@@ -110,3 +110,4 @@ class LoadedConfigFragment:
     extra_service_conf: Mapping[str, Sequence[RuleSpec[object]]]
     timeperiods: object  # Here we don't lie for a change. We haven't parsed anything.
     check_periods: Sequence[RuleSpec[object]]
+    relays: object  # see above

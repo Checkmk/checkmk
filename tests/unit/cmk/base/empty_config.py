@@ -88,6 +88,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
     extra_service_conf={},
     timeperiods={},
     check_periods=(),
+    relays={},
 )
 
 

@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+import enum
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Annotated, Literal, NamedTuple, NewType, Self
+from typing import Annotated, NamedTuple, NewType, Self
 
 from pydantic import BaseModel, Field, HttpUrl
 
-LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 Timestamp = NewType("Timestamp", float)
 Seconds = NewType("Seconds", float)
 
@@ -55,6 +55,14 @@ class SiteConfig(BaseModel):
         return cls.model_validate_json(path.read_text())
 
 
+class LogLevel(enum.StrEnum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
+
 class UserEngineConfig(BaseModel):
     """configuration for relay engine as provided by user config during activation"""
 
@@ -73,7 +81,7 @@ class EngineConfig(UserEngineConfig):
     poll_sleep: float = 0.5
     host_scheduler_sleep: float = 0.5
     poll_history: HistoryConfig = HistoryConfig()
-    third_party_log_level: LogLevel = "CRITICAL"
+    third_party_log_level: LogLevel = LogLevel.CRITICAL
 
     @classmethod
     def load(cls, path: Path) -> Self:

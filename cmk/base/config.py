@@ -708,6 +708,7 @@ def _perform_post_config_loading_actions(
         extra_service_conf=extra_service_conf,
         timeperiods=timeperiods,
         check_periods=check_periods,
+        relays=relays,
     )
 
     config_cache = ConfigCache(loaded_config).initialize()

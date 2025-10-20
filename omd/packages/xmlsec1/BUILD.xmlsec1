@@ -28,7 +28,7 @@ configure_make(
     # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
     # combined with foreign_cc/configure_make's RPATH agnosticness
     #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
-    # There is a caveat left, though: this rule will append "/opt/gcc-13.2.0/lib/../lib64"
+    # There is a caveat left, though: this rule will append "/opt/gcc-14.2.0/lib/../lib64"
     #   + the actual build directory, leading to a potentially wrong RPATH
     #   next to the fact that build artifacts won't be binary identical even
     #   when built in an exact same environment

@@ -83,5 +83,7 @@ bazel_env(
     toolchains = {},
     tools = {
         "osslsigncode": "@osslsigncode",
+        "pnpm": "@pnpm",
+        "uv": "@multitool//tools/uv",
     },
 )

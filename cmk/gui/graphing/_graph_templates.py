@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Literal, Self
+from typing import Literal, Self
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -48,18 +48,6 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_ORDER
-from ._metric_expressions import (
-    BaseMetricExpression,
-    Constant,
-    CriticalOf,
-    Maximum,
-    Metric,
-    MetricExpression,
-    Minimum,
-    parse_base_expression_from_api,
-    parse_expression_from_api,
-    WarningOf,
-)
 from ._rrd import get_graph_data_from_livestatus
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
@@ -80,10 +68,6 @@ def _sort_registered_graph_plugins(
     return sorted(registered_graphs.items(), key=lambda t: _by_index(t[0]))
 
 
-def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional) -> str:
-    return template.title.localize(translate_to_current_language)
-
-
 @dataclass(frozen=True)
 class GraphPluginChoice:
     id: str
@@ -95,198 +79,10 @@ def get_graph_plugin_choices(
 ) -> list[GraphPluginChoice]:
     return sorted(
         [
-            GraphPluginChoice(graph.name, _parse_title(graph))
+            GraphPluginChoice(graph.name, graph.title.localize(translate_to_current_language))
             for graph in registered_graphs.values()
         ],
         key=lambda c: c.title,
-    )
-
-
-@dataclass(frozen=True, kw_only=True)
-class FixedGraphTemplateRange:
-    min: BaseMetricExpression
-    max: BaseMetricExpression
-
-
-@dataclass(frozen=True, kw_only=True)
-class MinimalGraphTemplateRange:
-    min: BaseMetricExpression
-    max: BaseMetricExpression
-
-
-def _parse_minimal_range(
-    minimal_range: graphs_api.MinimalRange,
-) -> MinimalGraphTemplateRange:
-    return MinimalGraphTemplateRange(
-        min=(
-            Constant(minimal_range.lower)
-            if isinstance(minimal_range.lower, int | float)
-            else parse_base_expression_from_api(minimal_range.lower)
-        ),
-        max=(
-            Constant(minimal_range.upper)
-            if isinstance(minimal_range.upper, int | float)
-            else parse_base_expression_from_api(minimal_range.upper)
-        ),
-    )
-
-
-@dataclass(frozen=True)
-class GraphTemplate:
-    id: str
-    title: str
-    scalars: Sequence[MetricExpression]
-    conflicting_metrics: Sequence[str]
-    optional_metrics: Sequence[str]
-    consolidation_function: GraphConsolidationFunction | None
-    range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
-    omit_zero_metrics: bool
-    metrics: Sequence[MetricExpression]
-
-
-def _parse_graph_from_api(
-    name: str,
-    graph: graphs_api.Graph,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    *,
-    mirrored: bool,
-) -> GraphTemplate:
-    metrics: list[MetricExpression] = []
-    scalars: list[MetricExpression] = []
-
-    for line in graph.compound_lines:
-        if (
-            parsed := parse_expression_from_api(
-                line,
-                "-stack" if mirrored else "stack",
-                registered_metrics,
-            )
-        ).is_scalar():
-            scalars.append(parsed)
-        else:
-            metrics.append(parsed)
-
-    for line in graph.simple_lines:
-        if (
-            parsed := parse_expression_from_api(
-                line,
-                "-line" if mirrored else "line",
-                registered_metrics,
-            )
-        ).is_scalar():
-            scalars.append(parsed)
-        else:
-            metrics.append(parsed)
-
-    return GraphTemplate(
-        id=name,
-        title=_parse_title(graph),
-        range=(None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)),
-        metrics=metrics,
-        scalars=list(scalars),
-        optional_metrics=graph.optional,
-        conflicting_metrics=graph.conflicting,
-        consolidation_function=None,
-        omit_zero_metrics=False,
-    )
-
-
-def _parse_bidirectional_from_api(
-    name: str,
-    bidirectional: graphs_api.Bidirectional,
-    registered_metrics: Mapping[str, RegisteredMetric],
-) -> GraphTemplate:
-    upper = _parse_graph_from_api(
-        bidirectional.upper.name,
-        bidirectional.upper,
-        registered_metrics,
-        mirrored=False,
-    )
-    lower = _parse_graph_from_api(
-        bidirectional.lower.name,
-        bidirectional.lower,
-        registered_metrics,
-        mirrored=True,
-    )
-
-    ranges_min = []
-    ranges_max = []
-    if upper.range is not None:
-        ranges_min.append(upper.range.min)
-        ranges_max.append(upper.range.max)
-
-    if lower.range is not None:
-        ranges_min.append(lower.range.min)
-        ranges_max.append(lower.range.max)
-
-    return GraphTemplate(
-        id=name,
-        title=_parse_title(bidirectional),
-        range=(
-            MinimalGraphTemplateRange(
-                min=Minimum(ranges_min),
-                max=Maximum(ranges_max),
-            )
-            if ranges_min and ranges_max
-            else None
-        ),
-        metrics=list(upper.metrics) + list(lower.metrics),
-        scalars=list(upper.scalars) + list(lower.scalars),
-        optional_metrics=(list(bidirectional.upper.optional) + list(bidirectional.lower.optional)),
-        conflicting_metrics=(
-            list(bidirectional.upper.conflicting) + list(bidirectional.lower.conflicting)
-        ),
-        consolidation_function=None,
-        omit_zero_metrics=False,
-    )
-
-
-def _parse_graph_plugin(
-    name: str,
-    template: graphs_api.Graph | graphs_api.Bidirectional,
-    registered_metrics: Mapping[str, RegisteredMetric],
-) -> GraphTemplate:
-    match template:
-        case graphs_api.Graph():
-            return _parse_graph_from_api(
-                name,
-                template,
-                registered_metrics,
-                mirrored=False,
-            )
-        case graphs_api.Bidirectional():
-            return _parse_bidirectional_from_api(
-                name,
-                template,
-                registered_metrics,
-            )
-        case _:
-            assert_never(template)
-
-
-def _create_graph_template_from_template_id(template_id: str) -> GraphTemplate:
-    metric_name = template_id[7:]
-    return GraphTemplate(
-        id=template_id,
-        title="",
-        metrics=[MetricExpression(Metric(metric_name), line_type="area")],
-        scalars=[
-            MetricExpression(
-                WarningOf(Metric(metric_name)),
-                line_type="line",
-                title=str(_("Warning")),
-            ),
-            MetricExpression(
-                CriticalOf(Metric(metric_name)),
-                line_type="line",
-                title=str(_("Critical")),
-            ),
-        ],
-        conflicting_metrics=[],
-        optional_metrics=[],
-        consolidation_function=None,
-        range=None,
-        omit_zero_metrics=False,
     )
 
 

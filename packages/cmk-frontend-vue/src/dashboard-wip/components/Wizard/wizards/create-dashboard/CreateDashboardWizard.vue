@@ -22,14 +22,8 @@ import DashboardLayoutSelector from '../../components/DashboardSettings/Dashboar
 import DashboardScope from '../../components/DashboardSettings/DashboardScope.vue'
 import GeneralProperties from '../../components/DashboardSettings/GeneralProperties.vue'
 import VisibilityProperties from '../../components/DashboardSettings/VisibilityProperties.vue'
-import {
-  type DashboardIcon,
-  type DashboardMenu,
-  type DashboardTitle,
-  DashboardType,
-  type DashboardVisibility
-} from '../../components/DashboardSettings/types'
-import { isIdInUse, isValidSnakeCase } from '../../components/DashboardSettings/utils'
+import { useDashboardGeneralSettings } from '../../components/DashboardSettings/composables/useDashboardGeneralSettings'
+import { DashboardType } from '../../components/DashboardSettings/types'
 import StepsHeader from '../../components/StepsHeader.vue'
 import DashboardTypeSelector from './components/DashboardTypeSelector.vue'
 
@@ -55,55 +49,30 @@ const emit = defineEmits<{
 // Type
 const dashboardType = ref<DashboardType>(DashboardType.UNRESTRICTED)
 
-// General
-const name = ref<string>('')
-const nameErrors = ref<string[]>([])
+// General & Visibility
+const {
+  name,
+  nameErrors,
+  createUniqueId,
+  uniqueId,
+  uniqueIdErrors,
+  dashboardIcon,
+  dashboardEmblem,
+  showInMonitorMenu,
+  monitorMenu,
+  sortIndex,
+  validateGeneralSettings,
+  buildSettings
+} = useDashboardGeneralSettings()
 
-const createUniqueId = ref<boolean>(true)
-const uniqueId = ref<string>('')
-const uniqueIdErrors = ref<string[]>([])
-const dashboardIcon = ref<string | null>(null)
-const dashboardEmblem = ref<string | null>(null)
 const dashboardLayout = ref<DashboardLayout>(
   props.availableLayouts.includes(DashboardLayout.RESPONSIVE_GRID)
     ? DashboardLayout.RESPONSIVE_GRID
     : DashboardLayout.RELATIVE_GRID
 )
 
-// Visibility
-const showInMonitorMenu = ref<boolean>(false)
-const monitorMenu = ref<string>('dashboards')
-const sortIndex = ref<number>(99)
-
-// Dashboard scope
 const dashboardScopeIds = ref<string[]>([])
 const scopeErrors = ref<string[]>([])
-
-const _nameValidation = () => {
-  nameErrors.value = []
-  uniqueIdErrors.value = []
-  if (name.value.trim() === '') {
-    nameErrors.value.push(_t('Name is required.'))
-  }
-}
-
-const _uniqueIdValidation = async () => {
-  if (uniqueId.value.trim() === '') {
-    uniqueIdErrors.value.push(_t('Unique ID is required.'))
-    return
-  } else if (!isValidSnakeCase(uniqueId.value.trim())) {
-    uniqueIdErrors.value.push(
-      _t(
-        'Unique ID must only contain lowercase letters, numbers, and underscores, and must start with a letter.'
-      )
-    )
-    return
-  }
-
-  if (await isIdInUse(uniqueId.value.trim())) {
-    uniqueIdErrors.value.push(_t('This Unique ID is already in use. Please choose another one.'))
-  }
-}
 
 const _scopeValidation = () => {
   scopeErrors.value = []
@@ -113,11 +82,9 @@ const _scopeValidation = () => {
 }
 
 const validate = async (): Promise<boolean> => {
-  _nameValidation()
-  await _uniqueIdValidation()
+  const generalOk = await validateGeneralSettings()
   _scopeValidation()
-
-  return nameErrors.value.length + uniqueIdErrors.value.length + scopeErrors.value.length === 0
+  return generalOk && scopeErrors.value.length === 0
 }
 
 const _selectSingleInfo = () => {
@@ -128,53 +95,13 @@ const _selectSingleInfo = () => {
   }
 }
 
-const _buildSettings = (): DashboardGeneralSettings => {
-  const dashboardTitle: DashboardTitle = {
-    text: name.value.trim(),
-    render: true,
-    include_context: false
-  }
-
-  const dashboardMenu: DashboardMenu = {
-    topic: showInMonitorMenu.value ? monitorMenu.value : 'other',
-    sort_index: sortIndex.value,
-    is_show_more: false,
-    search_terms: []
-  }
-
-  if (dashboardIcon.value) {
-    const icon: DashboardIcon = {
-      name: dashboardIcon.value
-    }
-    if (dashboardEmblem.value) {
-      icon.emblem = dashboardEmblem.value
-    }
-
-    dashboardMenu.icon = icon
-  }
-
-  const dashboardVisibility: DashboardVisibility = {
-    hide_in_monitor_menu: !showInMonitorMenu.value,
-    hide_in_drop_down_menus: false,
-    share: 'no'
-  }
-
-  const settings: DashboardGeneralSettings = {
-    title: dashboardTitle,
-    menu: dashboardMenu,
-    visibility: dashboardVisibility
-  }
-
-  return settings
-}
-
 const createAndSetFilters = async () => {
   if (await validate()) {
     _selectSingleInfo()
     emit(
       'create-dashboard',
       uniqueId.value.trim(),
-      _buildSettings(),
+      buildSettings(),
       dashboardLayout.value,
       dashboardScopeIds.value,
       'setFilters'
@@ -188,7 +115,7 @@ const createAndViewList = async () => {
     emit(
       'create-dashboard',
       uniqueId.value.trim(),
-      _buildSettings(),
+      buildSettings(),
       dashboardLayout.value,
       dashboardScopeIds.value,
       'viewList'

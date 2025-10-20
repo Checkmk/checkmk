@@ -31,7 +31,7 @@ from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.i18n import _, localize_or_none, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
@@ -454,7 +454,12 @@ class Rulespec(abc.ABC):
 
     @property
     def title(self) -> str | None:
-        plain_title = self._title() if self._title else self.valuespec.title()
+        try:
+            spec_title = localize_or_none(self.form_spec.title, translate_to_current_language)
+        except FormSpecNotImplementedError:
+            spec_title = self.valuespec.title()
+
+        plain_title = self._title() if self._title else spec_title
         if plain_title is None:
             return None
         if self._is_deprecated:
@@ -469,12 +474,9 @@ class Rulespec(abc.ABC):
             return self._help()
 
         try:
-            help = self.form_spec.help_text
-            return None if help is None else help.localize(translate_to_current_language)
+            return localize_or_none(self.form_spec.help_text, translate_to_current_language)
         except FormSpecNotImplementedError:
-            pass
-
-        return self.valuespec.help()
+            return self.valuespec.help()
 
     @property
     def is_for_services(self) -> bool:

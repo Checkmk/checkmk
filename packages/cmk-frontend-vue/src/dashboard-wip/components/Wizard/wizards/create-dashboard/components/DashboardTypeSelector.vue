@@ -8,7 +8,7 @@ import usei18n from '@/lib/i18n'
 
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 
-import { DashboardType } from '../types'
+import { DashboardType } from '../../../components/DashboardSettings/types'
 
 const { _t } = usei18n()
 

@@ -22,16 +22,16 @@ import DashboardLayoutSelector from '../../components/DashboardSettings/Dashboar
 import DashboardScope from '../../components/DashboardSettings/DashboardScope.vue'
 import GeneralProperties from '../../components/DashboardSettings/GeneralProperties.vue'
 import VisibilityProperties from '../../components/DashboardSettings/VisibilityProperties.vue'
-import { isIdInUse, isValidSnakeCase } from '../../components/DashboardSettings/utils'
-import StepsHeader from '../../components/StepsHeader.vue'
-import DashboardTypeSelector from './components/DashboardTypeSelector.vue'
 import {
   type DashboardIcon,
   type DashboardMenu,
   type DashboardTitle,
   DashboardType,
   type DashboardVisibility
-} from './types'
+} from '../../components/DashboardSettings/types'
+import { isIdInUse, isValidSnakeCase } from '../../components/DashboardSettings/utils'
+import StepsHeader from '../../components/StepsHeader.vue'
+import DashboardTypeSelector from './components/DashboardTypeSelector.vue'
 
 const { _t } = usei18n()
 

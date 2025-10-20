@@ -16,6 +16,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
+from cmk.gui.site_config import site_is_local
 from cmk.utils import paths
 
 from .common import (
@@ -70,6 +71,12 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
     basic_settings: BasicSettingsModel = api_field(
         description="The basic settings of the site connection.",
     )
+    logged_in: bool | ApiOmitted = api_field(
+        description="If a remote site is currently logged in, this will be True, "
+        "if not it will be False. For the main site, nothing is returned.",
+        example=True,
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
     def from_internal(cls, site_configuration: SiteConfiguration) -> Self:
@@ -108,6 +115,9 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
             basic_settings=BasicSettingsModel.from_internal(site_configuration),
             status_connection=StatusConnectionModel.from_internal(site_configuration),
             configuration_connection=_configuration_connection_from_internal(site_configuration),
+            logged_in=bool(site_configuration.get("secret"))
+            if not site_is_local(site_configuration)
+            else ApiOmitted(),
         )
 
 

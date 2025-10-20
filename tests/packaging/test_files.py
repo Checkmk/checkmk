@@ -370,17 +370,17 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
 def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> None:
     signing_failures = []
 
-    non_msi_files = ["mk-sql.exe"]
+    mk_sql = "mk-sql.exe"
     path_prefix = (
         "agents/windows" if package_path.endswith(".tar.gz") else "share/check_mk/agents/windows"
     )
 
-    for non_msi_file in non_msi_files:
-        with NamedTemporaryFile() as non_msi_file_temp:
-            non_msi_file_temp.write(
-                _get_file_from_package(package_path, cmk_version, f"{path_prefix}/{non_msi_file}")
-            )
-            signing_failures.append(_verify_signature(Path(non_msi_file_temp.name), non_msi_file))
+    with NamedTemporaryFile() as mk_sql_temp:
+        mk_sql_temp.write(
+            _get_file_from_package(package_path, cmk_version, f"{path_prefix}/{mk_sql}")
+        )
+        mk_sql_temp.flush()
+        signing_failures.append(_verify_signature(Path(mk_sql_temp.name), mk_sql))
 
     # TODO: Clarify why the msi is missing in the source.tar.gz CMK-26785
     if not package_path.endswith(".tar.gz"):
@@ -390,6 +390,7 @@ def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> No
                     package_path, cmk_version, f"{path_prefix}/check_mk_agent.msi"
                 )
             )
+            msi_file.flush()
             signing_failures.append(_verify_signature(Path(msi_file.name), "check_mk_agent.msi"))
             with TemporaryDirectory() as msi_content:
                 subprocess.run(

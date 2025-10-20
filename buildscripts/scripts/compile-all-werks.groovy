@@ -68,20 +68,16 @@ def main() {
                 try {
                     /* groovylint-disable LineLength */
                     sh(script: """
-                        ./packages/cmk-frontend/run --build  # we just want to install the dependencies, but there is no target for that
                         echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' > validate-werks.html
                         # still no need for jq!
                         python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("all_werks.json")).items())))' >> validate-werks.html
                         echo '</body></html>' >> validate-werks.html
-                        # temporary disabled that test because of missing vnu.jar
-                        # we really really should restore this!
-                        # java \
-                        #     -jar packages/cmk-frontend/node_modules/vnu-jar/build/dist/vnu.jar \
-                        #     --filterpattern 'The .tt. element is obsolete\\. Use CSS instead\\.' \
-                        #     --stdout \
-                        #     --format gnu \
-                        #     - < validate-werks.html \
-                        #     > validate-werks.error.txt
+                        bazel run //packages/cmk-werks:vnu -- \
+                            --filterpattern 'The .tt. element is obsolete\\. Use CSS instead\\.' \
+                            --stdout \
+                            --format gnu \
+                            - < validate-werks.html \
+                            > validate-werks.error.txt
                     """);
                     /* groovylint-enable LineLength */
                 } catch(Exception e) {

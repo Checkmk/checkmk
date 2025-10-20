@@ -31,6 +31,14 @@ STRING_TABLE_NOK = [
     [["1", "99WT888888", "1", "2", "3", "4"]],
 ]
 
+STRING_TABLE_SUP_25829 = [
+    [["TS3100", "IBM", "F.01"]],
+    [["5"]],
+    [["1", "4", "L2U7777777", "2", "0", "0", "No error"]],
+    [["1", "99WT888888", "", "2", "3", "4"]],
+    #                    ^^-- empty string here, otherwise identical to STRING_TABLE_NOK
+]
+
 
 @pytest.mark.parametrize(
     ["string_table", "expected_result"],
@@ -136,6 +144,17 @@ def test_ibm_storage_ts_library(
                 Result(state=State.WARN, summary="3 recovered read errors"),
             ],
             id="nok",
+        ),
+        pytest.param(
+            STRING_TABLE_SUP_25829,
+            [
+                Result(state=State.OK, summary="S/N: 99WT888888"),
+                Result(state=State.CRIT, summary="2 hard write errors"),
+                Result(state=State.UNKNOWN, summary="got empty string for recovered write errors"),
+                Result(state=State.CRIT, summary="4 hard read errors"),
+                Result(state=State.WARN, summary="3 recovered read errors"),
+            ],
+            id="SUP-25829",
         ),
     ],
 )

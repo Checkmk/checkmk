@@ -207,20 +207,24 @@ def discover_ibm_storage_ts_drive(section: Section) -> DiscoveryResult:
         yield Service(item=drive.entry)
 
 
+def _check_drive(counter: str, state: State, summary: str) -> CheckResult:
+    if counter == "":
+        yield Result(state=State.UNKNOWN, summary=summary.format("got empty string for"))
+        return
+    if counter != "0":
+        yield Result(state=state, summary=summary.format(counter))
+
+
 def check_ibm_storage_ts_drive(item: str, section: Section) -> CheckResult:
     if section is None:
         return
     for drive in section.drives:
         if item == drive.entry:
             yield Result(state=State.OK, summary=f"S/N: {drive.serial}")
-            if drive.write_err != "0":
-                yield Result(state=State.CRIT, summary=f"{drive.write_err} hard write errors")
-            if drive.write_warn != "0":
-                yield Result(state=State.WARN, summary=f"{drive.write_warn} recovered write errors")
-            if drive.read_err != "0":
-                yield Result(state=State.CRIT, summary=f"{drive.read_err} hard read errors")
-            if drive.read_warn != "0":
-                yield Result(state=State.WARN, summary=f"{drive.read_warn} recovered read errors")
+            yield from _check_drive(drive.write_err, State.CRIT, "{} hard write errors")
+            yield from _check_drive(drive.write_warn, State.WARN, "{} recovered write errors")
+            yield from _check_drive(drive.read_err, State.CRIT, "{} hard read errors")
+            yield from _check_drive(drive.read_warn, State.WARN, "{} recovered read errors")
 
 
 check_plugin_ibm_storage_ts_drive = CheckPlugin(

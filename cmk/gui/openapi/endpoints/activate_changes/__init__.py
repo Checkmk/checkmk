@@ -260,11 +260,12 @@ def show_activation(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("activation_run", "running"),
     "cmk/run",
     method="get",
-    permissions_required=RO_PERMISSIONS,
+    permissions_required=PERMISSIONS,
     response_schema=ActivationRunCollection,
 )
 def list_activations(params: Mapping[str, Any]) -> Response:
     """Show all currently running activations"""
+    user.need_permission("wato.activate")
 
     value = []
     for activation_id in get_activation_ids():
@@ -283,11 +284,12 @@ def list_activations(params: Mapping[str, Any]) -> Response:
     "cmk/pending-activation-changes",
     method="get",
     etag="output",
-    permissions_required=RO_PERMISSIONS,
+    permissions_required=PERMISSIONS,
     response_schema=PendingChangesCollection,
 )
 def list_pending_changes(params: Mapping[str, Any]) -> Response:
     """Show all pending changes"""
+    user.need_permission("wato.activate")
 
     pending_changes = get_pending_changes(list(active_config.sites))
     response = serve_json(

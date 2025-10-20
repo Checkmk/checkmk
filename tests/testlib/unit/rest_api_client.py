@@ -3689,6 +3689,18 @@ class MetricBackendClient(RestApiClient):
         )
 
 
+class PagetypeTopicClient(RestApiClient):
+    domain: DomainType = "pagetype_topic"
+    default_version = APIVersion.INTERNAL
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3750,6 +3762,7 @@ class ClientRegistry:
     ViewClient: ViewClient
     RelayClient: RelayClient
     MetricBackendClient: MetricBackendClient
+    PagetypeTopicClient: PagetypeTopicClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3803,4 +3816,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         RelayClient=RelayClient(request_handler, url_prefix),
         SidebarElement=SidebarElementClient(request_handler, url_prefix),
         MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
+        PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
     )

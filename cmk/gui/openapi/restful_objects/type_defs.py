@@ -58,6 +58,7 @@ DomainType = Literal[
     "otel_collector_config",
     "otel_collector_config_receivers",
     "otel_collector_config_prom_scrape",
+    "pagetype_topic",
     "password",
     "parent_scan",
     "relay",

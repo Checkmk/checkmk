@@ -7,6 +7,7 @@ from typing import override
 
 from livestatus import SiteConfiguration
 
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.watolib.sites import SiteManagementFactory
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -18,6 +19,10 @@ class UpdateSiteConfigurations(UpdateAction):
 
     @override
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+        if is_wato_slave_site():
+            # remote sites don't have remote sites...
+            return
+
         changed = False
         site_mgmt = SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()

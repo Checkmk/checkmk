@@ -11,9 +11,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator, Discriminator
+from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
 from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.dashboard.page_edit_dashboard import dashboard_info_handler
 from cmk.gui.dashboard.type_defs import DashboardRelativeGridLayoutSpec
@@ -25,7 +25,6 @@ from cmk.gui.openapi.framework.model.converter import (
 )
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     AnnotatedUserId,
     DashboardEmbeddedViewSpec,
@@ -34,7 +33,6 @@ from cmk.gui.type_defs import (
     SingleInfos,
     VisualContext,
 )
-from cmk.gui.utils.roles import UserPermissions
 
 from .type_defs import AnnotatedInfoName
 from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
@@ -79,25 +77,9 @@ class DashboardIcon:
         return {"icon": icon.name, "emblem": icon.emblem}
 
 
-def _validate_topic(value: str, user_permissions: UserPermissions) -> str:
-    topic_choices = PagetypeTopics.choices(user_permissions)
-    topic_names = {topic[0] for topic in topic_choices}
-    if value not in topic_names:
-        raise ValueError(f"Invalid topic, valid options are: {', '.join(topic_names)}")
-
-    return value
-
-
 @api_model
 class DashboardMenuSettings:
-    topic: Annotated[
-        str,
-        AfterValidator(
-            lambda value: _validate_topic(
-                value, UserPermissions.from_config(active_config, permission_registry)
-            )
-        ),
-    ] = api_field(
+    topic: str = api_field(
         description="Which section in the `Monitor` menu this dashboard is displayed under."
     )
     sort_index: int = api_field(description="Order of the dashboard within the topic.")
@@ -111,6 +93,19 @@ class DashboardMenuSettings:
     search_terms: list[str] = api_field(
         description="A list of search terms that can be used to find this dashboard in the `Monitor` menu."
     )
+
+    def iter_validation_errors(
+        self, location: tuple[str | int, ...], context: ApiContext
+    ) -> Iterable[ErrorDetails]:
+        topic_choices = PagetypeTopics.choices(context.config.user_permissions())
+        topic_names = {topic[0] for topic in topic_choices}
+        if self.topic not in topic_names:
+            yield ErrorDetails(
+                type="value_error",
+                msg=f"Invalid topic, valid options are: {', '.join(topic_names)}",
+                loc=location + ("topic",),
+                input=self.topic,
+            )
 
 
 @api_model
@@ -248,6 +243,11 @@ class DashboardGeneralSettings:
             api_general_settings.description = str(dashboard["description"])
         return api_general_settings
 
+    def iter_validation_errors(
+        self, location: tuple[str | int, ...], context: ApiContext
+    ) -> Iterable[ErrorDetails]:
+        yield from self.menu.iter_validation_errors(location + ("menu",), context)
+
 
 @api_model
 class DashboardFilterContextResponse(DashboardFilterContext):
@@ -378,6 +378,9 @@ class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
                 embedded_views=embedded_views,
             )
         ]
+        errors.extend(
+            self.general_settings.iter_validation_errors(("body", "general_settings"), context)
+        )
         if errors:
             raise RequestDataValidator.format_error_details(errors)
 

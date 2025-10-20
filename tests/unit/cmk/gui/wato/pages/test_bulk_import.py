@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 
 from cmk.utils.hostaddress import HostAddress
+
 from cmk.gui.http import request
 from cmk.gui.wato.pages.bulk_import import ModeBulkImport
 from cmk.gui.watolib.hosts_and_folders import folder_tree

@@ -333,14 +333,14 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
     }
 )
 
-_CCE_ALLOWED_DUPLICATES = {
+_CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
     "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
     "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
     "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
 }
 
-_ALLOWED_DUPLICATES = {
+_ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Active": {"docker_active", "mem_lnx_active"},
     "Active connections": {
         "active",
@@ -412,23 +412,125 @@ _ALLOWED_DUPLICATES = {
 }
 
 if edition(omd_root) not in (Edition.CRE, Edition.CEE):
-    _ALLOWED_DUPLICATES.update(_CCE_ALLOWED_DUPLICATES)
+    _ALLOWED_DUPLICATE_METRIC_TITLES.update(_CCE_ALLOWED_DUPLICATE_METRIC_TITLES)
 
 
 def test_duplicate_metric_titles() -> None:
+    # CMK-26844
     metric_names_by_title: dict[str, set[str]] = {}
     for plugin in _load_graphing_plugins().plugins.values():
         if isinstance(plugin, metrics_api.Metric):
             metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
 
-    duplicates = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
+    duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
 
-    new = {t: mns for t, mns in duplicates.items() if t not in _ALLOWED_DUPLICATES}
-    assert not new, "Found new duplicates:\n" + "\n".join(
+    new = {
+        t: mns
+        for t, mns in duplicate_metric_titles.items()
+        if t not in _ALLOWED_DUPLICATE_METRIC_TITLES
+    }
+    assert not new, "Found new duplicate_metric_titles:\n" + "\n".join(
         [f"- {t}: {', '.join(mns)}" for t, mns in new.items()]
     )
 
-    already_fixed = {t: mns for t, mns in _ALLOWED_DUPLICATES.items() if t not in duplicates}
-    assert not already_fixed, "Found already fixed duplicates:\n" + "\n".join(
+    already_fixed = {
+        t: mns
+        for t, mns in _ALLOWED_DUPLICATE_METRIC_TITLES.items()
+        if t not in duplicate_metric_titles
+    }
+    assert not already_fixed, "Found already fixed duplicate_metric_titles:\n" + "\n".join(
         [f"- {t}: {', '.join(mns)}" for t, mns in already_fixed.items()]
+    )
+
+
+_CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
+    "Connections": {"azure_redis_connections"},
+    "Throughput": {"azure_redis_throughput"},
+    "Memory utilization": {"azure_redis_memory_utilization"},
+    "Memory": {"azure_redis_used_memory"},
+}
+
+_ALLOWED_DUPLICATE_GRAPH_TITLES = {
+    "Single-request consumption": {
+        "aws_dynamodb_write_capacity_single",
+        "aws_dynamodb_read_capacity_single",
+    },
+    "CPU utilization": {
+        "cpu_utilization_percentile",
+        "util_fallback",
+        "cpu_utilization_6_steal_util",
+        "cpu_utilization_6_steal",
+        "cpu_utilization_6_guest",
+        "cpu_utilization_6_guest_util",
+        "cpu_utilization",
+        "cpu_utilization_7_util",
+        "util_average_1",
+        "cpu_utilization_5",
+        "cpu_utilization_7",
+        "cpu_utilization_5_util",
+        "cpu_utilization_8",
+        "util_average_2",
+        "cpu_utilization_simple",
+        "cpu_utilization_3",
+        "cpu_utilization_4",
+    },
+    "Connections": {"connections", "connection_count"},
+    "Threads": {"threads", "jenkins_threads"},
+    "Errors": {"fc_errors", "if_errors_discards", "fc_errors_detailed"},
+    "Huge pages": {"huge_pages_2", "huge_pages"},
+    "Bandwidth": {"bandwidth_translated", "bandwidth"},
+    "Traffic": {"read_write_data", "traffic"},
+    "Disk latency": {"disk_latency", "disk_rw_latency"},
+    "Access point statistics": {"access_point_statistics2", "access_point_statistics"},
+    "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
+    "Capacity usage": {"capacity_usage_2", "capacity_usage"},
+    "Size and used space": {"fs_used", "fs_used_2"},
+    "Throughput": {"throughput"},
+    "Memory utilization": {"azure_redis_memory_utilization"},
+    "Licenses": {"licenses_max", "licenses_total"},
+    "Amount of mails in queues": {
+        "amount_of_mails_in_queues",
+        "amount_of_mails_in_secondary_queues",
+    },
+    "Packets": {"packets_1", "packets_2", "packets_3"},
+    "Memory": {"kube_memory_usage"},
+    "Commit charge": {"pagefile_absolute", "pagefile_percent"},
+    "RAM": {"mem_absolute", "mem_absolute_2"},
+    "Disk Usage": {
+        "podman_disk_usage_containers",
+        "podman_disk_usage_volumes",
+        "podman_disk_usage_images",
+    },
+}
+
+if edition(omd_root) not in (Edition.CRE, Edition.CEE):
+    for title, graph_plugins in _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES.items():
+        _ALLOWED_DUPLICATE_GRAPH_TITLES.setdefault(title, set()).update(graph_plugins)
+
+
+def test_duplicate_graph_titles() -> None:
+    # CMK-26844
+    graphs_by_title: dict[str, set[str]] = {}
+    for plugin in _load_graphing_plugins().plugins.values():
+        if isinstance(plugin, graphs_api.Graph | graphs_api.Bidirectional):
+            graphs_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
+
+    duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}
+
+    new = {
+        t: gps
+        for t, gps in duplicate_graph_titles.items()
+        if t not in _ALLOWED_DUPLICATE_GRAPH_TITLES
+    }
+    assert not new, "Found new duplicate_graph_titles:\n" + "\n".join(
+        [f"- {t}: {', '.join(gps)}" for t, gps in new.items()]
+    )
+
+    already_fixed = {
+        t: gps
+        for t, gps in _ALLOWED_DUPLICATE_GRAPH_TITLES.items()
+        if t not in duplicate_graph_titles
+    }
+    assert not already_fixed, "Found already fixed duplicate_graph_titles:\n" + "\n".join(
+        [f"- {t}: {', '.join(gps)}" for t, gps in already_fixed.items()]
     )

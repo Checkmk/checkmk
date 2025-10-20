@@ -107,6 +107,7 @@ CHECK_PARAMETER_GROUP2TOPIC: dict[str, str] = {
 
 tuple_to_levels = False
 tuple_to_levels_candidate = False
+dropdown_boolean_to_boolean = False
 use_unstable_api = False
 warnings = []
 
@@ -308,7 +309,26 @@ class VSTransformer(cst.CSTTransformer):
                 case "Optional":
                     convert_call = self._make_optional(updated_node)
                 case "DropdownChoice":
-                    convert_call = self._make_single_choice(updated_node)
+                    create_boolean = False
+                    if dropdown_boolean_to_boolean:
+                        create_boolean = True
+                        choices = _extract("choices", updated_node.args)[0].value
+                        if isinstance(choices, cst.List) and len(choices.elements) == 2:
+                            for element in choices.elements:
+                                first_elem = cst.ensure_type(
+                                    cst.ensure_type(element.value, cst.Tuple).elements[0],
+                                    cst.Element,
+                                ).value
+                                if not isinstance(first_elem, cst.Name) or first_elem.value not in (
+                                    "True",
+                                    "False",
+                                ):
+                                    create_boolean = False
+
+                    if create_boolean:
+                        convert_call = self._make_boolean_choice_from_dropdown(updated_node)
+                    else:
+                        convert_call = self._make_single_choice(updated_node)
                 case "TextInput":
                     convert_call = self._make_string(updated_node)
                 case "FixedValue":
@@ -1008,6 +1028,48 @@ class VSTransformer(cst.CSTTransformer):
     def _make_boolean_choice(self, old: cst.Call) -> cst.Call:
         return cst.Call(func=cst.Name("BooleanChoice"), args=old.args)
 
+    def _make_boolean_choice_from_dropdown(self, old: cst.Call) -> cst.Call:
+        # Ensure the choices of the dropdown are suitable for conversion
+        new_args: list[cst.Arg] = []
+        for arg in old.args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case "choices":
+                    choices = _extract("choices", old.args)[0].value
+                    for element in choices.elements:
+                        elem_value = cst.ensure_type(
+                            cst.ensure_type(element.value, cst.Tuple).elements[0],
+                            cst.Element,
+                        ).value
+                        if cst.ensure_type(elem_value, cst.Name).value == "True":
+                            new_args.append(
+                                cst.Arg(
+                                    cst.Call(
+                                        func=cst.Name("Label"),
+                                        args=[
+                                            cst.Arg(
+                                                cst.ensure_type(
+                                                    cst.ensure_type(
+                                                        cst.ensure_type(
+                                                            element.value, cst.Tuple
+                                                        ).elements[1],
+                                                        cst.Element,
+                                                    ).value,
+                                                    cst.Call,
+                                                )
+                                                .args[0]
+                                                .value,
+                                            )
+                                        ],
+                                    ),
+                                    cst.Name("label"),
+                                )
+                            )
+                case _:
+                    new_args.append(arg)
+
+        return cst.Call(func=cst.Name("BooleanChoice"), args=new_args)
+
     def _make_time_span(self, old: cst.Call) -> cst.Call:
         return cst.Call(func=cst.Name("TimeSpan"), args=old.args)
 
@@ -1526,6 +1588,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "-B",
+        "--dropdown_to_boolean",
+        action="store_true",
+        help="Converts DropdownChoices with true/false als Elements to a BooleanChoice FormSpec",
+    )
+
+    parser.add_argument(
         "--files",
         help="Legacy plug-ins to rewrite (inplace)",
         nargs="+",
@@ -1574,6 +1643,8 @@ def main(argv: Sequence[str]) -> None:
     use_unstable_api = args.use_unstable
     global tuple_to_levels_candidate
     tuple_to_levels_candidate = args.tuple_to_levels_candidate
+    global dropdown_boolean_to_boolean
+    dropdown_boolean_to_boolean = args.dropdown_to_boolean
 
     if args.transformers:
         used_transformers.clear()

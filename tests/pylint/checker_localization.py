@@ -74,7 +74,7 @@ class LiteralStringChecker(LocalizationBaseChecker):
     name = "localization-literal-string-checker"
     msgs = {
         "E7710": (
-            "Localization function called with a literal string.",
+            "Localization function called with a non-literal string.",
             _MESSAGE_ID,
             "Localization functions must be called with a literal string.",
         ),

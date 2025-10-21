@@ -7,44 +7,54 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, Literal, TypeVar
 
+from pydantic import BaseModel
+
 from cmk.server_side_calls import internal, v1
 from cmk.utils import config_warnings
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
-@dataclass(frozen=True)
-class BackendProxyAuth:
+type _PasswordSpec = tuple[
+    Literal["cmk_postprocessed"], Literal["stored_password", "explicit_password"], tuple[str, str]
+]
+
+
+class BackendProxyAuth(BaseModel):
     user: str
-    password: tuple[Literal["password"], str] | tuple[Literal["store"], str]
+    password: _PasswordSpec
 
 
-@dataclass(frozen=False)
-class BackendProxy:
+class BackendProxy(BaseModel):
     scheme: str
     proxy_server_name: str
     port: int
     auth: BackendProxyAuth | None = None
 
-    def url(self, password_lookup: Callable[[str], str | None]) -> str:
-        if self.auth is None:
+    def url(self, password_lookup: Callable[[str], str | None], usage_hint: str) -> str:
+        if (
+            self.auth is None
+            or (secret := self._secret(self.auth, password_lookup, usage_hint)) is None
+        ):
             return f"{self.scheme}://{self.proxy_server_name}:{self.port}"
+        return self._make_url_with_auth(self.auth.user, secret)
 
-        if self.auth.password[0] == "store":
-            if (password := password_lookup(self.auth.password[1])) is None:
-                config_warnings.warn(
-                    f'The stored password "{self.auth.password[1]}" does not exist.'
-                )
-                return f"{self.scheme}://{self.proxy_server_name}:{self.port}"
+    def _secret(
+        self, auth: BackendProxyAuth, password_lookup: Callable[[str], str | None], usage_hint: str
+    ) -> str | None:
+        _, password_type, (secret_id, secret_value) = auth.password
+        match password_type:
+            case "stored_password":
+                if (password := password_lookup(secret_id)) is None:
+                    config_warnings.warn(
+                        f'The stored password "{secret_id}" ({usage_hint}) does not exist.'
+                    )
+                return password
+            case "explicit_password":
+                return secret_value
 
-            return (
-                f"{self.scheme}://{self.auth.user}:{password}@{self.proxy_server_name}:{self.port}"
-            )
-
-        return (
-            f"{self.scheme}://{self.auth.user}:{self.auth.password[1]}@"
-            f"{self.proxy_server_name}:{self.port}"
-        )
+    def _make_url_with_auth(self, user: str, password: str) -> str:
+        return f"{self.scheme}://{user}:{password}@{self.proxy_server_name}:{self.port}"
 
 
 type GlobalProxies = Mapping[str, BackendProxy]
@@ -226,7 +236,7 @@ def _replace_v1_url_proxies(
         return ReplacementResult(v1.EnvProxy(), {}, {})
 
     return ReplacementResult(
-        v1.URLProxy(url=global_proxy.url(global_proxies_with_lookup.password_lookup)),
+        v1.URLProxy(url=global_proxy.url(global_proxies_with_lookup.password_lookup, usage_hint)),
         {},
         {},
     )
@@ -248,7 +258,9 @@ def _replace_alpha_url_proxies(
         return ReplacementResult(internal.EnvProxy(), {}, {})
 
     return ReplacementResult(
-        internal.URLProxy(url=global_proxy.url(global_proxies_with_lookup.password_lookup)),
+        internal.URLProxy(
+            url=global_proxy.url(global_proxies_with_lookup.password_lookup, usage_hint)
+        ),
         {},
         {},
     )

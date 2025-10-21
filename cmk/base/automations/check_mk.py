@@ -489,24 +489,6 @@ class AutomationDiscovery(DiscoveryAutomation):
 automations.register(AutomationDiscovery())
 
 
-def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.BackendProxy:
-    proxy_config_auth = (
-        config_processing.BackendProxyAuth(
-            user=auth["user"],
-            password=auth["password"],
-        )
-        if (auth := raw["proxy_config"].get("auth")) is not None
-        else None
-    )
-
-    return config_processing.BackendProxy(
-        scheme=raw["proxy_config"]["scheme"],
-        proxy_server_name=raw["proxy_config"]["proxy_server_name"],
-        port=raw["proxy_config"]["port"],
-        auth=proxy_config_auth,
-    )
-
-
 class AutomationSpecialAgentDiscoveryPreview(Automation):
     cmd = "special-agent-discovery-preview"
 
@@ -545,7 +527,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.passwords,
                 config_processing.GlobalProxiesWithLookup(
                     global_proxies={
-                        name: _set_global_proxy(raw)
+                        name: config_processing.BackendProxy.model_validate(raw)
                         for name, raw in run_settings.http_proxies.items()
                     },
                     password_lookup=make_staged_passwords_lookup(),
@@ -3107,7 +3089,7 @@ class AutomationDiagSpecialAgent(Automation):
                 diag_special_agent_input.passwords,
                 config_processing.GlobalProxiesWithLookup(
                     global_proxies={
-                        name: _set_global_proxy(raw)
+                        name: config_processing.BackendProxy.model_validate(raw)
                         for name, raw in diag_special_agent_input.http_proxies.items()
                     },
                     password_lookup=make_staged_passwords_lookup(),

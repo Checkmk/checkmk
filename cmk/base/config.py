@@ -1482,24 +1482,6 @@ class AutochecksConfigurer:
         )
 
 
-def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.BackendProxy:
-    proxy_config_auth = (
-        config_processing.BackendProxyAuth(
-            user=auth["user"],
-            password=auth["password"],
-        )
-        if (auth := raw["proxy_config"].get("auth")) is not None
-        else None
-    )
-
-    return config_processing.BackendProxy(
-        scheme=raw["proxy_config"]["scheme"],
-        proxy_server_name=raw["proxy_config"]["proxy_server_name"],
-        port=raw["proxy_config"]["port"],
-        auth=proxy_config_auth,
-    )
-
-
 class ConfigCache:
     def __init__(self, loaded_config: LoadedConfigFragment) -> None:
         super().__init__()
@@ -2368,7 +2350,7 @@ class ConfigCache:
             ),
             config_processing.GlobalProxiesWithLookup(
                 global_proxies={
-                    name: _set_global_proxy(raw)
+                    name: config_processing.BackendProxy.model_validate(raw)
                     for name, raw in self._loaded_config.http_proxies.items()
                 },
                 password_lookup=make_configured_passwords_lookup(),
@@ -2490,7 +2472,7 @@ class ConfigCache:
             host_attrs,
             config_processing.GlobalProxiesWithLookup(
                 global_proxies={
-                    name: _set_global_proxy(raw)
+                    name: config_processing.BackendProxy.model_validate(raw)
                     for name, raw in self._loaded_config.http_proxies.items()
                 },
                 password_lookup=make_configured_passwords_lookup(),
@@ -2526,7 +2508,7 @@ class ConfigCache:
 
         global_proxies_with_lookup = config_processing.GlobalProxiesWithLookup(
             global_proxies={
-                name: _set_global_proxy(raw)
+                name: config_processing.BackendProxy.model_validate(raw)
                 for name, raw in self._loaded_config.http_proxies.items()
             },
             password_lookup=make_configured_passwords_lookup(),

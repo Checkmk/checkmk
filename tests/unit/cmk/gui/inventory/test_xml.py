@@ -90,14 +90,14 @@ def test_dict_to_document_empty_value(payload: dict[str, Any], content: str) -> 
     assert value == expected
 
 
-@pytest.mark.skip(reason="CMK-26821")
 @pytest.mark.parametrize(
     "payload, content",
     [
         pytest.param({"a": "&"}, '<a type="str">&amp;</a>', id="ampersand"),
         pytest.param({"a": "<"}, '<a type="str">&lt;</a>', id="less-than"),
         pytest.param({"a": ">"}, '<a type="str">&gt;</a>', id="greater-than"),
-        pytest.param({"a": '"'}, '<a type="str">&quot;</a>', id="quote"),
+        # see https://github.com/python/cpython/issues/81555, there's no need for testing:
+        # pytest.param({"a": '"'}, '<a type="str">"</a>', id="quote"),
     ],
 )
 def test_dict_to_document_escaped_value(payload: dict[str, Any], content: str) -> None:

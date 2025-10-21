@@ -44,7 +44,7 @@ class FetchSpec:
 @dataclasses.dataclass(frozen=True, slots=True)
 class RelayConfigSpec:
     serial: str
-    tar_data: str
+    tar_data: bytes
 
 
 Spec = FetchSpec | RelayConfigSpec

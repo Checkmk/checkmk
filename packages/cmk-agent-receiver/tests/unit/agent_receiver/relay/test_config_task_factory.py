@@ -1,4 +1,3 @@
-import base64
 import datetime
 
 from cmk.agent_receiver.config import Config
@@ -42,12 +41,8 @@ def test_create_tasks_for_all_relays(
     assert isinstance(tasks_for_relay_2[0].spec, RelayConfigSpec)
     assert tasks_for_relay_2[0].spec.serial == cf.serial
 
-    cf.assert_tar_content(
-        relay_id_1, base64.b64decode(tasks_for_relay_1[0].spec.tar_data).decode("ascii")
-    )
-    cf.assert_tar_content(
-        relay_id_2, base64.b64decode(tasks_for_relay_2[0].spec.tar_data).decode("ascii")
-    )
+    cf.assert_tar_content(relay_id_1, tasks_for_relay_1[0].spec.tar_data)
+    cf.assert_tar_content(relay_id_2, tasks_for_relay_2[0].spec.tar_data)
 
 
 def test_create_task_for_single_chosen_relay_when_no_pending_task(
@@ -85,9 +80,7 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
     assert tasks_for_relay_2[0].spec.serial == cf.serial
     assert created_task == tasks_for_relay_2[0]
 
-    cf.assert_tar_content(
-        relay_id_2, base64.b64decode(tasks_for_relay_2[0].spec.tar_data).decode("ascii")
-    )
+    cf.assert_tar_content(relay_id_2, tasks_for_relay_2[0].spec.tar_data)
 
 
 def test_create_task_for_single_chosen_relay_when_pending_task(
@@ -116,7 +109,7 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
         creation_timestamp=now,
         update_timestamp=now,
         status=TaskStatus.PENDING,
-        spec=RelayConfigSpec(serial=cf.serial, tar_data="some-data"),
+        spec=RelayConfigSpec(serial=cf.serial, tar_data=b"some-data"),
     )
     tasks_repository.store_task(relay_id_2, stored_task)
 

@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import base64
 import dataclasses
 import io
 import tarfile
@@ -60,17 +59,12 @@ class ConfigTaskFactory:
             if self._pending_configuration_task_exists(rid, serial):
                 continue  # Skip creating duplicate pending tasks
             parent = config.helper_config_dir / f"{serial}/relays/{rid}"
-            relay_config_spec = self._generate_relay_config_spec(serial, parent)
+            relay_config_spec = RelayConfigSpec(serial=serial, tar_data=create_tar(parent))
             task = RelayTask(spec=relay_config_spec, creation_timestamp=now, update_timestamp=now)
             with bound_contextvars(task_id=task.id):
                 self.tasks_repository.store_task(rid, task)
                 created_tasks.append(task)
         return created_tasks
-
-    def _generate_relay_config_spec(self, serial: str, folder: Path) -> RelayConfigSpec:
-        tar_bytes = create_tar(folder)
-        tar_data = base64.b64encode(tar_bytes).decode("ascii")
-        return RelayConfigSpec(serial=serial, tar_data=tar_data)
 
     def _pending_configuration_task_exists(
         self,
@@ -86,7 +80,7 @@ class ConfigTaskFactory:
         )
 
 
-def create_tar(common_parent: Path) -> bytes:
+def create_tar(parent: Path) -> bytes:
     """Create an uncompressed tar archive in memory preserving structure from common parent.
 
     This function creates an uncompressed tar archive containing the specified folder
@@ -119,7 +113,7 @@ def create_tar(common_parent: Path) -> bytes:
 
     # Create tar archive in memory
     with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
-        tar.add(common_parent, arcname=_ARCHIVE_ROOT_NAME)
+        tar.add(parent, arcname=_ARCHIVE_ROOT_NAME)
 
     # Get the binary content of the tar archive
     return tar_buffer.getvalue()

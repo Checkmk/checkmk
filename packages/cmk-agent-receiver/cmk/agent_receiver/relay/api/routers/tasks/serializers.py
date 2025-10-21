@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from base64 import b64encode
 from typing import assert_never
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
@@ -20,7 +21,7 @@ class TaskResponseSerializer:
         match task.spec:
             case RelayConfigSpec():
                 spec = tasks_protocol.RelayConfigTask(
-                    serial=task.spec.serial, tar_data=task.spec.tar_data
+                    serial=task.spec.serial, tar_data=b64encode(task.spec.tar_data)
                 )
             case FetchSpec():
                 spec = tasks_protocol.FetchAdHocTask(

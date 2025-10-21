@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import Base64Str, BaseModel, Field
+from pydantic import Base64Bytes, BaseModel, Field
 
 
 class _TaskType(StrEnum):
@@ -40,7 +40,7 @@ class FetchAdHocTask(BaseModel):
 
 class RelayConfigTask(BaseModel, frozen=True):
     serial: str
-    tar_data: Base64Str = Field(
+    tar_data: Base64Bytes = Field(
         title="Base64 encoded tar data",
         description="Base64 encoded tar data containing the configuration files for the relay",
     )

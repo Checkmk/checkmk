@@ -63,6 +63,8 @@ database_accounts_metrics = [
             value="404",
         ),
     ),
+    AzureMetric(name="TotalRequestUnitsPreview", interval="PT1M", aggregation="total"),
+    AzureMetric(name="NormalizedRUConsumption", interval="PT1M", aggregation="maximum"),
 ]
 
 ALL_METRICS: dict[str, list[AzureMetric]] = {

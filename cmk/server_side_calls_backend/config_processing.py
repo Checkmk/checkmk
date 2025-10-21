@@ -14,17 +14,17 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
 @dataclass(frozen=True)
-class GlobalProxyAuth:
+class BackendProxyAuth:
     user: str
     password: tuple[Literal["password"], str] | tuple[Literal["store"], str]
 
 
 @dataclass(frozen=False)
-class GlobalProxy:
+class BackendProxy:
     scheme: str
     proxy_server_name: str
     port: int
-    auth: GlobalProxyAuth | None = None
+    auth: BackendProxyAuth | None = None
 
     def url(self, password_lookup: Callable[[str], str | None]) -> str:
         if self.auth is None:
@@ -47,7 +47,7 @@ class GlobalProxy:
         )
 
 
-type GlobalProxies = Mapping[str, GlobalProxy]
+type GlobalProxies = Mapping[str, BackendProxy]
 
 
 @dataclass(frozen=True)

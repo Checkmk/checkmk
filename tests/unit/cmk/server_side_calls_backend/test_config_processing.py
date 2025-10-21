@@ -6,8 +6,8 @@
 
 from cmk.server_side_calls import internal, v1
 from cmk.server_side_calls_backend.config_processing import (
+    BackendProxy,
     GlobalProxiesWithLookup,
-    GlobalProxy,
     process_configuration_to_parameters,
     ReplacementResult,
 )
@@ -99,7 +99,7 @@ def test_process_configuration_to_parameter_global_proxy_ok_v1() -> None:
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={
-                "my_global_proxy": GlobalProxy(
+                "my_global_proxy": BackendProxy(
                     scheme="http",
                     proxy_server_name="proxy.example.com",
                     port=3128,
@@ -185,7 +185,7 @@ def test_process_configuration_to_parameter_global_proxy_ok_internal() -> None:
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={
-                "my_global_proxy": GlobalProxy(
+                "my_global_proxy": BackendProxy(
                     scheme="http",
                     proxy_server_name="proxy.example.com",
                     port=3128,

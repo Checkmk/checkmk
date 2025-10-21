@@ -1482,9 +1482,9 @@ class AutochecksConfigurer:
         )
 
 
-def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.GlobalProxy:
+def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.BackendProxy:
     proxy_config_auth = (
-        config_processing.GlobalProxyAuth(
+        config_processing.BackendProxyAuth(
             user=auth["user"],
             password=auth["password"],
         )
@@ -1492,7 +1492,7 @@ def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.GlobalProxy:
         else None
     )
 
-    return config_processing.GlobalProxy(
+    return config_processing.BackendProxy(
         scheme=raw["proxy_config"]["scheme"],
         proxy_server_name=raw["proxy_config"]["proxy_server_name"],
         port=raw["proxy_config"]["port"],

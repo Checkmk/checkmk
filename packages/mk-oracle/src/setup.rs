@@ -265,7 +265,7 @@ fn make_log_file_spec(log_dir: &Path) -> FileSpec {
     FileSpec::default()
         .directory(log_dir.to_owned())
         .suppress_timestamp()
-        .basename("mk-sql")
+        .basename("mk-oracle")
 }
 
 pub const RUNTIME_SUB_DIR: &str = "mk-oracle";
@@ -571,7 +571,10 @@ mod tests {
     #[test]
     fn test_spec() {
         let spec = make_log_file_spec(&PathBuf::from("_"));
-        assert_eq!(spec.as_pathbuf(None), PathBuf::from("_").join("mk-sql.log"));
+        assert_eq!(
+            spec.as_pathbuf(None),
+            PathBuf::from("_").join("mk-oracle.log")
+        );
     }
     #[test]
     fn test_env_dir_exist() {

@@ -429,6 +429,7 @@ def code_name(distro_name: str) -> str:
         "debian-10": "buster",
         "debian-11": "bullseye",
         "debian-12": "bookworm",
+        "debian-13": "trixie",
         "ubuntu-20.04": "focal",
         "ubuntu-22.04": "jammy",
         "ubuntu-23.04": "lunar",

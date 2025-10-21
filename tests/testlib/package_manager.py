@@ -35,6 +35,7 @@ DISTRO_CODES = {
     "cma-4": "cma-4",
     "debian-11": "bullseye",
     "debian-12": "bookworm",
+    "debian-13": "trixie",
     "ubuntu-22.04": "jammy",
     "ubuntu-23.04": "lunar",
     "ubuntu-23.10": "mantic",

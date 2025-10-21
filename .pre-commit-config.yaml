@@ -142,9 +142,10 @@ repos:
             verbose: true
             require_serial: true
           - id: taplo
-            name: format pyproject.toml
-            entry: bazel run //bazel/tools/format:taplo_bin -- format pyproject.toml
-            pass_filenames: false
+            name: format pyproject.toml files
+            entry: bazel run //bazel/tools/format:taplo_bin -- format
+            pass_filenames: true
             language: system
+            files: pyproject.toml
             verbose: true
             require_serial: true

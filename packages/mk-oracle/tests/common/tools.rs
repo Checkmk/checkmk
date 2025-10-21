@@ -41,15 +41,17 @@ pub mod platform {
             .join("plugins")
             .join("packages")
             .join(RUNTIME_SUB_DIR)
+            .join("runtime")
     }
 
     fn _patch_path() {
-        let cwd = RUNTIME_PATH.get_or_init(_init_runtime_path).clone();
+        let path = RUNTIME_PATH
+            .get_or_init(_init_runtime_path)
+            .clone()
+            .into_os_string();
+        let cwd = path.to_str().unwrap();
         unsafe {
-            std::env::set_var(
-                "PATH",
-                format!("{cwd:?};") + &std::env::var("PATH").unwrap(),
-            );
+            std::env::set_var("PATH", format!("{cwd};") + &std::env::var("PATH").unwrap());
         }
         std::env::set_current_dir(cwd).unwrap();
         eprintln!("PATH={}", std::env::var("PATH").unwrap());

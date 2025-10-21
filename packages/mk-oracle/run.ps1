@@ -259,8 +259,8 @@ try {
     }
     if ($packTest) {
         # TODO(timi): move it to CI
-        Write-Host "WE DO NOT TEST INTEGRATION!" -Foreground White
-        Invoke-Cargo-With-Explicit-Package "test" "--lib" "--release" "--target" $cargo_target  "--" "--test-threads=4"
+        Write-Host "TEST INTEGRATION!" -Foreground White
+        Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
     }
     if ($packBuild -and $packTest -and $packClippy) {
         $exe_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-json).target_directory "$cargo_target" "release"

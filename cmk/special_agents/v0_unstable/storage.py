@@ -52,6 +52,13 @@ class Storage:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
 
+    def unset(self, key: str) -> None:
+        """
+        Remove key and its content from the storage.
+        """
+        path = self._get_path(key)
+        path.unlink(missing_ok=True)
+
     def read[T](self, key: str, default: T) -> str | T:
         """
         Read content from the storage.

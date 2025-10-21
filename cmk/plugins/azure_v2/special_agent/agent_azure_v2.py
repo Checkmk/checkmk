@@ -2257,7 +2257,9 @@ async def process_resources(
     monitored_groups: Sequence[str],
 ) -> None:
     monitored_resources_by_id = {
-        r.info["id"].lower(): r for r in selected_resources if r.info["type"] in monitored_services
+        r.info["id"].lower(): r
+        for r in selected_resources
+        if r.info["type"].lower() in monitored_services
     }
 
     # metrics must be gathered before the actual section writing
@@ -2431,7 +2433,9 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
 async def collect_info(
     args: Args, selector: Selector, subscriptions: set[AzureSubscription]
 ) -> None:
-    monitored_services = {service for service in args.services}
+    # lower, because I've seen things like
+    # Microsoft.DocumentDB/databaseAccounts AND Microsoft.DocumentDb/databaseAccounts
+    monitored_services = {service.lower() for service in args.services}
     await asyncio.gather(
         main_graph_client(args, monitored_services),
         *{

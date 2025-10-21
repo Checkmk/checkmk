@@ -12,10 +12,10 @@ import usei18n from '@/lib/i18n'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import ConnectionCheck from './add-relay-configuration-steps/ConnectionCheck.vue'
 import DeployRelay from './add-relay-configuration-steps/DeployRelay.vue'
 import NameRelay from './add-relay-configuration-steps/NameRelay.vue'
 import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
+import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistration.vue'
 
 const { _t } = usei18n()
 
@@ -84,11 +84,11 @@ const relayName = ref<string>('')
 
       <CmkWizardStep :index="4" :is-completed="() => currentStep > 4">
         <template #header>
-          <CmkHeading type="h2"> {{ _t('Connection check') }}</CmkHeading>
+          <CmkHeading type="h2"> {{ _t('Verify registration') }}</CmkHeading>
         </template>
 
         <template #content>
-          <ConnectionCheck></ConnectionCheck>
+          <VerifyRegistration :relay-name="relayName"></VerifyRegistration>
         </template>
         <template #actions>
           <CmkWizardButton type="finish" />

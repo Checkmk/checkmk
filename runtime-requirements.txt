@@ -707,9 +707,9 @@ exchangelib==5.6.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-fastapi==0.119.0 \
-    --hash=sha256:451082403a2c1f0b99c6bd57c09110ed5463856804c8078d38e5a1f1035dbbb7 \
-    --hash=sha256:90a2e49ed19515320abb864df570dd766be0662c5d577688f1600170f7f73cf2
+fastapi==0.119.1 \
+    --hash=sha256:0b8c2a2cce853216e150e9bd4faaed88227f8eb37de21cb200771f491586a27f \
+    --hash=sha256:a5e3426edce3fe221af4e1992c6d79011b247e3b03cc57999d697fe76cbf8ae0
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -935,21 +935,21 @@ google-cloud-monitoring==2.28.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-google-cloud-org-policy==1.14.0 \
-    --hash=sha256:0bbf1754927b4b4d09769d9e62a41cf7412c571e3085176d0c614c7024980ec5 \
-    --hash=sha256:4c877d420a2c512b454e62eacd2557cbbc74f734c079946e30e61f62791b319c
+google-cloud-org-policy==1.15.0 \
+    --hash=sha256:271d16a10e75347eace60d02cde322b2b1b613bcc99917109e0ebf2a4102253a \
+    --hash=sha256:5da410288236b334b8d05010501ea6180c5dc9e30888ff09488f2f107632f35b
     # via
     #   -c requirements.txt
     #   google-cloud-asset
-google-cloud-os-config==1.21.0 \
-    --hash=sha256:34a75bfc4f423b5669f7c90772fa98348af42f6ec2fa28d0d6e953de9e7ca929 \
-    --hash=sha256:e4a0c644adc474e31f19f4e0985a576bd94a61fbd9fdd6e3dfb840edaa60c36f
+google-cloud-os-config==1.22.0 \
+    --hash=sha256:92afa402aa3b94d765751907fded1ef5908a6a5322f1fc88dee9e4c7f1cd7e54 \
+    --hash=sha256:d79a310f6fa1ce7470aaa084c70e38dc05d98531f468f821b3a526e4d33a70e4
     # via
     #   -c requirements.txt
     #   google-cloud-asset
-googleapis-common-protos[grpc]==1.70.0 \
-    --hash=sha256:0e1b44e0ea153e6594f9f394fef15193a68aaaea2d843f83e2742717ca753257 \
-    --hash=sha256:b8bfcca8c25a2bb253e0e0b0adaf8c00773e5e6af6fd92397576680b807e0fd8
+googleapis-common-protos[grpc]==1.71.0 \
+    --hash=sha256:1aec01e574e29da63c80ba9f7bbf1ccfaacf1da877f23609fe236ca7c72a2e2e \
+    --hash=sha256:59034a1d849dc4d18971997a72ac56246570afdd17f9369a0ff68218d50ab78c
     # via
     #   -c requirements.txt
     #   google-api-core
@@ -1030,6 +1030,8 @@ grpcio==1.75.1 \
     #   google-api-core
     #   google-cloud-asset
     #   google-cloud-monitoring
+    #   google-cloud-org-policy
+    #   google-cloud-os-config
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status

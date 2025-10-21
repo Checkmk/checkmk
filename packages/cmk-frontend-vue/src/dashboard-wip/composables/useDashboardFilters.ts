@@ -28,10 +28,16 @@ export function useDashboardFilters(
     return dashboardFilterContextRef.value?.filters ?? {}
   })
 
-  const baseFilters = computed<ConfiguredFilters>(() => ({
-    ...configuredDashboardFilters.value,
-    ...appliedRuntimeFilters.value
-  }))
+  const baseFilters = computed<ConfiguredFilters>(() => {
+    if (runtimeFiltersMode.value === 'override') {
+      return appliedRuntimeFilters.value
+    }
+
+    return {
+      ...configuredDashboardFilters.value,
+      ...appliedRuntimeFilters.value
+    }
+  })
 
   const toContextFilters = (filters: ConfiguredFilters, source: FilterOrigin): ContextFilters => {
     const entries: [string, ContextFilter][] = Object.entries(filters).map(

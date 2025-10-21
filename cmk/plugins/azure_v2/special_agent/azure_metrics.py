@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -44,7 +43,26 @@ network_bytes_egress = AzureMetric(
 )
 
 database_accounts_metrics = [
-    AzureMetric(name="ServiceAvailability", interval="PT1H", aggregation="minimum")
+    AzureMetric(name="ServiceAvailability", interval="PT1H", aggregation="minimum"),
+    AzureMetric(name="TotalRequests", interval="PT1M", aggregation="count"),
+    AzureMetric(
+        name="TotalRequests",
+        interval="PT1M",
+        aggregation="count",
+        dimension_filter=DimensionFilter(
+            name="StatusCode",
+            value="429",
+        ),
+    ),
+    AzureMetric(
+        name="TotalRequests",
+        interval="PT1M",
+        aggregation="count",
+        dimension_filter=DimensionFilter(
+            name="StatusCode",
+            value="404",
+        ),
+    ),
 ]
 
 ALL_METRICS: dict[str, list[AzureMetric]] = {

@@ -7,6 +7,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+from cmk.rulesets.internal.form_specs import InternalProxy, migrate_to_internal_proxy
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -23,9 +24,7 @@ from cmk.rulesets.v1.form_specs import (
     LevelDirection,
     List,
     MatchingScope,
-    migrate_to_proxy,
     Password,
-    Proxy,
     RegularExpression,
     SIMagnitude,
     SimpleLevels,
@@ -403,7 +402,7 @@ def _valuespec_connection() -> Dictionary:
                     },
                 ),
             ),
-            "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
+            "proxy": DictElement(parameter_form=InternalProxy(migrate=migrate_to_internal_proxy)),
             "address_family": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("IP address family"),

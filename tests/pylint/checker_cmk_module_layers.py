@@ -329,6 +329,7 @@ PACKAGE_PLUGIN_APIS = (
     "cmk.inventory_ui.v1_unstable",
     "cmk.password_store.v1_unstable",
     "cmk.rulesets.v1",
+    "cmk.rulesets.internal",
     "cmk.server_side_calls.internal",
     "cmk.server_side_calls.v1",
     "cmk.server_side_programs.v1_unstable",
@@ -829,6 +830,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.timeperiod",
         "cmk.utils.translations",
         "cmk.utils.urls",
+        "cmk.utils.http_proxy_config",
         "cmk.utils.visuals",
         "cmk.utils.werks",
         exclude=(

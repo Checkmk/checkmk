@@ -41,6 +41,7 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_cascading_single_choice,
     recompose_dictionary,
     recompose_host_state,
+    recompose_internal_proxy,
     recompose_levels,
     recompose_list,
     recompose_metric,
@@ -57,6 +58,7 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_time_period,
     recompose_user_selection,
 )
+from cmk.rulesets.internal.form_specs import InternalProxy
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -191,6 +193,7 @@ def register_form_specs() -> None:
     register_recomposer_function(CascadingSingleChoice, recompose_cascading_single_choice)
     register_recomposer_function(Proxy, recompose_proxy)
     register_recomposer_function(TimePeriod, recompose_time_period)
+    register_recomposer_function(InternalProxy, recompose_internal_proxy)
 
 
 def register_validators() -> None:

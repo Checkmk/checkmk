@@ -75,7 +75,7 @@ const _uniqueIdValidation = async (): Promise<[boolean, TranslatedString[]]> => 
     ]
   }
 
-  if ((await isIdInUse(uniqueId.value.trim()), uniqueId.value)) {
+  if (await isIdInUse(uniqueId.value.trim(), originalId)) {
     return [false, [_t('This Unique ID is already in use. Please choose another one.')]]
   }
 

@@ -22,13 +22,10 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import (
     _compute_graph_recipes,
-    _matching_graph_recipes,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._translated_metrics import (
-    Original,
     translate_metrics,
-    TranslatedMetric,
 )
 from cmk.gui.graphing._unit import (
     ConvertibleUnitSpecification,
@@ -565,174 +562,248 @@ _HEAP_MEM_GRAPH = {
     ),
 }
 
-_TRANSLATED_METRICS = {
-    "metric1": TranslatedMetric(
-        originals=[Original("metric1", 1.0)],
-        value=1.0,
-        scalar={},
-        auto_graph=True,
-        title="",
-        unit_spec=ConvertibleUnitSpecification(
-            notation=DecimalNotation(symbol=""),
-            precision=AutoPrecision(digits=2),
-        ),
-        color="#0080c0",
-    ),
-    "metric2": TranslatedMetric(
-        originals=[Original("metric2", 1.0)],
-        value=1.0,
-        scalar={},
-        auto_graph=True,
-        title="",
-        unit_spec=ConvertibleUnitSpecification(
-            notation=DecimalNotation(symbol=""),
-            precision=AutoPrecision(digits=2),
-        ),
-        color="#0080c0",
-    ),
-}
 
-_REGISTERED_GRAPHS = {
-    "graph1": graphs_api.Graph(
-        name="graph1",
-        title=Title("Graph 1"),
-        simple_lines=["metric1"],
-    ),
-    "graph2": graphs_api.Graph(
-        name="graph2",
-        title=Title("Graph 2"),
-        simple_lines=["metric2"],
-    ),
-}
-
-_GRAPH_RECIPES = [
-    GraphRecipe(
-        title="Graph 1",
-        unit_spec=ConvertibleUnitSpecification(
-            notation=DecimalNotation(symbol=""),
-            precision=AutoPrecision(digits=2),
-        ),
-        explicit_vertical_range=None,
-        horizontal_rules=[],
-        omit_zero_metrics=False,
-        consolidation_function="max",
-        metrics=[
-            GraphMetric(
-                title="Metric1",
-                line_type="line",
-                operation=GraphMetricRRDSource(
-                    site_id=SiteId("site_id"),
-                    host_name=HostName("host_name"),
-                    service_name=ServiceName("service_name"),
-                    metric_name="metric1",
-                    consolidation_func_name="max",
-                    scale=1.0,
-                ),
-                unit=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol=""),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#0080c0",
-            )
-        ],
-        specification=TemplateGraphSpecification(
-            site=SiteId("site_id"),
-            host_name=HostName("host_name"),
-            service_description=ServiceName("service_name"),
-        ),
-    ),
-    GraphRecipe(
-        title="Graph 2",
-        unit_spec=ConvertibleUnitSpecification(
-            notation=DecimalNotation(symbol=""),
-            precision=AutoPrecision(digits=2),
-        ),
-        explicit_vertical_range=None,
-        horizontal_rules=[],
-        omit_zero_metrics=False,
-        consolidation_function="max",
-        metrics=[
-            GraphMetric(
-                title="Metric2",
-                line_type="line",
-                operation=GraphMetricRRDSource(
-                    site_id=SiteId("site_id"),
-                    host_name=HostName("host_name"),
-                    service_name=ServiceName("service_name"),
-                    metric_name="metric2",
-                    consolidation_func_name="max",
-                    scale=1.0,
-                ),
-                unit=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol=""),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#0080c0",
-            )
-        ],
-        specification=TemplateGraphSpecification(
-            site=SiteId("site_id"),
-            host_name=HostName("host_name"),
-            service_description=ServiceName("service_name"),
-        ),
-    ),
-]
+class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
+    def _get_graph_data_from_livestatus(self) -> Row:
+        return {
+            "site": "site_id",
+            "service_perf_data": "metric1=163651.992188;;;; metric2=313848.039062;;;",
+            "service_metrics": ["metric1", "metric2"],
+            "service_check_command": "check_mk-foo",
+            "host_name": "host_name",
+            "service_description": "service_name",
+        }
 
 
 @pytest.mark.parametrize(
-    ("translated_metrics", "registered_graphs", "graph_id", "graph_index", "expected_result"),
+    ("graph_id", "graph_index", "expected"),
     [
         pytest.param(
-            _TRANSLATED_METRICS,
-            _REGISTERED_GRAPHS,
             None,
             None,
-            list(enumerate(_GRAPH_RECIPES)),
+            [
+                GraphRecipe(
+                    title="Graph 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
+                    horizontal_rules=[],
+                    omit_zero_metrics=False,
+                    consolidation_function="max",
+                    metrics=[
+                        GraphMetric(
+                            title="Metric1",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="metric1",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#0080c0",
+                        )
+                    ],
+                    specification=_FakeTemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                        graph_index=0,
+                        graph_id="graph1",
+                    ),
+                ),
+                GraphRecipe(
+                    title="Graph 2",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
+                    horizontal_rules=[],
+                    omit_zero_metrics=False,
+                    consolidation_function="max",
+                    metrics=[
+                        GraphMetric(
+                            title="Metric2",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="metric2",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#0080c0",
+                        )
+                    ],
+                    specification=_FakeTemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                        graph_index=1,
+                        graph_id="graph2",
+                    ),
+                ),
+            ],
             id="no index and no id",
         ),
         pytest.param(
-            _TRANSLATED_METRICS,
-            _REGISTERED_GRAPHS,
             None,
             0,
-            [(0, _GRAPH_RECIPES[0])],
+            [
+                GraphRecipe(
+                    title="Graph 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
+                    horizontal_rules=[],
+                    omit_zero_metrics=False,
+                    consolidation_function="max",
+                    metrics=[
+                        GraphMetric(
+                            title="Metric1",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="metric1",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#0080c0",
+                        )
+                    ],
+                    specification=_FakeTemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                        graph_index=0,
+                        graph_id="graph1",
+                    ),
+                ),
+            ],
             id="matching index and no id",
         ),
         pytest.param(
-            _TRANSLATED_METRICS,
-            _REGISTERED_GRAPHS,
             None,
             10,
             [],
             id="non-matching index and no id",
         ),
         pytest.param(
-            _TRANSLATED_METRICS,
-            _REGISTERED_GRAPHS,
             "graph2",
             None,
-            [(1, _GRAPH_RECIPES[1])],
+            [
+                GraphRecipe(
+                    title="Graph 2",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
+                    horizontal_rules=[],
+                    omit_zero_metrics=False,
+                    consolidation_function="max",
+                    metrics=[
+                        GraphMetric(
+                            title="Metric2",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="metric2",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#0080c0",
+                        )
+                    ],
+                    specification=_FakeTemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                        graph_index=1,
+                        graph_id="graph2",
+                    ),
+                ),
+            ],
             id="no index and matching id",
         ),
         pytest.param(
-            _TRANSLATED_METRICS,
-            _REGISTERED_GRAPHS,
             "wrong",
             None,
             [],
             id="no index and non-matching id",
         ),
         pytest.param(
-            _TRANSLATED_METRICS,
-            _REGISTERED_GRAPHS,
             "graph1",
             0,
-            [(0, _GRAPH_RECIPES[0])],
+            [
+                GraphRecipe(
+                    title="Graph 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
+                    horizontal_rules=[],
+                    omit_zero_metrics=False,
+                    consolidation_function="max",
+                    metrics=[
+                        GraphMetric(
+                            title="Metric1",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="metric1",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#0080c0",
+                        )
+                    ],
+                    specification=_FakeTemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                        graph_id="graph1",
+                        graph_index=0,
+                    ),
+                ),
+            ],
             id="matching index and matching id",
         ),
         pytest.param(
-            _TRANSLATED_METRICS,
-            _REGISTERED_GRAPHS,
             "2",
             0,
             [],
@@ -740,32 +811,57 @@ _GRAPH_RECIPES = [
         ),
     ],
 )
-def test__matching_graph_recipes(
-    translated_metrics: Mapping[str, TranslatedMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+def test_template_recipes_matching(
     graph_id: str | None,
     graph_index: int | None,
-    expected_result: Sequence[tuple[int, GraphRecipe]],
+    expected: Sequence[GraphRecipe],
 ) -> None:
-    assert [
-        (graph_index, graph_recipe)
-        for graph_index, _graph_id, graph_recipe in _matching_graph_recipes(
-            {},
-            registered_graphs,
-            SiteId("site_id"),
-            HostName("host_name"),
-            ServiceName("service_name"),
-            translated_metrics,
-            TemplateGraphSpecification(
-                site=SiteId("site_id"),
-                host_name=HostName("host_name"),
-                service_description=ServiceName("service_name"),
-            ),
+    assert (
+        _FakeTemplateGraphSpecification(
+            site=SiteId("site_id"),
+            host_name=HostName("host_name"),
+            service_description=ServiceName("service_name"),
             graph_id=graph_id,
             graph_index=graph_index,
+        ).recipes(
+            {
+                "metric1": RegisteredMetric(
+                    name="metric1",
+                    title_localizer=lambda _localizer: "Metric1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#0080c0",
+                ),
+                "metric2": RegisteredMetric(
+                    name="metric2",
+                    title_localizer=lambda _localizer: "Metric2",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#0080c0",
+                ),
+            },
+            {
+                "graph1": graphs_api.Graph(
+                    name="graph1",
+                    title=Title("Graph 1"),
+                    simple_lines=["metric1"],
+                ),
+                "graph2": graphs_api.Graph(
+                    name="graph2",
+                    title=Title("Graph 2"),
+                    simple_lines=["metric2"],
+                ),
+            },
+            UserPermissions({}, {}, {}, []),
+            debug=False,
             temperature_unit=TemperatureUnit.CELSIUS,
         )
-    ] == expected_result
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -1985,7 +2081,7 @@ class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
             "service_metrics": ["fs_used", "fs_free", "fs_size", "growth"],
             "service_check_command": "check_mk-df",
             "host_name": "host_name",
-            "service_description": "Service name",
+            "service_description": "service_name",
         }
 
 
@@ -1993,7 +2089,7 @@ def test_template_recipes_fs() -> None:
     assert _FakeTemplateGraphSpecificationFS(
         site=SiteId("site_id"),
         host_name=HostName("host_name"),
-        service_description="Service name",
+        service_description="service_name",
     ).recipes(
         {
             "fs_growth": RegisteredMetric(
@@ -2077,7 +2173,7 @@ def test_template_recipes_fs() -> None:
                     operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
-                        service_name="Service name",
+                        service_name=ServiceName("service_name"),
                         metric_name="fs_used",
                         consolidation_func_name="max",
                         scale=1048576.0,
@@ -2094,7 +2190,7 @@ def test_template_recipes_fs() -> None:
                     operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
-                        service_name="Service name",
+                        service_name=ServiceName("service_name"),
                         metric_name="fs_free",
                         consolidation_func_name="max",
                         scale=1048576.0,
@@ -2111,7 +2207,7 @@ def test_template_recipes_fs() -> None:
                     operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
-                        service_name="Service name",
+                        service_name=ServiceName("service_name"),
                         metric_name="fs_size",
                         consolidation_func_name="max",
                         scale=1048576.0,
@@ -2129,7 +2225,7 @@ def test_template_recipes_fs() -> None:
             specification=_FakeTemplateGraphSpecificationFS(
                 site=SiteId("site_id"),
                 host_name=HostName("host_name"),
-                service_description="Service name",
+                service_description=ServiceName("service_name"),
                 graph_index=0,
                 graph_id="fs_used",
                 destination=None,
@@ -2152,7 +2248,7 @@ def test_template_recipes_fs() -> None:
                     operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
-                        service_name="Service name",
+                        service_name=ServiceName("service_name"),
                         metric_name="growth",
                         consolidation_func_name="max",
                         scale=12.136296296296296,
@@ -2170,7 +2266,7 @@ def test_template_recipes_fs() -> None:
             specification=_FakeTemplateGraphSpecificationFS(
                 site=SiteId("site_id"),
                 host_name=HostName("host_name"),
-                service_description="Service name",
+                service_description=ServiceName("service_name"),
                 graph_index=1,
                 graph_id="METRIC_fs_growth",
                 destination=None,

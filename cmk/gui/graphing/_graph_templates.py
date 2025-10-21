@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, Self
 
@@ -307,38 +307,6 @@ def _compute_graph_recipes(
             )
 
 
-def _matching_graph_recipes(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    specification: TemplateGraphSpecification,
-    *,
-    graph_index: int | None,
-    graph_id: str | None,
-    temperature_unit: TemperatureUnit,
-) -> Iterable[tuple[int, str, GraphRecipe]]:
-    yield from (
-        (graph_recipe_index, graph_recipe_id, graph_recipe)
-        for graph_recipe_index, (graph_recipe_id, graph_recipe) in enumerate(
-            _compute_graph_recipes(
-                registered_metrics,
-                registered_graphs,
-                site_id,
-                host_name,
-                service_name,
-                translated_metrics,
-                specification,
-                temperature_unit=temperature_unit,
-            )
-        )
-        if (graph_index is None or graph_index == graph_recipe_index)
-        and (graph_id is None or graph_id == graph_recipe_id)
-    )
-
-
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
     site: SiteId | None
     host_name: AnnotatedHostName
@@ -462,20 +430,23 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 )
             ]
         else:
-            recipes = list(
-                _matching_graph_recipes(
-                    registered_metrics,
-                    registered_graphs,
-                    site_id,
-                    host_name,
-                    service_name,
-                    translated_metrics,
-                    self,  # does not matter here, it will be overwritten in _post_process_recipe
-                    graph_index=self.graph_index,
-                    graph_id=self.graph_id,
-                    temperature_unit=temperature_unit,
+            recipes = [
+                (graph_recipe_index, graph_recipe_id, graph_recipe)
+                for graph_recipe_index, (graph_recipe_id, graph_recipe) in enumerate(
+                    _compute_graph_recipes(
+                        registered_metrics,
+                        registered_graphs,
+                        site_id,
+                        host_name,
+                        service_name,
+                        translated_metrics,
+                        self,  # does not matter here, it will be overwritten in _post_process_recipe
+                        temperature_unit=temperature_unit,
+                    )
                 )
-            )
+                if (self.graph_index is None or self.graph_index == graph_recipe_index)
+                and (self.graph_id is None or self.graph_id == graph_recipe_id)
+            ]
         return [
             post_processed_recipe
             for graph_index, graph_id, graph_recipe in recipes

@@ -60,6 +60,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.search import MatchItemGeneratorRegistry
 from cmk.gui.search import registration as search_registration
 from cmk.gui.sidebar import SnapinRegistry
+from cmk.gui.token_auth import TokenAuthenticatedPageRegistry
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
@@ -159,6 +160,7 @@ def register(
     help_learning_entries: Callable[[], MainMenuTopicEntries],
     help_developer_entries: Callable[[], MainMenuTopicEntries],
     help_about_checkmk_entries: Callable[[], MainMenuTopicEntries],
+    token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
     *,
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
@@ -210,6 +212,7 @@ def register(
     dashboard_registration.register(
         permission_section_registry,
         page_registry,
+        token_authenticated_page_registry,
         visual_type_registry,
         dashlet_registry,
         contact_group_usage_finder_registry,

@@ -8,6 +8,7 @@ from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
+from cmk.gui.token_auth import TokenAuthenticatedPageRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
@@ -47,6 +48,7 @@ from .visual_type import VisualTypeDashboards
 def register(
     permission_section_registry: PermissionSectionRegistry,
     page_registry: PageRegistry,
+    token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
     visual_type_registry: VisualTypeRegistry,
     dashlet_registry_: DashletRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,

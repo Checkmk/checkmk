@@ -49,6 +49,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.search import match_item_generator_registry
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.sites import site_choices
+from cmk.gui.token_auth import token_authenticated_page_registry
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.utils import agent_commands, plugins
 from cmk.gui.utils.agent_commands import agent_commands_registry
@@ -185,6 +186,7 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         default_learning_entries,
         default_developer_entries,
         default_about_checkmk_entries,
+        token_authenticated_page_registry,
         ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
 

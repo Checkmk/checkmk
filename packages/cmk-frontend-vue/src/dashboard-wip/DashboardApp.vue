@@ -400,7 +400,7 @@ function deepClone<T>(obj: T): T {
         :configured-runtime-filters-mode="
           dashboardFilters.runtimeFiltersMode.value || RuntimeFilterMode.OVERRIDE
         "
-        :can-edit="true"
+        :can-edit="can_edit_dashboards"
         starting-tab="dashboard-filter"
         @save-dashboard-filters="dashboardFilters.handleSaveDashboardFilters"
         @apply-runtime-filters="handleApplyRuntimeFilters"

@@ -5,7 +5,7 @@
 import re
 from typing import Annotated
 
-from pydantic import Base64Str, BaseModel, StringConstraints
+from pydantic import Base64Bytes, BaseModel, StringConstraints
 
 REGEX_HOST_NAME = re.compile(r"^\w[-0-9a-zA-Z_.]*$", re.ASCII)
 Host = Annotated[str, StringConstraints(pattern=REGEX_HOST_NAME)]
@@ -13,5 +13,5 @@ Host = Annotated[str, StringConstraints(pattern=REGEX_HOST_NAME)]
 
 class MonitoringData(BaseModel):
     host: Host
-    payload: Base64Str
+    payload: Base64Bytes
     version: int = 1

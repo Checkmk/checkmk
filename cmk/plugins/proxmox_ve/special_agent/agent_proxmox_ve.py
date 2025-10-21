@@ -31,6 +31,7 @@ from zoneinfo import ZoneInfo
 from cmk.plugins.proxmox_ve.lib.ha_manager_status import SectionHaManagerCurrent
 from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
 from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
+from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo, SubscriptionInfo
 from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, StorageLink
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
@@ -251,27 +252,16 @@ def agent_proxmox_ve_main(args: Args) -> int:
         with ConditionalPiggybackSection(piggyback_host):
             with SectionWriter("proxmox_ve_node_info") as writer:
                 writer.append_json(
-                    {
-                        "status": node["status"],
-                        "lxc": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
-                        "qemu": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
-                        "proxmox_ve_version": node["version"],
-                        "time_info": node["time"],
-                        "subscription": {
-                            key: value
-                            for key, value in node["subscription"].items()
-                            if key
-                            in {
-                                "status",
-                                "checktime",
-                                "key",
-                                "level",
-                                "nextduedate",
-                                "productname",
-                                "regdate",
-                            }
-                        },
-                    }
+                    SectionNodeInfo(
+                        status=node["status"],
+                        lxc=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
+                        qemu=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
+                        version=node["version"].get("version", "n/a"),
+                        subscription=SubscriptionInfo(
+                            status=node["subscription"]["status"],
+                            next_due_date=node["subscription"].get("nextduedate"),
+                        ),
+                    ).model_dump()
                 )
             with SectionWriter("proxmox_ve_node_allocation") as writer:
                 running_vms = [

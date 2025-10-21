@@ -10,6 +10,9 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    Integer,
+    LevelDirection,
+    SimpleLevels,
     String,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
@@ -19,7 +22,7 @@ def _parameter_rulespec_proxmox_ve_node_info():
     return Dictionary(
         elements={
             "required_node_status": DictElement(
-                required=False,
+                required=True,
                 parameter_form=String(
                     title=Title("Node Status (off: ignore node status)"),
                     label=Label("Warn if node status value is not"),
@@ -28,12 +31,21 @@ def _parameter_rulespec_proxmox_ve_node_info():
                 ),
             ),
             "required_subscription_status": DictElement(
-                required=False,
+                required=True,
                 parameter_form=String(
                     title=Title("Subscription Status (off: ignore subscription status)"),
                     label=Label("Warn if subscription status value is not"),
                     prefill=DefaultValue("Active"),
                     migrate=lambda v: "" if v is None else str(v),
+                ),
+            ),
+            "subscription_expiration_days_levels": DictElement(
+                required=True,
+                parameter_form=SimpleLevels(
+                    title=Title("Days until Subscription Expiration"),
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=DefaultValue((30, 7)),
                 ),
             ),
         }

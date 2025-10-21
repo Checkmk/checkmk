@@ -4,79 +4,82 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-
-import json
-from collections.abc import Mapping
-from typing import Any
+from datetime import datetime
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    FixedLevelsT,
+    NoLevelsT,
     Result,
     Service,
     State,
     StringTable,
 )
-
-Section = Mapping[str, Any]
-
-
-def parse_proxmox_ve_node_info(string_table: StringTable) -> Section:
-    return json.loads(string_table[0][0])
+from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo
 
 
-def discover_single(section: Section) -> DiscoveryResult:
+class Params(TypedDict):
+    required_node_status: str
+    required_subscription_status: str
+    subscription_expiration_days_levels: NoLevelsT | FixedLevelsT[int]
+
+
+def parse_proxmox_ve_node_info(string_table: StringTable) -> SectionNodeInfo:
+    return SectionNodeInfo.model_validate_json(string_table[0][0])
+
+
+def discover_single(section: SectionNodeInfo) -> DiscoveryResult:
     yield Service()
 
 
-def check_proxmox_ve_node_info(params: Mapping[str, Any], section: Section) -> CheckResult:
-    """
-    >>> for result in check_proxmox_ve_node_info(
-    ...     {},
-    ...     parse_proxmox_ve_node_info([[
-    ...         '{'
-    ...         '"lxc": ["103", "101", "108", "105", "104"],'
-    ...         '"proxmox_ve_version": {"release": "6.2", "repoid": "48bd51b6", "version": "6.2-15"},'
-    ...         '"qemu": ["102", "9000", "106", "109"],'
-    ...         '"status": "online",'
-    ...         '"subscription": {'
-    ...         '    "checktime": "1607143921",'
-    ...         '    "key": "pve2c-be9cadf297",'
-    ...         '    "level": "c",'
-    ...         '    "nextduedate": "2021-07-03",'
-    ...         '    "productname": "Proxmox VE Community Subscription 2 CPUs/year",'
-    ...         '    "regdate": "2020-07-03 00:00:00",'
-    ...         '    "status": "Active"}}'
-    ...     ]])):
-    ...   print(result)
-    Result(state=<State.OK: 0>, summary='Status: online')
-    Result(state=<State.OK: 0>, summary='Subscription: active')
-    Result(state=<State.OK: 0>, summary='Version: 6.2-15')
-    Result(state=<State.OK: 0>, summary='Hosted VMs: 5x LXC, 4x Qemu')
-    """
-    node_status = section.get("status", "n/a").lower()
-    subs_status = section.get("subscription", {}).get("status", "n/a").lower()
-    proxmox_ve_version = section.get("proxmox_ve_version", {}).get("version", "n/a")
-    req_node_status = (params.get("required_node_status") or "").lower()
-    req_subs_status = (params.get("required_subscription_status") or "").lower()
-    yield Result(
-        state=State.OK if not req_node_status or node_status == req_node_status else State.WARN,
-        summary=(f"Status: {node_status}{req_node_status and f' (required: {req_node_status})'}"),
+def _check_days_until_expiration(
+    expiration_days_levels: NoLevelsT | FixedLevelsT[int],
+    expiration_date_str: str,
+    now: datetime,
+) -> CheckResult:
+    expiration_date = datetime.strptime(expiration_date_str, "%Y-%m-%d")
+    delta = (expiration_date - now).days
+    yield from check_levels(
+        value=delta,
+        label="Subscription expiration in",
+        render_func=lambda days: f"{int(days)} day{'s' if days != 1 else ''}",
+        levels_lower=expiration_days_levels,
+        metric_name="days_until_subscription_expiration",
+        boundaries=expiration_days_levels[1] if expiration_days_levels[1] else None,
     )
+
+
+def check_proxmox_ve_node_info(params: Params, section: SectionNodeInfo) -> CheckResult:
+    req_node_status = params["required_node_status"].lower()
     yield Result(
-        state=State.OK if not req_subs_status or subs_status == req_subs_status else State.WARN,
-        summary=(
-            f"Subscription: {subs_status}{req_subs_status and f' (required: {req_subs_status})'}"
-        ),
+        state=State.OK if not req_node_status or req_node_status == section.status else State.WARN,
+        summary=f"Status: {section.status}{f' (required: {req_node_status})' if req_node_status else ''}",
     )
-    yield Result(state=State.OK, summary=f"Version: {proxmox_ve_version}")
+
+    req_subs_status = params["required_subscription_status"].lower()
+    yield Result(
+        state=State.OK
+        if not req_subs_status or req_subs_status == section.subscription.status
+        else State.WARN,
+        summary=f"Subscription: {section.subscription.status}{f' (required: {req_subs_status})' if req_subs_status else ''}",
+    )
+
+    if section.subscription.next_due_date:
+        yield from _check_days_until_expiration(
+            expiration_days_levels=params["subscription_expiration_days_levels"],
+            expiration_date_str=section.subscription.next_due_date,
+            now=datetime.now(),
+        )
+
+    yield Result(state=State.OK, summary=f"Version: {section.version}")
     yield Result(
         state=State.OK,
-        summary=(
-            f"Hosted VMs: {len(section.get('lxc', []))}x LXC, {len(section.get('qemu', []))}x Qemu"
-        ),
+        summary=f"Hosted VMs: {len(section.lxc)}x LXC, {len(section.qemu)}x Qemu",
     )
 
 
@@ -94,5 +97,6 @@ check_plugin_proxmox_ve_node_info = CheckPlugin(
     check_default_parameters={
         "required_node_status": "online",
         "required_subscription_status": "Active",
+        "subscription_expiration_days_levels": ("fixed", (30, 7)),
     },
 )

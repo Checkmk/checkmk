@@ -121,5 +121,21 @@ def wait_for_otel_collector_conf(
 
 @contextmanager
 def otel_collector_enabled(site: Site) -> Generator[None]:
-    with site.omd_config("OPENTELEMETRY_COLLECTOR", "on"):
+    # Don't use `site.omd_config` directly here.
+    # `site.omd_config` uses `site.omd_stopped`, which complains if the site is partially running.
+    # In the context of the OTel collector, this can happen if the last collector rule is removed.
+    # Activating changes will then stop the collector, resulting in a partially running site.
+    backed_up_setting = site.get_config("OPENTELEMETRY_COLLECTOR")
+    site.set_config(
+        "OPENTELEMETRY_COLLECTOR",
+        "on",
+        with_restart=True,
+    )
+    try:
         yield
+    finally:
+        site.set_config(
+            "OPENTELEMETRY_COLLECTOR",
+            backed_up_setting,
+            with_restart=True,
+        )

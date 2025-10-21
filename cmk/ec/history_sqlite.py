@@ -19,6 +19,7 @@ from shutil import disk_usage
 from typing import Final, Literal
 
 from cmk.utils.log import VERBOSE
+from cmk.utils.render import fmt_bytes
 
 from .config import Config
 from .event import Event
@@ -328,8 +329,8 @@ class SQLiteHistory(History):
             freelist_size = freelist_count * self._page_size
         max_freelist_size = self._config["sqlite_freelist_size"]
         freelist_msg = (
-            f"freelist size of the history DB at {self._settings.database} is {freelist_size} bytes, "
-            f"configured limit is {max_freelist_size} bytes"
+            f"freelist size of the history DB at {self._settings.database} is {fmt_bytes(freelist_size)}, "
+            f"configured limit is {fmt_bytes(max_freelist_size)}"
         )
         if freelist_size <= max_freelist_size:
             self._logger.log(VERBOSE, f"{freelist_msg}, no VACUUM needed")
@@ -340,15 +341,15 @@ class SQLiteHistory(History):
             db_size = self._settings.database.stat().st_size
             disk_free = disk_usage(self._sqlite_temp_file_dir).free
             disk_free_msg = (
-                f"{self._sqlite_temp_file_dir} has {disk_free} free bytes, "
-                f"estimated size for VACUUM is {db_size} bytes"
+                f"{self._sqlite_temp_file_dir} has {fmt_bytes(disk_free)} free, "
+                f"estimated size for VACUUM is {fmt_bytes(db_size)}"
             )
             if db_size * 1.1 > disk_free:  # Overestimate by 10%, just to be sure
                 self._logger.warning(f"{disk_free_msg}, not running it due to insufficient space")
                 return
             self._logger.log(VERBOSE, f"{disk_free_msg}, which is sufficient")
 
-        self._logger.log(VERBOSE, f"{freelist_msg}, running VACUUM")
+        self._logger.log(VERBOSE, "running VACUUM")
         self.conn.execute("VACUUM;")
         self._logger.log(VERBOSE, f"VACUUM on {self._settings.database} done")
 

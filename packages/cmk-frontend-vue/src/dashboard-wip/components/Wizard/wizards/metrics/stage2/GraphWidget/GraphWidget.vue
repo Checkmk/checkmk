@@ -11,6 +11,7 @@ import usei18n from '@/lib/i18n'
 import DashboardPreviewContent from '@/dashboard-wip/components/DashboardPreviewContent.vue'
 import GraphTimeRange from '@/dashboard-wip/components/TimeRange/GraphTimeRange.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
+import GraphRenderOptions from '@/dashboard-wip/components/Wizard/components/GraphRenderOptions/GraphRenderOptions.vue'
 import FieldComponent from '@/dashboard-wip/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard-wip/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard-wip/components/Wizard/components/TableForm/TableForm.vue'
@@ -20,7 +21,6 @@ import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/col
 import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp } from '@/dashboard-wip/components/Wizard/types.ts'
 
-import GraphRenderOptions from '../../components/GraphRenderOptions.vue'
 import type { UseGraph } from './composables/useGraph.ts'
 
 const { _t } = usei18n()

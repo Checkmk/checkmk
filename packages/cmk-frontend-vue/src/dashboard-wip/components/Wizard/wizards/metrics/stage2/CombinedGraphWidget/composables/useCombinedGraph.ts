@@ -28,7 +28,7 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 import {
   type UseGraphRenderOptions,
   useGraphRenderOptions
-} from '../../../composables/useGraphRenderOptions.ts'
+} from '../../../../../components/GraphRenderOptions/useGraphRenderOptions.ts'
 
 const { _t } = usei18n()
 

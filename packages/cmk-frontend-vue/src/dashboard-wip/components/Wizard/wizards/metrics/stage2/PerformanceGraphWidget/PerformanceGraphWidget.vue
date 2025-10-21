@@ -20,7 +20,7 @@ import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/col
 import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp } from '@/dashboard-wip/components/Wizard/types.ts'
 
-import GraphRenderOptions from '../../components/GraphRenderOptions.vue'
+import GraphRenderOptions from '../../../../components/GraphRenderOptions/GraphRenderOptions.vue'
 import type { UsePerformanceGraph } from './composables/usePerformanceGraph.ts'
 
 const { _t } = usei18n()

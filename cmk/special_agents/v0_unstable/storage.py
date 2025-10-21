@@ -3,18 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
-import string
 from pathlib import Path
-from typing import TypeVar
 from urllib.parse import quote as urlquote
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-_DefaultReturnValue = TypeVar("_DefaultReturnValue")
-
 SERVER_SIDE_PROGRAM_STORAGE_PATH = "var/check_mk/server_side_program_storage"
-ALLOWED_KEY_CHARS = set(string.ascii_letters + string.digits + "_-.")
 
 
 class Storage:
@@ -24,11 +16,7 @@ class Storage:
     Therefore, this interface transparently provides a possibility to read and write text to a persistent storage.
     """
 
-    def __init__(
-        self,
-        program_ident: str,
-        host: str,
-    ):
+    def __init__(self, program_ident: str, host: str) -> None:
         """
         Initializes the storage interface. program_ident and host provide an identifier to namespace
         the storage.
@@ -40,12 +28,10 @@ class Storage:
         )
 
     @staticmethod
-    def _get_base_path():
-        try:
-            omd_root = os.environ["OMD_ROOT"]
-        except KeyError:
-            raise RuntimeError("OMD_ROOT environment variable is not set.")
-        return Path(omd_root, SERVER_SIDE_PROGRAM_STORAGE_PATH)
+    def _get_base_path() -> Path:
+        if omd_root := os.getenv("OMD_ROOT"):
+            return Path(omd_root, SERVER_SIDE_PROGRAM_STORAGE_PATH)
+        raise RuntimeError("OMD_ROOT environment variable is not set.")
 
     @staticmethod
     def _sanitize_key(key: str) -> str:
@@ -58,11 +44,7 @@ class Storage:
         safe_key = self._sanitize_key(key)
         return self._full_dir / safe_key
 
-    def write(
-        self,
-        key: str,
-        content: str,
-    ) -> None:
+    def write(self, key: str, content: str) -> None:
         """
         Write text content to the storage.
         """
@@ -70,11 +52,7 @@ class Storage:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
 
-    def read(
-        self,
-        key: str,
-        default: _DefaultReturnValue,
-    ) -> str | _DefaultReturnValue:
+    def read[T](self, key: str, default: T) -> str | T:
         """
         Read content from the storage.
 

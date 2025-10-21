@@ -8,7 +8,7 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
-from logging import getLogger, Logger
+from logging import Logger
 from pathlib import Path
 from typing import Any, Literal
 
@@ -55,9 +55,9 @@ class History(ABC):
 class TimedHistory(History):
     """Decorate History methods with timing information."""
 
-    def __init__(self, history: History) -> None:
+    def __init__(self, history: History, logger: Logger) -> None:
         self._history = history
-        self._logger = getLogger("cmk.mkeventd")
+        self._logger = logger
 
     @contextmanager
     def _timing(self, method_name: str) -> Iterator[None]:
@@ -66,7 +66,7 @@ class TimedHistory(History):
             yield
         finally:
             self._logger.debug(
-                "method call %s took: %.3f ms", method_name, (time.time() - tic) * 1000
+                "history method call '%s' took %.3f ms", method_name, (time.time() - tic) * 1000
             )
 
     def flush(self) -> None:

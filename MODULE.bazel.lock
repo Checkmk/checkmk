@@ -1846,7 +1846,7 @@
         "usagesDigest": "08kH9jjVabmjH4pZe4CwkHoktWUZb/WfeLdICjLor2c=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "af49379884049f918ef2be399485453dfd901dd35c39c0de64c52d56d9bbf9c5",
+          "@@//requirements_all_lock.txt": "00cdf77e721f402d85c6215f253c2c2d3e0699a671b4553dc09cce5233570fb8",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -8041,7 +8041,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "google-cloud-os-config==1.21.0     --hash=sha256:34a75bfc4f423b5669f7c90772fa98348af42f6ec2fa28d0d6e953de9e7ca929     --hash=sha256:e4a0c644adc474e31f19f4e0985a576bd94a61fbd9fdd6e3dfb840edaa60c36f"
+              "requirement": "google-cloud-os-config==1.22.0     --hash=sha256:92afa402aa3b94d765751907fded1ef5908a6a5322f1fc88dee9e4c7f1cd7e54     --hash=sha256:d79a310f6fa1ce7470aaa084c70e38dc05d98531f468f821b3a526e4d33a70e4"
             }
           },
           "cmk_requirements_312_openapi_spec_validator": {
@@ -8143,7 +8143,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "google-cloud-org-policy==1.14.0     --hash=sha256:0bbf1754927b4b4d09769d9e62a41cf7412c571e3085176d0c614c7024980ec5     --hash=sha256:4c877d420a2c512b454e62eacd2557cbbc74f734c079946e30e61f62791b319c"
+              "requirement": "google-cloud-org-policy==1.15.0     --hash=sha256:271d16a10e75347eace60d02cde322b2b1b613bcc99917109e0ebf2a4102253a     --hash=sha256:5da410288236b334b8d05010501ea6180c5dc9e30888ff09488f2f107632f35b"
             }
           },
           "cmk_requirements_312_marshmallow_oneofschema": {
@@ -8364,7 +8364,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "googleapis-common-protos[grpc]==1.70.0     --hash=sha256:0e1b44e0ea153e6594f9f394fef15193a68aaaea2d843f83e2742717ca753257     --hash=sha256:b8bfcca8c25a2bb253e0e0b0adaf8c00773e5e6af6fd92397576680b807e0fd8"
+              "requirement": "googleapis-common-protos[grpc]==1.71.0     --hash=sha256:1aec01e574e29da63c80ba9f7bbf1ccfaacf1da877f23609fe236ca7c72a2e2e     --hash=sha256:59034a1d849dc4d18971997a72ac56246570afdd17f9369a0ff68218d50ab78c"
             }
           },
           "cmk_requirements_312_opentelemetry_container_distro": {

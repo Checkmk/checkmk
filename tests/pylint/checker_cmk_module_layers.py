@@ -1014,7 +1014,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.paths",
     ),
     Component("tests.integration.cce.metric_backend"): _allow(
+        *PACKAGE_CCC,
         *PACKAGE_METRIC_BACKEND,
+        "cmk.gui",
     ),
     Component("tests.integration.cmk.base"): _allow(
         *PACKAGE_CCC,

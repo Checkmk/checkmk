@@ -5424,6 +5424,9 @@ msgstr "Alert"
 msgid "Alert after being at or above the threshold for"
 msgstr ""
 
+msgid "Alert after being at or below the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Alert Handler"
 
@@ -8127,10 +8130,15 @@ msgstr "Untergrenzen für die durchschnittliche Anzahl an Meldungen"
 msgid "Average message count upper levels"
 msgstr "Obergrenzen für die durchschnittliche Anzahl an Meldungen"
 
+#, fuzzy
+msgid "Average metric value over a period of time"
+msgstr "Levels über eine längere Zeitperiode"
+
 msgid "Average number of messages"
 msgstr "Durchschnittliche Anzahl an Meldungen"
 
-msgid "Average over"
+#, fuzzy
+msgid "Average over..."
 msgstr "Durchschnitt über"
 
 msgid "Average pending tasks delta"
@@ -8185,9 +8193,12 @@ msgstr ""
 "Durchschnittliche CPU-Auslastung über die angegebene Zeitperiode, bevor die "
 "Levels angewendet werden."
 
+msgid "Average the instantaneous value over the specified number of minutes."
+msgstr ""
+
 msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
+"Average the instantaneous value over the specified number of minutes. Note: "
+"This does NOT affect \"Levels over an extended period of time\", which "
 "always checks the instantaneous value."
 msgstr ""
 
@@ -8673,6 +8684,10 @@ msgstr "Azure Load Balancer Gesundheit"
 
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Azure Load Balancer Gesundheit (veraltet)"
+
+#, fuzzy
+msgid "Azure NAT Gateways datapath availability"
+msgstr "Verfügbarkeit ansehen"
 
 msgid "Azure Redis CPU utilization"
 msgstr "Azure Redis CPU-Auslastung"
@@ -17761,6 +17776,18 @@ msgstr "Größen der Datendatei"
 msgid "Dataguard statistics"
 msgstr "Dataguard-Statistiken"
 
+#, fuzzy
+msgid "Datapath availability"
+msgstr "Untergrenzen für Datenpfadverfügbarkeit"
+
+#, fuzzy
+msgid "Datapath availability %"
+msgstr "Untergrenzen für Datenpfadverfügbarkeit"
+
+#, fuzzy
+msgid "Datapath availability (average)"
+msgstr "Untergrenzen für Datenpfadverfügbarkeit"
+
 msgid "Datasource"
 msgstr "Datenquelle"
 
@@ -19723,6 +19750,10 @@ msgid "Disable automatic user synchronization (use central site users)"
 msgstr ""
 "Automatische Benutzersynchronisation ausschalten (nutze Benutzer der "
 "Zentralinstanz)"
+
+#, fuzzy
+msgid "Disable averaging"
+msgstr "Meldungen mitteln"
 
 msgid "Disable bulkwalks"
 msgstr "Bulk-Walks deaktivieren"
@@ -46395,11 +46426,12 @@ msgstr ""
 "diese bereits existiert.<br><i>Keine Benutzererstellung</i>: Überprüfen Sie, "
 "ob der Benutzer Mitglied der Gruppe des GID ist."
 
+#, fuzzy
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
 "automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small an editable. Please note "
+"compatibility whereas the python script is small and editable. Please note "
 "that the Checkmk team can offer no support for issues about the target "
 "system's python environment when choosing \"Script\"."
 msgstr ""
@@ -72271,6 +72303,14 @@ msgstr ""
 "Sie den Checkmk Micro Core mit Smart Ping verwenden und trotzdem die "
 "Metriken des Ping zu einigen Hosts verfolgen wollen."
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways health "
+"monitoring"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der Azure "
+"Redis Latenz zu konfigurieren"
+
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
@@ -76601,10 +76641,6 @@ msgstr "Übertragen: %d neue, %d geänderte und %d verschwundene Dateien"
 
 msgid "Transform status output"
 msgstr "Statusausgabe umschreiben"
-
-#, python-format
-msgid "Transformed the user tag group \"%s\" to built-in."
-msgstr "Die Benutzer-Merkmal-Gruppe \"%s\" wurde in mitgeliefert umgewandelt."
 
 msgid "Translate SNMP traps"
 msgstr "SNMP-Traps übersetzen"
@@ -90045,6 +90081,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Transformed the user tag group \"%s\" to built-in."
+#~ msgstr ""
+#~ "Die Benutzer-Merkmal-Gruppe \"%s\" wurde in mitgeliefert umgewandelt."
 
 #~ msgid "Affinity"
 #~ msgstr "Affinität"

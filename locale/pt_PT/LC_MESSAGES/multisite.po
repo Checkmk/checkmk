@@ -5562,6 +5562,9 @@ msgstr "Alerta"
 msgid "Alert after being at or above the threshold for"
 msgstr ""
 
+msgid "Alert after being at or below the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Manipulador de alertas"
 
@@ -8373,11 +8376,16 @@ msgstr "Contagem média de mensagens níveis inferiores"
 msgid "Average message count upper levels"
 msgstr "Contagem média de mensagens nos níveis superiores"
 
+#, fuzzy
+msgid "Average metric value over a period of time"
+msgstr ""
+"Níveis durante um período de tempo alargado sobre o atraso de replicação"
+
 msgid "Average number of messages"
 msgstr "Número médio de mensagens"
 
 #, fuzzy
-msgid "Average over"
+msgid "Average over..."
 msgstr "Valor médio"
 
 msgid "Average pending tasks delta"
@@ -8434,9 +8442,12 @@ msgstr ""
 "Média da utilização da CPU durante o período de tempo especificado antes da "
 "aplicação dos níveis."
 
+msgid "Average the instantaneous value over the specified number of minutes."
+msgstr ""
+
 msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
+"Average the instantaneous value over the specified number of minutes. Note: "
+"This does NOT affect \"Levels over an extended period of time\", which "
 "always checks the instantaneous value."
 msgstr ""
 
@@ -9061,6 +9072,10 @@ msgstr "Saúde do balanceador de carga"
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Integridade do balanceador de carga do Azure"
+
+#, fuzzy
+msgid "Azure NAT Gateways datapath availability"
+msgstr "Ver a disponibilidade"
 
 #, fuzzy
 msgid "Azure Redis CPU utilization"
@@ -18411,6 +18426,18 @@ msgstr "Tamanhos do Datafile"
 msgid "Dataguard statistics"
 msgstr "Estatísticas do Dataguard"
 
+#, fuzzy
+msgid "Datapath availability"
+msgstr "Disponibilidade do percurso de dados níveis inferiores"
+
+#, fuzzy
+msgid "Datapath availability %"
+msgstr "Disponibilidade do percurso de dados níveis inferiores"
+
+#, fuzzy
+msgid "Datapath availability (average)"
+msgstr "Disponibilidade do percurso de dados níveis inferiores"
+
 msgid "Datasource"
 msgstr "Datasource"
 
@@ -20460,6 +20487,10 @@ msgid "Disable automatic user synchronization (use central site users)"
 msgstr ""
 "Desactivar a sincronização automática de utilizadores (utilizar utilizadores "
 "do site principal)"
+
+#, fuzzy
+msgid "Disable averaging"
+msgstr "Média de mensagens"
 
 #, fuzzy
 msgid "Disable bulkwalks"
@@ -48338,11 +48369,12 @@ msgid ""
 "member of the GID's group."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
 "automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small an editable. Please note "
+"compatibility whereas the python script is small and editable. Please note "
 "that the Checkmk team can offer no support for issues about the target "
 "system's python environment when choosing \"Script\"."
 msgstr ""
@@ -74789,6 +74821,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways health "
+"monitoring"
+msgstr ""
+"Esta regra permite que você configure níveis de inchaço para um espaço de "
+"tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
 msgstr ""
@@ -79691,10 +79731,6 @@ msgstr "Transferência: %d novos ficheiros, %d alterados e %d desaparecidos"
 
 msgid "Transform status output"
 msgstr "Saída do estado da transformação"
-
-#, python-format
-msgid "Transformed the user tag group \"%s\" to built-in."
-msgstr "Transformou o grupo de etiquetas de utilizador \"%s\" em incorporado."
 
 msgid "Translate SNMP traps"
 msgstr "Traduzir armadilhas SNMP"
@@ -93695,6 +93731,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Transformed the user tag group \"%s\" to built-in."
+#~ msgstr ""
+#~ "Transformou o grupo de etiquetas de utilizador \"%s\" em incorporado."
 
 #, fuzzy
 #~ msgid "Affinity"

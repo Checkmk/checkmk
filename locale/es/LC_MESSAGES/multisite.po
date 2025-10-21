@@ -5598,6 +5598,9 @@ msgstr "Alerta"
 msgid "Alert after being at or above the threshold for"
 msgstr ""
 
+msgid "Alert after being at or below the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Gestor de alertas"
 
@@ -8430,11 +8433,17 @@ msgstr "Niveles inferiores del recuento medio de mensajes"
 msgid "Average message count upper levels"
 msgstr "Niveles superiores del recuento medio de mensajes"
 
+#, fuzzy
+msgid "Average metric value over a period of time"
+msgstr ""
+"Niveles durante un periodo de tiempo prolongado en el retraso de la "
+"replicación"
+
 msgid "Average number of messages"
 msgstr "Número medio de mensajes"
 
 #, fuzzy
-msgid "Average over"
+msgid "Average over..."
 msgstr "Valor medio"
 
 msgid "Average pending tasks delta"
@@ -8491,9 +8500,12 @@ msgstr ""
 "Promediar la utilización de la CPU durante el período de tiempo especificado "
 "antes de aplicar los niveles."
 
+msgid "Average the instantaneous value over the specified number of minutes."
+msgstr ""
+
 msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
+"Average the instantaneous value over the specified number of minutes. Note: "
+"This does NOT affect \"Levels over an extended period of time\", which "
 "always checks the instantaneous value."
 msgstr ""
 
@@ -9118,6 +9130,10 @@ msgstr "Salud del equilibrador de carga"
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Salud del balanceador de carga de Azure"
+
+#, fuzzy
+msgid "Azure NAT Gateways datapath availability"
+msgstr "Ver la disponibilidad"
 
 #, fuzzy
 msgid "Azure Redis CPU utilization"
@@ -18540,6 +18556,18 @@ msgstr "Tamaños de archivos de datos"
 msgid "Dataguard statistics"
 msgstr "Estadísticas de protector de datos"
 
+#, fuzzy
+msgid "Datapath availability"
+msgstr "Disponibilidad de la ruta de datos niveles inferiores"
+
+#, fuzzy
+msgid "Datapath availability %"
+msgstr "Disponibilidad de la ruta de datos niveles inferiores"
+
+#, fuzzy
+msgid "Datapath availability (average)"
+msgstr "Disponibilidad de la ruta de datos niveles inferiores"
+
 msgid "Datasource"
 msgstr "Fuente de datos"
 
@@ -20613,6 +20641,10 @@ msgid "Disable automatic user synchronization (use central site users)"
 msgstr ""
 "Desactivar la sincronización automática de usuarios (utilizar los usuarios "
 "del sitio maestro)"
+
+#, fuzzy
+msgid "Disable averaging"
+msgstr "Promedio de mensajes"
 
 #, fuzzy
 msgid "Disable bulkwalks"
@@ -48754,7 +48786,7 @@ msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
 "automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small an editable. Please note "
+"compatibility whereas the python script is small and editable. Please note "
 "that the Checkmk team can offer no support for issues about the target "
 "system's python environment when choosing \"Script\"."
 msgstr ""
@@ -75471,6 +75503,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways health "
+"monitoring"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
 msgstr ""
@@ -80383,10 +80423,6 @@ msgstr "Transferencia: %d archivos nuevos, %d cambiados y %d desaparecidos"
 
 msgid "Transform status output"
 msgstr "Salida del estado de la transformación"
-
-#, fuzzy, python-format
-msgid "Transformed the user tag group \"%s\" to built-in."
-msgstr "Transformado el grupo de etiquetas de usuario \"%s\" a builtin."
 
 msgid "Translate SNMP traps"
 msgstr "Traducir los traps SNMP"
@@ -94538,6 +94574,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "Transformed the user tag group \"%s\" to built-in."
+#~ msgstr "Transformado el grupo de etiquetas de usuario \"%s\" a builtin."
 
 #, fuzzy
 #~ msgid "Affinity"

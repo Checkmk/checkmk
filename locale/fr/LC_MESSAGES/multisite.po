@@ -5599,6 +5599,9 @@ msgstr "Alerte"
 msgid "Alert after being at or above the threshold for"
 msgstr ""
 
+msgid "Alert after being at or below the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Gestionnaire d'alerte"
 
@@ -8411,11 +8414,15 @@ msgstr "Nombre moyen de messages aux niveaux inférieurs"
 msgid "Average message count upper levels"
 msgstr "Nombre moyen de messages - niveaux supérieurs"
 
+#, fuzzy
+msgid "Average metric value over a period of time"
+msgstr "Niveaux sur une longue période de temps sur le décalage de réplication"
+
 msgid "Average number of messages"
 msgstr "Nombre moyen de messages"
 
 #, fuzzy
-msgid "Average over"
+msgid "Average over..."
 msgstr "Valeur moyenne"
 
 msgid "Average pending tasks delta"
@@ -8472,9 +8479,12 @@ msgstr ""
 "Faire la moyenne de l'utilisation du CPU sur la période spécifiée avant "
 "l'application des niveaux."
 
+msgid "Average the instantaneous value over the specified number of minutes."
+msgstr ""
+
 msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
+"Average the instantaneous value over the specified number of minutes. Note: "
+"This does NOT affect \"Levels over an extended period of time\", which "
 "always checks the instantaneous value."
 msgstr ""
 
@@ -9099,6 +9109,10 @@ msgstr "Santé de l'équilibreur de charge"
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Santé de l'équilibreur de charge Azure"
+
+#, fuzzy
+msgid "Azure NAT Gateways datapath availability"
+msgstr "Voir la disponibilité"
 
 #, fuzzy
 msgid "Azure Redis CPU utilization"
@@ -18539,6 +18553,18 @@ msgstr "Taille des fichiers de données"
 msgid "Dataguard statistics"
 msgstr "Statistiques Dataguard"
 
+#, fuzzy
+msgid "Datapath availability"
+msgstr "Disponibilité du chemin de données niveaux inférieurs"
+
+#, fuzzy
+msgid "Datapath availability %"
+msgstr "Disponibilité du chemin de données niveaux inférieurs"
+
+#, fuzzy
+msgid "Datapath availability (average)"
+msgstr "Disponibilité du chemin de données niveaux inférieurs"
+
 msgid "Datasource"
 msgstr "Source de données"
 
@@ -20598,6 +20624,10 @@ msgid "Disable automatic user synchronization (use central site users)"
 msgstr ""
 "Désactiver la synchronisation automatique des utilisateurs (utiliser les "
 "utilisateurs du site maître)"
+
+#, fuzzy
+msgid "Disable averaging"
+msgstr "Moyenne des messages"
 
 #, fuzzy
 msgid "Disable bulkwalks"
@@ -48733,7 +48763,7 @@ msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
 "automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small an editable. Please note "
+"compatibility whereas the python script is small and editable. Please note "
 "that the Checkmk team can offer no support for issues about the target "
 "system's python environment when choosing \"Script\"."
 msgstr ""
@@ -75485,6 +75515,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways health "
+"monitoring"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
 msgstr ""
@@ -80419,10 +80457,6 @@ msgstr ""
 
 msgid "Transform status output"
 msgstr "Sortie d'état de transformation"
-
-#, fuzzy, python-format
-msgid "Transformed the user tag group \"%s\" to built-in."
-msgstr "Transformé le groupe de tags utilisateur \"%s\" en builtin."
 
 msgid "Translate SNMP traps"
 msgstr "Traduire les traps SNMP"
@@ -94622,6 +94656,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "Transformed the user tag group \"%s\" to built-in."
+#~ msgstr "Transformé le groupe de tags utilisateur \"%s\" en builtin."
 
 #, fuzzy
 #~ msgid "Affinity"

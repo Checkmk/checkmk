@@ -5268,6 +5268,9 @@ msgstr "アラート"
 msgid "Alert after being at or above the threshold for"
 msgstr ""
 
+msgid "Alert after being at or below the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "アラートハンドラ"
 
@@ -7891,11 +7894,15 @@ msgstr "平均メッセージ数の下位レベル"
 msgid "Average message count upper levels"
 msgstr "平均メッセージ数上位レベル"
 
+#, fuzzy
+msgid "Average metric value over a period of time"
+msgstr "レプリケーションラグに関する長期間のレベル"
+
 msgid "Average number of messages"
 msgstr "メッセージの平均数"
 
 #, fuzzy
-msgid "Average over"
+msgid "Average over..."
 msgstr "平均値"
 
 msgid "Average pending tasks delta"
@@ -7948,9 +7955,12 @@ msgid ""
 "applied."
 msgstr "レベルが適用される前に、指定された期間のCPU使用率を平均します。"
 
+msgid "Average the instantaneous value over the specified number of minutes."
+msgstr ""
+
 msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
+"Average the instantaneous value over the specified number of minutes. Note: "
+"This does NOT affect \"Levels over an extended period of time\", which "
 "always checks the instantaneous value."
 msgstr ""
 
@@ -8445,6 +8455,10 @@ msgstr "ロードバランサーヘルス"
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Azureロードバランサーヘルス"
+
+#, fuzzy
+msgid "Azure NAT Gateways datapath availability"
+msgstr "サービスの可用性を見る"
 
 #, fuzzy
 msgid "Azure Redis CPU utilization"
@@ -17367,6 +17381,18 @@ msgstr "データファイルのサイズ"
 msgid "Dataguard statistics"
 msgstr "データガード統計"
 
+#, fuzzy
+msgid "Datapath availability"
+msgstr "データパスの可用性下位レベル"
+
+#, fuzzy
+msgid "Datapath availability %"
+msgstr "データパスの可用性下位レベル"
+
+#, fuzzy
+msgid "Datapath availability (average)"
+msgstr "データパスの可用性下位レベル"
+
 msgid "Datasource"
 msgstr "データソース"
 
@@ -19287,6 +19313,10 @@ msgstr "ホストの自動削除を無効化"
 
 msgid "Disable automatic user synchronization (use central site users)"
 msgstr "ユーザー自動同期を無効にする(セントラルサイトユーザーを使用)"
+
+#, fuzzy
+msgid "Disable averaging"
+msgstr "メッセージの平均化"
 
 msgid "Disable bulkwalks"
 msgstr "バルクウォークの無効化"
@@ -45452,11 +45482,12 @@ msgstr ""
 "在する場合、ユーザーをそのグループに追加します。<br><i>ユーザー作成なし</i>："
 "ユーザーがGIDのグループに所属していることを確認してください。"
 
+#, fuzzy
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
 "automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small an editable. Please note "
+"compatibility whereas the python script is small and editable. Please note "
 "that the Checkmk team can offer no support for issues about the target "
 "system's python environment when choosing \"Script\"."
 msgstr ""
@@ -70448,6 +70479,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways health "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
 msgstr ""
@@ -74686,10 +74725,6 @@ msgstr "転送中:%d新規、%d変更、%d消失ファイル"
 
 msgid "Transform status output"
 msgstr "変換ステータス出力"
-
-#, python-format
-msgid "Transformed the user tag group \"%s\" to built-in."
-msgstr "ユーザータググループ\"%s\"を変換しました。"
 
 msgid "Translate SNMP traps"
 msgstr "SNMPトラップを変換する"
@@ -87978,6 +88013,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Transformed the user tag group \"%s\" to built-in."
+#~ msgstr "ユーザータググループ\"%s\"を変換しました。"
 
 #, fuzzy
 #~ msgid "Affinity"

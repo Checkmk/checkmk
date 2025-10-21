@@ -5567,6 +5567,9 @@ msgstr "Waarschuwing"
 msgid "Alert after being at or above the threshold for"
 msgstr ""
 
+msgid "Alert after being at or below the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Waarschuwings afhandelaar"
 
@@ -8358,11 +8361,15 @@ msgstr "Gemiddeld aantal berichten lagere niveaus"
 msgid "Average message count upper levels"
 msgstr "Gemiddeld aantal berichten bovenste niveaus"
 
+#, fuzzy
+msgid "Average metric value over a period of time"
+msgstr "Niveaus over een langere periode op replicatievertraging"
+
 msgid "Average number of messages"
 msgstr "Gemiddeld aantal berichten"
 
 #, fuzzy
-msgid "Average over"
+msgid "Average over..."
 msgstr "Gemiddelde waarde"
 
 msgid "Average pending tasks delta"
@@ -8419,9 +8426,12 @@ msgstr ""
 "Gemiddelde van CPU-gebruik over de gespecificeerde tijdsperiode voordat "
 "niveaus worden toegepast."
 
+msgid "Average the instantaneous value over the specified number of minutes."
+msgstr ""
+
 msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
+"Average the instantaneous value over the specified number of minutes. Note: "
+"This does NOT affect \"Levels over an extended period of time\", which "
 "always checks the instantaneous value."
 msgstr ""
 
@@ -9046,6 +9056,10 @@ msgstr "Gezondheid van de loadbalancer"
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Gezondheid Azure Load Balancer"
+
+#, fuzzy
+msgid "Azure NAT Gateways datapath availability"
+msgstr "Bekijk de beschikbaarheid"
 
 #, fuzzy
 msgid "Azure Redis CPU utilization"
@@ -18415,6 +18429,18 @@ msgstr "Databestandsgrootte"
 msgid "Dataguard statistics"
 msgstr "Dataguard Statistieken"
 
+#, fuzzy
+msgid "Datapath availability"
+msgstr "Beschikbaarheid gegevenspad lagere niveaus"
+
+#, fuzzy
+msgid "Datapath availability %"
+msgstr "Beschikbaarheid gegevenspad lagere niveaus"
+
+#, fuzzy
+msgid "Datapath availability (average)"
+msgstr "Beschikbaarheid gegevenspad lagere niveaus"
+
 msgid "Datasource"
 msgstr "Datasource"
 
@@ -20465,6 +20491,10 @@ msgid "Disable automatic user synchronization (use central site users)"
 msgstr ""
 "Schakel automatische gebruikerssynchronisatie uit (gebruik master site "
 "gebruikers)"
+
+#, fuzzy
+msgid "Disable averaging"
+msgstr "Bericht gemiddelde"
 
 #, fuzzy
 msgid "Disable bulkwalks"
@@ -48374,7 +48404,7 @@ msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
 "automatically regardless of this rule. The binary formats yield a broader "
-"compatibility whereas the python script is small an editable. Please note "
+"compatibility whereas the python script is small and editable. Please note "
 "that the Checkmk team can offer no support for issues about the target "
 "system's python environment when choosing \"Script\"."
 msgstr ""
@@ -74837,6 +74867,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways health "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
 msgstr ""
@@ -79742,10 +79780,6 @@ msgstr "Overdracht: %d nieuwe, %d gewijzigde en %d verdwenen bestanden"
 
 msgid "Transform status output"
 msgstr "Transformeer status uitgang"
-
-#, fuzzy, python-format
-msgid "Transformed the user tag group \"%s\" to built-in."
-msgstr "Heeft de gebruiker tag groep \"%s\" getransformeerd naar builtin."
 
 msgid "Translate SNMP traps"
 msgstr "SNMP traps vertalen"
@@ -93803,6 +93837,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "Transformed the user tag group \"%s\" to built-in."
+#~ msgstr "Heeft de gebruiker tag groep \"%s\" getransformeerd naar builtin."
 
 #, fuzzy
 #~ msgid "Affinity"

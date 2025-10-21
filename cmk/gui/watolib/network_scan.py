@@ -41,7 +41,7 @@ from .host_attributes import (
     IPRange,
     NetworkScanResult,
 )
-from .hosts_and_folders import Folder, folder_tree, Host, update_metadata
+from .hosts_and_folders import Folder, folder_tree, FolderTree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
 
@@ -57,7 +57,8 @@ def execute_network_scan_job(config: Config) -> None:
     if is_distributed_setup_remote_site(config.sites):
         return  # Don't execute this job on slaves.
 
-    folder = _find_folder_to_scan()
+    tree = folder_tree()
+    folder = _find_folder_to_scan(tree)
     if not folder:
         return  # Nothing to do.
 
@@ -79,7 +80,7 @@ def execute_network_scan_job(config: Config) -> None:
         # Mark the scan in progress: Is important in case the request takes longer than
         # the interval of the cron job (1 minute). Otherwise the scan might be started
         # a second time before the first one finished.
-        _save_network_scan_result(folder, result)
+        _save_network_scan_result(tree, folder, result)
 
         try:
             if site_is_local(site_config := config.sites[folder.site_id()]):
@@ -123,13 +124,13 @@ def execute_network_scan_job(config: Config) -> None:
 
         result["end"] = time.time()
 
-        _save_network_scan_result(folder, result)
+        _save_network_scan_result(tree, folder, result)
 
 
-def _find_folder_to_scan() -> Folder | None:
+def _find_folder_to_scan(tree: FolderTree) -> Folder | None:
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
-    for folder in folder_tree().all_folders().values():
+    for folder in tree.all_folders().values():
         scheduled_time = folder.next_network_scan_at()
         if scheduled_time is not None and scheduled_time < time.time():
             if folder_to_scan is None:
@@ -187,15 +188,15 @@ def _add_scanned_hosts_to_folder(
     bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries), debug=debug)
 
 
-def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None:
+def _save_network_scan_result(tree: FolderTree, folder: Folder, result: NetworkScanResult) -> None:
     # Reload the folder, lock Setup before to protect against concurrency problems.
     with store.lock_checkmk_configuration(configuration_lockfile):
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
-        write_folder = folder_tree().folder(folder.path())
+        write_folder = tree.folder(folder.path())
         write_folder.attributes["network_scan_result"] = result
         write_folder.save_folder_attributes()
-        folder_tree().invalidate_caches()
+        tree.invalidate_caches()
 
 
 class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):

@@ -101,6 +101,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DropdownChoice,
+    DropdownChoices,
     FixedValue,
     ListChoice,
     ListOfStrings,
@@ -136,6 +137,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_lookup_cache,
     folder_preserving_link,
     folder_tree,
+    FolderTree,
     Host,
     make_action_link,
 )
@@ -900,6 +902,7 @@ class ModeEditRuleset(WatoMode):
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
     def _from_vars(self) -> None:
+        tree = folder_tree()
         self._folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
         self._name = request.get_ascii_input_mandatory("varname")
@@ -974,17 +977,17 @@ class ModeEditRuleset(WatoMode):
                 "service", _('Unable to analyze matching, because "service" parameter is missing')
             )
 
-        self._just_edited_rule_from_vars()
+        self._just_edited_rule_from_vars(tree)
 
     # After actions like editing or moving a rule there is a rule that the user has been
     # working before. Focus this rule row again to make multiple actions with a single
     # rule easier to handle
-    def _just_edited_rule_from_vars(self) -> None:
+    def _just_edited_rule_from_vars(self, tree: FolderTree) -> None:
         if (folder := request.var("rule_folder")) is None or not request.has_var("rule_id"):
             self._just_edited_rule = None
             return
 
-        rule_folder = folder_tree().folder(folder)
+        rule_folder = tree.folder(folder)
         rulesets = FolderRulesets.load_folder_rulesets(rule_folder)
         ruleset = rulesets.get(self._name)
 
@@ -1201,7 +1204,7 @@ class ModeEditRuleset(WatoMode):
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
-        self._rule_listing(ruleset, site_configs=config.sites, debug=config.debug)
+        self._rule_listing(ruleset, folder_tree(), site_configs=config.sites, debug=config.debug)
         self._create_form()
 
     def _explain_match_type(self, match_type: MatchType) -> None:
@@ -1233,7 +1236,12 @@ class ModeEditRuleset(WatoMode):
         html.close_div()
 
     def _rule_listing(
-        self, ruleset: Ruleset, *, site_configs: Mapping[SiteId, SiteConfiguration], debug: bool
+        self,
+        ruleset: Ruleset,
+        tree: FolderTree,
+        *,
+        site_configs: Mapping[SiteId, SiteConfiguration],
+        debug: bool,
     ) -> None:
         rules: list[tuple[Folder, int, Rule]] = ruleset.get_rules()
         if not rules:
@@ -1298,7 +1306,7 @@ class ModeEditRuleset(WatoMode):
                         rule_match_results,
                         rule_effectiveness,
                     )
-                    self._rule_cells(table, rule)
+                    self._rule_cells(table, rule, tree)
 
         show_row_count(
             row_count=(row_count := num_rows),
@@ -1571,13 +1579,14 @@ class ModeEditRuleset(WatoMode):
         self,
         table: Table,
         rule: Rule,
+        tree: FolderTree,
     ) -> None:
         value = rule.value
         rule_options = rule.rule_options
 
         # Conditions
         table.cell(_("Conditions"), css=["condition"])
-        self._rule_conditions(rule)
+        self._rule_conditions(rule, folder_choices=tree.folder_choices)
 
         # Value
         table.cell(_("Value"), css=["value"])
@@ -1633,12 +1642,12 @@ class ModeEditRuleset(WatoMode):
 
         quick_setup_source_cell(table, rule.locked_by)
 
-    def _rule_conditions(self, rule: Rule) -> None:
+    def _rule_conditions(self, rule: Rule, folder_choices: DropdownChoices) -> None:
         self._predefined_condition_info(rule)
         html.write_text_permissive(
-            VSExplicitConditions(rulespec=self._rulespec, render="normal").value_to_html(
-                rule.get_rule_conditions()
-            )
+            VSExplicitConditions(
+                rulespec=self._rulespec, folder_choices=folder_choices, render="normal"
+            ).value_to_html(rule.get_rule_conditions())
         )
 
     def _predefined_condition_info(self, rule: Rule) -> None:
@@ -1725,7 +1734,7 @@ class ModeRuleSearchForm(WatoMode):
         with html.form_context("rule_search", method="POST"):
             html.hidden_field("mode", self.back_mode, add_var=True)
 
-            valuespec = self._valuespec()
+            valuespec = self._valuespec(folder_tree())
             valuespec.render_input_as_form("search", self.search_options)
 
             html.hidden_fields()
@@ -1737,8 +1746,8 @@ class ModeRuleSearchForm(WatoMode):
             return
 
         forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
-        value = self._valuespec().from_html_vars("search")
-        self._valuespec().validate_value(value, "search")
+        value = (vs := self._valuespec(folder_tree())).from_html_vars("search")
+        vs.validate_value(value, "search")
 
         # In case all checkboxes are unchecked, treat this like the reset search button press
         # and remove all vars
@@ -1747,7 +1756,7 @@ class ModeRuleSearchForm(WatoMode):
 
         self.search_options = value
 
-    def _valuespec(self) -> Dictionary:
+    def _valuespec(self, tree: FolderTree) -> Dictionary:
         return Dictionary(
             title=_("Search rulesets"),
             headers=[
@@ -1933,7 +1942,7 @@ class ModeRuleSearchForm(WatoMode):
                         elements=[
                             DropdownChoice(
                                 title=_("Selection"),
-                                choices=folder_tree().folder_choices,
+                                choices=tree.folder_choices,
                             ),
                             DropdownChoice(
                                 title=_("Recursion"),
@@ -2031,14 +2040,14 @@ class ABCEditRuleMode(WatoMode):
 
         self._back_mode = request.get_ascii_input_mandatory("back_mode", "edit_ruleset")
 
-        self._set_folder()
+        self._set_folder(folder_tree())
 
         self._rulesets = FolderRulesets.load_folder_rulesets(self._folder)
         self._ruleset = self._rulesets.get(self._name)
 
         self._set_rule()
 
-    def _set_folder(self) -> None:
+    def _set_folder(self, tree: FolderTree) -> None:
         """Determine the folder object of the requested rule
 
         In case it is possible the call sites should set the folder. This makes loading the page
@@ -2048,7 +2057,7 @@ class ABCEditRuleMode(WatoMode):
         """
         rule_folder = request.get_ascii_input("rule_folder")
         if rule_folder:
-            self._folder = folder_tree().folder(rule_folder)
+            self._folder = tree.folder(rule_folder)
         else:
             rule_id = request.get_ascii_input_mandatory(self.VAR_RULE_ID)
 
@@ -2157,11 +2166,14 @@ class ABCEditRuleMode(WatoMode):
         if not transactions.check_transaction():
             return redirect(self._back_url())
 
-        if redirect_ := self._update_rule_from_vars():
+        tree = folder_tree()
+        if redirect_ := self._update_rule_from_vars(tree.folder_choices):
             return redirect_
 
         # Check permissions on folders
-        new_rule_folder = folder_tree().folder(self._get_rule_conditions_from_vars().host_folder)
+        new_rule_folder = tree.folder(
+            self._get_rule_conditions_from_vars(tree.folder_choices).host_folder
+        )
         if not isinstance(self, ModeNewRule | ModeCloneRule):
             self._folder.permissions.need_permission("write")
         new_rule_folder.permissions.need_permission("write")
@@ -2209,7 +2221,7 @@ class ABCEditRuleMode(WatoMode):
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _update_rule_from_vars(self) -> HTTPRedirect | None:
+    def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> HTTPRedirect | None:
         # Additional options
         rule_options = self._vs_rule_options(self._rule).from_html_vars("options")
         self._vs_rule_options(self._rule).validate_value(rule_options, "options")
@@ -2222,7 +2234,7 @@ class ABCEditRuleMode(WatoMode):
         )
 
         # CONDITION
-        rule_conditions = self._get_rule_conditions_from_vars()
+        rule_conditions = self._get_rule_conditions_from_vars(folder_choices)
         if (
             is_locked_by_quick_setup(self._rule.locked_by)
             and self._rule.conditions != rule_conditions
@@ -2267,10 +2279,10 @@ class ABCEditRuleMode(WatoMode):
         self._vs_predefined_condition_id().validate_value(condition_id, "predefined_condition_id")
         return condition_id
 
-    def _get_rule_conditions_from_vars(self) -> RuleConditions:
+    def _get_rule_conditions_from_vars(self, folder_choices: DropdownChoices) -> RuleConditions:
         if self._get_condition_type_from_vars() == "predefined":
             return self._get_predefined_rule_conditions(self._get_condition_id_from_vars())
-        return self._get_explicit_rule_conditions()
+        return self._get_explicit_rule_conditions(folder_choices)
 
     # TODO: refine type
     def _get_predefined_rule_conditions(self, condition_id: Any) -> RuleConditions:
@@ -2292,8 +2304,8 @@ class ABCEditRuleMode(WatoMode):
         )
 
     # TODO: refine type
-    def _get_explicit_rule_conditions(self) -> Any:
-        vs = self._vs_explicit_conditions(render="normal")
+    def _get_explicit_rule_conditions(self, folder_choices: DropdownChoices) -> Any:
+        vs = self._vs_explicit_conditions(folder_choices=folder_choices, render="normal")
         conditions = vs.from_html_vars("explicit_conditions")
         vs.validate_value(conditions, "explicit_conditions")
         return conditions
@@ -2318,7 +2330,7 @@ class ABCEditRuleMode(WatoMode):
             html.div(help_text, class_="info")
 
         with html.form_context("rule_editor", method="POST"):
-            self._page_form(debug=config.debug)
+            self._page_form(folder_tree(), debug=config.debug)
 
     def _get_rule_value(self) -> IncomingData:
         if request.has_var(self._vue_field_id()):
@@ -2349,7 +2361,7 @@ class ABCEditRuleMode(WatoMode):
     def _should_validate_on_render(self) -> bool:
         return self._do_validate_on_render or not isinstance(self, ModeNewRule)
 
-    def _page_form(self, *, debug: bool) -> None:
+    def _page_form(self, tree: FolderTree, *, debug: bool) -> None:
         self._page_form_quick_setup_warning()
 
         # Additional rule options
@@ -2409,13 +2421,13 @@ class ABCEditRuleMode(WatoMode):
                         registered_form_spec, self._vue_field_id(), DEFAULT_VALUE, False
                     )
 
-        self._show_conditions()
+        self._show_conditions(tree.folder_choices)
         forms.end()
 
         html.hidden_fields()
         self._vs_rule_options(self._rule).set_focus("options")
 
-    def _show_conditions(self) -> None:
+    def _show_conditions(self, folder_choices: DropdownChoices) -> None:
         locked = is_locked_by_quick_setup(self._rule.locked_by)
         forms.header(_("Conditions"), css="locked" if locked else None)
         if locked:
@@ -2429,7 +2441,7 @@ class ABCEditRuleMode(WatoMode):
 
         render_hidden_if_locked(self._vs_condition_type(), "condition_type", condition_type, locked)
         self._show_predefined_conditions(locked)
-        self._show_explicit_conditions(locked)
+        self._show_explicit_conditions(folder_choices, locked)
 
         if not locked:
             html.javascript('cmk.wato.toggle_rule_condition_type("condition_type")')
@@ -2502,10 +2514,12 @@ class ABCEditRuleMode(WatoMode):
                 ),
             )
 
-    def _show_explicit_conditions(self, locked: bool) -> None:
+    def _show_explicit_conditions(self, folder_choices: DropdownChoices, locked: bool) -> None:
         if locked:
             forms.section(_("Explicit condition"), css="condition explicit")
-        vs = self._vs_explicit_conditions(render="normal" if locked else "form_part")
+        vs = self._vs_explicit_conditions(
+            folder_choices=folder_choices, render="normal" if locked else "form_part"
+        )
         value = self._rule.get_rule_conditions()
 
         try:
@@ -2529,9 +2543,11 @@ class ABCEditRuleMode(WatoMode):
             render_hidden_if_locked(vs, "explicit_conditions", value, locked)
 
     def _vs_explicit_conditions(
-        self, render: Literal["normal", "form_part"]
+        self, folder_choices: DropdownChoices, render: Literal["normal", "form_part"]
     ) -> VSExplicitConditions:
-        return VSExplicitConditions(rulespec=self._rulespec, render=render)
+        return VSExplicitConditions(
+            rulespec=self._rulespec, folder_choices=folder_choices, render=render
+        )
 
     def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
         elements = rule_option_elements(disabling)
@@ -2588,11 +2604,16 @@ class ABCEditRuleMode(WatoMode):
 class VSExplicitConditions(Transform):
     """Valuespec for editing a set of explicit rule conditions"""
 
-    def __init__(self, rulespec: Rulespec, render: Literal["normal", "form_part"]) -> None:
+    def __init__(
+        self,
+        rulespec: Rulespec,
+        folder_choices: DropdownChoices,
+        render: Literal["normal", "form_part"],
+    ) -> None:
         self._rulespec = rulespec
         super().__init__(
             valuespec=Dictionary(
-                elements=self._condition_elements(),
+                elements=self._condition_elements(folder_choices),
                 headers=[
                     (_("Folder"), "condition explicit", ["folder_path"]),
                     (_("Host tags"), "condition explicit", ["host_tags"]),
@@ -2612,9 +2633,11 @@ class VSExplicitConditions(Transform):
             from_valuespec=self._from_valuespec,
         )
 
-    def _condition_elements(self) -> Iterable[tuple[str, ValueSpec]]:
+    def _condition_elements(
+        self, folder_choices: DropdownChoices
+    ) -> Iterable[tuple[str, ValueSpec]]:
         elements = [
-            ("folder_path", self._vs_folder()),
+            ("folder_path", self._vs_folder(folder_choices)),
             ("host_tags", self._vs_host_tag_condition()),
         ]
 
@@ -2734,11 +2757,11 @@ class VSExplicitConditions(Transform):
             return {"$nor": sub_conditions}
         return sub_conditions
 
-    def _vs_folder(self) -> DropdownChoice:
+    def _vs_folder(self, folder_choices: DropdownChoices) -> DropdownChoice:
         return DropdownChoice(
             title=_("Folder"),
             help=_("Rule only applies to hosts directly in or below this folder."),
-            choices=folder_tree().folder_choices,
+            choices=folder_choices,
             encode_value=False,
         )
 
@@ -3223,8 +3246,7 @@ class ModeNewRule(ABCEditRuleMode):
     def title(self) -> str:
         return _("Add rule: %s") % self._rulespec.title
 
-    def _set_folder(self) -> None:
-        tree = folder_tree()
+    def _set_folder(self, tree: FolderTree) -> None:
         if request.has_var("_new_dflt_rule"):
             # Start creating a new rule with default selections (root folder)
             self._folder = tree.root_folder()
@@ -3242,14 +3264,14 @@ class ModeNewRule(ABCEditRuleMode):
         else:
             # Submitting the create dialog
             try:
-                self._folder = tree.folder(self._get_folder_path_from_vars())
+                self._folder = tree.folder(self._get_folder_path_from_vars(tree.folder_choices))
             except MKUserError:
                 # Folder can not be gathered from form if an error occurs
                 folder = mandatory_parameter("rule_folder", request.var("rule_folder"))
                 self._folder = tree.folder(folder)
 
-    def _get_folder_path_from_vars(self) -> str:
-        return self._get_rule_conditions_from_vars().host_folder
+    def _get_folder_path_from_vars(self, folder_choices: DropdownChoices) -> str:
+        return self._get_rule_conditions_from_vars(folder_choices).host_folder
 
     def _set_rule(self) -> None:
         host_name_conditions: HostOrServiceConditions | None = None

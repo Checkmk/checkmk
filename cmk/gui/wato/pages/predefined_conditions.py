@@ -30,6 +30,7 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
+from cmk.gui.valuespec.definitions import DropdownChoices
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
@@ -71,9 +72,11 @@ def dummy_rulespec() -> ServiceRulespec:
     )
 
 
-def vs_conditions() -> Transform:
+def vs_conditions(folder_choices: DropdownChoices) -> Transform:
     return Transform(
-        valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
+        valuespec=VSExplicitConditions(
+            rulespec=dummy_rulespec(), folder_choices=folder_choices, render="form_part"
+        ),
         to_valuespec=lambda c: RuleConditions.from_config("", c),
         from_valuespec=lambda c: c.to_config(UseHostFolder.HOST_FOLDER_FOR_UI),
     )
@@ -170,6 +173,8 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         )
 
     def _show_entry_cells(self, table: Table, ident: str, entry: PredefinedConditionSpec) -> None:
+        tree = folder_tree()
+
         table.cell(_("Title"), entry["title"])
 
         table.cell(_("Conditions"))
@@ -177,12 +182,14 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         html.open_li()
         html.write_text_permissive(
             "{}: {}".format(
-                _("Folder"), folder_tree().folder(entry["conditions"]["host_folder"]).alias_path()
+                _("Folder"), tree.folder(entry["conditions"]["host_folder"]).alias_path()
             )
         )
         html.close_li()
         html.close_ul()
-        html.write_text_permissive(vs_conditions().value_to_html(entry["conditions"]))
+        html.write_text_permissive(
+            vs_conditions(tree.folder_choices).value_to_html(entry["conditions"])
+        )
 
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
@@ -242,7 +249,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
             admin_element = []
 
         return [
-            ("conditions", vs_conditions()),
+            ("conditions", vs_conditions(folder_tree().folder_choices)),
             (
                 "owned_by",
                 Alternative(

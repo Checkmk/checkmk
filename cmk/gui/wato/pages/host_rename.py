@@ -75,6 +75,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
     folder_tree,
+    FolderTree,
     Host,
     validate_host_uniqueness,
 )
@@ -468,7 +469,7 @@ def rename_hosts_job_entry_point(
     with job_interface.gui_context(
         UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
     ):
-        renamings = _renamings_from_job_args(args.renamings)
+        renamings = _renamings_from_job_args(folder_tree(), args.renamings)
 
         actions, auth_problems = _rename_hosts(
             renamings,
@@ -671,9 +672,9 @@ def _renamings_to_job_args(
 
 
 def _renamings_from_job_args(
+    tree: FolderTree,
     rename_args: Sequence[tuple[str, HostName, HostName]],
 ) -> Sequence[tuple[Folder, HostName, HostName]]:
-    tree = folder_tree()
     return [
         (tree.folder(folder_path), old_name, new_name)
         for folder_path, old_name, new_name in rename_args

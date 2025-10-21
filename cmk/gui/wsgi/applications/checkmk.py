@@ -32,6 +32,7 @@ from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
     MKConfigError,
+    MKMethodNotAllowed,
     MKNotFound,
     MKUnauthenticatedException,
     MKUserError,
@@ -41,6 +42,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.token_auth import handle_token_page
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wsgi.applications.utils import (
     AbstractWSGIApp,
@@ -210,6 +212,8 @@ def _process_request(
             page_handler = ensure_authentication(_handler)
         elif _handler := pages.get_page_handler(f"noauth:{file_name}"):
             page_handler = _noauth(_handler)
+        elif "cmk-token" in request.args:
+            page_handler = handle_token_page(file_name, request, response)
         else:
             page_handler = _page_not_found
 
@@ -220,6 +224,9 @@ def _process_request(
 
     except HTTPRedirect as exc:
         return flask.redirect(exc.url)(environ, start_response)
+
+    except MKMethodNotAllowed as e:
+        resp = _render_exception(e, title=_("Method not allowed"))
 
     except FinalizeRequest as exc:
         # TODO: Remove all FinalizeRequest exceptions from all pages and replace it with a `return`.

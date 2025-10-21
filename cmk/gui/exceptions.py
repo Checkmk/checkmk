@@ -80,3 +80,7 @@ class MKMissingDataError(MKHTTPException):
 
 class MKNotFound(MKHTTPException):
     status = http.HTTPStatus.NOT_FOUND
+
+
+class MKMethodNotAllowed(MKHTTPException):
+    status = http.HTTPStatus.METHOD_NOT_ALLOWED

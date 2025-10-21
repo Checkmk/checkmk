@@ -30,7 +30,7 @@ class AuthenticationFailureEvent(SecurityEvent):
         self,
         *,
         user_error: str,
-        auth_method: AuthType,
+        auth_method: AuthType | Literal["token"],
         username: UserId | None,
         remote_ip: str | None,
     ) -> None:

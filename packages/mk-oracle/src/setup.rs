@@ -300,6 +300,28 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
     }
 }
 
+pub fn find_current_instance_runtime(env_var: &str) -> Option<PathBuf> {
+    let oracle_home = match std::env::var(env_var) {
+        Ok(path) => path,
+        Err(_) => {
+            log::warn!("{} is not set", env_var);
+            return None;
+        }
+    };
+
+    let candidate = PathBuf::from(oracle_home).join("lib");
+
+    if !candidate.is_dir() {
+        log::warn!("{} path {:?} is not a directory", env_var, candidate);
+        None
+    } else if !validate_permissions(&candidate) {
+        log::warn!("{env_var} path {:?} has wrong permissions", candidate);
+        None
+    } else {
+        log::info!("Using {} {:?} for runtime", env_var, candidate);
+        Some(candidate)
+    }
+}
 /// Finds runtime dir using MK_LIBDIR or custom env var
 /// usually at: MK_LIBDIR/plugins/packages/mk-oracle
 /// Returns None if env var is not set or path is not a directory

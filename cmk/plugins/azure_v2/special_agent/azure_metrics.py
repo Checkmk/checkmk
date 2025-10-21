@@ -65,6 +65,9 @@ database_accounts_metrics = [
     ),
     AzureMetric(name="TotalRequestUnitsPreview", interval="PT1M", aggregation="total"),
     AzureMetric(name="NormalizedRUConsumption", interval="PT1M", aggregation="maximum"),
+    AzureMetric(name="DataUsage", interval="PT5M", aggregation="maximum"),
+    AzureMetric(name="IndexUsage", interval="PT5M", aggregation="maximum"),
+    AzureMetric(name="DocumentCount", interval="PT5M", aggregation="average"),
 ]
 
 ALL_METRICS: dict[str, list[AzureMetric]] = {

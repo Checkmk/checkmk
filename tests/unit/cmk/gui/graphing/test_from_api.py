@@ -341,6 +341,7 @@ _CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
     "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
     "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
+    "Data usage": {"azure_cosmosdb_data_usage", "data_usage"},
 }
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {

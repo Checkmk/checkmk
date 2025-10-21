@@ -12,7 +12,7 @@ import logging
 import os
 import signal
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -28,6 +28,7 @@ OPENTELEMETRY_DIR_AUTOCOMPLETE = Path("tmp/check_mk/otel_collector")
 
 
 class ScriptFileName(enum.Enum):
+    OTEL_ALL_METRIC_TYPES = "opentelemetry_all_metric_types.py"
     OTEL_HTTP = "opentelemetry_http.py"
     OTEL_GRPC = "opentelemetry_grpc.py"
     PROMETHEUS = "opentelemetry_prometheus.py"
@@ -116,3 +117,9 @@ def wait_for_otel_collector_conf(
         return len(services) > 10
 
     wait_until(_check_config, timeout=timeout, interval=interval)
+
+
+@contextmanager
+def otel_collector_enabled(site: Site) -> Generator[None]:
+    with site.omd_config("OPENTELEMETRY_COLLECTOR", "on"):
+        yield

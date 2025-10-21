@@ -32,6 +32,7 @@ from tests.testlib.common.utils import wait_until
 from tests.testlib.opentelemetry import (
     delete_opentelemetry_data,
     opentelemetry_app,
+    otel_collector_enabled,
     ScriptFileName,
     wait_for_opentelemetry_data,
     wait_for_otel_collector_conf,
@@ -112,14 +113,8 @@ HTTP_CONFIG_MULTIPLE_PASSWORDS = {
 
 @pytest.fixture(scope="module")
 def otel_enabled_site(otel_site: Site) -> Iterator[Site]:
-    """Fixture to enable OpenTelemetry collector"""
-    otel_site.stop()
-    otel_site.set_config("OPENTELEMETRY_COLLECTOR", "on")
-    otel_site.start()
-    yield otel_site
-    otel_site.stop()
-    otel_site.set_config("OPENTELEMETRY_COLLECTOR", "off")
-    otel_site.start()
+    with otel_collector_enabled(otel_site):
+        yield otel_site
 
 
 def delete_created_objects(

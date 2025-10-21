@@ -18,7 +18,7 @@ from tests.testlib.agent import (
     uninstall_agent_package,
 )
 from tests.testlib.common.repo import repo_path
-from tests.testlib.opentelemetry import wait_for_opentelemetry_data
+from tests.testlib.opentelemetry import otel_collector_enabled, wait_for_opentelemetry_data
 from tests.testlib.site import Site
 from tests.testlib.version import edition_from_env
 
@@ -90,22 +90,21 @@ def test_otel_collector_build_configuration(otel_site: Site) -> None:
 
 @contextmanager
 def _modify_test_site(otel_site: Site, hostname: str, agent_ctl: Path) -> Iterator[None]:
-    try:
-        otel_site.set_config("OPENTELEMETRY_COLLECTOR", "on", with_restart=True)
-        otel_site.openapi.hosts.create(
-            hostname,
-            attributes={
-                "ipaddress": "127.0.0.1",
-                "tag_agent": "cmk-agent",
-                "tag_piggyback": "no-piggyback",
-            },
-            folder="/",
-        )
-        register_controller(agent_ctl, otel_site, HostName(hostname))
-        yield
-    finally:
-        otel_site.openapi.hosts.delete(hostname)
-        otel_site.set_config("OPENTELEMETRY_COLLECTOR", "off", with_restart=True)
+    with otel_collector_enabled(otel_site):
+        try:
+            otel_site.openapi.hosts.create(
+                hostname,
+                attributes={
+                    "ipaddress": "127.0.0.1",
+                    "tag_agent": "cmk-agent",
+                    "tag_piggyback": "no-piggyback",
+                },
+                folder="/",
+            )
+            register_controller(agent_ctl, otel_site, HostName(hostname))
+            yield
+        finally:
+            otel_site.openapi.hosts.delete(hostname)
 
 
 def test_otel_collector_self_monitoring(agent_ctl: Path, otel_site: Site) -> None:

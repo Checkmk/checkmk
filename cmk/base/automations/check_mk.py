@@ -1057,13 +1057,18 @@ def _make_configured_bake_on_restart_callback(
     )
 
 
-def _make_configured_notify_relay() -> Callable[[], None]:
+def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
+    noop = lambda: None
+
+    if not relays_present:
+        return noop
+
     try:
         from cmk.relay_fetcher_trigger.relay_client import (  # type: ignore[import-not-found, unused-ignore]
             Client,
         )
     except ImportError:
-        return lambda: None
+        return noop
 
     return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config  # type: ignore[no-any-return, unused-ignore]
 
@@ -1318,7 +1323,7 @@ def _execute_autodiscovery(
             bake_on_restart = _make_configured_bake_on_restart_callback(
                 loading_result, hosts_config.hosts
             )
-            notify_relay = _make_configured_notify_relay()
+            notify_relay = _make_configured_notify_relay(bool(loaded_config.relays))
 
             # reset these to their original value to create a correct config
             if loaded_config.monitoring_core == "cmc":
@@ -1638,7 +1643,7 @@ class AutomationRenameHosts(Automation):
                     bake_on_restart=_make_configured_bake_on_restart_callback(
                         loading_result, hosts_config.hosts
                     ),
-                    notify_relay=_make_configured_notify_relay(),
+                    notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
                 )
 
                 for hostname in ip_address_of.error_handler.failed_ip_lookups:
@@ -2705,7 +2710,7 @@ class AutomationRestart(Automation):
             bake_on_restart=_make_configured_bake_on_restart_callback(
                 loading_result, hosts_config.hosts
             ),
-            notify_relay=_make_configured_notify_relay(),
+            notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
         )
 
     def _check_plugins_have_changed(self, monitoring_core: Literal["nagios", "cmc"]) -> bool:

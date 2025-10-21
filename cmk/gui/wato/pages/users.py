@@ -64,7 +64,11 @@ from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyn
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
+from cmk.gui.utils.ntop import (
+    get_ntop_connection_by_site,
+    get_ntop_connection_mandatory,
+    is_ntop_available,
+)
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
@@ -1314,20 +1318,24 @@ class ModeEditUser(WatoMode):
 
         # ntopng
         if is_ntop_available():
-            ntop_connection = get_ntop_connection_mandatory()
+            ntop_connections = get_ntop_connection_by_site()
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding Setup rule
-            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
-            if ntop_username_attribute:
-                forms.section(_("ntopng username"))
-                self._lockable_input(ntop_username_attribute, "")
-                html.help(
-                    _(
-                        "The corresponding username in ntopng of the current Checkmk user. "
-                        "It is used, in case the user mapping to ntopng is configured to use this "
-                        "custom attribute"
-                    )
+            for site_id, ntop_connection in ntop_connections.items():
+                ntop_username_attribute = ntop_connection.get(
+                    "use_custom_attribute_as_ntop_username"
                 )
+                if ntop_username_attribute:
+                    forms.section(_("ntopng username"))
+                    self._lockable_input(ntop_username_attribute, "")
+                    html.help(
+                        _(
+                            "The corresponding username in ntopng of the current Checkmk user. "
+                            "It is used, in case the user mapping to ntopng is configured to use this "
+                            "custom attribute"
+                        )
+                    )
+                    return
 
     def _render_security(
         self,

@@ -10,9 +10,11 @@
 Needs to be part of the generic code, not packed into NTOP addon.
 """
 
+from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.watolib.config_sync import get_site_globals
 
 
 def get_ntop_connection() -> dict | None:
@@ -22,6 +24,13 @@ def get_ntop_connection() -> dict | None:
         return active_config.ntop_connection  # type: ignore[attr-defined, unused-ignore]
     except AttributeError:
         return None
+
+
+def get_ntop_connection_by_site() -> dict[SiteId, dict]:
+    return {
+        site_id: get_site_globals(site_id, site_config).get("ntop_connection", {})
+        for site_id, site_config in active_config.sites.items()
+    }
 
 
 def get_ntop_connection_mandatory() -> dict:

@@ -14,6 +14,7 @@ import type {
   WidgetGeneralSettings,
   WidgetSpec
 } from '../../types/widget'
+import CustomGraphsWizard from '../Wizard/wizards/custom-graphs/CustomGraphsWizard.vue'
 import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
 import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
 import HwSwInventoryWizard from '../Wizard/wizards/hw_sw_inventory/HwSwInventoryWizard.vue'
@@ -133,6 +134,16 @@ const handleAddEditWidget = (
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
+      />
+      <CustomGraphsWizard
+        v-if="selectedWizard === 'custom_graphs'"
+        :dashboard-name="dashboardName"
+        :dashboard-constants="dashboardConstants"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+        @update-widget="() => {}"
       />
 
       <!-- Other wizards can be added here similarly -->

@@ -12,6 +12,7 @@ import CmkLabel from '@/components/CmkLabel.vue'
 interface BackButtonProps {
   title: TranslatedString
   subtitle?: TranslatedString
+  hideBackButton?: boolean
 }
 
 const emit = defineEmits(['back'])
@@ -21,7 +22,7 @@ defineProps<BackButtonProps>()
 
 <template>
   <div class="back-button__container">
-    <div class="back-button__icon">
+    <div v-if="!hideBackButton" class="back-button__icon">
       <CmkIconButton
         name="back"
         variant="plain"

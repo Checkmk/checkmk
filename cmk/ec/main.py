@@ -217,8 +217,9 @@ def create_history(
     history_columns: Columns,
 ) -> History:
     """Factory for History objects based on the current configuration, optionally augmented with timing information."""
-    history = create_history_raw(settings, config, logger, event_columns, history_columns)
-    return TimedHistory(history) if logger.isEnabledFor(DEBUG) else history
+    history_logger = logger.getChild("EventStatus")
+    history = create_history_raw(settings, config, history_logger, event_columns, history_columns)
+    return TimedHistory(history) if history_logger.isEnabledFor(DEBUG) else history
 
 
 def allowed_ip(

@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import re
 from collections.abc import Mapping
 from typing import Any
@@ -12,8 +15,9 @@ from cmk.agent_based.v2 import StringTable
 Section = Mapping[str, Mapping[str, Any]]
 
 RE_INTRO = re.compile(r"^QMNAME\((.*)\)[\s]*STATUS\((.*?)\)[\s]*NOW\((.*)\)")
-RE_GROUP = re.compile(r"^AMQ\d+\w?: [^.]*.")
-RE_KEY = re.compile(r"[\s]*[A-Z0-9]+\(")
+# Accept `AMQ[0-9]+?:` and `CSQM[0-9]+? !` as group line prefixes
+RE_GROUP = re.compile(r"^(AMQ\d+\w?:|CSQM\d+\w? !)")
+RE_KEY = re.compile(r"([\s]*|CSQM\d+\w? !MQSU[\s]+)([A-Z0-9]+\()")
 RE_SECOND_COLUMN = re.compile(r" [A-Z0-9]+\(")
 RE_KEY_VALUE = re.compile(r"([A-Z0-9]+)\((.*)\)[\s]*")
 
@@ -62,11 +66,14 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
             now = intro_line.group(3)
             parsed[qmname] = {"STATUS": qmstatus, "NOW": now}
             continue
+
         if RE_GROUP.match(line) or not has_more:
             if attributes:
                 record_group(qmname, attributes, parsed)
                 attributes.clear()
-            continue
+                # Remote group header do contain attribute(s)
+                # do not go to next line now, test for attr
+
         if RE_KEY.match(line):
             if RE_SECOND_COLUMN.match(line[39:]):
                 first_half = line[:40]

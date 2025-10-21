@@ -12,7 +12,7 @@ from cmk.rulesets.v1.form_specs import (
     migrate_to_integer_simple_levels,
     SimpleLevels,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
 def _make_form() -> Dictionary:
@@ -40,5 +40,5 @@ rule_spec_azure_databases_deadlock = CheckParameters(
     title=Title("Azure SQL database deadlocks"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
-    condition=HostAndItemCondition(item_title=Title("Database name")),
+    condition=HostCondition(),
 )

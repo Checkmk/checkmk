@@ -4,6 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special Agent to fetch Redfish data from management interfaces"""
 
+# mypy: disable-error-code="exhaustive-match"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="type-arg"
+
 import json
 import logging
 import sys
@@ -323,7 +328,9 @@ def fetch_list_of_elements(
         if section not in data.keys():
             continue
 
-        fetch_result = data[section]
+        fetch_result = data.get(section)
+        if not fetch_result:
+            continue
         if isinstance(fetch_result, Mapping):
             # result = fetch_data(redfishobj, fetch_result.get("@odata.id"), section)
             fetch_entry(redfishobj, fetch_result, section)

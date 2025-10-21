@@ -6,6 +6,9 @@
 to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 import abc
@@ -85,7 +88,7 @@ class CrashReportStore:
             fname = "crash.info" if key == "crash_info" else key
 
             if value is None:
-                continue
+                continue  # type: ignore[unreachable]
 
             if fname == "crash.info":
                 store.save_text_to_file(
@@ -239,7 +242,7 @@ def _get_generic_crash_info[TDetails](
     type_name: str,
     version_info: VersionInfo,
     details: TDetails,
-) -> CrashInfo:
+) -> CrashInfo[TDetails]:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need

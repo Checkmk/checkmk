@@ -15,14 +15,16 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
-  WidgetGeneralSettings
+  WidgetGeneralSettings,
+  WidgetSpec
 } from '@/dashboard-wip/types/widget'
 
 import ActionBar from '../../../components/ActionBar.vue'
 import ActionButton from '../../../components/ActionButton.vue'
 import ContentSpacer from '../../../components/ContentSpacer.vue'
+import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
+import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import type { ElementSelection, UseWidgetHandler } from '../../../types'
-import WidgetSelection from '../components/WidgetSelection.vue'
 import { getAvailableGraphs } from '../composables/useSelectGraphTypes'
 import { Graph } from '../types'
 import HostState from './HostState/HostState.vue'
@@ -48,6 +50,7 @@ interface Stage2Props {
 
   filters: ConfiguredFilters
   dashboardConstants: DashboardConstants
+  editWidgetSpec: WidgetSpec | null
 }
 
 const props = defineProps<Stage2Props>()
@@ -83,14 +86,37 @@ const gotoPrevStage = () => {
   emit('goPrev')
 }
 
-const availableGraphs = getAvailableGraphs(props.hostFilterType)
+const enabledWidgets = getAvailableGraphs(props.hostFilterType)
+const availableWidgets: WidgetItemList = [
+  { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
+  { id: Graph.HOST_STATISTICS, label: _t('Host statistics'), icon: 'folder' },
+  { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'folder' },
+  { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'folder' }
+]
+
 const selectedWidget = ref<Graph>(Graph.SITE_OVERVIEW)
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.HOST_STATE]: useHostState(props.filters),
-  [Graph.HOST_STATE_SUMMARY]: useHostStateSummary(props.filters),
-  [Graph.HOST_STATISTICS]: useHostStatistics(props.filters),
-  [Graph.SITE_OVERVIEW]: useSiteOverview(props.filters)
+  [Graph.HOST_STATE]: await useHostState(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.HOST_STATE_SUMMARY]: await useHostStateSummary(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.HOST_STATISTICS]: await useHostStatistics(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.SITE_OVERVIEW]: await useSiteOverview(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  )
 }
 </script>
 
@@ -113,10 +139,10 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
 
   <ContentSpacer />
 
-  <WidgetSelection
+  <SelectableWidgets
     v-model:selected-widget="selectedWidget as Graph"
-    :available-items="Object.keys(Graph)"
-    :enabled-widgets="availableGraphs"
+    :available-items="availableWidgets"
+    :enabled-widgets="enabledWidgets"
   />
 
   <ContentSpacer />

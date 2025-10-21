@@ -20,7 +20,8 @@ export enum Graph {
   SCATTERPLOT = 'SCATTERPLOT',
   TOP_LIST = 'TOP_LIST',
   PERFORMANCE_GRAPH = 'PERFORMANCE_GRAPH',
-  COMBINED_GRAPH = 'COMBINED_GRAPH'
+  COMBINED_GRAPH = 'COMBINED_GRAPH',
+  ANY_GRAPH = 'ANY_GRAPH'
 }
 
 const graphSelector = {
@@ -34,17 +35,26 @@ const graphSelector = {
         Graph.SINGLE_METRIC,
         Graph.BARPLOT,
         Graph.SCATTERPLOT,
-        Graph.TOP_LIST
+        Graph.TOP_LIST,
+        Graph.ANY_GRAPH
       ],
 
-      [MetricSelection.COMBINED_GRAPH]: [Graph.PERFORMANCE_GRAPH, Graph.COMBINED_GRAPH]
+      [MetricSelection.COMBINED_GRAPH]: [
+        Graph.PERFORMANCE_GRAPH,
+        Graph.COMBINED_GRAPH,
+        Graph.ANY_GRAPH
+      ]
     },
 
     [ElementSelection.MULTIPLE]: {
       //service
       [MetricSelection.SINGLE_METRIC]: [Graph.SCATTERPLOT, Graph.TOP_LIST],
 
-      [MetricSelection.COMBINED_GRAPH]: [Graph.PERFORMANCE_GRAPH, Graph.COMBINED_GRAPH]
+      [MetricSelection.COMBINED_GRAPH]: [
+        Graph.PERFORMANCE_GRAPH,
+        Graph.COMBINED_GRAPH,
+        Graph.ANY_GRAPH
+      ]
     }
   },
 
@@ -54,14 +64,22 @@ const graphSelector = {
       //service
       [MetricSelection.SINGLE_METRIC]: [Graph.BARPLOT, Graph.SCATTERPLOT, Graph.TOP_LIST],
 
-      [MetricSelection.COMBINED_GRAPH]: [Graph.PERFORMANCE_GRAPH, Graph.COMBINED_GRAPH]
+      [MetricSelection.COMBINED_GRAPH]: [
+        Graph.PERFORMANCE_GRAPH,
+        Graph.COMBINED_GRAPH,
+        Graph.ANY_GRAPH
+      ]
     },
 
     [ElementSelection.MULTIPLE]: {
       //service
       [MetricSelection.SINGLE_METRIC]: [Graph.SCATTERPLOT, Graph.TOP_LIST],
 
-      [MetricSelection.COMBINED_GRAPH]: [Graph.PERFORMANCE_GRAPH, Graph.COMBINED_GRAPH]
+      [MetricSelection.COMBINED_GRAPH]: [
+        Graph.PERFORMANCE_GRAPH,
+        Graph.COMBINED_GRAPH,
+        Graph.ANY_GRAPH
+      ]
     }
   }
 }

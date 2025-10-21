@@ -6,14 +6,19 @@
 
 import itertools
 import json
+import os
 import sqlite3
+import stat
 import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
+from shutil import disk_usage
 from typing import Final, Literal
+
+from cmk.utils.log import VERBOSE
 
 from .config import Config
 from .event import Event
@@ -143,6 +148,34 @@ class SQLiteSettings:
         return cls(paths=settings.paths, options=settings.options, database=database)
 
 
+# This is basically the Python version of SQLite's src/os_unix.c:unixTempFileDir
+# function for figuring out the directory in which to put temporary files, see
+# https://www.sqlite.org/tempfiles.html#temporary_file_storage_locations. Note
+# that we ignore deprecated features here, like "PRAGMA temp_store_directory" or
+# the global variable "sqlite3_temp_directory".
+def _unix_temp_file_dir(logger: Logger) -> Path | None:
+    for path_candidate in [
+        os.getenv("SQLITE_TMPDIR"),
+        os.getenv("TMPDIR"),
+        "/var/tmp",  # nosec B108
+        "/usr/tmp",
+        "/tmp",  # nosec B108
+        ".",
+    ]:
+        try:
+            if (  # pathlib offers no os.access() equivalent
+                path_candidate is not None
+                and stat.S_ISDIR(os.stat(path_candidate).st_mode)
+                and os.access(path_candidate, os.W_OK | os.X_OK)
+            ):
+                logger.log(VERBOSE, f"assuming {path_candidate} for SQLite's temporary directory")
+                return Path(path_candidate)
+        except OSError:
+            pass
+    logger.warning("could not determine SQLite's temporary directory")
+    return None
+
+
 class SQLiteHistory(History):
     def __init__(
         self,
@@ -163,6 +196,8 @@ class SQLiteHistory(History):
         if isinstance(self._settings.database, Path):
             self._settings.database.parent.mkdir(parents=True, exist_ok=True)
             self._settings.database.touch(exist_ok=True)
+
+        self._sqlite_temp_file_dir = _unix_temp_file_dir(logger)
 
         configure_sqlite_types()
 
@@ -262,28 +297,60 @@ class SQLiteHistory(History):
             return cur.fetchall()
 
     def housekeeping(self) -> None:
-        """Remove old entries from the history table.
-
-        And performs a vacuum to shrink the database file.
-        """
+        """Remove old entries from the history table, performin a VACUUM to shrink the database file
+        if needed"""
         now = time.time()
-        if now - self._last_housekeeping > self._config["sqlite_housekeeping_interval"]:
-            delta = now - timedelta(days=self._config["history_lifetime"]).total_seconds()
-            with self.conn as connection:
-                cur = connection.cursor()
-                cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
-            # should be executed outside of the transaction
-            self._vacuum()
-            self._last_housekeeping = now
+        if now - self._last_housekeeping <= self._config["sqlite_housekeeping_interval"]:
+            return
+        delta = now - timedelta(days=self._config["history_lifetime"]).total_seconds()
+        self._logger.log(
+            VERBOSE,
+            "SQLite history housekeeping: deleting events before %s",
+            datetime.fromtimestamp(delta).isoformat(),
+        )
+        with self.conn as connection:
+            cur = connection.cursor()
+            cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
+        # should be executed outside of the transaction
+        self._vacuum()
+        self._last_housekeeping = now
 
     def _vacuum(self) -> None:
-        """Run VACUUM command only if the free pages in DB are greater than 50 Mb."""
+        """Run VACUUM command, but only if it is not an in-memory DB, and the free pages in DB are
+        greater than the configured limit, and there is enough space for the temporary copy of the
+        DB"""
+        if self._settings.database == ":memory:":
+            self._logger.log(VERBOSE, "using in-memory DB for the history, no VACUUM needed")
+            return
+
         with self.conn as connection:
             freelist_count = connection.execute("PRAGMA freelist_count").fetchone()[0]
             freelist_size = freelist_count * self._page_size
+        max_freelist_size = self._config["sqlite_freelist_size"]
+        freelist_msg = (
+            f"freelist size of the history DB at {self._settings.database} is {freelist_size} bytes, "
+            f"configured limit is {max_freelist_size} bytes"
+        )
+        if freelist_size <= max_freelist_size:
+            self._logger.log(VERBOSE, f"{freelist_msg}, no VACUUM needed")
+            return
+        self._logger.log(VERBOSE, f"{freelist_msg}, VACUUM needed")
 
-        if freelist_size > self._config["sqlite_freelist_size"]:
-            self.conn.execute("VACUUM;")
+        if self._sqlite_temp_file_dir is not None:
+            db_size = self._settings.database.stat().st_size
+            disk_free = disk_usage(self._sqlite_temp_file_dir).free
+            disk_free_msg = (
+                f"{self._sqlite_temp_file_dir} has {disk_free} free bytes, "
+                f"estimated size for VACUUM is {db_size} bytes"
+            )
+            if db_size * 1.1 > disk_free:  # Overestimate by 10%, just to be sure
+                self._logger.warning(f"{disk_free_msg}, not running it due to insufficient space")
+                return
+            self._logger.log(VERBOSE, f"{disk_free_msg}, which is sufficient")
+
+        self._logger.log(VERBOSE, f"{freelist_msg}, running VACUUM")
+        self.conn.execute("VACUUM;")
+        self._logger.log(VERBOSE, f"VACUUM on {self._settings.database} done")
 
     def close(self) -> None:
         """Explicitly close the connection to the sqlite database.

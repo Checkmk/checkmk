@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
 from collections.abc import Iterable, Sequence
 from typing import Literal
 
@@ -68,7 +70,7 @@ def _commands_function(
         case ("auth_token", AuthToken(token=token)):
             args += [
                 "auth_token",
-                "--token",
+                "--token-reference",
                 token,
             ]
     yield SpecialAgentCommand(command_arguments=args)

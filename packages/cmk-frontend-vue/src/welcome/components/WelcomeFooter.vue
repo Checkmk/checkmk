@@ -13,6 +13,9 @@ import usei18n from '@/lib/i18n'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare let global_csrf_token: string
+
 const props = defineProps<{
   is_start_url: boolean
 }>()
@@ -35,7 +38,6 @@ const setStartUrl = async (startUrlValue?: string): Promise<void> => {
     const response = await axios.post(url, null, {
       params: {
         name: startUrlValue,
-        // @ts-expect-error  TODO change if something is implemented to use CSRF token
         _csrf_token: global_csrf_token
       }
     })

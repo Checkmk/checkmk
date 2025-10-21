@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
 check_info = {}
 
@@ -33,15 +35,8 @@ def check_informix_locks(item, params, parsed):
         data = parsed[item]
         locks = int(data["locks"])
         warn, crit = params["levels"]
-        state = 0
-        infotext = "Type: {}, Locks: {}".format(data["type"], locks)
-        if locks >= crit:
-            state = 2
-        elif locks >= crit:
-            state = 1
-        if state:
-            infotext += f" (warn/crit at {warn}/{crit})"
-        return state, infotext, [("locks", locks)]
+
+        return check_levels(locks, "locks", (warn, crit), infoname=f"Type: {data['type']}, Locks")
     return None
 
 

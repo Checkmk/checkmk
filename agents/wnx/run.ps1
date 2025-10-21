@@ -674,13 +674,19 @@ function Test-MsiSigning($file) {
         foreach ($exe in $exe_files) {
             Write-Host "Validate executable $exe ..." -ForegroundColor White
             $state = Get-AuthenticodeSignature -FilePath $random_dir\$exe -ErrorAction Stop
-            if ($state.Status -ne "Signed") {
-                Write-Host "Signature check failed: $($state.Status) status: $($state.StatusMessage)" -ForegroundColor Red
+            if ($state.Status -ne "Valid") {
+                Write-Host "Signature check Failed: $($state.Status) status: $($state.StatusMessage)" -ForegroundColor Red
+                Write-Host "BUILD FAILED - EXITING..." -ForegroundColor Red
+                throw
+            }
+            else {
+                Write-Host "Signature check Valid"
             }
         }
     }
     catch {
-        Write-Host "Failed to validate signing: $_" -ForegroundColor Red
+        Write-Host "Failed to validate signing for $file - $_" -ForegroundColor Red
+        throw
     }
     finally {
         Remove-Item -Path $random_dir -Recurse -Force -ErrorAction SilentlyContinue

@@ -9,10 +9,13 @@ from typing import Self
 from pydantic import model_validator
 from pydantic_core import ErrorDetails
 
+from cmk.gui.config import active_config
 from cmk.gui.dashboard import dashlet_registry, DashletConfig
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualLinkSpec, VisualName, VisualTypeName
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import visual_type_registry
 
 
@@ -67,7 +70,9 @@ class ApiVisualLink:
 
     def __post_init__(self) -> None:
         visual = visual_type_registry[self.type]()
-        if self.name not in visual.permitted_visuals:
+        if self.name not in visual.permitted_visuals(
+            visual.visuals(), UserPermissions.from_config(active_config, permission_registry)
+        ):
             link_type = self.type.title()[:-1]  # remove trailing "s"
             raise ValueError(
                 f"{link_type} '{self.name}' does not exist or you don't have permission to see it."

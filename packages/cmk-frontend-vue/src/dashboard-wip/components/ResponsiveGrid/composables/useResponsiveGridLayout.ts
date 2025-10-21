@@ -152,12 +152,10 @@ export function createWidgetLayout(
   for (const [layoutName, gridLayouts] of Object.entries(configuredLayouts)) {
     layoutData[layoutName] = {}
     for (const [breakpoint, elements] of typedEntries(gridLayouts)) {
-      const { columns, rows } = getMinimumSize(
-        widgetContentType,
-        breakpointFromInternal[breakpoint]
-      )
+      const externalBreakpoint = breakpointFromInternal[breakpoint]
+      const { columns, rows } = getMinimumSize(widgetContentType, externalBreakpoint)
       const position = findPositionForWidget(elements, columns, rows)
-      layoutData[layoutName]![breakpoint] = {
+      layoutData[layoutName]![externalBreakpoint] = {
         position,
         size: {
           columns,

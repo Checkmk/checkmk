@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # TODO This module should be freed from base deps.
 
 import os.path
@@ -488,32 +490,15 @@ class SpecialAgentSource(Source[AgentRawData]):
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
-        if self._agent_name != "otel":
-            return AgentFileCache(
-                base_path=self._file_cache_path_base,
-                relative_path_template=os.path.join(
-                    self._file_cache_path_relative, self.source_info().ident, str(self.host_name)
-                ),
-                max_age=self._max_age,
-                simulation=simulation,
-                use_only_cache=file_cache_options.use_only_cache,
-                file_cache_mode=file_cache_options.file_cache_mode(),
-            )
-
-        # Overriding the cache mode like this is extremely hackish. The alternative would have
-        # been to modify the agent API to pass down this via configuration.
-        # We want to disable caching to prevent data duplication in tmpfs. Because this is a
-        # temp fix until a metrics backend becomes available, we didn't go for a cleaner
-        # approach.
         return AgentFileCache(
             base_path=self._file_cache_path_base,
             relative_path_template=os.path.join(
-                self._file_cache_path_relative, "special_otel", str(self.host_name)
+                self._file_cache_path_relative, self.source_info().ident, str(self.host_name)
             ),
             max_age=self._max_age,
             simulation=simulation,
-            use_only_cache=False,
-            file_cache_mode=FileCacheMode.DISABLED,
+            use_only_cache=file_cache_options.use_only_cache,
+            file_cache_mode=file_cache_options.file_cache_mode(),
         )
 
 
@@ -600,3 +585,52 @@ class MissingSourceSource(Source):
 
     def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
         return _NO_CACHE
+
+
+class MetricBackendSource(Source[AgentRawData]):
+    fetcher_type: Final = FetcherType.SPECIAL_AGENT
+    source_type: Final = SourceType.HOST
+
+    def __init__(
+        self,
+        fetcher: ProgramFetcher,
+        host_name: HostName,
+        ipaddress: HostAddress | None,
+        *,
+        max_age: MaxAge,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
+    ) -> None:
+        super().__init__()
+        self._fetcher: Final = fetcher
+        self.host_name: Final = host_name
+        self.ipaddress: Final = ipaddress
+        self._max_age: Final = max_age
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
+
+    def source_info(self) -> SourceInfo:
+        return SourceInfo(
+            self.host_name,
+            self.ipaddress,
+            "special_otel",  # TODO: metric backend
+            self.fetcher_type,
+            self.source_type,
+        )
+
+    def fetcher(self) -> ProgramFetcher:
+        return self._fetcher
+
+    def file_cache(
+        self, *, simulation: bool, file_cache_options: FileCacheOptions
+    ) -> FileCache[AgentRawData]:
+        return AgentFileCache(
+            base_path=self._file_cache_path_base,
+            relative_path_template=os.path.join(
+                self._file_cache_path_relative, self.source_info().ident, str(self.host_name)
+            ),
+            max_age=self._max_age,
+            simulation=simulation,
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
+        )

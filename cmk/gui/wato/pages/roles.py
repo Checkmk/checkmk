@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Manage roles and permissions
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 In order to make getting started easier - Checkmk Multisite comes with three
 builtin-roles: admin, user and guest. These roles have predefined permissions.
 The built-in roles cannot be deleted.

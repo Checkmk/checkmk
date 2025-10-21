@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Callable, Mapping, Sequence
 from functools import partial
 from typing import Any, TypeVar
@@ -2439,6 +2443,8 @@ def test_simple_levels_custom_validate() -> None:
                     raise api_v1.form_specs.validators.ValidationError(
                         message=api_v1.Message("Warning level must be lower than critical level")
                     )
+            case _:
+                pass
 
     api_v1_levels = api_v1.form_specs.SimpleLevels(
         form_spec_template=api_v1.form_specs.Float(),
@@ -2459,6 +2465,8 @@ def test_levels_custom_validate() -> None:
                     raise api_v1.form_specs.validators.ValidationError(
                         message=api_v1.Message("Warning level must be lower than critical level")
                     )
+            case _:
+                pass
 
     api_v1_levels = api_v1.form_specs.Levels(
         form_spec_template=api_v1.form_specs.Float(),

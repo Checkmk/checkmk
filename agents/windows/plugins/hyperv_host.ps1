@@ -159,15 +159,16 @@ function Get-VMRAMInfo {
 
   $getRAMInfo = Get-VMMemory -VMName $vm.Name -ComputerName $clusterNode
   if ($getRAMInfo.DynamicMemoryEnabled -eq $true) {
-    Write-Output "config.hardware.RAMType Dynamic Memory"
-    Write-Output "config.hardware.StartRAM $($getRAMInfo.Startup / 1MB)"
-    Write-Output "config.hardware.MinRAM $($getRAMInfo.Minimum / 1MB)"
-    Write-Output "config.hardware.MaxRAM $($getRAMInfo.Maximum / 1MB)"
+    Write-Output "config.hardware.RAMType dynamic"
   }
   else {
-    Write-Output "config.hardware.RAMType Static Memory"
-    Write-Output "config.hardware.RAM $($vm.MemoryStartup / 1MB)"
+    Write-Output "config.hardware.RAMType static"
   }
+  Write-Output "config.hardware.StartRAM $($getRAMInfo.Startup)"
+  Write-Output "config.hardware.MinRAM $($getRAMInfo.Minimum)"
+  Write-Output "config.hardware.MaxRAM $($getRAMInfo.Maximum)"
+  Write-Output "config.hardware.AssignedRAM $($vm.MemoryAssigned)"
+  Write-Output "config.hardware.RAMDemand $($vm.MemoryDemand)"
 }
 
 ############################################################################################################

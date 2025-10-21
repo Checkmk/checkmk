@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="unreachable"
+
 
 import ast
 import csv
@@ -420,8 +424,6 @@ def test_dependencies_are_used() -> None:
     known_unused_packages.add("setuptools")  # pinned transitive dependency
     # used for deploying the agent receiver, but in a bash script, so undetectable by this test
     known_unused_packages.add("gunicorn")
-    # Will soon be used
-    known_unused_packages.add("clickhouse-connect")
 
     if not is_enterprise_repo():
         known_unused_packages.update(("PyPDF", "numpy", "roman"))

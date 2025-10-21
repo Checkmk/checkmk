@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pre update checks, executed before any configuration is changed."""
 
+# mypy: disable-error-code="possibly-undefined"
+
 import warnings
 from dataclasses import dataclass
 from logging import Logger
@@ -55,7 +57,7 @@ class PreUpdateRulesets(PreUpdateAction):
             )
             for ruleset in rulesets.get_rulesets().values():
                 try:
-                    ruleset.valuespec()
+                    ruleset.rulespec.valuespec
                 except Exception:
                     logger.error(
                         "ERROR: Failed to load Ruleset: %s. "
@@ -74,7 +76,7 @@ def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:
         case ConflictMode.FORCE:
             return Resume.UPDATE
         case ConflictMode.ABORT:
-            return Resume.UPDATE
+            return Resume.ABORT
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
             return Resume.UPDATE
         case ConflictMode.ASK:

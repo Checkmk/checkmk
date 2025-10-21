@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from itertools import zip_longest
@@ -67,8 +69,8 @@ def _diff_values(path_components: PATH_COMPONENTS, old: object, new: object) -> 
     if isinstance(old, dict) and isinstance(new, dict):
         yield from __diff_dict(path_components, old, new)
 
-    elif isinstance(old, list) and isinstance(new, list):
-        yield from __diff_list(path_components, old, new)
+    elif isinstance(old, list | tuple) and isinstance(new, list | tuple):
+        yield from __diff_sequence(path_components, old, new)
 
     elif isinstance(old, set) and isinstance(new, set):
         yield from __diff_set(path_components, old, new)
@@ -109,7 +111,9 @@ def __diff_dict(path_components: PATH_COMPONENTS, old: dict, new: dict) -> Itera
             )
 
 
-def __diff_list(path_components: PATH_COMPONENTS, old: list, new: list) -> Iterable[DIFF_ITEM]:
+def __diff_sequence(
+    path_components: PATH_COMPONENTS, old: Sequence, new: Sequence
+) -> Iterable[DIFF_ITEM]:
     for idx, (old_item, new_item) in enumerate(zip_longest(old, new, fillvalue=MISSING)):
         sub_path = _diff_path(path_components, idx)
         if new_item is MISSING:

@@ -116,7 +116,7 @@ function onClickGoTo() {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
-  width: 100%;
+  width: calc(100% - 40px);
 }
 
 .cmk-wizard-step__actions {

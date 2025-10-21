@@ -41,7 +41,6 @@ _PERMISSIONS = (
     ("notifications/*", is_executable, ("README", "debug"), ()),
     ("bin/*", is_executable, ("BUILD", "mkevent.cc", "mkeventd_open514.cc"), ()),
     # Enterprise specific
-    ("omd/packages/enterprise/bin/*", is_executable, (), ()),
     (
         "non-free/packages/cmk-update-agent/*",
         is_executable,
@@ -66,7 +65,7 @@ _PERMISSIONS = (
         ),
         (),
     ),
-    ("omd/packages/enterprise/alert_handlers/*", is_executable, (), ()),
+    ("omd/non-free/packages/alert-handling/alert_handlers/*", is_executable, (), ()),
 )
 
 

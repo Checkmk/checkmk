@@ -3,7 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
 import { randomId } from './randomId'
+
+const { _t } = usei18n()
 
 export type KeyShortcutHandlerCallback = (shortcut: KeyShortcut) => void
 
@@ -19,11 +25,11 @@ export interface KeyShortcutEnsured extends KeyShortcut {
 
 export interface KeyShortcut {
   key: string[]
-  ctrl?: boolean
-  shift?: boolean
-  alt?: boolean
-  preventDefault?: boolean
-  propagate?: boolean
+  ctrl?: boolean | undefined
+  shift?: boolean | undefined
+  alt?: boolean | undefined
+  preventDefault?: boolean | undefined
+  propagate?: boolean | undefined
 }
 
 export interface KeyShortcutHandler extends KeyShortcutEnsured {
@@ -69,6 +75,25 @@ export class KeyShortcutService {
 
   public setPropagateTo(propagateTo: HTMLCollectionOf<HTMLIFrameElement>): void {
     this.propagateTo = propagateTo
+  }
+
+  public static getShortCutInfo(shortcut: KeyShortcut): string {
+    const keys = []
+    if (shortcut.ctrl) {
+      keys.push((_t('Ctrl') as unknown as Ref).value)
+    }
+
+    if (shortcut.shift) {
+      keys.push((_t('Shift') as unknown as Ref).value)
+    }
+
+    if (shortcut.alt) {
+      keys.push((_t('Alt') as unknown as Ref).value)
+    }
+
+    keys.push(shortcut.key.map((k) => k.toUpperCase()))
+
+    return keys.join(' + ')
   }
 
   private ensureShortcut(shortcut: KeyShortcut): KeyShortcutEnsured {

@@ -2,6 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="unreachable"
+
 from __future__ import annotations
 
 import functools
@@ -53,7 +58,7 @@ tracer = trace.get_tracer()
 #  * derive all exceptions from werkzeug's http exceptions.
 
 
-def _noauth(handler: pages.PageHandlerFunc | type[pages.Page]) -> Callable[[Config], Response]:
+def _noauth(handler: pages.PageHandler) -> Callable[[Config], Response]:
     #
     # We don't have to set up anything because we assume this is only used for special calls. We
     # however have to make sure all errors get written out in plaintext, without HTML.
@@ -65,10 +70,7 @@ def _noauth(handler: pages.PageHandlerFunc | type[pages.Page]) -> Callable[[Conf
     @functools.wraps(handler)
     def _call_noauth(config: Config) -> Response:
         try:
-            if isinstance(handler, type):
-                handler().handle_page(config)
-            else:
-                handler(config)
+            handler(config)
         except HTTPRedirect:
             raise
         except Exception as e:

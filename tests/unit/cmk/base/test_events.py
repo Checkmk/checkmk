@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Final
 
 import pytest
@@ -13,11 +14,16 @@ from cmk.base.events import (
     _update_enriched_context_from_notify_host_file,
     add_to_event_context,
     apply_matchers,
-    convert_proxy_params,
     event_match_hosttags,
     raw_context_from_string,
 )
 from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.utils.http_proxy_config import (
+    EnvironmentProxyConfig,
+    HTTPProxySpec,
+    make_http_proxy_getter,
+    ProxyConfigSpec,
+)
 from cmk.utils.notify import NotificationHostConfig
 from cmk.utils.notify_types import (
     EventRule,
@@ -28,19 +34,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagGroupID, TagID
 
-
-class HTTPPRoxyConfig:
-    def to_requests_proxies(self) -> None:
-        return None
-
-    def serialize(self) -> str:
-        return ""
-
-    def __eq__(self, o: object) -> bool:
-        return NotImplemented
-
-
-HTTP_PROXY: Final = HTTPPRoxyConfig()
+HTTP_PROXY: Final = EnvironmentProxyConfig()
 
 
 @pytest.mark.parametrize(
@@ -226,7 +220,7 @@ def test_add_to_event_context_prefix_is_prepended() -> None:
 )
 def test_add_to_event_context(param: object, expected: EventContext) -> None:
     context: EventContext = {}
-    add_to_event_context(context, "PARAMETER", param, lambda *args, **lw: HTTP_PROXY)
+    add_to_event_context(context, "PARAMETER", param, make_http_proxy_getter({}))
     assert context == expected
 
 
@@ -457,32 +451,58 @@ def test_match_host_tags(
     [
         pytest.param(
             {"proxy_url": ("cmk_postprocessed", "no_proxy", "")},
-            ("no_proxy", None),
+            {
+                "PARAMETER_PROXY_URL": "NO_PROXY",
+            },
             id="No proxy",
         ),
         pytest.param(
             {"proxy_url": ("cmk_postprocessed", "stored_proxy", "proxy_id")},
-            ("global", "proxy_id"),
+            {
+                "PARAMETER_PROXY_URL": "http://stored_url:8080",
+            },
             id="Stored proxy",
         ),
         pytest.param(
             {"proxy_url": ("cmk_postprocessed", "environment_proxy", "")},
-            ("environment", "environment"),
+            {
+                "PARAMETER_PROXY_URL": "FROM_ENVIRONMENT",
+            },
             id="Environment proxy",
         ),
         pytest.param(
             {"proxy_url": ("cmk_postprocessed", "explicit_proxy", "http://www.myproxy.com")},
-            ("url", "http://www.myproxy.com"),
+            {
+                "PARAMETER_PROXY_URL": "http://www.myproxy.com",
+            },
             id="Explicit proxy",
         ),
     ],
 )
-def test_convert_proxy_params(
+def test_add_to_event_context_proxy(
     params: NotifyPluginParamsDict,
-    expected: tuple[str, str | None],
+    expected: Mapping[str, str],
 ) -> None:
-    params_dict = convert_proxy_params(params)
-    assert params_dict["proxy_url"] == expected
+    context = dict[str, str]()
+    add_to_event_context(
+        context,
+        "PARAMETER",
+        params,
+        make_http_proxy_getter(
+            {
+                "proxy_id": HTTPProxySpec(
+                    ident="proxy_id",
+                    title="proxy_id",
+                    proxy_config=ProxyConfigSpec(
+                        scheme="http",
+                        proxy_server_name="stored_url",
+                        port=8080,
+                    ),
+                )
+            },
+        ),
+    )
+    assert context == expected
 
 
 def test_apply_matchers_catches_errors() -> None:

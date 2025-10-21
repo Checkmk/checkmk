@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.plugins.vsphere.lib import esx_vsphere

@@ -20,9 +20,11 @@ import type {
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
-import { generateWidgetProps } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { WidgetSpec } from '@/dashboard-wip/types/widget'
+import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 const { _t } = usei18n()
 
@@ -46,21 +48,28 @@ export interface UseTopList extends UseWidgetHandler, UseWidgetVisualizationOpti
   widgetProps: Ref<WidgetProps>
 }
 
-export const useTopList = (metric: string, filters: ConfiguredFilters): UseTopList => {
+export const useTopList = async (
+  metric: string,
+  filters: ConfiguredFilters,
+  dashboardConstants: DashboardConstants,
+  currentSpec?: WidgetSpec | null
+): Promise<UseTopList> => {
+  const currentContent = currentSpec?.content as TopListContent
+
   //Todo: Fill values if they exist in serializedData
   const {
     type: dataRangeType,
     symbol: dataRangeSymbol,
     maximum: dataRangeMax,
     minimum: dataRangeMin,
-    widgetProps: generateTimeRangeSpec
-  } = useDataRangeInput()
+    dataRangeProps
+  } = useDataRangeInput(currentContent?.display_range)
 
-  const rankingOrder = ref<'high' | 'low'>('high')
+  const rankingOrder = ref<'high' | 'low'>(currentContent?.ranking_order ?? 'high')
 
-  const limitTo = ref<number>(10)
-  const showServiceName = ref<boolean>(true)
-  const showBarVisualizaton = ref<boolean>(true)
+  const limitTo = ref<number>(currentContent?.limit_to ?? 10)
+  const showServiceName = ref<boolean>(currentContent?.columns?.show_service_description ?? true)
+  const showBarVisualizaton = ref<boolean>(currentContent?.columns?.show_bar_visualization ?? true)
 
   const {
     title,
@@ -71,10 +80,12 @@ export const useTopList = (metric: string, filters: ConfiguredFilters): UseTopLi
     titleUrl,
     validate: validateTitle,
     titleUrlValidationErrors,
-    generateTitleSpec
-  } = useWidgetVisualizationProps(metric)
+    widgetGeneralSettings
+  } = useWidgetVisualizationProps(metric, currentSpec?.general_settings)
 
   const limitToValidationErrors = ref<string[]>([])
+
+  const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     limitToValidationErrors.value = []
@@ -88,41 +99,37 @@ export const useTopList = (metric: string, filters: ConfiguredFilters): UseTopLi
     return titleUrlValidationErrors.value.length + limitToValidationErrors.value.length === 0
   }
 
-  const _generateWidgetProps = (): WidgetProps => {
-    const content: TopListContent = {
+  const _generateContent = (): TopListContent => {
+    return {
       type: 'top_list',
       metric: metric,
       columns: {
         show_bar_visualization: showBarVisualizaton.value,
         show_service_description: showServiceName.value
       },
-      display_range: generateTimeRangeSpec(),
+      display_range: dataRangeProps.value,
       ranking_order: rankingOrder.value,
       limit_to: limitTo.value
     }
-
-    return generateWidgetProps(generateTitleSpec(), content, filters)
   }
 
-  const widgetProps = ref<WidgetProps>(_generateWidgetProps())
+  const _updateWidgetProps = async () => {
+    const content = _generateContent()
+    widgetProps.value = {
+      general_settings: widgetGeneralSettings.value,
+      content,
+      effective_filter_context: await determineWidgetEffectiveFilterContext(
+        content,
+        filters,
+        dashboardConstants
+      )
+    }
+  }
 
   watch(
-    [
-      dataRangeType,
-      dataRangeSymbol,
-      dataRangeMin,
-      dataRangeMax,
-
-      showTitle,
-      showTitleBackground,
-      showWidgetBackground,
-      titleUrlEnabled,
-      titleUrl,
-      limitTo,
-      rankingOrder
-    ],
+    [dataRangeProps, widgetGeneralSettings, limitTo, rankingOrder],
     useDebounceFn(() => {
-      widgetProps.value = _generateWidgetProps()
+      void _updateWidgetProps()
     }, 300),
     { deep: true }
   )
@@ -149,6 +156,6 @@ export const useTopList = (metric: string, filters: ConfiguredFilters): UseTopLi
     limitToValidationErrors,
     validate,
 
-    widgetProps
+    widgetProps: widgetProps as Ref<WidgetProps>
   }
 }

@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # .1.3.6.1.4.1.9.9.147.1.2.2.2.1.3.40.6  "number of connections currently in use by the entire firewall"
 # .1.3.6.1.4.1.9.9.147.1.2.2.2.1.3.40.7  "highest number of connections in use at any one time since system startup"
 # .1.3.6.1.4.1.9.9.147.1.2.2.2.1.5.40.6  1045
 # .1.3.6.1.4.1.9.9.147.1.2.2.2.1.5.40.7  2816
-
-
-# mypy: disable-error-code="list-item"
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, contains, SNMPTree, startswith, StringTable

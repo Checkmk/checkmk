@@ -7,11 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import type { CmkIconProps } from '@/components/CmkIcon.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
-import CmkTab from '@/components/CmkTabs/CmkTab.vue'
-import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
-import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { CmkIconProps } from '@/components/CmkIcon'
+import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 
 const openedTab = ref<string | number>('tab-3')
 

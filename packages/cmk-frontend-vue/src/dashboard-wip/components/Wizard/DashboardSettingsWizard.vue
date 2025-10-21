@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
 import type { DashboardGeneralSettings } from '@/dashboard-wip/types/dashboard'
@@ -12,18 +12,18 @@ import type { DashboardGeneralSettings } from '@/dashboard-wip/types/dashboard'
 import DashboardSettingsWizard from './wizards/dashboard-settings/DashboardSettingsWizard.vue'
 
 defineProps<{
-  dashboardId: string
+  activeDashboardId: string
   dashboardGeneralSettings: DashboardGeneralSettings
   dashboardRestrictedToSingle: string[]
 }>()
 
 const emit = defineEmits<{
-  save: [dashboardName: string, generalSettings: DashboardGeneralSettings]
+  save: [dashboardId: string, generalSettings: DashboardGeneralSettings]
   cancel: []
 }>()
 
-const save = (dashboardName: string, generalSettings: DashboardGeneralSettings) => {
-  emit('save', dashboardName, generalSettings)
+const save = (dashboardId: string, generalSettings: DashboardGeneralSettings) => {
+  emit('save', dashboardId, generalSettings)
 }
 </script>
 
@@ -31,7 +31,7 @@ const save = (dashboardName: string, generalSettings: DashboardGeneralSettings) 
   <CmkSlideIn :open="true">
     <Suspense>
       <DashboardSettingsWizard
-        :dashboard-id="dashboardId"
+        :active-dashboard-id="activeDashboardId"
         :dashboard-general-settings="dashboardGeneralSettings"
         :dashboard-restricted-to-single="dashboardRestrictedToSingle"
         @cancel="() => emit('cancel')"

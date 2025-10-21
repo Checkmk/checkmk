@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Comments
 
+# mypy: disable-error-code="exhaustive-match"
+
 In Checkmk you can add comments to hosts and services to store textual information related to the object.
 The comments can later be viewed through the user interface or read via API. You could e.g.
 add maintenance information about the related host or service to help your colleagues in case problems occur.

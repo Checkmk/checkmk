@@ -9,9 +9,7 @@ import { reactive, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkTab from '@/components/CmkTabs/CmkTab.vue'
-import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
-import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
+import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { type DashboardGeneralSettings } from '@/dashboard-wip/types/dashboard'
@@ -28,17 +26,17 @@ import VisibilitySettings from './components/VisibilitySettings.vue'
 const { _t } = usei18n()
 
 const props = defineProps<{
-  dashboardId: string
+  activeDashboardId: string
   dashboardGeneralSettings: DashboardGeneralSettings
   dashboardRestrictedToSingle: string[]
 }>()
 
 const emit = defineEmits<{
-  save: [dashboardName: string, generalSettings: DashboardGeneralSettings]
+  save: [dashboardId: string, generalSettings: DashboardGeneralSettings]
   cancel: []
 }>()
 
-const uniqueId = ref<string>(props.dashboardId)
+const uniqueId = ref<string>(props.activeDashboardId)
 const generalSettings = reactive(props.dashboardGeneralSettings)
 
 // //General
@@ -146,7 +144,7 @@ const save = async () => {
           <CmkTab id="visibility">{{ _t('Visibility') }}</CmkTab>
         </template>
         <template #tab-contents>
-          <CmkTabContent id="general">
+          <CmkTabContent id="general" class="db-settings-wizard__box">
             <GeneralSettings
               v-model:name="generalSettings.title.text"
               v-model:add-filter-suffix="generalSettings.title.include_context"
@@ -162,10 +160,10 @@ const save = async () => {
               @update:description="updateDescription"
             />
           </CmkTabContent>
-          <CmkTabContent id="access">
+          <CmkTabContent id="access" class="db-settings-wizard__box">
             <AccessSettings v-model:share="generalSettings.visibility.share" />
           </CmkTabContent>
-          <CmkTabContent id="visibility">
+          <CmkTabContent id="visibility" class="db-settings-wizard__box">
             <VisibilitySettings
               v-model:monitor-menu="generalSettings.menu.topic"
               v-model:hide-in-monitor-menu="generalSettings.visibility.hide_in_monitor_menu"
@@ -191,5 +189,9 @@ const save = async () => {
   width: 100vh;
   flex: 2;
   padding: var(--spacing-double);
+}
+
+.db-settings-wizard__box {
+  background-color: var(--ux-theme-2);
 }
 </style>

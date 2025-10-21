@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Example output:
 # <<<solaris_multipath>>>
 # /dev/rdsk/c4t600601608CB02A00DCFD2EEB19A0E111d0s2 4 4

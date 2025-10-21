@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.azure import parse_azure_datetime
+from cmk.plugins.azure_deprecated.agent_based.lib import parse_azure_datetime
 
 THIRTY_DAYS = 30 * 24 * 60 * 60
 SEVEN_DAYS = 7 * 24 * 60 * 60

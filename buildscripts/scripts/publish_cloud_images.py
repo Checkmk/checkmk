@@ -2,6 +2,12 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import abc
 import argparse
 import asyncio
@@ -242,6 +248,8 @@ class AWSPublisher(CloudPublisher):
                     )
                 case "SUCCEEDED":
                     return
+                case _:
+                    pass  # TODO: Hmmmm...
 
 
 class AzurePublisher(CloudPublisher):
@@ -398,3 +406,5 @@ if __name__ == "__main__":
                     args.azure_resource_group,
                 ).publish()
             )
+        case _:
+            pass

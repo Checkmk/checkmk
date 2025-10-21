@@ -93,7 +93,7 @@ def _instantiate_ruleset(
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, rulespec=rulespec)
     folder = folder_tree().root_folder()
-    rule = Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value())
+    rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
     rule.value = param_value
     if conditions:
         rule.update_conditions(RuleConditions.from_config(folder.name(), conditions))

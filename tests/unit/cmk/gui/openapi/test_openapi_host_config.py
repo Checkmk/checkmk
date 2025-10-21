@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 import contextlib
 import datetime
 from collections.abc import Iterator, Sequence
@@ -1461,7 +1463,6 @@ def test_openapi_host_config_effective_attributes_includes_custom_attributes_reg
     assert resp.json["extensions"]["effective_attributes"]["foo"] == "blub"
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_host_config_effective_attributes_includes_tags_regression(
     clients: ClientRegistry,
 ) -> None:

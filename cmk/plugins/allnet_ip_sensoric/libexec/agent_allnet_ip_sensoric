@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+
 from cmk.plugins.allnet_ip_sensoric.special_agent.agent_allnet_ip_sensoric import main
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

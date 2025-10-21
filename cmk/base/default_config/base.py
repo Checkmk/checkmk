@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Container, Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, SupportsInt, TypeAlias, TypedDict
 
@@ -14,13 +16,13 @@ from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
 from cmk.snmplib import SNMPCredentials, SNMPTiming
 from cmk.utils.host_storage import FolderAttributesForBase
+from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagConfigSpec
-from cmk.utils.timeperiod import TimeperiodSpecs
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -74,8 +76,9 @@ stored_passwords: dict[str, Password] = {}
 # in this config domain but not used by the base code. The WATO logic for writing out
 # rule.mk files is resolving the predefined conditions.
 predefined_conditions: dict = {}
+
 # Global setting for managing HTTP proxy configs
-http_proxies: dict[str, dict[str, str]] = {}
+http_proxies: dict[str, HTTPProxySpec] = {}
 
 # SNMP communities and encoding
 
@@ -249,7 +252,7 @@ define_contactgroups: dict[_ContactgroupName, str] = {}
 contactgroup_members: dict[_ContactgroupName, list[ContactName]] = {}
 contacts: dict[ContactName, Contact] = {}
 # needed for WATO
-timeperiods: TimeperiodSpecs = {}
+timeperiods: object = {}
 clusters: dict[HostName, list[HostName]] = {}
 clustered_services: list[RuleSpec[object]] = []
 # new in 1.1.4
@@ -274,7 +277,7 @@ distributed_wato_site: str | None = None  # used by distributed WATO
 is_distributed_setup_remote_site = False
 extra_host_conf: dict[str, list[RuleSpec[Any]]] = {}
 explicit_host_conf: dict[str, dict[HostName, Any]] = {}
-extra_service_conf: dict[str, list[RuleSpec[int]]] = {}
+extra_service_conf: dict[str, list[RuleSpec[object]]] = {}
 extra_nagios_conf = ""
 service_descriptions: dict[str, str] = {}
 # host_attributes store explicitly configured attributes in WATO
@@ -299,7 +302,7 @@ class _NestedExitSpec(ExitSpec, total=False):
 check_mk_exit_status: list[RuleSpec[_NestedExitSpec]] = []
 # Rule for defining expected version for agents
 check_mk_agent_target_versions: list[RuleSpec[str]] = []
-check_periods: list[RuleSpec[str]] = []
+check_periods: Sequence[RuleSpec[object]] = []
 snmp_check_interval: list[
     RuleSpec[tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]]
 ] = []

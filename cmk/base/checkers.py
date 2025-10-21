@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 """Concrete implementation of checkers functionality."""
 
 from __future__ import annotations
@@ -108,7 +113,6 @@ from cmk.utils.log import console
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
-from cmk.utils.timeperiod import timeperiod_active
 
 __all__ = [
     "CheckerPluginMapper",
@@ -136,6 +140,7 @@ class CheckerConfig:
     nodes: Callable[[HostName], Sequence[HostName]]
     effective_host: Callable[[HostName, ServiceName, _Labels], HostName]
     get_snmp_backend: Callable[[HostName], SNMPBackendEnum]
+    timeperiods_active: Mapping[str, bool]
 
 
 def _fetch_all(
@@ -356,6 +361,7 @@ class CMKFetcher:
         mode: Mode,
         password_store_file: Path,
         simulation_mode: bool,
+        metric_backend_fetcher_factory: Callable[[HostAddress], ProgramFetcher | None],
         max_cachefile_age: MaxAge | None = None,
     ) -> None:
         self.config_cache: Final = config_cache
@@ -373,6 +379,7 @@ class CMKFetcher:
         self.password_store_file: Final = password_store_file
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
+        self.metric_backend_fetcher_factory: Final = metric_backend_fetcher_factory
 
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
@@ -469,6 +476,7 @@ class CMKFetcher:
                     check_mk_check_interval=self.config_cache.check_mk_check_interval(
                         current_host_name
                     ),
+                    metric_backend_fetcher=self.metric_backend_fetcher_factory(current_host_name),
                 )
                 for current_host_name, current_ip_family, current_ip_stack_config, current_ip_address in hosts
             ),
@@ -687,7 +695,7 @@ def _compute_final_check_parameters(
     checker_config: CheckerConfig,
     logger: logging.Logger,
 ) -> Parameters:
-    params = service.parameters.evaluate(timeperiod_active)
+    params = service.parameters.evaluate(checker_config.timeperiods_active.get)
 
     if not _needs_postprocessing(params):
         return Parameters(params)

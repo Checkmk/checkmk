@@ -8,12 +8,14 @@ import uuid
 
 import pytest
 
+from cmk.agent_receiver.config import Config
 from cmk.relay_protocols.tasks import (
     ResultType,
     TaskResponse,
     TaskStatus,
 )
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks, get_relay_tasks
 
@@ -34,11 +36,16 @@ def test_updating_task_should_change_stored_task_object(
     result_type_input: str,
     result_type_output: ResultType,
     expected_status: TaskStatus,
+    site_context: Config,
 ) -> None:
     """
     The stored task object should be modified so that it contains the result.
     The task status should reflect the type of the attached result.
     """
+
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
+
     task_ids = add_tasks(1, agent_receiver, relay_id)
     task_id = task_ids[0]
 
@@ -76,11 +83,14 @@ def test_updating_task_should_change_stored_task_object(
 
 @pytest.mark.parametrize("result_type_input", ["OK", "ERROR"])
 def test_task_no_longer_pending(
-    agent_receiver: AgentReceiverClient, relay_id: str, result_type_input: str
+    agent_receiver: AgentReceiverClient, relay_id: str, result_type_input: str, site_context: Config
 ) -> None:
     """
     Once a task has been updated with a result, it should no longer appear in the list of pending tasks.
     """
+
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(3, agent_receiver, relay_id)
     task_id = task_ids[1]
@@ -105,12 +115,15 @@ def test_task_no_longer_pending(
 
 @pytest.mark.parametrize("result_type_input", ["OK", "ERROR"])
 def test_timestamps_are_handled(
-    agent_receiver: AgentReceiverClient, relay_id: str, result_type_input: str
+    agent_receiver: AgentReceiverClient, relay_id: str, result_type_input: str, site_context: Config
 ) -> None:
     """
     A call to update task should modify the "update_timestamp" values and it should not
     modify the "creation_timestamp" value.
     """
+
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(1, agent_receiver, relay_id)
     task_id = task_ids[0]
@@ -140,10 +153,14 @@ def test_the_other_tasks_are_not_changed(
     agent_receiver: AgentReceiverClient,
     relay_id: str,
     result_type_input: str,
+    site_context: Config,
 ) -> None:
     """
     A call to update task should not modify any other possible tasks that belong to the relay.
     """
+
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(3, agent_receiver, relay_id)
     task_id = task_ids[1]

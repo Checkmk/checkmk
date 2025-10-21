@@ -41,15 +41,6 @@ file_from_flag(
     tags = ["manual"],
 )
 
-py_binary(
-    name = "generate_api_spec",
-    srcs = ["//cmk:gui/openapi/spec/spec_generator/generate_api_spec.py"],
-    tags = ["manual"],
-    deps = [
-        "//cmk:lib_cmk_cre",
-    ],
-)
-
 run_binary(
     name = "generate_doc.spec",
     outs = ["doc.spec"],
@@ -60,12 +51,12 @@ run_binary(
         "--target",
         "doc",
         "--out",
-        "bazel-out/k8-fastbuild/bin/omd/doc.spec",
+        "$(execpath doc.spec)",
         "--format",
         "dict",
     ],
     tags = ["manual"],
-    tool = ":generate_api_spec",
+    tool = "//cmk:generate_api_spec",
 )
 
 run_binary(
@@ -78,12 +69,12 @@ run_binary(
         "--target",
         "swagger-ui",
         "--out",
-        "bazel-out/k8-fastbuild/bin/omd/swagger-ui.spec",
+        "$(execpath swagger-ui.spec)",
         "--format",
         "dict",
     ],
     tags = ["manual"],
-    tool = ":generate_api_spec",
+    tool = "//cmk:generate_api_spec",
 )
 
 pkg_files(
@@ -92,7 +83,7 @@ pkg_files(
         ":doc.spec",
         ":swagger-ui.spec",
     ],
-    prefix = "var/check_mk/rest_api/spec",
+    prefix = "share/doc/check_mk/rest-api/spec",
 )
 
 [pkg_tar(
@@ -130,13 +121,12 @@ pkg_files(
                "//omd/packages/navicli",
                "//omd/packages/net-snmp:net-snmp_tar",
                "//omd/packages/nrpe",
+               "//omd/packages/omd",
                "//omd/packages/openssl:openssl_tar_" + edition,
                "//omd/packages/patch",
                "//omd/packages/perl-modules",
                "//omd/packages/pnp4nagios",
                "//omd/packages/python3-modules:python3-modules.tar",
-               "//omd/packages/oci:oci_light_win_x64.tar",
-               "//omd/packages/oci:oci_light_lin_x64.tar",
                "//omd/packages/rabbitmq",
                "//omd/packages/redis",
                "//omd/packages/rrdtool:rrdtool_perl_bindings",
@@ -283,6 +273,7 @@ editions = {
     version = select({
         "@cmk//distro:almalinux-8": "el8-38",
         "@cmk//distro:almalinux-9": "el9-38",
+        "@cmk//distro:almalinux-10": "el10-38",
         "@cmk//distro:debian-12": "0.bookworm",
         "@cmk//distro:sles-15sp5": "sles15sp5",
         "@cmk//distro:sles-15sp6": "sles15sp6",

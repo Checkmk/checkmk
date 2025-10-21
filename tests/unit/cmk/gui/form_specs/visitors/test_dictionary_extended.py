@@ -6,6 +6,8 @@ from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorO
 from cmk.gui.form_specs.unstable import DictionaryExtended
 from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, String
 
+# mypy: disable-error-code="no-untyped-def"
+
 
 def test_dictionary_visitor_only_fills_required_prefill():
     form_spec = Dictionary(

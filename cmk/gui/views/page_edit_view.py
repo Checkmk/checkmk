@@ -3,6 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 """Provides the view editor dialog"""
 
 from __future__ import annotations
@@ -10,7 +17,7 @@ from __future__ import annotations
 import ast
 import string
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Literal, NamedTuple, overload, TypedDict
+from typing import Any, Literal, NamedTuple, overload, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -503,7 +510,7 @@ def _get_vs_link_or_tooltip_elements(
             "link_spec",
             CascadingDropdown(
                 title=_("Link"),
-                choices=_column_link_choices(),
+                choices=_column_link_choices(user_permissions),
                 orientation="horizontal",
             ),
         ),
@@ -703,7 +710,8 @@ def _view_editor_spec(
     )
 
 
-def _column_link_choices() -> list[CascadingDropdownChoice]:
+def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDropdownChoice]:
+    visual_type = visual_type_registry["dashboards"]()
     return [
         (
             "views",
@@ -717,7 +725,7 @@ def _column_link_choices() -> list[CascadingDropdownChoice]:
             "dashboards",
             _("Link to dashboard") + ":",
             DropdownChoice(
-                choices=visual_type_registry["dashboards"]().choices,
+                choices=visual_type.choices(visual_type.visuals(), user_permissions),
                 sorted=True,
             ),
         ),
@@ -783,6 +791,7 @@ def view_editor_sorter_specs(
 
 
 class PageAjaxCascadingRenderPainterParameters(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         api_request = request.get_request()
 

@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mange custom attributes of users and hosts"""
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import re
 from collections.abc import Collection, Iterable, Sequence

@@ -17,6 +17,7 @@ import DemoCmkChip from './DemoCmkChip.vue'
 import DemoCmkCode from './DemoCmkCode.vue'
 import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
+import DemoCmkDialog from './DemoCmkDialog.vue'
 import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkDualList from './DemoCmkDualList.vue'
 import DemoCmkHtml from './DemoCmkHtml.vue'
@@ -25,12 +26,14 @@ import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkMultitoneIcon from './DemoCmkMultitoneIcon.vue'
+import DemoCmkPopupDialog from './DemoCmkPopupDialog.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
 import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoErrorBoundary from './DemoErrorBoundary.vue'
+import DemoHelp from './DemoHelp.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import { pages as typographyPages } from './typography'
 import { pages as userInputPages } from './user-input'
@@ -43,13 +46,15 @@ export const pages = [
   new Folder('CmkTabs', DemoEmpty, CmkTabPages),
   new Page('CmkAlertBox', DemoCmkAlertBox),
   new Page('CmkSlideInDialog', DemoCmkSlideInDialog),
+  new Page('CmkPopupDialog', DemoCmkPopupDialog),
   new Page('CmkSpace', DemoCmkSpace),
   new Page('CmkIcon', DemoCmkIcon),
   new Page('CmkList', DemoCmkList),
   new Page('ToggleButtonGroup', DemoToggleButtonGroup),
   new Page('CmkButton', DemoCmkButton),
+  new Page('CmkDialog', DemoCmkDialog),
   new Page('CmkDropdown', DemoCmkDropdown),
-  new Page('ErrorBoundary', DemoErrorBoundary),
+  new Page('CmkErrorBoundary', DemoErrorBoundary),
   new Page('CmkSwitch', DemoCmkSwitch),
   new Page('CmkColorPicker', DemoCmkColorPicker),
   new Page('CmkHtml', DemoCmkHtml),
@@ -64,5 +69,6 @@ export const pages = [
   new Page('CmkCode', DemoCmkCode),
   new Page('CmkCollapsible', DemoCmkCollapsible),
   new Page('CmkKeyboardKey', DemoCmkKeyboardKey),
-  new Page('CmkDualList', DemoCmkDualList)
+  new Page('CmkDualList', DemoCmkDualList),
+  new Page('CmkHelpText', DemoHelp)
 ]

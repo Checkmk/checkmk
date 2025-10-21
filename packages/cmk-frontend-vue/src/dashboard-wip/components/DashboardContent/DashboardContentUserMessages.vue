@@ -11,11 +11,14 @@ import { CmkError } from '@/lib/error'
 import usei18n from '@/lib/i18n'
 
 import CmkHtml from '@/components/CmkHtml.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare let global_csrf_token: string
 
 const { _t } = usei18n()
 
@@ -66,7 +69,6 @@ class AjaxResponseError extends CmkError {
 }
 
 async function postUserMessageAction(actionType: string, msg: UserMessage): Promise<void> {
-  // @ts-expect-error Expected: "Cannot find name 'global_csrf_token'."
   const csrfToken = global_csrf_token
   const response = await cmkFetch(`ajax_user_message_action.py`, {
     method: 'POST',
@@ -118,7 +120,7 @@ function formatTimestamp(timestamp: number): string {
 </script>
 
 <template>
-  <DashboardContentContainer v-bind="general_settings">
+  <DashboardContentContainer :general_settings="general_settings">
     <div>
       <table v-if="messages!.length" class="db-content-user-messages__table">
         <tbody>

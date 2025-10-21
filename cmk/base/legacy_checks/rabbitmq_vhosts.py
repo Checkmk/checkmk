@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # <<<rabbitmq_vhosts>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
 # "mem_alarm": false, "disk_free_limit": 70000000, "disk_free_alarm": false,

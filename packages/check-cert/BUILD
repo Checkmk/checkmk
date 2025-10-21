@@ -20,6 +20,9 @@ rust_library(
         "src/checker/verification.rs",
         "src/fetcher.rs",
         "src/lib.rs",
+        "src/starttls/postgres.rs",
+        "src/starttls/smtp.rs",
+        "src/starttls/stream_io.rs",
         "src/truststore.rs",
     ],
     aliases = aliases(),
@@ -35,6 +38,26 @@ rust_test(
     name = "check-cert-lib-test-internal",
     compile_data = ["assets/certificate.der"],
     crate = ":check-cert-lib",
+)
+
+rust_test(
+    name = "postgres_starttls_test",
+    srcs = [
+        "tests/starttls/common/mock_stream.rs",
+        "tests/starttls/postgres.rs",
+    ],
+    crate_root = "tests/starttls/postgres.rs",
+    deps = [":check-cert-lib"],
+)
+
+rust_test(
+    name = "smtp_starttls_test",
+    srcs = [
+        "tests/starttls/common/mock_stream.rs",
+        "tests/starttls/smtp.rs",
+    ],
+    crate_root = "tests/starttls/smtp.rs",
+    deps = [":check-cert-lib"],
 )
 
 rust_test_suite(

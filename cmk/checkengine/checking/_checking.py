@@ -45,7 +45,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName
-from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
+from cmk.utils.timeperiod import TimeperiodName
 
 __all__ = [
     "execute_checkmk_checks",
@@ -85,11 +85,12 @@ def execute_checkmk_checks(
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     params: HWSWInventoryParameters,
     services: Sequence[ConfiguredService],
-    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
+    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     exit_spec: ExitSpec,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
+    timeperiods_active: Mapping[str, bool],
 ) -> Sequence[ActiveCheckResult]:
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
@@ -110,6 +111,7 @@ def execute_checkmk_checks(
             check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
             get_check_period=get_check_period,
+            timeperiods_active=timeperiods_active,
         )
     )
     submitter.submit(
@@ -215,15 +217,16 @@ def check_host_services(
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckerPlugin],
     run_plugin_names: Container[CheckPluginName],
-    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
+    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName],
+    timeperiods_active: Mapping[str, bool],
 ) -> Iterable[AggregatedResult]:
     """Compute service state results for all given services on node or cluster"""
     for service in (
         s
         for s in services
         if s.check_plugin_name in run_plugin_names
-        and not service_outside_check_period(
-            s.description, get_check_period(s.description, s.labels)
+        and _service_inside_check_period(
+            s.description, get_check_period(s.description, s.labels), timeperiods_active
         )
     ):
         if service.check_plugin_name not in check_plugins:
@@ -238,11 +241,14 @@ def check_host_services(
             yield plugin.function(host_name, service, providers=providers)
 
 
-def service_outside_check_period(description: ServiceName, period: TimeperiodName | None) -> bool:
-    if period is None:
-        return False
-    if check_timeperiod(period):
+def _service_inside_check_period(
+    description: ServiceName, period: TimeperiodName, timeperiods_active: Mapping[str, bool]
+) -> bool:
+    if period == TimeperiodName("24X7"):
+        # No need to look this one up. Might save us a livestatus query.
+        return True
+    if timeperiods_active.get(period, True):
         console.debug(f"Service {description}: time period {period} is currently active.")
-        return False
+        return True
     console.verbose(f"Skipping service {description}: currently not in time period {period}.")
-    return True
+    return False

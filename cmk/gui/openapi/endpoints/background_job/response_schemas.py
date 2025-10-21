@@ -6,6 +6,8 @@ from cmk import fields
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject
 
+# mypy: disable-error-code="mutable-override"
+
 
 class StatusLogInfo(BaseSchema):
     JobProgressUpdate = fields.List(

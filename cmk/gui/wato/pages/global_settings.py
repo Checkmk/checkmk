@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 
 """Editor for global settings in main.mk and modes for these global
 settings"""
@@ -14,7 +19,6 @@ from typing import Any, Final
 
 from livestatus import SiteConfigurations
 
-import cmk.gui.watolib.changes as _changes
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -50,6 +54,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
@@ -66,7 +71,12 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainCore,
     finalize_all_settings_per_site,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.global_settings import (
+    add_global_settings_change,
+    load_configuration_settings,
+    save_global_settings,
+    STATIC_PERMISSIONS_GLOBAL_SETTINGS,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
@@ -403,18 +413,11 @@ class ABCEditGlobalSettingMode(WatoMode):
         if new_value and self._varname == "trusted_certificate_authorities":
             ConfigDomainCACertificates.log_changes(current, new_value)
 
-        _changes.add_change(
-            action_name="edit-configvar",
-            text=msg,
+        add_global_settings_change(
+            self._config_variable,
             user_id=user.id,
+            text=msg,
             sites=self._affected_sites(),
-            domains=list(self._config_variable.all_domains()),
-            need_restart=self._config_variable.need_restart(),
-            need_apache_reload=self._config_variable.need_apache_reload(),
-            domain_settings={
-                domain.ident(): {"need_apache_reload": self._config_variable.need_apache_reload()}
-                for domain in self._config_variable.all_domains()
-            },
             use_git=config.wato_use_git,
         )
 
@@ -530,7 +533,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["global"]
+        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
     def __init__(
         self,
@@ -604,17 +607,11 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         )
         save_global_settings(self._current_settings)
 
-        _changes.add_change(
-            action_name="edit-configvar",
-            text=msg,
+        add_global_settings_change(
+            config_variable,
             user_id=user.id,
-            domains=list(config_variable.all_domains()),
-            need_restart=config_variable.need_restart(),
-            need_apache_reload=config_variable.need_apache_reload(),
-            domain_settings={
-                domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
-                for domain in config_variable.all_domains()
-            },
+            text=msg,
+            sites=None,
             use_git=config.wato_use_git,
         )
 
@@ -638,7 +635,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["global"]
+        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -702,7 +699,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
             match_texts=[title, ident],
         )
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         mode = self._mode_class()
         yield from (
             self._config_variable_to_match_item(config_variable, mode.edit_mode_name)

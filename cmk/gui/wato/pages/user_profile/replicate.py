@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import override
+
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -20,7 +22,7 @@ from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_re
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("user_profile_replicate", UserProfileReplicate))
+    page_registry.register(PageEndpoint("user_profile_replicate", UserProfileReplicate()))
 
 
 class UserProfileReplicate(Page):
@@ -31,6 +33,7 @@ class UserProfileReplicate(Page):
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
         return menu
 
+    @override
     def page(self, config: Config) -> None:
         if not user.id:
             raise MKUserError(None, _("Not logged in."))

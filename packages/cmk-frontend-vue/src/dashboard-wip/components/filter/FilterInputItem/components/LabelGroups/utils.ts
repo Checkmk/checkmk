@@ -39,7 +39,9 @@ export function convertToFilterStructure(
 
       params[`${prefix}_${queryNum}_vs_${groupNum}_bool`] = group.operator
 
-      params[`${prefix}_${queryNum}_vs_${groupNum}_vs`] = group.label || ''
+      if (group.label) {
+        params[`${prefix}_${queryNum}_vs_${groupNum}_vs`] = group.label
+      }
     })
   })
 
@@ -53,7 +55,7 @@ export function convertToFilterStructure(
  * @returns Array of QueryItem objects
  */
 export function convertFromFilterStructure(
-  params: Record<string, string | null>,
+  params: Record<string, string>,
   prefix: string = 'host_labels'
 ): QueryItem[] {
   const result: QueryItem[] = []

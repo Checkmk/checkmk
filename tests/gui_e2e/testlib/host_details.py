@@ -6,6 +6,8 @@ import logging
 from enum import Enum
 from typing import override
 
+# mypy: disable-error-code="type-arg"
+
 logger = logging.getLogger(__name__)
 
 

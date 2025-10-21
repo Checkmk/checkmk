@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 
 from kubernetes import client  # type: ignore[import-untyped]
 
@@ -40,7 +42,10 @@ class TestAPIDeployments:
         assert metadata.labels == {
             "app": api.Label(name=api.LabelName("app"), value=api.LabelValue("cluster-collector"))
         }
-        assert metadata.annotations == {"deployment.kubernetes.io/revision": "2"}
+        assert metadata.annotations == {
+            "deployment.kubernetes.io/revision": "2",
+            "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
+        }
 
     def test_parse_metadata_missing_annotations_and_labels(
         self, apps_client: client.AppsV1Api, dummy_host: str

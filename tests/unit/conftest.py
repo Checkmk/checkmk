@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import json
 import logging
 import logging.handlers
@@ -246,7 +251,7 @@ def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edit
 
 
 @pytest.fixture(autouse=True, scope="session")
-def fixture_omd_site() -> Generator[None, None, None]:
+def fixture_omd_site() -> Generator[None]:
     os.environ["OMD_SITE"] = "NO_SITE"
     yield
 

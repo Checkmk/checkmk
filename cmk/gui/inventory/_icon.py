@@ -12,7 +12,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row, VisualLinkSpec
-from cmk.gui.views.icon import Icon
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views.icon import Icon, IconConfig
 from cmk.gui.visual_link import url_to_visual
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.utils.tags import TagID
@@ -28,6 +29,8 @@ def _render_inventory_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | tuple[str, str, str]:
     if (
         what == "host"
@@ -36,7 +39,13 @@ def _render_inventory_icon(
         if not user.may("view.inv_host"):
             return None
 
-        v = url_to_visual(row, VisualLinkSpec("views", "inv_host"), request=request)
+        v = url_to_visual(
+            row,
+            VisualLinkSpec("views", "inv_host"),
+            user_permissions,
+            request=request,
+            force=False,
+        )
         assert v is not None
         return (
             "inventory",
@@ -73,6 +82,8 @@ def _render_inventory_history_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | tuple[str, str, str]:
     if (
         what == "host"
@@ -81,7 +92,13 @@ def _render_inventory_history_icon(
         if not user.may("view.inv_host"):
             return None
 
-        v = url_to_visual(row, VisualLinkSpec("views", "inv_host_history"), request=request)
+        v = url_to_visual(
+            row,
+            VisualLinkSpec("views", "inv_host_history"),
+            user_permissions,
+            request=request,
+            force=False,
+        )
         assert v is not None
         return (
             "inventory",

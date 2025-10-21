@@ -3,20 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 import abc
 import copy
 from typing import Any
 
-from cmk.bi import actions
+from cmk.bi.actions import (
+    BICallARuleAction,
+    BIStateOfHostAction,
+    BIStateOfRemainingServicesAction,
+    BIStateOfServiceAction,
+)
 from cmk.bi.aggregation_functions import (
     BIAggregationFunctionBest,
     BIAggregationFunctionCountOK,
     BIAggregationFunctionWorst,
 )
-from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, SearchKind
+from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch
 from cmk.bi.packs import BIAggregationPack
 from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
-from cmk.bi.type_defs import ActionKind
+from cmk.bi.type_defs import ActionKind, SearchKind
 from cmk.ccc import plugin_registry
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
@@ -553,7 +565,7 @@ class BIConfigActionRegistry(plugin_registry.Registry[type[ABCBIConfigAction]]):
 bi_config_action_registry = BIConfigActionRegistry()
 
 
-class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
+class BIConfigCallARuleAction(BICallARuleAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("Call a Rule"), cls.valuespec())
@@ -665,7 +677,7 @@ def is_contact_for_pack(bi_pack: BIAggregationPack) -> bool:
     return False
 
 
-class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
+class BIConfigStateOfHostAction(BIStateOfHostAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of a host"), cls.valuespec())
@@ -696,7 +708,7 @@ class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
         )
 
 
-class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAction):
+class BIConfigStateOfServiceAction(BIStateOfServiceAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of a service"), cls.valuespec())
@@ -729,9 +741,7 @@ class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAc
         )
 
 
-class BIConfigStateOfRemainingServicesAction(
-    actions.BIStateOfRemainingServicesAction, ABCBIConfigAction
-):
+class BIConfigStateOfRemainingServicesAction(BIStateOfRemainingServicesAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of remaining services"), cls.valuespec())

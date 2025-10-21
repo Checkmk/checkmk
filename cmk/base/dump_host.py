@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import socket
 import sys
 import time
@@ -15,7 +17,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.base import sources
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, get_metric_backend_fetcher
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
@@ -24,7 +26,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parameters import IsTimeperiodActiveCallback, TimespecificParameters
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.fetchers import (
     IPMIFetcher,
@@ -41,7 +43,6 @@ from cmk.helper_interface import SourceType
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.tags import ComputedDataSources
-from cmk.utils.timeperiod import timeperiod_active
 
 
 def dump_source(source: Source) -> str:
@@ -132,6 +133,7 @@ def dump_host(
     ip_address_of: IPLookup,
     ip_address_of_mgmt: IPLookupOptional,
     simulation_mode: bool,
+    timeperiod_active: IsTimeperiodActiveCallback,
 ) -> None:
     print_("\n")
     label_manager = config_cache.label_manager
@@ -272,6 +274,11 @@ def dump_host(
                 ),
                 agent_connection_mode=config_cache.agent_connection_mode(hostname),
                 check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+                metric_backend_fetcher=get_metric_backend_fetcher(
+                    hostname,
+                    config_cache.explicit_host_attributes,
+                    loaded_config.monitoring_core == "cmc",
+                ),
             )
         ]
     )
@@ -309,7 +316,7 @@ def dump_host(
             [
                 str(service.check_plugin_name),
                 str(service.item),
-                _evaluate_params(service.parameters),
+                _evaluate_params(service.parameters, timeperiod_active),
                 service.description,
                 ",".join(
                     config_cache.servicegroups_of_service(
@@ -332,7 +339,9 @@ def _complementary_family(
             return socket.AddressFamily.AF_INET
 
 
-def _evaluate_params(params: TimespecificParameters) -> str:
+def _evaluate_params(
+    params: TimespecificParameters, timeperiod_active: IsTimeperiodActiveCallback
+) -> str:
     return (
         repr(params.evaluate(timeperiod_active))
         if params.is_constant()

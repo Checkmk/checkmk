@@ -32,6 +32,7 @@ import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
 import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
+import CloseButton from '../../components/CloseButton.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'
@@ -269,6 +270,7 @@ const handleResetAllFilters = (): void => {
     </WizardStepsContainer>
 
     <WizardStageContainer>
+      <CloseButton @close="() => emit('goBack')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:selected-datasource="selectedDatasource"

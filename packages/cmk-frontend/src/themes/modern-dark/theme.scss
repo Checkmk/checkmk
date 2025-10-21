@@ -1,4 +1,4 @@
-@charset "UTF-8";
+@charset 'UTF-8';
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
@@ -6,7 +6,6 @@
 @import 'select2/dist/css/select2.css';
 @import '@yaireo/tagify/dist/tagify.css';
 @import 'simplebar/dist/simplebar.css';
-
 @import '../facelift/scss/_variables_common.scss';
 @import 'scss/_variables.scss';
 @import '../facelift/scss/_mixins.scss';
@@ -26,6 +25,7 @@
 @import '../facelift/scss/_node_visualization.scss';
 @import '../facelift/scss/_cmk_figures.scss';
 @import '../facelift/scss/_main_menu.scss';
+@import '../facelift/scss/_main_navigation.scss';
 @import '../facelift/scss/_page_menu.scss';
 @import '../facelift/scss/_more.scss';
 @import '../facelift/scss/_graphs.scss';

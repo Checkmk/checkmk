@@ -4,6 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to set comments for host and service."""
 
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="no-untyped-def"
+
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass

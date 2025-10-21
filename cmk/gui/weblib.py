@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
@@ -21,7 +23,7 @@ def ajax_tree_openclose(config: Config) -> None:
     tree = request.get_str_input_mandatory("tree")
     name = request.get_str_input_mandatory("name")
 
-    user.set_tree_state(tree, name, request.get_str_input("state"))  # type: ignore[no-untyped-call]
+    user.set_tree_state(tree, name, request.get_str_input("state"))
     user.save_tree_states()
     response.set_data("OK")  # Write out something to make debugging easier
 

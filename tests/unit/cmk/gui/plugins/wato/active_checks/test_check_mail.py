@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
+
 from functools import lru_cache
 
 import pytest
@@ -19,7 +22,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 def _check_mail_vs() -> ValueSpec:
     all_rulesets = AllRulesets.load_all_rulesets().get_rulesets()
     try:
-        return all_rulesets[RuleGroup.ActiveChecks("mail")].valuespec()
+        return all_rulesets[RuleGroup.ActiveChecks("mail")].rulespec.valuespec
     except KeyError:
         raise RuntimeError(sorted(all_rulesets))
 

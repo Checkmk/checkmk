@@ -182,7 +182,7 @@ class State:
         return self._state
 
     def update_and_save(self, **update: object) -> None:
-        self._state = self._state.copy(update=update)
+        self._state = self._state.model_copy(update=update)
         self._save()
 
     def _save(self) -> None:

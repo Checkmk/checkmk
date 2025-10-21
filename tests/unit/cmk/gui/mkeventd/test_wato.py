@@ -14,6 +14,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.mkeventd import wato as mkeventd_wato
 from cmk.gui.search import MatchItem
+from cmk.gui.utils.roles import UserPermissions
 
 
 def test_match_item_generator_ec_rule_packs_and_rules() -> None:
@@ -38,7 +39,7 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
         mkeventd_wato.MatchItemGeneratorECRulePacksAndRules(
             "event_console",
             lambda: rule_packs,
-        ).generate_match_items()
+        ).generate_match_items(UserPermissions({}, {}, {}, []))
     ) == [
         MatchItem(
             title="rule_pack_id (Rule pack)",

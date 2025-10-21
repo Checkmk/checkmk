@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 # This file initializes the pytest environment
 
 import logging
@@ -356,6 +360,10 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
         "medium_test_chain: marks tests as part of the medium-test-chain CI job",
+    )
+    config.addinivalue_line(
+        "markers",
+        "skip_on_code_coverage: skip the tests when code-coverage measurement is active",
     )
 
 

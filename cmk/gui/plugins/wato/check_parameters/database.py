@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     TextInput,
@@ -56,7 +59,17 @@ def _parameter_valuespec_network():
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="network_io",
-        item_spec=lambda: TextInput(title=_("Network IO")),
+        item_spec=lambda: TextInput(title=_("Network IO (Deprecated)")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_network,
+        title=lambda: _("Network IO"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="network_io_without_item",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_network,
         title=lambda: _("Network IO"),

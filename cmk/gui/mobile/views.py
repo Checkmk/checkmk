@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="redundant-expr"
+
 from collections.abc import Sequence
-from functools import partial
 from typing import override
 
 from cmk.ccc.user import UserId
@@ -17,9 +18,9 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.views.layout import Layout
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views.layout import Layout, make_link_renderer
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.gui.visual_link import render_link_to_view
 
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |
@@ -923,6 +924,7 @@ def render_mobile_table(
     cells: Sequence[Cell],
     num_columns: int,
     show_checkboxes: bool,
+    user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
@@ -943,7 +945,8 @@ def render_mobile_table(
             cell.paint_as_header()
         html.close_tr()
 
-    link_renderer = partial(render_link_to_view, request=request)
+    link_renderer = make_link_renderer(request, user_permissions)
+
     # Paint data rows
     for row in rows:
         odd = "even" if odd == "odd" else "odd"
@@ -989,8 +992,11 @@ class LayoutMobileTable(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
-        render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes)
+        render_mobile_table(
+            rows, view, group_cells, cells, num_columns, show_checkboxes, user_permissions
+        )
 
 
 def render_mobile_list(
@@ -1000,6 +1006,7 @@ def render_mobile_list(
     cells: Sequence[Cell],
     num_columns: int,
     show_checkboxes: bool,
+    user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
@@ -1011,7 +1018,8 @@ def render_mobile_list(
 
     html.open_ul(class_="mobilelist", **{"data-role": "listview"})
 
-    link_renderer = partial(render_link_to_view, request=request)
+    link_renderer = make_link_renderer(request, user_permissions)
+
     # Paint data rows
     for row in rows:
         html.open_li()
@@ -1072,8 +1080,11 @@ class LayoutMobileList(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
-        render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
+        render_mobile_list(
+            rows, view, group_cells, cells, num_columns, show_checkboxes, user_permissions
+        )
 
 
 def render_mobile_dataset(
@@ -1083,6 +1094,7 @@ def render_mobile_dataset(
     cells: Sequence[Cell],
     num_columns: int,
     show_checkboxes: bool,
+    user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
@@ -1091,7 +1103,8 @@ def render_mobile_dataset(
     painter_options = PainterOptions.get_instance()
     painter_options.set("ts_format", "both")
 
-    link_renderer = partial(render_link_to_view, request=request)
+    link_renderer = make_link_renderer(request, user_permissions)
+
     for row in rows:
         html.open_table(class_="dataset")
         for cell in cells:
@@ -1139,5 +1152,8 @@ class LayoutMobileDataset(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
-        render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes)
+        render_mobile_dataset(
+            rows, view, group_cells, cells, num_columns, show_checkboxes, user_permissions
+        )

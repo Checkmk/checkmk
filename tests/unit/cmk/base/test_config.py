@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
+
 
 import itertools
 import re
@@ -177,6 +180,7 @@ def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:
     }
 
 
+@pytest.mark.skip_on_code_coverage
 def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario(site_id="site1")
     ts.add_host(HostName("real1"), tags={TagGroupID("site"): TagID("site1")})
@@ -1632,10 +1636,6 @@ def test_snmp_check_interval(
     assert ts.apply(monkeypatch).snmp_fetch_intervals(hostname) == result
 
 
-def test_http_proxies() -> None:
-    assert not config.http_proxies
-
-
 @pytest.fixture(name="service_list")
 def _service_list() -> list[ConfiguredService]:
     return [
@@ -2248,7 +2248,7 @@ def test_config_cache_passive_check_period_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.passive_check_period_of_service(hostname, "CPU load", {}) == result
+    assert config_cache.check_period_of_passive_service(hostname, "CPU load", {}) == result
 
 
 @pytest.mark.parametrize(
@@ -2311,8 +2311,9 @@ def test_config_cache_service_level_of_service(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)
-    ts.set_ruleset(
-        "service_service_levels",
+    ts.add_to_ruleset_bundle(
+        "extra_service_conf",
+        "_ec_sl",
         [
             {
                 "id": "01",
@@ -2339,8 +2340,8 @@ def test_config_cache_service_level_of_service(
 @pytest.mark.parametrize(
     "hostname,result",
     [
-        (HostName("testhost1"), None),
-        (HostName("testhost2"), None),
+        (HostName("testhost1"), "24X7"),
+        (HostName("testhost2"), "24X7"),
         (HostName("testhost3"), "xyz"),
     ],
 )
@@ -2379,7 +2380,7 @@ def test_config_cache_check_period_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.check_period_of_service(hostname, "CPU load", {}) == result
+    assert config_cache.check_period_of_passive_service(hostname, "CPU load", {}) == result
 
 
 def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> None:
@@ -2470,8 +2471,9 @@ def test_host_config_service_level(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)
-    ts.set_ruleset(
-        "host_service_levels",
+    ts.add_to_ruleset_bundle(
+        "extra_host_conf",
+        "_ec_sl",
         [
             {
                 "id": "01",

@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="list-item"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
@@ -91,20 +91,19 @@ def check_ddn_s2a_stats_io(item, params, parsed):
     def check_io_levels(value, levels, infotext_formatstring, perfname=None):
         infotext = infotext_formatstring % value
         if levels is None:
-            perfdata = [(perfname, value)]
-            status = 0
+            return (0, infotext) if perfname is None else (0, infotext, [(perfname, value)])
+
+        warn, crit = levels
+        perfdata = [(perfname, value, warn, crit)]
+        levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
+        if value >= crit:
+            status = 2
+            infotext += levelstext
+        elif value >= warn:
+            status = 1
+            infotext += levelstext
         else:
-            warn, crit = levels
-            perfdata = [(perfname, value, warn, crit)]
-            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
-            if value >= crit:
-                status = 2
-                infotext += levelstext
-            elif value >= warn:
-                status = 1
-                infotext += levelstext
-            else:
-                status = 0
+            status = 0
 
         if perfname is None:
             return status, infotext
@@ -157,21 +156,20 @@ def check_ddn_s2a_stats(item, params, parsed):
     def check_datarate_levels(value, value_mb, levels, infotext_formatstring, perfname=None):
         infotext = infotext_formatstring % value_mb
         if levels is None:
-            perfdata = [(perfname, value)]
-            status = 0
+            return (0, infotext) if perfname is None else (0, infotext, [(perfname, value)])
+
+        warn, crit = levels
+        warn_mb, crit_mb = (x / (1024 * 1024.0) for x in levels)
+        perfdata = [(perfname, value, warn, crit)]
+        levelstext = f" (warn/crit at {warn_mb:.2f}/{crit_mb:.2f} MB/s)"
+        if value >= crit:
+            status = 2
+            infotext += levelstext
+        elif value >= warn:
+            status = 1
+            infotext += levelstext
         else:
-            warn, crit = levels
-            warn_mb, crit_mb = (x / (1024 * 1024.0) for x in levels)
-            perfdata = [(perfname, value, warn, crit)]
-            levelstext = f" (warn/crit at {warn_mb:.2f}/{crit_mb:.2f} MB/s)"
-            if value >= crit:
-                status = 2
-                infotext += levelstext
-            elif value >= warn:
-                status = 1
-                infotext += levelstext
-            else:
-                status = 0
+            status = 0
 
         if perfname is None:
             return status, infotext

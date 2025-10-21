@@ -9,6 +9,7 @@ from pytest import MonkeyPatch
 
 from cmk.gui.i18n import _l
 from cmk.gui.search import MatchItem
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.global_settings import DefaultModeEditGlobals, MatchItemGeneratorSettings
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigVariable, ConfigVariableGroup
@@ -49,7 +50,7 @@ def test_match_item_generator_settings(
             "settings",
             "Settings",
             SomeSettingsMode,
-        ).generate_match_items()
+        ).generate_match_items(UserPermissions({}, {}, {}, []))
     ) == [
         MatchItem(
             title="title",

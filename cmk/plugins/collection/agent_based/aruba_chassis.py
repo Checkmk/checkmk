@@ -51,7 +51,7 @@ default_chassis_temperature_parameters = TempParamDict(
 
 
 def _string_to_celsius(temp_str: str) -> float:
-    return float(to_celsius(temp_str[:-1], temp_str[-1].lower()))
+    return to_celsius(float(temp_str[:-1]), temp_str[-1].lower())
 
 
 def parse_aruba_chassis(string_table: StringTable) -> Section:

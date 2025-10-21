@@ -44,6 +44,8 @@ $(CHECK_MK_BUILD):
 	$(REPO_PATH)/locale/compile_mo_files
 	$(TOUCH) $@
 
+ADDITIONAL_EXCLUDE=--exclude "BUILD.*" --exclude "BUILD" --exclude "OWNERS"
+
 EDITION_EXCLUDE=
 ifeq ($(EDITION),raw)
 	EDITION_EXCLUDE += \
@@ -98,6 +100,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	    --exclude plugins/Makefile \
 	    --exclude plugins/*.checksum \
 	    --exclude plugins/__init__.py \
+	    $(ADDITIONAL_EXCLUDE) \
 	    cfg_examples \
 	    plugins \
 	    sap \
@@ -127,10 +130,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	    windows/unsign-msi.patch \
 	    windows/python-3.cab \
 	    windows/check_mk.user.yml \
-	    windows/OpenHardwareMonitorLib.dll \
-	    windows/OpenHardwareMonitorCLI.exe \
 	    windows/robotmk_ext.exe \
-	    windows/mk-oracle.exe \
 	    windows/mk-sql.exe \
 	    windows/windows_files_hashes.txt \
 	    windows/mrpe \
@@ -141,6 +141,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	tar -c -C $(REPO_PATH) \
 	    $(CHECK_MK_TAROPTS) \
 	    $(EDITION_EXCLUDE) \
+	    $(ADDITIONAL_EXCLUDE) \
 	    cmk | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/python3
 
 	# legacy checks have been moved to checks/ in a dedicated step above.
@@ -200,8 +201,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_cmk-compute-api-spec $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/03_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-update/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update/

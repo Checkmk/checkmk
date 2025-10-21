@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 import contextlib
@@ -61,7 +67,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         user = self.get("_user")
         if user is None:
             return LoggedInNobody()
-        return user  # type: ignore[no-any-return]
+        return user
 
     @user.setter
     def user(self, user: LoggedInUser) -> None:
@@ -70,7 +76,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         self["_user"] = user
 
     @property
-    def user_id(self):  # type: ignore[no-untyped-def]
+    def user_id(self):
         raise AttributeError("Don't set user_id please.")
 
     @property

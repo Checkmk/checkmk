@@ -8,7 +8,7 @@ import type { SingleChoice } from 'cmk-shared-typing/typescript/vue_formspec_com
 
 import { untranslated } from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 

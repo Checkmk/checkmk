@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="unreachable"
+
 
 import datetime
 import os
@@ -32,6 +36,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.search import MatchItem
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -608,7 +613,7 @@ def test_match_item_generator_hosts() -> None:
                     "path": "",
                 },
             },
-        ).generate_match_items()
+        ).generate_match_items(UserPermissions({}, {}, {}, []))
     ) == [
         MatchItem(
             title="host",

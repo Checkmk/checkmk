@@ -9,7 +9,7 @@ import { computed } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 

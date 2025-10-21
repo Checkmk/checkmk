@@ -17,7 +17,8 @@ import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
   WidgetFilterContext,
-  WidgetGeneralSettings
+  WidgetGeneralSettings,
+  WidgetSpec
 } from '@/dashboard-wip/types/widget'
 import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
@@ -25,6 +26,7 @@ import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
 import AddFilters from '../../components/AddFilters/AddFilters.vue'
 import { useAddFilter } from '../../components/AddFilters/composables/useAddFilters'
+import CloseButton from '../../components/CloseButton.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import FiltersRecap from '../../components/FiltersRecap/FiltersRecap.vue'
 import { parseContextConfiguredFilters, squashFilters } from '../../components/FiltersRecap/utils'
@@ -41,8 +43,8 @@ const { _t } = usei18n()
 interface MetricsWizardProps {
   dashboardName: string
   contextFilters: ContextFilters
-  // TODO: widgetFilters?: ConfiguredFilters (during edit mode)
   dashboardConstants: DashboardConstants
+  editWidgetSpec?: WidgetSpec | null
 }
 
 const props = defineProps<MetricsWizardProps>()
@@ -126,7 +128,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
 
     <WizardStepsContainer v-else>
       <StepsHeader
-        :title="_t('Metrics & graphs')"
+        :title="_t('Host & site overview')"
         :subtitle="_t('Define widget')"
         @back="() => emit('goBack')"
       />
@@ -144,6 +146,8 @@ const handleObjectTypeSwitch = (objectType: string): void => {
     </WizardStepsContainer>
 
     <WizardStageContainer>
+      <CloseButton @close="() => emit('goBack')" />
+
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:host-filter-type="hostFilterType"
@@ -165,6 +169,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :host-filter-type="hostFilterType"
           :filters="appliedFilters"
           :dashboard-constants="dashboardConstants"
+          :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"
           @add-widget="
             (content, generalSettings, filterContext) =>

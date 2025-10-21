@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="index"
+# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
@@ -12,7 +11,7 @@ check_info = {}
 
 
 def parse_couchbase_nodes_operations(string_table):
-    parsed = {}
+    parsed = dict[str | None, float]()
     for line in string_table:
         if len(line) < 2:
             continue

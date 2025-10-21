@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Place for common code shared among different Check_MK special agents
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 Please don't add code to this file and allow new components to have a module for their own.
 """
 
@@ -11,87 +14,14 @@ import abc
 import argparse
 import atexit
 import datetime
-import getopt
 import json
 import logging
-import pprint
 import sys
 import time
 from pathlib import Path
 from typing import Any
 
-import requests
-
 from cmk.ccc import store
-
-LOG = logging.getLogger(__name__)
-
-
-class AgentJSON:
-    def __init__(self, key: str, title: str) -> None:
-        self._key = key
-        self._title = title
-
-    def usage(self) -> None:
-        sys.stderr.write(
-            """
-Check_MK %s Agent
-
-USAGE: agent_%s --section_url [{section_name},{url}]
-
-    Parameters:
-        --section_url   Pair of section_name and url separated by a comma
-                        Can be defined multiple times
-        --debug         Output json data with pprint
-
-"""
-            % (self._title, self._key)
-        )
-
-    def get_content(self) -> dict[str, list[str]] | None:
-        short_options = "h"
-        long_options = ["section_url=", "help", "newline_replacement=", "debug"]
-
-        try:
-            opts, _args = getopt.getopt(sys.argv[1:], short_options, long_options)
-        except getopt.GetoptError as err:
-            sys.stderr.write("%s\n" % err)
-            sys.exit(1)
-
-        sections = []
-        newline_replacement = "\\n"
-        opt_debug = False
-
-        for o, a in opts:
-            if o in ["--section_url"]:
-                sections.append(a.split(",", 1))
-            elif o in ["--newline_replacement"]:
-                newline_replacement = a
-            elif o in ["--debug"]:
-                opt_debug = True
-            elif o in ["-h", "--help"]:
-                self.usage()
-                sys.exit(0)
-
-        if not sections:
-            self.usage()
-            sys.exit(0)
-
-        content: dict[str, list[str]] = {}
-        for section_name, url in sections:
-            content.setdefault(section_name, [])
-            c = requests.get(url, timeout=900)
-            content[section_name].append(c.text.replace("\n", newline_replacement))
-
-        if opt_debug:
-            for line in content:
-                try:
-                    pprint.pprint(json.loads(line))
-                except Exception:
-                    sys.stdout.write(line + "\n")
-            return None
-
-        return content
 
 
 def datetime_serializer(obj):
@@ -279,77 +209,10 @@ def vcrtrace(**vcr_init_kwargs):
 
             import vcr
 
-            use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
+            use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette  # type: ignore[attr-defined]
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
             global_context = use_cassette(filename)
             atexit.register(global_context.__exit__)
             global_context.__enter__()
 
     return VcrTraceAction
-
-
-def get_seconds_since_midnight(current_time: datetime.datetime) -> float:
-    midnight = datetime.datetime.combine(current_time.date(), datetime.datetime.min.time())
-    return (current_time - midnight).total_seconds()
-
-
-def to_bytes(string: str) -> int:
-    """Turn a string containing a byte-size with units like (MiB, ..) into an int
-    containing the size in bytes
-
-    >>> to_bytes("123B")
-    123
-    >>> to_bytes("123 B")
-    123
-    >>> to_bytes("123")
-    123
-    >>> to_bytes("123KiB")
-    125952
-    >>> to_bytes("123 KiB")
-    125952
-    >>> to_bytes("123KB")
-    123000
-    >>> to_bytes("123 MiB")
-    128974848
-    >>> to_bytes("123 GiB")
-    132070244352
-    >>> to_bytes("123.5 GiB")
-    132607115264
-    """
-    return round(  #
-        (float(string[:-3]) * (1 << 10))
-        if string.endswith("KiB")
-        else (
-            (float(string[:-2]) * (10**3))
-            if string.endswith("KB")
-            else (
-                (float(string[:-3]) * (1 << 20))
-                if string.endswith("MiB")
-                else (
-                    (float(string[:-2]) * (10**6))
-                    if string.endswith("MB")
-                    else (
-                        (float(string[:-3]) * (1 << 30))
-                        if string.endswith("GiB")
-                        else (
-                            (float(string[:-2]) * (10**9))
-                            if string.endswith("GB")
-                            else (
-                                (float(string[:-3]) * (1 << 40))
-                                if string.endswith("TiB")
-                                else (
-                                    (float(string[:-2]) * (10**12))
-                                    if string.endswith("TB")
-                                    else (
-                                        float(string[:-1])  #
-                                        if string.endswith("B")
-                                        else float(string)
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )  #
-    )

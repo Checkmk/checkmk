@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, h, ref } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -17,7 +17,8 @@ import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
   WidgetFilterContext,
-  WidgetGeneralSettings
+  WidgetGeneralSettings,
+  WidgetSpec
 } from '@/dashboard-wip/types/widget'
 import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
@@ -25,6 +26,7 @@ import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
 import AddFilters from '../../components/AddFilters/AddFilters.vue'
 import { useAddFilter } from '../../components/AddFilters/composables/useAddFilters'
+import CloseButton from '../../components/CloseButton.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import FiltersRecap from '../../components/FiltersRecap/FiltersRecap.vue'
 import { parseContextConfiguredFilters, squashFilters } from '../../components/FiltersRecap/utils'
@@ -46,6 +48,7 @@ interface MetricsWizardProps {
   contextFilters: ContextFilters
   // TODO: widgetFilters?: ConfiguredFilters (during edit mode)
   dashboardConstants: DashboardConstants
+  editWidgetSpec?: WidgetSpec | null
 }
 
 const props = defineProps<MetricsWizardProps>()
@@ -79,6 +82,25 @@ const combinedMetricHandler = useCombinedMetric(null)
 
 // TODO: Fill with saved values if available --^--
 // /////////////////////////////////////////////////////////
+
+watch(
+  [widgetFilterManager.filterHandler.configuredFilters],
+  (newConfiguredFilters) => {
+    if (metricType.value === MetricSelection.SINGLE_METRIC) {
+      const host: string | null = newConfiguredFilters[0]?.host?.host ?? null
+      const svc: string | null = newConfiguredFilters[0]?.service?.service ?? null
+
+      if (host && hostFilterType.value === ElementSelection.SPECIFIC) {
+        singleMetricHandler.host.value = host
+      }
+
+      if (svc && serviceFilterType.value === ElementSelection.SPECIFIC) {
+        singleMetricHandler.service.value = svc
+      }
+    }
+  },
+  { deep: true }
+)
 
 const wizardHandler = useWizard(2)
 const wizardStages: QuickSetupStageSpec[] = [
@@ -169,6 +191,8 @@ const handleObjectTypeSwitch = (objectType: string): void => {
     </WizardStepsContainer>
 
     <WizardStageContainer>
+      <CloseButton @close="() => emit('goBack')" />
+
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:host-filter-type="hostFilterType"
@@ -197,6 +221,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :metric-type="metricType"
           :filters="appliedFilters"
           :metric="selectedMetric"
+          :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"
           @add-widget="
             (content, generalSettings, filterContext) =>

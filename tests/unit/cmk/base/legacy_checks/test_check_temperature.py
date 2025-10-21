@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import datetime as dt
 from collections.abc import Iterable
 from typing import Any, NamedTuple
@@ -198,7 +202,7 @@ from .checktestlib import mock_item_state
         ),
     ],
 )
-def test_check_temperature(  # type: ignore[no-untyped-def]
+def test_check_temperature(
     params: tuple[Number, TempParamType, str | None],
     kwargs,
     expected: Iterable[object] | None,
@@ -207,7 +211,8 @@ def test_check_temperature(  # type: ignore[no-untyped-def]
     assert result == expected
 
 
-def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
+def unix_ts(datetime_obj: dt.datetime) -> float:
+    epoch = dt.datetime(1970, 1, 1)
     return (datetime_obj - epoch).total_seconds()
 
 
@@ -307,7 +312,7 @@ def test_check_temperature_trend_exception() -> None:
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
-    def raises_exception(*args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def raises_exception(*args, **kwargs) -> None:
         raise IgnoreResultsError("Value Store does not have any valid values")
 
     with mock_item_state(raises_exception):

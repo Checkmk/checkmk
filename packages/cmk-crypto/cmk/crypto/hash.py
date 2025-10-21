@@ -30,10 +30,12 @@ class HashAlgorithm(Enum):
                 return HashAlgorithm.Sha384
             case crypto_hashes.SHA512():
                 return HashAlgorithm.Sha512
-        raise ValueError(f"Unsupported hash algorithm: '{algo.name}'")
+            case _:
+                raise ValueError(f"Unsupported hash algorithm: '{algo.name}'")
 
     def to_hashlib(self) -> hashlib._Hash:
         match self.value:
             case crypto_hashes.SHA1():
                 return hashlib.new("sha1")  # nosec B324 # BNS:eb967b
-        raise ValueError(f"Unsupported hash algorithm: '{self.value.name}'")
+            case _:
+                raise ValueError(f"Unsupported hash algorithm: '{self.value.name}'")

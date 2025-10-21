@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="possibly-undefined"
+
 from __future__ import annotations
 
 import contextlib
@@ -59,11 +62,11 @@ from cmk.utils.urls import is_allowed_url
 def register(page_registry: PageRegistry) -> None:
     # TODO: only overwrite this in cse specific files
     if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
-        page_registry.register(PageEndpoint("login", SaasLoginPage))
-        page_registry.register(PageEndpoint("logout", SaasLogoutPage))
+        page_registry.register(PageEndpoint("login", SaasLoginPage()))
+        page_registry.register(PageEndpoint("logout", SaasLogoutPage()))
     else:
-        page_registry.register(PageEndpoint("login", LoginPage))
-        page_registry.register(PageEndpoint("logout", LogoutPage))
+        page_registry.register(PageEndpoint("login", LoginPage()))
+        page_registry.register(PageEndpoint("logout", LogoutPage()))
 
 
 @contextlib.contextmanager

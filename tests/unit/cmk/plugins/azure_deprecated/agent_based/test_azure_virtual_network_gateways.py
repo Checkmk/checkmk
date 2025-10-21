@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -25,7 +28,7 @@ from cmk.plugins.azure_deprecated.agent_based.azure_virtual_network_gateways imp
     VNetGWHealth,
     VNetGWSettings,
 )
-from cmk.plugins.lib.azure import AzureMetric, Resource
+from cmk.plugins.azure_deprecated.agent_based.lib import AzureMetric, Resource
 
 SECTION: Section = {
     "vpn-001": VNetGateway(

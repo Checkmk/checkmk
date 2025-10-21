@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Small wrapper for the kernels `inotify` feature
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 Existing libraries seem to be rather unmaintained or lack
 features that we want (type annotations).
 
@@ -163,8 +166,16 @@ class INotify:
 
     def __exit__(self, _exc_type: object, _exc_val: object, _exc_tb: object) -> Literal[False]:
         """Accepts exception arguments for context manager protocol; currently unused."""
-        if not self._fileio.closed:
-            self._fileio.close()
+        try:
+            for wd, path in list(self._parser._wd_map.items()):
+                try:
+                    self.rm_watch(Watchee(wd, path))
+                except OSError:
+                    # The directory might already be gone, which is fine
+                    pass
+        finally:
+            if not self._fileio.closed:
+                self._fileio.close()
         return False  # don't swallow exceptions.
 
     def add_watch(self, path: Path, mask: Masks) -> Watchee:

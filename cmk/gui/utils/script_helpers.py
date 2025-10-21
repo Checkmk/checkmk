@@ -11,7 +11,7 @@ import typing
 from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import cache
-from typing import Any
+from wsgiref.types import WSGIEnvironment
 
 from flask import Flask
 from flask.ctx import RequestContext
@@ -33,29 +33,29 @@ def session_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     return make_wsgi_app(edition(paths.omd_root), debug=debug, testing=testing)
 
 
-def make_request_context(app: Flask, environ: dict[str, Any] | None = None) -> RequestContext:
+def _make_request_context(app: Flask, environ: WSGIEnvironment | None = None) -> RequestContext:
     if environ is None:
         environ = create_environ()
     return app.request_context(environ)
 
 
 @contextmanager
-def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterator[None]:
-    with make_request_context(app, environ):
+def request_context(app: Flask, environ: WSGIEnvironment | None = None) -> Iterator[None]:
+    with _make_request_context(app, environ):
         app.preprocess_request()
         yield
         app.process_response(Response())
 
 
 @contextmanager
-def application_and_request_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
+def application_and_request_context(environ: WSGIEnvironment | None = None) -> Iterator[None]:
     app = session_wsgi_app(testing=True)
     with app.app_context(), request_context(app, environ):
         yield
 
 
 @contextmanager
-def gui_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
+def gui_context(environ: WSGIEnvironment | None = None) -> Iterator[None]:
     app = session_wsgi_app(testing=True)
-    with app.app_context(), make_request_context(app, environ):
+    with app.app_context(), _make_request_context(app, environ):
         yield

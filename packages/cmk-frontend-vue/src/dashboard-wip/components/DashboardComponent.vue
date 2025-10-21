@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useErrorBoundary } from '@/components/useErrorBoundary'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import type {
   ContentProps,
@@ -59,7 +59,6 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
       effective_filter_context: {
         uses_infos: widget.filter_context.uses_infos,
         restricted_to_single: widgetConstants.filter_context.restricted_to_single,
-        // @ts-expect-error TODO: filters should be adapted to be <string, string> only
         filters: {
           // TODO: might have to be adjusted where widget filter overwrites completely everything if available
           // to be discussed
@@ -73,11 +72,12 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
   return record
 })
 
-const { ErrorBoundary: errorBoundary } = useErrorBoundary()
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
-  <errorBoundary>
+  <CmkErrorBoundary>
     <ResponsiveGrid
       v-if="dashboard.content.layout.type === 'responsive_grid'"
       v-model:content="dashboard.content as ContentResponsiveGrid"
@@ -96,6 +96,8 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
       :is-editing="isEditing"
       :dashboard-constants="constants"
       @widget:edit="$emit('widget:edit', $event)"
+      @widget:delete="$emit('widget:delete', $event)"
+      @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
     />
-  </errorBoundary>
+  </CmkErrorBoundary>
 </template>

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # Functions for parsing Werks and showing the users a browsable change
 # log
 
@@ -71,7 +73,7 @@ TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("change_log", ChangeLogPage))
+    page_registry.register(PageEndpoint("change_log", ChangeLogPage()))
     page_registry.register(PageEndpoint("werk", page_werk))
 
 

@@ -5,6 +5,8 @@
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
+# mypy: disable-error-code="type-arg"
+
 
 # LDAP API Schema Example
 # Hint: the alias is always added to the response, so we need to add it for response testing, but not for request schema

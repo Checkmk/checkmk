@@ -2,13 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="exhaustive-match"
+
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
 from typing import Final, Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import (
+from cmk.server_side_calls.alpha import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
@@ -16,7 +19,6 @@ from cmk.server_side_calls.v1 import (
 )
 
 _DAY: Final[int] = 24 * 3600
-_MILLISECOND: Final[int] = 1000
 
 
 class LevelsType(StrEnum):
@@ -27,6 +29,12 @@ class LevelsType(StrEnum):
 class ServicePrefix(StrEnum):
     AUTO = "auto"
     NONE = "none"
+
+
+class ConnectionType(StrEnum):
+    TLS = "tls"
+    SMTP_STARTTLS = "smtp_starttls"
+    POSTGRES_STARTTLS = "postgres_starttls"
 
 
 FloatLevels = (
@@ -75,6 +83,7 @@ class CertificateDetails(BaseModel):
 
 
 class Settings(BaseModel):
+    connection_type: ConnectionType | None = None
     response_time: FloatLevels | None = None
     validity: Certificate | None = None
     cert_details: CertificateDetails | None = None
@@ -144,6 +153,9 @@ def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Itera
     if (settings := endpoint.individual_settings) is None:
         return
 
+    if (connection_type := settings.connection_type) is not None:
+        yield "--connection-type"
+        yield connection_type
     if (response_time := settings.response_time) is not None:
         yield from _response_time_args(response_time)
     if (validity := settings.validity) is not None:

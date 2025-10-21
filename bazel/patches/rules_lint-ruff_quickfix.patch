@@ -1,0 +1,40 @@
+diff --git a/lint/ruff.bzl b/lint/ruff.bzl
+index 9fd1c13..57843ca 100644
+--- a/lint/ruff.bzl
++++ b/lint/ruff.bzl
+@@ -142,17 +142,22 @@ def ruff_fix(ctx, executable, srcs, config, patch, stdout, exit_code, env = {}):
+         }),
+     )
+ 
++    outputs = [patch, stdout]
++    if exit_code:
++        outputs.append(exit_code)
++
+     ctx.actions.run(
+         inputs = srcs + config + [patch_cfg],
+-        outputs = [patch, exit_code, stdout],
++        outputs = outputs,
+         executable = executable._patcher,
+         arguments = [patch_cfg.path],
+         env = dict(env, **{
+             "BAZEL_BINDIR": ".",
+-            "JS_BINARY__EXIT_CODE_OUTPUT_FILE": exit_code.path,
+             "JS_BINARY__STDOUT_OUTPUT_FILE": stdout.path,
+             "JS_BINARY__SILENT_ON_SUCCESS": "1",
+-        }),
++        } | ({
++            "JS_BINARY__EXIT_CODE_OUTPUT_FILE": exit_code.path,
++        } if exit_code else {})),
+         tools = [executable._ruff],
+         mnemonic = _MNEMONIC,
+         progress_message = "Fixing %{label} with Ruff",
+@@ -164,7 +169,8 @@ def _ruff_aspect_impl(target, ctx):
+         return []
+ 
+     files_to_lint = filter_srcs(ctx.rule)
+-    if ctx.attr._options[LintOptionsInfo].fix:
++    # HACK!  Quickfix to let ruff fail change validation.
++    if False and ctx.attr._options[LintOptionsInfo].fix:
+         outputs, info = patch_and_output_files(_MNEMONIC, target, ctx)
+     else:
+         outputs, info = output_files(_MNEMONIC, target, ctx)

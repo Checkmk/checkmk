@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -11,20 +13,23 @@ import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
 from cmk.plugins.azure_deprecated.agent_based.azure_load_balancer import (
+    BackendIpConfiguration,
     check_byte_count,
     check_health,
     check_snat,
-    parse_load_balancer,
-)
-from cmk.plugins.lib.azure import AzureMetric, FrontendIpConfiguration, PublicIP, Resource
-from cmk.plugins.lib.azure_load_balancer import (
-    BackendIpConfiguration,
     InboundNatRule,
     LoadBalancer,
     LoadBalancerBackendAddress,
     LoadBalancerBackendPool,
     OutboundRule,
+    parse_load_balancer,
     Section,
+)
+from cmk.plugins.azure_deprecated.agent_based.lib import (
+    AzureMetric,
+    FrontendIpConfiguration,
+    PublicIP,
+    Resource,
 )
 
 SECTION = {

@@ -2,6 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="redundant-expr"
+
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass

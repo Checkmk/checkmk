@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 
 import re
 from collections.abc import Callable, Container, Iterable, Mapping
 from functools import partial
-from typing import Literal
+from typing import Literal, override
 
 import livestatus
 
@@ -64,7 +67,7 @@ from .filter.components import (
 
 
 def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_validate_filter", PageValidateFilter))
+    page_registry.register(PageEndpoint("ajax_validate_filter", PageValidateFilter()))
     register_host_and_service_basic_filters(filter_registry)
     register_host_address_filters(filter_registry)
     register_host_and_service_group_filters(filter_registry)
@@ -113,6 +116,7 @@ class RegexAjaxDropdownFilter(AjaxDropdownFilter):
 
 
 class PageValidateFilter(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         api_request = self.webapi_request()
         varname = str(api_request.get("varname"))

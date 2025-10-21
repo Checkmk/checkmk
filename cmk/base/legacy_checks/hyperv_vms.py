@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+
 # Example output from agent:
 # <<<hyperv_vms>>>
 # DMZ-DC1                         Running 4.21:44:58          Operating normally

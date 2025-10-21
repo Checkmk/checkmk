@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # netappFiler(1) vfiler(16) vfTable (3) vfEntry (1) vfName (2)
 #                                                   vfState(9)
 

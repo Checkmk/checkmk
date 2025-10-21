@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.rulesets.v1 import form_specs, rule_specs, Title
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 
 def _ms_to_s(values: object) -> dict:
     if not isinstance(values, dict):

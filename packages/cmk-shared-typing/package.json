@@ -5,6 +5,7 @@
   "type": "module",
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "5.2.2",
-    "json-schema-to-typescript": "^13.1.2"
+    "json-schema-to-typescript": "^13.1.2",
+    "openapi-typescript": "^7.9.1"
   }
 }

@@ -7,6 +7,8 @@ This module handles tree structures for HW/SW Inventory system and
 structured monitoring data of Check_MK.
 """
 
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 import ast

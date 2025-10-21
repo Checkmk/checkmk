@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -32,8 +37,13 @@ from cmk.bi.type_defs import (
     AggregationFunctionSerialized,
     ComputationConfigDict,
     GroupConfigDict,
+    HostChoice,
+    HostConditions,
+    HostRegexMatches,
+    HostServiceConditions,
     HostState,
-    SearchConfig,
+    SearchKind,
+    SearchSerialized,
 )
 from cmk.ccc import plugin_registry
 from cmk.ccc.hostaddress import HostName
@@ -43,6 +53,7 @@ from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-vio
     ServiceState,
 )
 from cmk.fields import Boolean, Constant, Dict, Integer, List, Nested, String
+from cmk.utils.labels import LabelGroups
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.servicename import ServiceName
@@ -430,21 +441,21 @@ class ABCBISearcher(ABC):
     def __init__(self) -> None:
         # The key may be a pattern / regex, so `str` is the correct type for the key.
         self.hosts: dict[str, BIHostData] = {}
-        self._host_regex_match_cache: dict[str, dict] = {}
-        self._host_regex_miss_cache: dict[str, dict] = {}
+        self._host_regex_match_cache: dict[str, HostRegexMatches] = {}
+        self._host_regex_miss_cache: dict[str, dict[str, bool]] = {}
 
     @abstractmethod
-    def search_hosts(self, conditions: dict) -> list[BIHostSearchMatch]:
+    def search_hosts(self, conditions: HostConditions) -> list[BIHostSearchMatch]:
         raise NotImplementedError()
 
     @abstractmethod
-    def search_services(self, conditions: dict) -> list[BIServiceSearchMatch]:
+    def search_services(self, conditions: HostServiceConditions) -> list[BIServiceSearchMatch]:
         raise NotImplementedError()
 
     @abstractmethod
     def get_host_name_matches(
         self, hosts: list[BIHostData], pattern: str
-    ) -> tuple[list[BIHostData], dict]:
+    ) -> tuple[list[BIHostData], HostRegexMatches]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -455,8 +466,8 @@ class ABCBISearcher(ABC):
 
     @abstractmethod
     def filter_host_choice(
-        self, hosts: list[BIHostData], condition: dict
-    ) -> tuple[Iterable[BIHostData], dict]:
+        self, hosts: list[BIHostData], condition: HostChoice
+    ) -> tuple[Iterable[BIHostData], HostRegexMatches]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -475,7 +486,7 @@ class ABCBISearcher(ABC):
 
     @abstractmethod
     def filter_host_labels(
-        self, hosts: Iterable[BIHostData], required_label_groups: Any
+        self, hosts: Iterable[BIHostData], required_label_groups: LabelGroups
     ) -> Iterable[BIHostData]: ...
 
 
@@ -634,16 +645,9 @@ bi_action_registry = BIActionRegistry()
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-SearchKind = Literal[
-    "empty",
-    "fixed_arguments",
-    "host_search",
-    "service_search",
-]
-
 
 class ABCBISearch(ABC):
-    def __init__(self, search_config: dict[str, Any]) -> None:
+    def __init__(self, search_config: SearchSerialized) -> None:
         super().__init__()
 
     @classmethod
@@ -657,7 +661,7 @@ class ABCBISearch(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def serialize(self) -> dict[str, Any]:
+    def serialize(self) -> SearchSerialized:
         raise NotImplementedError()
 
     @abstractmethod
@@ -670,7 +674,7 @@ class BISearchRegistry(plugin_registry.Registry[type[ABCBISearch]]):
     def plugin_name(self, instance: type[ABCBISearch]) -> str:
         return instance.kind()
 
-    def instantiate(self, search_config: SearchConfig) -> ABCBISearch:
+    def instantiate(self, search_config: SearchSerialized) -> ABCBISearch:
         return self._entries[search_config["type"]](search_config)
 
 

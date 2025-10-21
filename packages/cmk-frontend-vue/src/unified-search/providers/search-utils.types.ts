@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { SimpleIcons } from '@/components/CmkIcon'
 
 export interface UnifiedSearchQueryLike {
   input: string
@@ -27,10 +28,12 @@ export type SearchProviderKeys = 'monitoring' | 'customize' | 'setup'
 export type QueryProvider = SearchProviderKeys | 'all'
 
 export interface TopicIconMapping {
-  [key: string]: string | null
+  [key: string]: SimpleIcons
 }
 export interface ProviderTopicIconMapping {
   monitoring: TopicIconMapping
   customize: TopicIconMapping
   setup: TopicIconMapping
+  help: TopicIconMapping
+  user: TopicIconMapping
 }

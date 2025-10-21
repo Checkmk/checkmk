@@ -40,12 +40,12 @@ class Snapshot:
 
     def __add__(self, other: Snapshot) -> Snapshot:
         if not isinstance(other, Snapshot):
-            return NotImplemented
+            return NotImplemented  # type: ignore[unreachable]
         return Snapshot(posix.times_result(t0 + t1 for t0, t1 in zip(self.process, other.process)))
 
     def __sub__(self, other: Snapshot) -> Snapshot:
         if not isinstance(other, Snapshot):
-            return NotImplemented
+            return NotImplemented  # type: ignore[unreachable]
         return Snapshot(posix.times_result(t0 - t1 for t0, t1 in zip(self.process, other.process)))
 
     def __bool__(self) -> bool:

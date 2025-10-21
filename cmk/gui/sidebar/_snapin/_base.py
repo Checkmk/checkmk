@@ -3,15 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 import abc
-from collections.abc import Callable
 
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageHandler
 from cmk.gui.type_defs import PermissionName, RoleName
 from cmk.gui.utils.roles import UserPermissions
 
-PageHandlers = dict[str, Callable[[Config], None]]
+PageHandlers = dict[str, PageHandler]
 
 
 # TODO: Transform methods to class methods

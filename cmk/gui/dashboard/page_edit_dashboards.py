@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
@@ -16,6 +17,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 from .store import get_all_dashboards
 from .type_defs import DashboardConfig, DashboardName
 
+PAGE_EDIT_DASHBOARDS_LINK = "edit_dashboards"
+
 
 def page_edit_dashboards(config: Config) -> None:
     visuals.page_list(
@@ -28,12 +31,16 @@ def page_edit_dashboards(config: Config) -> None:
 
 
 def _render_dashboard_buttons(dashboard_name: DashboardName, dashboard: DashboardConfig) -> None:
-    if dashboard["owner"] == user.id:
+    owner = dashboard["owner"]
+    if owner == user.id or (
+        owner != UserId.builtin() and user.may("general.edit_foreign_dashboards")
+    ):
         if dashboard.get("show_title"):
             html.icon_button(
                 makeuri_contextless(
                     request,
                     [
+                        ("owner", owner),
                         ("name", dashboard_name),
                         ("edit", "1"),
                     ],

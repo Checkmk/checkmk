@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="possibly-undefined"
+
 import abc
 import math
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import repeat
 from typing import assert_never, Self
@@ -103,27 +107,38 @@ class _MetricNamesOrScalars:
         return self._scalars
 
 
-def _perfometer_matches(
-    perfometer: (
+def _extract_metric_names_or_scalars(
+    perfometer_plugin: (
+        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+    ),
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> _MetricNamesOrScalars:
+    match perfometer_plugin:
+        case perfometers_api.Perfometer():
+            return _MetricNamesOrScalars.from_perfometers(perfometer_plugin)
+        case perfometers_api.Bidirectional():
+            return _MetricNamesOrScalars.from_perfometers(
+                perfometer_plugin.left,
+                perfometer_plugin.right,
+            )
+        case perfometers_api.Stacked():
+            return _MetricNamesOrScalars.from_perfometers(
+                perfometer_plugin.lower,
+                perfometer_plugin.upper,
+            )
+
+
+def _perfometer_plugin_matches(
+    perfometer_plugin: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> bool:
     assert translated_metrics
 
-    match perfometer:
-        case perfometers_api.Perfometer():
-            metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(perfometer)
-        case perfometers_api.Bidirectional():
-            metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(
-                perfometer.left,
-                perfometer.right,
-            )
-        case perfometers_api.Stacked():
-            metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(
-                perfometer.lower,
-                perfometer.upper,
-            )
+    metric_names_or_scalars = _extract_metric_names_or_scalars(
+        perfometer_plugin, translated_metrics
+    )
 
     if not metric_names_or_scalars.metric_names:
         return False
@@ -502,12 +517,6 @@ def _make_projection(
     assert False, focus_range
 
 
-def _evaluate_segments(
-    segments: Iterable[Quantity], translated_metrics: Mapping[str, TranslatedMetric]
-) -> Sequence[_EvaluatedQuantity]:
-    return [_evaluate_quantity(segment, translated_metrics) for segment in segments]
-
-
 def _project_segments(
     projection: _ProjectionFromMetricValueToPerfFillLevel,
     segments: Sequence[_EvaluatedQuantity],
@@ -617,10 +626,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                 self.perfometer.name,
                 temperature_unit=temperature_unit,
             ),
-            _evaluate_segments(
-                self.perfometer.segments,
-                self.translated_metrics,
-            ),
+            [_evaluate_quantity(s, self.translated_metrics) for s in self.perfometer.segments],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
@@ -680,10 +686,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.name,
                 temperature_unit=temperature_unit,
             ),
-            _evaluate_segments(
-                self.perfometer.left.segments,
-                self.translated_metrics,
-            ),
+            [_evaluate_quantity(s, self.translated_metrics) for s in self.perfometer.left.segments],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
@@ -700,10 +703,10 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.name,
                 temperature_unit=temperature_unit,
             ),
-            _evaluate_segments(
-                self.perfometer.right.segments,
-                self.translated_metrics,
-            ),
+            [
+                _evaluate_quantity(s, self.translated_metrics)
+                for s in self.perfometer.right.segments
+            ],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
@@ -784,28 +787,28 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
 
 def _get_renderer(
-    perfometer: (
+    perfometer_plugin: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> (
     MetricometerRendererPerfometer | MetricometerRendererBidirectional | MetricometerRendererStacked
 ):
-    match perfometer:
+    match perfometer_plugin:
         case perfometers_api.Perfometer():
             return MetricometerRendererPerfometer(
-                perfometer,
+                perfometer_plugin,
                 translated_metrics,
                 get_themed_perfometer_bg_color(),
             )
         case perfometers_api.Bidirectional():
             return MetricometerRendererBidirectional(
-                perfometer,
+                perfometer_plugin,
                 translated_metrics,
                 get_themed_perfometer_bg_color(),
             )
         case perfometers_api.Stacked():
-            return MetricometerRendererStacked(perfometer, translated_metrics)
+            return MetricometerRendererStacked(perfometer_plugin, translated_metrics)
 
 
 def _get_first_matching_perfometer_testable(
@@ -823,16 +826,16 @@ def _get_first_matching_perfometer_testable(
     if not translated_metrics:
         return None
 
-    for perfometer in registered_perfometers.values():
-        if _perfometer_matches(perfometer, translated_metrics):
+    for perfometer_plugin in registered_perfometers.values():
+        if _perfometer_plugin_matches(perfometer_plugin, translated_metrics):
             if (
-                (superseder_name := superseded_to_superseder.get(perfometer.name))
+                (superseder_name := superseded_to_superseder.get(perfometer_plugin.name))
                 and (superseder := registered_perfometers.get(superseder_name))
-                and _perfometer_matches(superseder, translated_metrics)
+                and _perfometer_plugin_matches(superseder, translated_metrics)
             ):
                 return _get_renderer(superseder, translated_metrics)
 
-            return _get_renderer(perfometer, translated_metrics)
+            return _get_renderer(perfometer_plugin, translated_metrics)
 
     return None
 

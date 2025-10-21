@@ -4,6 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Simple download page for the built-in agents and plugins"""
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import fnmatch
 import os

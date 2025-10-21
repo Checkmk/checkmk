@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="exhaustive-match"
+
 from collections.abc import Mapping
 from typing import cast
 from uuid import uuid4
@@ -398,6 +401,7 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
             "match_services",
             "match_exclude_services",
             "match_exclude_servicegroups_regex",
+            "match_checktype",
         ]
     ):
         spec["service_filters"] = _get_service_filters(event_rule)

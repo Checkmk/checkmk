@@ -3,6 +3,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+
 r"""Check_MK Agent Plugin: mk_filestats
 
 This is a Check_MK Agent plugin. If configured, it will be called by the
@@ -229,7 +234,7 @@ def _sanitize_path(raw_file_path):
     #   str_with_surrogates.encode('utf-8', 'surrogateescape')
     if sys.version_info[0] >= 3:
         return raw_file_path.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
-    if isinstance(raw_file_path, unicode):  # type: ignore[name-defined] # noqa: F821
+    if isinstance(raw_file_path, unicode):  # type: ignore[name-defined,unreachable] # noqa: F821
         return raw_file_path
     return raw_file_path.decode("utf-8", "replace")
 

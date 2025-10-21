@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import abc
 import copy
 import dataclasses
@@ -51,7 +50,8 @@ def _parse_range_limit(raw: object) -> RangeLimit:
             return position, limit
         case ("mid", tuple((int(), int())) as oid_range):
             return "mid", oid_range
-    raise ValueError(raw)
+        case _:
+            raise ValueError(raw)
 
 
 class SNMPTimeout(TimeoutError):

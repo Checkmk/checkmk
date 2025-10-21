@@ -91,6 +91,8 @@ class PredictiveLevels:
                 res.append("Relative difference")
             case PredictiveLevelTypeShort.STANDARD_DEVIATION:
                 res.append("Standard deviation difference")
+            case _:
+                pass
 
         if self.upper_bound:
             res.append(BoundType.DYNAMIC_UPPER.value + "")

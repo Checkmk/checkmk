@@ -90,7 +90,8 @@ class TCPFetcherConfig:
                 return TCPEncryptionHandling.ANY_ENCRYPTED
             case "any_and_plain":
                 return TCPEncryptionHandling.ANY_AND_PLAIN
-        raise ValueError("Unknown setting: %r" % setting)
+            case _:
+                raise ValueError("Unknown setting: %r" % setting)
 
 
 class TCPFetcher(Fetcher[AgentRawData]):

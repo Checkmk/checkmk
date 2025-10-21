@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import os
 import re
 
@@ -132,7 +136,7 @@ def expected_output_engine():
     return expected
 
 
-def test_section_check_mk(  # type: ignore[no-untyped-def]
+def test_section_check_mk(
     request, testconfig_only_from, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

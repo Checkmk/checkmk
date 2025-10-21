@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # <<<3ware_disks>>>
 # p0     OK               u1     298.09 GB   625142448     WD-WCAT19310918
 # p1     OK               u0     298.09 GB   625142448     WD-WCARW3200306

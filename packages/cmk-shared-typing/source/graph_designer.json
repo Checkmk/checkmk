@@ -14,9 +14,18 @@
     },
     "metric_backend_available": {
       "type": "boolean"
+    },
+    "create_services_available": {
+      "type": "boolean"
     }
   },
-  "required": ["graph_id", "graph_lines", "graph_options", "metric_backend_available"],
+  "required": [
+    "graph_id",
+    "graph_lines",
+    "graph_options",
+    "metric_backend_available",
+    "create_services_available"
+  ],
   "$defs": {
     "graph_line_id": {
       "type": "integer"

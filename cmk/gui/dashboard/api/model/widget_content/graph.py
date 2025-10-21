@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="redundant-expr"
+
 from abc import ABC
 from collections.abc import Callable, Sequence
 from typing import Annotated, Literal, override, Self
@@ -20,9 +23,12 @@ from cmk.gui.dashboard.type_defs import (
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
 )
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
+from cmk.gui.graphing import graphs_from_api, metrics_from_api
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
+from cmk.gui.openapi.framework.model.common_fields import (
+    timerange_from_internal,
+    TimerangeModel,
+)
 from cmk.gui.openapi.framework.model.converter import RegistryConverter
 from cmk.gui.type_defs import GraphPresentation, GraphRenderOptionsVS, SizePT
 

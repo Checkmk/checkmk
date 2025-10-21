@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="redundant-expr"
+
 from collections.abc import Callable, Iterable
 from typing import TypedDict
 
@@ -15,6 +19,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic
 from cmk.gui.permissions import permission_registry
 from cmk.gui.search import (
     ABCMatchItemGenerator,
@@ -29,15 +34,7 @@ from cmk.gui.sidebar import (
     SidebarSnapin,
     SnapinRegistry,
 )
-from cmk.gui.type_defs import (
-    Choices,
-    MainMenu,
-    MainMenuItem,
-    MainMenuTopic,
-    RoleName,
-    ViewSpec,
-    Visual,
-)
+from cmk.gui.type_defs import Choices, RoleName, ViewSpec, Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -62,7 +59,7 @@ def render_wato(config: Config, mini: bool) -> None:
     if not user.may("wato.use"):
         html.write_text_permissive(_("You are not allowed to use the setup."))
 
-    menu = get_wato_menu_items()
+    menu = get_wato_menu_items(UserPermissions.from_config(config, permission_registry))
 
     if mini:
         for topic in menu:
@@ -84,7 +81,7 @@ def render_wato(config: Config, mini: bool) -> None:
         html.div("", class_="clear")
 
 
-def get_wato_menu_items() -> list[MainMenuTopic]:
+def get_wato_menu_items(user_permissions: UserPermissions) -> list[MainMenuTopic]:
     by_topic: dict[MainModuleTopic, MainMenuTopic] = {}
     for module_class in main_module_registry.values():
         module = module_class()
@@ -143,12 +140,12 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        topic_generator: Callable[[], Iterable[MainMenuTopic]] | None,
+        topic_generator: Callable[[UserPermissions], Iterable[MainMenuTopic]] | None,
     ) -> None:
         super().__init__(name)
         self._topic_generator = topic_generator
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield from (
             MatchItem(
                 title=main_menu_item.title,
@@ -159,7 +156,9 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                     *main_menu_item.main_menu_search_terms,
                 ],
             )
-            for main_menu_topic in (self._topic_generator() if self._topic_generator else [])
+            for main_menu_topic in (
+                self._topic_generator(user_permissions) if self._topic_generator else []
+            )
             for main_menu_item in get_main_menu_items_prefixed_by_segment(main_menu_topic)
         )
 
@@ -355,12 +354,9 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         dflt_target_name: str = "allhosts"
         dflt_topic_name: str = ""
         for name, view in get_permitted_views().items():
-            if (not config.visible_views or name in config.visible_views) and (
-                not config.hidden_views or name not in config.hidden_views
-            ):
-                views_to_show.append((name, view))
-                if name == dflt_target_name:
-                    dflt_topic_name = view["topic"]
+            views_to_show.append((name, view))
+            if name == dflt_target_name:
+                dflt_topic_name = view["topic"]
 
         selected_topic_name: str
         selected_target_name: str

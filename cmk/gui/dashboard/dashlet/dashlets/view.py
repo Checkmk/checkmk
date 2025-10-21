@@ -3,13 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+
 import contextlib
 import copy
 import dataclasses
 import json
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from typing import cast, get_args, Literal, TypeVar
+from typing import cast, get_args, Literal, override, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -557,6 +560,7 @@ class EmbeddedViewSpecManager:
 
 
 class ViewWidgetIFramePage(Page):
+    @override
     def page(self, config: Config) -> None:
         """Render a single view for use in an iframe.
 
@@ -711,6 +715,7 @@ class ViewWidgetEditPage(Page):
         datasource: str
         single_infos: SingleInfos
 
+    @override
     def page(self, config: Config) -> None:
         """Render the view editor for embedded views in dashboards.
 
@@ -812,7 +817,7 @@ class ViewWidgetEditPage(Page):
         view_spec = create_view_from_valuespec(old_view=view_spec, view=view_spec)
         embedded = EmbeddedViewSpecManager.normal_to_embedded_view_spec(view_spec)
         dashboard.setdefault("embedded_views", {})[embedded_id] = embedded
-        save_all_dashboards()
+        save_all_dashboards(dashboard["owner"])
         # we don't do the remote site sync here, as this is done when the dashboard is saved
         # we accept that this might drift apart for now
 

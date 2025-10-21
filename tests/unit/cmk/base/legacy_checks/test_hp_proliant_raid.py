@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+
 
 import pytest
 
@@ -47,7 +50,7 @@ def test_discover_hp_proliant_raid_no_snmp_data(
     assert not list(check_plugin.discovery_function({}))
 
 
-def test_discover_hp_proliant_raid_aa(  # type: ignore[no-untyped-def]
+def test_discover_hp_proliant_raid_aa(
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,
@@ -65,7 +68,7 @@ def test_discover_hp_proliant_raid_aa(  # type: ignore[no-untyped-def]
     ]
 
 
-def test_check_hp_proliant_raid_item_not_found(  # type: ignore[no-untyped-def]
+def test_check_hp_proliant_raid_item_not_found(
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,
@@ -79,7 +82,7 @@ def test_check_hp_proliant_raid_item_not_found(  # type: ignore[no-untyped-def]
     )
 
 
-def test_check_hp_proliant_raid(  # type: ignore[no-untyped-def]
+def test_check_hp_proliant_raid(
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,

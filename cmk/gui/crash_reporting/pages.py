@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import base64
 import io
@@ -12,7 +18,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Final, TypedDict
+from typing import override, TypedDict
 
 import livestatus
 
@@ -63,8 +69,8 @@ CrashReportRow = dict[str, str]
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("crash", PageCrash))
-    page_registry.register(PageEndpoint("download_crash_report", PageDownloadCrashReport))
+    page_registry.register(PageEndpoint("crash", PageCrash()))
+    page_registry.register(PageEndpoint("download_crash_report", PageDownloadCrashReport()))
     report_renderer_registry.register(ReportRendererGeneric)
     report_renderer_registry.register(ReportRendererSection)
     report_renderer_registry.register(ReportRendererCheck)
@@ -77,10 +83,10 @@ class ReportSubmitDetails(TypedDict):
 
 
 class ABCCrashReportPage(Page, abc.ABC):
-    def __init__(self) -> None:
-        super().__init__()
-        self._crash_id: Final = request.get_str_input_mandatory("crash_id")
-        self._site_id: Final = request.get_str_input_mandatory("site")
+    @override
+    def _handle_http_request(self) -> None:
+        self._crash_id = request.get_str_input_mandatory("crash_id")
+        self._site_id = request.get_str_input_mandatory("site")
 
     def _get_crash_info(self, row: CrashReportRow) -> CrashInfo:
         return json.loads(row["crash_info"])
@@ -117,6 +123,7 @@ class ABCCrashReportPage(Page, abc.ABC):
 
 
 class PageCrash(ABCCrashReportPage):
+    @override
     def page(self, config: Config) -> None:
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
@@ -711,6 +718,7 @@ def _show_agent_output(row: CrashReportRow) -> None:
 
 
 class PageDownloadCrashReport(ABCCrashReportPage):
+    @override
     def page(self, config: Config) -> None:
         user.need_permission("general.see_crash_reports")
 

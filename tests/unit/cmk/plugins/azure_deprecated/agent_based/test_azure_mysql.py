@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -13,7 +15,12 @@ from cmk.plugins.azure_deprecated.agent_based.azure_mysql import (
     check_plugin_azure_mysql_connections,
     check_replication,
 )
-from cmk.plugins.lib.azure import AzureMetric, check_connections, Resource, Section
+from cmk.plugins.azure_deprecated.agent_based.lib import (
+    AzureMetric,
+    check_connections,
+    Resource,
+    Section,
+)
 
 
 @pytest.mark.parametrize(

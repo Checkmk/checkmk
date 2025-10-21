@@ -6,13 +6,37 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Literal
 
+from cmk.gui.config import Config
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.speaklater import LazyString
 from cmk.utils.tags import TagID
+
+
+@dataclass
+class IconConfig:
+    """Required subset of Config needed for icons - Add whichever is needed"""
+
+    wato_enabled: bool
+    mkeventd_enabled: bool
+    multisite_draw_ruleicon: bool
+    staleness_threshold: float
+    debug: bool
+
+    @classmethod
+    def from_config(cls, config: Config) -> IconConfig:
+        return cls(
+            wato_enabled=config.wato_enabled,
+            mkeventd_enabled=config.mkeventd_enabled,
+            multisite_draw_ruleicon=config.multisite_draw_ruleicon,
+            staleness_threshold=config.staleness_threshold,
+            debug=config.debug,
+        )
 
 
 class Icon:
@@ -27,6 +51,8 @@ class Icon:
                 Row,
                 Sequence[TagID],
                 Mapping[str, str],
+                UserPermissions,
+                IconConfig,
             ],
             None
             | IconSpec
@@ -89,6 +115,8 @@ class Icon:
         row: Row,
         tags: Sequence[TagID],
         custom_vars: Mapping[str, str],
+        user_permissions: UserPermissions,
+        icon_config: IconConfig,
     ) -> (
         None
         | IconSpec
@@ -99,7 +127,7 @@ class Icon:
         | tuple[IconSpec, str, tuple[str, str]]
         | tuple[str, str | None, tuple[str, str] | None]
     ):
-        return self._render_func(what, row, tags, custom_vars)
+        return self._render_func(what, row, tags, custom_vars, user_permissions, icon_config)
 
     @property
     def toplevel(self) -> bool:

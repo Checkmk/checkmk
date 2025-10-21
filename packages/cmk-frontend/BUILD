@@ -116,12 +116,12 @@ pkg_tar(
 
 alias(
     name = "format",
-    actual = "//bazel/tools:format",
+    actual = "//bazel/tools/format",
 )
 
 alias(
     name = "format.check",
-    actual = "//bazel/tools:format.check",
+    actual = "//bazel/tools/format:check",
 )
 
 # Note: this is not done via lint_eslint_aspect + lint_test intentionally.

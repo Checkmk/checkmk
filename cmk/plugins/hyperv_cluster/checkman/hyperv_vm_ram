@@ -16,4 +16,4 @@ item:
  The virtual machine name as discovered by the agent.
 
 inventory:
- One service per virtual machine is created, based on the presence of "config.hardware.RAMType" in the section data.
+ One service per virtual machine is created.

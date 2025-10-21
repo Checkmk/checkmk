@@ -8,8 +8,8 @@ import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
-import HelpText from '@/components/HelpText.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 defineOptions({ inheritAttrs: false })
@@ -48,7 +48,7 @@ const { padding = 'both', label, disabled = false } = defineProps<CmkCheckboxPro
       </CheckboxRoot>
       <span v-if="label"
         ><CmkHtml :html="label" /><span class="nowrap"
-          >&nbsp;<HelpText v-if="help" :help="help" /></span
+          >&nbsp;<CmkHelpText v-if="help" :help="help" /></span
       ></span>
     </label>
   </span>

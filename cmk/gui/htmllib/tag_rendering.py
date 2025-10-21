@@ -4,6 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Internal helper for rendering HTML tags"""
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="redundant-expr"
+
 import re
 from collections.abc import Iterator
 

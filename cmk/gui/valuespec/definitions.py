@@ -3,6 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="mutable-override"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 # FIXME: Cleanups
 # - Consolidate ListChoice and DualListChoice to use the same class
 #   and rename to better name

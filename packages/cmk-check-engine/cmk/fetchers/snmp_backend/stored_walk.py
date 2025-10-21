@@ -58,9 +58,9 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
         begin = 0
         end = len(lines)
+        current = (begin + end) // 2
         hit = None
         while end - begin > 0:
-            current = (begin + end) // 2
             parts = lines[current].split(None, 1)
             comp = parts[0]
             hit = StoredWalkSNMPBackend._compare_oids(oid_prefix, comp)
@@ -70,6 +70,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
                 begin = current + 1
             else:
                 end = current
+            current = (begin + end) // 2
 
         if hit != 0:
             return []  # not found

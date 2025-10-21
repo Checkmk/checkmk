@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="possibly-undefined"
+
 import abc
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
@@ -81,11 +83,8 @@ class TDSpec:
 
 
 def compute_cell_spec(td_spec: TDSpec) -> tuple[str, HTML]:
-    css_classes = list(td_spec.css_classes)
-    if td_spec.background_color:
-        css_classes.append("inv_cell_no_padding")
     return (
-        " ".join(css_classes),
+        " ".join(td_spec.css_classes),
         (
             HTMLWriter.render_div(td_spec.html_value, style=td_style)
             if (td_style := td_spec.style)

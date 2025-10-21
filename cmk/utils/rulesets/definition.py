@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
+from typing import Literal
 
 
 class RuleGroupType(enum.Enum):
@@ -16,6 +17,32 @@ class RuleGroupType(enum.Enum):
     SPECIAL_AGENTS = "special_agents"
     STATIC_CHECKS = "static_checks"
     CHECKGROUP_PARAMETERS = "checkgroup_parameters"
+
+
+# I am not sure we need this in the long run, but for now it helps to see the possible values.
+type _ExtraServiceConfRuleName = Literal[
+    "active_checks_enabled",
+    "check_interval",
+    "check_period",
+    "display_name",
+    "_ec_contact",
+    "_ec_sl",
+    "_ESCAPE_PLUGIN_OUTPUT",
+    "first_notification_delay",
+    "flap_detection_enabled",
+    "icon_image",
+    "max_check_attempts",
+    "notes_url",
+    "notification_interval",
+    "notification_options",
+    "notification_period",
+    "notifications_enabled",
+    "passive_checks_enabled",
+    "process_perf_data",
+    "retry_interval",
+    "service_period",
+    "_sla_config",
+]
 
 
 class RuleGroup:
@@ -36,7 +63,7 @@ class RuleGroup:
         return f"{RuleGroupType.EXTRA_HOST_CONF.value}:{name}"
 
     @staticmethod
-    def ExtraServiceConf(name: str | None) -> str:
+    def ExtraServiceConf(name: _ExtraServiceConfRuleName) -> str:
         return f"{RuleGroupType.EXTRA_SERVICE_CONF.value}:{name}"
 
     @staticmethod

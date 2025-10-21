@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 """HTML page handler for generating the (a) dashboard. The name
 of the dashboard to render is given in the HTML variable 'name'.
 """
@@ -24,7 +30,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.crash_handler import GUIDetails
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
-from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
+from cmk.gui.graphing import MKCombinedGraphLimitExceededError
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -75,6 +81,7 @@ from .dashlet import (
     StaticTextDashletConfig,
 )
 from .metadata import DashboardMetadataObject
+from .page_edit_dashboards import PAGE_EDIT_DASHBOARDS_LINK
 from .store import (
     get_all_dashboards,
     get_permitted_dashboards,
@@ -167,6 +174,15 @@ def page_dashboard_app(config: Config) -> None:
         "mode": mode,
         # required for edit, clone and new dashboard creation
         "can_edit_dashboards": user.may("general.edit_dashboards"),
+        "url_params": {"ifid": request.get_ascii_input("ifid")},
+        "links": {
+            "list_dashboards": f"{PAGE_EDIT_DASHBOARDS_LINK}.py",
+            "user_guide": "https://docs.checkmk.com/master/en/dashboards.html",
+            "navigation_embedding_page": makeuri_contextless(request, [], filename="index.py"),
+        },
+        "available_layouts": ["relative_grid"]
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE
+        else ["relative_grid", "responsive_grid"],
     }
     html.vue_component("cmk-dashboard", data=page_properties)
 
@@ -210,18 +226,26 @@ def _draw_dashboard(
     board = load_dashboard(permitted_dashboards, name)
 
     owner = board["owner"]
-    if mode == "edit" and owner == UserId.builtin():
+    if mode == "edit" and (
+        owner == UserId.builtin()
+        or (owner != UserId.builtin() and user.may("general.edit_foreign_dashboards"))
+    ):
         # Trying to edit a built-in dashboard results in doing a copy
         all_dashboards = get_all_dashboards()
         active_user = user.id
         assert active_user is not None
         board = copy.deepcopy(board)
-        board["owner"] = active_user
-        board["public"] = False
+        if owner == UserId.builtin():
+            board["owner"] = active_user
+            board["public"] = False
 
         all_dashboards[(active_user, name)] = board
         permitted_dashboards[name] = board
-        save_all_dashboards()
+        if owner == UserId.builtin():
+            owner = active_user
+            save_all_dashboards()
+        else:
+            save_all_dashboards(owner)
         need_replication = True
 
     board = _add_context_to_dashboard(board)
@@ -264,7 +288,11 @@ def _draw_dashboard(
     # replication is only needed if we have remote sites
     if need_replication and get_enabled_remote_sites_for_logged_in_user(user, site_configs):
         save_and_replicate_all_dashboards(
-            makeuri(request, [("name", name), ("edit", "1" if mode == "edit" else "0")])
+            owner,
+            makeuri(
+                request,
+                [("owner", owner), ("name", name), ("edit", "1" if mode == "edit" else "0")],
+            ),
         )
 
     call_hooks("rmk_dashboard_banner", name)
@@ -303,6 +331,7 @@ def _draw_dashboard(
         "refresh_dashlets": _get_refresh_dashlets(dashlets, debug=config.debug),
         "on_resize_dashlets": _get_resize_dashlets(dashlets),
         "dashboard_name": name,
+        "dashboard_owner": owner,
         "dashboard_mtime": board["mtime"],
         "dashlets": _get_dashlet_coords(dashlets),
         "slim_editor_thresholds": {
@@ -549,6 +578,7 @@ def _page_menu(
     mode: str,
 ) -> PageMenu:
     html.close_ul()
+    owner = board["owner"]
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -576,7 +606,7 @@ def _page_menu(
             PageMenuDropdown(
                 name="add_dashlets",
                 title=_("Add"),
-                topics=list(_page_menu_topics(name)),
+                topics=list(_page_menu_topics(owner, name)),
                 is_enabled=True,
             ),
             PageMenuDropdown(
@@ -627,46 +657,46 @@ def _page_menu_dashboards(name: DashboardName) -> Iterable[PageMenuTopic]:
     )
 
 
-def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
+def _page_menu_topics(owner: UserId, name: DashboardName) -> Iterator[PageMenuTopic]:
     yield PageMenuTopic(
         title=_("Views"),
-        entries=list(_dashboard_add_views_dashlet_entries(name)),
+        entries=list(_dashboard_add_views_dashlet_entries(owner, name)),
     )
 
     yield PageMenuTopic(
         title=_("Graphs"),
-        entries=list(_dashboard_add_graphs_dashlet_entries(name)),
+        entries=list(_dashboard_add_graphs_dashlet_entries(owner, name)),
     )
 
     yield PageMenuTopic(
         title=_("Metrics"),
-        entries=list(_dashboard_add_metrics_dashlet_entries(name)),
+        entries=list(_dashboard_add_metrics_dashlet_entries(owner, name)),
     )
 
     yield PageMenuTopic(
         title=_("State"),
-        entries=list(_dashboard_add_state_dashlet_entries(name)),
+        entries=list(_dashboard_add_state_dashlet_entries(owner, name)),
     )
 
     yield PageMenuTopic(
         title=_("HW/SW Inventory"),
-        entries=list(_dashboard_add_inventory_dashlet_entries(name)),
+        entries=list(_dashboard_add_inventory_dashlet_entries(owner, name)),
     )
 
     yield PageMenuTopic(
         title=_("Checkmk"),
-        entries=list(_dashboard_add_checkmk_dashlet_entries(name)),
+        entries=list(_dashboard_add_checkmk_dashlet_entries(owner, name)),
     )
 
     if is_ntop_configured():
         yield PageMenuTopic(
             title=_("Ntop"),
-            entries=list(_dashboard_add_ntop_dashlet_entries(name)),
+            entries=list(_dashboard_add_ntop_dashlet_entries(owner, name)),
         )
 
     yield PageMenuTopic(
         title=_("Other"),
-        entries=list(_dashboard_add_other_dashlet_entries(name)),
+        entries=list(_dashboard_add_other_dashlet_entries(owner, name)),
     )
 
 
@@ -687,7 +717,7 @@ def _dashboard_edit_entries(
         )
         return
 
-    if board["owner"] != user.id:
+    if board["owner"] != user.id and not user.may("general.edit_foreign_dashboards"):
         return
 
     edit_text = _("Leave layout mode")
@@ -861,6 +891,7 @@ def _dashboard_add_dashlet_back_http_var() -> tuple[str, str]:
 
 
 def _dashboard_add_view_dashlet_link(
+    owner: UserId,
     name: DashboardName,
     create: Literal["0", "1"],
     filename: str,
@@ -869,6 +900,7 @@ def _dashboard_add_view_dashlet_link(
         makeuri_contextless(
             request,
             [
+                ("owner", owner),
                 ("name", name),
                 ("create", create),
                 _dashboard_add_dashlet_back_http_var(),
@@ -879,28 +911,30 @@ def _dashboard_add_view_dashlet_link(
 
 
 def _dashboard_add_views_dashlet_entries(
+    owner: UserId,
     name: DashboardName,
 ) -> Iterable[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("New view"),
         icon_name="view",
-        item=_dashboard_add_view_dashlet_link(name, "1", "create_view_dashlet.py"),
+        item=_dashboard_add_view_dashlet_link(owner, name, "1", "create_view_dashlet.py"),
     )
 
     yield PageMenuEntry(
         title=_("Link to existing view"),
         icon_name="view_link",
-        item=_dashboard_add_view_dashlet_link(name, "0", "create_link_view_dashlet.py"),
+        item=_dashboard_add_view_dashlet_link(owner, name, "0", "create_link_view_dashlet.py"),
     )
 
     yield PageMenuEntry(
         title=_("Copy of existing view"),
         icon_name="view_copy",
-        item=_dashboard_add_view_dashlet_link(name, "0", "create_view_dashlet.py"),
+        item=_dashboard_add_view_dashlet_link(owner, name, "0", "create_view_dashlet.py"),
     )
 
 
 def _dashboard_add_non_view_dashlet_link(
+    owner: UserId,
     name: DashboardName,
     dashlet_type: str,
 ) -> PageMenuLink:
@@ -908,6 +942,7 @@ def _dashboard_add_non_view_dashlet_link(
         makeuri_contextless(
             request,
             [
+                ("owner", owner),
                 ("name", name),
                 ("create", "0"),
                 _dashboard_add_dashlet_back_http_var(),
@@ -919,6 +954,7 @@ def _dashboard_add_non_view_dashlet_link(
 
 
 def _dashboard_add_graphs_dashlet_entries(
+    owner: UserId,
     name: DashboardName,
 ) -> Iterable[PageMenuEntry]:
     yield PageMenuEntryCEEOnly(
@@ -927,13 +963,13 @@ def _dashboard_add_graphs_dashlet_entries(
             "icon": "graph",
             "emblem": "add",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "single_timeseries"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "single_timeseries"),
     )
 
     yield PageMenuEntry(
         title=_("Performance graph"),
         icon_name="graph",
-        item=_dashboard_add_non_view_dashlet_link(name, "pnpgraph"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "pnpgraph"),
     )
 
     yield PageMenuEntryCEEOnly(
@@ -942,7 +978,7 @@ def _dashboard_add_graphs_dashlet_entries(
             "icon": "graph",
             "emblem": "add",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "custom_graph"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "custom_graph"),
     )
 
     yield PageMenuEntryCEEOnly(
@@ -951,23 +987,24 @@ def _dashboard_add_graphs_dashlet_entries(
             "icon": "graph",
             "emblem": "add",  # TODO: Need its own icon
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "combined_graph"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "combined_graph"),
     )
 
 
 def _dashboard_add_state_dashlet_entries(
+    owner: UserId,
     name: DashboardName,
 ) -> Iterable[PageMenuEntryCEEOnly]:
     yield PageMenuEntryCEEOnly(
         title="Host state",
         icon_name="host_state",
-        item=_dashboard_add_non_view_dashlet_link(name, "state_host"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "state_host"),
     )
 
     yield PageMenuEntryCEEOnly(
         title="Service state",
         icon_name="service_state",
-        item=_dashboard_add_non_view_dashlet_link(name, "state_service"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "state_service"),
     )
 
     yield PageMenuEntryCEEOnly(
@@ -976,7 +1013,7 @@ def _dashboard_add_state_dashlet_entries(
             "icon": "host_state",
             "emblem": "statistic",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "host_state_summary"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "host_state_summary"),
     )
 
     yield PageMenuEntryCEEOnly(
@@ -985,67 +1022,70 @@ def _dashboard_add_state_dashlet_entries(
             "icon": "service_state",
             "emblem": "statistic",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "service_state_summary"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "service_state_summary"),
     )
 
 
 def _dashboard_add_inventory_dashlet_entries(
+    owner: UserId,
     name: DashboardName,
 ) -> Iterable[PageMenuEntryCEEOnly]:
     yield PageMenuEntryCEEOnly(
         title="HW/SW Inventory of host",
         icon_name="inventory",
-        item=_dashboard_add_non_view_dashlet_link(name, "inventory"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "inventory"),
     )
 
 
 def _dashboard_add_metrics_dashlet_entries(
+    owner: UserId,
     name: DashboardName,
 ) -> Iterable[PageMenuEntryCEEOnly]:
     yield PageMenuEntryCEEOnly(
         title="Average scatterplot",
         icon_name="scatterplot",
-        item=_dashboard_add_non_view_dashlet_link(name, "average_scatterplot"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "average_scatterplot"),
     )
 
     yield PageMenuEntryCEEOnly(
         title="Barplot",
         icon_name="barplot",
-        item=_dashboard_add_non_view_dashlet_link(name, "barplot"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "barplot"),
     )
 
     yield PageMenuEntryCEEOnly(
         title="Gauge",
         icon_name="gauge",
-        item=_dashboard_add_non_view_dashlet_link(name, "gauge"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "gauge"),
     )
 
     yield PageMenuEntryCEEOnly(
         title="Single metric",
         icon_name="single_metric",
-        item=_dashboard_add_non_view_dashlet_link(name, "single_metric"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "single_metric"),
     )
 
     yield PageMenuEntryCEEOnly(
         title="Top list",
         icon_name="rank",
-        item=_dashboard_add_non_view_dashlet_link(name, "top_list"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "top_list"),
     )
 
 
 def _dashboard_add_checkmk_dashlet_entries(
+    owner: UserId,
     name: DashboardName,
 ) -> Iterable[PageMenuEntry]:
     yield PageMenuEntryCEEOnly(
         title="Site overview",
         icon_name="site_overview",
-        item=_dashboard_add_non_view_dashlet_link(name, "site_overview"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "site_overview"),
     )
 
     yield PageMenuEntryCEEOnly(
         title="Alert overview",
         icon_name={"icon": "alerts", "emblem": "statistic"},
-        item=_dashboard_add_non_view_dashlet_link(name, "alert_overview"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "alert_overview"),
     )
     yield PageMenuEntry(
         title="Host statistics",
@@ -1053,7 +1093,7 @@ def _dashboard_add_checkmk_dashlet_entries(
             "icon": "folder",
             "emblem": "statistic",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "hoststats"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "hoststats"),
     )
 
     yield PageMenuEntry(
@@ -1062,7 +1102,7 @@ def _dashboard_add_checkmk_dashlet_entries(
             "icon": "services",
             "emblem": "statistic",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "servicestats"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "servicestats"),
     )
 
     yield PageMenuEntry(
@@ -1071,7 +1111,7 @@ def _dashboard_add_checkmk_dashlet_entries(
             "icon": "event_console",
             "emblem": "statistic",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "eventstats"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "eventstats"),
     )
 
     yield PageMenuEntryCEEOnly(
@@ -1080,7 +1120,7 @@ def _dashboard_add_checkmk_dashlet_entries(
             "icon": "notifications",
             "emblem": "statistic",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "notifications_bar_chart"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "notifications_bar_chart"),
     )
 
     yield PageMenuEntryCEEOnly(
@@ -1089,29 +1129,30 @@ def _dashboard_add_checkmk_dashlet_entries(
             "icon": "alerts",
             "emblem": "statistic",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "alerts_bar_chart"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "alerts_bar_chart"),
     )
 
     yield PageMenuEntryCEEOnly(
         title=_("Percentage of service problems"),
         icon_name={"icon": "graph", "emblem": "statistic"},
-        item=_dashboard_add_non_view_dashlet_link(name, "problem_graph"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "problem_graph"),
     )
 
     yield PageMenuEntry(
         title="User messages",
         icon_name="notifications",
-        item=_dashboard_add_non_view_dashlet_link(name, "user_messages"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "user_messages"),
     )
 
     yield PageMenuEntry(
         title="Sidebar element",
         icon_name="custom_snapin",
-        item=_dashboard_add_non_view_dashlet_link(name, "snapin"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "snapin"),
     )
 
 
 def _dashboard_add_ntop_dashlet_entries(
+    owner: UserId,
     name: DashboardName,
 ) -> Iterable[PageMenuEntryCEEOnly]:
     yield PageMenuEntryCEEOnly(
@@ -1120,7 +1161,7 @@ def _dashboard_add_ntop_dashlet_entries(
             "icon": "ntop",
             "emblem": "warning",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "ntop_alerts"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "ntop_alerts"),
     )
 
     yield PageMenuEntryCEEOnly(
@@ -1129,7 +1170,7 @@ def _dashboard_add_ntop_dashlet_entries(
             "icon": "ntop",
             "emblem": "more",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "ntop_flows"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "ntop_flows"),
     )
 
     yield PageMenuEntryCEEOnly(
@@ -1138,23 +1179,24 @@ def _dashboard_add_ntop_dashlet_entries(
             "icon": "ntop",
             "emblem": "statistic",
         },
-        item=_dashboard_add_non_view_dashlet_link(name, "ntop_top_talkers"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "ntop_top_talkers"),
     )
 
 
 def _dashboard_add_other_dashlet_entries(
+    owner: UserId,
     name: DashboardName,
 ) -> Iterable[PageMenuEntry]:
     yield PageMenuEntry(
         title="Custom URL",
         icon_name="dashlet_url",
-        item=_dashboard_add_non_view_dashlet_link(name, "url"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "url"),
     )
 
     yield PageMenuEntry(
         title="Static text",
         icon_name="dashlet_nodata",
-        item=_dashboard_add_non_view_dashlet_link(name, "nodata"),
+        item=_dashboard_add_non_view_dashlet_link(owner, name, "nodata"),
     )
 
 

@@ -3,10 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="mutable-override"
+
+# mypy: disable-error-code="no-untyped-def"
+
 from typing import Any, override
 
 from marshmallow import post_dump, pre_dump
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.gui import fields as gui_fields
@@ -507,7 +512,7 @@ class LDAPGroupsToSyncSelector(OneOfSchema):
     }
 
     @override
-    def get_obj_type(self, obj):  # type: ignore[no-untyped-def]
+    def get_obj_type(self, obj):
         attribute_to_set = obj.get("attribute_to_set")
         if attribute_to_set not in self.type_schemas:
             self.type_schemas[attribute_to_set] = LDAPGroupsToSyncAllOthers

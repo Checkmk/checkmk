@@ -1,0 +1,10 @@
+title: Podman Disk Usage
+agents: linux
+catalog: app/podman
+license: GPLv2
+distribution: check_mk
+description: This check plug-in monitors the disk usage of Podman containers, images and volumes.
+
+item: Fixed items - containers, images and volumes
+
+discovery: One service for containers, images and volumes is created.

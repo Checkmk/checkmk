@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
+
+from pydantic import BaseModel
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -14,6 +16,8 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
+    InventoryPlugin,
+    InventoryResult,
     Metric,
     render,
     Result,
@@ -21,29 +25,85 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.azure import (
-    create_check_metrics_function,
+from cmk.plugins.azure_v2.agent_based.lib import (
+    create_check_metrics_function_single,
+    create_inventory_function,
+    FrontendIpConfiguration,
     get_service_labels_from_resource_tags,
     MetricData,
-    parse_resources,
+    parse_resource,
+    Resource,
 )
-from cmk.plugins.lib.azure_load_balancer import LoadBalancer, Section
 
 
-def parse_load_balancer(string_table: StringTable) -> Section:
-    resources = parse_resources(string_table)
+class BackendIpConfiguration(BaseModel):
+    name: str
+    privateIPAddress: str
+    privateIPAllocationMethod: str
 
-    return {
-        name: LoadBalancer(
-            resource=resource,
-            name=resource.name,
-            frontend_ip_configs=resource.properties["frontend_ip_configs"],
-            inbound_nat_rules=resource.properties["inbound_nat_rules"],
-            backend_pools=resource.properties["backend_pools"],
-            outbound_rules=resource.properties["outbound_rules"],
-        )
-        for name, resource in resources.items()
-    }
+
+class InboundNatRule(BaseModel):
+    name: str
+    frontendIPConfiguration: Mapping[str, str]
+    frontendPort: int
+    backendPort: int
+    backend_ip_config: BackendIpConfiguration | None = None
+
+
+class LoadBalancerBackendAddress(BaseModel):
+    name: str
+    privateIPAddress: str
+    privateIPAllocationMethod: str
+    primary: bool = False
+
+
+class LoadBalancerBackendPool(BaseModel):
+    id: str
+    name: str
+    addresses: Sequence[LoadBalancerBackendAddress] = []
+
+
+class OutboundRule(BaseModel):
+    name: str
+    protocol: str
+    idleTimeoutInMinutes: int
+    backendAddressPool: Mapping[str, str]
+
+
+class LoadBalancer(BaseModel):
+    resource: Resource
+    name: str
+    frontend_ip_configs: Mapping[str, FrontendIpConfiguration]
+    inbound_nat_rules: Sequence[InboundNatRule]
+    backend_pools: Mapping[str, LoadBalancerBackendPool] = {}
+    outbound_rules: Sequence[OutboundRule] = []
+
+
+Section = Mapping[str, LoadBalancer]
+
+
+def load_balancer_inventory(section: LoadBalancer) -> InventoryResult:
+    yield from create_inventory_function()(section.resource)
+
+
+inventory_plugin_azure_load_balancer = InventoryPlugin(
+    name="azure_v2_loadbalancers",
+    inventory_function=load_balancer_inventory,
+)
+
+
+def parse_load_balancer(string_table: StringTable) -> LoadBalancer | None:
+    if not (resource := parse_resource(string_table)):
+        return None
+
+    return LoadBalancer(
+        resource=resource,
+        name=resource.name,
+        frontend_ip_configs=resource.properties["frontend_ip_configs"],
+        inbound_nat_rules=resource.properties["inbound_nat_rules"],
+        backend_pools=resource.properties["backend_pools"],
+        outbound_rules=resource.properties["outbound_rules"],
+    )
 
 
 agent_section_azure_loadbalancers = AgentSection(
@@ -54,16 +114,14 @@ agent_section_azure_loadbalancers = AgentSection(
 
 def discover_load_balancer_by_metrics(
     *desired_metrics: str,
-) -> Callable[[Section], DiscoveryResult]:
+) -> Callable[[LoadBalancer], DiscoveryResult]:
     """Return a discovery function, that will discover if any of the metrics are found"""
 
-    def discovery_function(section: Section) -> DiscoveryResult:
-        for item, load_balancer in section.items():
-            if set(desired_metrics) & set(load_balancer.resource.metrics):
-                yield Service(
-                    item=item,
-                    labels=get_service_labels_from_resource_tags(load_balancer.resource.tags),
-                )
+    def discovery_function(section: LoadBalancer) -> DiscoveryResult:
+        if set(desired_metrics) & set(section.resource.metrics):
+            yield Service(
+                labels=get_service_labels_from_resource_tags(section.resource.tags),
+            )
 
     return discovery_function
 
@@ -78,11 +136,8 @@ def discover_load_balancer_by_metrics(
 #   +----------------------------------------------------------------------+
 
 
-def check_byte_count(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if (load_balancer := section.get(item)) is None:
-        raise IgnoreResultsError("Data not present at the moment")
-
-    metric = load_balancer.resource.metrics.get("total_ByteCount")
+def check_byte_count(params: Mapping[str, Any], section: LoadBalancer) -> CheckResult:
+    metric = section.resource.metrics.get("total_ByteCount")
     if metric is None:
         raise IgnoreResultsError("Data not present at the moment")
 
@@ -101,10 +156,10 @@ def check_byte_count(item: str, params: Mapping[str, Any], section: Section) -> 
 check_plugin_azure_load_balancer_byte_count = CheckPlugin(
     name="azure_v2_load_balancer_byte_count",
     sections=["azure_v2_loadbalancers"],
-    service_name="Azure/Load Balancer %s Byte Count",
+    service_name="Azure/Load Balancer Byte Count",
     discovery_function=discover_load_balancer_by_metrics("total_ByteCount"),
     check_function=check_byte_count,
-    check_ruleset_name="byte_count",
+    check_ruleset_name="byte_count_without_item",
     check_default_parameters={},
 )
 
@@ -119,12 +174,9 @@ check_plugin_azure_load_balancer_byte_count = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def check_snat(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if (load_balancer := section.get(item)) is None:
-        raise IgnoreResultsError("Data not present at the moment")
-
-    allocated_ports_metric = load_balancer.resource.metrics.get("average_AllocatedSnatPorts")
-    used_ports_metric = load_balancer.resource.metrics.get("average_UsedSnatPorts")
+def check_snat(params: Mapping[str, Any], section: LoadBalancer) -> CheckResult:
+    allocated_ports_metric = section.resource.metrics.get("average_AllocatedSnatPorts")
+    used_ports_metric = section.resource.metrics.get("average_UsedSnatPorts")
 
     if allocated_ports_metric is None or used_ports_metric is None:
         raise IgnoreResultsError("Data not present at the moment")
@@ -153,13 +205,15 @@ def check_snat(item: str, params: Mapping[str, Any], section: Section) -> CheckR
 check_plugin_azure_load_balancer_snat = CheckPlugin(
     name="azure_v2_load_balancer_snat",
     sections=["azure_v2_loadbalancers"],
-    service_name="Azure/Load Balancer %s SNAT Consumption",
+    service_name="Azure/Load Balancer SNAT Consumption",
     discovery_function=discover_load_balancer_by_metrics(
         "average_AllocatedSnatPorts", "average_UsedSnatPorts"
     ),
     check_function=check_snat,
-    check_ruleset_name="snat_usage",
-    check_default_parameters={},
+    check_ruleset_name="snat_usage_without_item",
+    check_default_parameters={
+        "upper_levels": (75.0, 95.0),
+    },
 )
 
 
@@ -173,11 +227,8 @@ check_plugin_azure_load_balancer_snat = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def check_health(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if (load_balancer := section.get(item)) is None:
-        raise IgnoreResultsError("Data not present at the moment")
-
-    yield from create_check_metrics_function(
+def check_health(params: Mapping[str, Any], section: LoadBalancer) -> CheckResult:
+    yield from create_check_metrics_function_single(
         [
             MetricData(
                 "average_VipAvailability",
@@ -194,13 +245,13 @@ def check_health(item: str, params: Mapping[str, Any], section: Section) -> Chec
                 lower_levels_param="health_probe",
             ),
         ],
-    )(item, params, {item: load_balancer.resource})
+    )(params, section.resource)
 
 
 check_plugin_azure_load_balancer_health = CheckPlugin(
     name="azure_v2_load_balancer_health",
     sections=["azure_v2_loadbalancers"],
-    service_name="Azure/Load Balancer %s Health",
+    service_name="Azure/Load Balancer Health",
     discovery_function=discover_load_balancer_by_metrics(
         "average_VipAvailability", "average_DipAvailability"
     ),

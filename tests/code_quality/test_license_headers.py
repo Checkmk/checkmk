@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import logging
 import os
 import re
@@ -103,7 +106,7 @@ def check_for_license_header_violation(rel_path, abs_path):
     if rel_path.startswith("non-free/packages/cmk-update-agent/"):
         if not ENTERPRISE_HEADER_CODING.match(get_file_header(abs_path, length=5)):
             yield "enterprise header with coding not matching", rel_path
-    elif rel_path.startswith("omd/packages/enterprise/alert_handlers/"):
+    elif rel_path.startswith("omd/non-free/packages/alert-handling/alert_handlers/"):
         if not ENTERPRISE_HEADER_ALERT_HANDLERS.match(get_file_header(abs_path, length=8)):
             yield "enterprise header with alert handler not matching", rel_path
     elif needs_enterprise_license(rel_path):

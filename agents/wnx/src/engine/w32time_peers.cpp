@@ -13,6 +13,8 @@ namespace cma::provider {
 std::string W32TimePeers::makeBody() {
     auto cmd = wtools::ExpandStringWithEnvironment(
         L"%SystemRoot%\\System32\\w32tm.exe /query /peers /verbose");
-    return wtools::RunCommand(cmd);
+
+    std::string raw = wtools::RunCommand(cmd);
+    return wtools::ReplaceBlankLineWithSeparator(raw, "---");
 }
 }  // namespace cma::provider

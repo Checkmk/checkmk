@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import datetime
 from collections.abc import Sequence
 from functools import partial
@@ -964,12 +968,16 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "main_menu_search_terms": [],
         },
         context={},
-        user_permissions=UserPermissions({}, {}, {}, []),
+        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
     )
 
     row = _service_row()
     for cell in view.row_cells:
-        _tdclass, content = cell.render(row, partial(render_link_to_view, request=request), user)
+        _tdclass, content = cell.render(
+            row,
+            partial(render_link_to_view, request=request, user_permissions=user_permissions),
+            user,
+        )
         assert isinstance(content, str | HTML)
 
         if isinstance(content, str) and "<" in content:

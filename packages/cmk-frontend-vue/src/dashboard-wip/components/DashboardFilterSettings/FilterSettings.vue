@@ -10,11 +10,9 @@ import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
-import CmkTab from '@/components/CmkTabs/CmkTab.vue'
-import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
-import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
+import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 
 import type {
   FilterSettingsEmits,
@@ -25,6 +23,7 @@ import FilterSelection from '@/dashboard-wip/components/filter/FilterSelection/F
 import { CATEGORY_DEFINITIONS } from '@/dashboard-wip/components/filter/FilterSelection/utils.ts'
 import { useFilters } from '@/dashboard-wip/components/filter/composables/useFilters.ts'
 import { parseFilterTypes, useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
+import type { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
 
 import FilterCollection from './FilterCollection.vue'
 import FilterCollectionInputItem from './FilterCollectionInputItem.vue'
@@ -48,7 +47,7 @@ const closeWindow = () => {
 }
 
 const saveDashboardFilters = () => {
-  console.log('Sending dashboard filters from menu', dashboardFilters.getFilters())
+  console.debug('Sending dashboard filters from menu', dashboardFilters.getFilters())
   emit('save-dashboard-filters', dashboardFilters.getFilters())
   showSavedDashboardAlert.value = true
 }
@@ -58,13 +57,14 @@ const resetDashboardFilters = () => {
 }
 
 const applyRuntimeFilters = () => {
-  console.log('Sending runtime filters from menu')
-  emit('apply-runtime-filters', runtimeFilters.getFilters())
+  console.debug('Sending runtime filters from menu')
+  emit('apply-runtime-filters', runtimeFilters.getFilters(), runtimeFiltersMode.value)
 }
 
 const filterCategories = parseFilterTypes(filterDefinitions, new Set(['host', 'service']))
 
 const showSavedDashboardAlert = ref(false)
+const runtimeFiltersMode = ref<RuntimeFilterMode>(props.configuredRuntimeFiltersMode)
 const dashboardFilters = useFilters(props.configuredDashboardFilters)
 
 const appliedRuntimeFilterIds = Object.keys(props.appliedRuntimeFilters || {})
@@ -114,6 +114,11 @@ const isFilterSelectionDisabled = computed(() => {
 
 const setRuntimeFilterConfigurationTarget = (target: 'runtime-filter' | 'required-filter') => {
   runtimeFilterConfigurationTarget.value = target
+}
+
+const handleUpdateRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
+  console.log('Handle: ', mode)
+  runtimeFiltersMode.value = mode
 }
 
 const handleSaveRequiredFilters = () => {
@@ -323,6 +328,8 @@ watch(
                 :runtime-filters="runtimeFilters"
                 :dashboard-filters="dashboardFilters.getFilters()"
                 :mandatory-filters="new Set(mandatoryRuntimeFilters.getSelectedFilters())"
+                :runtime-filters-mode="runtimeFiltersMode"
+                @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
                 @apply-runtime-filters="applyRuntimeFilters"
                 @set-configuration-target="setRuntimeFilterConfigurationTarget"
               />

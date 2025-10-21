@@ -1,0 +1,48 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+)
+
+configure_make(
+    name = "openssl_static",
+    args = ["-j6"],
+    configure_command = "Configure",
+    configure_in_place = True,
+    configure_options = [
+        "no-comp",
+        "no-idea",
+        "no-module",
+        "no-shared",
+        "no-static-engine",
+        "no-tests",
+        "no-weak-ssl-ciphers",
+        "-fPIC",
+    ] + select({
+        "@platforms//cpu:aarch64": ["linux-aarch64"],
+        "//conditions:default": [],
+    }),
+    lib_name = "openssl",
+    lib_source = ":all_srcs",
+    out_lib_dir = select({
+        "@platforms//cpu:aarch64": "lib",
+        "//conditions:default": "lib64",
+    }),
+    out_static_libs = [
+        "libssl.a",
+        "libcrypto.a",
+    ],
+    targets = [
+        "build_libs",
+        "install_dev",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":openssl_static"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)

@@ -50,60 +50,119 @@ def test_parse() -> None:
 @pytest.mark.parametrize(
     "params, discovered_services",
     [
-        (
-            [services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS],
+        pytest.param(
             [],
+            [],
+            id="No non-default params passed",
         ),
-        (
+        pytest.param(
+            [
+                {
+                    "state": "paused",
+                },
+            ],
+            [
+                Service(item="app2"),
+            ],
+            id="Match only on state",
+        ),
+        pytest.param(
+            [
+                {
+                    "start_mode": "demand",
+                },
+            ],
+            [
+                Service(item="WSearch"),
+            ],
+            id="Match only on start mode",
+        ),
+        pytest.param(
             [
                 {
                     "services": ["app*"],
                     "state": "pending",
                 },
-                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [
                 Service(item="app", parameters={}, labels=[]),
             ],
+            id="Match on pattern and state",
         ),
-        (
+        pytest.param(
             [
                 {
                     "services": ["Windows*"],
                     "start_mode": "demand",
                 },
-                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [
                 Service(item="WSearch", parameters={}, labels=[]),
             ],
+            id="Match on pattern and start mode",
         ),
-        (
+        pytest.param(
             [
                 {
                     "services": ["Windows*"],
                     "start_mode": "demand",
                     "state": "running",
                 },
-                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [],
+            id="No match on pattern, state, and start mode",
         ),
-        (
+        pytest.param(
             [
                 {
                     "services": ["app2"],
                     "start_mode": "auto",
                     "state": "paused",
                 },
-                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [Service(item="app2")],
+            id="Match on pattern, state, and start mode",
+        ),
+        pytest.param(
+            [
+                {
+                    "services": ["Security*"],
+                },
+            ],
+            [
+                Service(item="wscsvc"),
+            ],
+            id="Match only on pattern",
+        ),
+        pytest.param(
+            [
+                {
+                    "services": [".*"],
+                    "state": "running",
+                },
+            ],
+            [
+                Service(item="wscsvc"),
+            ],
+            id="Match all pattern and state",
+        ),
+        pytest.param(
+            [
+                {
+                    "services": [".*"],
+                    "start_mode": "auto",
+                },
+            ],
+            [
+                Service(item="wscsvc"),
+                Service(item="app2"),
+            ],
+            id="Match all pattern and start mode",
         ),
     ],
 )
 def test_discovery_windows_services(
-    params: Sequence[Mapping[str, object]], discovered_services: DiscoveryResult
+    params: Sequence[services.WindowsServiceDiscoveryParams], discovered_services: DiscoveryResult
 ) -> None:
     assert discovered_services == list(services.discovery_windows_services(params, PARSED))
 

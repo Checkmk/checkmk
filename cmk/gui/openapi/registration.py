@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
@@ -39,14 +38,14 @@ from cmk.gui.openapi.endpoints import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
 from .api_endpoints import host_config as api_host_config
-from .api_endpoints import site_management
+from .api_endpoints import pagetype_topic, site_management
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
+from .api_endpoints.sidebar_element import registration as sidebar_element
 from .api_endpoints.user_role import registration as api_user_role
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
 from .shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
-from .spec import spec_generator_job
 
 
 def register(
@@ -90,7 +89,6 @@ def register(
     time_periods.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     user_config.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     version.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
-    spec_generator_job.register(job_registry)
     quick_setup.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     broker_connection.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
 
@@ -108,6 +106,16 @@ def register(
         ignore_duplicates=ignore_duplicate_endpoints,
     )
     api_graph_timerange.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
+    )
+    pagetype_topic.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
+    )
+    sidebar_element.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
         ignore_duplicates=ignore_duplicate_endpoints,

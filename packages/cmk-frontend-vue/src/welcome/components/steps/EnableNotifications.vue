@@ -5,17 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import type { Ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkLinkCard from '@/components/CmkLinkCard'
+import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
@@ -27,7 +25,7 @@ const { _t } = usei18n()
 const props = defineProps<{
   step: number
   stepId: StepId
-  urls: WelcomeUrls
+  cards: WelcomeCards
   accomplished: boolean
 }>()
 const emit = defineEmits(['step-completed'])
@@ -70,7 +68,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="notifications"
               :title="_t('Add notification rule')"
-              :url="urls.add_notification_rule"
+              :url="cards.add_notification_rule"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
@@ -96,7 +94,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="analysis"
               :title="_t('Test notifications')"
-              :url="urls.test_notifications"
+              :url="cards.test_notifications"
               :open-in-new-tab="false"
             />
           </StepCardsRow>

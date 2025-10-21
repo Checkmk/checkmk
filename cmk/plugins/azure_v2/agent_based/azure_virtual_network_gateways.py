@@ -13,19 +13,22 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    InventoryPlugin,
+    InventoryResult,
     render,
     Result,
     Service,
     State,
     StringTable,
 )
-from cmk.plugins.lib.azure import (
-    create_check_metrics_function,
+from cmk.plugins.azure_v2.agent_based.lib import (
+    create_check_metrics_function_single,
+    create_inventory_function,
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
     parse_azure_datetime,
-    parse_resources,
+    parse_resource,
     Resource,
 )
 
@@ -65,33 +68,39 @@ class VNetGWSettings(BaseModel):
 
 
 class VNetGateway(BaseModel):
+    name: str
     resource: Resource
     remote_vnet_peerings: Sequence[RemoteVnetPeering]
     health: VNetGWHealth
     settings: VNetGWSettings
 
 
-Section = Mapping[str, VNetGateway]
+def parse_virtual_network_gateway(string_table: StringTable) -> VNetGateway | None:
+    if not (resource := parse_resource(string_table)):
+        return None
 
-
-def parse_virtual_network_gateway(string_table: StringTable) -> Section:
-    section = {}
-    resources = parse_resources(string_table)
-
-    for name, resource in resources.items():
-        section[name] = VNetGateway(
-            resource=resource,
-            remote_vnet_peerings=resource.properties["remote_vnet_peerings"],
-            health=VNetGWHealth(**resource.properties["health"]),
-            settings=VNetGWSettings(**resource.specific_info),
-        )
-
-    return section
+    return VNetGateway(
+        name=resource.name,
+        resource=resource,
+        remote_vnet_peerings=resource.properties["remote_vnet_peerings"],
+        health=VNetGWHealth(**resource.properties["health"]),
+        settings=VNetGWSettings(**resource.specific_info),
+    )
 
 
 agent_section_azure_virtualnetworkgateways = AgentSection(
     name="azure_v2_virtualnetworkgateways",
     parse_function=parse_virtual_network_gateway,
+)
+
+
+def virtualnetworkgateways_inventory(section: VNetGateway) -> InventoryResult:
+    yield from create_inventory_function()(section.resource)
+
+
+inventory_plugin_azure_virtualnetworkgateways = InventoryPlugin(
+    name="azure_v2_virtualnetworkgateways",
+    inventory_function=virtualnetworkgateways_inventory,
 )
 
 
@@ -105,20 +114,14 @@ agent_section_azure_virtualnetworkgateways = AgentSection(
 #   +----------------------------------------------------------------------+
 
 
-def discover_virtual_network_gateway(section: Section) -> DiscoveryResult:
-    for item, vnet_gateway in section.items():
-        yield Service(
-            item=item, labels=get_service_labels_from_resource_tags(vnet_gateway.resource.tags)
-        )
+def discover_virtual_network_gateway(section: VNetGateway) -> DiscoveryResult:
+    yield Service(labels=get_service_labels_from_resource_tags(section.resource.tags))
 
 
 def check_azure_virtual_network_gateway(
-    item: str, params: Mapping[str, tuple[float, float]], section: Section
+    params: Mapping[str, tuple[float, float]], section: VNetGateway
 ) -> CheckResult:
-    if (vn_gateway := section.get(item)) is None:
-        return
-
-    yield from create_check_metrics_function(
+    yield from create_check_metrics_function_single(
         [
             MetricData(
                 "maximum_P2SConnectionCount",
@@ -181,20 +184,23 @@ def check_azure_virtual_network_gateway(
             ),
         ],
         suppress_error=True,
-    )(item, params, {item: vn_gateway.resource})
+    )(params, section.resource)
 
-    for name, value in iter_resource_attributes(vn_gateway.resource):
+    for name, value in iter_resource_attributes(section.resource):
         yield Result(state=State.OK, summary=f"{name}: {value}")
 
 
 check_plugin_azure_virtual_network_gateways = CheckPlugin(
     name="azure_v2_virtual_network_gateways",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway %s",
+    service_name="Azure/VNet Gateway",
     discovery_function=discover_virtual_network_gateway,
     check_function=check_azure_virtual_network_gateway,
     check_ruleset_name="azure_v2_virtualnetworkgateways",
-    check_default_parameters={},
+    check_default_parameters={
+        "ingress_packet_drop_levels": (1, 1),
+        "egress_packet_drop_levels": (1, 1),
+    },
 )
 
 
@@ -208,11 +214,8 @@ check_plugin_azure_virtual_network_gateways = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def check_virtual_network_gateway_settings(item: str, section: Section) -> CheckResult:
-    if (vn_gateway := section.get(item)) is None:
-        return
-
-    settings = vn_gateway.settings
+def check_virtual_network_gateway_settings(section: VNetGateway) -> CheckResult:
+    settings = section.settings
     state = State.WARN if settings.disableIPSecReplayProtection else State.OK
 
     yield Result(
@@ -229,7 +232,7 @@ def check_virtual_network_gateway_settings(item: str, section: Section) -> Check
 check_plugin_azure_virtual_network_gateway_settings = CheckPlugin(
     name="azure_v2_virtual_network_gateway_settings",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway %s Settings",
+    service_name="Azure/VNet Gateway Settings",
     discovery_function=discover_virtual_network_gateway,
     check_function=check_virtual_network_gateway_settings,
 )
@@ -245,11 +248,8 @@ check_plugin_azure_virtual_network_gateway_settings = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def check_virtual_network_gateway_health(item: str, section: Section) -> CheckResult:
-    if (vn_gateway := section.get(item)) is None:
-        return
-
-    health = vn_gateway.health
+def check_virtual_network_gateway_health(section: VNetGateway) -> CheckResult:
+    health = section.health
     health_available = health.availabilityState == "Available"
 
     yield Result(state=State.OK, summary=f"Availability state: {health.availabilityState}")
@@ -267,7 +267,7 @@ def check_virtual_network_gateway_health(item: str, section: Section) -> CheckRe
 check_plugin_azure_virtual_network_gateway_health = CheckPlugin(
     name="azure_v2_virtual_network_gateway_health",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway %s Health Probe",
+    service_name="Azure/VNet Gateway Health Probe",
     discovery_function=discover_virtual_network_gateway,
     check_function=check_virtual_network_gateway_health,
 )
@@ -295,12 +295,9 @@ def get_peering_address_summary(bgp_settings: BgpSettings) -> Iterable[str]:
         yield f"{address_type}: {str(address_list)}"
 
 
-def check_virtual_network_gateway_bgp(item: str, section: Section) -> CheckResult:
-    if (vn_gateway := section.get(item)) is None:
-        return
-
-    settings = vn_gateway.settings
-    bgp_settings = vn_gateway.settings.bgpSettings
+def check_virtual_network_gateway_bgp(section: VNetGateway) -> CheckResult:
+    settings = section.settings
+    bgp_settings = section.settings.bgpSettings
 
     if settings.enableBgp and bgp_settings:
         yield Result(
@@ -316,7 +313,7 @@ def check_virtual_network_gateway_bgp(item: str, section: Section) -> CheckResul
 check_plugin_azure_virtual_network_gateway_bgp = CheckPlugin(
     name="azure_v2_virtual_network_gateway_bgp",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway %s BGP",
+    service_name="Azure/VNet Gateway BGP",
     discovery_function=discover_virtual_network_gateway,
     check_function=check_virtual_network_gateway_bgp,
 )
@@ -338,21 +335,18 @@ check_plugin_azure_virtual_network_gateway_bgp = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def discover_virtual_network_gateway_peering(section: Section) -> DiscoveryResult:
-    for item, vnet_gateway in section.items():
-        for peering in vnet_gateway.remote_vnet_peerings:
-            yield Service(
-                item=f"{item} Remote Peering {peering.name}",
-                labels=get_service_labels_from_resource_tags(vnet_gateway.resource.tags),
-            )
+def discover_virtual_network_gateway_peering(section: VNetGateway) -> DiscoveryResult:
+    for peering in section.remote_vnet_peerings:
+        yield Service(
+            item=f"Remote Peering {peering.name}",
+            labels=get_service_labels_from_resource_tags(section.resource.tags),
+        )
 
 
-def check_virtual_network_gateway_peering(item: str, section: Section) -> CheckResult:
-    vn_gateway_name, _, _, peering_name = item.split()
-    if (vn_gateway := section.get(vn_gateway_name)) is None:
-        return
+def check_virtual_network_gateway_peering(item: str, section: VNetGateway) -> CheckResult:
+    _, _, peering_name = item.split()
 
-    for peering in vn_gateway.remote_vnet_peerings:
+    for peering in section.remote_vnet_peerings:
         if peering.name == peering_name:
             peering_connected = (
                 peering.peeringSyncLevel == "FullyInSync" and peering.peeringState == "Connected"
@@ -366,7 +360,7 @@ def check_virtual_network_gateway_peering(item: str, section: Section) -> CheckR
 check_plugin_azure_virtual_network_gateway_peering = CheckPlugin(
     name="azure_v2_virtual_network_gateway_peering",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway %s",
+    service_name="Azure/VNet Gateway %s",
     discovery_function=discover_virtual_network_gateway_peering,
     check_function=check_virtual_network_gateway_peering,
 )

@@ -8,7 +8,7 @@ import { computed, ref, watch } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 
-import HelpText from '@/components/HelpText.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 
 import type { ValidationMessages } from '@/form'
 import FormEdit from '@/form/components/FormEdit.vue'
@@ -43,7 +43,7 @@ watch(
     <tbody>
       <tr>
         <td>
-          <HelpText :help="untranslated(form_spec.spec.help)" />
+          <CmkHelpText :help="untranslated(form_spec.spec.help)" />
           <FormEdit
             v-model:data="internal"
             :spec="form_spec.spec"

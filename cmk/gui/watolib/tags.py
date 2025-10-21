@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with host tags"""
 
+# mypy: disable-error-code="unreachable"
+
 import abc
 from collections.abc import Mapping, Sequence
 from enum import Enum
@@ -103,7 +105,6 @@ def update_tag_config(tag_config: TagConfig, pprint_value: bool) -> None:
     user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format(), pprint_value)
     _update_tag_dependencies(tag_config, pprint_value=pprint_value)
-    hooks.call("tags-changed")
 
 
 def load_tag_group(ident: TagGroupID) -> TagGroup | None:

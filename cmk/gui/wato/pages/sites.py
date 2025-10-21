@@ -4,13 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for managing sites"""
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 import socket
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from copy import deepcopy
-from typing import Any, assert_never, cast, Literal, overload
+from typing import Any, assert_never, cast, Literal, overload, override
 from urllib.parse import urlparse
 
 from livestatus import (
@@ -116,6 +122,7 @@ from cmk.gui.watolib.global_settings import (
     load_site_global_settings,
     save_global_settings,
     save_site_global_settings,
+    STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -140,6 +147,7 @@ from cmk.gui.watolib.sites import (
     ReplicationStatusFetcher,
     site_globals_editable,
     site_management_registry,
+    STATIC_PERMISSIONS_SITES,
 )
 from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionRefused
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
@@ -148,7 +156,7 @@ from cmk.utils.paths import omd_root
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register(PageEndpoint("wato_ajax_fetch_site_status", PageAjaxFetchSiteStatus))
+    page_registry.register(PageEndpoint("wato_ajax_fetch_site_status", PageAjaxFetchSiteStatus()))
     mode_registry.register(ModeEditSite)
     mode_registry.register(ModeEditBrokerConnection)
     mode_registry.register(ModeDistributedMonitoring)
@@ -164,7 +172,7 @@ class ModeEditSite(WatoMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -632,7 +640,7 @@ class ModeEditBrokerConnection(WatoMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -837,7 +845,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     def __init__(self) -> None:
         super().__init__()
@@ -1408,6 +1416,7 @@ class ModeDistributedMonitoring(WatoMode):
 class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         user.need_permission("wato.sites")
 
@@ -1556,7 +1565,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -1728,7 +1737,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["global"]
+        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -1779,7 +1788,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:

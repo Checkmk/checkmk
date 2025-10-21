@@ -54,12 +54,10 @@ exclude_options = [
 #                1: A site must be specified
 #                2: A site is optional
 #  must_exist    Site must be existant for this command
-#  confirm       Is a confirm dialog shown before command execution?
 #  args          Help text for command individual arguments
 #  function      Handler function for this command
 #  options_spec  List of individual arguments for this command
 #  description   Text for the help of omd
-#  confirm_text  Confirm text to show before calling the handler function
 class Command(NamedTuple):
     command: str
     only_root: bool
@@ -67,11 +65,9 @@ class Command(NamedTuple):
     needs_site: int
     # TODO: Refactor to bool
     site_must_exist: int
-    confirm: bool
     args_text: str
     options: list[Option]
     description: str
-    confirm_text: str
 
 
 COMMANDS: Final = [
@@ -81,11 +77,9 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=0,
         site_must_exist=0,
-        confirm=False,
         args_text="",
         options=[],
         description="Show general help",
-        confirm_text="",
     ),
     Command(
         command="setversion",
@@ -93,11 +87,9 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=0,
         site_must_exist=0,
-        confirm=False,
         args_text="VERSION",
         options=[],
         description="Sets the default version of OMD which will be used by new sites",
-        confirm_text="",
     ),
     Command(
         command="version",
@@ -105,13 +97,11 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=0,
         site_must_exist=0,
-        confirm=False,
         args_text="[SITE]",
         options=[
             Option("bare", "b", False, "output plain text optimized for parsing"),
         ],
         description="Show version of OMD",
-        confirm_text="",
     ),
     Command(
         command="versions",
@@ -119,13 +109,11 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=0,
         site_must_exist=0,
-        confirm=False,
         args_text="",
         options=[
             Option("bare", "b", False, "output plain text optimized for parsing"),
         ],
         description="List installed OMD versions",
-        confirm_text="",
     ),
     Command(
         command="sites",
@@ -133,13 +121,11 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=0,
         site_must_exist=0,
-        confirm=False,
         args_text="",
         options=[
             Option("bare", "b", False, "output plain text for easy parsing"),
         ],
         description="Show list of sites",
-        confirm_text="",
     ),
     Command(
         command="create",
@@ -147,7 +133,6 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=0,
-        confirm=False,
         args_text="",
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -172,8 +157,8 @@ COMMANDS: Final = [
                 "specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%",
             ),
         ],
-        description="Create a new site (-u UID, -g GID)",
-        confirm_text="This command performs the following actions on your system:\n"
+        description="Create a new site (-u UID, -g GID)\n\n"
+        "This command performs the following actions on your system:\n"
         "- Create the system user <SITENAME>\n"
         "- Create the system group <SITENAME>\n"
         "- Create and populate the site home directory\n"
@@ -186,7 +171,6 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="",
         options=[
             Option(
@@ -197,7 +181,6 @@ COMMANDS: Final = [
             ),
         ],
         description="Populate site directory with default files and enable the site",
-        confirm_text="",
     ),
     Command(
         command="rm",
@@ -205,7 +188,6 @@ COMMANDS: Final = [
         no_suid=True,
         needs_site=1,
         site_must_exist=1,
-        confirm=True,
         args_text="",
         options=[
             Option("reuse", None, False, "assume --reuse on create, do not delete site user/group"),
@@ -218,17 +200,6 @@ COMMANDS: Final = [
             ),
         ],
         description="Remove a site (and its data)",
-        confirm_text="PLEASE NOTE: This action removes all configuration files\n"
-        "             and variable data of the site.\n"
-        "\n"
-        "In detail the following steps will be done:\n"
-        "- Stop all processes of the site\n"
-        "- Unmount tmpfs of the site\n"
-        "- Remove tmpfs of the site from fstab\n"
-        "- Remove the system user <SITENAME>\n"
-        "- Remove the system group <SITENAME>\n"
-        "- Remove the site home directory\n"
-        "- Restart the system wide apache daemon\n",
     ),
     Command(
         command="disable",
@@ -236,13 +207,11 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="",
         options=[
             Option("kill", None, False, "kill processes using tmpfs before unmounting it"),
         ],
         description="Disable a site (stop it, unmount tmpfs, remove Apache hook)",
-        confirm_text="",
     ),
     Command(
         command="enable",
@@ -250,11 +219,9 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="",
         options=[],
         description="Enable a site (reenable a formerly disabled site)",
-        confirm_text="",
     ),
     Command(
         command="update-apache-config",
@@ -262,11 +229,9 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="",
         options=[],
         description="Update the system apache config of a site (and reload apache)",
-        confirm_text="",
     ),
     Command(
         command="mv",
@@ -274,7 +239,6 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="NEWNAME",
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -300,7 +264,6 @@ COMMANDS: Final = [
             ),
         ],
         description="Rename a site",
-        confirm_text="",
     ),
     Command(
         command="cp",
@@ -308,7 +271,6 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="NEWNAME",
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -337,7 +299,6 @@ COMMANDS: Final = [
             ),
         ],
         description="Make a copy of a site",
-        confirm_text="",
     ),
     Command(
         command="update",
@@ -345,14 +306,13 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="",
         options=[
             Option(
                 "conflict",
                 None,
                 True,
-                "non-interactive conflict resolution. ARG is install, keepold, abort or ask",
+                "non-interactive conflict resolution. ARG is install, keepold, abort, ignore or ask",
             ),
             Option(
                 UpdateOption.confirm_version,
@@ -386,7 +346,6 @@ COMMANDS: Final = [
             ),
         ],
         description="Update site to other version of OMD",
-        confirm_text="",
     ),
     Command(
         command="start",
@@ -394,7 +353,6 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=2,
         site_must_exist=1,
-        confirm=False,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "only start services having version ARG"),
@@ -407,7 +365,6 @@ COMMANDS: Final = [
             " * 2: When targeting a single site, this indicates that one or more services failed to start. "
             "When targeting multiple sites, this indicates that an unspecific error occurred."
         ),
-        confirm_text="",
     ),
     Command(
         command="stop",
@@ -415,14 +372,12 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=2,
         site_must_exist=1,
-        confirm=False,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "only stop sites having version ARG"),
             Option("parallel", "p", False, "Invoke stop of sites in parallel"),
         ],
         description="Stop services of site(s) and terminate processes owned by the site user",
-        confirm_text="",
     ),
     Command(
         command="restart",
@@ -430,13 +385,11 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=2,
         site_must_exist=1,
-        confirm=False,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "only restart sites having version ARG"),
         ],
         description="Restart services of site(s)",
-        confirm_text="",
     ),
     Command(
         command="reload",
@@ -444,13 +397,11 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=2,
         site_must_exist=1,
-        confirm=False,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "only reload sites having version ARG"),
         ],
         description="Reload services of site(s)",
-        confirm_text="",
     ),
     Command(
         command="status",
@@ -458,7 +409,6 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=2,
         site_must_exist=1,
-        confirm=False,
         args_text="[SERVICE]",
         options=[
             Option("version", "V", True, "show only sites having version ARG"),
@@ -466,7 +416,6 @@ COMMANDS: Final = [
             Option("bare", "b", False, "output plain format optimized for parsing"),
         ],
         description="Show status of services of site(s)",
-        confirm_text="",
     ),
     Command(
         command="config",
@@ -474,7 +423,6 @@ COMMANDS: Final = [
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="...",
         options=[],
         description="Show and set site configuration parameters.\n\n\
@@ -482,7 +430,6 @@ Usage:\n\
  omd config [site]\t\t\tinteractive mode\n\
  omd config [site] show\t\t\tshow configuration settings\n\
  omd config [site] set VAR VAL\t\tset specific setting VAR to VAL",
-        confirm_text="",
     ),
     Command(
         command="diff",
@@ -490,13 +437,11 @@ Usage:\n\
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="([RELBASE])",
         options=[
             Option("bare", "b", False, "output plain diff format, no beautifying"),
         ],
         description="Shows differences compared to the original version files",
-        confirm_text="",
     ),
     Command(
         command="su",
@@ -504,11 +449,9 @@ Usage:\n\
         no_suid=False,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="",
         options=[],
         description="Run a shell as a site-user",
-        confirm_text="",
     ),
     Command(
         command="umount",
@@ -516,14 +459,12 @@ Usage:\n\
         no_suid=False,
         needs_site=2,
         site_must_exist=1,
-        confirm=False,
         args_text="",
         options=[
             Option("version", "V", True, "unmount only sites with version ARG"),
             Option("kill", None, False, "kill processes using the tmpfs before unmounting it"),
         ],
         description="Umount ramdisk volumes of site(s)",
-        confirm_text="",
     ),
     Command(
         command="backup",
@@ -531,14 +472,12 @@ Usage:\n\
         no_suid=True,
         needs_site=1,
         site_must_exist=1,
-        confirm=False,
         args_text="[SITE] [-|ARCHIVE_PATH]",
         options=exclude_options
         + [
             Option("no-compression", None, False, "do not compress tar archive"),
         ],
         description="Create a backup tarball of a site, writing it to a file or stdout",
-        confirm_text="",
     ),
     Command(
         command="restore",
@@ -546,7 +485,6 @@ Usage:\n\
         no_suid=False,
         needs_site=0,
         site_must_exist=0,
-        confirm=False,
         args_text="[SITE] handler=[-|ARCHIVE_PATH]",
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -578,7 +516,6 @@ Usage:\n\
             ),
         ],
         description="Restores the backup of a site to an existing site or creates a new site",
-        confirm_text="",
     ),
     Command(
         command="cleanup",
@@ -586,11 +523,9 @@ Usage:\n\
         no_suid=False,
         needs_site=0,
         site_must_exist=0,
-        confirm=False,
         args_text="",
         options=[],
         description="Uninstall all Check_MK versions that are not used by any site.",
-        confirm_text="",
     ),
 ]
 
@@ -686,11 +621,9 @@ def main_help() -> None:
         _no_suid,
         needs_site,
         _site_must_exist,
-        _confirm,
         synopsis,
         _command_options,
         descr,
-        _confirm_text,
     ) in COMMANDS:
         if only_root and not is_root():
             continue

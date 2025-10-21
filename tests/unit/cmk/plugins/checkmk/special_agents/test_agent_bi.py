@@ -11,6 +11,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
+from cmk.password_store.v1_alpha import Secret
 from cmk.plugins.checkmk.special_agents.agent_bi import (
     AgentBiAutomationUserAuthentication,
     AgentBiConfig,
@@ -47,9 +48,9 @@ class TestAggregationRawdataGeneratorLocal:
         expected_site_url: str,
     ) -> None:
         mocker.patch(
-            "cmk.utils.password_store._pwstore.load",
+            "cmk.utils.password_store._pwstore._load",
             return_value={
-                "the_dude_secret": "white_russian",
+                "the_dude_secret": Secret("white_russian"),
             },
         )
         mocker.patch("cmk.ccc.site.get_apache_port", return_value=5002)
@@ -116,9 +117,9 @@ class TestAggregationRawdataGenerator:
         expected_site_url: str,
     ) -> None:
         mocker.patch(
-            "cmk.utils.password_store._pwstore.load",
+            "cmk.utils.password_store._pwstore._load",
             return_value={
-                "the_dude_secret": "white_russian",
+                "the_dude_secret": Secret("white_russian"),
             },
         )
 

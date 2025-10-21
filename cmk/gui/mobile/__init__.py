@@ -11,8 +11,8 @@ from .views import LayoutMobileDataset, LayoutMobileList, LayoutMobileTable
 
 
 def register(layout_registry: LayoutRegistry) -> None:
-    page_registry.register(PageEndpoint("mobile", PageMobileIndex))
-    page_registry.register(PageEndpoint("mobile_view", PageMobileView))
+    page_registry.register(PageEndpoint("mobile", PageMobileIndex()))
+    page_registry.register(PageEndpoint("mobile_view", PageMobileView()))
     layout_registry.register(LayoutMobileTable)
     layout_registry.register(LayoutMobileList)
     layout_registry.register(LayoutMobileDataset)

@@ -18,17 +18,22 @@ export interface TagMatchItem {
 export function tagMatchItemsToDict(
   items: TagMatchItem[],
   variablePrefix: string
-): Record<string, string | null> {
-  const result: Record<string, string | null> = {}
+): Record<string, string> {
+  const result: Record<string, string> = {}
 
   items.forEach((item, index) => {
     const groupKey = `${variablePrefix}_${index}_grp`
     const operatorKey = `${variablePrefix}_${index}_op`
     const valueKey = `${variablePrefix}_${index}_val`
 
-    result[groupKey] = item.group
     result[operatorKey] = item.operator
-    result[valueKey] = item.value
+
+    if (item.group) {
+      result[groupKey] = item.group
+    }
+    if (item.value) {
+      result[valueKey] = item.value
+    }
   })
 
   return result
@@ -42,7 +47,7 @@ export function tagMatchItemsToDict(
  * @returns Array of TagMatchItem objects
  */
 export function dictToTagMatchItems(
-  dict: Record<string, string | null>,
+  dict: Record<string, string>,
   variablePrefix: string
 ): TagMatchItem[] {
   const items: TagMatchItem[] = []
@@ -74,6 +79,5 @@ export function dictToTagMatchItems(
       value: dict[valueKey] || null
     })
   })
-
   return items
 }

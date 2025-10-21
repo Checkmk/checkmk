@@ -22,8 +22,10 @@ import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
-import AvailableGraphs from '../components/AvailableGraphs.vue'
+import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
+import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import { useSelectGraphTypes } from '../composables/useSelectGraphTypes'
+import { Graph } from '../types'
 
 const { _t } = usei18n()
 
@@ -50,7 +52,13 @@ const gotoNextStage = () => {
 
 const hostObjectType = 'host'
 const hostFilterType = defineModel<ElementSelection>('hostFilterType', { required: true })
-const availableGraphs = useSelectGraphTypes(hostFilterType)
+const enabledWidgets = useSelectGraphTypes(hostFilterType)
+const availableWidgets: WidgetItemList = [
+  { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
+  { id: Graph.HOST_STATISTICS, label: _t('Host statistics'), icon: 'folder' },
+  { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'folder' },
+  { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'folder' }
+]
 
 // Filters
 const filterDefinitions = useFilterDefinitions()
@@ -109,7 +117,7 @@ const configuredFiltersByObjectType = computed(() =>
     {{ _t('Available visualization types') }}
   </CmkHeading>
 
-  <AvailableGraphs :available-graphs="availableGraphs" />
+  <AvailableWidgets :available-items="availableWidgets" :enabled-widgets="enabledWidgets" />
 
   <ContentSpacer />
 </template>

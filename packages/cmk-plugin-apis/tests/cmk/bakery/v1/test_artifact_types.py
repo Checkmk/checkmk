@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -38,7 +39,7 @@ def test_plugin() -> None:
 
 
 def test_plugin_config() -> None:
-    def get_lines():
+    def get_lines() -> Iterable[str]:
         yield "dummy"
 
     with pytest.raises(TypeError) as exc_info:

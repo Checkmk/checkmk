@@ -5,6 +5,8 @@
 """
 Quick setup
 
+# mypy: disable-error-code="type-arg"
+
 * GET quick setup guided stages or overview stages
 * GET a quick setup stage structure
 * POST validate stage

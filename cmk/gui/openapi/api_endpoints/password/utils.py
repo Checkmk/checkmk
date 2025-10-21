@@ -14,6 +14,8 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.utils import permission_verification as permissions
 from cmk.utils.password_store import Password
 
+# mypy: disable-error-code="no-untyped-call"
+
 PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.passwords"),
@@ -31,18 +33,18 @@ RW_PERMISSIONS = permissions.AllPerm(
 
 
 def serialize_password(ident: str, details: Password) -> PasswordObject:
-    details = complement_customer(details)
+    details_with_customer = complement_customer(dict(details))
     return PasswordObject(
         domainType="password",
         id=ident,
-        title=details["title"],
+        title=details_with_customer["title"],
         extensions=PasswordExtension(
-            comment=details.get("comment", ApiOmitted()),
-            documentation_url=details.get("docu_url", ApiOmitted()),
-            editable_by=details.get("owned_by") or ApiOmitted(),
-            owned_by=details.get("owned_by") or ApiOmitted(),
-            shared_with=details.get("shared_with", ApiOmitted()),
-            customer=details.get("customer") or ApiOmitted(),
+            comment=details_with_customer.get("comment", ApiOmitted()),
+            documentation_url=details_with_customer.get("docu_url", ApiOmitted()),
+            editable_by=details_with_customer.get("owned_by") or ApiOmitted(),
+            owned_by=details_with_customer.get("owned_by") or ApiOmitted(),
+            shared_with=details_with_customer.get("shared_with", ApiOmitted()),
+            customer=details_with_customer.get("customer") or ApiOmitted(),
         ),
         links=[LinkModel.create("self", object_href("password", "{name}"))],
     )

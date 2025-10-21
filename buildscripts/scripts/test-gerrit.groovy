@@ -148,6 +148,7 @@ def main() {
                         case "Package cmk-update-agent":    // Failing tests in k8s, detailed analysis outstanding
                         case "Package mk-oracle":           // Runs integration tests in CV, wants to install libaio
                         case "Python Werks Test":           // Get's OOM killed, see CMK-26379
+                        case "Software Documentation Generation": // exception: The 'enchant' C library was not found and maybe needs to be installed.
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             break;
                         default:
@@ -313,7 +314,7 @@ def job_result_row(Map args) {
     def test_result_link = "n/a";
 
     if (args.pattern != null && args.pattern != '--') {
-        pattern_url = "<a href='artifact/${args.pattern}'>${args.pattern}</a>";
+        pattern_url = "<a href='${args.triggered_build_url}/artifact/${args.pattern}'>${args.pattern}</a>";
     }
     if (args.triggered_build_url) {
         triggered_build = "<a href='${args.triggered_build_url}'>${args.stepName}</a>";

@@ -1,0 +1,11 @@
+title: Podman Pods
+agents: linux
+catalog: app/podman
+license: GPLv2
+distribution: check_mk
+description: This check monitors Podman pods metrics.
+
+  It provides information about the number of pods in various states such as
+  running, paused, created, stopped, exited and dead.
+
+discovery: One service called "Podman pods" is created.

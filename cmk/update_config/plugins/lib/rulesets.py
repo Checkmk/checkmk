@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 
 import re
 from collections.abc import Collection, Iterable, Mapping, Sequence
@@ -209,7 +211,7 @@ def transform_wato_rulesets_params(
     migrated_rulesets = set()
     for ruleset in all_rulesets.get_rulesets().values():
         try:
-            valuespec = ruleset.valuespec()
+            valuespec = ruleset.rulespec.valuespec
         except Exception:
             logger.error(
                 "ERROR: Failed to load Ruleset: %s. "

@@ -2,10 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+
 import datetime
 from collections.abc import Callable
 
-# No stub file
 import pytest
 
 import cmk.gui.inventory
@@ -1535,9 +1537,9 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                     SDNodeName("images"),
                 ),
                 icon="",
-                title="Docker images",
-                short_title="Docker images",
-                long_title="Docker ➤ Docker images",
+                title="Images",
+                short_title="Images",
+                long_title="Docker ➤ Images",
                 attributes={},
                 # The single column hints are not checked here
                 table=TableWithView(
@@ -1697,9 +1699,9 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         SDNodeName("docker"),
                         SDNodeName("images"),
                     ),
-                    long_title="Docker ➤ Docker images",
+                    long_title="Docker ➤ Images",
                     icon="",
-                    is_show_more=False,
+                    is_show_more=True,
                 ),
             ),
         ),
@@ -1792,9 +1794,9 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                     SDNodeName("containers"),
                 ),
                 icon="",
-                title="Docker containers",
-                short_title="Docker containers",
-                long_title="Docker ➤ Docker containers",
+                title="Containers",
+                short_title="Containers",
+                long_title="Docker ➤ Containers",
                 attributes={},
                 # The single column hints are not checked here
                 table=TableWithView(
@@ -1933,9 +1935,9 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                         SDNodeName("docker"),
                         SDNodeName("containers"),
                     ),
-                    long_title="Docker ➤ Docker containers",
+                    long_title="Docker ➤ Containers",
                     icon="",
-                    is_show_more=False,
+                    is_show_more=True,
                 ),
             ),
         ),

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for predictive monitoring / anomaly detection"""
 
+# mypy: disable-error-code="unreachable"
+
 import logging
 from collections.abc import Callable, Mapping
 from typing import assert_never, Literal

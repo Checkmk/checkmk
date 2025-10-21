@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Tools used by all Redfish special agents"""
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 from redfish.messages import (
     get_error_messages,
     get_messages_detail,

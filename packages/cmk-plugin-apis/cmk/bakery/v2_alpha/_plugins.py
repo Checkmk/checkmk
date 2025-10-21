@@ -3,21 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import string
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Final, Never
 
 from ..v1._artifact_types import (
-    Plugin,
     PluginConfig,
     Scriptlet,
-    SystemBinary,
     SystemConfig,
     WindowsConfigEntry,
     WindowsConfigItems,
     WindowsGlobalConfigEntry,
     WindowsSystemConfigEntry,
+)
+from ._artifact_types import (
+    Plugin,
+    SystemBinary,
 )
 
 _VALID_CHARACTERS: Final = string.ascii_letters + "_" + string.digits

@@ -8,6 +8,7 @@ from collections.abc import Callable, Iterable, Mapping
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.i18n import _
 from cmk.gui.search import ABCMatchItemGenerator, MatchItem, MatchItems
+from cmk.gui.utils.roles import UserPermissions
 
 from .host_attributes import HostAttributes
 from .hosts_and_folders import CollectedHostAttributes
@@ -42,7 +43,7 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
             for ip_address in ip_addresses
         )
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield from (
             MatchItem(
                 title=host_name,

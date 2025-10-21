@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import ssl
+from pathlib import Path
 from typing import IO
 
 import pytest
@@ -20,6 +22,7 @@ from tests.composition.message_broker.utils import (
     timeout,
 )
 from tests.testlib.site import Site
+from tests.testlib.tls import CMKTLSError, tls_connect
 
 logger = logging.getLogger(__name__)
 
@@ -132,3 +135,36 @@ class TestMessageBroker:
 
             central_site.openapi.changes.activate_and_wait_for_completion()
             assert_message_exchange_working(central_site, remote_site)
+
+
+@pytest.fixture(scope="session", name="broker_ca")
+def site_ca_fixture(central_site: Site, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    path = tmp_path_factory.mktemp("ca") / "broker.pem"
+    path.write_bytes(central_site.read_file("etc/rabbitmq/ssl/ca_cert.pem", encoding=None))
+    return path
+
+
+UNSUPPORTED_VERSIONS = (ssl.TLSVersion.SSLv3,)
+SUPPORTED_VERSIONS = (
+    ssl.TLSVersion.TLSv1,
+    ssl.TLSVersion.TLSv1_1,
+    ssl.TLSVersion.TLSv1_2,
+    ssl.TLSVersion.TLSv1_3,
+)
+
+
+@pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS)
+def test_unsupported_tls_versions(
+    central_site: Site, broker_ca: Path, tls_version: ssl.TLSVersion
+) -> None:
+    with pytest.raises(CMKTLSError):
+        tls_connect(
+            central_site.http_address, central_site.message_broker_port, broker_ca, tls_version
+        )
+
+
+@pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS)
+def test_supported_tls_versions(
+    central_site: Site, broker_ca: Path, tls_version: ssl.TLSVersion
+) -> None:
+    tls_connect(central_site.http_address, central_site.message_broker_port, broker_ca, tls_version)

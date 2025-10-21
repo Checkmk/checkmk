@@ -29,7 +29,12 @@ Section = Sequence[Package]
 def parse_win_reg_uninstall(string_table: StringTable) -> Section:
     parsed_packages: list[Package] = []
     for line in string_table:
-        if len(line) == 7:
+        if len(line) == 5:
+            display_name, publisher, path, pacname, version = line
+            estimated_size = ""
+            date = ""
+            language = ""
+        elif len(line) == 7:
             display_name, publisher, path, pacname, version, estimated_size, date = line
             language = ""
         elif len(line) == 8:

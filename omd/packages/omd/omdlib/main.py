@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="possibly-undefined"
+
 """The command line tool specific implementations of the omd command and main entry point"""
 
 from __future__ import annotations
@@ -2313,6 +2317,35 @@ def main_rm(
     _args: object,
     options: CommandOptions,
 ) -> None:
+    if not global_opts.force:
+        confirm_text = (
+            "PLEASE NOTE: This action removes all configuration files\n"
+            "             and variable data of the site.\n"
+            "\n"
+            "In detail the following steps will be done:\n"
+            "- Stop all processes of the site\n"
+            "- Unmount tmpfs of the site\n"
+            "- Remove tmpfs of the site from fstab\n"
+            "- Remove the system user <SITENAME>\n"
+            "- Remove the system group <SITENAME>\n"
+            "- Remove the site home directory\n"
+            "- Restart the system wide apache daemon\n"
+            " [yes/NO]:"
+        )
+        answer = None
+        while answer not in ["", "yes", "no"]:
+            answer = input(confirm_text).strip().lower()
+        if answer in ["", "no"]:
+            sys.exit("Aborted.")
+    _main_rm(version_info, site, global_opts, options)
+
+
+def _main_rm(
+    version_info: VersionInfo,
+    site: SiteContext,
+    global_opts: GlobalOptions,
+    options: CommandOptions,
+) -> None:
     # omd rm is called as root but the init scripts need to be called as
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
@@ -2462,8 +2495,8 @@ def _is_apache_enabled(config: Config) -> bool:
 def _get_conflict_mode(options: CommandOptions) -> str:
     conflict_mode = cast(str, options.get("conflict", "ask"))
 
-    if conflict_mode not in ["ask", "install", "keepold", "abort"]:
-        sys.exit("Argument to --conflict must be one of ask, install, keepold and abort.")
+    if conflict_mode not in ["ask", "install", "keepold", "abort", "ignore"]:
+        sys.exit("Argument to --conflict must be one of ask, install, keepold, ignore and abort.")
 
     return conflict_mode
 
@@ -2575,7 +2608,7 @@ def main_mv_or_cp(
 
     # clean up old site
     if command_type is CommandType.move and reuse:
-        main_rm(version_info, old_site, global_opts, [], {"reuse": None})
+        _main_rm(version_info, old_site, global_opts, {"reuse": None})
 
     sys.stdout.write("OK\n")
 
@@ -2818,6 +2851,8 @@ def main_update(
         from_skelroot = site.version_skel_dir
         to_skelroot = "/omd/versions/%s/skel" % to_version
 
+        skeleton_mode = "install" if conflict_mode == "ignore" else conflict_mode
+
         with ManageUpdate(
             site.name, site.tmp_dir, Path(site_home), Path(from_skelroot), Path(to_skelroot)
         ) as mu:
@@ -2826,7 +2861,7 @@ def main_update(
                 _execute_update_file(
                     relpath,
                     site,
-                    conflict_mode,
+                    skeleton_mode,
                     from_version,
                     to_version,
                     from_edition,
@@ -2840,7 +2875,7 @@ def main_update(
                 _execute_update_file(
                     relpath,
                     site,
-                    conflict_mode,
+                    skeleton_mode,
                     from_version,
                     to_version,
                     from_edition,
@@ -2868,23 +2903,28 @@ def main_update(
             )
 
             additional_update_env = {
+                "OMD_FROM_EDITION": from_edition,
+                "OMD_FROM_VERSION": from_version,
                 "OMD_TO_EDITION": to_edition,
                 "OMD_TO_VERSION": to_version,
             }
-            command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
-            sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
-            returncode = _call_script(
-                is_tty,
-                {
-                    **os.environ,
-                    "OMD_ROOT": site_home,
-                    "OMD_SITE": site.name,
-                    **additional_update_env,
-                },
-                command,
-            )
-            if returncode != 0:
-                sys.exit(returncode)
+            if conflict_mode != "ignore":
+                command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
+                sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
+                returncode = _call_script(
+                    is_tty,
+                    {
+                        **os.environ,
+                        "OMD_ROOT": site_home,
+                        "OMD_SITE": site.name,
+                        **additional_update_env,
+                    },
+                    command,
+                )
+                if returncode != 0:
+                    sys.exit(returncode)
+            else:
+                sys.stdout.write("Skipping pre-flight check")
             sys.stdout.write(
                 f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
             )
@@ -3675,6 +3715,8 @@ def _run_command(
                 main_restore(version_info, object(), global_opts, args, command_options)
             case "cleanup":
                 main_cleanup(version_info, object(), global_opts, object(), object())
+            case _:
+                pass  # TODO: Hmmmm...
     except MKTerminate as e:
         sys.exit(str(e))
     except KeyboardInterrupt:
@@ -3703,13 +3745,6 @@ def main() -> None:
         if site_name is None
         else _site_environment(site_name, command, global_opts.verbose)
     )
-
-    if (global_opts.interactive or command.confirm) and not global_opts.force:
-        answer = None
-        while answer not in ["", "yes", "no"]:
-            answer = input(f"{command.confirm_text} [yes/NO]: ").strip().lower()
-        if answer in ["", "no"]:
-            sys.exit(tty.normal + "Aborted.")
 
     _run_command(
         command, version_info, site, global_opts, args, command_options, orig_working_directory

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # TODO: Cluster with different data sources, eg. TCP node and SNMP node:
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
@@ -14,7 +16,7 @@ from typing import assert_never, Final, Literal
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import TLSConfig
+from cmk.fetchers import ProgramFetcher, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.helper_interface import FetcherType
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
@@ -27,6 +29,7 @@ from ._api import Source
 from ._sources import (
     FetcherFactory,
     IPMISource,
+    MetricBackendSource,
     MgmtSNMPSource,
     MissingIPSource,
     MissingSourceSource,
@@ -67,6 +70,7 @@ class _Builder:
         special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
         agent_connection_mode: HostAgentConnectionMode,
         check_mk_check_interval: float,
+        metric_backend_fetcher: ProgramFetcher | None,
     ) -> None:
         super().__init__()
 
@@ -92,6 +96,7 @@ class _Builder:
         self._file_cache_path_relative: Final = file_cache_path_relative
         self._tcp_cache_path_relative: Final = tcp_cache_path_relative
         self.tls_config: Final = tls_config
+        self.metric_backend_fetcher: Final = metric_backend_fetcher
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
@@ -157,6 +162,18 @@ class _Builder:
                 self._add(elem)
             if not special_agents:
                 self._add_agent()
+
+        if self.metric_backend_fetcher is not None:
+            self._add(
+                MetricBackendSource(
+                    self.metric_backend_fetcher,
+                    self.host_name,
+                    self.ipaddress,
+                    max_age=self.max_age_agent,
+                    file_cache_path_base=self._file_cache_path_base,
+                    file_cache_path_relative=self._file_cache_path_relative,
+                )
+            )
 
     def _initialize_snmp_based(self) -> None:
         if not self.cds.is_snmp:
@@ -319,6 +336,7 @@ def make_sources(
     special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
     agent_connection_mode: HostAgentConnectionMode,
     check_mk_check_interval: float,
+    metric_backend_fetcher: ProgramFetcher | None,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
 
@@ -361,4 +379,5 @@ def make_sources(
         special_agent_command_lines=special_agent_command_lines,
         agent_connection_mode=agent_connection_mode,
         check_mk_check_interval=check_mk_check_interval,
+        metric_backend_fetcher=metric_backend_fetcher,
     ).sources

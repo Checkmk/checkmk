@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 from dataclasses import dataclass
 
 from cmk.gui.openapi.restful_objects.type_defs import EndpointFamilyName, OpenAPITag, TagGroup

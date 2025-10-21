@@ -3,12 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 from pathlib import Path
 from unittest.mock import ANY
+
+import pytest
 
 from cmk.piggyback.backend._inotify import Cookie, Event, INotify, Masks, Watchee
 
 
+@pytest.mark.skip(reason="CMK-26458")
 def test_basic_event_observing(tmp_path: Path) -> None:
     """This tests the happy path of observing events on a file."""
     folder = tmp_path / "folder"

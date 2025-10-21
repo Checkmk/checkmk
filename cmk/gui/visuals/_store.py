@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 import os
 import pickle
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
@@ -459,7 +463,7 @@ def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
 
 def available(
     what: VisualTypeName,
-    all_visuals: dict[tuple[UserId, VisualName], TVisual],
+    all_visuals: Mapping[tuple[UserId, VisualName], TVisual],
     user_permissions: UserPermissions,
 ) -> dict[VisualName, TVisual]:
     visuals: dict[VisualName, TVisual] = {}
@@ -481,7 +485,7 @@ def available(
 # (which could be retrieved with get_visual)
 def available_by_owner(
     what: VisualTypeName,
-    all_visuals: dict[tuple[UserId, VisualName], TVisual],
+    all_visuals: Mapping[tuple[UserId, VisualName], TVisual],
     user_permissions: UserPermissions,
 ) -> dict[VisualName, dict[UserId, TVisual]]:
     visuals: dict[VisualName, dict[UserId, TVisual]] = {}

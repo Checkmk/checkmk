@@ -5,11 +5,18 @@
 """These functions implement a web service with that a master can call
 automation functions on slaves,"""
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+
 import secrets
 import traceback
 from collections.abc import Iterable, Sequence
 from contextlib import nullcontext
 from datetime import datetime
+from typing import override
 
 import cmk.ccc.version as cmk_version
 import cmk.gui.utils
@@ -51,8 +58,8 @@ tracer = trace.get_tracer()
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("automation_login", PageAutomationLogin))
-    page_registry.register(PageEndpoint("noauth:automation", PageAutomation))
+    page_registry.register(PageEndpoint("automation_login", PageAutomationLogin()))
+    page_registry.register(PageEndpoint("noauth:automation", PageAutomation()))
 
 
 def _store_central_site_info() -> None:
@@ -82,9 +89,11 @@ class PageAutomationLogin(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    @override
     def handle_page(self, config: Config) -> None:
         self._handle_exc(config, self.page)
 
+    @override
     @tracer.instrument("PageAutomationLogin.page")
     def page(self, config: Config) -> PageResult:
         if not user.may("wato.automation"):
@@ -120,7 +129,8 @@ class PageAutomation(AjaxPage):
     login secret that has previously been exchanged during "site login" (see above).
     """
 
-    def _from_vars(self) -> None:
+    @override
+    def _handle_http_request(self) -> None:
         self._authenticate()
         _set_version_headers()
         self._command = request.get_str_input_mandatory("command")
@@ -142,14 +152,17 @@ class PageAutomation(AjaxPage):
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    @override
     def handle_page(self, config: Config) -> None:
         # The automation page is accessed unauthenticated. After leaving the index.py area
         # into the page handler we always want to have a user context initialized to keep
         # the code free from special cases (if no user logged in, then...). So fake the
         # logged in user here.
         with SuperUserContext():
+            self._handle_http_request()
             self._handle_exc(config, self.page)
 
+    @override
     @tracer.instrument("PageAutomation.page")
     def page(self, config: Config) -> PageResult:
         # To prevent mixups in written files we use the same lock here as for

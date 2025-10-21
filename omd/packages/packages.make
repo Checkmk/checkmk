@@ -55,6 +55,13 @@ $(DEPS_INSTALL_BAZEL):
 	    -x "bad_coding|badsyntax|test/test_lib2to3/data" \
 	    "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/"
 
+	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/" \
+	    -x "bad_coding|badsyntax|test/test_lib2to3/data" \
+	    "$(DESTDIR)/$(OMD_ROOT)/lib/python3/omdlib/"
+
 	# This will replace forced absolute paths determined at build time by
 	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different
 	# each time
@@ -184,7 +191,6 @@ debug:
 include \
     packages/apache-omd/apache-omd.make \
     packages/check_mk/check_mk.make \
-    packages/omd/omd.make \
     packages/appliance/appliance.make \
 
 ifeq ($(EDITION),enterprise)

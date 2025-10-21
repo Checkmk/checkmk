@@ -3,18 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+
 import re
 import shlex
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import Row
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.views.icon import Icon
+from cmk.gui.views.icon import Icon, IconConfig
 from cmk.utils.tags import TagID
 
 
@@ -23,8 +25,10 @@ def _render_mkeventd_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | tuple[str, str, str]:
-    if not active_config.mkeventd_enabled:
+    if not icon_config.mkeventd_enabled:
         return None
 
     # show for services based on the mkevents active check

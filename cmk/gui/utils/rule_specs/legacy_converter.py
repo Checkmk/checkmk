@@ -2,16 +2,26 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="unreachable"
+
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+
 import dataclasses
 import enum
-import urllib.parse
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, cast, Literal, Self, TypeVar
 
-import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
@@ -27,9 +37,13 @@ from cmk.gui.form_specs.unstable import (
     UserSelection,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword, Tuple
+from cmk.gui.graphing import MetricName
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
+from cmk.gui.utils.autocompleter_config import (
+    AutocompleterConfig,
+    ContextAutocompleterConfig,
+)
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
@@ -38,7 +52,7 @@ from cmk.gui.watolib import config_domains as legacy_config_domains
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
-from cmk.gui.watolib.password_store import IndividualOrStoredPassword
+from cmk.gui.watolib.password_store import postprocessable_ios_password
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -49,7 +63,6 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
-from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
 
 RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
@@ -2163,11 +2176,7 @@ def _convert_to_legacy_http_proxy(
 
     def _global_proxy_choices() -> legacy_valuespecs.DropdownChoiceEntries:
         settings = legacy_config_domains.ConfigDomainCore().load()
-        return [
-            (p["ident"], p["title"])
-            for p in settings.get("http_proxies", {}).values()
-            if urllib.parse.urlparse(p["proxy_url"]).scheme in allowed_schemas
-        ]
+        return [(p["ident"], p["title"]) for p in settings.get("http_proxies", {}).values()]
 
     return Transform(
         legacy_valuespecs.CascadingDropdown(
@@ -2262,7 +2271,7 @@ def _convert_to_legacy_file_upload(
 
 def _convert_to_legacy_metric_name(
     to_convert: ruleset_api_v1.form_specs.Metric, localizer: Callable[[str], str]
-) -> legacy_graphing_valuespecs.MetricName:
+) -> MetricName:
     converted_kwargs = {}
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
         help_text = ruleset_api_v1.Help("Select from a list of metrics known to Checkmk").localize(
@@ -2271,7 +2280,7 @@ def _convert_to_legacy_metric_name(
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is not None:
         converted_kwargs["title"] = title
-    return legacy_graphing_valuespecs.MetricName(**converted_kwargs)
+    return MetricName(**converted_kwargs)
 
 
 def _convert_to_legacy_monitored_host_name(
@@ -2319,41 +2328,12 @@ def _convert_to_legacy_monitored_service_description(
     return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)
 
 
-def _transform_password_forth(value: object) -> tuple[str, str]:
-    match value:
-        case "cmk_postprocessed", "explicit_password", (str(), str(password)):
-            return "password", password
-        case "cmk_postprocessed", "stored_password", (str(password_store_id), str()):
-            return "store", password_store_id
-
-    raise ValueError(value)
-
-
-def _transform_password_back(
-    value: tuple[str, str],
-) -> tuple[
-    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
-]:
-    match value:
-        case "password", str(password):
-            return "cmk_postprocessed", "explicit_password", (ad_hoc_password_id(), password)
-        case "store", str(password_store_id):
-            return "cmk_postprocessed", "stored_password", (password_store_id, "")
-
-    raise ValueError(value)
-
-
 def _convert_to_legacy_individual_or_stored_password(
     to_convert: ruleset_api_v1.form_specs.Password, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Transform:
-    return Transform(
-        IndividualOrStoredPassword(
-            title=_localize_optional(to_convert.title, localizer),
-            help=_localize_optional(to_convert.help_text, localizer),
-            allow_empty=False,
-        ),
-        forth=_transform_password_forth,
-        back=_transform_password_back,
+    return postprocessable_ios_password(
+        title=_localize_optional(to_convert.title, localizer),
+        help_text=_localize_optional(to_convert.help_text, localizer),
     )
 
 

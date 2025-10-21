@@ -1,0 +1,12 @@
+title: Podman Container Status
+agents: linux
+catalog: app/podman
+license: GPLv2
+distribution: check_mk
+description: This service monitors the status of the underlying
+  container. The service reports the current status of the container.
+  It also reports the pod name if the container is part of a pod.
+
+  The is the possibility to map the container status to a service state.
+
+discovery: One service is created.

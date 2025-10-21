@@ -200,7 +200,7 @@ class MainDashboard(BaseDashboard):
         logger.info("Navigate to 'Main dashboard' page")
         self.main_menu.monitor_menu("Main dashboard").click()
         self.page.wait_for_url(
-            url=re.compile(f"{quote_plus('dashboard.py?name=main')}$"), wait_until="load"
+            url=re.compile(quote_plus("dashboard.py?name=main")), wait_until="load"
         )
         self.validate_page()
 

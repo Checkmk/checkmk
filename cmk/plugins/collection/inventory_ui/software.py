@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 import time
 from collections.abc import Iterable
 
@@ -47,6 +48,30 @@ def _style_service_status(value: str) -> Iterable[Alignment | BackgroundColor | 
         case _:
             yield LabelColor.WHITE
             yield BackgroundColor.DARK_GRAY
+
+
+def _style_container_ready(
+    value: bool,
+) -> Iterable[Alignment | BackgroundColor | LabelColor]:
+    yield Alignment.CENTER
+    if value:
+        yield LabelColor.BLACK
+        yield BackgroundColor.GREEN
+    else:
+        yield LabelColor.WHITE
+        yield BackgroundColor.DARK_GRAY
+
+
+def _style_mssql_is_clustered(
+    value: bool,
+) -> Iterable[Alignment | BackgroundColor | LabelColor]:
+    yield Alignment.CENTER
+    if value:
+        yield LabelColor.BLACK
+        yield BackgroundColor.GREEN
+    else:
+        yield LabelColor.WHITE
+        yield BackgroundColor.DARK_GRAY
 
 
 node_software = Node(
@@ -467,6 +492,23 @@ node_software_applications_docker_container = Node(
     },
 )
 
+node_software_applications_docker_containers = Node(
+    name="software_applications_docker_containers",
+    path=["software", "applications", "docker", "containers"],
+    title=Title("Containers"),
+    table=Table(
+        view=View(name="invdockercontainers", title=Title("Containers")),
+        columns={
+            "id": TextField(Title("ID")),
+            "creation": TextField(Title("Creation")),
+            "name": TextField(Title("Name")),
+            "labels": TextField(Title("Labels")),
+            "status": TextField(Title("Status")),
+            "image": TextField(Title("Image")),
+        },
+    ),
+)
+
 node_software_applications_docker_container_networks = Node(
     name="software_applications_docker_container_networks",
     path=["software", "applications", "docker", "container", "networks"],
@@ -492,6 +534,39 @@ node_software_applications_docker_container_ports = Node(
             "port": TextField(Title("Port")),
             "protocol": TextField(Title("Protocol")),
             "host_addresses": TextField(Title("Host addresses")),
+        },
+    ),
+)
+
+node_software_applications_docker_images = Node(
+    name="software_applications_docker_images",
+    path=["software", "applications", "docker", "images"],
+    title=Title("Images"),
+    table=Table(
+        view=View(name="invdockerimages", title=Title("Images")),
+        columns={
+            "id": TextField(Title("ID")),
+            "creation": TextField(Title("Creation")),
+            "size": NumberField(Title("Size"), render=UNIT_COUNT),
+            "labels": TextField(Title("Labels")),
+            "amount_containers": TextField(Title("#Containers")),
+            "repotags": TextField(Title("Repository/Tag")),
+            "repodigests": TextField(Title("Digests")),
+        },
+    ),
+)
+
+node_software_applications_docker_networks = Node(
+    name="software_applications_docker_networks",
+    path=["software", "applications", "docker", "networks"],
+    title=Title("Docker networks"),
+    table=Table(
+        columns={
+            "network_id": TextField(Title("Network ID")),
+            "short_id": TextField(Title("Short ID")),
+            "name": TextField(Title("Name")),
+            "scope": TextField(Title("Scope")),
+            "labels": TextField(Title("Labels")),
         },
     ),
 )
@@ -652,6 +727,23 @@ node_software_applications_kube_cluster = Node(
     },
 )
 
+node_software_applications_kube_containers = Node(
+    name="software_applications_kube_containers",
+    path=["software", "applications", "kube", "containers"],
+    title=Title("Containers"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "ready": BoolField(Title("Ready"), style=_style_container_ready),
+            "restart_count": TextField(Title("Restart count")),
+            "image": TextField(Title("Image")),
+            "image_pull_policy": TextField(Title("Image pull policy")),
+            "image_id": TextField(Title("Image ID")),
+            "container_id": TextField(Title("Container ID")),
+        },
+    ),
+)
+
 node_software_applications_kube_daemonset = Node(
     name="software_applications_kube_daemonset",
     path=["software", "applications", "kube", "daemonset"],
@@ -751,6 +843,24 @@ node_software_applications_mssql = Node(
     name="software_applications_mssql",
     path=["software", "applications", "mssql"],
     title=Title("MSSQL"),
+)
+
+node_software_applications_mssql_instances = Node(
+    name="software_applications_mssql_instances",
+    path=["software", "applications", "mssql", "instances"],
+    title=Title("Instances"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "product": TextField(Title("Product")),
+            "edition": TextField(Title("Edition")),
+            "version": TextField(Title("Version")),
+            "clustered": BoolField(Title("Clustered"), style=_style_mssql_is_clustered),
+            "cluster_name": TextField(Title("Cluster name")),
+            "active_node": TextField(Title("Active node")),
+            "node_names": TextField(Title("Node names")),
+        },
+    ),
 )
 
 node_software_applications_oracle = Node(
@@ -1101,7 +1211,7 @@ node_software_applications_podman_images = Node(
             "container_num": NumberField(Title("#Containers"), render=UNIT_COUNT),
             "repository": TextField(Title("Repository")),
             "tag": TextField(Title("Tag")),
-        }
+        },
     ),
 )
 
@@ -1151,4 +1261,39 @@ node_software_applications_proxmox_ve_cluster = Node(
     attributes={
         "cluster": TextField(Title("Cluster name")),
     },
+)
+
+
+def _sort_key_version(value: str) -> tuple[int | str, ...]:
+    parts: list[int | str] = []
+    for value_part in value.split("."):
+        for part in re.split(r"(\d+)", value_part):
+            try:
+                parts.append(int(part))
+            except ValueError:
+                parts.append(part)
+    return tuple(parts)
+
+
+node_software_packages = Node(
+    name="software_packages",
+    path=["software", "packages"],
+    title=Title("Software packages"),
+    table=Table(
+        view=View(name="invswpac", title=Title("Software packages")),
+        columns={
+            "name": TextField(Title("Name")),
+            "arch": TextField(Title("Architecture")),
+            "package_type": TextField(Title("Type")),
+            "summary": TextField(Title("Description")),
+            # sort_key enables from-to filtering
+            "version": TextField(Title("Version"), sort_key=_sort_key_version),
+            "vendor": TextField(Title("Publisher")),
+            # sort_key enables from-to filtering
+            "package_version": TextField(Title("Package version"), sort_key=_sort_key_version),
+            "install_date": NumberField(Title("Install date"), render=_render_date),
+            "size": NumberField(Title("Size"), render=UNIT_COUNT),
+            "path": TextField(Title("Path")),
+        },
+    ),
 )

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Setup can be set into read only mode manually using this mode"""
 
+# mypy: disable-error-code="type-arg"
+
 import time
 from collections.abc import Collection
 from typing import cast

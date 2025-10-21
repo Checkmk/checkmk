@@ -9,6 +9,11 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Literal, NamedTuple
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 # workaround - can be removed when CMK-25281 is resolved
 os.environ["SSL_CERT_FILE"] = str(Path(os.getenv("OMD_ROOT", "")) / "var/ssl/ca-certificates.crt")
 
@@ -182,7 +187,7 @@ class BaseAsyncApiClient:
         self._session = None
 
     async def login_async(self, tenant: str, client: str, secret: str) -> None:
-        client_app = msal.ConfidentialClientApplication(
+        client_app = msal.ConfidentialClientApplication(  # type: ignore[attr-defined]
             client,
             secret,
             f"{self._login_url}/{tenant}",

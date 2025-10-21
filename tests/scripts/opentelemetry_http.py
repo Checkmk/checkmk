@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+
 """This script demonstrates the use of OpenTelemetry for logging and metrics export via HTTP.
 It sets up OpenTelemetry providers for metrics and logging, sends logs and metrics to a specified
 endpoint, and handles the shutdown on termination signals."""
@@ -41,7 +45,7 @@ ENCODED_CREDENTIALS = base64.b64encode(f"{USERNAME}:{PASSWORD}".encode()).decode
 AUTH_HEADERS = {"Authorization": f"Basic {ENCODED_CREDENTIALS}"}
 # OpenTelemetry logs configuration
 HTTP_LOG_LEVELS = ["info", "warning", "error"]
-HTTP_LOG_TEXT = "Test log level %s #%d"
+HTTP_LOG_TEXT = "Test \nlog \nlevel \n%s #%d"  # enable_octet_counting should handle new lines.
 
 RESOURCE = Resource.create({"service.name": SERVICE_NAME})
 

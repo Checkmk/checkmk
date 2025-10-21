@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import override
+
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.htmllib.header import make_header
@@ -12,6 +14,7 @@ from cmk.gui.pages import Page, PageEndpoint, PageRegistry, PageResult
 
 
 class GuiTimingsPage(Page):
+    @override
     def page(self, config: Config) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry["help"], _("Info"))
         make_header(
@@ -38,4 +41,4 @@ class GuiTimingsPage(Page):
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("gui_timings", GuiTimingsPage))
+    page_registry.register(PageEndpoint("gui_timings", GuiTimingsPage()))

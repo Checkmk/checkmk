@@ -2,6 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 import functools
@@ -202,7 +208,7 @@ class AvailabilityColumns:
         self.bi = self._bi_availability_columns()
 
     def __getitem__(self, key: str) -> list[ColumnSpec]:
-        return getattr(self, key)  # type: ignore[no-any-return]
+        return getattr(self, key)
 
     def _host_availability_columns(self) -> list[ColumnSpec]:
         return [
@@ -1593,7 +1599,7 @@ def load_annotations(lock: bool = False) -> AVAnnotations:
         # Support legacy old wrong name-clashing path
         path = cmk.utils.paths.var_dir / "web/statehist_annotations.mk"
 
-    return store.load_object_from_file(path, default={}, lock=lock)  # type: ignore[no-any-return]
+    return store.load_object_from_file(path, default={}, lock=lock)
 
 
 def update_annotations(

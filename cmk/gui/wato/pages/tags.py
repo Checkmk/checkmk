@@ -5,6 +5,13 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+
 import abc
 from collections.abc import Collection, Sequence
 
@@ -205,20 +212,15 @@ class ModeTags(ABCTagMode):
             request.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
         )
 
-        if not request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
-            del_id
-        ):
-            message: bool | str = _('Transformed the user tag group "%s" to built-in.') % del_id
-        else:
-            message = _rename_tags_after_confirmation(
-                self.breadcrumb(),
-                OperationRemoveTagGroup(del_id),
-                pprint_value=pprint_value,
-                debug=debug,
-                use_git=use_git,
-            )
-            if message is False:
-                return FinalizeRequest(code=200)
+        message = _rename_tags_after_confirmation(
+            self.breadcrumb(),
+            OperationRemoveTagGroup(del_id),
+            pprint_value=pprint_value,
+            debug=debug,
+            use_git=use_git,
+        )
+        if message is False:
+            return FinalizeRequest(code=200)
 
         if message:
             self._tag_config.remove_tag_group(del_id)
@@ -236,31 +238,6 @@ class ModeTags(ABCTagMode):
             if isinstance(message, str):
                 flash(message)
         return redirect(makeuri(request, [], delvars=["_delete"]))
-
-    def _is_cleaning_up_user_tag_group_to_builtin(self, del_id: TagGroupID) -> bool:
-        """The "Agent type" tag group was user defined in previous versions
-
-        Have a look at cmk/gui/watolib/tags.py (_migrate_old_sample_config_tag_groups)
-        for further information
-
-        In case a user wants to remove such a "agent" tag group do not perform the
-        usual validations since this is not a real delete operation because it just
-        replaces a custom group with a built-in one.
-        """
-        if del_id != "agent":
-            return False
-
-        builtin_tg = self._builtin_config.get_tag_group(TagGroupID("agent"))
-        if builtin_tg is None:
-            return False
-
-        user_tg = self._tag_config.get_tag_group(TagGroupID("agent"))
-        if user_tg is None:
-            return False
-
-        # When the tag choices are matching the built-in tag group choices
-        # simply allow removal without confirm
-        return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
     def _delete_aux_tag(self, *, pprint_value: bool, use_git: bool, debug: bool) -> ActionResult:
         del_id = TagID(

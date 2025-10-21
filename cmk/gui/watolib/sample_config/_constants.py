@@ -64,6 +64,11 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [  # sorted by descr
             "~python3 /omd/sites/[^/]+/bin/cmk .*--checker",
         ),
         (
+            "fb28480f-175f-4e41-b0a9-a7a5afdf5fac",
+            "clickhouse server",
+            "~clickhouse-server",
+        ),
+        (
             "9440a0b2-5eb2-4f52-ac4b-17c6ddecd1f2",
             "cmc",
             "~/omd/sites/[^/]+/bin/cmc",

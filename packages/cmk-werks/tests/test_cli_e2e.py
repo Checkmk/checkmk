@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+
 import json
 import os
 import subprocess
@@ -166,7 +169,7 @@ def create_werk(*, title: str, vcr_cassette_dir: str, vcr_config: dict[str, Any]
 def latest_commit_subject(repo_path: Path) -> str:
     repo = Repo(repo_path)
     message = repo.head.commit.message
-    if message is None:
+    if message is None:  # type: ignore[comparison-overlap]
         raise RuntimeError("message is none")
     if isinstance(message, bytes):
         message = message.decode("utf-8")
@@ -180,7 +183,7 @@ def test_reserve_ids_and_create_werk(
     home = tmp_path / "home"
     home.mkdir()
 
-    def read_reserved_werks():
+    def read_reserved_werks() -> Any:
         return json.loads((home / ".cmk-werk-ids").read_text().strip())["ids_by_project"]
 
     cmk_repo_path = tmp_path / "repo_cmk"

@@ -5,6 +5,13 @@
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 Resources and resourcegroups are all treated lowercase because of:
 https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
@@ -240,6 +247,9 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
         ("GeoReplicationConnectivityLag", "PT1M", "average"),
         ("allcacheRead,allcacheWrite", "PT1M", "maximum"),
         ("serverLoad", "PT1M", "maximum"),
+    ],
+    "Microsoft.Network/natGateways": [
+        ("DatapathAvailability", "PT1M", "average"),
     ],
 }
 
@@ -1674,22 +1684,41 @@ def get_resource_host_labels_section(
     )
 
 
-async def get_group_labels(
+def write_resource_groups_sections(
+    resource_groups: Sequence[Mapping[str, Any]], subscription: AzureSubscription
+):
+    # Fake a resource here for inventory purposes
+    for group in resource_groups:
+        resource = AzureResource(group, TagsImportPatternOption.import_all, subscription)
+        section = AzureResourceSection(resource)
+        section.add(resource.dumpinfo())
+        section.write()
+
+
+async def get_resource_groups(
     mgmt_client: BaseAsyncApiClient,
     monitored_groups: Sequence[str],
-    tag_key_pattern: TagsOption,
-) -> GroupLabels:
+) -> list[Mapping[str, Any]]:
     resource_groups = await mgmt_client.get_async(
         "resourcegroups", key="value", params={"api-version": "2019-05-01"}
     )
 
-    group_labels = {
-        name: filter_tags(group.get("tags", {}), tag_key_pattern)
-        for group in resource_groups
-        if (name := group["name"].lower()) and name in monitored_groups
-    }
+    groups = []
+    for group in resource_groups:
+        if (name := group["name"].lower()) and name in monitored_groups:
+            group["name"] = name
+            groups.append(group)
+    return groups
 
-    return group_labels
+
+def get_group_labels(
+    resource_groups: Sequence[Mapping[str, Any]],
+    tag_key_pattern: TagsOption,
+) -> GroupLabels:
+    return {
+        group["name"].lower(): filter_tags(group.get("tags", {}), tag_key_pattern)
+        for group in resource_groups
+    }
 
 
 def write_group_info(
@@ -1738,6 +1767,20 @@ def write_subscription_info(subscription: AzureSubscription) -> None:
         },
         tags=subscription.tags,
     ).write()
+
+
+def write_subscription_section(subscription: AzureSubscription) -> None:
+    info = {
+        "name": subscription.name,
+        "tags": subscription.tags,
+        "id": subscription.id,
+        "type": "subscription",  # This doesn't exist, but sure.
+        "group": "",
+    }
+    resource = AzureResource(info, TagsImportPatternOption.import_all, subscription)
+    section = AzureResourceSection(resource)
+    section.add(resource.dumpinfo())
+    section.write()
 
 
 def write_remaining_reads(rate_limit: int | None, subscription: AzureSubscription) -> None:
@@ -2075,7 +2118,12 @@ def _get_resource_health_sections(
 
     sections = []
     for group, values in health_section.items():
-        section = AzureSection("resource_health", resource.piggytargets, subscription=subscription)
+        section = AzureSection(
+            "resource_health",
+            piggytargets=resource.piggytargets,
+            separator=0,
+            subscription=subscription,
+        )
         for value in values:
             section.add([value])
         sections.append(section)
@@ -2278,11 +2326,12 @@ async def main_subscription(
                 mgmt_client, subscription, args, selector
             )
 
-            group_labels = await get_group_labels(
-                mgmt_client, monitored_groups, args.tag_key_pattern
-            )
+            resource_groups = await get_resource_groups(mgmt_client, monitored_groups)
+            group_labels = get_group_labels(resource_groups, args.tag_key_pattern)
             write_group_info(monitored_groups, selected_resources, subscription, group_labels)
+            write_resource_groups_sections(resource_groups, subscription)
             write_subscription_info(subscription)
+            write_subscription_section(subscription)
 
             tasks = {
                 process_usage_details(mgmt_client, subscription, monitored_groups, args)

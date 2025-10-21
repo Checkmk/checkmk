@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-def"
+
 import time
 from typing import Any
 
@@ -104,12 +108,14 @@ def _internal_embedded_view_to_runtime_embedded_view(
     return spec
 
 
-def save_all_dashboards() -> None:
-    visuals.save("dashboards", get_all_dashboards())
+def save_all_dashboards(owner: UserId | None = None) -> None:
+    visuals.save("dashboards", get_all_dashboards(), owner)
 
 
-def save_and_replicate_all_dashboards(back: str = "edit_dashboards.py") -> None:
-    save_all_dashboards()
+def save_and_replicate_all_dashboards(
+    owner: UserId | None = None, back: str = "edit_dashboards.py"
+) -> None:
+    save_all_dashboards(owner)
     user_profile_async_replication_page(back_url=request.get_url_input("back", back))
 
 
@@ -153,4 +159,4 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
 def add_dashlet(dashlet_spec: DashletConfig, dashboard: DashboardConfig) -> None:
     dashboard["dashlets"].append(dashlet_spec)
     dashboard["mtime"] = int(time.time())
-    save_and_replicate_all_dashboards()
+    save_and_replicate_all_dashboards(dashboard["owner"])

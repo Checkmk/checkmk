@@ -7,15 +7,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, ref } from 'vue'
 
-import CmkIcon from '@/components/CmkIcon.vue'
-import { type CmkIconVariants } from '@/components/CmkIcon.vue'
+import type { SimpleIcons } from '@/components/CmkIcon'
+import { type CmkIconVariants } from '@/components/CmkIcon'
+import CmkIcon from '@/components/CmkIcon'
 
 defineProps<{ screenshotMode: boolean }>()
 
 const sizes: CmkIconVariants['size'][] = ['xsmall', 'small', 'medium', 'large', 'xlarge', 'xxlarge']
 const variants: CmkIconVariants['variant'][] = ['plain', 'inline']
 const title = 'Some title that is shown in a tooltip on hovering the icon'
-const iconName = ref('continue')
+const iconName = ref<SimpleIcons>('continue')
 const sizeRef: Ref<CmkIconVariants['size']> = ref('large')
 const rotate = ref(90)
 </script>

@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-call"
+
 """
 Special agent for monitoring Kubernetes clusters. This agent is required for
 monitoring data provided by the Kubernetes API and the Checkmk collectors,
@@ -9,9 +12,6 @@ which can optionally be deployed within a cluster. The agent requires
 Kubernetes version v1.26 or higher. Moreover, read access to the Kubernetes API
 endpoints monitored by Checkmk must be provided.
 """
-
-# mypy: warn_return_any
-# mypy: disallow_untyped_defs
 
 from __future__ import annotations
 
@@ -1068,7 +1068,6 @@ def _create_sections_based_on_container_metrics(
     debug: bool,
     cluster_name: str,
     pods_to_host: PodsToHost,
-    piggyback_formatter: PiggybackFormatter,
     usage_config: query.CollectorSessionConfig,
 ) -> section.CollectorHandlerLog:
     try:
@@ -1272,7 +1271,6 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         arguments.debug,
         arguments.cluster,
         pods_to_host,
-        piggyback_formatter,
         usage_config,
     )
 

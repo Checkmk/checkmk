@@ -2,12 +2,16 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="mutable-override"
+
 import datetime as dt
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator, Discriminator
+from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig
@@ -17,10 +21,10 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
     GroupConverter,
-    RegistryConverter,
     SiteIdConverter,
 )
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
+from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.type_defs import (
     AnnotatedUserId,
     DashboardEmbeddedViewSpec,
@@ -29,8 +33,6 @@ from cmk.gui.type_defs import (
     SingleInfos,
     VisualContext,
 )
-from cmk.gui.views.icon.registry import all_icons
-from cmk.gui.watolib.main_menu import main_module_topic_registry
 
 from .type_defs import AnnotatedInfoName
 from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
@@ -44,13 +46,16 @@ class DashboardTitle:
     include_context: bool = api_field(description="Include the context in the title.")
 
 
-type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda x: all_icons()).validate)]
+# TODO: replace with proper icon lookup once it has been properly migrated
+#  the misleading all_icons currently does not contain all icons
+#  alternatively the existing IconSelector should get adjusted to retrieve the correct list
+# type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda x: all_icons()).validate)]
 
 
 @api_model
 class DashboardIcon:
-    name: IconName = api_field(description="The icon name.")
-    emblem: IconName | ApiOmitted = api_field(
+    name: str = api_field(description="The icon name.")
+    emblem: str | ApiOmitted = api_field(
         description="Additional icon name, that will be displayed as a smaller emblem.",
         default_factory=ApiOmitted,
     )
@@ -72,19 +77,9 @@ class DashboardIcon:
         return {"icon": icon.name, "emblem": icon.emblem}
 
 
-def _validate_topic(value: str) -> str:
-    # NOTE: `other` is not in the registry, but is the default value for the topic
-    if value != "other" and value not in main_module_topic_registry:
-        raise ValueError(
-            f"Invalid topic, valid options are: {', '.join(main_module_topic_registry)}"
-        )
-
-    return value
-
-
 @api_model
 class DashboardMenuSettings:
-    topic: Annotated[str, AfterValidator(_validate_topic)] = api_field(
+    topic: str = api_field(
         description="Which section in the `Monitor` menu this dashboard is displayed under."
     )
     sort_index: int = api_field(description="Order of the dashboard within the topic.")
@@ -98,6 +93,19 @@ class DashboardMenuSettings:
     search_terms: list[str] = api_field(
         description="A list of search terms that can be used to find this dashboard in the `Monitor` menu."
     )
+
+    def iter_validation_errors(
+        self, location: tuple[str | int, ...], context: ApiContext
+    ) -> Iterable[ErrorDetails]:
+        topic_choices = PagetypeTopics.choices(context.config.user_permissions())
+        topic_names = {topic[0] for topic in topic_choices}
+        if self.topic not in topic_names:
+            yield ErrorDetails(
+                type="value_error",
+                msg=f"Invalid topic, valid options are: {', '.join(topic_names)}",
+                loc=location + ("topic",),
+                input=self.topic,
+            )
 
 
 @api_model
@@ -235,6 +243,11 @@ class DashboardGeneralSettings:
             api_general_settings.description = str(dashboard["description"])
         return api_general_settings
 
+    def iter_validation_errors(
+        self, location: tuple[str | int, ...], context: ApiContext
+    ) -> Iterable[ErrorDetails]:
+        yield from self.menu.iter_validation_errors(location + ("menu",), context)
+
 
 @api_model
 class DashboardFilterContextResponse(DashboardFilterContext):
@@ -365,6 +378,9 @@ class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
                 embedded_views=embedded_views,
             )
         ]
+        errors.extend(
+            self.general_settings.iter_validation_errors(("body", "general_settings"), context)
+        )
         if errors:
             raise RequestDataValidator.format_error_details(errors)
 

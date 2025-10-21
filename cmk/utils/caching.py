@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Managing in-memory caches through the execution time of cmk"""
 
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 import collections

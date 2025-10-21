@@ -9,7 +9,7 @@ import http.client as http_client
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, override, Protocol
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException, MKGeneralException
@@ -22,8 +22,11 @@ from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 
-PageHandlerFunc = Callable[[Config], None]
 PageResult = object
+
+
+class PageHandler(Protocol):
+    def __call__(self, config: Config) -> None: ...
 
 
 # At the moment pages are simply callables that somehow render content for the HTTP response
@@ -38,7 +41,27 @@ PageResult = object
 # TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
 # implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
 class Page(abc.ABC):
+    """The base page class for our page registry.
+
+    It is important that you DO NOT handle global variables like request and session from within the
+    __init__ function.
+
+    This causes a temporal dependency as the pages are now initialized at registration. You do,
+    however, now have the ability to inject dependencies from external registries at registration.
+    That is up to the discretion of the page and is totally optional as the __init__ method is not
+    part of the base class.
+    """
+
+    def _handle_http_request(self) -> None:
+        """Handles everything to do with processing an HTTP request.
+
+        This can include extracting variables from the request/session or checking user permissions.
+        This method is optional and doesn't need to be defined if you are not accessing global HTTP
+        variables in the page method.
+        """
+
     def handle_page(self, config: Config) -> None:
+        self._handle_http_request()
         self.page(config)
 
     @abc.abstractmethod
@@ -50,14 +73,6 @@ class Page(abc.ABC):
 # TODO: Clean up implicit _from_vars() procotocol
 class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._from_vars()
-
-    def _from_vars(self) -> None:
-        """Override this method to set mode specific attributes based on the
-        given HTTP variables."""
 
     def webapi_request(self) -> dict[str, Any]:
         return request.get_request()
@@ -83,6 +98,8 @@ class AjaxPage(Page, abc.ABC):
     @override
     def handle_page(self, config: Config) -> None:
         """The page handler, called by the page registry"""
+        self._handle_http_request()
+
         response.set_content_type("application/json")
         try:
             action_response = self.page(config)
@@ -109,7 +126,7 @@ class AjaxPage(Page, abc.ABC):
 @dataclass(frozen=True)
 class PageEndpoint:
     ident: str
-    handler: PageHandlerFunc | type[Page]
+    handler: PageHandler | Page
 
 
 class PageRegistry(cmk.ccc.plugin_registry.Registry[PageEndpoint]):
@@ -121,13 +138,13 @@ class PageRegistry(cmk.ccc.plugin_registry.Registry[PageEndpoint]):
 page_registry = PageRegistry()
 
 
-def get_page_handler(
-    name: str, dflt: PageHandlerFunc | None = None
-) -> PageHandlerFunc | type[Page] | None:
+def get_page_handler(name: str, dflt: PageHandler | None = None) -> PageHandler | None:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
     if endpoint := page_registry.get(name):
+        if isinstance(endpoint.handler, Page):
+            return endpoint.handler.handle_page
         return endpoint.handler
     return dflt

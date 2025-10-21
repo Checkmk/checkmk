@@ -93,7 +93,6 @@ def _find_control_chains(
     return {pod_uid: _find_controllers(pod_uid, object_to_owners).chain for pod_uid in pod_uids}
 
 
-# TODO Needs an integration test
 def _match_controllers(
     pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],
 ) -> Mapping[str, Sequence[api.PodUID]]:
@@ -106,25 +105,25 @@ def _match_controllers(
     return controller_to_pods
 
 
-def map_controllers(
-    raw_pods: Sequence[V1Pod],
-    object_to_owners: Mapping[str, api.OwnerReferences],
-) -> tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
-    pod_to_controllers = _find_control_chains(
-        pod_uids=(pod.metadata.uid for pod in raw_pods),
-        object_to_owners=object_to_owners,
-    )
-    return _match_controllers(pod_to_controllers), pod_to_controllers
+class ControllerGraph:
+    def __init__(
+        self, raw_pods: Sequence[V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
+    ) -> None:
+        self._pod_to_controllers = _find_control_chains(
+            pod_uids=(pod.metadata.uid for pod in raw_pods),
+            object_to_owners=object_to_owners,
+        )
+        self._controller_to_pods = _match_controllers(self._pod_to_controllers)
+        self._top_down_references: dict[str, list[str]] = {}
+        for object_uid, owner_references in object_to_owners.items():
+            for owner_reference in owner_references:
+                self._top_down_references.setdefault(owner_reference.uid, []).append(object_uid)
 
+    def pods_controlled_by(self, uid: str) -> Sequence[api.PodUID]:
+        return self._controller_to_pods.get(uid, [])
 
-def map_controllers_top_to_down(
-    object_to_owners: Mapping[str, api.OwnerReferences],
-) -> Mapping[str, Sequence[str]]:
-    """Creates a mapping where the key is the controller and the value a sequence of controlled
-    objects
-    """
-    top_down_references: dict[str, list[str]] = {}
-    for object_uid, owner_references in object_to_owners.items():
-        for owner_reference in owner_references:
-            top_down_references.setdefault(owner_reference.uid, []).append(object_uid)
-    return top_down_references
+    def dependents_owned_by(self, uid: str) -> Sequence[str]:
+        return self._top_down_references.get(uid, [])
+
+    def pod_to_control_chain(self, uid: api.PodUID) -> Sequence[api.Controller]:
+        return self._pod_to_controllers.get(uid, [])

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """LDAP configuration and diagnose page"""
 
+# mypy: disable-error-code="type-arg"
+
 import re
 from collections.abc import Callable, Collection
 from copy import deepcopy

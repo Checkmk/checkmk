@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Note: Sometimes the esx_vsphere_sensors check reports incorrect sensor data.
 # The reason is that the data is cached on the esx system. In the worst case some sensors
 # might get stuck in an unhealthy state. You can find more information under the following link:

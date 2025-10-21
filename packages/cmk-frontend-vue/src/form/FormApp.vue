@@ -10,8 +10,8 @@ import { computed, ref } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import HelpText from '@/components/HelpText.vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
@@ -60,12 +60,12 @@ function toggleActiveMode() {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const { ErrorBoundary } = useErrorBoundary()
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
   <div :id="`form-app--${id}`">
-    <ErrorBoundary>
+    <CmkErrorBoundary>
       <input
         v-if="showToggleMode"
         type="button"
@@ -76,37 +76,23 @@ const { ErrorBoundary } = useErrorBoundary()
         <FormReadonly :data="dataRef" :backend-validation="validation" :spec="spec"></FormReadonly>
       </div>
 
-      <HelpText :help="untranslated(spec.help)" />
-      <div v-if="activeMode === 'edit' || activeMode === 'both'">
-        <table class="nform">
-          <tbody>
-            <tr>
-              <td>
-                <FormEdit
-                  v-if="display_mode === 'edit' || display_mode === 'both'"
-                  v-model:data="dataRef"
-                  :backend-validation="validation"
-                  :spec="spec"
-                />
-                <!-- This input field contains the computed json value which is sent when the form is submitted -->
-                <input v-model="valueAsJSON" :name="id" type="hidden" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <CmkHelpText :help="untranslated(spec.help)" />
+      <div v-if="activeMode === 'edit' || activeMode === 'both'" class="form-app__root">
+        <FormEdit
+          v-if="display_mode === 'edit' || display_mode === 'both'"
+          v-model:data="dataRef"
+          :backend-validation="validation"
+          :spec="spec"
+        />
+        <!-- This input field contains the computed json value which is sent when the form is submitted -->
+        <input v-model="valueAsJSON" :name="id" type="hidden" />
       </div>
-    </ErrorBoundary>
+    </CmkErrorBoundary>
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.nform {
-  margin: 0;
-  background: transparent;
-
-  > tbody > tr:first-child > td {
-    padding: 0;
-  }
+.form-app__root {
+  margin: 2px;
 }
 </style>

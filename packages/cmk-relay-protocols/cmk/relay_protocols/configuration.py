@@ -6,10 +6,11 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Annotated, NamedTuple, NewType, Self
+from typing import Annotated, Literal, NamedTuple, NewType, Self
 
 from pydantic import BaseModel, Field, HttpUrl
 
+LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 Timestamp = NewType("Timestamp", float)
 Seconds = NewType("Seconds", float)
 
@@ -21,7 +22,7 @@ class CheckPeriod(NamedTuple):
 
 class Schedule(BaseModel):
     check_periods: Annotated[
-        list[CheckPeriod], Field(description="Periods during which to schedule checks")
+        Sequence[CheckPeriod], Field(description="Periods during which to schedule checks")
     ]
     check_interval: Annotated[Seconds, Field(description="Check interval in seconds", gt=0)]
     retry_interval: Annotated[Seconds, Field(description="Retry interval in seconds", gt=0)]
@@ -57,6 +58,7 @@ class SiteConfig(BaseModel):
 class UserEngineConfig(BaseModel):
     """configuration for relay engine as provided by user config during activation"""
 
+    log_level: LogLevel
     num_fetchers: int
     hosts: Sequence[Host]
 
@@ -71,8 +73,7 @@ class EngineConfig(UserEngineConfig):
     poll_sleep: float = 0.5
     host_scheduler_sleep: float = 0.5
     poll_history: HistoryConfig = HistoryConfig()
-    log_level: str = "INFO"
-    third_party_log_level: str = "CRITICAL"
+    third_party_log_level: LogLevel = "CRITICAL"
 
     @classmethod
     def load(cls, path: Path) -> Self:

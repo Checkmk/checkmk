@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import json
-from typing import cast
+from typing import cast, override
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
@@ -28,6 +31,7 @@ __all__ = ["FigureDashletPage", "ABCFigureDashlet"]
 
 
 class FigureDashletPage(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         dashboard_name = request.get_ascii_input_mandatory("name")
         dashboard_owner = request.get_validated_type_input_mandatory(UserId, "owner")

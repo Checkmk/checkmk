@@ -179,8 +179,7 @@ class BaseQuickSetupAddNewConfiguration(QuickSetupPage):
     def save_quick_setup(self) -> None:
         logger.info("Save Quick setup configuration.")
         self.save_and_go_to_activate_changes_button.click()
-        self.activate_selected()
-        self.expect_success_state()
+        self.activate_changes(navigate_to_page=False)
 
     def _get_row(self, name: str) -> Locator:
         # TODO: change to accessibility elements once available

@@ -7,8 +7,9 @@
 import pytest
 
 import cmk.ccc.version as cmk_version
+from cmk.gui.main_menu_types import MainMenuItem, MainMenuTopic
 from cmk.gui.search import MatchItem
-from cmk.gui.type_defs import MainMenuItem, MainMenuTopic
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._snapins import get_wato_menu_items, MatchItemGeneratorSetupMenu
 from cmk.utils import paths
 
@@ -83,6 +84,8 @@ def expected_items() -> dict[str, list[str]]:
         cmk_version.Edition.CME,
     ]:
         hosts_items.append("otel_collectors")
+        hosts_items.append("otel_collectors_receivers")
+        hosts_items.append("otel_collectors_prom_scrapes")
         hosts_items.append("relays")
 
     users_items = []
@@ -152,7 +155,7 @@ def expected_items() -> dict[str, list[str]]:
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_get_wato_menu_items() -> None:
     items_by_topic: dict[str, list[str]] = {}
-    for topic in get_wato_menu_items():
+    for topic in get_wato_menu_items(UserPermissions({}, {}, {}, [])):
         items = items_by_topic.setdefault(topic.name, [])
         for item in topic.entries:
             items.append(item.name)
@@ -164,7 +167,7 @@ def test_get_wato_menu_items() -> None:
 def test_unique_wato_menu_item_titels() -> None:
     titles = [
         entry.title
-        for main_menu_topic in get_wato_menu_items()
+        for main_menu_topic in get_wato_menu_items(UserPermissions({}, {}, {}, []))
         for entry in main_menu_topic.entries
     ]
     assert len(titles) == len(set(titles))
@@ -174,7 +177,7 @@ def test_match_item_generator_setup_menu() -> None:
     assert list(
         MatchItemGeneratorSetupMenu(
             "setup",
-            lambda: [
+            lambda p: [
                 MainMenuTopic(
                     name="topic",
                     title="Topic",
@@ -184,7 +187,7 @@ def test_match_item_generator_setup_menu() -> None:
                     ],
                 )
             ],
-        ).generate_match_items()
+        ).generate_match_items(UserPermissions({}, {}, {}, []))
     ) == [
         MatchItem(title="Item 1", topic="Setup", url="url 1", match_texts=["item 1"]),
         MatchItem(title="Item 2", topic="Setup", url="url 2", match_texts=["item 2"]),

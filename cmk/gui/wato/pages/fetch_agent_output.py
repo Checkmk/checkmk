@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import abc
 import ast
 from collections.abc import Mapping
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel
 
@@ -58,8 +61,8 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("fetch_agent_output", PageFetchAgentOutput))
-    page_registry.register(PageEndpoint("download_agent_output", PageDownloadAgentOutput))
+    page_registry.register(PageEndpoint("fetch_agent_output", PageFetchAgentOutput()))
+    page_registry.register(PageEndpoint("download_agent_output", PageDownloadAgentOutput()))
     automation_command_registry.register(AutomationFetchAgentOutputStart)
     automation_command_registry.register(AutomationFetchAgentOutputGetStatus)
     automation_command_registry.register(AutomationFetchAgentOutputGetFile)
@@ -137,11 +140,8 @@ class FetchAgentOutputRequest:
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
 class AgentOutputPage(Page, abc.ABC):
-    def __init__(self) -> None:
-        super().__init__()
-        self._from_vars()
-
-    def _from_vars(self) -> None:
+    @override
+    def _handle_http_request(self) -> None:
         user.need_permission("wato.download_agent_output")
 
         host_name = request.var("host")
@@ -177,6 +177,7 @@ class AgentOutputPage(Page, abc.ABC):
 
 
 class PageFetchAgentOutput(AgentOutputPage):
+    @override
     def page(self, config: Config) -> None:
         title = self._title()
         make_header(

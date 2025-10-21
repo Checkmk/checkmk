@@ -2,9 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import re
 from collections.abc import Generator, Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -42,7 +46,6 @@ from cmk.agent_based.v2 import (
 # <state> is the expected state to inventorize services of (running, stopped, ...)
 # <start_mode> is the expected state to inventorize services of (auto, manual, ...)
 
-WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS: dict[str, Any] = {}
 
 WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS = {
     "states": [("running", None, 0)],
@@ -80,29 +83,58 @@ agent_section_services = AgentSection(
 )
 
 
-def _match_service(service: WinService, settings: Mapping[str, Any]) -> bool:
-    for pattern in settings.get("services", []):
-        # First match name or description (optional since rule based config option available)
+class WindowsServiceDiscoveryParams(TypedDict, total=False):
+    services: Sequence[str]
+    state: str
+    start_mode: str
+
+
+def _match_service(service: WinService, settings: WindowsServiceDiscoveryParams) -> bool:
+    # Skip empty discovery settings, i.e. default settings.
+    if not settings:
+        return False
+
+    def _check_pattern(pattern: str) -> bool:
         expr = re.compile(pattern)
-        if expr.match(service.name) and expr.match(service.description):
-            return True
+        return bool(expr.match(service.name) or expr.match(service.description))
 
     state = settings.get("state")
     mode = settings.get("start_mode")
-    if (state and state != service.state) or (mode and mode != service.start_type):
-        return False
+    patterns = settings.get("services")
 
-    return True
+    # One could argue that these checks should be called from within the match statement below, but
+    # for readability reasons and how cheap these checks are, I think it's fine to do it upfront.
+    has_state_match = bool(state and state == service.state)
+    has_mode_match = bool(mode and mode == service.start_type)
+    has_pattern_match = any(_check_pattern(pattern) for pattern in patterns or [])
+
+    match (state, mode, patterns):
+        case [state, None, None]:
+            return has_state_match
+        case [None, mode, None]:
+            return has_mode_match
+        case [None, None, patterns]:
+            return has_pattern_match
+        case [state, mode, None]:
+            return has_state_match and has_mode_match
+        case [state, None, patterns]:
+            return has_state_match and has_pattern_match
+        case [None, mode, patterns]:
+            return has_mode_match and has_pattern_match
+        case [state, mode, patterns]:
+            return has_state_match and has_mode_match and has_pattern_match
+        # Note: unable to use `assert_never` when matching on a tuple.
+        case _:
+            return False
 
 
 def discovery_windows_services(
-    params: Sequence[Mapping[str, Any]], section: Section
+    params: Sequence[WindowsServiceDiscoveryParams], section: Section
 ) -> DiscoveryResult:
     # Extract the WATO compatible rules for the current host
     for service in section:
         # If no rule is set by user, *no* windows services should be discovered.
-        # Skip the default settings which are the last element of the list:
-        for settings in params[:-1]:
+        for settings in params:
             if _match_service(service, settings):
                 yield Service(item=service.name)
 
@@ -196,7 +228,7 @@ check_plugin_services = CheckPlugin(
     discovery_ruleset_type=RuleSetType.ALL,
     discovery_ruleset_name="inventory_services_rules",
     discovery_function=discovery_windows_services,
-    discovery_default_parameters=WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
+    discovery_default_parameters=WindowsServiceDiscoveryParams(),
     check_ruleset_name="services",
     check_default_parameters=WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS,
     check_function=check_windows_services,

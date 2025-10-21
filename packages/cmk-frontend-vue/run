@@ -20,8 +20,7 @@ usage() {
     echo "  -t, --tests                run tests"
     echo "  -F, --check-format         run format check"
     echo "  -T, --tsc                  run type checker"
-    echo "  -E, --eslint               run linter"
-    echo "  -S, --stylelint            run stylelint"
+    echo "  -l, --lint                 run configured linters"
     echo "  -f, --format               format sources"
     echo "  -a, --all                  shortcut for -b -B -t -F -T -E -d"
     echo "  -h, --help                 show this help"
@@ -35,11 +34,12 @@ parse_options() {
     RUN_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_TSC=no
+    RUN_LINT=no
     RUN_ESLINT=no
     RUN_STYLELINT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'bBtdFTEafhS' --long 'build,build-dev,tests,check-format,tsc,stylelint,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'bBtdFTlEafhS' --long 'build,build-dev,tests,check-format,tsc,stylelint,lint,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -75,6 +75,11 @@ parse_options() {
                 ;;
             '-T' | '--tsc')
                 RUN_TSC=yes
+                shift
+                continue
+                ;;
+            '-l' | '--lint')
+                RUN_LINT=yes
                 shift
                 continue
                 ;;
@@ -145,18 +150,19 @@ run_build_demo() {
 }
 
 run_check_format() {
+    bazel run :format.check "$PWD"
+}
+
+run_lint() {
     bazel lint \
         --aspect:interactive=false \
         --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
         --diff \
         --quiet \
         :all
-    bazel run :format.check "$(pwd)"
-    # this should be a `bazel run` target which can operate on the workspace
-    # but since we don't have any dependencies here and test_license_headers.py
-    # is subject to vanish system-python3 is ok here
-    setup_venv
-    python3 scripts/test_license_headers.py
+    # The following targets will be part of `bazel lint`
+    # after CMK-26334 and CMK-25906.
+    bazel test :eslint :stylelint
 }
 
 run_tsc() {
@@ -164,24 +170,26 @@ run_tsc() {
 }
 
 run_eslint() {
+    echo "WARNING: This target is deprecated, use the generic '--lint' instead."
     bazel test :eslint
 }
 
 run_stylelint() {
+    echo "WARNING: This target is deprecated, use the generic '--lint' instead."
     bazel test :stylelint
 }
 
 run_format() {
-    bazel lint \
-        --aspect:interactive=false \
-        --aspect:config="$(bazel info workspace)"/.aspect/cli/config.yaml \
-        --fix \
-        :all
-    bazel run :format "$(pwd)"
+    bazel run :format "$PWD"
 }
 
 run_tests() {
     bazel test :unit-test
+    # this should be a `bazel run` target which can operate on the workspace
+    # but since we don't have any dependencies here and test_license_headers.py
+    # is subject to vanish system-python3 is ok here
+    setup_venv
+    python3 scripts/test_license_headers.py
 }
 
 main() {
@@ -193,6 +201,7 @@ main() {
     test ${RUN_BUILD_DEMO} = yes && run_build_demo
     test ${RUN_TESTS} = yes && run_tests
     test ${RUN_TSC} = yes && run_tsc
+    test ${RUN_LINT} = yes && run_lint
     test ${RUN_ESLINT} = yes && run_eslint
     test ${RUN_STYLELINT} = yes && run_stylelint
     test ${RUN_FORMAT} = yes && run_format

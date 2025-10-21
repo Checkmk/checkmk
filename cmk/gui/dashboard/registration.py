@@ -26,7 +26,7 @@ from .page_create_view_dashlet import (
 )
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
-from .page_edit_dashboards import page_edit_dashboards
+from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_edit_dashlet import EditDashletPage
 from .page_figure_widget import FigureWidgetPage
 from .page_graph_widget import GraphWidgetPage
@@ -53,21 +53,21 @@ def register(
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
-    page_registry.register(PageEndpoint("ajax_figure_dashlet_data", FigureDashletPage))
-    page_registry.register(PageEndpoint("widget_figure", FigureWidgetPage))
-    page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage))
-    page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage))
-    page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage))
+    page_registry.register(PageEndpoint("ajax_figure_dashlet_data", FigureDashletPage()))
+    page_registry.register(PageEndpoint("widget_figure", FigureWidgetPage()))
+    page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage()))
+    page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage()))
+    page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage()))
     page_registry.register(
-        PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters)
+        PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters())
     )
-    page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage))
+    page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage()))
     page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
     # TODO: old dashboard page should be removed
     page_registry.register(PageEndpoint("dashboard", page_dashboard))
     page_registry.register(PageEndpoint("dashboard_wip", page_dashboard_app))
     page_registry.register(PageEndpoint("dashboard_dashlet", ajax_dashlet))
-    page_registry.register(PageEndpoint("edit_dashboards", page_edit_dashboards))
+    page_registry.register(PageEndpoint(PAGE_EDIT_DASHBOARDS_LINK, page_edit_dashboards))
     page_registry.register(PageEndpoint("create_dashboard", page_create_dashboard))
     page_registry.register(PageEndpoint("edit_dashboard", page_edit_dashboard))
     page_registry.register(PageEndpoint("create_link_view_dashlet", page_create_link_view_dashlet))

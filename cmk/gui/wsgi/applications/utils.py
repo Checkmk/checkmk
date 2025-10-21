@@ -54,9 +54,7 @@ class AbstractWSGIApp(abc.ABC):
         raise NotImplementedError
 
 
-def ensure_authentication(
-    handler: type[pages.Page] | pages.PageHandlerFunc,
-) -> Callable[[Config], Response]:
+def ensure_authentication(handler: pages.PageHandler) -> Callable[[Config], Response]:
     # Ensure the user is authenticated. This call is wrapping all the different
     # authentication modes the Checkmk GUI supports and initializes the logged-in
     # user objects.
@@ -68,10 +66,7 @@ def ensure_authentication(
                 return _handle_not_authenticated(config)
 
             if isinstance(session.user, LoggedInRemoteSite | LoggedInSuperUser):
-                if isinstance(handler, type):
-                    handler().handle_page(config)
-                else:
-                    handler(config)
+                handler(config)
                 return response
 
             user_id = session.user.ident
@@ -140,10 +135,7 @@ def ensure_authentication(
 
             set_user_frontend_config_cookie(request, response, user.frontend_config)
 
-            if isinstance(handler, type):
-                handler().handle_page(config)
-            else:
-                handler(config)
+            handler(config)
 
             return response
 

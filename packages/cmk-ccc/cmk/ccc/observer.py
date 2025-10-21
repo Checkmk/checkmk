@@ -159,7 +159,7 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
                 self._log_verbose_info()
             sys.exit(14)
 
-    def _log_verbose_info(self):
+    def _log_verbose_info(self) -> None:
         self._print_global_memory_usage()
         self._error(
             "memory usage increased from %s to %s, exiting"

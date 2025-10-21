@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
+
 """Helper functions for tests against rules with predictive and fixed levels.."""
 
 import logging
@@ -151,7 +154,7 @@ def setup_test_environment(
     folder: str = FOLDER_PATH,
     folder_title: str = "RulesAPI Tests",
     allow_foreign_changes: bool = False,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Creates and cleans up a test environment with a folder and a host."""
     logger.info(f"Create test environment: folder='{folder}', host='{hostname}' via API")
     try:

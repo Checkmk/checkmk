@@ -6,6 +6,11 @@
 Tests for legacy tuple rulesets.
 """
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Mapping, Sequence
 from typing import Final
 
@@ -414,6 +419,7 @@ def test_get_service_bool_value(
     )
 
 
+@pytest.mark.skip_on_code_coverage
 def test_all_matching_hosts(ts: Scenario) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
     label_manager = ts.config_cache.label_manager

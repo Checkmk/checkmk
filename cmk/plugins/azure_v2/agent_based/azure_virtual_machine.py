@@ -14,24 +14,24 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
-    IgnoreResultsError,
+    InventoryPlugin,
     render,
     Result,
     Service,
     State,
 )
-from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.azure import (
+from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
+    create_inventory_function,
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
-    parse_resources,
+    parse_resource,
     Resource,
-    Section,
 )
+from cmk.plugins.lib import interfaces
 
 _MAP_STATES = {
     # Provisioning states
@@ -62,9 +62,15 @@ class VMStatus(NamedTuple):
 VMSummaryParams = Mapping[str, Mapping[str, tuple[float, float]]]
 
 
+inventory_plugin_azure_virtualmachines = InventoryPlugin(
+    name="azure_v2_virtualmachines",
+    inventory_function=create_inventory_function(),
+)
+
+
 agent_section_azure_virtualmachines = AgentSection(
     name="azure_v2_virtualmachines",
-    parse_function=parse_resources,
+    parse_function=parse_resource,
 )
 
 
@@ -78,9 +84,8 @@ agent_section_azure_virtualmachines = AgentSection(
 #   '----------------------------------------------------------------------'
 
 
-def discover_azure_virtual_machine(section: Section) -> DiscoveryResult:
-    for item, resource in section.items():
-        yield Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
+def discover_azure_virtual_machine(section: Resource) -> DiscoveryResult:
+    yield Service(labels=get_service_labels_from_resource_tags(section.tags))
 
 
 def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:
@@ -96,13 +101,8 @@ def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:
         yield status_name, VMStatus(status_name, parsed_status_value, parsed_message)
 
 
-def check_azure_virtual_machine(
-    item: str, params: Mapping[str, int], section: Section
-) -> CheckResult:
-    if (resource := section.get(item)) is None:
-        raise IgnoreResultsError("Data not present at the moment")
-
-    statuses = dict(get_statuses(resource))
+def check_azure_virtual_machine(params: Mapping[str, int], section: Resource) -> CheckResult:
+    statuses = dict(get_statuses(section))
 
     map_provisioning_states = {k: v for k, v in params.items() if k in _PROVISIONING_STATES}
     map_power_states = {k: v for k, v in params.items() if k in _POWER_STATES}
@@ -123,14 +123,14 @@ def check_azure_virtual_machine(
             summary=f"{summary_template} {status.value}{status.message}",
         )
 
-    for key, value in iter_resource_attributes(resource):
+    for key, value in iter_resource_attributes(section):
         yield Result(state=State.OK, summary=f"{key}: {value}")
 
 
 check_plugin_azure_virtual_machine = CheckPlugin(
     name="azure_v2_virtual_machine",
     sections=["azure_v2_virtualmachines"],
-    service_name="VM %s",
+    service_name="Azure/VM",
     discovery_function=discover_azure_virtual_machine,
     check_function=check_azure_virtual_machine,
     check_ruleset_name="azure_v2_vms",
@@ -138,116 +138,12 @@ check_plugin_azure_virtual_machine = CheckPlugin(
 )
 
 
-#   .--VM Summary----------------------------------------------------------.
-#   | __     ____  __   ____                                               |
-#   | \ \   / /  \/  | / ___| _   _ _ __ ___  _ __ ___   __ _ _ __ _   _   |
-#   |  \ \ / /| |\/| | \___ \| | | | '_ ` _ \| '_ ` _ \ / _` | '__| | | |  |
-#   |   \ V / | |  | |  ___) | |_| | | | | | | | | | | | (_| | |  | |_| |  |
-#   |    \_/  |_|  |_| |____/ \__,_|_| |_| |_|_| |_| |_|\__,_|_|   \__, |  |
-#   |                                                              |___/   |
-#   '----------------------------------------------------------------------'
-
-
-def discover_azure_virtual_machine_summary(section: Section) -> DiscoveryResult:
-    if len(section) > 1:
-        yield Service()
-
-
-def check_state(state: str, count: int, levels: VMSummaryParams) -> tuple[State, str]:
-    for result in check_levels_v1(
-        value=count,
-        levels_upper=levels.get(state, {}).get("levels"),
-        levels_lower=levels.get(state, {}).get("levels_lower"),
-        render_func=lambda x: str(int(x)),
-    ):
-        if result.state != State.OK:
-            summary = f"{count} {state} {result.summary.split(maxsplit=1)[1]}"
-            return result.state, summary
-
-        if count:
-            return State.OK, f"{count} {state}"
-
-    return State.OK, ""
-
-
-def get_status_result(
-    name: str, occurred_states: list[str], all_states: set[str], levels: VMSummaryParams
-) -> CheckResult:
-    state_results = [check_state(s, occurred_states.count(s), levels) for s in sorted(all_states)]
-
-    state = State.worst(*(s[0] for s in state_results))
-    summary = " / ".join(s[1] for s in state_results if s[1])
-    yield Result(state=state, summary=f"{name}: {summary}")
-
-
-def check_azure_virtual_machine_summary(
-    params: Mapping[str, VMSummaryParams], section: Section
-) -> CheckResult:
-    resources = section.values()
-    all_statuses = [dict(get_statuses(r)) for r in resources]
-
-    provisionings = [
-        s["ProvisioningState"].value if "ProvisioningState" in s else "unknown"
-        for s in all_statuses
-    ]
-    provisioning_levels = params.get("levels_provisioning", {})
-    provisioning_states = set(provisionings + list(_PROVISIONING_STATES))
-
-    yield from get_status_result(
-        "Provisioning", provisionings, provisioning_states, provisioning_levels
-    )
-
-    powers = [s["PowerState"].value if "PowerState" in s else "unknown" for s in all_statuses]
-    power_levels = params.get("levels_power", {})
-    power_states = set(powers + list(_POWER_STATES))
-
-    yield from get_status_result("Power states", powers, power_states, power_levels)
-
-    names = (r.name for r in resources)
-    for name, provisioning, power in sorted(zip(names, provisionings, powers)):
-        yield Result(state=State.OK, notice=f"{name}: Provisioning {provisioning}, VM {power}")
-
-
-check_plugin_azure_virtual_machine_summary = CheckPlugin(
-    name="azure_v2_virtual_machine_summary",
-    sections=["azure_v2_virtualmachines"],
-    service_name="VM Summary",
-    discovery_function=discover_azure_virtual_machine_summary,
-    check_function=check_azure_virtual_machine_summary,
-    check_ruleset_name="azure_v2_vms_summary",
-    check_default_parameters={
-        "levels_provisioning": {
-            "failed": {"levels": (1, 1)},
-        },
-        "levels_power": {
-            "unknown": {"levels": (1, 2)},
-        },
-    },
-)
-
-
-#   .--CPU Utilization-----------------------------------------------------.
-#   |    ____ ____  _   _   _   _ _   _ _ _          _   _                 |
-#   |   / ___|  _ \| | | | | | | | |_(_) (_)______ _| |_(_) ___  _ __      |
-#   |  | |   | |_) | | | | | | | | __| | | |_  / _` | __| |/ _ \| '_ \     |
-#   |  | |___|  __/| |_| | | |_| | |_| | | |/ / (_| | |_| | (_) | | | |    |
-#   |   \____|_|    \___/   \___/ \__|_|_|_/___\__,_|\__|_|\___/|_| |_|    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def discover_azure_vm_cpu_utilization(section: Section) -> DiscoveryResult:
-    if len(section) != 1:
-        return
-    resource = list(section.values())[0]
-
-    yield from create_discover_by_metrics_function("average_Percentage_CPU")(
-        {"CPU Utilization": resource}
-    )
+def discover_azure_vm_cpu_utilization(section: Resource) -> DiscoveryResult:
+    yield from create_discover_by_metrics_function_single("average_Percentage_CPU")(section)
 
 
 def check_azure_vm_cpu_utilization(
-    item: str, params: Mapping[str, tuple[float, float]], section: Section
+    params: Mapping[str, tuple[float, float]], section: Resource
 ) -> CheckResult:
     yield from create_check_metrics_function_single(
         [
@@ -265,10 +161,10 @@ def check_azure_vm_cpu_utilization(
 check_plugin_azure_vm_cpu_utilization = CheckPlugin(
     name="azure_v2_vm_cpu_utilization",
     sections=["azure_v2_virtualmachines"],
-    service_name="Azure/VM %s",
+    service_name="Azure/VM CPU utilization",
     discovery_function=discover_azure_vm_cpu_utilization,
     check_function=check_azure_vm_cpu_utilization,
-    check_ruleset_name="cpu_utilization_with_item",
+    check_ruleset_name="cpu_utilization",
     check_default_parameters={"levels": (65.0, 90.0)},
 )
 
@@ -284,7 +180,7 @@ check_plugin_azure_vm_cpu_utilization = CheckPlugin(
 
 
 def check_azure_vm_burst_cpu_credits(
-    params: Mapping[str, tuple[float, float]], section: Section
+    params: Mapping[str, tuple[float, float]], section: Resource
 ) -> CheckResult:
     yield from create_check_metrics_function_single(
         [
@@ -330,7 +226,7 @@ check_plugin_azure_vm_burst_cpu_credits = CheckPlugin(
 
 
 def check_azure_vm_memory(
-    params: Mapping[str, tuple[float, float]], section: Section
+    params: Mapping[str, tuple[float, float]], section: Resource
 ) -> CheckResult:
     yield from create_check_metrics_function_single(
         [
@@ -366,13 +262,10 @@ check_plugin_azure_vm_memory = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Section) -> CheckResult:
-    if len(section) != 1:
-        raise IgnoreResultsError("Only one resource expected")
-
-    resource = list(section.values())[0]
-
-    if (read_bytes := resource.metrics.get("total_Disk_Read_Bytes")) is not None:
+def check_azure_vm_disk(
+    params: Mapping[str, tuple[float, float]], section: Resource
+) -> CheckResult:
+    if (read_bytes := section.metrics.get("total_Disk_Read_Bytes")) is not None:
         yield from check_levels_v1(
             read_bytes.value / 60,
             levels_upper=params.get("disk_read"),
@@ -381,7 +274,7 @@ def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Sect
             render_func=render.iobandwidth,
         )
 
-    if (write_bytes := resource.metrics.get("total_Disk_Write_Bytes")) is not None:
+    if (write_bytes := section.metrics.get("total_Disk_Write_Bytes")) is not None:
         yield from check_levels_v1(
             write_bytes.value / 60,
             levels_upper=params.get("disk_write"),
@@ -390,7 +283,7 @@ def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Sect
             render_func=render.iobandwidth,
         )
 
-    if (read_ops := resource.metrics.get("average_Disk_Read_Operations/Sec")) is not None:
+    if (read_ops := section.metrics.get("average_Disk_Read_Operations/Sec")) is not None:
         yield from check_levels_v1(
             read_ops.value,
             levels_upper=params.get("disk_read_ios"),
@@ -399,7 +292,7 @@ def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Sect
             render_func=lambda x: f"{x:.2f}/s",
         )
 
-    if (write_ops := resource.metrics.get("average_Disk_Write_Operations/Sec")) is not None:
+    if (write_ops := section.metrics.get("average_Disk_Write_Operations/Sec")) is not None:
         yield from check_levels_v1(
             write_ops.value,
             levels_upper=params.get("disk_write_ios"),
@@ -435,28 +328,20 @@ check_plugin_azure_vm_disk = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_azure_vm_network_io(section: Section) -> DiscoveryResult:
-    if len(section) != 1:
-        return
-    resource = list(section.values())[0]
-
+def discover_azure_vm_network_io(section: Resource) -> DiscoveryResult:
     yield from create_discover_by_metrics_function(
         "total_Network_In_Total", "total_Network_Out_Total"
-    )({"Network IO": resource})
+    )({"Network IO": section})
 
 
 def check_azure_vm_network_io(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: Resource
 ) -> CheckResult:
-    if len(section) != 1:
-        raise IgnoreResultsError("Only one resource expected")
-
-    resource = list(section.values())[0]
     in_octets = None
-    if (In_Total := resource.metrics.get("total_Network_In_Total")) is not None:
+    if (In_Total := section.metrics.get("total_Network_In_Total")) is not None:
         in_octets = In_Total.value / 60
     out_octets = None
-    if (Out_Total := resource.metrics.get("total_Network_Out_Total")) is not None:
+    if (Out_Total := section.metrics.get("total_Network_Out_Total")) is not None:
         out_octets = Out_Total.value / 60
     interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
         interfaces.InterfaceWithRates(

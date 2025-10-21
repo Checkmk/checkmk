@@ -2,6 +2,9 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="deprecated"
+
 """
 Module for definitions and functions which are used by both the special_agent/agent_kube and
 the utils_kubernetes/performance

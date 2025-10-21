@@ -18,23 +18,34 @@ import type {
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
-import { generateWidgetProps } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { WidgetSpec } from '@/dashboard-wip/types/widget'
+import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
-import { type UseAdditionalOptionsReferences, useAdditionalOptions } from './useAdditionalOptions'
+import {
+  type UseGraphRenderOptions,
+  useGraphRenderOptions
+} from '../../../composables/useGraphRenderOptions.ts'
 
 const { _t } = usei18n()
 
 export interface UseGraph
   extends UseWidgetHandler,
-    UseAdditionalOptionsReferences,
+    UseGraphRenderOptions,
     UseWidgetVisualizationOptions {
-  //Data settings
   timeRange: Ref<GraphTimerange>
 }
 
-export const useGraph = (metric: string, filters: ConfiguredFilters): UseGraph => {
+export const useGraph = async (
+  metric: string,
+  filters: ConfiguredFilters,
+  dashboardConstants: DashboardConstants,
+  currentSpec?: WidgetSpec | null
+): Promise<UseGraph> => {
+  const currentContent = currentSpec?.content as GraphContent
+
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
 
   const {
@@ -46,8 +57,8 @@ export const useGraph = (metric: string, filters: ConfiguredFilters): UseGraph =
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    generateTitleSpec
-  } = useWidgetVisualizationProps(metric)
+    widgetGeneralSettings
+  } = useWidgetVisualizationProps(metric, currentSpec?.general_settings)
 
   const {
     horizontalAxis,
@@ -61,54 +72,50 @@ export const useGraph = (metric: string, filters: ConfiguredFilters): UseGraph =
     graphLegend,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange
-  } = useAdditionalOptions()
+    dontFollowTimerange,
+    graphRenderOptions
+  } = useGraphRenderOptions(currentContent?.graph_render_options)
+
+  const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()
   }
 
-  const _generateWidgetProps = (): WidgetProps => {
-    const content: GraphContent = {
+  const _generateContent = (): GraphContent => {
+    return {
       type: 'single_timeseries',
       metric,
       timerange: generateTimeRangeSpec(),
+      graph_render_options: graphRenderOptions.value,
 
       //TODO: this should map to color reference
       color: 'default_theme'
     }
-    return generateWidgetProps(generateTitleSpec(), content, filters)
   }
 
-  const widgetProps = ref<WidgetProps>(_generateWidgetProps())
+  const _updateWidgetProps = async () => {
+    const content = _generateContent()
+    widgetProps.value = {
+      general_settings: widgetGeneralSettings.value,
+      content,
+      effective_filter_context: await determineWidgetEffectiveFilterContext(
+        content,
+        filters,
+        dashboardConstants
+      )
+    }
+  }
 
   watch(
-    [
-      timeRange,
-      title,
-      showTitle,
-      showTitleBackground,
-      showWidgetBackground,
-      titleUrlEnabled,
-      titleUrl,
-      horizontalAxis,
-      verticalAxis,
-      verticalAxisWidthMode,
-      fixedVerticalAxisWidth,
-      fontSize,
-      color,
-      timestamp,
-      roundMargin,
-      graphLegend,
-      clickToPlacePin,
-      showBurgerMenu,
-      dontFollowTimerange
-    ],
+    [timeRange, widgetGeneralSettings, graphRenderOptions],
     useDebounceFn(() => {
-      widgetProps.value = _generateWidgetProps()
+      void _updateWidgetProps()
     }, 300),
     { deep: true }
   )
+
+  await _updateWidgetProps()
 
   return {
     timeRange,
@@ -136,6 +143,6 @@ export const useGraph = (metric: string, filters: ConfiguredFilters): UseGraph =
     showBurgerMenu,
     dontFollowTimerange,
 
-    widgetProps
+    widgetProps: widgetProps as Ref<WidgetProps>
   }
 }

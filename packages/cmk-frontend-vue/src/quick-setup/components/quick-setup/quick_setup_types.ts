@@ -5,10 +5,12 @@
  */
 import type { Ref, VNode } from 'vue'
 
+import type { SimpleIcons } from '@/components/CmkIcon'
+
 import type { WizardMode } from './useWizard'
 
 export interface QuickSetupStageActionIcon {
-  name?: string | undefined
+  name?: SimpleIcons | undefined
   rotate?: number | undefined
 }
 

@@ -6,6 +6,15 @@
 Special agent for monitoring Amazon web services (AWS) with Check_MK.
 """
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 # TODO: Using BaseClient all over the place is wrong and leads to the tons of ignore[attr-defined]
 # suppressions below. The code and types have to be restructured to use the right subclass of
 # BaseClient for the client in question.
@@ -60,7 +69,6 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import (
     DataCache,
     datetime_serializer,
-    get_seconds_since_midnight,
     vcrtrace,
 )
 from cmk.utils.password_store import lookup as password_store_lookup
@@ -284,6 +292,11 @@ TagsOption = str | Literal[TagsImportPatternOption.ignore_all, TagsImportPattern
 # '-- ElastiCacheSummary
 #     |
 #     '-- ElastiCache
+
+
+def get_seconds_since_midnight(current_time: datetime) -> float:
+    midnight = datetime.combine(current_time.date(), datetime.min.time())
+    return (current_time - midnight).total_seconds()
 
 
 class AWSConfig:
@@ -910,7 +923,7 @@ class AWSSection(DataCache):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         pass
 
-    def _get_response_content(self, response, key: str, dflt=None):  # type: ignore[no-untyped-def]
+    def _get_response_content(self, response, key: str, dflt=None):
         if dflt is None:
             dflt = []
         try:

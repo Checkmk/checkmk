@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
 # storageControllerHealth<TAB>dn
 # sys/rack-unit-1/board/storage-SAS-SLOT-HBA/vd-0 <TAB>id SLOT-HBA<TAB>health Good

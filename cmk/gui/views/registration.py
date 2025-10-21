@@ -61,11 +61,11 @@ def register(
 
     page_registry.register(
         PageEndpoint(
-            "ajax_cascading_render_painer_parameters", PageAjaxCascadingRenderPainterParameters
+            "ajax_cascading_render_painer_parameters", PageAjaxCascadingRenderPainterParameters()
         )
     )
-    page_registry.register(PageEndpoint("ajax_reschedule", PageRescheduleCheck))
-    page_registry.register(PageEndpoint("ajax_initial_view_filters", AjaxInitialViewFilters))
+    page_registry.register(PageEndpoint("ajax_reschedule", PageRescheduleCheck()))
+    page_registry.register(PageEndpoint("ajax_initial_view_filters", AjaxInitialViewFilters()))
     page_registry.register(
         PageEndpoint(
             "view", partial(page_show_view, page_menu_dropdowns_callback=lambda x, y, z: None)

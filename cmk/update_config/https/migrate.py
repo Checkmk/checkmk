@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="possibly-undefined"
+
 """
 *Known Limitations*
 
@@ -33,7 +37,12 @@ from cmk.update_config.https.conflict_options import (
     CantPostData,
     V2ChecksCertificates,
 )
-from cmk.update_config.https.conflicts import ForMigration, MigratableCert, MigratableUrl
+from cmk.update_config.https.conflicts import (
+    ForMigration,
+    MigratableCert,
+    MigratableUrl,
+    validate_virthost,
+)
 from cmk.update_config.https.render import MIGRATE_POSTFIX
 
 
@@ -57,6 +66,7 @@ def _migrate_url_params(
     cant_post_data: CantPostData,
     url_params: MigratableUrl,
     address_family: str,
+    host_header_value: str | None,
 ) -> tuple[dict[str, object], Mapping[str, object]]:
     match url_params.ssl:
         case None:
@@ -85,10 +95,20 @@ def _migrate_url_params(
             user_agent: Mapping[str, object] = {}
         case agent:
             user_agent = {"user_agent": agent}
-    match url_params.migrate_add_headers():
-        case None:
+    match url_params.migrate_add_headers(), host_header_value:
+        case None, None:
             add_headers: Mapping[str, object] = {}
-        case headers:
+        case None, str(header_value):
+            add_headers = {"add_headers": [{"header_name": "Host", "header_value": header_value}]}
+        case list(headers), str(header_value) if all(
+            header["header_name"].lower() != "host" for header in headers
+        ):
+            # v1 ignores virtual host completely, if there is a Host header already present. So, we
+            # mirror this behaviour here.
+            add_headers = {
+                "add_headers": headers + [{"header_name": "Host", "header_value": header_value}]
+            }
+        case list(headers), _:
             add_headers = {"add_headers": headers}
     match url_params.auth:
         case None:
@@ -202,12 +222,17 @@ def _migrate_url_params(
 
 
 def _migrate_cert_params(
-    cert_params: MigratableCert, address_family: str
+    cert_params: MigratableCert, address_family: str, host_header_value: str | None
 ) -> tuple[dict[str, object], Mapping[str, object]]:
     return (
         {
             "method": ("get", None),
             "address_family": address_family,
+            **(
+                {}
+                if host_header_value is None
+                else {"add_headers": [{"header_name": "Host", "header_value": host_header_value}]}
+            ),
         },
         {
             "cert": ("validate", cert_params.cert_days),
@@ -235,8 +260,16 @@ def migrate(for_migration: ForMigration) -> Mapping[str, object]:
             address_family = "primary"
         case None:
             address_family = "any"
+    # We omitted the host name from the url, so we should pass it via the headers.
+    host_header_value = (
+        value.host.virthost
+        if value.host.virthost and not validate_virthost(value.host.virthost)
+        else None
+    )
     if isinstance(value.mode[1], MigratableCert):
-        connection, remaining_settings = _migrate_cert_params(value.mode[1], address_family)
+        connection, remaining_settings = _migrate_cert_params(
+            value.mode[1], address_family, host_header_value
+        )
     else:
         connection, remaining_settings = _migrate_url_params(
             for_migration.config.v2_checks_certificates,
@@ -244,6 +277,7 @@ def migrate(for_migration: ForMigration) -> Mapping[str, object]:
             for_migration.config.cant_post_data,
             value.mode[1],
             address_family,
+            host_header_value,
         )
     if value.host.address is None:
         server = "$HOSTADDRESS$"

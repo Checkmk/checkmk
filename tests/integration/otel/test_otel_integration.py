@@ -2,8 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
+
 import logging
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
+from typing import Literal
 
 import pytest
 import yaml
@@ -38,6 +43,10 @@ pytestmark = pytest.mark.skip_if_not_edition("cloud", "managed")
 
 logger = logging.getLogger(__name__)
 
+DUMMY_USERNAME = "dummyuser"
+DUMMY_PASSWORD_ID = "dummypasswordid"
+PASSWORD_ID = "otel_test_password_id"
+
 GRPC_CONFIG = {
     "endpoint": {
         "address": "0.0.0.0",
@@ -55,13 +64,39 @@ GRPC_CONFIG = {
     }
 }
 
-HTTP_CONFIG = {
+HTTP_CONFIG_SINGLE_PASSWORD = {
     "endpoint": {
         "address": "127.0.0.1",
         "auth": {
             "type": "basicauth",
             "userlist": [
-                {"username": USERNAME, "password": {"type": "explicit", "value": PASSWORD}}
+                {"username": USERNAME, "password": {"type": "store", "value": PASSWORD_ID}},
+            ],
+        },
+        "export_to_syslog": False,
+        "host_name_rules": [
+            [{"type": "key", "value": "cmk.test.attribute"}],
+            [{"type": "free", "value": "fallback_host"}],
+        ],
+        "encryption": False,
+        "port": HTTP_PORT,
+    }
+}
+
+
+HTTP_CONFIG_MULTIPLE_PASSWORDS = {
+    "endpoint": {
+        "address": "127.0.0.1",
+        "auth": {
+            "type": "basicauth",
+            "userlist": [
+                # To test definition of multiple credentials, although only one is actually
+                # used for authentication
+                {
+                    "username": DUMMY_USERNAME,
+                    "password": {"type": "store", "value": DUMMY_PASSWORD_ID},
+                },
+                {"username": USERNAME, "password": {"type": "store", "value": PASSWORD_ID}},
             ],
         },
         "export_to_syslog": False,
@@ -93,10 +128,15 @@ def delete_created_objects(
     host_name: str | None = None,
     rule_id: str | None = None,
     cleanup_ec: bool = False,
+    collector_type: Literal["receivers", "prom_scrape"] = "receivers",
+    password_ids: Sequence[str] | None = None,
 ) -> None:
     if is_cleanup_enabled():
         logger.info("Cleaning up created resources")
-        site.openapi.otel_collector.delete(collector_id)
+        if collector_type == "prom_scrape":
+            site.openapi.otel_collector.delete_prom_scrape(collector_id)
+        else:
+            site.openapi.otel_collector.delete_receivers(collector_id)
         if host_name:
             site.openapi.hosts.delete(host_name)
         if rule_id:
@@ -104,7 +144,10 @@ def delete_created_objects(
         if cleanup_ec:
             _write_ec_rule(site, None)
             _activate_ec_changes(site)
-            site.openapi.event_console.archive_events_by_params({"phase": "open"})
+        if password_ids is not None:
+            for pwd_id in password_ids:
+                if site.openapi.passwords.exists(pwd_id):
+                    site.openapi.passwords.delete(pwd_id)
         site.openapi.changes.activate_and_wait_for_completion()
         delete_opentelemetry_data(site)
 
@@ -122,7 +165,7 @@ def delete_created_objects(
         ),
         pytest.param(
             "http",
-            HTTP_CONFIG,
+            HTTP_CONFIG_MULTIPLE_PASSWORDS,
             ScriptFileName.OTEL_HTTP,
             "fallback_host",
             HTTP_METRIC_NAME,
@@ -161,12 +204,22 @@ def test_otel_collector_with_receiver_config(
     try:
         if receiver_type == "grpc":
             logger.info("Creating OpenTelemetry collector with GRPC receiver")
-            otel_enabled_site.openapi.otel_collector.create(
+            otel_enabled_site.openapi.otel_collector.create_receivers(
                 collector_id, "Test collector", False, receiver_protocol_grpc=receiver_config
             )
         elif receiver_type == "http":
+            logger.info("Setting up passwords for OTel HTTP receiver authentication")
+            otel_enabled_site.openapi.passwords.create(
+                PASSWORD_ID, "OTel test password", "test comment", PASSWORD
+            )
+            # not used for authentication, just to test multiple credentials definition in
+            # collector configuration
+            otel_enabled_site.openapi.passwords.create(
+                DUMMY_PASSWORD_ID, "OTel dummy test password", "test comment", "dummy password"
+            )
+
             logger.info("Creating OpenTelemetry collector with HTTP receiver")
-            otel_enabled_site.openapi.otel_collector.create(
+            otel_enabled_site.openapi.otel_collector.create_receivers(
                 collector_id, "Test collector", False, receiver_protocol_http=receiver_config
             )
         else:
@@ -214,7 +267,20 @@ def test_otel_collector_with_receiver_config(
             assert otel_service_name in services, "OTel service was not found in host services"
             assert services[otel_service_name].state == 0, "OTel service is not in OK or PEND state"
     finally:
-        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
+        if receiver_type == "http":
+            delete_created_objects(
+                otel_enabled_site,
+                collector_id,
+                host_name,
+                rule_id,
+                False,
+                collector_type="receivers",
+                password_ids=[PASSWORD_ID, DUMMY_PASSWORD_ID],
+            )
+        else:
+            delete_created_objects(
+                otel_enabled_site, collector_id, host_name, rule_id, collector_type="receivers"
+            )
 
 
 def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -> None:
@@ -242,7 +308,7 @@ def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -
 
     try:
         logger.info("Creating OpenTelemetry collector with Prometheus scrape configuration")
-        otel_enabled_site.openapi.otel_collector.create(
+        otel_enabled_site.openapi.otel_collector.create_prom_scrape(
             collector_id,
             "Test collector",
             False,
@@ -286,7 +352,9 @@ def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -
                 if service_name.startswith("OTel metric "):
                     assert service.state == 0, f"Service {service_name} is not in OK or PEND state"
     finally:
-        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
+        delete_created_objects(
+            otel_enabled_site, collector_id, host_name, rule_id, collector_type="prom_scrape"
+        )
 
 
 def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Site) -> None:
@@ -314,7 +382,7 @@ def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Sit
 
     try:
         logger.info("Creating OpenTelemetry collector with Prometheus scrape configuration")
-        otel_enabled_site.openapi.otel_collector.create(
+        otel_enabled_site.openapi.otel_collector.create_prom_scrape(
             collector_id,
             "Test collector",
             False,
@@ -365,7 +433,9 @@ def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Sit
                 if service_name.startswith("OTel metric "):
                     assert service.state == 0, f"Service {service_name} is not in OK or PEND state"
     finally:
-        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
+        delete_created_objects(
+            otel_enabled_site, collector_id, host_name, rule_id, collector_type="prom_scrape"
+        )
 
 
 def wait_for_event_console_events(
@@ -394,14 +464,19 @@ def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
     expected_event_count = len(expected_log_levels)
 
     # Use existing config and enable syslog export
-    receiver_config = HTTP_CONFIG.copy()
+    receiver_config = HTTP_CONFIG_SINGLE_PASSWORD.copy()
     receiver_config["endpoint"]["export_to_syslog"] = True
 
     try:
+        logger.info("Setting up password for OTel HTTP receiver authentication")
+        otel_enabled_site.openapi.passwords.create(
+            PASSWORD_ID, "OTel test password", "test comment", PASSWORD
+        )
+
         logger.info(
             "Creating OpenTelemetry collector with 'Send log messages to EC' option enabled"
         )
-        otel_enabled_site.openapi.otel_collector.create(
+        otel_enabled_site.openapi.otel_collector.create_receivers(
             collector_id, "Test collector", False, receiver_protocol_http=receiver_config
         )
         otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
@@ -422,7 +497,7 @@ def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
 
             for i, event in enumerate(events):
                 expected_log_level, expected_state = expected_log_levels[i]
-                expected_log_text = HTTP_LOG_TEXT % (expected_log_level, 0)
+                expected_log_text = HTTP_LOG_TEXT.replace("\n", "") % (expected_log_level, 0)
                 assert event["extensions"]["text"] == expected_log_text, (
                     f"Unexpected log text for event #{i}: {event['extensions']['text']}. "
                     f"Expected: {expected_log_text}"
@@ -433,4 +508,10 @@ def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
                 )
 
     finally:
-        delete_created_objects(otel_enabled_site, collector_id, cleanup_ec=True)
+        delete_created_objects(
+            otel_enabled_site,
+            collector_id,
+            cleanup_ec=True,
+            collector_type="receivers",
+            password_ids=[PASSWORD_ID],
+        )

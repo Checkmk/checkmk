@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-azx0Bj20In+jJLicnd5FTrWCVY6iq3PJQFdLwIAfZ8g=",
+  "strip_prefix": "clickhouse-common-static-25.9.3.48",
+  "url": "https://github.com/ClickHouse/ClickHouse/releases/download/v25.9.3.48-stable/clickhouse-common-static-25.9.3.48-amd64.tgz",
+  "overlay": {
+    "BUILD.bazel": "sha256-e+n5FLzIzrpJm/CskshBRDg9vX8cBnqWcVUxvnpZZu0=",
+    "MODULE.bazel": "sha256-EGUQvcSWthsf78Cm5CWnvBHQNIqbSXFUU3yz+SeIdQY="
+  }
+}

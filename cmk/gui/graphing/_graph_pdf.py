@@ -4,6 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Render graphs in PDF. Is also used for PNG image rendering."""
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="unreachable"
+
 from collections.abc import Sequence
 from typing import TypeGuard
 

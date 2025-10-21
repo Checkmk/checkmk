@@ -38,7 +38,9 @@ export class FigureBase {
     const typeMap: Record<string, string> = {
       event_stats: 'eventstats',
       host_stats: 'hoststats',
-      service_stats: 'servicestats'
+      service_stats: 'servicestats',
+      host_state: 'state_host',
+      service_state: 'state_service'
     }
     function newToLegacyType(newType: string): string {
       if (newType in typeMap && typeMap[newType]) {

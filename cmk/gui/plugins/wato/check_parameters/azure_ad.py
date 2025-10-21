@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -36,19 +38,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         parameter_valuespec=_parameter_valuespec_azure_ad,
         title=lambda: _("Azure AD Connect (deprecated)"),
-        item_spec=lambda: TextInput(title=_("Accounts display name")),
-    )
-)
-
-
-# TODO: migrate and move to new folder struct
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="azure_v2_ad",
-        match_type="dict",
-        group=RulespecGroupCheckParametersNetworking,
-        parameter_valuespec=_parameter_valuespec_azure_ad,
-        title=lambda: _("Azure AD Connect"),
         item_spec=lambda: TextInput(title=_("Accounts display name")),
     )
 )

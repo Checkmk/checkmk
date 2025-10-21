@@ -8,14 +8,14 @@ from collections.abc import Mapping, Sequence
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.gui.config import active_config
-from cmk.gui.graphing import get_first_matching_perfometer
-from cmk.gui.graphing._from_api import RegisteredMetric
-from cmk.gui.graphing._translated_metrics import (
+from cmk.gui.graphing import (
+    get_first_matching_perfometer,
+    get_temperature_unit,
     parse_perf_data,
+    RegisteredMetric,
     translate_metrics,
     TranslatedMetric,
 )
-from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

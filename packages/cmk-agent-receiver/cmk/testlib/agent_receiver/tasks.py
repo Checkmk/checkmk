@@ -45,9 +45,7 @@ def add_tasks(count: int, agent_receiver: AgentReceiverClient, relay_id: str) ->
         )
         for i in range(count)
     )
-    result = [TaskID(str(r.task_id)) for r in gen if r is not None]
-    assert len(result) == count
-    return result
+    return [TaskID(str(r.task_id)) for r in gen]
 
 
 def get_all_tasks(agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskResponse]:

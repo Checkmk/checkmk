@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 """Add a visual to other visuals (dashboard, report)"""
 
 import re
@@ -90,7 +92,7 @@ def page_menu_dropdown_add_to_visual(
     for visual_type_class in visual_type_registry.values():
         visual_type = visual_type_class()
 
-        entries = list(visual_type.page_menu_add_to_entries(add_type))
+        entries = list(visual_type.page_menu_add_to_entries(add_type, user_permissions))
         if not entries:
             continue
 
@@ -174,6 +176,7 @@ def ajax_add_visual(config: Config) -> None:
         element_type,
         create_info.context,
         create_info.params,
+        UserPermissions.from_config(config, permission_registry),
     )
 
 
@@ -219,18 +222,22 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
 
 def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:
     return get_visual_choices(
-        visual_type="dashboards",
+        visual_type_name="dashboards",
         value=value,
+        user_permissions=UserPermissions.from_config(config, permission_registry),
     )
 
 
-def get_visual_choices(visual_type: str, value: str) -> Choices:
+def get_visual_choices(
+    visual_type_name: str, value: str, user_permissions: UserPermissions
+) -> Choices:
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_visuals = []
-    for name, content in sorted(visual_type_registry[f"{visual_type}"]().permitted_visuals.items()):
-        if match_pattern.search(content["title"]) is not None:
-            matching_visuals.append((name, f"{content['title']} ({name})"))
+    visual_type = visual_type_registry[visual_type_name]()
+    for name, title in sorted(visual_type.choices(visual_type.visuals(), user_permissions)):
+        if match_pattern.search(title) is not None:
+            matching_visuals.append((name, f"{title} ({name})"))
     return matching_visuals
 
 

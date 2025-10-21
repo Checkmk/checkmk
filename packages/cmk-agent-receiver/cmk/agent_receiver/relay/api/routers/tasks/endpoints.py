@@ -31,6 +31,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
     TaskListResponseSerializer,
     TaskResponseSerializer,
 )
+from cmk.agent_receiver.relay.lib.check_relay import check_relay
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial, TaskID
 from cmk.relay_protocols import tasks as tasks_protocol
@@ -46,6 +47,7 @@ router = fastapi.APIRouter()
     responses={
         200: {"model": tasks_protocol.TaskCreateResponse},
     },
+    dependencies=[fastapi.Depends(check_relay)],
 )
 async def create_task_endpoint(
     relay_id: str,
@@ -96,13 +98,13 @@ async def create_task_endpoint(
     responses={
         202: {"model": tasks_protocol.TaskResponse},
     },
+    dependencies=[fastapi.Depends(check_relay)],
 )
 async def update_task(
     relay_id: str,
     task_id: str,
     request: tasks_protocol.TaskUpdateRequest,
     handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
-    relay_serial: Annotated[str, fastapi.Header(alias=SERIAL_HEADER)],
 ) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 
@@ -134,7 +136,6 @@ async def update_task(
                 task_id=TaskID(task_id),
                 result_type=ResultType(request.result_type.value),
                 result_payload=request.result_payload,
-                relay_serial=Serial(relay_serial),
             )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
@@ -144,10 +145,12 @@ async def update_task(
     return TaskResponseSerializer.serialize(updated_task)
 
 
-@router.get("/{relay_id}/tasks")
+# TODO try to use dependency to check the serial mismatch
+@router.get("/{relay_id}/tasks", dependencies=[fastapi.Depends(check_relay)])
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
+    relay_serial: Annotated[str, fastapi.Header(alias=SERIAL_HEADER)],
     status: tasks_protocol.TaskStatus | None = fastapi.Query(
         None, description="Filter tasks by status"
     ),
@@ -172,7 +175,11 @@ async def get_tasks_endpoint(
         - Expired tasks are automatically removed
     """
     try:
-        tasks = handler.process(RelayID(relay_id), TaskStatus(status.value) if status else None)
+        tasks = handler.process(
+            RelayID(relay_id),
+            TaskStatus(status.value) if status else None,
+            relay_serial=Serial(relay_serial),
+        )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
@@ -181,7 +188,7 @@ async def get_tasks_endpoint(
     return TaskListResponseSerializer.serialize(tasks)
 
 
-@router.get("/{relay_id}/tasks/{task_id}")
+@router.get("/{relay_id}/tasks/{task_id}", dependencies=[fastapi.Depends(check_relay)])
 async def get_task_endpoint(
     relay_id: str,
     task_id: str,

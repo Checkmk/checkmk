@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import abc
 from collections.abc import Collection, Iterable
-from typing import final
 
 from cmk.ccc.resulttype import Error, Result
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -15,8 +16,9 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
+from cmk.gui.main_menu_types import MainMenu
 from cmk.gui.page_menu import PageMenu
-from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.main_menu import main_module_registry
@@ -41,24 +43,12 @@ class WatoMode[RequestOK](abc.ABC):
         for each permission in the list."""
         raise NotImplementedError()
 
-    @final
-    @classmethod
-    def _ensure_static_permissions(cls) -> None:
-        permissions = cls.static_permissions()
-        if permissions is None:
-            permissions = []
-        else:
-            user.need_permission("wato.use")
-        if transactions.is_transaction():
-            user.need_permission("wato.edit")
-        elif user.may("wato.seeall"):
-            permissions = []
-        for pname in permissions:
-            user.need_permission(pname if "." in pname else ("wato." + pname))
-
     def ensure_permissions(self) -> None:
         """Overwrite this method to additionally check request-specific permissions if needed."""
-        self._ensure_static_permissions()
+        ensure_static_permissions(
+            self.static_permissions(),
+            transactions.is_transaction(),
+        )
 
     @classmethod
     @abc.abstractmethod
@@ -177,3 +167,19 @@ class WatoMode[RequestOK](abc.ABC):
 
     def handle_page(self, config: Config) -> None:
         return self.page(config)
+
+
+def ensure_static_permissions(
+    permissions: Iterable[PermissionName] | None,
+    need_modification_permission: bool,
+) -> None:
+    if permissions is None:
+        permissions = []
+    else:
+        user.need_permission("wato.use")
+    if need_modification_permission:
+        user.need_permission("wato.edit")
+    elif user.may("wato.seeall"):
+        permissions = []
+    for pname in permissions:
+        user.need_permission(pname if "." in pname else ("wato." + pname))

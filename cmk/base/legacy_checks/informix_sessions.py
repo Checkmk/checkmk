@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # TODO WATO
 
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
 check_info = {}
 
@@ -34,15 +36,8 @@ def check_informix_sessions(item, params, parsed):
     if item in parsed:
         sessions = int(parsed[item])
         warn, crit = params["levels"]
-        state = 0
-        infotext = "%s sessions" % sessions
-        if sessions >= crit:
-            state = 2
-        elif sessions >= warn:
-            state = 0
-        if state:
-            infotext += f" (warn/crit at {warn}/{crit})"
-        return state, infotext, [("sessions", sessions)]
+
+        return check_levels(sessions, "sessions", (warn, crit), infoname="Sessions")
     return None
 
 

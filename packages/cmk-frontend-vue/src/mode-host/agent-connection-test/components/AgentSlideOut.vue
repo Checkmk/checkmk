@@ -12,14 +12,11 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkTab from '@/components/CmkTabs/CmkTab.vue'
-import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
-import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
-import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
+import CmkLinkCard from '@/components/CmkLinkCard'
+import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
+import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
@@ -44,7 +41,7 @@ export interface InstallUrl {
   title: TranslatedString
   url: string
   msg: TranslatedString
-  icon?: string
+  icon?: SimpleIcons
 }
 
 const props = defineProps<{

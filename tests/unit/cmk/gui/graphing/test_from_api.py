@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 from collections import Counter
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -84,6 +86,8 @@ def _collect_metric_names_from_quantity(
         case metrics_api.Fraction():
             yield from _collect_metric_names_from_quantity(quantity.dividend)
             yield from _collect_metric_names_from_quantity(quantity.divisor)
+        case _:
+            pass  # TODO: Hmmmm...
 
 
 def _collect_metric_names_from_perfometer(
@@ -187,6 +191,8 @@ class _MetricNamesInModule:
                         _collect_metric_names_from_graph(plugin.upper)
                     ),
                 )
+            case _:
+                pass
 
 
 @pytest.mark.parametrize(
@@ -323,10 +329,16 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
         # we cannot have sub-modules below the cee folder, so we have to allow the following violations
         # in cmk.cee.robotmk, the module layout of the metric etc. defintions is correct
         "cmk.plugins.robotmk.graphing.cee",
-        "cmk.plugins.podman.graphing.cee",
+        "cmk.plugins.azure_v2.graphing.cce",
     }
 )
 
+_CCE_ALLOWED_DUPLICATES = {
+    "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
+    "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
+    "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
+    "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
+}
 
 _ALLOWED_DUPLICATES = {
     "Active": {"docker_active", "mem_lnx_active"},
@@ -340,9 +352,6 @@ _ALLOWED_DUPLICATES = {
     "Allocated space": {"mem_lnx_vmalloc_used", "allocated_size"},
     "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
     "Average usage": {"aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"},
-    "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
-    "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
-    "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
     "Cluster utilization": {
         "kube_cpu_cluster_allocatable_utilization",
         "kube_memory_cluster_allocatable_utilization",
@@ -362,7 +371,6 @@ _ALLOWED_DUPLICATES = {
         "aws_dynamodb_maximum_consumed_rcu",
     },
     "Memory used": {"memused_couchbase_bucket", "memory_used"},
-    "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
     "Minimum single-request consumption": {
         "aws_dynamodb_minimum_consumed_rcu",
         "aws_dynamodb_minimum_consumed_wcu",
@@ -402,6 +410,9 @@ _ALLOWED_DUPLICATES = {
     "Write latency": {"write_latency", "db_write_latency_s"},
     "Write operations": {"write_ops_s", "disk_write_ios"},
 }
+
+if edition(omd_root) not in (Edition.CRE, Edition.CEE):
+    _ALLOWED_DUPLICATES.update(_CCE_ALLOWED_DUPLICATES)
 
 
 def test_duplicate_metric_titles() -> None:

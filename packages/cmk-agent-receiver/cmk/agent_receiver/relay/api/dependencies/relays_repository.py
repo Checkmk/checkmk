@@ -8,4 +8,4 @@ from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 def get_relays_repository() -> RelaysRepository:
     config = get_config()
-    return RelaysRepository.from_site(config.site_url, config.site_name)
+    return RelaysRepository.from_site(config.site_url, config.site_name, config.helper_config_dir)

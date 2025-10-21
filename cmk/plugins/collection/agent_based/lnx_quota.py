@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="type-arg"
+
 # [[[usr:/home]]]
 # root      -- 62743228       0       0      0  137561     0     0      0
 # proxy     --   288648       0       0      0   14370     0     0      0

@@ -11,16 +11,22 @@ from cmk.gui.type_defs import HTTPVariables
 
 
 @dataclass
-class WelcomeUrl:
+class WelcomeCardUrl:
     id: str
     vars: HTTPVariables
     filename: str
 
 
-class WelcomeUrlRegistry(Registry[WelcomeUrl]):
+@dataclass
+class WelcomeCardCallback:
+    id: str
+    callback_id: str
+
+
+class WelcomeCardRegistry(Registry[WelcomeCardUrl | WelcomeCardCallback]):
     @override
-    def plugin_name(self, instance: WelcomeUrl) -> str:
+    def plugin_name(self, instance: WelcomeCardUrl | WelcomeCardCallback) -> str:
         return instance.id
 
 
-welcome_url_registry = WelcomeUrlRegistry()
+welcome_card_registry = WelcomeCardRegistry()

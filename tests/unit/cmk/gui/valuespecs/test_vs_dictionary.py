@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
 
 import pytest
 
@@ -51,7 +53,7 @@ class TestValueSpecDictionary:
             vs.Dictionary(elements=_test_elements(), ignored_keys=["z"]), {"z": "z"}
         )
 
-        expect_validate_failure(vs.Dictionary(elements=_test_elements()), ["a", "b"])  # type: ignore[misc]
+        expect_validate_failure(vs.Dictionary(elements=_test_elements()), ["a", "b"])
 
         # required_keys do what you would expect
         expect_validate_success(

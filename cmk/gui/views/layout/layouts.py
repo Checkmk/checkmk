@@ -3,10 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 import abc
 import re
-from collections.abc import Hashable, Iterator, Sequence
-from functools import partial
+from collections.abc import Callable, Hashable, Iterator, Sequence
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -15,7 +20,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.exporter import output_csv_headers
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell, EmptyCell
@@ -23,7 +28,9 @@ from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
+from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec, VisualLinkSpec
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visual_link import render_link_to_view
 
 from .base import Layout
@@ -94,8 +101,10 @@ class LayoutSingleDataset(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = make_link_renderer(request, user_permissions)
+
         html.open_table(class_="data single")
         rownum = 0
         odd = "odd"
@@ -140,6 +149,7 @@ class GroupedBoxesLayout(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         # N columns. Each should contain approx the same number of entries
         groups: list[tuple[Hashable, list[tuple[str, Row]]]] = []
@@ -179,7 +189,9 @@ class GroupedBoxesLayout(Layout):
         for column in columns:
             html.open_td(class_="boxcolumn")
             for _header, rows_with_ids in column:
-                self._render_group(rows_with_ids, view, group_cells, cells, show_checkboxes)
+                self._render_group(
+                    rows_with_ids, view, group_cells, cells, show_checkboxes, user_permissions
+                )
             html.close_td()
         html.close_tr()
         html.close_table()
@@ -191,9 +203,10 @@ class GroupedBoxesLayout(Layout):
         group_cells: Sequence[Cell],
         cells: Sequence[Cell],
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         if group_cells:
-            self._show_group_header_table(group_cells, rows_with_ids[0][1])
+            self._show_group_header_table(group_cells, rows_with_ids[0][1], user_permissions)
 
         html.open_table(class_="data table")
         odd = "odd"
@@ -206,6 +219,7 @@ class GroupedBoxesLayout(Layout):
             rows_with_ids, row_group_cells=None
         )
 
+        link_renderer = make_link_renderer(request, user_permissions)
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
         for index, row in rows_with_ids:
@@ -231,7 +245,7 @@ class GroupedBoxesLayout(Layout):
 
             css_classes = []
 
-            if is_stale(row, config=active_config):
+            if is_stale(row, active_config.staleness_threshold):
                 css_classes.append("stale")
 
             hide = ""
@@ -252,7 +266,6 @@ class GroupedBoxesLayout(Layout):
             if show_checkboxes:
                 render_checkbox_td(view, row, num_cells)
 
-            link_renderer = partial(render_link_to_view, request=request)
             for cell in cells:
                 cell.paint(row, link_renderer, user=user)
 
@@ -267,11 +280,15 @@ class GroupedBoxesLayout(Layout):
 
         init_rowselect(_get_view_name(view))
 
-    def _show_group_header_table(self, group_cells: Sequence[Cell], first_row: Row) -> None:
+    def _show_group_header_table(
+        self, group_cells: Sequence[Cell], first_row: Row, user_permissions: UserPermissions
+    ) -> None:
         html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
         html.open_tr(class_="groupheader")
         painted = False
-        link_renderer = partial(render_link_to_view, request=request)
+
+        link_renderer = make_link_renderer(request, user_permissions)
+
         for cell in group_cells:
             if painted:
                 html.td(",&nbsp;")
@@ -380,7 +397,7 @@ def calculate_view_grouping_of_services(
 
         # When the service is not OK and should not be grouped, move it's row
         # in front of the group.
-        if row.get("service_state", -1) != 0 or is_stale(row, config=active_config):
+        if row.get("service_state", -1) != 0 or is_stale(row, active_config.staleness_threshold):
             if current_group is None or current_group != group_spec:
                 continue  # skip grouping first row
 
@@ -504,10 +521,12 @@ class LayoutTiled(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         html.open_table(class_="data tiled")
 
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = make_link_renderer(request, user_permissions)
+
         last_group = None
         group_open = False
         for row in rows:
@@ -649,6 +668,7 @@ class LayoutTable(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         html.open_table(class_="data table")
         last_group = None
@@ -667,7 +687,7 @@ class LayoutTable(Layout):
             rows_with_ids, row_group_cells=group_cells
         )
 
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = make_link_renderer(request, user_permissions)
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
         for index, row in rows_with_ids:
@@ -847,7 +867,12 @@ class LayoutMatrix(Layout):
 
     @override
     def csv_export(
-        self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
+        self,
+        rows: Rows,
+        view: ViewSpec,
+        group_cells: Sequence[Cell],
+        cells: Sequence[Cell],
+        user_permissions: UserPermissions,
     ) -> None:
         output_csv_headers(view)
 
@@ -857,8 +882,8 @@ class LayoutMatrix(Layout):
         value_counts, _row_majorities = self._matrix_find_majorities(rows, cells)
 
         painter_options = PainterOptions.get_instance()
+        link_renderer = make_link_renderer(request, user_permissions)
         with table_element(output_format="csv") as table:
-            link_renderer = partial(render_link_to_view, request=request)
             for cell_nr, cell in enumerate(group_cells):
                 table.row()
                 table.cell("", cell.title(use_short=False))
@@ -902,12 +927,13 @@ class LayoutMatrix(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         header_majorities = self._matrix_find_majorities_for_header(rows, group_cells)
         value_counts, row_majorities = self._matrix_find_majorities(rows, cells)
 
         painter_options = PainterOptions.get_instance()
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = make_link_renderer(request, user_permissions)
         for groups, unique_row_ids, matrix_cells in create_matrices(
             rows, group_cells, cells, num_columns
         ):
@@ -1087,3 +1113,14 @@ def create_matrices(
 
     if col_num:
         yield (groups, unique_row_ids, matrix_cells)
+
+
+def make_link_renderer(
+    request: Request, user_permissions: UserPermissions
+) -> Callable[[str | HTML, Row, VisualLinkSpec], str | HTML]:
+    def link_renderer(content: str | HTML, row: Row, link_spec: VisualLinkSpec) -> str | HTML:
+        return render_link_to_view(
+            content, row, link_spec, request=request, user_permissions=user_permissions
+        )
+
+    return link_renderer

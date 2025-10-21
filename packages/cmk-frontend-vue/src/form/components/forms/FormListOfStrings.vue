@@ -103,38 +103,41 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <span role="group" :aria-label="spec.title">
-    <table ref="tableRef" class="form-list-of-strings">
-      <tbody>
-        <template v-for="(_, index) in backendData" :key="index">
-          <tr
-            class="listof_element"
-            :style="{ float: props.spec.layout === 'vertical' ? 'unset' : 'left' }"
-            @paste="(event: ClipboardEvent) => onPaste(event, index)"
-          >
-            <td class="vlof_content">
-              <FormEditDispatcher
-                v-model:data="backendData[index]"
-                :spec="spec.string_spec"
-                :backend-validation="elementValidation[index]!"
-              />
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </span>
-  <FormValidation :validation="validation"></FormValidation>
+  <div role="group" :aria-label="spec.title" :class="`form-list-of-strings--${spec.layout}`">
+    <div
+      v-for="(_, index) in backendData"
+      :key="index"
+      class="form-list-of-strings__element"
+      @paste="(event: ClipboardEvent) => onPaste(event, index)"
+    >
+      <FormEditDispatcher
+        v-model:data="backendData[index]"
+        :spec="spec.string_spec"
+        :backend-validation="elementValidation[index]!"
+      />
+    </div>
+  </div>
+  <FormValidation :validation="validation" />
 </template>
 
 <style scoped>
-.form-list-of-strings {
-  border-spacing: 2px 0;
+.form-list-of-strings--horizontal,
+.form-list-of-strings--vertical {
+  display: flex;
+  gap: 6px;
+  max-width: 100%;
+}
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  > tbody > .listof_element > .vlof_content {
-    vertical-align: top;
-    padding-bottom: 8px;
-  }
+.form-list-of-strings--horizontal {
+  flex-flow: row wrap;
+}
+
+.form-list-of-strings--vertical {
+  flex-direction: column;
+}
+
+.form-list-of-strings__vlof-content {
+  vertical-align: top;
+  padding-bottom: 8px;
 }
 </style>

@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 """
 Module Summary:
     This module implements a REST API client for interacting with the Checkmk system in tests.
@@ -34,6 +38,7 @@ import time
 import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from functools import cached_property
 from typing import Any, NamedTuple
 
 import requests
@@ -41,6 +46,7 @@ import requests
 from cmk import trace
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
+from cmk.relay_protocols.tasks import TaskListResponse, TaskResponse
 from tests.testlib.version import CMKVersion
 
 logger = logging.getLogger("rest-session")
@@ -88,6 +94,14 @@ class User(NamedTuple):
     title: str
 
 
+class Relay(NamedTuple):
+    id: str
+    alias: str
+    site_id: str
+    num_fetchers: int | None
+    log_level: str | None
+
+
 class CMKOpenApiSession(requests.Session):
     def __init__(
         self,
@@ -129,6 +143,8 @@ class CMKOpenApiSession(requests.Session):
         self.otel_collector = OtelCollectorAPI(self)
         self.event_console = EventConsoleAPI(self)
         self.saml2 = Saml2API(self)
+        self.relays = RelayAPI(self)
+        self.metric_backend = MetricBackendAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -244,8 +260,38 @@ class CMKOpenApiSession(requests.Session):
             time.sleep(0.5)
 
 
+class AgentReceiverApiSession(requests.Session):
+    def __init__(self, openapi_session: CMKOpenApiSession):
+        super().__init__()
+        self._openapi_session = openapi_session
+        self._port: int | None = None
+        self.headers["Authorization"] = self._openapi_session.headers["Authorization"]
+        self.relays = AgentReceiverRelayAPI(self)
+        self.verify = False
+
+    @property
+    def port(self) -> int:
+        if self._port is None:
+            self._port = int(
+                self._openapi_session.get(
+                    url="domain-types/internal/actions/discover-receiver/invoke",
+                ).text
+            )
+
+        return self._port
+
+    @property
+    def base_url(self) -> str:
+        return f"https://{self._openapi_session.host}:{self.port}/{self._openapi_session.site}/agent-receiver/"
+
+
 class BaseAPI:
     def __init__(self, session: CMKOpenApiSession) -> None:
+        self.session = session
+
+
+class ARBaseAPI:
+    def __init__(self, session: AgentReceiverApiSession) -> None:
         self.session = session
 
 
@@ -1343,6 +1389,33 @@ class PasswordsAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
+    def delete(
+        self,
+        ident: str,
+    ) -> None:
+        """Delete a password via REST API."""
+        response = self.session.delete(f"/objects/password/{ident}", headers={"If-Match": "*"})
+
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[dict[str, Any]]:
+        """Get all configured passwords via REST API."""
+        response = self.session.get(
+            "/domain-types/password/collections/all", headers={"Content-Type": "application/json"}
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def exists(self, ident: str) -> bool:
+        """Check if a password exists via REST API."""
+        raw_passwords = self.get_all()
+        return any(pw["id"] == ident for pw in raw_passwords)
+
 
 class LicenseAPI(BaseAPI):
     def download(self) -> requests.Response:
@@ -1356,20 +1429,19 @@ class OtelCollectorAPI(BaseAPI):
     def __init__(self, session: CMKOpenApiSession) -> None:
         super().__init__(session)
         # Hack to use the "unstable" version of the API endpoint
-        self.base_url = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/unstable"
+        self.base_url = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
 
-    def create(
+    def create_receivers(
         self,
         ident: str,
         title: str,
         disabled: bool,
         receiver_protocol_grpc: dict[str, Any] | None = None,
         receiver_protocol_http: dict[str, Any] | None = None,
-        prometheus_scrape_configs: list[dict[str, Any]] | None = None,
     ) -> None:
-        """Create an OpenTelemetry collector via REST API."""
+        """Create an OpenTelemetry collector receivers via REST API."""
         body = {
-            "ident": ident,
+            "id": ident,
             "disabled": disabled,
             "site": [self.session.site],
             "title": title,
@@ -1378,20 +1450,53 @@ class OtelCollectorAPI(BaseAPI):
             body["receiver_protocol_grpc"] = receiver_protocol_grpc
         if receiver_protocol_http:
             body["receiver_protocol_http"] = receiver_protocol_http
-        if prometheus_scrape_configs:
-            body["prometheus_scrape_configs"] = prometheus_scrape_configs
 
         # hack to use the "unstable" version of the API endpoint
         response = self.session.post(
-            url=self.base_url + "/domain-types/otel_collector_config/collections/all",
+            url=self.base_url + "/domain-types/otel_collector_config_receivers/collections/all",
             json=body,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def delete(self, ident: str) -> None:
-        """Delete an OpenTelemetry collector via REST API."""
-        response = self.session.delete(self.base_url + f"/objects/otel_collector_config/{ident}")
+    def create_prom_scrape(
+        self,
+        ident: str,
+        title: str,
+        disabled: bool,
+        prometheus_scrape_configs: list[dict[str, Any]] | None = None,
+    ) -> None:
+        """Create an OpenTelemetry collector prometheus scraping config via REST API."""
+        body = {
+            "id": ident,
+            "disabled": disabled,
+            "site": [self.session.site],
+            "title": title,
+        }
+        if prometheus_scrape_configs:
+            body["prometheus_scrape_configs"] = prometheus_scrape_configs
+
+        # hack to use the "unstable" version of the API endpoint
+        response = self.session.post(
+            url=self.base_url + "/domain-types/otel_collector_config_prom_scrape/collections/all",
+            json=body,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete_receivers(self, ident: str) -> None:
+        """Delete an OpenTelemetry collector receiver via REST API."""
+        response = self.session.delete(
+            self.base_url + f"/objects/otel_collector_config_receivers/{ident}"
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete_prom_scrape(self, ident: str) -> None:
+        """Delete an OpenTelemetry collector prometheus scraping via REST API."""
+        response = self.session.delete(
+            self.base_url + f"/objects/otel_collector_config_prom_scrape/{ident}"
+        )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
@@ -1464,3 +1569,178 @@ class Saml2API(BaseAPI):
 
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+
+class RelayAPI(BaseAPI):
+    _domain_url = "/domain-types/relay/collections/all"
+    _headers = {"Content-Type": "application/json"}
+
+    @staticmethod
+    def _object_url(relay_id: str) -> str:
+        return f"/objects/relay/{relay_id}"
+
+    @cached_property
+    def agent_receiver_base_url(self) -> str:
+        response = self.session.get("/domain-types/internal/actions/discover-receiver/invoke")
+        port = int(response.text)
+
+        return f"https://{self.session.host}:{port}/{self.session.site}/agent-receiver/relays/"
+
+    def create(
+        self,
+        alias: str,
+        site_id: str,
+        num_fetchers: int | None = None,
+        log_level: str | None = None,
+    ) -> None:
+        body: dict[str, object] = {"alias": alias, "siteid": site_id}
+        if num_fetchers is not None:
+            body["num_fetchers"] = num_fetchers
+        if log_level is not None:
+            body["log_level"] = log_level
+        response = self.session.post(
+            url=self._domain_url,
+            headers=self._headers,
+            json=body,
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, relay_id: str) -> tuple[Relay, str]:
+        response = self.session.get(url=self._object_url(relay_id))
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        response_json = response.json()
+        return Relay(
+            id=relay_id,
+            alias=response_json["extensions"]["alias"],
+            site_id=response_json["extensions"]["siteid"],
+            num_fetchers=response_json["extensions"].get("num_fetchers"),
+            log_level=response_json["extensions"].get("log_level"),
+        ), response.headers["Etag"]
+
+    def get_all(self) -> list[Relay]:
+        response = self.session.get(url=self._domain_url)
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return [
+            Relay(
+                id=relay_dict["id"],
+                alias=relay_dict["extensions"]["alias"],
+                site_id=relay_dict["extensions"]["siteid"],
+                num_fetchers=relay_dict["extensions"].get("num_fetchers"),
+                log_level=relay_dict["extensions"].get("log_level"),
+            )
+            for relay_dict in response.json()["value"]
+        ]
+
+    def edit(self, relay: Relay) -> None:
+        body: dict[str, object] = {"alias": relay.alias, "siteid": relay.site_id}
+        if relay.num_fetchers is not None:
+            body["num_fetchers"] = relay.num_fetchers
+        if relay.log_level is not None:
+            body["log_level"] = relay.log_level
+        response = self.session.put(url=self._object_url(relay.id), json=body)
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, relay_id: str, etag: str) -> None:
+        response = self.session.delete(
+            url=self._object_url(relay_id),
+            headers={"If-Match": etag},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class MetricBackendAPI(BaseAPI):
+    def __init__(self, session: CMKOpenApiSession):
+        super().__init__(session)
+        self._base_url_internal = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
+
+    def disable_metric_backend(self, site_id: str) -> None:
+        response = self.session.put(
+            url=self._config_endpoint_url(),
+            json={
+                "site_id": site_id,
+                "config": {
+                    "type": "disabled",
+                },
+            },
+        )
+
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def enable_site_local_metric_backend(self, site_id: str) -> None:
+        response = self.session.put(
+            url=self._config_endpoint_url(),
+            json={
+                "site_id": site_id,
+                "config": {
+                    "type": "site_local",
+                },
+            },
+        )
+
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def enable_custom_metric_backend(
+        self,
+        *,
+        site_id: str,
+        address: str,
+        tcp_port: int,
+        http_port: int,
+        username: str,
+        password: str,
+    ) -> None:
+        response = self.session.put(
+            url=self._config_endpoint_url(),
+            json={
+                "site_id": site_id,
+                "config": {
+                    "type": "custom",
+                    "address": address,
+                    "tcp_port": tcp_port,
+                    "http_port": http_port,
+                    "username": username,
+                    "password": password,
+                },
+            },
+        )
+
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def _config_endpoint_url(self) -> str:
+        return f"{self._base_url_internal}/domain-types/metric_backend/actions/update/invoke"
+
+
+class AgentReceiverRelayAPI(ARBaseAPI):
+    def register(self, alias: str, csr: str) -> str:
+        response = self.session.post(
+            url=urllib.parse.urljoin(self.session.base_url, "relays/"),
+            json={"relay_name": alias, "csr": csr},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        return str(response.json()["relay_id"])
+
+    def unregister(self, relay_id: str) -> None:
+        response = self.session.delete(
+            url=urllib.parse.urljoin(self.session.base_url, f"relays/{relay_id}")
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_tasks(self, relay_id: str) -> list[TaskResponse]:
+        response = self.session.get(
+            url=urllib.parse.urljoin(self.session.base_url, f"relays/{relay_id}/tasks")
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return TaskListResponse.model_validate(response.json()).tasks

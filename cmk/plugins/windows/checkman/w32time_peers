@@ -1,0 +1,26 @@
+title: Windows: Time service (w32time) peer status
+agents: windows
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the configured time synchronization peers in the Windows
+ time service (w32time), by parsing the output of w32tm.
+
+ Normally, the check reports the last synchronization time with each peer. Note
+ that the output of w32tm is localized, so the format of the timestamp displayed
+ here will depend on the locale of the Windows service account running the
+ Checkmk agent.
+
+ A ruleset, "Windows time service peers" exists where alerting can be configured
+ in multiple ways, e.g., reporting on when a peer's stratum changes, when the
+ last several consecutive attempts to communicate with the peer have failed, or
+ when some number of attempts out of the last (not necessarily consecutive)
+ tries to contact the server have failed. See the help text in the ruleset for
+ more information.
+
+ We also recommend using an Enforced Service with this check plugin, when you
+ expect a particular NTP peer to be configured on the host(s).
+
+discovery:
+ One service is created for each configured w32time peer on the monitored host.

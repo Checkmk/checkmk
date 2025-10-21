@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import assert_never
 
 from cryptography.x509 import Certificate
-from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import UUID4
 from starlette.status import (
@@ -22,7 +22,6 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
-from .apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from .certs import (
     agent_root_ca,
     current_time_naive,
@@ -65,6 +64,7 @@ from .models import (
     RenewCertResponse,
     RequestForRegistration,
 )
+from .route_classes import UUIDValidationRoute
 from .utils import (
     internal_credentials,
     NotRegisteredException,
@@ -73,6 +73,8 @@ from .utils import (
     uuid_from_pem_csr,
 )
 
+UUID_VALIDATION_ROUTER = APIRouter(route_class=UUIDValidationRoute)
+AGENT_RECEIVER_ROUTER = APIRouter()
 security = HTTPBasic()
 
 
@@ -101,7 +103,7 @@ def _pem_serizialized_site_root_cert() -> str:
     return serialize_to_pem(site_root_certificate())
 
 
-@AGENT_RECEIVER_APP.post(
+@AGENT_RECEIVER_ROUTER.post(
     "/register_existing",
     response_model=RegisterExistingResponse,
 )
@@ -136,7 +138,7 @@ async def register_existing(
     )
 
 
-@AGENT_RECEIVER_APP.post("/pairing", response_model=PairingResponse)
+@AGENT_RECEIVER_ROUTER.post("/pairing", response_model=PairingResponse)
 async def pairing(
     *,
     credentials: HTTPBasicCredentials = Depends(security),
@@ -183,7 +185,7 @@ def _validate_registration_request(host_config: HostConfiguration) -> None:
         )
 
 
-@AGENT_RECEIVER_APP.post(
+@AGENT_RECEIVER_ROUTER.post(
     "/register_with_hostname",
     status_code=HTTP_204_NO_CONTENT,
 )
@@ -213,7 +215,7 @@ async def register_with_hostname(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-@AGENT_RECEIVER_APP.post(
+@AGENT_RECEIVER_ROUTER.post(
     "/register_new",
     response_model=RegisterNewResponse,
 )
@@ -249,7 +251,7 @@ async def register_new(
     return RegisterNewResponse(root_cert=root_cert)
 
 
-@AGENT_RECEIVER_APP.post(
+@AGENT_RECEIVER_ROUTER.post(
     "/register_new_ongoing/{uuid}",
     # https://fastapi.tiangolo.com/tutorial/extra-models/#union-or-anyof
     response_model=RegisterNewOngoingResponseInProgress

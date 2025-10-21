@@ -15,10 +15,16 @@ def register(
     page_registry: PageRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
+    *,
+    ignore_duplicate_endpoints: bool = False,
 ) -> None:
-    page_registry.register(PageEndpoint("user_message", PageUserMessage))
+    page_registry.register(PageEndpoint("user_message", PageUserMessage()))
     page_registry.register(PageEndpoint("ajax_delete_user_message", ajax_delete_user_message))
     page_registry.register(
         PageEndpoint("ajax_acknowledge_user_message", ajax_acknowledge_user_message)
     )
-    register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
+    register_endpoints(
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
+    )

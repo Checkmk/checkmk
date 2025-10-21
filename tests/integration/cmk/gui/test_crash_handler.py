@@ -17,7 +17,7 @@ class FooPage(AjaxPage):
         some_local_var = [{"foo": {"deep": True, "password": "verysecret", "foo": "notsecret"}}]
         raise ValueError("This is intended, please move on... Really")
 
-page_registry.register(PageEndpoint("foo", FooPage))
+page_registry.register(PageEndpoint("foo", FooPage()))
 """
 
 

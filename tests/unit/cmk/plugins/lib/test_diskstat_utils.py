@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import datetime
 import time
 from collections.abc import Iterable, Mapping
@@ -88,7 +92,7 @@ SECTION: Mapping[str, Mapping] = {
         ),
     ],
 )
-def test_discovery_diskstat_generic(params, section, exp_res) -> None:  # type: ignore[no-untyped-def]
+def test_discovery_diskstat_generic(params, section, exp_res) -> None:
     assert list(diskstat.discovery_diskstat_generic(params, section)) == exp_res
 
 

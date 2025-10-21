@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
+
 
 import importlib
 import io
@@ -316,7 +320,7 @@ def test_create_nagios_host_spec(
 
     hostname = HostName(hostname_str)
     outfile = io.StringIO()
-    cfg = NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname], timeperiods={})
 
     config_cache = ts.apply(monkeypatch)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -358,7 +362,7 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
         hostname, socket.AddressFamily.AF_INET, ip_address_of=lambda *a: HostAddress("")
     )
 
-    cfg = NagiosConfig(io.StringIO(), [hostname])
+    cfg = NagiosConfig(io.StringIO(), [hostname], timeperiods={})
     host_spec = create_nagios_host_spec(
         cfg,
         config_cache,
@@ -615,7 +619,7 @@ def test_create_nagios_servicedefs_active_check(
         config_cache._loaded_config, config_cache.ruleset_matcher
     )
     outfile = io.StringIO()
-    cfg = NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
@@ -663,7 +667,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
         hostname, socket.AddressFamily.AF_INET, ip_address_of_return_local
     )
     outfile = io.StringIO()
-    cfg = NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
@@ -794,7 +798,7 @@ def test_create_nagios_servicedefs_with_warnings(
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
-    cfg = NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
@@ -868,7 +872,7 @@ def test_create_nagios_servicedefs_omit_service(
 
     outfile = io.StringIO()
     hostname = HostName("my_host")
-    cfg = NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
@@ -941,7 +945,7 @@ def test_create_nagios_servicedefs_invalid_args(
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
-    cfg = NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
 
     create_nagios_servicedefs(
@@ -1035,7 +1039,7 @@ def test_create_nagios_config_commands(
     )
     hostname = HostName("my_host")
     outfile = io.StringIO()
-    cfg = NagiosConfig(outfile, [hostname])
+    cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,

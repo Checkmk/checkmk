@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="mutable-override"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 
 import ast
@@ -20,7 +26,7 @@ from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import ValidationError
 from marshmallow.types import StrSequenceOrSet
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKException, MKGeneralException
@@ -407,9 +413,7 @@ class ExprSchema(CmkOneOfSchema):
                     tree_to_expr(item, self.context["table"])
         except ValueError as e:
             raise ValidationError(str(e)) from e
-        return super().load(  # type: ignore[no-untyped-call]
-            data, many=many, partial=partial, unknown=unknown, **kwargs
-        )
+        return super().load(data, many=many, partial=partial, unknown=unknown, **kwargs)
 
 
 class _ExprNested(base.Nested):

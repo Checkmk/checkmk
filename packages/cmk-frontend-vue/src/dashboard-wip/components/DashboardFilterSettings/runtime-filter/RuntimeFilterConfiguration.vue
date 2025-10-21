@@ -11,6 +11,7 @@ import usei18n from '@/lib/i18n'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import type { useFilters } from '@/dashboard-wip/components/filter/composables/useFilters.ts'
 import type {
@@ -18,6 +19,7 @@ import type {
   ConfiguredValues,
   FilterDefinition
 } from '@/dashboard-wip/components/filter/types.ts'
+import { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
 
 import FilterCollection from '../FilterCollection.vue'
 import FilterCollectionInputItem from '../FilterCollectionInputItem.vue'
@@ -28,14 +30,32 @@ const props = defineProps<{
   runtimeFilters: ReturnType<typeof useFilters>
   dashboardFilters: ConfiguredFilters
   mandatoryFilters: Set<string>
+  runtimeFiltersMode: RuntimeFilterMode
 }>()
 
 const emit = defineEmits<{
   'apply-runtime-filters': []
   'set-configuration-target': [target: 'required-filter']
+  'update:runtime-filters-mode': [mode: RuntimeFilterMode]
 }>()
 
 const showAppliedConfirmation = ref(false)
+const overrideMode = ref(props.runtimeFiltersMode === RuntimeFilterMode.OVERRIDE)
+
+watch(
+  () => props.runtimeFiltersMode,
+  (newMode) => {
+    // keep local state in sync if parent updates externally
+    overrideMode.value = newMode === RuntimeFilterMode.OVERRIDE
+  }
+)
+
+watch(overrideMode, (checked) => {
+  emit(
+    'update:runtime-filters-mode',
+    checked ? RuntimeFilterMode.OVERRIDE : RuntimeFilterMode.MERGE
+  )
+})
 
 const hostRuntimeFilters = computed(() => {
   const filters: string[] = []
@@ -96,6 +116,9 @@ watch(
         {{ _t('Edit required runtime filters') }}
       </CmkButton>
     </div>
+    <div class="filter-configuration__mode-toggle">
+      <CmkCheckbox v-model="overrideMode" :label="_t('Override dashboard filters')" />
+    </div>
     <div v-if="showAppliedConfirmation">
       <CmkAlertBox variant="success">
         <CmkLabel>
@@ -155,5 +178,10 @@ watch(
   align-items: center;
   margin-bottom: var(--dimension-5);
   gap: var(--dimension-4);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-configuration__mode-toggle {
+  margin-bottom: var(--dimension-5);
 }
 </style>

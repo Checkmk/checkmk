@@ -6,6 +6,7 @@
 """The user profile main menu and related AJAX endpoints"""
 
 from collections.abc import Callable
+from typing import override
 
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -13,24 +14,25 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicEntries
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicEntries
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 
 
 def register(
     page_registry: PageRegistry,
     main_menu_registry: MainMenuRegistry,
-    user_menu_topics: Callable[[], list[MainMenuTopic]],
+    user_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_ui_theme", ModeAjaxCycleThemes))
-    page_registry.register(PageEndpoint("ajax_sidebar_position", ModeAjaxCycleSidebarPosition))
-    page_registry.register(PageEndpoint("ajax_set_dashboard_start_url", ModeAjaxSetStartURL))
+    page_registry.register(PageEndpoint("ajax_ui_theme", ModeAjaxCycleThemes()))
+    page_registry.register(PageEndpoint("ajax_sidebar_position", ModeAjaxCycleSidebarPosition()))
+    page_registry.register(PageEndpoint("ajax_set_dashboard_start_url", ModeAjaxSetStartURL()))
 
     main_menu_registry.register(
         MainMenu(
@@ -68,7 +70,9 @@ def _sidebar_position_id(stored_value: str) -> str:
 
 
 def default_user_menu_topics(
-    add_change_password_menu_item: bool = True, add_two_factor_menu_item: bool = True
+    user_permissions: UserPermissions,
+    add_change_password_menu_item: bool = True,
+    add_two_factor_menu_item: bool = True,
 ) -> list[MainMenuTopic]:
     quick_entries: MainMenuTopicEntries = [
         MainMenuItem(
@@ -183,6 +187,7 @@ def default_user_menu_topics(
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         themes = [theme for theme, _title in theme_choices()]
@@ -204,6 +209,7 @@ class ModeAjaxCycleThemes(AjaxPage):
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         set_user_attribute(
@@ -216,6 +222,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         try:
             check_csrf_token()

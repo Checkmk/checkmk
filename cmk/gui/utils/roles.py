@@ -11,7 +11,7 @@ from typing import cast, Final, get_args, Literal
 from cmk.ccc import store
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config, Config
-from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.permissions import Permission
 from cmk.gui.role_types import BuiltInUserRole, BuiltInUserRoleID, CustomUserRole
 from cmk.utils import paths
 
@@ -217,11 +217,6 @@ def is_user_with_publish_permissions(
     )
 
 
-# TODO: Move to UserPermissions.user_may
-def roles_of_user(user_id: UserId | None) -> list[str]:
-    return UserPermissions.from_config(active_config, permission_registry).roles_of_user(user_id)
-
-
 def is_automation_user(user_id: UserId) -> bool:
     return AutomationUserFile(user_id).load()
 
@@ -233,7 +228,10 @@ class AutomationUserFile:
         self.path = profile_dir / user_id / "automation_user.mk"
 
     def load(self) -> bool:
-        return store.load_object_from_file(self.path, default=False)
+        value = store.load_object_from_file(self.path, default=False)
+        if not isinstance(value, bool):
+            raise TypeError(value)
+        return value
 
     def save(self, value: bool) -> None:
         self.path.parent.mkdir(mode=0o770, exist_ok=True)

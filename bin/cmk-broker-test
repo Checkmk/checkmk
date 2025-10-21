@@ -95,7 +95,7 @@ def _command_pong() -> int:
         channel.queue_declare(queue=QUEUE_PING)
         write("Waiting for messages\n")
         channel.consume(QUEUE_PING, _callback_pong)
-    return 42  # can't happen
+    return 42  # type: ignore[unreachable] # can't happen
 
 
 def _make_callback_ping(
@@ -142,7 +142,7 @@ def _command_ping(site_id: str) -> int:
         write("Waiting for response\n")
         channel.consume(QUEUE_PONG, _make_callback_ping(message))
 
-    return 23  # can't happen
+    return 23  # type: ignore[unreachable]  # can't happen
 
 
 def main() -> int:

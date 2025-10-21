@@ -1,0 +1,6 @@
+{
+  "homepage": "https://www.openssl.org/",
+  "maintainers": [],
+  "repository": ["github:openssl/openssl"],
+  "versions": ["3.0.16.cmk.1"]
+}

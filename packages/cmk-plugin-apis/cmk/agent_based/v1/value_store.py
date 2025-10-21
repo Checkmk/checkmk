@@ -56,7 +56,7 @@ class _ValueStoreManagerProtocol(Protocol):
 _active_host_value_store: _ValueStoreManagerProtocol | None = None
 
 
-def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[explicit-any]
+def get_value_store() -> MutableMapping[str, Any]:
     """Get the value store for the current service from Checkmk
 
     The returned value store object can be used to persist values

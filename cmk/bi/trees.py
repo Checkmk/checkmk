@@ -3,13 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="mutable-override"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Any, Literal, NamedTuple, NotRequired, override, TypedDict
 
 from marshmallow import pre_dump
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema

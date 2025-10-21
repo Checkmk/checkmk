@@ -1,0 +1,19 @@
+title: Corosync: Corosync Latency
+agents: linux
+catalog: os/network
+license: GPLv2
+distribution: check_mk
+description:
+ This check plug-in monitors the Corosync latency.
+ It checks the maximum and average latency of all links.
+
+ The upper levels for average and maximum latency are
+  configurable via the ruleset Corosync Latency.
+ If a link is connected but provides no latency samples,
+ the link is skipped and no service is discovered.
+
+discovery:
+ One service per Link is created.
+
+item:
+ The item name is constructed as {hostname}.{link_name}, e.g. node1.link0

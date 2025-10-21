@@ -9,8 +9,8 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import type { UnifiedSearchResultElementInlineButton } from '@/lib/unified-search/providers/unified'
 import { immediateWatch } from '@/lib/watch'
 
-import type { CmkIconProps } from '@/components/CmkIcon.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import type { CmkIconProps } from '@/components/CmkIcon'
+import CmkIcon from '@/components/CmkIcon'
 import CmkZebra from '@/components/CmkZebra.vue'
 
 import { getSearchUtils } from '../../providers/search-utils'

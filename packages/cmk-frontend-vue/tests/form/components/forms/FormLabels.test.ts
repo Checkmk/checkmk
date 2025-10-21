@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { findByRole, fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import { Response } from '@/components/suggestions'
+import { Response } from '@/components/CmkSuggestions'
 
 import FormLabel from '@/form/components/forms/FormLabels.vue'
 

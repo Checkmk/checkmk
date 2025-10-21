@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="mutable-override"
+
 from cmk import fields
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, Linkable

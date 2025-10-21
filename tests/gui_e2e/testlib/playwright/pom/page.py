@@ -85,11 +85,11 @@ class CmkPage(LocatorHelper):
         _loc = _loc.filter(**kwargs) if kwargs else _loc
         return _loc
 
-    def activate_selected(self) -> None:
+    def _activate_selected(self) -> None:
         logger.info("Click 'Activate on selected sites' button")
         self.main_area.locator("#menu_suggestion_activate_selected").click()
 
-    def expect_success_state(self) -> None:
+    def _expect_success_state(self) -> None:
         logger.info("Check changes were activated successfully")
 
         progress_elements = self.main_area.locator("td.repprogress > div.progress")
@@ -121,7 +121,7 @@ class CmkPage(LocatorHelper):
         """Returns a web-element from the `main_area`, which is a `link`."""
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
-    def activate_changes(self, site: Site | None = None) -> None:
+    def activate_changes(self, site: Site | None = None, navigate_to_page: bool = True) -> None:
         """Activate changes using the UI.
 
         Args:
@@ -133,10 +133,11 @@ class CmkPage(LocatorHelper):
         """
         logger.info("Activate changes")
         try:
-            self.main_menu.changes_menu("Open full view").click()
+            if navigate_to_page:
+                self.main_menu.changes_menu("Open full view").click()
             self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
-            self.activate_selected()
-            self.expect_success_state()
+            self._activate_selected()
+            self._expect_success_state()
         except Exception as e:
             if site:
                 logger.warning("fail-safe: could not activate changes using UI; using REST-API...")

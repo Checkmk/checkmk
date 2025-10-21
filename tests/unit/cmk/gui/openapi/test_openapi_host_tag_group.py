@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+
 import json
 from typing import Any, Literal
 
@@ -14,9 +16,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
-@pytest.mark.usefixtures(
-    "suppress_remote_automation_calls", "suppress_spec_generation_in_background"
-)
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_tag_group_update(
     clients: ClientRegistry,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
@@ -96,10 +96,7 @@ def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAp
     assert len(col_resp.json_body["value"]) == builtin_groups_count
 
 
-@pytest.mark.usefixtures(
-    "suppress_remote_automation_calls",
-    "suppress_spec_generation_in_background",
-)
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -162,9 +159,7 @@ def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppFor
     )
 
 
-@pytest.mark.usefixtures(
-    "suppress_remote_automation_calls", "suppress_spec_generation_in_background"
-)
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
@@ -214,9 +209,7 @@ def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCM
     )
 
 
-@pytest.mark.usefixtures(
-    "suppress_remote_automation_calls", "suppress_spec_generation_in_background"
-)
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     resp = aut_user_auth_wsgi_app.call_method(
@@ -260,7 +253,6 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_host_tag_with_only_one_option(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     clients: ClientRegistry,
@@ -311,7 +303,6 @@ def test_openapi_host_tag_with_only_one_option(
     assert host.json["extensions"]["attributes"]["tag_group_id999"] is None
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_host_tag_groups_all_props_in_schema(
     aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
 ) -> None:
@@ -328,7 +319,6 @@ def test_openapi_host_tag_groups_all_props_in_schema(
     assert "tags" in first_tag["extensions"]
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_host_tags_groups_without_topic_and_tags(
     aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
 ) -> None:
@@ -365,7 +355,6 @@ def test_openapi_host_tags_groups_without_topic_and_tags(
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_host_tag_group_empty_tags(clients: ClientRegistry) -> None:
     clients.HostTagGroup.create(
         ident="group_id999",
@@ -389,7 +378,6 @@ def test_openapi_host_tag_group_empty_tags(clients: ClientRegistry) -> None:
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 @pytest.mark.parametrize(
     "delete_options",
     [
@@ -423,7 +411,6 @@ def test_openapi_delete_dependant_host_tag(
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 @pytest.mark.parametrize("mode", ["delete", "remove"])
 def test_openapi_delete_host_tag_mode(
     clients: ClientRegistry,
@@ -469,7 +456,6 @@ def test_openapi_delete_host_tag_mode(
         assert len(resp.json["extensions"]["conditions"]["host_tags"]) == 0
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_delete_host_tag_repair_and_mode_not_compatible(
     clients: ClientRegistry,
 ) -> None:
@@ -498,7 +484,6 @@ invalid_tag_group_ids = (
 )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 @pytest.mark.parametrize("group_id", invalid_tag_group_ids)
 def test_host_tag_group_ident_with_newline(
     clients: ClientRegistry,
@@ -516,7 +501,6 @@ def test_host_tag_group_ident_with_newline(
     assert resp.json["fields"]["id"][0].startswith(f"Invalid tag ID: {group_id!r}")
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_host_tag_group_creation_when_aux_tag_exists(
     clients: ClientRegistry,
 ) -> None:
@@ -537,7 +521,6 @@ def test_openapi_host_tag_group_creation_when_aux_tag_exists(
     ).assert_status_code(400)
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_identifiation_field(clients: ClientRegistry) -> None:
     clients.HostTagGroup.create(
         ident="test_group",
@@ -551,7 +534,6 @@ def test_openapi_identifiation_field(clients: ClientRegistry) -> None:
     assert "id" in res.json["extensions"]["tags"][0]
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_id_already_in_use_by_custom_tag_group(clients: ClientRegistry) -> None:
     custom_tag_group = "criticality"
     clients.HostTagGroup.create(
@@ -601,7 +583,6 @@ def test_id_already_in_use_by_builtin_tag_group(clients: ClientRegistry) -> None
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_id_already_in_use_by_custom_aux_tag(clients: ClientRegistry) -> None:
     custom_aux_tag = "interface"
 

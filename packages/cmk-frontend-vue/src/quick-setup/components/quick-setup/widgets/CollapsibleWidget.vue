@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, ref, watch } from 'vue'
 
-import CollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
+import { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 
 import FormHelp from '@/form/private/FormHelp.vue'
 
@@ -37,7 +37,7 @@ const updateData = (id: string, value: Ref) => {
 </script>
 
 <template>
-  <CollapsibleTitle
+  <CmkCollapsibleTitle
     :title="props.title"
     :help_text="props.help_text"
     :open="isOpen"

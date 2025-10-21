@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="no-untyped-call"
+
 import abc
 import binascii
 import email

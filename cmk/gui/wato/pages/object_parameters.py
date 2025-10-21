@@ -3,6 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+
 
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be

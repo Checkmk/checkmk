@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { GridLayout } from 'grid-layout-plus'
 import { computed, ref, watch } from 'vue'
 
-import { useErrorBoundary } from '@/components/useErrorBoundary'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import type { ContentPropsRecord } from '@/dashboard-wip/components/DashboardContent/types'
 import type { ContentResponsiveGrid, DashboardConstants } from '@/dashboard-wip/types/dashboard'
@@ -165,11 +165,12 @@ watch(
 const internalBreakpointConfig = useInternalBreakpointConfig(props.responsiveGridBreakpoints)
 const gridMargin = 10
 
-const { ErrorBoundary: errorBoundary } = useErrorBoundary()
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
-  <errorBoundary>
+  <CmkErrorBoundary>
     <div class="db-responsive-grid__container">
       <div v-if="props.isEditing" class="db-responsive-grid__edit-columns">
         <div
@@ -214,7 +215,7 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
         </template>
       </GridLayout>
     </div>
-  </errorBoundary>
+  </CmkErrorBoundary>
 </template>
 
 <style scoped>

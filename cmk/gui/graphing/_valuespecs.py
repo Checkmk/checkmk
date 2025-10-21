@@ -3,15 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import json
 import re
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, assert_never, Literal, TypedDict
+from typing import Any, assert_never, Literal, override, TypedDict
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -60,6 +65,7 @@ from ._unit import (
     ConvertibleUnitSpecification,
     DecimalNotation,
     EngineeringScientificNotation,
+    get_temperature_unit,
     IECNotation,
     SINotation,
     StandardScientificNotation,
@@ -425,6 +431,7 @@ def _vs_type_from_formatter(
 
 
 class PageVsAutocomplete(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         temperature_unit = get_temperature_unit(user, config.default_temperature_unit)
         if metric_name := self.webapi_request()["metric"]:

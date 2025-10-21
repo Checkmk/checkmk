@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+
 from collections.abc import Mapping
 
 import pytest
@@ -31,8 +33,8 @@ from cmk.plugins.azure_deprecated.agent_based.azure_virtual_machine import (
     discover_azure_vm_network_io,
     VMSummaryParams,
 )
+from cmk.plugins.azure_deprecated.agent_based.lib import AzureMetric, Resource, Section
 from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 SECTION = {
     "VM-test-1": Resource(

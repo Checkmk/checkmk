@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+
 
 from dataclasses import asdict
 
@@ -52,8 +55,6 @@ def test_default_config_from_plugins() -> None:
         "debug_livestatus_queries",
         "show_livestatus_errors",
         "liveproxyd_enabled",
-        "visible_views",
-        "hidden_views",
         "service_view_grouping",
         "custom_style_sheet",
         "ui_theme",

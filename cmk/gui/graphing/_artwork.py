@@ -3,6 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 import math
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -15,7 +22,6 @@ from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
 
 import cmk.utils.render
-from cmk.gui.color import fade_color, parse_color, render_color
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -27,6 +33,7 @@ from cmk.gui.unit_formatter import (
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
+from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import clean_time_series_point, LineType
 from ._graph_specification import (
@@ -38,7 +45,6 @@ from ._graph_specification import (
 )
 from ._metric_backend_registry import FetchTimeSeries
 from ._time_series import TimeSeries, TimeSeriesValue
-from ._time_series_fetcher import fetch_augmented_time_series
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 
@@ -329,61 +335,6 @@ def _areastack(
     return list(map(fix_swap, zip_longest(base, edge)))
 
 
-def _parse_line_type(
-    mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
-) -> LineType | Literal["ref"]:
-    match ts_line_type:
-        case "line" | "-line":
-            return "line" if mirror_prefix == "" else "-line"
-        case "area" | "-area":
-            return "area" if mirror_prefix == "" else "-area"
-        case "stack" | "-stack":
-            return "stack" if mirror_prefix == "" else "-stack"
-        case "ref":
-            return "ref"
-    assert_never((mirror_prefix, ts_line_type))
-
-
-def _compute_graph_curves(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    graph_recipe: GraphRecipe,
-    graph_data_range: GraphDataRange,
-    *,
-    temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
-) -> Iterator[Curve]:
-    # Fetch all raw RRD data
-    for spec in fetch_augmented_time_series(
-        registered_metrics,
-        graph_recipe,
-        graph_data_range,
-        temperature_unit=temperature_unit,
-        fetch_time_series=fetch_time_series,
-    ):
-        multi = len(spec.augmented_time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if spec.line_type.startswith("-") else ""
-        for i, ts in enumerate(spec.augmented_time_series):
-            title = spec.title
-            line_type: LineType | Literal["ref"] = spec.line_type
-            color = spec.color
-            if ts.metadata:
-                if multi:
-                    title = f"{spec.title} - {ts.metadata.title}"
-                    line_type = _parse_line_type(mirror_prefix, ts.metadata.line_type)
-                if ts.metadata.color:
-                    color = ts.metadata.color
-
-            if i % 2 == 1 and spec.fade_odd_color:
-                color = render_color(fade_color(parse_color(color), 0.3))
-
-            yield Curve(
-                line_type=line_type,
-                color=color,
-                title=title,
-                rrddata=ts.data,
-            )
-
-
 def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
@@ -392,15 +343,22 @@ def compute_graph_artwork_curves(
     temperature_unit: TemperatureUnit,
     fetch_time_series: FetchTimeSeries,
 ) -> list[Curve]:
-    curves = list(
-        _compute_graph_curves(
+    curves = [
+        Curve(
+            line_type=augmented_time_series.meta_data.line_type,
+            color=augmented_time_series.meta_data.color,
+            title=augmented_time_series.meta_data.title,
+            rrddata=augmented_time_series.time_series,
+        )
+        for augmented_time_series in fetch_augmented_time_series(
             registered_metrics,
             graph_recipe,
             graph_data_range,
             temperature_unit=temperature_unit,
             fetch_time_series=fetch_time_series,
         )
-    )
+        if augmented_time_series.meta_data
+    ]
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
     return curves

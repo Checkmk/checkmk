@@ -147,8 +147,9 @@ TEST(SectionProviders_Integration, W32TimePeers) {
     srv::SectionProvider<W32TimePeers> w32time_peers_provider;
     auto &engine = w32time_peers_provider.getEngine();
     auto const &content = engine.generateContent(section_name);
-    static constexpr std::array<std::string_view, 15> kFields{
+    static constexpr std::array<std::string_view, 16> kFields{
         "#Peers:",
+        "---",
         "Peer:",
         "State:",
         "Time Remaining:",

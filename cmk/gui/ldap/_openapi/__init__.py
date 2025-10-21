@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """LDAP Connections
 
+# mypy: disable-error-code="comparison-overlap"
+
 Checkmk provides a facility for using LDAP-based services for managing users, automatically
 synchronizing users from the home directories, and for assigning contact groups, roles and
 other attributes to these users in Checkmk automatically. Checkmk is not restricted to a

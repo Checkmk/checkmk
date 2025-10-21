@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,8 +16,8 @@ from cmk.utils import password_store
 
 from ._commons import ExecutableFinderProtocol, replace_passwords
 from .config_processing import (
+    GlobalProxiesWithLookup,
     process_configuration_to_parameters,
-    ProxyConfig,
 )
 
 
@@ -33,7 +35,7 @@ class SpecialAgent:
         host_address: HostAddress | None,
         host_config: v1.HostConfig,
         host_attrs: Mapping[str, str],
-        http_proxies: Mapping[str, Mapping[str, str]],
+        global_proxies_with_lookup: GlobalProxiesWithLookup,
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
@@ -44,7 +46,7 @@ class SpecialAgent:
         self.host_address = host_address
         self.host_config = host_config
         self.host_attrs = host_attrs
-        self._http_proxies = http_proxies
+        self._global_proxies_with_lookup = global_proxies_with_lookup
         self.stored_passwords = stored_passwords
         self.password_store_file = password_store_file
         self._finder = finder
@@ -57,9 +59,11 @@ class SpecialAgent:
         special_agent: v1.SpecialAgentConfig | alpha.SpecialAgentConfig,
         conf_dict: Mapping[str, object],
     ) -> Iterator[SpecialAgentCommandLine]:
-        proxy_config = ProxyConfig(self.host_name, self._http_proxies)
         processed = process_configuration_to_parameters(
-            conf_dict, proxy_config, is_alpha=isinstance(special_agent, alpha.SpecialAgentConfig)
+            conf_dict,
+            self._global_proxies_with_lookup,
+            usage_hint=f"special agent: {special_agent.name}",
+            is_alpha=isinstance(special_agent, alpha.SpecialAgentConfig),
         )
 
         for command in special_agent(processed.value, self.host_config):

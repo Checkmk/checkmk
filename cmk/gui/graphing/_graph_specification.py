@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -29,6 +31,7 @@ from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     GraphConsolidationFunction,
     GraphMetricExpression,
+    line_type_mirror,
     LineType,
     parse_graph_metric_expression,
 )
@@ -82,6 +85,15 @@ class GraphMetric(BaseModel, frozen=True):
     ]
     unit: ConvertibleUnitSpecification
     color: str
+
+    def mirror(self) -> GraphMetric:
+        return GraphMetric(
+            title=self.title,
+            line_type=line_type_mirror(self.line_type),
+            operation=self.operation,
+            unit=self.unit,
+            color=self.color,
+        )
 
 
 class GraphSpecification(BaseModel, ABC, frozen=True):

@@ -567,7 +567,7 @@ def _make_spec(version: APIVersion) -> APISpec:
         plugins=[
             CheckmkPydanticPlugin(),
             MarshmallowPlugin(),
-            apispec_oneofschema.MarshmallowPlugin(),
+            apispec_oneofschema.MarshmallowPlugin(),  # type: ignore[attr-defined]
             CheckmkMarshmallowPlugin(),
         ],
         **_redoc_spec(),

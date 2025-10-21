@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 from collections.abc import Iterable
 from typing import assert_never
 
@@ -12,11 +14,11 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.gui import sites, visuals
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing._metrics import MetricSpec
-from cmk.gui.graphing._translated_metrics import TranslatedMetric
-from cmk.gui.graphing._unit import (
+from cmk.gui.graphing import (
     ConvertibleUnitSpecification,
     get_temperature_unit,
+    MetricSpec,
+    TranslatedMetric,
     user_specific_unit,
     UserSpecificUnit,
 )

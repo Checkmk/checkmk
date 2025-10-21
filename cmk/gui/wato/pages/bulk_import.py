@@ -6,16 +6,20 @@
 single Setup folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import csv
 import itertools
 import operator
 import time
 import typing
 import uuid
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 import cmk.gui.pages
 from cmk.ccc import store
@@ -40,6 +44,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import (
     ActionResult,
     Choices,
+    CustomHostAttrSpec,
     PermissionName,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -63,14 +68,290 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.utils.tags import TagGroup
 
-# Was not able to get determine the type of csv._reader / _csv.reader
-CSVReader = Any
-
 ImportTuple = tuple[HostName, HostAttributes, None]
 
 
 def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeBulkImport)
+
+
+def _prevent_reused_attr_names(attr_names: Sequence[str | None]) -> None:
+    """
+    A user might try to assign two different columns to be the same attribute
+    e.g. "host name", which doesn't make sense. Prevent that here by checking
+    the list of attribute names selected by the user and ensuring they are
+    all unique, throwing an exception if not.
+    """
+    attrs_seen = set()
+    for name in attr_names:
+        # "-" is the value set for "Don't import"
+        if name != "-" and name in attrs_seen:
+            raise MKUserError(
+                None,
+                _(
+                    'The attribute "%s" is assigned to multiple columns. '
+                    "You can not populate one attribute from multiple columns. "
+                    "The column-to-attribute associations need to be unique."
+                )
+                % name,
+            )
+        attrs_seen.add(name)
+
+
+def _attribute_choices(
+    tag_groups: Sequence[TagGroup],
+    custom_host_attrs: Sequence[CustomHostAttrSpec],
+) -> Choices:
+    attributes = [
+        (None, _("(please select)")),
+        ("-", _("Don't import")),
+        ("host_name", _("Host name")),
+        ("alias", _("Alias")),
+        ("site", _("Monitored on site")),
+        ("ipaddress", _("IPv4 address")),
+        ("ipv6address", _("IPv6 address")),
+        ("snmp_community", _("SNMP community")),
+    ]
+
+    # Add tag groups
+    for tag_group in tag_groups:
+        attributes.append(("tag_" + tag_group.id, _("Tag: %s") % tag_group.title))
+
+    # Add custom attributes
+    for entry in custom_host_attrs:
+        name = entry["name"]
+        attributes.append((name, _("Custom variable: %s") % name))
+
+    return attributes
+
+
+def _detect_attribute(attributes: Choices, header: str) -> str:
+    """
+    Given a 'Choices' of possible host attributes, and assuming there is a
+    title line in the CSV, try to match the given title (for a particular
+    column) with the attribute key most likely related to it.
+    """
+
+    if not header:
+        return ""
+
+    highscore = 0.0
+    best_key = ""
+    for key, title in attributes:
+        if key is not None:
+            key_match_score = SequenceMatcher(None, key, header).ratio()
+            title_match_score = SequenceMatcher(None, title, header).ratio()
+            score = key_match_score if key_match_score > title_match_score else title_match_score
+
+            if score > 0.6 and score > highscore:
+                best_key = key
+                highscore = score
+
+    return best_key
+
+
+def _host_rows_to_bulk(
+    iterator: typing.Iterator[dict[str, str]],
+    host_attributes: Mapping[str, ABCHostAttribute],
+) -> typing.Generator[ImportTuple, None, None]:
+    """Here we transform each row into a tuple of HostName and HostAttributes and None.
+
+    This format is directly compatible with Folder().create_hosts(...)
+
+    Each attribute will be validated against its corresponding ValueSpec.
+
+    Example:
+        Before:
+            [{'alias': 'foo', 'host_name': 'foo_server', 'dummy_attr': '5'}]
+
+        After:
+            [('foo_server', {'alias': 'foo', 'dummy_attr': '5'}, None)]
+
+    """
+    hostname_valuespec = Hostname()
+
+    for row_num, entry in enumerate(iterator):
+        entry = entry.copy()  # Don't operate on the original
+        _host_name: HostName | None = None
+        # keys are ordered in insert-first order, so we can derive col_num from the ordering
+        for col_num, (attr_name, attr_value) in enumerate(list(entry.items())):  # iterate on copy
+            if attr_name == "host_name":
+                hostname_valuespec.validate_value(attr_value, "host")
+                # Remove host_name from attributes
+                del entry["host_name"]
+                _host_name = HostName(attr_value)
+            elif attr_name in ("-", ""):
+                # Don't import / No select
+                del entry[attr_name]
+            elif attr_name != "alias":
+                host_attribute_inst = host_attributes[attr_name]
+
+                if not attr_value.isascii():
+                    raise MKUserError(
+                        None,
+                        _('Non-ASCII characters are not allowed in the attribute "%s".')
+                        % attr_name,
+                    )
+                try:
+                    host_attribute_inst.validate_input(attr_value, "")
+                except MKUserError as exc:
+                    raise MKUserError(
+                        None,
+                        _("Invalid value in column %d (%s) of row %d: %s")
+                        % (col_num, attr_name, row_num, exc),
+                    ) from exc
+
+        if _host_name is None:
+            raise MKUserError(None, _("The host name attribute needs to be assigned to a column."))
+
+        yield _host_name, typing.cast(HostAttributes, entry), None
+
+
+def _get_custom_csv_dialect(delim: str) -> type[csv.Dialect]:
+    class CustomCSVDialect(csv.excel):
+        delimiter = delim
+
+    return CustomCSVDialect
+
+
+def get_handle_for_csv(path: Path) -> TextIO:
+    """
+    Public function to attempt to open a CSV file with the correct encoding,
+    from the path given.
+    """
+    try:
+        return path.open(encoding="utf-8")
+    except OSError:
+        raise MKUserError(
+            None, _("Failed to read the previously uploaded CSV file. Please upload it again.")
+        )
+
+
+class CSVBulkImport:
+    def __init__(self, handle: TextIO, has_title_line: bool, delimiter: str | None = None):
+        self._handle = handle  # Take a handle instead of a Path for easier testing
+        self._dialect = self._determine_dialect(delimiter)
+        self._reader = csv.reader(self._handle, self._dialect)
+
+        self._num_fields: int | None = None
+        self._num_fields = self.row_length
+
+        self._has_title_line = has_title_line
+        self._title_row: list[str] | None = None
+        if self._has_title_line:
+            self._title_row = self.title_row
+
+    def _determine_dialect(self, delimiter: str | None) -> type[csv.Dialect]:
+        """
+        Attempt to return a csv.Dialect that works to parse the file.
+
+        Called only by the constructor: Calling this method later might manipulate the file cursor
+        and cause the instance to lose track of where it was in the file.
+        """
+        if delimiter is not None:
+            return _get_custom_csv_dialect(delimiter)
+
+        try:
+            dialect = csv.Sniffer().sniff(self._handle.read(2048), delimiters=",;\t:")
+        except csv.Error as e:
+            if "Could not determine delimiter" in str(e):
+                # Default to splitting on ;
+                dialect = _get_custom_csv_dialect(";")
+            else:
+                raise
+
+        self._handle.seek(0)
+        return dialect
+
+    def skip_to_and_return_next_row(self) -> list[str] | None:
+        """
+        Skip ahead to the next row that has data in it (if any). If there are no remaining
+        rows with data, return None.
+        """
+        for row in self._reader:
+            if row:
+                # If there are *only* spaces on the line, skip it
+                if len(row) == 1 and row[0].strip() == "":
+                    continue
+
+                # This very function is called to determine the row length.
+                # In that case, self._num_fields won't be set yet.
+                if self._num_fields is not None and len(row) != self.row_length:
+                    raise MKUserError(
+                        None,
+                        _(
+                            "All rows in the CSV file must have the same number of columns. "
+                            "The following row had a different number of columns than the first "
+                            "row (or the title row, if one is present): %s"
+                        )
+                        % repr(row),
+                    )
+                return row
+        return None
+
+    def rows(self) -> Iterator[list[str]]:
+        while (next_row := self.skip_to_and_return_next_row()) is not None:
+            yield next_row
+        return
+
+    def __iter__(self) -> Iterator[list[str]]:
+        yield from self.rows()
+
+    @property
+    def row_length(self) -> int:
+        if self._num_fields is not None:
+            return self._num_fields
+
+        current_pos = self._handle.tell()
+        next_row = self.skip_to_and_return_next_row() or []
+        self._handle.seek(current_pos)
+        return len(next_row)
+
+    @property
+    def title_row(self) -> list[str] | None:
+        """
+        Return the title row, if one exists, taking care to only ever advance the reader
+        cursor once, even if called multiple times.
+        """
+        if not self._has_title_line:
+            # If we aren't expecting a title line and we are called anyway, do not
+            # advance the reader cursor.
+            return None
+
+        if self._title_row is not None:
+            # If we've already established the title row, then just return it.
+            return self._title_row
+
+        # TODO: Consider throwing if there is no next row
+        return self.skip_to_and_return_next_row()
+
+    @property
+    def has_title_line(self) -> bool:
+        return self._has_title_line
+
+    def rows_as_dict(self, attr_names: Sequence[str]) -> Iterator[dict[str, str]]:
+        """
+        Yield each row rendered as a dictionary with keys being the names given in attr_names
+        and values being the fields from the CSV.
+
+        In other words:
+        Given attr_names=["host_name", "ipaddress"]
+
+        ..and a row like:
+        "server01,192.168.100.1"
+
+        ...we would yield:
+        {"host_name": "server01", "ipaddress": "192.168.100.1"}.
+
+        Raises an exception if the number of attr_names differs from the number of fields.
+        """
+        if len(attr_names) != self.row_length:
+            raise ValueError(
+                f"Got {len(attr_names)} attribute names, but row length is {self.row_length}"
+            )
+
+        while (row := self.skip_to_and_return_next_row()) is not None:
+            yield dict(zip(attr_names, row))
 
 
 class ModeBulkImport(WatoMode):
@@ -89,7 +370,6 @@ class ModeBulkImport(WatoMode):
     def __init__(self) -> None:
         super().__init__()
         self._params: dict[str, Any] | None = None
-        self._has_title_line = True
 
     @property
     def _upload_tmp_path(self) -> Path:
@@ -147,11 +427,13 @@ class ModeBulkImport(WatoMode):
             if request.has_var("_do_upload"):
                 self._upload_csv_file()
 
-            csv_reader = self._open_csv_file()
+            has_title_line = self.params.get("has_title_line", False)
+            delimiter = self.params.get("field_delimiter")
+            csv_bulk_import = self._open_csv_file(has_title_line, delimiter)
 
             if request.var("_do_import"):
                 return self._import(
-                    csv_reader,
+                    csv_bulk_import,
                     host_attributes=all_host_attributes(
                         config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
                     ),
@@ -195,162 +477,49 @@ class ModeBulkImport(WatoMode):
             if mtime < time.time() - 3600:
                 path.unlink()
 
-    def _get_custom_csv_dialect(self, delim: str) -> type[csv.Dialect]:
-        class CustomCSVDialect(csv.excel):
-            delimiter = delim
+    @property
+    def params(self) -> dict[str, Any]:
+        if self._params is None:
+            self._params = self.validate_params()
+        return self._params
 
-        return CustomCSVDialect
+    def validate_params(self) -> dict[str, Any]:
+        vs_parse_params = self._vs_parse_params()
 
-    def _open_csv_file(self) -> CSVReader:
-        try:
-            csv_file = self._file_path().open(encoding="utf-8")
-        except OSError:
-            raise MKUserError(
-                None, _("Failed to read the previously uploaded CSV file. Please upload it again.")
-            )
-
-        if list(request.itervars(prefix="_preview")):
-            params = self._vs_parse_params().from_html_vars("_preview")
+        # If the request has any _preview* vars at all, populate the ValueSpec instance with them.
+        # Otherwise, use the defaults from the ValueSpec itself.
+        if any(True for _ in request.itervars(prefix="_preview")):
+            params = vs_parse_params.from_html_vars("_preview")
         else:
-            params = {
-                "has_title_line": True,
-            }
+            params = self._vs_parse_params().default_value()
 
-        self._vs_parse_params().validate_value(params, "_preview")
-        self._params = params
-        assert self._params is not None
-        self._has_title_line = self._params.get("has_title_line", False)
+        vs_parse_params.validate_value(params, "_preview")
+        return params
 
-        # try to detect the CSV format to be parsed
-        if "field_delimiter" in params:
-            csv_dialect = self._get_custom_csv_dialect(params["field_delimiter"])
-        else:
-            try:
-                csv_dialect = csv.Sniffer().sniff(csv_file.read(2048), delimiters=",;\t:")
-                csv_file.seek(0)
-            except csv.Error as e:
-                if "Could not determine delimiter" in str(e):
-                    # Failed to detect the CSV files field delimiter character. Using ";" now. If
-                    # you need another one, please specify it manually.
-                    csv_dialect = self._get_custom_csv_dialect(";")
-                    csv_file.seek(0)
-                else:
-                    raise
-
-        return csv.reader(csv_file, csv_dialect)
-
-    def _next_until_nonempty(self, csv_reader: CSVReader) -> list[str] | None:
-        for row in csv_reader:
-            if row:
-                return row
-        return None
+    def _open_csv_file(self, has_title_line: bool, delimiter: str | None) -> CSVBulkImport:
+        handle = get_handle_for_csv(self._file_path())
+        return CSVBulkImport(handle, has_title_line, delimiter)
 
     def _import(
         self,
-        csv_reader: CSVReader,
+        csv_bulk_import: CSVBulkImport,
         host_attributes: Mapping[str, ABCHostAttribute],
         *,
         debug: bool,
         pprint_value: bool,
         use_git: bool,
     ) -> ActionResult:
-        def _emit_raw_rows(_reader: CSVReader) -> typing.Generator[dict, None, None]:
-            if self._has_title_line:
-                # Read until the first non-empty line, in this case the title line
-                if self._next_until_nonempty(_reader) is None:
-                    return
-
-            def _check_duplicates(_names: list[str | None]) -> None:
-                _attrs_seen = set()
-                for _name in _names:
-                    # "-" is the value set for "Don't import"
-                    if _name != "-" and _name in _attrs_seen:
-                        raise MKUserError(
-                            None,
-                            _(
-                                'The attribute "%s" is assigned to multiple columns. '
-                                "You can not populate one attribute from multiple columns. "
-                                "The column to attribute associations need to be unique."
-                            )
-                            % _name,
-                        )
-                    _attrs_seen.add(_name)
-
-            # Determine the used attributes once. We also check for duplicates only once.
-            if (first_row := self._next_until_nonempty(_reader)) is None:
-                return
-
-            _attr_names = [request.var(f"attribute_{index}") for index in range(len(first_row))]
-            _check_duplicates(_attr_names)
-            yield dict(zip(_attr_names, first_row))
-
-            for csv_row in _reader:
-                if not csv_row:
-                    continue  # skip empty lines
-
-                yield dict(zip(_attr_names, csv_row))
-
-        def _transform_and_validate_raw_rows(
-            iterator: typing.Iterator[dict[str, str]],
-            host_attributes: Mapping[str, ABCHostAttribute],
-        ) -> typing.Generator[ImportTuple, None, None]:
-            """Here we transform each row into a tuple of HostName and HostAttributes and None.
-
-            This format is directly compatible with Folder().create_hosts(...)
-
-            Each attribute will be validated against it's corresponding ValueSpec.
-
-            Example:
-                Before:
-                    [{'alias': 'foo', 'host_name': 'foo_server', 'dummy_attr': '5'}]
-
-                After:
-                    [('foo_server', {'alias': 'foo', 'dummy_attr': '5'}, None)]
-
-            """
-            hostname_valuespec = Hostname()
-
-            for row_num, entry in enumerate(iterator):
-                _host_name: HostName | None = None
-                # keys are ordered in insert-first order, so we can derive col_num from the ordering
-                for col_num, (attr_name, attr_value) in enumerate(
-                    list(entry.items())
-                ):  # iterate on copy
-                    if attr_name == "host_name":
-                        hostname_valuespec.validate_value(attr_value, "host")
-                        # Remove host_name from attributes
-                        del entry["host_name"]
-                        _host_name = HostName(attr_value)
-                    elif attr_name in ("-", ""):
-                        # Don't import / No select
-                        del entry[attr_name]
-                    elif attr_name != "alias":
-                        host_attribute_inst = host_attributes[attr_name]
-
-                        if not attr_value.isascii():
-                            raise MKUserError(
-                                None,
-                                _('Non-ASCII characters are not allowed in the attribute "%s".')
-                                % attr_name,
-                            )
-                        try:
-                            host_attribute_inst.validate_input(attr_value, "")
-                        except MKUserError as exc:
-                            raise MKUserError(
-                                None,
-                                _("Invalid value in column %d (%s) of row %d: %s")
-                                % (col_num, attr_name, row_num, exc),
-                            ) from exc
-
-                if _host_name is None:
-                    raise MKUserError(
-                        None, _("The host name attribute needs to be assigned to a column.")
-                    )
-
-                yield _host_name, typing.cast(HostAttributes, entry), None
-
-        raw_rows = _emit_raw_rows(csv_reader)
-        host_attribute_tuples: typing.Iterator[ImportTuple] = _transform_and_validate_raw_rows(
+        # The attribute names will come as request variables stored at attribute_0...attribute_n
+        # where n is, in theory, the row length - 1. And, in theory, they should always exist, even
+        # if they are the empty string. 'None' would be weird, likely the user manually modified
+        # the form and deleted the field. In that case, rows_as_dict() would raise ValueError.
+        attr_names: list[str] = [
+            name
+            for index in range(csv_bulk_import.row_length)
+            if (name := request.var(f"attribute_{index}")) is not None
+        ]
+        raw_rows = csv_bulk_import.rows_as_dict(attr_names)
+        host_attribute_tuples: typing.Iterator[ImportTuple] = _host_rows_to_bulk(
             raw_rows, host_attributes
         )
 
@@ -493,12 +662,13 @@ class ModeBulkImport(WatoMode):
         with html.form_context("preview", method="POST"):
             self._preview_form()
 
-            attributes = self._attribute_choices(tag_groups)
+            custom_host_attrs = ModeCustomHostAttrs().get_attributes()
+            attributes = _attribute_choices(tag_groups, custom_host_attrs)
 
             # first line could be missing in situation of import error
-            csv_reader = self._open_csv_file()
-            if not csv_reader:
-                return  # don't try to show preview when CSV could not be read
+            has_title_line = self.params.get("has_title_line", False)
+            delimiter = self.params.get("field_delimiter")
+            csv_bulk_import = self._open_csv_file(has_title_line, delimiter)
 
             html.h2(_("Preview"))
             attribute_list = "<ul>%s</ul>" % "".join(
@@ -527,21 +697,17 @@ class ModeBulkImport(WatoMode):
                 )
             )
 
-            # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
-            # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
-            # erneut importieren kann.
-            headers = []
-            if self._has_title_line:
-                # Read until the first non-empty line, in this case the title line
-                headers = self._next_until_nonempty(csv_reader) or []
+            headers: list[str] = csv_bulk_import.title_row or []
 
-            rows = list(csv_reader)
-
-            # Determine how many columns should be rendered by using the longest column
-            num_columns = max(len(r) for r in [headers] + rows)
+            # 2.5+: We explicitly assume a well-formed CSV with consistent column lengths
+            # and CSVBulkImport will raise if ever asked to produce a row (e.g. from rows_as_dict())
+            # with a number of columns different from the first row (or title row if it exists).
+            #
+            # In <2.5, we would silently drop extra columns on import.
+            num_columns = csv_bulk_import.row_length
 
             with table_element(
-                sortable=False, searchable=False, omit_headers=not self._has_title_line
+                sortable=False, searchable=False, omit_headers=not csv_bulk_import.has_title_line
             ) as table:
                 # Render attribute selection fields
                 table.row()
@@ -552,7 +718,7 @@ class ModeBulkImport(WatoMode):
                     if request.var(attribute_varname):
                         attribute_method = request.get_ascii_input_mandatory(attribute_varname)
                     else:
-                        attribute_method = self._try_detect_default_attribute(attributes, header)
+                        attribute_method = _detect_attribute(attributes, header)
                         request.del_var(attribute_varname)
 
                     html.dropdown(
@@ -563,19 +729,13 @@ class ModeBulkImport(WatoMode):
                     )
 
                 # Render sample rows
-                for row in rows:
-                    if not row:
-                        continue  # skip empty lines
+                for row in csv_bulk_import:
                     table.row()
                     for cell in row:
                         table.cell(None, cell)
 
     def _preview_form(self) -> None:
-        if self._params is not None:
-            params = self._params
-        else:
-            params = self._vs_parse_params().default_value()
-        self._vs_parse_params().render_input("_preview", params)
+        self._vs_parse_params().render_input("_preview", self.params)
         html.hidden_fields()
 
     def _vs_parse_params(self) -> Dictionary:
@@ -603,51 +763,3 @@ class ModeBulkImport(WatoMode):
             title=_("File Parsing Settings"),
             default_keys=["has_title_line"],
         )
-
-    def _attribute_choices(self, tag_groups: Sequence[TagGroup]) -> Choices:
-        attributes = [
-            (None, _("(please select)")),
-            ("-", _("Don't import")),
-            ("host_name", _("Host name")),
-            ("alias", _("Alias")),
-            ("site", _("Monitored on site")),
-            ("ipaddress", _("IPv4 address")),
-            ("ipv6address", _("IPv6 address")),
-            ("snmp_community", _("SNMP community")),
-        ]
-
-        # Add tag groups
-        for tag_group in tag_groups:
-            attributes.append(("tag_" + tag_group.id, _("Tag: %s") % tag_group.title))
-
-        # Add custom attributes
-        for entry in ModeCustomHostAttrs().get_attributes():
-            name = entry["name"]
-            attributes.append((name, _("Custom variable: %s") % name))
-
-        return attributes
-
-    # Try to detect the host attribute to choose for this column based on the header
-    # of this column (if there is some).
-    def _try_detect_default_attribute(self, attributes, header):
-        if header is None:
-            return ""
-
-        def similarity(a, b):
-            return SequenceMatcher(None, a, b).ratio()
-
-        highscore = 0.0
-        best_key = ""
-        for key, title in attributes:
-            if key is not None:
-                key_match_score = similarity(key, header)
-                title_match_score = similarity(title, header)
-                score = (
-                    key_match_score if key_match_score > title_match_score else title_match_score
-                )
-
-                if score > 0.6 and score > highscore:
-                    best_key = key
-                    highscore = score
-
-        return best_key

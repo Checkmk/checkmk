@@ -1,0 +1,9 @@
+module(
+    name = "clickhouse",
+    # We choose the stable over the lts version based on the documentation below.
+    # https://github.com/ClickHouse/clickhouse-docs/blob/3825267408bb43b9b75e9201039d4264729ecebd/docs/faq/operations/production.md
+    version = "v25.9.3.48-stable",
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")

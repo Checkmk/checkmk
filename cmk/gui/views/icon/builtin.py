@@ -9,7 +9,6 @@ from collections.abc import Mapping, Sequence
 from typing import Literal
 
 import cmk.utils.render
-from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -25,12 +24,13 @@ from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.visual_link import url_to_visual
 from cmk.utils.tags import TagID
 
 from ..graph import cmk_graph_url
-from .base import Icon
+from .base import Icon, IconConfig
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -49,6 +49,8 @@ def _render_action_menu_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     url_vars = [
         ("host", row["host_name"]),
@@ -100,6 +102,8 @@ def _render_icon_image_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> HTML | None:
     img = row[what + "_icon_image"]
     if not img:
@@ -137,6 +141,8 @@ def _render_reschedule_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str] | tuple[str, str, tuple[str, str]] | None:
     if what == "service" and row["service_cached_at"]:
         output = _("This service is based on cached agent data and cannot be rescheduled.")
@@ -205,14 +211,16 @@ def _render_rule_editor_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     if row[what + "_check_type"] == 2:
         return None  # shadow services have no parameters
 
     if (
-        active_config.wato_enabled
+        icon_config.wato_enabled
         and user.may("wato.rulesets")
-        and active_config.multisite_draw_ruleicon
+        and icon_config.multisite_draw_ruleicon
     ):
         urlvars = [
             ("mode", "object_parameters"),
@@ -257,8 +265,10 @@ def _render_manpage_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
-    if what == "service" and active_config.wato_enabled and user.may("wato.use"):
+    if what == "service" and icon_config.wato_enabled and user.may("wato.use"):
         command = row["service_check_command"]
         if command.startswith("check_mk-mgmt_"):
             check_type = command[14:]
@@ -311,6 +321,8 @@ def _render_acknowledge_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     if row[what + "_acknowledged"]:
         return "ack", _("This problem has been acknowledged")
@@ -344,6 +356,8 @@ def _render_perfgraph_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     if row[what + "_pnpgraph_present"] == 1:
         return _pnp_icon(row, what)
@@ -408,6 +422,8 @@ def _render_prediction_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     # TODO: At least for interfaces we have 2 predictive values. But this icon
     # only creates a link to the first one. Add multiple icons or add a navigation
@@ -459,6 +475,8 @@ def _render_custom_action_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     if display_options.enabled(display_options.X):
         # action_url (only, if not a PNP-URL and pnp_graph is working!)
@@ -495,6 +513,8 @@ def _render_logwatch_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     if what != "service" or row[what + "_check_command"] not in [
         "check_mk-logwatch",
@@ -537,6 +557,8 @@ def _render_notes_url_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str, tuple[str, str]] | None:
     # Adds the url_prefix of the services site to the notes url configured in this site.
     # It also adds the master_url which will be used to link back to the source site
@@ -574,6 +596,8 @@ def _render_downtimes_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[IconSpec, str, str | None] | None:
     def detail_txt(
         downtimes_with_extra_info: Sequence[
@@ -621,7 +645,13 @@ def _render_downtimes_icon(
         return (
             icon,
             title,
-            url_to_visual(row, VisualLinkSpec("views", "downtimes_of_" + what), request=request),
+            url_to_visual(
+                row,
+                VisualLinkSpec("views", "downtimes_of_" + what),
+                user_permissions,
+                request=request,
+                force=False,
+            ),
         )
 
     if what == "service" and row["host_scheduled_downtime_depth"] > 0:
@@ -631,7 +661,13 @@ def _render_downtimes_icon(
         return (
             {"icon": "folder", "emblem": "downtime"},
             title,
-            url_to_visual(row, VisualLinkSpec("views", "downtimes_of_host"), request=request),
+            url_to_visual(
+                row,
+                VisualLinkSpec("views", "downtimes_of_host"),
+                user_permissions,
+                request=request,
+                force=False,
+            ),
         )
     return None
 
@@ -664,6 +700,8 @@ def _render_comments_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str, str | None] | None:
     comments = row[what + "_comments_with_extra_info"]
     if len(comments) > 0:
@@ -686,7 +724,13 @@ def _render_comments_icon(
         return (
             "comment",
             text,
-            url_to_visual(row, VisualLinkSpec("views", "comments_of_" + what), request=request),
+            url_to_visual(
+                row,
+                VisualLinkSpec("views", "comments_of_" + what),
+                user_permissions,
+                request=request,
+                force=False,
+            ),
         )
     return None
 
@@ -718,6 +762,8 @@ def _render_notifications_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     # Notifications disabled
     enabled = row[what + "_notifications_enabled"]
@@ -756,6 +802,8 @@ def _render_flapping_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | tuple[str, str]:
     if row[what + "_is_flapping"]:
         if what == "host":
@@ -791,15 +839,17 @@ def _render_staleness_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
-    if is_stale(row, config=active_config):
+    if is_stale(row, icon_config.staleness_threshold):
         if what == "host":
             title = _("This host is stale")
         else:
             title = _("This service is stale")
             title += (
                 _(", no data has been received within the last %.1f check periods")
-                % active_config.staleness_threshold
+                % icon_config.staleness_threshold
             )
         return "stale", title
     return None
@@ -832,6 +882,8 @@ def _render_active_checks_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     # Setting of active checks modified by user
     if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
@@ -870,6 +922,8 @@ def _render_passive_checks_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     # Passive checks disabled manually?
     if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
@@ -906,6 +960,8 @@ def _render_notification_period_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     if not row[what + "_in_notification_period"]:
         return "outofnot", _("Out of notification period")
@@ -936,6 +992,8 @@ def _render_service_period_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     if not row[what + "_in_service_period"]:
         return "outof_serviceperiod", _("Out of service period")
@@ -967,6 +1025,8 @@ def _render_stars(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
     stars = _get_stars()
 
@@ -1009,6 +1069,8 @@ def _render_crashed_check_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | tuple[str, str] | tuple[str, str, str]:
     if (
         what == "service"
@@ -1076,6 +1138,8 @@ def _render_check_period_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | tuple[str, str]:
     if what == "service":
         if row["%s_in_passive_check_period" % what] == 0 or row["%s_in_check_period" % what] == 0:

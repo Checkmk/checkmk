@@ -8,9 +8,22 @@ use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
 use std::time::Duration;
 use typed_builder::TypedBuilder;
 
+use crate::starttls;
+
+#[derive(Debug, Clone, clap::ValueEnum)]
+pub enum ConnectionType {
+    #[value(name = "tls")]
+    Tls,
+    #[value(name = "smtp_starttls")]
+    SmtpStarttls,
+    #[value(name = "postgres_starttls")]
+    PostgresStarttls,
+}
+
 #[derive(Debug, TypedBuilder)]
 pub struct Config {
     timeout: Option<Duration>,
+    connection_type: ConnectionType,
 }
 
 fn to_addr(server: &str, port: u16) -> Result<SocketAddr> {
@@ -20,11 +33,18 @@ fn to_addr(server: &str, port: u16) -> Result<SocketAddr> {
 
 pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<Vec<u8>>> {
     let addr = to_addr(server, port)?;
-    let stream = match config.timeout {
+    let mut stream = match config.timeout {
         None => TcpStream::connect(addr)?,
         Some(dur) => TcpStream::connect_timeout(&addr, dur)?,
     };
     stream.set_read_timeout(config.timeout)?;
+
+    match config.connection_type {
+        ConnectionType::Tls => (),
+        ConnectionType::SmtpStarttls => starttls::smtp::perform(&mut stream, server)?,
+        ConnectionType::PostgresStarttls => starttls::postgres::perform(&mut stream)?,
+    };
+
     let mut connector_builder = SslConnector::builder(SslMethod::tls())?;
     connector_builder.set_verify(SslVerifyMode::NONE);
     let connector = connector_builder.build();
@@ -32,6 +52,12 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
         .configure()
         .context("Cannot configure connection")?;
     let mut stream = connector.connect(server, stream)?;
+
+    // Send EHLO again for SMTP STARTTLS to comply with RFC 3207
+    if let ConnectionType::SmtpStarttls = config.connection_type {
+        starttls::smtp::send_ehlo(&mut stream, server)?;
+    }
+
     let chain = stream
         .ssl()
         .peer_cert_chain()

@@ -246,6 +246,8 @@ install_for_python_dev() {
         "libxmlsec1-dev"
         "libffi-dev"
         "liblzma-dev"
+        "libperl-dev"
+        "libpcap-dev"
     )
     install_packages "${PACKAGES_TO_INSTALL[@]}"
 
@@ -292,6 +294,7 @@ install_for_cpp_dev() {
     prepare_gplusplus_sources_list
 
     local PACKAGES_TO_INSTALL=(
+        "flex"            # to build pcap
         "bison"           # to build binutils
         "texinfo"         # to build gdb
         "tk-dev"          # to build gdb

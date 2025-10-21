@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import abc
 from collections.abc import Iterator
 
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import Choices, HTTPVariables, Rows, SingleInfos, Visual, VisualContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import get_labels
 
 
@@ -57,29 +60,32 @@ class VisualType(abc.ABC):
         add_type: str,
         context: VisualContext | None,
         parameters: dict,
+        user_permissions: UserPermissions,
     ) -> None:
         """The function to handle adding the given visual to the given visual of this type"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
+    def page_menu_add_to_entries(
+        self, add_type: str, user_permissions: UserPermissions
+    ) -> Iterator[PageMenuEntry]:
         """List of visual choices another visual of the given type can be added to"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def load_handler(self) -> None:
-        """Load all visuals of this type"""
+    def visuals(self) -> dict:
+        """Get all visuals of this type"""
         raise NotImplementedError()
 
-    @property
     @abc.abstractmethod
-    def permitted_visuals(self) -> dict:
+    def permitted_visuals(self, visuals: dict, user_permissions: UserPermissions) -> dict:
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
-    @property
-    def choices(self) -> Choices:
-        return [(k, v["title"]) for k, v in self.permitted_visuals.items()]
+    def choices(self, visuals: dict, user_permissions: UserPermissions) -> Choices:
+        return [
+            (k, v["title"]) for k, v in self.permitted_visuals(visuals, user_permissions).items()
+        ]
 
     def link_from(
         self,

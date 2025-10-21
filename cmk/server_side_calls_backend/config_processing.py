@@ -3,30 +3,66 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, Literal, TypeVar
 
-from cmk.server_side_calls.v1 import EnvProxy, NoProxy, Secret, URLProxy
+from cmk.server_side_calls import alpha, v1
 from cmk.utils import config_warnings
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
 @dataclass(frozen=True)
-class ProxyConfig:
-    host_name: str
-    global_proxies: Mapping[str, Mapping[str, str]]
+class GlobalProxyAuth:
+    user: str
+    password: tuple[Literal["password"], str] | tuple[Literal["store"], str]
+
+
+@dataclass(frozen=False)
+class GlobalProxy:
+    scheme: str
+    proxy_server_name: str
+    port: int
+    auth: GlobalProxyAuth | None = None
+
+    def url(self, password_lookup: Callable[[str], str | None]) -> str:
+        if self.auth is None:
+            return f"{self.scheme}://{self.proxy_server_name}:{self.port}"
+
+        if self.auth.password[0] == "store":
+            if (password := password_lookup(self.auth.password[1])) is None:
+                config_warnings.warn(
+                    f'The stored password "{self.auth.password[1]}" does not exist.'
+                )
+                return f"{self.scheme}://{self.proxy_server_name}:{self.port}"
+
+            return (
+                f"{self.scheme}://{self.auth.user}:{password}@{self.proxy_server_name}:{self.port}"
+            )
+
+        return (
+            f"{self.scheme}://{self.auth.user}:{self.auth.password[1]}@"
+            f"{self.proxy_server_name}:{self.port}"
+        )
+
+
+type GlobalProxies = Mapping[str, GlobalProxy]
+
+
+@dataclass(frozen=True)
+class GlobalProxiesWithLookup:
+    global_proxies: GlobalProxies
+    password_lookup: Callable[[str], str | None]
 
 
 def extract_all_adhoc_secrets(
     rules_by_name: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
-    # TODO: we will have to pass proxy config here as well if global proxies can contain explicit secrets
-    proxy_config: ProxyConfig | None = None,
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
 ) -> Mapping[str, str]:
     """
     >>> extract_all_adhoc_secrets(
-    ...     [
+    ...     rules_by_name=[
     ...         (
     ...             'pure_storage_fa',
     ...             [
@@ -37,6 +73,10 @@ def extract_all_adhoc_secrets(
     ...             ],
     ...         ),
     ...     ],
+    ...     global_proxies_with_lookup=GlobalProxiesWithLookup(
+    ...         global_proxies={},
+    ...         password_lookup=lambda name: None,
+    ...     ),
     ... )
     {':uuid:1234': 'knubblwubbl'}
     """
@@ -44,7 +84,12 @@ def extract_all_adhoc_secrets(
     preprocessing_results = [
         (
             name,
-            [process_configuration_to_parameters(rule, proxy_config, use_alpha) for rule in rules],
+            [
+                process_configuration_to_parameters(
+                    rule, global_proxies_with_lookup, f"ruleset: {name}", use_alpha
+                )
+                for rule in rules
+            ],
         )
         for name, rules in rules_by_name
     ]
@@ -69,10 +114,14 @@ class ReplacementResult(Generic[_RuleSetType_co]):
 
 def process_configuration_to_parameters(
     params: Mapping[str, object],
-    proxy_config: ProxyConfig | None,
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
+    usage_hint: str,
     is_alpha: bool,
 ) -> ReplacementResult[Mapping[str, object]]:
-    d_results = [(k, _processed_config_value(v, proxy_config, is_alpha)) for k, v in params.items()]
+    d_results = [
+        (k, _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_alpha))
+        for k, v in params.items()
+    ]
     return ReplacementResult(
         value={k: res.value for k, res in d_results},
         found_secrets={k: v for _, res in d_results for k, v in res.found_secrets.items()},
@@ -82,12 +131,16 @@ def process_configuration_to_parameters(
 
 def _processed_config_value(
     params: object,
-    proxy_config: ProxyConfig | None,
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
+    usage_hint: str,
     is_alpha: bool,
 ) -> ReplacementResult[object]:
     match params:
         case list():
-            results = [_processed_config_value(v, proxy_config, is_alpha) for v in params]
+            results = [
+                _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_alpha)
+                for v in params
+            ]
             return ReplacementResult(
                 value=[res.value for res in results],
                 found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
@@ -96,64 +149,102 @@ def _processed_config_value(
         case tuple():
             match params:
                 case ("cmk_postprocessed", "stored_password", value):
-                    return _replace_password(value[0], None)
+                    return _replace_password(value[0], None, is_alpha=is_alpha)
                 case ("cmk_postprocessed", "explicit_password", value):
-                    return _replace_password(*value)
+                    return _replace_password(value[0], value[1], is_alpha=is_alpha)
                 case ("cmk_postprocessed", "no_proxy", str()):
-                    return ReplacementResult(NoProxy(), {}, {})
+                    return ReplacementResult(alpha.NoProxy() if is_alpha else v1.NoProxy(), {}, {})
                 case ("cmk_postprocessed", "environment_proxy", str()):
-                    return ReplacementResult(EnvProxy(), {}, {})
+                    return ReplacementResult(
+                        alpha.EnvProxy() if is_alpha else v1.EnvProxy(), {}, {}
+                    )
                 case (
                     "cmk_postprocessed",
                     "stored_proxy" | "explicit_proxy" as proxy_type,
                     str(proxy_spec),
                 ):
-                    if proxy_config is not None:
-                        return ReplacementResult(
-                            value=_replace_url_proxies(proxy_type, proxy_spec, proxy_config),
-                            found_secrets={},
-                            surrogates={},
+                    return (
+                        _replace_alpha_url_proxies(
+                            proxy_type, proxy_spec, global_proxies_with_lookup, usage_hint
                         )
-
-            results = [_processed_config_value(v, proxy_config, is_alpha) for v in params]
-            return ReplacementResult(
-                value=tuple(res.value for res in results),
-                found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
-                surrogates={k: v for res in results for k, v in res.surrogates.items()},
-            )
+                        if is_alpha
+                        else _replace_v1_url_proxies(
+                            proxy_type, proxy_spec, global_proxies_with_lookup, usage_hint
+                        )
+                    )
+                case _:
+                    results = [
+                        _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_alpha)
+                        for v in params
+                    ]
+                    return ReplacementResult(
+                        value=tuple(res.value for res in results),
+                        found_secrets={
+                            k: v for res in results for k, v in res.found_secrets.items()
+                        },
+                        surrogates={k: v for res in results for k, v in res.surrogates.items()},
+                    )
         case dict():
-            return process_configuration_to_parameters(params, proxy_config, is_alpha)
-    return ReplacementResult(value=params, found_secrets={}, surrogates={})
+            return process_configuration_to_parameters(
+                params, global_proxies_with_lookup, usage_hint, is_alpha
+            )
+        case other:
+            return ReplacementResult(value=other, found_secrets={}, surrogates={})
 
 
 def _replace_password(
     name: str,
     value: str | None,
-) -> ReplacementResult:
+    is_alpha: bool,
+) -> ReplacementResult[alpha.Secret | v1.Secret]:
     # We need some injective function.
     surrogate = id(name)
     return ReplacementResult(
-        value=Secret(surrogate),
+        value=(alpha.Secret if is_alpha else v1.Secret)(surrogate),
         found_secrets={} if value is None else {name: value},
         surrogates={surrogate: name},
     )
 
 
-def _replace_url_proxies(
+def _replace_v1_url_proxies(
     proxy_type: Literal["stored_proxy", "explicit_proxy"],
     proxy_spec: str,
-    proxy_config: ProxyConfig,
-) -> ReplacementResult:
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
+    usage_hint: str,
+) -> ReplacementResult[v1.EnvProxy | v1.URLProxy]:
     if proxy_type == "explicit_proxy":
-        return ReplacementResult(URLProxy(url=proxy_spec), {}, {})
+        return ReplacementResult(v1.URLProxy(url=proxy_spec), {}, {})
 
     try:
-        global_proxy = proxy_config.global_proxies[proxy_spec]
+        global_proxy = global_proxies_with_lookup.global_proxies[proxy_spec]
     except KeyError:
-        config_warnings.warn(
-            f'The global proxy "{proxy_spec}" used by host "{proxy_config.host_name}"'
-            " does not exist."
-        )
-        return ReplacementResult(EnvProxy(), {}, {})
+        config_warnings.warn(f'The global proxy "{proxy_spec}" ({usage_hint}) does not exist.')
+        return ReplacementResult(v1.EnvProxy(), {}, {})
 
-    return ReplacementResult(URLProxy(url=global_proxy["proxy_url"]), {}, {})
+    return ReplacementResult(
+        v1.URLProxy(url=global_proxy.url(global_proxies_with_lookup.password_lookup)),
+        {},
+        {},
+    )
+
+
+def _replace_alpha_url_proxies(
+    proxy_type: Literal["stored_proxy", "explicit_proxy"],
+    proxy_spec: str,
+    global_proxies_with_lookup: GlobalProxiesWithLookup,
+    usage_hint: str,
+) -> ReplacementResult[alpha.EnvProxy | alpha.URLProxy]:
+    if proxy_type == "explicit_proxy":
+        return ReplacementResult(alpha.URLProxy(url=proxy_spec), {}, {})
+
+    try:
+        global_proxy = global_proxies_with_lookup.global_proxies[proxy_spec]
+    except KeyError:
+        config_warnings.warn(f'The global proxy "{proxy_spec}" ({usage_hint}) does not exist.')
+        return ReplacementResult(alpha.EnvProxy(), {}, {})
+
+    return ReplacementResult(
+        alpha.URLProxy(url=global_proxy.url(global_proxies_with_lookup.password_lookup)),
+        {},
+        {},
+    )

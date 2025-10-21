@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 import argparse
 import csv
 import json
@@ -60,6 +63,7 @@ LINKS = {
     "WTFPL": "https://spdx.org/licenses/WTFPL.html",
     "ZPL-2.1": "https://old.zope.dev/Resources/ZPL/",
     "Zlib": "https://opensource.org/license/Zlib",
+    "python-ldap": "https://github.com/python-ldap/python-ldap/blob/python-ldap-3.4.4/LICENCE.MIT",
     "xinetd": "https://fedoraproject.org/wiki/Licensing/Xinetd_License",
 }
 

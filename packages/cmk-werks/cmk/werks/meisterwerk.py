@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk development script to manage werks with the help of AI"""
 
+import datetime
 import sys
 import uuid
 from enum import Enum
-import datetime
 
 import httpx
 from rich.box import HORIZONTALS
@@ -37,7 +37,6 @@ from .schemas.responses import (
     RewritingResponse,
     UserUnderstandingResponse,
 )
-
 from .schemas.werk import Werk as WerkTuple
 
 URL = "http://meisterwerk.lan.checkmk.net/werks/"

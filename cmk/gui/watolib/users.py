@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -27,6 +31,7 @@ from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import (
@@ -37,6 +42,7 @@ from cmk.gui.watolib.user_scripts import (
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 from cmk.utils import paths
 from cmk.utils.log.security_event import log_security_event
+from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 
 _UserAssociatedSitesFn: TypeAlias = Callable[[UserSpec], Sequence[SiteId] | None]
@@ -71,7 +77,7 @@ def delete_users(
     *,
     use_git: bool,
     acting_user: LoggedInUser,
-) -> None:
+) -> tuple[list[UserId], dict[UserId, list[EventRule]]]:
     acting_user.need_permission("wato.users")
     acting_user.need_permission("wato.edit")
     if user.id in users_to_delete:
@@ -81,8 +87,12 @@ def delete_users(
 
     deleted_users = []
     affected_sites: _AffectedSites = set()
+    all_rules = NotificationRuleConfigFile().load_for_reading()
+    users_used_in_notification_rule: dict[UserId, list[EventRule]] = {}
     for entry in users_to_delete:
         if entry in all_users:  # Silently ignore not existing users
+            if used_in_rules := _user_used_in_notification_rule(all_rules, entry):
+                users_used_in_notification_rule.setdefault(entry, used_in_rules)
             deleted_users.append(entry)
             affected_sites = _update_affected_sites(affected_sites, sites(all_users[entry]))
             connection_id = all_users[entry].get("connector", None)
@@ -124,6 +134,13 @@ def delete_users(
             pprint_value=active_config.wato_pprint_config,
             call_users_saved_hook=True,
         )
+    return deleted_users, users_used_in_notification_rule
+
+
+def _user_used_in_notification_rule(all_rules: list[EventRule], user_id: UserId) -> list[EventRule]:
+    return [
+        rule for rule in all_rules if "contact_users" in rule and rule["contact_users"] == [user_id]
+    ]
 
 
 def edit_users(
@@ -251,7 +268,7 @@ def create_user(
     affected_sites = _update_affected_sites(set(), sites(new_user))
     add_change(
         action_name="edit-users",
-        text=_l("Created new users: %s") % new_user,
+        text=_l("Created new user: %s") % user_id,
         user_id=acting_user.id,
         sites=None if affected_sites == "all" else list(affected_sites),
         use_git=use_git,

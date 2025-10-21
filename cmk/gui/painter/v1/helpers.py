@@ -2,10 +2,12 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-any-return"
+
 from collections.abc import Sequence
 from typing import NamedTuple, TypeVar
 
-from cmk.gui.config import Config
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.view_utils import CellContent, CellSpec
@@ -34,13 +36,13 @@ def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
         return str(e)
 
 
-def is_stale(row: Row, *, config: Config) -> bool:
+def is_stale(row: Row, staleness_threshold: float) -> bool:
     staleness = row.get("service_staleness", row.get("host_staleness", 0)) or 0
-    return staleness >= config.staleness_threshold
+    return staleness >= staleness_threshold
 
 
-def paint_stalified(row: Row, text: CellContent, *, config: Config) -> CellSpec:
-    if is_stale(row, config=config):
+def paint_stalified(row: Row, text: CellContent, staleness_threshold: float) -> CellSpec:
+    if is_stale(row, staleness_threshold):
         return "stale", text
     return "", text
 

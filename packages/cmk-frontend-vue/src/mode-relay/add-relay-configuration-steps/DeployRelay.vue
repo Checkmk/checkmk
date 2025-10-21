@@ -7,15 +7,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
+import CmkCode from '@/components/CmkCode.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const { _t } = usei18n()
+
+const codeText = ``
 </script>
 
 <template>
   <CmkParagraph>
     {{
-      _t('This is a placeholder for the relay setup wizard. The actual implementation is pending.')
+      _t('Download the Relay container image and run it in your environment to start the setup.')
     }}
   </CmkParagraph>
+  <CmkCode :code_txt="codeText"> </CmkCode>
 </template>

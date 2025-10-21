@@ -3,23 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 import json
 from collections.abc import Iterator
 from typing import cast
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.graphing._graph_specification import GraphSpecification, parse_raw_graph_specification
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.ccc.user import UserId
+from cmk.gui.graphing import (
+    GraphSpecification,
+    parse_raw_graph_specification,
+    TemplateGraphSpecification,
+)
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig
-from .store import add_dashlet, get_permitted_dashboards, load_dashboard
-from .type_defs import ABCGraphDashletConfig, ViewDashletConfig
+from .store import (
+    add_dashlet,
+    get_all_dashboards,
+    get_permitted_dashboards,
+    load_dashboard,
+)
+from .type_defs import (
+    ABCGraphDashletConfig,
+    DashboardConfig,
+    DashboardName,
+    ViewDashletConfig,
+)
 
 
 class VisualTypeDashboards(VisualType):
@@ -47,7 +66,9 @@ class VisualTypeDashboards(VisualType):
     def show_url(self):
         return "dashboard.py"
 
-    def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
+    def page_menu_add_to_entries(
+        self, add_type: str, user_permissions: UserPermissions
+    ) -> Iterator[PageMenuEntry]:
         if not user.may("general.edit_dashboards"):
             return
 
@@ -69,6 +90,7 @@ class VisualTypeDashboards(VisualType):
         add_type: str,
         context: VisualContext | None,
         parameters: dict,
+        user_permissions: UserPermissions,
     ) -> None:
         if not user.may("general.edit_dashboards"):
             # Exceptions do not work here.
@@ -136,11 +158,14 @@ class VisualTypeDashboards(VisualType):
         # to the AJAX request
         response.set_data("OK dashboard.py?name=" + target_visual_name + "&edit=1")
 
-    def load_handler(self):
-        pass
+    def visuals(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
+        return get_all_dashboards()
 
-    @property
-    def permitted_visuals(self):
+    def permitted_visuals(
+        self,
+        visuals: dict[tuple[UserId, DashboardName], DashboardConfig],
+        user_permissions: UserPermissions,
+    ) -> dict[DashboardName, DashboardConfig]:
         return get_permitted_dashboards()
 
     def _handle_add_graph(

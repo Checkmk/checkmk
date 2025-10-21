@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import sys
 from argparse import ArgumentParser
 from argparse import Namespace as Args
@@ -67,25 +70,25 @@ def test_distro_lists():
 
     # fmt: off
     assert distros_for_use_case(edition_distros, "enterprise", "release") == [
-        "almalinux-8", "almalinux-9",
+        "almalinux-10", "almalinux-8", "almalinux-9",
         "cma-4",
         "debian-12",
         "sles-15sp5", "sles-15sp6",
         "ubuntu-22.04", "ubuntu-24.04",
     ]
     assert distros_for_use_case(edition_distros, "enterprise", "daily") == [
-        "almalinux-8", "almalinux-9",
+        "almalinux-10", "almalinux-8", "almalinux-9",
         "cma-4",
         "debian-12",
         "sles-15sp5", "sles-15sp6",
         "ubuntu-22.04", "ubuntu-24.04",
     ]
     assert distros_for_use_case(edition_distros, "all", "all") == [
-        "almalinux-8", "almalinux-9",
+        "almalinux-10", "almalinux-8", "almalinux-9",
         "cma-4",
         "debian-12",
         "sles-15sp5", "sles-15sp6",
-        "ubuntu-22.04", "ubuntu-24.04"
+        "ubuntu-22.04", "ubuntu-24.04",
     ]
     # fmt: on
 

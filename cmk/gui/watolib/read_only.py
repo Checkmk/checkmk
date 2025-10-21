@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Setup can be set into read only mode manually."""
 
+# mypy: disable-error-code="unreachable"
+
 import time
 
 from cmk.gui.http import request

@@ -5,6 +5,12 @@
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 Resources and resourcegroups are all treated lowercase because of:
 https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
@@ -495,7 +501,7 @@ class BaseApiClient(abc.ABC):
         self._http_proxy_config = http_proxy_config
 
     def login(self, tenant: str, client: str, secret: str) -> None:
-        client_app = msal.ConfidentialClientApplication(
+        client_app = msal.ConfidentialClientApplication(  # type: ignore[attr-defined]
             client,
             secret,
             f"{self._login_url}/{tenant}",
@@ -1906,7 +1912,11 @@ def process_resource_health(
         health_section[group].append(json.dumps(health_data))
 
     for group, values in health_section.items():
-        section = AzureSection("resource_health", [group.lower()])
+        section = AzureSection(
+            "resource_health",
+            piggytargets=[group.lower()],
+            separator=0,
+        )
         for value in values:
             section.add([value])
         yield section

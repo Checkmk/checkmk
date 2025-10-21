@@ -8,9 +8,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
@@ -23,6 +21,8 @@ import FieldComponent from '@/dashboard-wip/components/Wizard/components/TableFo
 import FieldDescription from '@/dashboard-wip/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard-wip/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard-wip/components/Wizard/components/TableForm/TableFormRow.vue'
+import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleContent.vue'
+import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp } from '@/dashboard-wip/components/Wizard/types.ts'
 
 import type { UseGauge } from './composables/useGauge.ts'
@@ -54,13 +54,13 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCollapsibleTitle
+  <CollapsibleTitle
     :title="_t('Data settings')"
     :open="displayDataSettings"
     class="collapsible"
     @toggle-open="displayDataSettings = !displayDataSettings"
   />
-  <CmkCollapsible :open="displayDataSettings">
+  <CollapsibleContent :open="displayDataSettings">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
@@ -108,17 +108,17 @@ const widgetProps = computed(() => handler.value.widgetProps)
         </FieldComponent>
       </TableFormRow>
     </TableForm>
-  </CmkCollapsible>
+  </CollapsibleContent>
 
   <ContentSpacer />
 
-  <CmkCollapsibleTitle
+  <CollapsibleTitle
     :title="_t('Widget visualization')"
     :open="displayVisualizationSettings"
     class="collapsible"
     @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
   />
-  <CmkCollapsible :open="displayVisualizationSettings">
+  <CollapsibleContent :open="displayVisualizationSettings">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Title') }}</FieldDescription>
@@ -161,7 +161,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
         </FieldComponent>
       </TableFormRow>
     </TableForm>
-  </CmkCollapsible>
+  </CollapsibleContent>
 
   <ContentSpacer />
 </template>

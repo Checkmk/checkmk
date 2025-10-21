@@ -2,6 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="var-annotated"
+
 # .1.3.6.1.4.1.23867.3.1.1.1.4.0 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmCount.0
 # .1.3.6.1.4.1.23867.3.1.1.2.1.1.3.1 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.1
 # .1.3.6.1.4.1.23867.3.1.1.2.1.1.3.2 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.2
@@ -17,9 +22,6 @@
 # .1.3.6.1.4.1.23867.3.1.1.2.1.1.6.4 to_sp01-mad_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.4
 
 # Taken from SILVERPEAK-TC.txt: translates silverpeak severities to checkmk's OK,WARN,CRIT
-
-
-# mypy: disable-error-code="var-annotated,index"
 
 from collections.abc import Iterable, Mapping
 from typing import Any
@@ -66,7 +68,7 @@ def parse_silverpeak(string_table):
             parsed.setdefault("alarms", [])
             parsed["alarms"].append(
                 {
-                    "state": severity_to_states.get(sever, 3)[1],
+                    "state": severity_to_states.get(sever, ("unknown", 3))[1],
                     "severity_as_text": severity_to_states.get(sever, "unkown[%s]" % sever)[0],
                     "descr": descr,
                     "source": source,

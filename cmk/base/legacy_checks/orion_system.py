@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="index,attr-defined"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
@@ -41,18 +41,12 @@ def parse_orion_system(string_table):
         system_power,
     ) = string_table[0]
 
-    parsed: dict[str, object] = {
-        "charging": {
-            "Battery": map_charge_states.get(charge_state, (3, "unknown[%s]" % charge_state))
-        },
-        "temperature": {},
-        "electrical": {},
-    }
-
+    temperature = dict[str, float]()
     if battery_temp != "2147483647":
         # From MIB: The max. value 2147483647 is used to indicate an invalid value."
-        parsed["temperature"]["Battery"] = int(battery_temp) * 0.1
+        temperature["Battery"] = int(battery_temp) * 0.1
 
+    electrical = dict[str, dict[str, float]]()
     for what, value, factor in [
         ("voltage", system_voltage, 0.01),
         ("current", load_current, 0.1),
@@ -60,7 +54,7 @@ def parse_orion_system(string_table):
     ]:
         if value != "2147483647":
             # From MIB: The max. value 2147483647 is used to indicate an invalid value."
-            system_data = parsed["electrical"].setdefault("System", {})
+            system_data = electrical.setdefault("System", {})
             system_data[what] = int(value) * factor
 
     for item, value in [
@@ -69,10 +63,16 @@ def parse_orion_system(string_table):
     ]:
         if value != "2147483647":
             # From MIB: The max. value 2147483647 is used to indicate an invalid value."
-            item_data = parsed["electrical"].setdefault(item, {})
+            item_data = electrical.setdefault(item, {})
             item_data["current"] = int(battery_temp) * 0.1
 
-    return parsed
+    return {
+        "charging": {
+            "Battery": map_charge_states.get(charge_state, (3, "unknown[%s]" % charge_state))
+        },
+        "temperature": temperature,
+        "electrical": electrical,
+    }
 
 
 def inventory_orion_system_temp(parsed):

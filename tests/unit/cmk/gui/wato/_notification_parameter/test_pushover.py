@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 from typing import Literal
 
 import pytest
@@ -27,6 +29,15 @@ from cmk.gui.wato._notification_parameter._pushover import _migrate_to_priority
             },
             ("emergency", (0.0, 0.0, "ergerahtrehrthrthrhrhaergherhtgrsth")),
             id="Emergency",
+        ),
+        pytest.param(
+            {
+                "priority": "2",
+                "retry": 0,
+                "expire": 0,
+            },
+            ("emergency", (0.0, 0.0)),
+            id="Emergency (without receipts)",
         ),
     ],
 )

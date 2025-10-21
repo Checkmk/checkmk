@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-override, no-untyped-def"
+# mypy: disable-error-code="no-untyped-def"
 
 """Breadcrumb processing
 
@@ -16,7 +16,7 @@ from collections.abc import Iterable, MutableSequence
 from typing import NamedTuple
 
 import cmk.gui.htmllib.html
-from cmk.gui.type_defs import MainMenu
+from cmk.gui.main_menu_types import MainMenu
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 

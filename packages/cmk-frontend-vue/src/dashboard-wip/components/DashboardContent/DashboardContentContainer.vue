@@ -3,19 +3,22 @@ Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script lang="ts">
-import type { WidgetGeneralSettings } from '@/dashboard-wip/types/widget.ts'
+<script setup lang="ts">
+import type { WidgetGeneralSettings } from '@/dashboard-wip/types/widget'
 
-export interface DashboardContentContainerProps extends WidgetGeneralSettings {
+interface DashboardContentContainerProps {
+  general_settings: WidgetGeneralSettings
   contentOverflow?: string
 }
-</script>
 
-<script setup lang="ts">
-const { title, contentOverflow = 'auto', ...props } = defineProps<DashboardContentContainerProps>()
+const { general_settings: generalSettings, contentOverflow = 'auto' } =
+  defineProps<DashboardContentContainerProps>()
 
 let titleRenderClass: string = 'db-content-container__title--with-background'
-if (title && ['hidden', 'without_background'].includes(title.render_mode)) {
+if (
+  generalSettings.title &&
+  ['hidden', 'without_background'].includes(generalSettings.title.render_mode)
+) {
   titleRenderClass = ''
 }
 </script>
@@ -23,16 +26,18 @@ if (title && ['hidden', 'without_background'].includes(title.render_mode)) {
 <template>
   <div class="db-content-container">
     <div
-      v-if="title && title.render_mode !== 'hidden'"
+      v-if="generalSettings.title && generalSettings.title.render_mode !== 'hidden'"
       class="db-content-container__title"
       :class="titleRenderClass"
     >
-      <a v-if="title.url" :href="title.url">{{ title.text }}</a>
-      <span v-else>{{ title.text }}</span>
+      <a v-if="generalSettings.title.url" :href="generalSettings.title.url">{{
+        generalSettings.title.text
+      }}</a>
+      <span v-else>{{ generalSettings.title.text }}</span>
     </div>
     <div
       class="db-content-container__content"
-      :class="{ 'db-content-container__content-background': !!props.render_background }"
+      :class="{ 'db-content-container__content-background': !!generalSettings.render_background }"
     >
       <slot />
     </div>

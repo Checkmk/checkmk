@@ -5,7 +5,7 @@
 """Displaying the asynchronous replication of the current users user profile"""
 
 import time
-from typing import get_args
+from typing import get_args, override
 
 import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
@@ -27,12 +27,13 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("wato_ajax_profile_repl", ModeAjaxProfileReplication))
+    page_registry.register(PageEndpoint("wato_ajax_profile_repl", ModeAjaxProfileReplication()))
 
 
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         ajax_request = self.webapi_request()

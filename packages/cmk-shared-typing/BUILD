@@ -5,6 +5,7 @@ load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
+load("@npm//packages/cmk-shared-typing:openapi-typescript/package_json.bzl", openapi_typescript = "bin")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
@@ -15,9 +16,11 @@ npm_link_all_packages(name = "node_modules")
 
 SOURCES_COMMON = [
     "configuration_entity.json",
+    "main_menu.json",
     "mode_host.json",
     "notifications.json",
     "setup.json",
+    "sidebar.json",
     "unified_search.json",
     "user_frontend_config.json",
     "vue_formspec_components.json",
@@ -55,6 +58,17 @@ write_file(
     out = "typescript/index.ts",
 )
 
+openapi_typescript.openapi_typescript(
+    name = "openapi_internal_ts_file",
+    srcs = ["source/openapi_spec_internal.yaml"],
+    outs = ["typescript/openapi_internal.d.ts"],
+    args = [
+        "$(rootpath source/openapi_spec_internal.yaml)",
+        "-o",
+        "$(rootpath typescript/openapi_internal.d.ts)",
+    ],
+)
+
 js_library(
     name = "cmk_shared_typing_ts",
     srcs = [
@@ -63,6 +77,7 @@ js_library(
         ":cmk_shared_typing_ts_lib",
         ":empty_index_ts",
         ":generated_ts_files",
+        ":openapi_internal_ts_file",
     ],
     visibility = ["//packages:__subpackages__"],
 )
@@ -195,10 +210,10 @@ prettier_bin.prettier_binary(
 
 alias(
     name = "format",
-    actual = "//bazel/tools:format",
+    actual = "//bazel/tools/format",
 )
 
 alias(
     name = "format.check",
-    actual = "//bazel/tools:format.check",
+    actual = "//bazel/tools/format:check",
 )

@@ -1,0 +1,23 @@
+title: Hyper-V VM Checkpoints
+agents: windows
+catalog: os/virtual
+license: GPLv2
+distribution: check_mk
+
+description:
+ This check monitors the checkpoints (snapshots) of virtual machines running on a Microsoft Hyper-V cluster.
+
+ The check queries a Microsoft Hyper-V cluster via an agent plug-in and reports
+ the status and age of VM checkpoints. It monitors checkpoint creation dates and
+ can alert when checkpoints become too old, which may indicate maintenance issues
+ or potential storage concerns.
+
+ The check tracks both the newest and oldest checkpoints, providing visibility into
+ checkpoint management practices. It calculates the age of checkpoints from their
+ creation timestamp and compares against configurable thresholds.
+
+item:
+ No item is used. This check monitors all checkpoints for the VM as a single service.
+
+inventory:
+ One service is created per VM that has checkpoint data available in the agent output.

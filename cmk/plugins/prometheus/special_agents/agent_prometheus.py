@@ -6,6 +6,14 @@
 Special agent for monitoring Prometheus with Checkmk.
 """
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import argparse
 import ast
 import json

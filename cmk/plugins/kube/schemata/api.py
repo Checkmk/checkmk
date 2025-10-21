@@ -7,6 +7,10 @@ The schemas contained in this file define the stable API between kubernetes and
 the special agent.
 The schemas should not be affected by different kubernetes server or client versions.
 
+# mypy: disable-error-code="mutable-override"
+
+# mypy: disable-error-code="type-arg"
+
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 
@@ -24,9 +28,8 @@ class Correct(BaseModel):
 import datetime
 import enum
 import math
-import re
 from collections.abc import Mapping, Sequence
-from typing import Literal, NewType, TypeGuard
+from typing import Literal, NewType
 
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator, RootModel
 from pydantic.fields import Field
@@ -38,6 +41,7 @@ GitVersion = NewType("GitVersion", str)
 ContainerName = NewType("ContainerName", str)
 VolumeName = NewType("VolumeName", str)
 
+AnnotationValue = NewType("AnnotationValue", str)
 LabelValue = NewType("LabelValue", str)
 """
 
@@ -126,7 +130,7 @@ class Label(BaseModel):
 
 
 Labels = Mapping[LabelName, Label]
-Annotations = Mapping[LabelName, LabelValue]
+Annotations = Mapping[LabelName, AnnotationValue]
 Timestamp = NewType("Timestamp", float)
 
 # This information is from the one-page API overview v1.22
@@ -232,15 +236,6 @@ def parse_labels(labels: Mapping[str, str] | None) -> Mapping[LabelName, Label]:
     return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
 
 
-# See LabelValue for details
-__validation_value = re.compile(r"(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
-
-
-def _is_valid_label_value(value: object) -> TypeGuard[LabelValue]:
-    # The length of a Kubernetes label value at most 63 chars
-    return isinstance(value, str) and bool(__validation_value.fullmatch(value)) and len(value) < 64
-
-
 def parse_annotations(annotations: Mapping[str, str] | None) -> Annotations:
     """Select annotations, if they are valid.
 
@@ -251,25 +246,38 @@ def parse_annotations(annotations: Mapping[str, str] | None) -> Annotations:
     was obtained, was
     https://github.com/kubernetes/kubernetes/commit/a83cc51a19d1b5f2b2d3fb75574b04f587ec0054
 
+    Information about the valid syntax and character set can be found here:
+    https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/#syntax-and-character-set
+    (Please note that the linked article does not reveal all the relevant information, and we infer
+    some further information from the source code directly such as the maximum value length:
+    https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/validation/objectmeta.go#L36)
+
     Since not every annotation can be converted to a HostLabel, we decided to
-    only use annotations, which are also valid Kubernetes labels. Kubernetes
-    makes sure that the annotation has a valid name, so we only verify, that
+    only use annotations, which are also valid Checkmk Host labels and are not longer than a
+    specific length.
+
+    Kubernetes makes sure that the annotation has a valid name, so we only verify, that
     the key is also valid as a label.
 
     >>> parse_annotations(None)  # no annotation specified for the object
     {}
     >>> parse_annotations({
     ... '1': '',
-    ... '2': 'a-',
-    ... '3': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    ... '4': 'a&a',
+    ... '2': 'a-.',
+    ... '3': 'a:',
+    ... '4': 'a' * 257,
     ... '5': 'valid-key',
     ... })
-    {'1': '', '5': 'valid-key'}
+    {'1': '', '2': 'a-.', '5': 'valid-key'}
     """
     if annotations is None:
         return {}
-    return {LabelName(k): v for k, v in annotations.items() if _is_valid_label_value(v)}
+
+    return {
+        LabelName(k): AnnotationValue(v)
+        for k, v in annotations.items()
+        if ":" not in v and len(v) <= 256
+    }
 
 
 class MetaDataNoNamespace(ClientModel):

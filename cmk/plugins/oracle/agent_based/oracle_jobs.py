@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="possibly-undefined"
+
 # <<<oracle_jobs>>>
 # IODBSZ1 SYS SM$CLEAN_AUTO_SPLIT_MERGE SCHEDULED 0 763 TRUE 24.04.13 00:00:00,600000 EUROPE/VIENNA - SUCCEEDED
 # IODBSZ1 SYS RSE$CLEAN_RECOVERABLE_SCRIPT SCHEDULED 0 763 TRUE 24.04.13 00:00:00,100000 EUROPE/VIENNA - SUCCEEDED

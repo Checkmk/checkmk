@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Iterable
 
 import pytest
@@ -132,7 +133,7 @@ class TestOk:
 
     def test_map(self, result: Result[int, object]) -> None:
         ok = "ok"
-        assert not isinstance(result.ok, type(ok))
+        assert not isinstance(result.ok, type(ok))  # type: ignore[unreachable]
 
         other = result.map(lambda _: ok)
         assert other != result
@@ -269,7 +270,7 @@ class TestError:
 
     def test_map_error(self, result: Result[object, int]) -> None:
         error = "error"
-        assert not isinstance(result.error, type(error))
+        assert not isinstance(result.error, type(error))  # type: ignore[unreachable]
 
         other = result.map_error(lambda _: error)
         assert other != result
@@ -288,7 +289,7 @@ def test_match_ok() -> None:
             assert False
 
 
-def test_match_error():
+def test_match_error() -> None:
     err: Result[int, str] = Error("a")
     match err:
         case Error(v):

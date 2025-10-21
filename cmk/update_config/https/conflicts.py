@@ -3,11 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="mutable-override"
+
 import enum
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import Literal
+from urllib.parse import urlparse
 
 from pydantic import HttpUrl, ValidationError
 
@@ -103,6 +108,13 @@ class MigrateableHost(V1Host):
     address: tuple[Literal["direct"], str] | None = None
 
 
+def validate_virthost(virthost: str) -> bool:
+    # ensures that virthost is only used, if the result would pass `validators.Url`.
+    with suppress(ValueError):
+        return urlparse(f"http://{virthost}").netloc != ""
+    return False
+
+
 def _build_url(scheme: str, host: str, port: int | None, path: str) -> str:
     port_suffix = f":{port}" if port is not None else ""
     return f"{scheme}://{host}{port_suffix}{path}"
@@ -115,10 +127,12 @@ class MigratableValue(V1Value):
     def url(self) -> str:
         scheme = "https" if self.uses_https() else "http"
         path = self.mode[1].uri or "" if isinstance(self.mode[1], MigratableUrl) else ""
-        if isinstance(self.host.address, tuple):
-            hostname = self.host.virthost or self.host.address[1]
+        if self.host.virthost and validate_virthost(self.host.virthost):
+            hostname = self.host.virthost
+        elif isinstance(self.host.address, tuple):
+            hostname = self.host.address[1]
         else:
-            hostname = self.host.virthost or "$HOSTNAME$"
+            hostname = "$HOSTNAME$"
         return _build_url(scheme, hostname, self.host.port, path)
 
 

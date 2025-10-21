@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -21,7 +25,7 @@ from cmk.server_side_calls.v1 import (
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
-from cmk.server_side_calls_backend import SpecialAgent
+from cmk.server_side_calls_backend import config_processing, SpecialAgent
 from cmk.server_side_calls_backend._special_agents import SpecialAgentCommandLine
 from cmk.utils import password_store
 
@@ -191,7 +195,9 @@ def test_iter_special_agent_commands(
         HostAddress("127.0.0.1"),
         host_config,
         host_attrs,
-        http_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -233,7 +239,9 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         host_address=HostAddress("127.0.0.1"),
         host_config=HOST_CONFIG,
         host_attrs=HOST_ATTRS,
-        http_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         stored_passwords={"1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -258,7 +266,9 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
         host_address=HostAddress("127.0.0.1"),
         host_config=HOST_CONFIG,
         host_attrs=HOST_ATTRS,
-        http_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         stored_passwords={"uuid1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -291,7 +301,9 @@ def test_iter_special_agent_commands_crash() -> None:
         HostAddress("127.0.0.1"),
         HOST_CONFIG,
         HOST_ATTRS,
-        http_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         stored_passwords={},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "/path/to/agent",

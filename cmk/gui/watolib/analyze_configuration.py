@@ -5,6 +5,9 @@
 """Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved."""
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-def"
+
 # See https://github.com/pylint-dev/pylint/issues/3488
 from __future__ import annotations
 

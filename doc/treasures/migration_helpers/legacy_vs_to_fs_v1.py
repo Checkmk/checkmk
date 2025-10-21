@@ -41,6 +41,8 @@ _ADDED_IMPORTS = (
         "from cmk.rulesets.v1.form_specs import ("
         "BooleanChoice, "
         "DefaultValue, "
+        "DataSize, "
+        "IECMagnitude, "
         "DictElement, "
         "Dictionary, "
         "CascadingSingleChoice, "
@@ -75,7 +77,8 @@ _ADDED_IMPORTS = (
         "from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic, HostAndServiceCondition, HostCondition, "
         "HostAndItemCondition, CheckParameters, EnforcedService, DiscoveryParameters"
     ),
-    ("from cmk.gui.form_specs.unstable import OptionalChoice, Tuple"),
+    ("from cmk.gui.form_specs.unstable import OptionalChoice"),
+    ("from cmk.gui.form_specs.unstable.legacy_converter import Tuple"),
 )
 
 DEFAULT_TIME_SPAN_ARGS = (
@@ -165,11 +168,11 @@ class VSTransformer(cst.CSTTransformer):
 
     def __init__(self) -> None:
         super().__init__()
-        self._in_valuespec = False
+        self._in_valuespec_location = []
         self._in_known_unconvertable = False
 
     def leave_Arg(self, original_node: cst.Arg, updated_node: cst.Arg) -> cst.Arg:
-        if not self._in_valuespec or self._in_known_unconvertable:
+        if not self._in_valuespec_location or self._in_known_unconvertable:
             return updated_node
         match updated_node:
             case cst.Arg(cst.Call(func=cst.Name("_"), args=args), cst.Name("title")):
@@ -196,7 +199,7 @@ class VSTransformer(cst.CSTTransformer):
     def visit_Call(self, node: cst.Call) -> None:
         if isinstance(func := node.func, cst.Name):
             if cst.ensure_type(func, cst.Name).value in self._convertable_valuespecs:
-                self._in_valuespec = True
+                self._in_valuespec_location.append(func.value)
             if cst.ensure_type(func, cst.Name).value in self._known_unconvertable:
                 self._in_known_unconvertable = True
 
@@ -210,7 +213,7 @@ class VSTransformer(cst.CSTTransformer):
         if cst.ensure_type(node.func, cst.Name).value not in self._supported_form_specs:
             if not use_unstable_api:
                 warnings.append(
-                    f"Unstable/unoffical API required for: Wrap valuespec in LegacyValueSpec {cst.Module([]).code_for_node(node)}"
+                    f"Unstable/unoffical API required for: Wrap valuespec in LegacyValueSpec {self._format_code(node)}"
                 )
             return cst.Call(
                 func=cst.Attribute(value=cst.Name("LegacyValueSpec"), attr=cst.Name("wrap")),
@@ -244,6 +247,7 @@ class VSTransformer(cst.CSTTransformer):
             "Percentage",
             "Float",
             "MonitoringState",
+            "Filesize",
         }
 
     @property
@@ -254,8 +258,10 @@ class VSTransformer(cst.CSTTransformer):
     def _supported_form_specs(self) -> set[str]:
         """Returns a set of known form specs that can be used in the migration."""
         return {
+            "Age",
             "Integer",
             "Float",
+            "DataSize",
             "Dictionary",
             "List",
             "ListExtended",
@@ -315,9 +321,15 @@ class VSTransformer(cst.CSTTransformer):
                     if use_unstable_api:
                         convert_call = self._make_tuple(updated_node)
                     else:
-                        elements = cst.ensure_type(
-                            _extract("elements", updated_node.args)[0].value, cst.List
-                        ).elements
+                        try:
+                            elements = cst.ensure_type(
+                                _extract("elements", updated_node.args)[0].value, cst.List
+                            ).elements
+                        except ValueError:
+                            warnings.append(
+                                f"Unable to process Tuple elements {self._format_code(updated_node)}"
+                            )
+                            return updated_node
                         if tuple_to_levels and len(elements) == 2:
                             convert_call = self._make_simple_levels_from_tuple(updated_node)
                         elif tuple_to_levels_candidate and len(elements) == 2:
@@ -340,9 +352,11 @@ class VSTransformer(cst.CSTTransformer):
                     convert_call = self._make_float(updated_node)
                 case "MonitoringState":
                     convert_call = self._make_service_state(updated_node)
+                case "Filesize":
+                    convert_call = self._make_data_size(updated_node)
 
             if convert_call is not None:
-                self._in_valuespec = False
+                self._in_valuespec_location = self._in_valuespec_location[:-1]
                 return convert_call
 
             if func.value in self._known_unconvertable:
@@ -396,7 +410,6 @@ class VSTransformer(cst.CSTTransformer):
                     )
                     template_name = cst.ensure_type(template_class.func, cst.Name)
                     for template_arg in template_class.args:
-                        print("handle arg", template_arg)
                         if template_arg.keyword.value == "unit_symbol":
                             template_args.append(template_arg)
                 case "help_text":
@@ -417,7 +430,6 @@ class VSTransformer(cst.CSTTransformer):
         )
 
         args = {k.value: arg.value for arg in new_args if (k := arg.keyword) is not None}
-        print("template args", template_args)
         new_args.extend(self._make_simple_levels_template_args(template_name, args, template_args))
         return cst.Call(func=cst.Name("SimpleLevels"), args=new_args)
 
@@ -464,50 +476,63 @@ class VSTransformer(cst.CSTTransformer):
             def _make_required(element_name: str) -> cst.Name:
                 return cst.Name("True") if element_name in required_keys else cst.Name("False")
 
-            elements = cst.Dict(
-                [
-                    cst.DictElement(
-                        t.elements[0].value,
-                        cst.Call(
-                            func=cst.Name("DictElement"),
-                            args=(
-                                cst.Arg(
-                                    _make_required(
-                                        cst.ensure_type(t.elements[0].value, cst.SimpleString).value
-                                    ),
-                                    cst.Name("required"),
+            dict_elements = [
+                cst.DictElement(
+                    t.elements[0].value,
+                    cst.Call(
+                        func=cst.Name("DictElement"),
+                        args=(
+                            cst.Arg(
+                                _make_required(
+                                    cst.ensure_type(t.elements[0].value, cst.SimpleString).value
                                 ),
-                                cst.Arg(
-                                    self._optional_wrap_legacy_valuespec(
-                                        cst.ensure_type(t.elements[1].value, cst.Call)
-                                    ),
-                                    cst.Name("parameter_form"),
+                                cst.Name("required"),
+                            ),
+                            cst.Arg(
+                                self._optional_wrap_legacy_valuespec(
+                                    cst.ensure_type(t.elements[1].value, cst.Call)
                                 ),
+                                cst.Name("parameter_form"),
                             ),
                         ),
-                    )
-                    for t in (
-                        cst.ensure_type(el.value, cst.Tuple)
-                        for el in cst.ensure_type(args["elements"], cst.List).elements
-                        if isinstance(el.value, cst.Tuple)
-                    )
-                ]
-            )
-            return cst.Call(
-                func=cst.Name("Dictionary"),
-                args=(
-                    *(
-                        arg
-                        for arg in old.args
-                        if cst.ensure_type(arg.keyword, cst.Name).value
-                        not in ("elements", "optional_keys", "required_keys")
                     ),
-                    cst.Arg(elements, cst.Name("elements")),
+                )
+                for t in (
+                    cst.ensure_type(el.value, cst.Tuple)
+                    for el in cst.ensure_type(args["elements"], cst.List).elements
+                    if isinstance(el.value, cst.Tuple)
+                )
+            ]
+
+            for el in cst.ensure_type(args["elements"], cst.List).elements:
+                if not isinstance(el.value, cst.Tuple):
+                    dict_elements.append(el)
+
+            elements = cst.Dict(dict_elements)
+
+            new_args = [
+                *(
+                    arg
+                    for arg in old.args
+                    if cst.ensure_type(arg.keyword, cst.Name).value
+                    not in ("elements", "optional_keys", "required_keys", "ignored_keys")
                 ),
-            )
+                cst.Arg(elements, cst.Name("elements")),
+            ]
+            if ignored_arg := args.get("ignored_keys"):
+                new_args.append(
+                    cst.Arg(
+                        cst.Tuple(
+                            cst.ensure_type(ignored_arg, cst.List).elements,
+                        ),
+                        cst.Name("ignored_elements"),
+                    )
+                )
+
+            return cst.Call(func=cst.Name("Dictionary"), args=new_args)
         except Exception as e:
             warnings.append(
-                f"Unconvertable dictionary {old.args[0].value}: {e} {''.join(traceback.format_exc())}"
+                f"Unconvertable dictionary {self._format_code(old.args[0].value)}: {e} {''.join(traceback.format_exc())}"
             )
             return old
 
@@ -590,7 +615,7 @@ class VSTransformer(cst.CSTTransformer):
         if self._contains_keyword_arg(old_args, "prefill"):
             if not use_unstable_api:
                 warnings.append(
-                    f"Unstable/unofficial API required for: ListExtended required for prefill in {cst.Module([]).code_for_node(old)}"
+                    f"Unstable/unofficial API required for: ListExtended required for prefill in {self._format_code(old)}"
                 )
                 return cst.Call(func=cst.Name("List"), args=new_args)
             return cst.Call(func=cst.Name("ListExtended"), args=new_args)
@@ -641,7 +666,7 @@ class VSTransformer(cst.CSTTransformer):
                 % (
                     f", error_msg=Message('{fallback_text}')"
                     if not empty_text_arg
-                    else f", error_msg={cst.Module([]).code_for_node(empty_text_arg[0].value)}"
+                    else f", error_msg={self._format_code(empty_text_arg[0].value)}"
                 )
             )
 
@@ -649,13 +674,9 @@ class VSTransformer(cst.CSTTransformer):
             custom_validators.append(
                 "validators.NumberInRange(%s%s%s%s)"
                 % (
-                    f"min_value={cst.Module([]).code_for_node(minvalue)}"
-                    if minvalue is not None
-                    else "",
+                    f"min_value={self._format_code(minvalue)}" if minvalue is not None else "",
                     ", " if minvalue is not None and maxvalue is not None else "",
-                    f"max_value={cst.Module([]).code_for_node(maxvalue)}"
-                    if maxvalue is not None
-                    else "",
+                    f"max_value={self._format_code(maxvalue)}" if maxvalue is not None else "",
                     f", error_msg=Message('{fallback_text}')" if fallback_text else "",
                 )
             )
@@ -675,7 +696,7 @@ class VSTransformer(cst.CSTTransformer):
             assert arg.keyword, "All args should have a keyword"
             if arg.keyword.value == "choices":
                 warnings.append(
-                    f"'choices' field in {old.func} requires manual conversion {cst.Module([]).code_for_node(arg.value)}"
+                    f"'choices' field in {old.func} requires manual conversion {self._format_code(arg.value)}"
                 )
         return cst.Call(func=cst.Name("MultipleChoice"), args=new_args)
 
@@ -715,7 +736,7 @@ class VSTransformer(cst.CSTTransformer):
     def _make_cascading_single_choice_from_alternative(self, old: cst.Call) -> cst.Call:
         if not use_unstable_api:
             warnings.append(
-                f"Unstable/unofficial API required for: CascadingSingleChoice from Alternative in {cst.Module([]).code_for_node(old)}"
+                f"Unstable/unofficial API required for: CascadingSingleChoice from Alternative in {self._format_code(old)}"
             )
 
         old_args = self._drop_args(old.args, ("show_alternative_title"))
@@ -726,7 +747,7 @@ class VSTransformer(cst.CSTTransformer):
                 new_elements: list[cst.Element] = []
                 if isinstance(arg.value, (cst.Call, cst.Name, cst.BinaryOperation)):
                     warnings.append(
-                        f"'elements' field in Alternative is unconvertable {cst.Module([]).code_for_node(arg)}. type of arg.value {type(arg.value)}"
+                        f"'elements' field in Alternative is unconvertable {self._format_code(arg)}. type of arg.value {type(arg.value)}"
                     )
                     new_args.append(arg)
                     continue
@@ -735,7 +756,7 @@ class VSTransformer(cst.CSTTransformer):
                 for idx, el in enumerate(cst.ensure_type(arg.value, cst.List).elements):
                     if not isinstance(el.value, cst.Call):
                         warnings.append(
-                            f"one element field in Alternative is unconvertable {cst.Module([]).code_for_node(arg)}. type of arg.value {type(el.value)}"
+                            f"one element field in Alternative is unconvertable {self._format_code(arg)}. type of arg.value {type(el.value)}"
                         )
                         failed_conversion = True
                         break
@@ -753,7 +774,7 @@ class VSTransformer(cst.CSTTransformer):
 
                         traceback.print_exc()
                         warnings.append(
-                            f"one element field in Alternative is unconvertable {cst.Module([]).code_for_node(el)}. Error: {e}"
+                            f"one element field in Alternative is unconvertable {self._format_code(el)}. Error: {e}"
                         )
                         failed_conversion = True
                         break
@@ -782,9 +803,9 @@ class VSTransformer(cst.CSTTransformer):
             assert arg.keyword, "All args should have a keyword"
             if arg.keyword.value == "choices":
                 new_elements: list[cst.Element] = []
-                if isinstance(arg.value, (cst.Call, cst.Name)):
+                if isinstance(arg.value, (cst.Call, cst.Name, cst.ListComp)):
                     warnings.append(
-                        f"'choices' field in DropdownChoice is not a list: {cst.Module([]).code_for_node(arg)}"
+                        f"'choices' field in DropdownChoice is not a list: {self._format_code(arg)}"
                     )
                     new_args.append(cst.Arg(arg.value, keyword=cst.Name("elements")))
                     continue
@@ -861,14 +882,14 @@ class VSTransformer(cst.CSTTransformer):
 
         if not use_unstable_api:
             warnings.append(
-                f"Unstable/unofficial API required for: CascadingSingleChoice with legacy format in {cst.Module([]).code_for_node(old)}"
+                f"Unstable/unofficial API required for: CascadingSingleChoice with legacy format in {self._format_code(old)}"
             )
             return form_spec
 
         def create_data_conversion_data_class(
             name: str, value: cst.CSTNode, has_form_spec: bool
         ) -> cst.BaseExpression:
-            code = cst.Module([]).code_for_node(value)
+            code = self._format_code(value)
             return cst.parse_expression(
                 f"CascadingDataConversion(name_in_form_spec={name}, value_on_disk={code}, has_form_spec={has_form_spec})"
             )
@@ -902,7 +923,7 @@ class VSTransformer(cst.CSTTransformer):
 
                     if isinstance(arg.value, (cst.Call, cst.Name)):
                         warnings.append(
-                            f"'choices' field in DropdownChoice is not a list: {cst.Module([]).code_for_node(arg)}"
+                            f"'choices' field in DropdownChoice is not a list: {self._format_code(arg)}"
                         )
                         new_args.append(cst.Arg(arg.value, keyword=cst.Name("elements")))
                         continue
@@ -1023,6 +1044,10 @@ class VSTransformer(cst.CSTTransformer):
                     maxvalue = cst.ensure_type(arg.value, cst.Integer).value
                 case "minvalue":
                     minvalue = cst.ensure_type(arg.value, cst.Integer).value
+                case "prefill":
+                    new_args.append(arg)
+                case _:
+                    pass
 
         if minvalue is not None or maxvalue is not None:
             expression = f"[validators.NumberInRange({minvalue}, {maxvalue})]"
@@ -1063,7 +1088,9 @@ class VSTransformer(cst.CSTTransformer):
             args=new_args,
         )
 
-    def _try_strip_i18n(self, old: cst.BaseExpression) -> cst.SimpleString:
+    def _try_strip_i18n(self, old: cst.BaseExpression) -> cst.SimpleString | cst.Name:
+        if isinstance(old, cst.Name):
+            return old
         if isinstance(old, cst.SimpleString):
             return old
         if isinstance(old, cst.Call):
@@ -1086,6 +1113,28 @@ class VSTransformer(cst.CSTTransformer):
 
         return cst.Call(
             func=cst.Name("ServiceState"),
+            args=new_args,
+        )
+
+    def _make_data_size(self, old: cst.Call) -> cst.Call:
+        old_args = self._add_custom_validators(old.args, "Service State field can not be empty")
+        new_args: list[cst.Arg] = []
+        for arg in old_args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case _:
+                    new_args.append(arg)
+
+        magnitudes = map(lambda x: f"IECMagnitude.{x}", ["BYTE", "KIBI", "MEBI", "GIBI", "TEBI"])
+        new_args.append(
+            cst.Arg(
+                cst.parse_expression(f"({', '.join(magnitudes)})"),
+                keyword=cst.Name("displayed_magnitudes"),
+            )
+        )
+
+        return cst.Call(
+            func=cst.Name("DataSize"),
             args=new_args,
         )
 
@@ -1545,9 +1594,10 @@ def main(argv: Sequence[str]) -> None:
             if args.debug:
                 raise
 
-    _try_to_run("scripts/run-uvenv", "ruff", "check", "--fix", *args.files)
-    _try_to_run("scripts/run-uvenv", "ruff", "check", "--select", "I", "--fix", *args.files)
-    _try_to_run("scripts/run-uvenv", "ruff", "format", *args.files)
+
+#    _try_to_run("scripts/run-uvenv", "ruff", "check", "--fix", *args.files)
+#    _try_to_run("scripts/run-uvenv", "ruff", "check", "--select", "I", "--fix", *args.files)
+#    _try_to_run("scripts/run-uvenv", "ruff", "format", *args.files)
 
 
 if __name__ == "__main__":

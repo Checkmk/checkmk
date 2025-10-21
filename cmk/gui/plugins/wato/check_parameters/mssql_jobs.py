@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.db_jobs import (
     get_consider_job_status_valuespec,

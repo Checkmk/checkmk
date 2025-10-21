@@ -8,13 +8,14 @@ from collections.abc import Callable
 
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenuTopic
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.search import MatchItemGeneratorRegistry
 from cmk.gui.sidebar import SnapinRegistry
-from cmk.gui.type_defs import MainMenuTopic
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -89,7 +90,7 @@ def register(
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     replication_path_registry: ReplicationPathRegistry,
-    user_menu_topics: Callable[[], list[MainMenuTopic]],
+    user_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -107,7 +108,7 @@ def register(
     page_registry.register(PageEndpoint("ajax_popup_host_action_menu", ajax_popup_host_action_menu))
     page_registry.register(
         PageEndpoint(
-            "ajax_dict_host_tag_condition_get_choice", PageAjaxDictHostTagConditionGetChoice
+            "ajax_dict_host_tag_condition_get_choice", PageAjaxDictHostTagConditionGetChoice()
         )
     )
 

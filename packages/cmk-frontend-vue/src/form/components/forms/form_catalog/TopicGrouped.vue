@@ -48,16 +48,20 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <tr v-for="topic_group in props.elements" :key="`${componentId}.${topic_group.title}`">
-    <td class="group_title">
-      <span class="fixed_content_width">
+  <tr
+    v-for="topic_group in props.elements"
+    :key="`${componentId}.${topic_group.title}`"
+    class="form-topic-grouped"
+  >
+    <td class="form-topic-grouped__group-title">
+      <span class="form-topic-grouped__fixed-content-width">
         <label>
           {{ topic_group.title }}
         </label>
-        <span class="dots">{{ Array(200).join('.') }}</span>
+        <span class="form-topic-grouped__dots">{{ Array(200).join('.') }}</span>
       </span>
     </td>
-    <td class="value">
+    <td class="form-topic-grouped__value">
       <FormEditDispatcher
         :spec="convertToDictionarySpec(topic_group)"
         :data="data"
@@ -68,30 +72,39 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-tr {
+.form-topic-grouped {
   padding-bottom: 4px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-td.group_title {
+.form-topic-grouped__group-title {
   width: 240px;
   min-width: 240px;
   max-width: 240px;
   vertical-align: top;
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  span.fixed_content_width {
-    width: 230px;
-    display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-  }
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-td.value {
+.form-topic-grouped__fixed-content-width {
+  width: 230px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.form-topic-grouped__value {
   width: 100%;
   vertical-align: top;
   padding-bottom: 4px;
+  empty-cells: show;
+  white-space: nowrap;
+}
+
+.form-topic-grouped__dots {
+  margin-left: 5px;
+  overflow: hidden;
+  color: var(--grey-4-dimmed);
+}
+
+.form-topic-grouped:nth-child(1) > td {
+  padding-top: 5px;
 }
 </style>

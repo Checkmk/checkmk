@@ -14,9 +14,11 @@ import type {
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
-import { generateWidgetProps } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { WidgetSpec } from '@/dashboard-wip/types/widget'
+import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 export interface UseSiteOverview extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
@@ -24,10 +26,12 @@ export interface UseSiteOverview extends UseWidgetHandler, UseWidgetVisualizatio
   hexagonSize: Ref<string>
 }
 
-export const useSiteOverview = (filters: ConfiguredFilters): UseSiteOverview => {
+export const useSiteOverview = async (
+  filters: ConfiguredFilters,
+  dashboardConstants: DashboardConstants,
+  currentSpec?: WidgetSpec | null
+): Promise<UseSiteOverview> => {
   //Todo: Fill values if they exist in serializedData
-  const showStateOf = ref<'via_context' | 'sites' | 'hosts'>('via_context')
-  const hexagonSize = ref<string>('small')
 
   const {
     title,
@@ -38,32 +42,51 @@ export const useSiteOverview = (filters: ConfiguredFilters): UseSiteOverview => 
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    generateTitleSpec
-  } = useWidgetVisualizationProps('')
+    widgetGeneralSettings
+  } = useWidgetVisualizationProps('', currentSpec?.general_settings)
+
+  const currentContent = currentSpec?.content as SiteOverviewContent
+
+  const showStateOf = ref<'via_context' | 'sites' | 'hosts'>(
+    currentContent?.dataset ?? 'via_context'
+  )
+  const hexagonSize = ref<string>(currentContent?.hexagon_size ?? 'small')
+  const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()
   }
 
-  const _generateWidgetProps = (): WidgetProps => {
-    const content: SiteOverviewContent = {
+  const _generateContent = (): SiteOverviewContent => {
+    return {
       type: 'site_overview',
       dataset: showStateOf.value,
       hexagon_size: hexagonSize.value === 'small' ? 'default' : 'large'
     }
-
-    return generateWidgetProps(generateTitleSpec(), content, filters)
   }
 
-  const widgetProps = ref<WidgetProps>(_generateWidgetProps())
+  const _updateWidgetProps = async () => {
+    const content = _generateContent()
+    widgetProps.value = {
+      general_settings: widgetGeneralSettings.value,
+      content,
+      effective_filter_context: await determineWidgetEffectiveFilterContext(
+        content,
+        filters,
+        dashboardConstants
+      )
+    }
+  }
 
   watch(
-    [title, showTitle, showTitleBackground, titleUrlEnabled, titleUrl, showStateOf, hexagonSize],
+    [widgetGeneralSettings, showStateOf, hexagonSize],
     useDebounceFn(() => {
-      widgetProps.value = _generateWidgetProps()
+      void _updateWidgetProps()
     }, 300),
     { deep: true }
   )
+
+  await _updateWidgetProps()
 
   return {
     showStateOf,
@@ -79,6 +102,6 @@ export const useSiteOverview = (filters: ConfiguredFilters): UseSiteOverview => 
     titleUrlValidationErrors,
     validate,
 
-    widgetProps
+    widgetProps: widgetProps as Ref<WidgetProps>
   }
 }

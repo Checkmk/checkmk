@@ -34,4 +34,4 @@ get_bazel_files() {
         \) -print
 }
 
-get_bazel_files | xargs bazel run -- //bazel/tools:buildifier --warnings=-module-docstring "$@"
+get_bazel_files | xargs bazel run -- @buildifier_prebuilt//:buildifier --warnings=-module-docstring "$@"

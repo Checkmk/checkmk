@@ -4,6 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Business intelligence (BI)
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 BI is used in Checkmk to set up a tree based on the status of hosts and services as branches and to
 extend with higher level nodes summarizing (or aggregating) the status of the contained objects.
 A BI pack contains the configuration data by means of BI aggregations and BI rules.

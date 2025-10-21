@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
+# mypy: disable-error-code="type-arg"
+
 import os
 import shutil
 import socket

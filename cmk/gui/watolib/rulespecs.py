@@ -3,6 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 """The rulespecs are the ruleset specifications registered to Setup."""
 
 import abc
@@ -407,6 +415,16 @@ class Rulespec(abc.ABC):
     @property
     def valuespec(self) -> ValueSpec:
         return self._valuespec()
+
+    @property
+    def has_valuespec(self) -> bool:
+        # Right now, a Valuespec is always present
+        # Will be refactored later on
+        return True
+
+    @property
+    def has_form_spec(self) -> bool:
+        return self._form_spec_definition is not None
 
     @property
     def form_spec(self) -> FormSpec:
@@ -1198,7 +1216,7 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
                 rulespecs.append(rulespec_instance)
         return rulespecs
 
-    def get_all_groups(self):
+    def get_all_groups(self) -> list[str]:
         """Returns a list of all rulespec groups that have rules registered for
 
         Can not use direct rulespec_group_registry access for this, because the

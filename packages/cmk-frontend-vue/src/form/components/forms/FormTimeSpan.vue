@@ -99,7 +99,7 @@ const localValidation = ref<Array<string>>([])
       <input
         v-model="values[magnitude]"
         :placeholder="getPlaceholder(magnitude)"
-        class="number no-spinner"
+        class="form-time-span__number form-time-span__no-spinner"
         step="any"
         size="5"
         type="number"
@@ -111,15 +111,17 @@ const localValidation = ref<Array<string>>([])
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.no-spinner::-webkit-outer-spin-button,
-.no-spinner::-webkit-inner-spin-button {
+.form-time-span__no-spinner::-webkit-outer-spin-button,
+.form-time-span__no-spinner::-webkit-inner-spin-button {
   appearance: none;
   margin: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.no-spinner[type='number'] {
+.form-time-span__number {
+  text-align: right;
+}
+
+.form-time-span__no-spinner[type='number'] {
   appearance: textfield;
 }
 

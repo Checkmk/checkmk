@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { nextTick, onMounted, ref } from 'vue'
 
 import CmkButton from '@/components/CmkButton.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkProgressbar from '@/components/CmkProgressbar.vue'
 
 defineProps<{ screenshotMode: boolean }>()

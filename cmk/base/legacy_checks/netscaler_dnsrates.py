@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 #
 # Example Output:
 # .1.3.6.1.4.1.5951.4.1.1.53.1.1.0  13
@@ -11,7 +13,7 @@
 
 import time
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
 
@@ -32,18 +34,14 @@ def check_netscaler_dnsrates(_no_item, params, info):
     for name, counter in [("query", queries), ("answer", answers)]:
         rate = get_rate(value_store, name, now, counter, raise_overflow=True)
         warn, crit = params[name]
-        infotext = f"{name} rate {rate:.1f}/sec"
-        perfdata = [(name + "_rate", rate, warn, crit, 0)]
 
-        state = 0
-        if rate >= crit:
-            state = 2
-        elif rate >= warn:
-            state = 1
-        if state > 0:
-            infotext += f" (warn/crit at {warn:.1f}/{crit:.1f} /sec)"
-
-        yield state, infotext, perfdata
+        yield check_levels(
+            rate,
+            name + "_rate",
+            (warn, crit),
+            infoname=f"{name} rate",
+            human_readable_func=lambda x: f"{x:.1f}/sec",
+        )
 
 
 def parse_netscaler_dnsrates(string_table: StringTable) -> StringTable:

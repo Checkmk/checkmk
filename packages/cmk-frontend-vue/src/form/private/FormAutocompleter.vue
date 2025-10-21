@@ -9,8 +9,8 @@ import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_co
 import { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
-import { ErrorResponse, Response, type Suggestion } from '@/components/suggestions'
+import CmkDropdown from '@/components/CmkDropdown'
+import { ErrorResponse, Response, type Suggestion } from '@/components/CmkSuggestions'
 
 import { fetchSuggestions } from '@/form/components/utils/autocompleter'
 

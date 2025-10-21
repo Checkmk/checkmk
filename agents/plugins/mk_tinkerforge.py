@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 __version__ = "2.5.0b1"
 
 ###################################################
@@ -255,7 +260,7 @@ def init_device_handlers():
         if dev_id is not None:
             device_handlers[dev_id] = handler
         else:
-            module = __import__("tinkerforge." + module_name)
+            module = __import__("tinkerforge." + module_name)  # type: ignore[unreachable]
             sub_module = module.__dict__[module_name]
             device_handlers[sub_module.__dict__[clazz].DEVICE_IDENTIFIER] = handler
 

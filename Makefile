@@ -17,7 +17,7 @@ CI ?= false
 
 .PHONY: announcement all build \
         clean dist documentation \
-        format format-c test-format-c format-python format-shell \
+        format \
         help install mrproper mrclean \
         packages setup setversion version openapi \
         requirements.txt .venv
@@ -121,7 +121,6 @@ setversion:
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
 ifeq ($(ENTERPRISE),yes)
 	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' non-free/packages/cmk-update-agent/cmk_update_agent.py
-	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' omd/packages/enterprise/bin/cmcdump
 endif
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
@@ -178,37 +177,11 @@ setup:
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
-format: format-python format-c format-shell format-bazel
-
-format-c:
-	packages/livestatus/run --format
-	packages/unixcat/run --format
-	packages/neb/run --format
-ifeq ($(ENTERPRISE),yes)
-	non-free/packages/cmc/run --format
-endif
-
-test-format-c:
-	packages/livestatus/run --check-format
-	packages/unixcat/run --check-format
-	packages/neb/run --check-format
-ifeq ($(ENTERPRISE),yes)
-	non-free/packages/cmc/run --check-format
-endif
-
-format-python:
-	./scripts/run-uvenv ruff check --select I --fix
-	./.venv/bin/ruff format
-
-
-format-shell:
-	$(MAKE)	-C tests format-shell
+format:
+	bazel run //:format
 
 what-gerrit-makes:
 	$(MAKE)	-C tests what-gerrit-makes
-
-format-bazel:
-	scripts/run-buildifier --mode=fix
 
 lint-bazel:
 	scripts/run-buildifier --lint=fix

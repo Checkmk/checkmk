@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 
 check_info = {}
 
@@ -34,10 +36,6 @@ def inventory_vms_cpu(info):
 
 
 def check_vms_cpu(_no_item, params, parsed):
-    # ancient tuple rule
-    # and legacy default None prior to 1.6
-    params = transform_cpu_iowait(params)
-
     user = parsed["user"]
     wait = parsed["wait_interrupt"] + parsed["wait_npsync"]
     util = 100.0 - parsed["idle"]

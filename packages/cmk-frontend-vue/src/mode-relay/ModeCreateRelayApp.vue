@@ -9,25 +9,25 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ConnectionCheck from './add-relay-configuration-steps/ConnectionCheck.vue'
 import DeployRelay from './add-relay-configuration-steps/DeployRelay.vue'
+import NameRelay from './add-relay-configuration-steps/NameRelay.vue'
 import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
 
 const { _t } = usei18n()
 
 const currentStep = ref<number>(1)
+const relayName = ref<string>('')
 </script>
 
 <template>
   <CmkWizard v-model="currentStep" mode="guided">
     <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
       <template #header>
-        <CmkHeading> {{ _t('Deploy the relay to your environment') }}</CmkHeading>
+        <CmkHeading type="h2"> {{ _t('Deploy the relay to your environment') }}</CmkHeading>
       </template>
 
       <template #content>
@@ -48,20 +48,42 @@ const currentStep = ref<number>(1)
       "
     >
       <template #header>
-        <CmkHeading> {{ _t('Name the relay and register with your Checkmk site') }}</CmkHeading>
+        <CmkHeading type="h2"> {{ _t('Name the relay') }}</CmkHeading>
       </template>
 
       <template #content>
-        <RegisterRelay></RegisterRelay>
+        <NameRelay v-model="relayName" />
       </template>
       <template #actions>
         <CmkWizardButton type="next" />
+        <CmkWizardButton type="previous" />
       </template>
     </CmkWizardStep>
 
-    <CmkWizardStep :index="3" :is-completed="() => currentStep > 3">
+    <CmkWizardStep
+      :index="3"
+      :is-completed="
+        () => {
+          return currentStep > 3
+        }
+      "
+    >
       <template #header>
-        <CmkHeading> {{ _t('Connection check') }}</CmkHeading>
+        <CmkHeading type="h2"> {{ _t('Register the relay with your Checkmk site') }}</CmkHeading>
+      </template>
+
+      <template #content>
+        <RegisterRelay :relay-name="relayName" />
+      </template>
+      <template #actions>
+        <CmkWizardButton type="next" />
+        <CmkWizardButton type="previous" />
+      </template>
+    </CmkWizardStep>
+
+    <CmkWizardStep :index="4" :is-completed="() => currentStep > 4">
+      <template #header>
+        <CmkHeading type="h2"> {{ _t('Connection check') }}</CmkHeading>
       </template>
 
       <template #content>
@@ -69,6 +91,7 @@ const currentStep = ref<number>(1)
       </template>
       <template #actions>
         <CmkWizardButton type="finish" />
+        <CmkWizardButton type="previous" />
       </template>
     </CmkWizardStep>
   </CmkWizard>

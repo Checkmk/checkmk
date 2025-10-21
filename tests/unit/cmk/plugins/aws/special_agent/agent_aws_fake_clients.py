@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 from __future__ import annotations
 
 import abc
@@ -29,8 +32,7 @@ class Entity(abc.ABC):
         self.key = key
 
     @abc.abstractmethod
-    def create(self, idx, amount: int) -> Entity:  # type: ignore[no-untyped-def]
-        ...
+    def create(self, idx, amount: int) -> Entity: ...
 
 
 #   ---structural-----------------------------------------------------------

@@ -5,6 +5,9 @@
 """Is executed in container from git top level as working directory to install
 the desired Checkmk version"""
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import argparse
 import logging
 import os

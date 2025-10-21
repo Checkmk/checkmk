@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A user can edit some user profile attributes on this page"""
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Iterable, Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
@@ -42,7 +44,7 @@ def _get_input(valuespec: ValueSpec, varprefix: str) -> Any:
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("user_profile", UserProfile))
+    page_registry.register(PageEndpoint("user_profile", UserProfile()))
 
 
 class UserProfile(Page):
@@ -111,6 +113,7 @@ class UserProfile(Page):
 
         raise FinalizeRequest(code=200)
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),

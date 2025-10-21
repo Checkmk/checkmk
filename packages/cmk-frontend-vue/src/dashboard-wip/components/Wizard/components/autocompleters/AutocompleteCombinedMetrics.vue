@@ -17,7 +17,7 @@ const combinedMetrics = defineModel<string | null>('combinedMetrics', { required
 const combinedMetricsAutocompleter: Autocompleter = {
   fetch_method: 'rest_autocomplete',
   data: {
-    ident: 'graph_Template_for_combined_graph',
+    ident: 'graph_template_for_combined_graph',
     params: {
       strict: true,
       show_independent_of_context: true,

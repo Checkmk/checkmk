@@ -7,6 +7,8 @@ Polyfactory has a limitation on more specific Callables, so we override the orig
 to have a more generic type definition for fields which involve those
 """
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 

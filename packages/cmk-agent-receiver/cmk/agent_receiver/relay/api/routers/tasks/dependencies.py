@@ -30,46 +30,6 @@ def get_tasks_repository(
     )
 
 
-def get_relay_tasks_handler(
-    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
-    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
-) -> GetRelayTasksHandler:
-    return GetRelayTasksHandler(
-        tasks_repository=tasks_repository,
-        relay_repository=relays_repository,
-    )
-
-
-def get_relay_task_handler(
-    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
-    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
-) -> GetRelayTaskHandler:
-    return GetRelayTaskHandler(
-        tasks_repository=tasks_repository,
-        relay_repository=relays_repository,
-    )
-
-
-def get_create_task_handler(
-    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
-    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
-) -> CreateTaskHandler:
-    return CreateTaskHandler(
-        tasks_repository=tasks_repository,
-        relays_repository=relays_repository,
-    )
-
-
-def get_update_task_handler(
-    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
-    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
-) -> UpdateTaskHandler:
-    return UpdateTaskHandler(
-        tasks_repository=tasks_repository,
-        relays_repository=relays_repository,
-    )
-
-
 def get_config_task_factory(
     tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
     relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
@@ -77,6 +37,41 @@ def get_config_task_factory(
     return ConfigTaskFactory(
         tasks_repository=tasks_repository,
         relays_repository=relays_repository,
+    )
+
+
+def get_relay_tasks_handler(
+    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
+    config_task_factory: Annotated[ConfigTaskFactory, fastapi.Depends(get_config_task_factory)],
+) -> GetRelayTasksHandler:
+    _ = config_task_factory
+    return GetRelayTasksHandler(
+        tasks_repository=tasks_repository,
+        config_task_factory=config_task_factory,
+    )
+
+
+def get_relay_task_handler(
+    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
+) -> GetRelayTaskHandler:
+    return GetRelayTaskHandler(
+        tasks_repository=tasks_repository,
+    )
+
+
+def get_create_task_handler(
+    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
+) -> CreateTaskHandler:
+    return CreateTaskHandler(
+        tasks_repository=tasks_repository,
+    )
+
+
+def get_update_task_handler(
+    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
+) -> UpdateTaskHandler:
+    return UpdateTaskHandler(
+        tasks_repository=tasks_repository,
     )
 
 

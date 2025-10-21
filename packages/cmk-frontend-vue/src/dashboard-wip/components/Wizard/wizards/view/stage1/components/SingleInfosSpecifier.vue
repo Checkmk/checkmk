@@ -9,7 +9,7 @@ import { computed } from 'vue'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import SelectorSingleInfo from '@/dashboard-wip/components/selectors/SelectorSingleInfo.vue'

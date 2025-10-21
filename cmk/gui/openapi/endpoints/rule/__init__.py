@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rules"""
 
+# mypy: disable-error-code="no-untyped-def"
+
 from __future__ import annotations
 
 import dataclasses
@@ -428,7 +430,7 @@ def _validate_value(ruleset: Ruleset, value: Any) -> None:
 
     # Legacy valuespec validation
     try:
-        valuespec = ruleset.valuespec()
+        valuespec = ruleset.rulespec.valuespec
         valuespec.validate_datatype(value, "")
         valuespec.validate_value(value, "")
 
@@ -551,7 +553,7 @@ def _get_masked_rule_value(rule: Rule) -> object:
             ).to_disk(RawDiskData(rule.value))
         )
     except FormSpecNotImplementedError:
-        return repr(rule.ruleset.valuespec().mask(rule.value))
+        return repr(rule.ruleset.rulespec.valuespec.mask(rule.value))
 
 
 def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:

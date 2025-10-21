@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="possibly-undefined"
+
 # Helper file for more effectively organizing monitoring log files.
 # Rewrites existing logfiles for CMC. You can concatenate several
 # logfiles and then compress them. Do *not* compress compressed

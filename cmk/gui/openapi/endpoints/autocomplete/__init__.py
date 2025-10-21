@@ -54,6 +54,13 @@ def show(params: Mapping[str, Any]) -> Response:
     autocompleter = params["autocomplete_id"]
     internal_autocompleter = autocompleter
 
+    # This fix allows the autocompleter to be accessible by both the old and the new name,
+    # thus maintaining compatibility with the Grafana datasource, which uses the old name.
+    # When dropping support for Checkmk 2.3.0 we can remove these lines after updating
+    # the Grafana datasource plugin.
+    if internal_autocompleter == "available_graphs":
+        internal_autocompleter = "available_graph_templates"
+
     function = autocompleter_registry.get(internal_autocompleter)
 
     if function is None:

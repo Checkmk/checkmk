@@ -9,6 +9,7 @@ string_flag(
     values = [
         "almalinux-8",
         "almalinux-9",
+        "almalinux-10",
         "debian-12",
         "sles-15sp5",
         "sles-15sp6",
@@ -27,11 +28,17 @@ config_setting(
     flag_values = {":distro": "almalinux-9"},
 )
 
+config_setting(
+    name = "almalinux-10",
+    flag_values = {":distro": "almalinux-10"},
+)
+
 selects.config_setting_group(
     name = "almalinux",
     match_any = [
         ":almalinux-8",
         ":almalinux-9",
+        ":almalinux-10",
     ],
 )
 

@@ -8,19 +8,26 @@ from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
     CheckPlugin,
+    InventoryPlugin,
     render,
 )
-from cmk.plugins.lib.azure import (
-    CheckFunction,
-    create_check_metrics_function,
-    create_discover_by_metrics_function,
+from cmk.plugins.azure_v2.agent_based.lib import (
+    CheckFunctionWithoutItem,
+    create_check_metrics_function_single,
+    create_discover_by_metrics_function_single,
+    create_inventory_function,
     MetricData,
-    parse_resources,
+    parse_resource,
+)
+
+inventory_plugin_azure_storageaccounts = InventoryPlugin(
+    name="azure_v2_storageaccounts",
+    inventory_function=create_inventory_function(),
 )
 
 
-def create_check_azure_storage() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_storage() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "total_UsedCapacity",
@@ -35,13 +42,13 @@ def create_check_azure_storage() -> CheckFunction:
 
 
 agent_section_azure_storageaccounts = AgentSection(
-    name="azure_v2_storageaccounts", parse_function=parse_resources
+    name="azure_v2_storageaccounts", parse_function=parse_resource
 )
 check_plugin_azure_storageaccounts = CheckPlugin(
     name="azure_v2_storageaccounts",
-    service_name="Storage %s account",
+    service_name="Azure/Storage account",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function("total_UsedCapacity"),
+    discovery_function=create_discover_by_metrics_function_single("total_UsedCapacity"),
     check_function=create_check_azure_storage(),
     check_ruleset_name="azure_v2_storageaccounts_usage",
     check_default_parameters={
@@ -49,8 +56,8 @@ check_plugin_azure_storageaccounts = CheckPlugin(
             "fixed",
             (
                 # B   KiB    MiB    GiB    TiB
-                1.0 * 1024 * 1024 * 1024 * 1024 * 50,  # 50 TiB
-                1.0 * 1024 * 1024 * 1024 * 1024 * 500,  # 500 TiB
+                1 * 1024 * 1024 * 1024 * 1024 * 50,  # 50 TiB
+                1 * 1024 * 1024 * 1024 * 1024 * 500,  # 500 TiB
             ),
         )
     },
@@ -64,8 +71,8 @@ FLOW_METRICS = {
 }
 
 
-def create_check_azure_storageaccounts_flow() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_storageaccounts_flow() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 metric_key,
@@ -82,15 +89,15 @@ def create_check_azure_storageaccounts_flow() -> CheckFunction:
 
 check_plugin_azure_storageaccounts_flow = CheckPlugin(
     name="azure_v2_storageaccounts_flow",
-    service_name="Storage %s flow",
+    service_name="Azure/Storage flow",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function(*FLOW_METRICS.keys()),
+    discovery_function=create_discover_by_metrics_function_single(*FLOW_METRICS.keys()),
     check_function=create_check_azure_storageaccounts_flow(),
     check_ruleset_name="azure_v2_storageaccounts_flow",
     check_default_parameters={
         "ingress_levels": ("no_levels", None),
         "egress_levels": ("no_levels", None),
-        "transactions_levels": ("fixed", (8.0, 10.0)),
+        "transactions_levels": ("fixed", (8, 10)),
     },
 )
 
@@ -124,8 +131,8 @@ PERFORMANCE_METRICS = {
 }
 
 
-def create_check_azure_storageaccounts_performance() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_storageaccounts_performance() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 metric_key,
@@ -149,14 +156,14 @@ def create_check_azure_storageaccounts_performance() -> CheckFunction:
 
 check_plugin_azure_storageaccounts_performance = CheckPlugin(
     name="azure_v2_storageaccounts_performance",
-    service_name="Storage %s performance",
+    service_name="Azure/Storage performance",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function(*PERFORMANCE_METRICS.keys()),
+    discovery_function=create_discover_by_metrics_function_single(*PERFORMANCE_METRICS.keys()),
     check_function=create_check_azure_storageaccounts_performance(),
     check_ruleset_name="azure_v2_storageaccounts_performance",
     check_default_parameters={
-        "server_latency_levels": ("fixed", (701.0, 1001.0)),
-        "e2e_latency_levels": ("fixed", (701.0, 1001.0)),
+        "server_latency_levels": ("fixed", (701, 1001)),
+        "e2e_latency_levels": ("fixed", (701, 1001)),
         "availability_levels": ("fixed", (99.8, 99.0)),
     },
 )

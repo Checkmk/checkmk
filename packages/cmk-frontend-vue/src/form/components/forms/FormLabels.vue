@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { onBeforeUpdate, ref, watch } from 'vue'
 
 import CmkList from '@/components/CmkList'
-import { type Suggestion } from '@/components/suggestions'
+import { type Suggestion } from '@/components/CmkSuggestions'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { inputSizes } from '@/components/user-input/sizes'
 
@@ -147,39 +147,19 @@ const deleteItem = (index: number) => {
       @update:model-value="addItem"
     />
   </div>
-  <div v-else class="error">{{ props.spec.i18n.max_labels_reached }}</div>
+  <div v-else class="form-labels__error">{{ props.spec.i18n.max_labels_reached }}</div>
   <FormValidation :validation="validation"></FormValidation>
-  <div v-if="error" class="error">{{ error }}</div>
+  <div v-if="error" class="form-labels__error">{{ error }}</div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.label-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-
-  li {
-    width: fit-content;
-    border-radius: 5px;
-    background-color: var(--default-form-element-bg-color);
-    margin-bottom: 5px;
-    padding: 2px;
-  }
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-table.nform input {
-  margin: 0;
-  padding: 2px;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.error {
+.form-labels__error {
   margin: 0;
   padding: 5px;
   background-color: rgb(247 65 65);
   color: var(--font-color);
   display: block;
+  border-radius: 4px;
+  box-shadow: none;
 }
 </style>

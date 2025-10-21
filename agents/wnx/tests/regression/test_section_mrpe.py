@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import os
 import platform
 import re
@@ -105,6 +109,6 @@ def manage_plugin(request):
             os.unlink(os.path.join(target_dir, Globals.cfgfile))
 
 
-def test_section_mrpe(request, testconfig, expected_output, actual_output, testfile) -> None:  # type: ignore[no-untyped-def]
+def test_section_mrpe(request, testconfig, expected_output, actual_output, testfile) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

@@ -10,7 +10,7 @@ from typing import Any
 from cmk.gui import utils, visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.data_source import data_source_registry
-from cmk.gui.graphing._translated_metrics import TranslatedMetric
+from cmk.gui.graphing import TranslatedMetric
 from cmk.gui.i18n import _, _u
 from cmk.gui.painter.v0 import painter_registry, register_painter
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission

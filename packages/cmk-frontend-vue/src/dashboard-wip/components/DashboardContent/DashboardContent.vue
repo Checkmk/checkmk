@@ -11,10 +11,11 @@ import DashboardContentFigure from './DashboardContentFigure.vue'
 import DashboardContentGraph from './DashboardContentGraph.vue'
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
+import DashboardContentNtop from './DashboardContentNtop.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentTopList from './DashboardContentTopList.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
-import { CONTENT_FIGURE_TYPES, GRAPH_TYPES } from './types.ts'
+import { CONTENT_FIGURE_TYPES, GRAPH_TYPES, NTOP_TYPES } from './types.ts'
 </script>
 
 <script setup lang="ts">
@@ -40,6 +41,8 @@ function contentTypeToComponent(contentType: string): Component {
       return DashboardContentFigure
     case GRAPH_TYPES.includes(contentType):
       return DashboardContentGraph
+    case NTOP_TYPES.includes(contentType):
+      return DashboardContentNtop
     default:
       throw new Error(`Unknown dashboard content type: ${contentType}`)
   }

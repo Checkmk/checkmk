@@ -10,9 +10,9 @@ PERL_MODULES_LIST_1 = {
         "sha256": "1f8f5c928fd6699a25ead67c23e1159482e7088ce684fbc084b3bcef115e1fc3",
         "url": "https://cpan.metacpan.org/authors/id/C/CO/CORION/parent-0.232.tar.gz",
     },
-    "version-0.9924.tar.gz": {
-        "sha256": "81e4485ff3faf9b7813584d57b557f4b34e73b6c2eb696394f6deefacf5ca65b",
-        "url": "https://www.cpan.org/modules/by-module/version/version-0.9924.tar.gz",
+    "version-0.9933.tar.gz": {
+        "sha256": "dc07d9388ca3d3f67146312904bcdb35fe416bb30056158f80df3281a94fae58",
+        "url": "https://www.cpan.org/modules/by-module/version/version-0.9933.tar.gz",
     },
     "Module-CoreList-5.20150420.tar.gz": {
         "sha256": "03768bde1f5c02ba3fc4c093ed58c1c461d1251187b21f2c4ddfffc04b33e686",
@@ -129,9 +129,9 @@ PERL_MODULES_LIST_2 = {
         "sha256": "e144207a6fd261eb9f98554c76bea66d95870ee1f62d2d346a1ea95fdccf80db",
         "url": "https://www.cpan.org/modules/by-module/Sys/Sys-SigAction-0.21.tar.gz",
     },
-    "Term-ReadLine-Gnu-1.25.tar.gz": {
-        "sha256": "22a1b4a156b10dc5e55be5f0030460e62a210f9194e5a469e857e5d17186b003",
-        "url": "https://www.cpan.org/modules/by-module/Term/Term-ReadLine-Gnu-1.25.tar.gz",
+    "Term-ReadLine-Gnu-1.47.tar.gz": {
+        "sha256": "3b07ac8a9b494c50aa87a40dccab3f879b92eb9527ac0f2ded5d4743d166b649",
+        "url": "https://www.cpan.org/modules/by-module/Term/Term-ReadLine-Gnu-1.47.tar.gz",
     },
     "Term-ShellUI-0.92.tar.gz": {
         "sha256": "3279c01c76227335eeff09032a40f4b02b285151b3576c04cacd15be05942bdb",

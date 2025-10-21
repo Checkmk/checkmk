@@ -4,6 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Email server roundtrip active check"""
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 import argparse
 import email.utils
 import logging

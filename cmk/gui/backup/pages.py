@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pages for managing backup and restore of WATO"""
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Collection
+from typing import override
 
 import cmk.utils.paths
 from cmk.crypto.password import Password
@@ -20,7 +23,7 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_backup_job_state", PageAjaxBackupJobState))
+    page_registry.register(PageEndpoint("ajax_backup_job_state", PageAjaxBackupJobState()))
     mode_registry.register(ModeBackup)
     mode_registry.register(ModeBackupTargets)
     mode_registry.register(ModeEditBackupTarget)
@@ -111,9 +114,11 @@ class ModeBackupJobState(handler.PageBackupJobState, WatoMode):
 class PageAjaxBackupJobState(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    @override
     def handle_page(self, config: Config) -> None:
         self._handle_exc(config, self.page)
 
+    @override
     def page(self, config: Config) -> PageResult:
         user.need_permission("wato.backups")
         if request.var("job") == "restore":

@@ -2,6 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="misc"
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -15,7 +18,7 @@ from cmk.plugins.azure_deprecated.agent_based.azure_databases import (
     create_check_azure_databases_dtu,
     create_check_azure_databases_storage,
 )
-from cmk.plugins.lib.azure import AzureMetric, Resource, Section
+from cmk.plugins.azure_deprecated.agent_based.lib import AzureMetric, Resource, Section
 
 LEVELS = (5.0, 20.0)
 METRIC_CONN_FAILED_OK = Metric(name="connections_failed_rate", value=10)

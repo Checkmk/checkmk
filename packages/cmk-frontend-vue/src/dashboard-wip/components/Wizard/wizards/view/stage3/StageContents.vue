@@ -8,8 +8,6 @@ import { computed, ref, toValue } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { ContentProps } from '@/dashboard-wip/components/DashboardContent/types'
@@ -19,6 +17,8 @@ import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionBut
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import WidgetVisualization from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { UseWidgetVisualizationProps } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
+import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleContent.vue'
+import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type {
   EffectiveWidgetFilterContext,
   EmbeddedViewContent,
@@ -95,13 +95,13 @@ const displayVisualizationSettings = ref<boolean>(true)
 
   <ContentSpacer />
 
-  <CmkCollapsibleTitle
+  <CollapsibleTitle
     :title="_t('Widget visualization')"
     :open="displayVisualizationSettings"
     class="collapsible"
     @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
   />
-  <CmkCollapsible :open="displayVisualizationSettings">
+  <CollapsibleContent :open="displayVisualizationSettings">
     <WidgetVisualization
       v-model:show-title="visualizationProps.showTitle.value"
       v-model:show-title-background="visualizationProps.showTitleBackground.value"
@@ -111,5 +111,5 @@ const displayVisualizationSettings = ref<boolean>(true)
       v-model:title-url-enabled="visualizationProps.titleUrlEnabled.value"
       v-model:title-url-validation-errors="visualizationProps.titleUrlValidationErrors.value"
     />
-  </CmkCollapsible>
+  </CollapsibleContent>
 </template>

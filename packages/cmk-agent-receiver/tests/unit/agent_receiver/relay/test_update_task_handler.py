@@ -15,15 +15,10 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
-    RelayNotFoundError,
-    Serial,
     TaskID,
     TaskNotFoundError,
 )
 from cmk.agent_receiver.relay.lib.site_auth import UserAuth
-
-# TODO use non-empty serial
-SERIAL = Serial("")
 
 
 @pytest.mark.usefixtures("site_context")
@@ -39,7 +34,6 @@ def test_process_update_task(
         task_id=task.id,
         result_type=ResultType.OK,
         result_payload="Task completed successfully",
-        relay_serial=SERIAL,
     )
 
     # assert
@@ -51,22 +45,6 @@ def test_process_update_task(
     # TODO: assert tasks_enqueued[0].status == TaskStatus.FINISHED or TaskStatus.ERROR
     assert tasks_enqueued[0].result_type == ResultType.OK
     assert tasks_enqueued[0].result_payload == "Task completed successfully"
-
-
-@pytest.mark.usefixtures("site_context")
-def test_process_update_task_non_existent_relay(update_task_handler: UpdateTaskHandler) -> None:
-    # arrange
-    relay_id = RelayID("non-existent-relay-id")
-
-    # act
-    with pytest.raises(RelayNotFoundError):
-        update_task_handler.process(
-            relay_id=relay_id,
-            task_id=TaskID("any-task-id"),
-            result_type=ResultType.OK,
-            result_payload="any payload",
-            relay_serial=SERIAL,
-        )
 
 
 @pytest.mark.usefixtures("site_context")
@@ -88,5 +66,4 @@ def test_process_update_task_non_existent_task(
             task_id=task_id,
             result_type=ResultType.OK,
             result_payload="any payload",
-            relay_serial=SERIAL,
         )

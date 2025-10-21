@@ -19,8 +19,9 @@ from cmk.werks.cli import (
     main_user_understanding,
 )
 from cmk.werks.meisterwerk import build_meisterwerk_payload
-from cmk.werks.schemas.werk import WerkId, Werk as WerkTuple
 from cmk.werks.parse import WerkV2ParseResult
+from cmk.werks.schemas.werk import Werk as WerkTuple
+from cmk.werks.schemas.werk import WerkId
 
 
 def tw(data: Iterable[int]) -> list[WerkId]:

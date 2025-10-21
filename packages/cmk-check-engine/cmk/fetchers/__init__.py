@@ -16,6 +16,7 @@ from ._agentprtcl import TCPEncryptionHandling as TCPEncryptionHandling
 from ._agentprtcl import TransportProtocol as TransportProtocol
 from ._ipmi import IPMICredentials as IPMICredentials
 from ._ipmi import IPMIFetcher as IPMIFetcher
+from ._metric_backend import MetricBackendFetcherConfig as MetricBackendFetcherConfig
 from ._nofetcher import NoFetcher as NoFetcher
 from ._nofetcher import NoFetcherError as NoFetcherError
 from ._piggyback import PiggybackFetcher as PiggybackFetcher

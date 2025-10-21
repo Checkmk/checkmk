@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 import importlib
@@ -94,7 +98,7 @@ class JobTarget[Args](BaseModel, frozen=True):
         func = getattr(importlib.import_module(value[0]), value[1])
         if not callable(func):
             raise ValueError("The callable must be a callable")
-        return func  # type: ignore[no-any-return]
+        return func
 
     @field_serializer("callable")
     def serialize_callable(self, value: Callable) -> tuple[str, str]:

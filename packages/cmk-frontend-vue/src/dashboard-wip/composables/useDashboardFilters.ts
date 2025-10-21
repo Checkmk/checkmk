@@ -6,16 +6,18 @@
 import { type Ref, computed, ref } from 'vue'
 
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/components/filter/types'
-import type { DashboardFilterContext } from '@/dashboard-wip/types/dashboard'
+import type { DashboardFilterContextWithSingleInfos } from '@/dashboard-wip/types/dashboard'
 import {
   type ContextFilter,
   type ContextFilters,
-  FilterOrigin
+  FilterOrigin,
+  RuntimeFilterMode
 } from '@/dashboard-wip/types/filter.ts'
 
 export function useDashboardFilters(
-  dashboardFilterContextRef: Ref<DashboardFilterContext | undefined>
+  dashboardFilterContextRef: Ref<DashboardFilterContextWithSingleInfos | undefined>
 ) {
+  const runtimeFiltersMode = ref<RuntimeFilterMode>(RuntimeFilterMode.OVERRIDE)
   const appliedRuntimeFilters = ref<ConfiguredFilters>({})
 
   const configuredMandatoryRuntimeFilters = computed<string[]>(() => {
@@ -41,17 +43,21 @@ export function useDashboardFilters(
     return Object.fromEntries(entries)
   }
 
-  const contextFilters = computed<ContextFilters>(() => ({
-    ...toContextFilters(configuredDashboardFilters.value, FilterOrigin.DASHBOARD),
-    ...toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
-  }))
+  const contextFilters = computed<ContextFilters>(() => {
+    if (runtimeFiltersMode.value === 'override') {
+      return toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
+    }
+    return {
+      ...toContextFilters(configuredDashboardFilters.value, FilterOrigin.DASHBOARD),
+      ...toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
+    }
+  })
 
   const handleSaveDashboardFilters = (filters: ConfiguredFilters) => {
     const ctx = dashboardFilterContextRef.value
     if (!ctx) {
       throw new Error('Cannot save dashboard filters: dashboardFilterContext is undefined')
     }
-    // @ts-expect-error TODO: filter configuration value should be adjusted
     ctx.filters = structuredClone(filters)
   }
 
@@ -67,6 +73,10 @@ export function useDashboardFilters(
     ctx.mandatory_context_filters = structuredClone(mandatoryFilters)
   }
 
+  const setRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
+    runtimeFiltersMode.value = mode
+  }
+
   const handleResetRuntimeFilters = () => {
     appliedRuntimeFilters.value = {}
   }
@@ -77,6 +87,8 @@ export function useDashboardFilters(
     appliedRuntimeFilters,
     baseFilters,
     contextFilters,
+    runtimeFiltersMode: computed(() => runtimeFiltersMode.value),
+    setRuntimeFiltersMode,
     handleSaveDashboardFilters,
     handleApplyRuntimeFilters,
     handleSaveMandatoryRuntimeFilters,

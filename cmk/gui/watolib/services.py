@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 import ast
@@ -92,8 +96,8 @@ class DiscoveryState:
     CLUSTERED_NEW = "clustered_new"
     CLUSTERED_VANISHED = "clustered_vanished"
     CLUSTERED_IGNORED = "clustered_ignored"
-    ACTIVE_IGNORED = "active_ignored"
-    CUSTOM_IGNORED = "custom_ignored"
+    ACTIVE_IGNORED = "ignored_active"
+    CUSTOM_IGNORED = "ignored_custom"
 
     @classmethod
     def is_discovered(cls, table_source: str) -> bool:

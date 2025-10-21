@@ -77,8 +77,9 @@ export function useDashboardsManager() {
     dashboardName: string,
     generalSettings: DashboardGeneralSettings,
     layoutType: DashboardLayout,
-    restrictedToSingle: string[] = []
-  ): Promise<DashboardModel> {
+    restrictedToSingle: string[] = [],
+    postCreateMode: 'setDashboardAsActive' | null = 'setDashboardAsActive'
+  ): Promise<void> {
     const filterContext = {
       restricted_to_single: restrictedToSingle,
       filters: {},
@@ -133,7 +134,9 @@ export function useDashboardsManager() {
       content
     }
 
-    return setActiveDashboard(dashboardName, dashboard)
+    if (postCreateMode === 'setDashboardAsActive') {
+      setActiveDashboard(dashboardName, dashboard)
+    }
   }
 
   async function persistDashboard() {
@@ -152,9 +155,14 @@ export function useDashboardsManager() {
           ]
         )
       )
+      const filterContext = dashboard.filter_context
       const relativeDashboard: EditRelativeDashboardBody = {
         general_settings: dashboard.general_settings,
-        filter_context: dashboard.filter_context,
+        filter_context: {
+          restricted_to_single: filterContext.restricted_to_single,
+          filters: filterContext.filters,
+          mandatory_context_filters: filterContext.mandatory_context_filters
+        },
         layout: dashboard.content.layout,
         widgets
       }
@@ -172,9 +180,14 @@ export function useDashboardsManager() {
           ]
         )
       )
+      const filterContext = dashboard.filter_context
       const responsiveDashboard: EditResponsiveDashboardBody = {
         general_settings: dashboard.general_settings,
-        filter_context: dashboard.filter_context,
+        filter_context: {
+          restricted_to_single: filterContext.restricted_to_single,
+          filters: filterContext.filters,
+          mandatory_context_filters: filterContext.mandatory_context_filters
+        },
         layout: dashboard.content.layout,
         widgets
       }

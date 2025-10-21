@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
+# mypy: disable-error-code="type-arg"
+
 
 class FakeResponse:
     def __init__(self, data: dict):

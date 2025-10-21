@@ -5,6 +5,7 @@
  */
 // import { h } from 'vue'
 import type { ConfiguredFilters } from '../filter/types'
+import type { WidgetFilterManager } from './components/filter/composables/useWidgetFilterManager'
 import type { TitleSpec, WidgetContentType, WidgetFiltersType, WidgetProps } from './types'
 
 export const isUrl = (text: string): boolean => {
@@ -17,6 +18,12 @@ export const isUrl = (text: string): boolean => {
   }
 }
 
+/**
+ * Generates WidgetProps
+ * To be removed once all widgets use the new system
+ * @deprecated
+ * @returns WidgetProps
+ */
 export const generateWidgetProps = (
   titleSpec: TitleSpec,
   widgetContent: WidgetContentType,
@@ -32,10 +39,24 @@ export const generateWidgetProps = (
   }
 }
 
+/**
+ * Generates an effective filter context based on the currently configured filters
+ * To be removed once all widgets use the new system
+ * @deprecated
+ */
 export const generateEffectiveFilterContext = (filters: ConfiguredFilters) => {
   return {
     uses_infos: [],
     filters: filters as unknown as WidgetFiltersType,
     restricted_to_single: []
   }
+}
+
+export const getConfiguredFilters = (manager: WidgetFilterManager): ConfiguredFilters => {
+  const configuredActiveFilters: ConfiguredFilters = {}
+  const configuredFilters = manager.getConfiguredFilters()
+  for (const flt of manager.getSelectedFilters()) {
+    configuredActiveFilters[flt] = configuredFilters[flt] || {}
+  }
+  return configuredActiveFilters
 }

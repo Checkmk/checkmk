@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import override
+
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.ccc.site import omd_site
@@ -234,6 +236,7 @@ def page_login(config: Config) -> None:
 
 
 class PageMobileIndex(Page):
+    @override
     def page(self, config: Config) -> PageResult:
         _page_index(config)
         return None
@@ -302,6 +305,7 @@ def _page_index(config: Config) -> None:
 
 
 class PageMobileView(Page):
+    @override
     def page(self, config: Config) -> PageResult:
         _page_view(config, debug=config.debug)
         return None
@@ -386,7 +390,13 @@ class MobileViewRenderer(ABCViewRenderer):
 
         # Should we show a page with context links?
         context_links = list(
-            collect_context_links(self.view, rows, mobile=True, visual_types=["views"])
+            collect_context_links(
+                self.view,
+                rows,
+                mobile=True,
+                visual_types=["views"],
+                user_permissions=user_permissions,
+            )
         )
 
         if context_links:
@@ -438,6 +448,7 @@ class MobileViewRenderer(ABCViewRenderer):
                         self.view.row_cells,
                         num_columns,
                         show_checkboxes and not html.do_actions(),
+                        user_permissions,
                     )
                 except Exception as e:
                     logger.exception("error rendering mobile view")

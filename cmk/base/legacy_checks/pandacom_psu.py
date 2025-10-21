@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # .1.3.6.1.4.1.3652.3.2.1.1.0 M9-2 --> SPEEDCARRIER-MIB::nmCarrierName.0
 # .1.3.6.1.4.1.3652.3.2.1.2.0 4 --> SPEEDCARRIER-MIB::nmCarrierType.0
 # .1.3.6.1.4.1.3652.3.2.1.3.0 3 --> SPEEDCARRIER-MIB::nmPSU1Status.0

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # Example output from agent:
 # Put here the example output from your TCP-Based agent. If the
 # <<<win_printers>>>

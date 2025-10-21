@@ -3,6 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -24,8 +32,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.rule_specs import legacy_converter
-from cmk.gui.watolib import rulesets
+from cmk.gui.watolib import password_store, rulesets
 from cmk.gui.watolib.configuration_bundle_store import BundleId
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
@@ -82,7 +89,7 @@ def test_rule_from_ruleset_defaults(
 ) -> None:
     ruleset = _ruleset(ruleset_name)
     rule = rulesets.Rule.from_ruleset(
-        folder_tree().root_folder(), ruleset, ruleset.valuespec().default_value()
+        folder_tree().root_folder(), ruleset, ruleset.rulespec.valuespec.default_value()
     )
     assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == RuleOptions(
@@ -837,6 +844,7 @@ def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
     assert ruleset.matches_search_with_rules({"rule_ineffective": False}, debug=False) is True
 
 
+@pytest.mark.skip_on_code_coverage
 @pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
 def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_login: UserId) -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(
@@ -937,7 +945,7 @@ def rule_helper(request: FixtureRequest) -> _RuleHelper:
 
 def test_to_log_masks_secrets() -> None:
     log = str(_RuleHelper.gcp_rule().to_log())
-    assert "'password'" in log, "password tuple is present"
+    assert "'explicit_password'" in log, "password tuple is present"
     assert "hunter2" not in log, "password is masked"
 
 
@@ -952,7 +960,7 @@ def test_diff_to_no_changes(rule_helper: _RuleHelper) -> None:
     rule = rule_helper.rule()
     # An uuid is created every time a rule is created/edited, so mock it here for the comparison.
     # The actual password should stay the same
-    with patch.object(legacy_converter, "ad_hoc_password_id", return_value="test-uuid"):
+    with patch.object(password_store, "ad_hoc_password_id", return_value="test-uuid"):
         assert rule.diff_to(rule) == "Nothing was changed."
 
 
@@ -967,7 +975,7 @@ def test_diff_to_secret_unchanged(rule_helper: _RuleHelper) -> None:
     new.value[rule_helper.other_attr] = "new_value"
     # An uuid is created every time a rule is created/edited, so mock it here for the comparison.
     # The actual password should stay the same
-    with patch.object(legacy_converter, "ad_hoc_password_id", return_value="test-uuid"):
+    with patch.object(password_store, "ad_hoc_password_id", return_value="test-uuid"):
         diff = old.diff_to(new)
     assert "Redacted secrets changed." not in diff
     assert 'changed from "old_value" to "new_value".' in diff
@@ -1007,13 +1015,17 @@ def test_rules_grouped_by_folder() -> None:
     root: Folder = tree.root_folder()
     ruleset: Ruleset = Ruleset("only_hosts")
     rules: list[tuple[Folder, int, Rule]] = [
-        (root, 0, Rule.from_ruleset(root, ruleset, ruleset.valuespec().default_value()))
+        (root, 0, Rule.from_ruleset(root, ruleset, ruleset.rulespec.valuespec.default_value()))
     ]
 
     for nr in range(1, 3):
         folder = Folder.new(tree=tree, name="folder%d" % nr, parent_folder=root)
         rules.append(
-            (folder, 0, Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value()))
+            (
+                folder,
+                0,
+                Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value()),
+            )
         )
         for x in range(1, 3):
             subfolder = Folder.new(tree=tree, name="folder%d" % x, parent_folder=folder)
@@ -1021,7 +1033,7 @@ def test_rules_grouped_by_folder() -> None:
                 (
                     subfolder,
                     0,
-                    Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value()),
+                    Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value()),
                 )
             )
             for y in range(1, 3):
@@ -1030,7 +1042,9 @@ def test_rules_grouped_by_folder() -> None:
                     (
                         sub_subfolder,
                         0,
-                        Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value()),
+                        Rule.from_ruleset(
+                            folder, ruleset, ruleset.rulespec.valuespec.default_value()
+                        ),
                     )
                 )
 
@@ -1038,7 +1052,11 @@ def test_rules_grouped_by_folder() -> None:
     folder4 = Folder.new(tree=tree, name="folder4", parent_folder=root)
     folder4._title = "abc"
     rules.append(
-        (folder4, 0, Rule.from_ruleset(folder4, ruleset, ruleset.valuespec().default_value()))
+        (
+            folder4,
+            0,
+            Rule.from_ruleset(folder4, ruleset, ruleset.rulespec.valuespec.default_value()),
+        )
     )
 
     sorted_rules = sorted(

@@ -24,15 +24,18 @@ interface FiltersRecapProps {
   contextConfiguredFilters: ConfiguredFilters
   widgetFilters?: ConfiguredFilters
 
-  metricType: MetricSelection | null
-  combinedMetric: string | null
-  singleMetric: string | null
+  metricType?: MetricSelection | null
+  combinedMetric?: string | null
+  singleMetric?: string | null
 }
 
 const props = withDefaults(defineProps<FiltersRecapProps>(), {
   widgetFilters: () => {
     return {} as ConfiguredFilters
-  }
+  },
+  metricType: null,
+  combinedMetric: null,
+  singleMetric: null
 })
 
 const filterDefinitions = useFilterDefinitions()

@@ -6,6 +6,8 @@ r"""
 Send notification messages to Cisco Webex Teams
 ===============================================
 
+# mypy: disable-error-code="type-arg"
+
 Use a Cisco Webex Teams webhook to send notification messages
 """
 

@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from typing import override
 
 import pytest
 
 import cmk.ccc.version as cmk_version
 import cmk.gui.pages
 from cmk.gui.config import Config
-from cmk.gui.pages import PageEndpoint
+from cmk.gui.pages import Page, PageEndpoint
 from cmk.utils import paths
 
 
@@ -231,6 +232,7 @@ def test_registered_pages() -> None:
             "ajax_ntop_engaged_alerts",
             "ajax_ntop_past_alerts",
             "ajax_ntop_flow_alerts",
+            "ajax_ntop_ifid",
             "licensing_download_verification_request",
             "noauth:saml_acs",
             "noauth:saml_metadata",
@@ -268,22 +270,22 @@ def test_registered_pages() -> None:
 
 
 @pytest.mark.usefixtures("monkeypatch")
-def test_page_registry_register_page_class(capsys: pytest.CaptureFixture[str]) -> None:
+def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None:
     page_registry = cmk.gui.pages.PageRegistry()
 
     class PageClass(cmk.gui.pages.Page):
+        @override
         def page(self, config: Config) -> None:
             sys.stdout.write("234")
 
-    page_registry.register(PageEndpoint("234handler", PageClass))
+    page_registry.register(PageEndpoint("234handler", PageClass()))
 
     endpoint = page_registry.get("234handler")
     assert isinstance(endpoint, PageEndpoint)
     handler = endpoint.handler
-    assert isinstance(handler, type)
-    assert issubclass(handler, PageClass)
+    assert isinstance(handler, Page)
 
-    handler().handle_page(Config())
+    handler.handle_page(Config())
     assert capsys.readouterr()[0] == "234"
 
 
@@ -301,7 +303,7 @@ def test_page_registry_register_page_handler(
     endpoint = page_registry.get("234handler")
     assert isinstance(endpoint, PageEndpoint)
     handler = endpoint.handler
-    assert not isinstance(handler, type)
+    assert not isinstance(handler, Page)
 
     handler(Config())
     assert capsys.readouterr()[0] == "234"

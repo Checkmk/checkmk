@@ -12,7 +12,7 @@ on: [push, pull_request]
 
 jobs:
   testing:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       PYTHONWARNINGS: ignore:DeprecationWarning
       # Avoid falling back to our internal bazel remote cache on github actions
@@ -22,8 +22,8 @@ jobs:
         include:
         - name: Bandit tests
           target: test-bandit
-        - name: Python formatting
-          target: test-format-python
+        - name: Formatting
+          target: test-format
         - name: Ruff lint tests
           target: test-ruff
         - name: Python unit tests
@@ -60,9 +60,10 @@ jobs:
         # libkrb5-dev: Needed for building pykerberos.
         # libglib2.0-dev: required by packages/glib and therfore transitive by python unit tests
         # gettext: Needed for some "unit tests" (test_i18n.py)
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/ppa
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install ksh libpango1.0-dev librrd-dev libldap2-dev libsasl2-dev libkrb5-dev libglib2.0-dev gettext g++-13 g++14
+        sudo apt-get install ksh libpango1.0-dev librrd-dev libldap2-dev libsasl2-dev libkrb5-dev libglib2.0-dev gettext "^g\+\+-14$"
         make .venv
     - name: Run ${{ matrix.name  }}
       env:

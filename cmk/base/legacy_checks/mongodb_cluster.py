@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="arg-type"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="var-annotated"
+
 # <<<mongodb_chunks>>>
 # <json>
-
-
-# mypy: disable-error-code="var-annotated,arg-type"
 
 import json
 from collections.abc import Iterable, Mapping

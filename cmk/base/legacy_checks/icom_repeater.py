@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="list-item"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
@@ -145,8 +146,7 @@ def check_icom_repeater_pll_volt(item, params, parsed):
     paramlist = params.get(item.lower(), None)
 
     if not paramlist:
-        perfdata = [("voltage", voltage)]
-        return 1, "Please specify parameters for PLL voltage", perfdata
+        return 1, "Please specify parameters for PLL voltage", [("voltage", voltage)]
 
     i = 0
     while i < len(paramlist):

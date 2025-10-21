@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="possibly-undefined"
+
 # <<<sap:sep(9)>>>
 # sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTime    249 msec
 # sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTimeDialog  249 msec

@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-any-return"
+
 import time
 from typing import NamedTuple, override
 
@@ -45,7 +48,9 @@ from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 def register(
     page_registry: PageRegistry, permission_section_registry: PermissionSectionRegistry
 ) -> None:
-    page_registry.register(PageEndpoint("clear_failed_notifications", ClearFailedNotificationPage))
+    page_registry.register(
+        PageEndpoint("clear_failed_notifications", ClearFailedNotificationPage())
+    )
     permission_section_registry.register(PERMISSION_SECTION_NOTIFICATION_PLUGINS)
 
 
@@ -101,7 +106,7 @@ def acknowledged_time() -> float:
                 user.acknowledged_notifications, now
             )
 
-    return g.failed_notification_times.acknowledged_unitl  # type: ignore[no-any-return]
+    return g.failed_notification_times.acknowledged_unitl
 
 
 def number_of_failed_notifications(after: float | None) -> int:
@@ -189,7 +194,8 @@ def _may_see_failed_notifications() -> bool:
 
 
 class ClearFailedNotificationPage(Page):
-    def __init__(self) -> None:
+    @override
+    def _handle_http_request(self) -> None:
         if not _may_see_failed_notifications():
             raise MKAuthException(_("You are not allowed to view the failed notifications."))
 

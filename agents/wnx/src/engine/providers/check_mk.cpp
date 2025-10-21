@@ -124,25 +124,22 @@ std::string MakeDirs() {
 
     return out;
 }
-
-std::tm ToLocalTime(std::chrono::time_point<std::chrono::system_clock> now) {
-    const std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-    std::tm local_time{};
-    errno = 0;
-    if (localtime_s(&local_time, &now_c) != 0) {
-        XLOG::d.e("ToLocalTime: localtime_s failed with errno {}", errno);
-    }
-    return local_time;
-}
-
 }  // namespace
 
 std::string PrintIsoTime(
     std::chrono::time_point<std::chrono::system_clock> now) {
-    auto lt = ToLocalTime(now);
+    auto lt_opt = wtools::GetTimeAsTm(now);
+    if (!lt_opt.has_value()) {
+        XLOG::l.crit(
+            "PrintIsoTime: cannot convert time to tm struct, returning zero value");
+        return "0000-00-00T00:00:00+0000";
+    }
+    auto const &lt_val = lt_opt.value();
+
     return fmt::format("{:4}-{:02}-{:02}T{:02}:{:02}:{:02}{}",
-                       lt.tm_year + 1900, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour,
-                       lt.tm_min, lt.tm_sec, GetTimezoneOffset(now));
+                       lt_val.tm_year + 1900, lt_val.tm_mon + 1, lt_val.tm_mday,
+                       lt_val.tm_hour, lt_val.tm_min, lt_val.tm_sec,
+                       GetTimezoneOffset(now));
 }
 
 std::string CheckMk::makeBody() {

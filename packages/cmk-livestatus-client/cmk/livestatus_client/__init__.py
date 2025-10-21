@@ -405,8 +405,8 @@ class Helpers:
                     return ",".join(map(str, value))
                 case Enum():
                     return str(value.value)
-
-            assert False, f"Unexpected type in serialization: {type(value)}"
+                case _:
+                    assert False, f"Unexpected type in serialization: {type(value)}"
 
         serialized_args = ";".join(map(_serialize_type, command.args()))
         return f"{command.name()};{serialized_args}"
@@ -1655,7 +1655,27 @@ def get_rrd_data(
 
 
 def get_timeperiods_active_map(timeout: int) -> Mapping[str, bool]:
+    """Query for a map of timeperiod names to their active state.
+
+    Raise livestatus exceptions.
+    """
     connection = LocalConnection()
     connection.set_timeout(timeout)
     response = connection.query("GET timeperiods\nColumns: name in")
+    return {str(name): bool(active) for name, active in response}
+
+
+def get_optional_timeperiods_active_map(log: Callable[[str], object]) -> Mapping[str, bool] | None:
+    """Query for a map of timeperiod names to their active state.
+
+    If livestatus is not available or the query fails, return None
+    and log the errors using the provided logger.
+    """
+    connection = LocalConnection()
+    connection.set_timeout(2)
+    try:
+        response = connection.query("GET timeperiods\nColumns: name in")
+    except MKLivestatusException as exc:
+        log(f"Failed to query timeperiods via livestatus: {exc}")
+        return None
     return {str(name): bool(active) for name, active in response}

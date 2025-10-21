@@ -22,7 +22,7 @@ from cmk.rulesets.v1.form_specs import (
     SimpleLevelsConfigModel,
 )
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
-from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 Number = TypeVar("Number", int, float)
 
@@ -43,12 +43,6 @@ def _validate_level_factory(
 
 _validate_positive = _validate_level_factory(NumberInRange(min_value=0))
 _validate_percent = _validate_level_factory(NumberInRange(min_value=0, max_value=100))
-
-
-def _make_condition() -> HostAndItemCondition:
-    return HostAndItemCondition(
-        item_title=Title("Storage account name"),
-    )
 
 
 def _make_usage_form() -> Dictionary:
@@ -178,7 +172,7 @@ rule_spec_azure_storageaccounts_usage = CheckParameters(
     title=Title("Azure Storage Usage"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_usage_form,
-    condition=_make_condition(),
+    condition=HostCondition(),
 )
 
 
@@ -187,7 +181,7 @@ rule_spec_azure_storageaccounts_flow = CheckParameters(
     title=Title("Azure Storage Data Flow"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_flow_form,
-    condition=_make_condition(),
+    condition=HostCondition(),
 )
 
 
@@ -196,5 +190,5 @@ rule_spec_azure_storageaccounts_performance = CheckParameters(
     title=Title("Azure Storage Performance"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_performance_form,
-    condition=_make_condition(),
+    condition=HostCondition(),
 )

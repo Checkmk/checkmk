@@ -6,6 +6,8 @@
 Special agent for monitoring Couchbase servers with Checkmk
 """
 
+# mypy: disable-error-code="no-any-return"
+
 import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any, TypeVar

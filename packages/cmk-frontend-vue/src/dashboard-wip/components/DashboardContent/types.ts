@@ -49,3 +49,8 @@ export const GRAPH_TYPES = [
   'problem_graph',
   'single_timeseries'
 ]
+
+// Ntop
+export const NTOP_TYPES: string[] = ['ntop_alerts', 'ntop_flows', 'ntop_top_talkers']
+
+export type NtopType = (typeof NTOP_TYPES)[number]

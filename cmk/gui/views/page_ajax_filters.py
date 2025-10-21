@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+from typing import override
 
 from cmk.gui import visuals
 from cmk.gui.config import Config
@@ -22,6 +23,7 @@ class ABCAjaxInitialFilters(AjaxPage):
     def _get_context(self, page_name: str) -> VisualContext:
         raise NotImplementedError()
 
+    @override
     def page(self, config: Config) -> dict[str, str]:
         api_request = self.webapi_request()
         varprefix = api_request.get("varprefix", "")

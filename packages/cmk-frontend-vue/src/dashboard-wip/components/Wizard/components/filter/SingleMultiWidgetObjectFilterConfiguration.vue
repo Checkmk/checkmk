@@ -24,9 +24,12 @@ interface Props {
   configuredFiltersOfObjectType: FilterConfigState
   contextFilters: ContextFilters
   inSelectionMenuFocus: boolean
+  singleOnly?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  singleOnly: false
+})
 
 interface Emits {
   (e: 'set-focus', target: ObjectType): void
@@ -42,31 +45,44 @@ const modeSelection = defineModel<ElementSelection>('modeSelection', {
 </script>
 
 <template>
-  <ToggleButtonGroup
-    v-model="modeSelection"
-    :options="[
-      { label: _t('Single %{n}', { n: props.objectType }), value: ElementSelection.SPECIFIC },
-      {
-        label: _t('Multiple %{n}', { n: props.objectType }),
-        value: ElementSelection.MULTIPLE
-      }
-    ]"
-    @update:model-value="
-      (value) => {
-        modeSelection = value as ElementSelection
-        emit('reset-object-type-filters', objectType)
-      }
-    "
-  />
-  <CmkIndent>
+  <template v-if="!props.singleOnly">
+    <ToggleButtonGroup
+      v-model="modeSelection"
+      :options="[
+        { label: _t('Single %{n}', { n: props.objectType }), value: ElementSelection.SPECIFIC },
+        {
+          label: _t('Multiple %{n}', { n: props.objectType }),
+          value: ElementSelection.MULTIPLE
+        }
+      ]"
+      @update:model-value="
+        (value) => {
+          modeSelection = value as ElementSelection
+          emit('reset-object-type-filters', objectType)
+        }
+      "
+    />
+    <CmkIndent>
+      <WidgetObjectFilterConfiguration
+        :object-type="objectType"
+        :object-selection-mode="modeSelection"
+        :object-configured-filters="configuredFiltersOfObjectType"
+        :in-focus="inSelectionMenuFocus"
+        :context-filters="contextFilters"
+        @set-focus="emit('set-focus', $event)"
+        @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+      />
+    </CmkIndent>
+  </template>
+  <template v-else>
     <WidgetObjectFilterConfiguration
       :object-type="objectType"
-      :object-selection-mode="modeSelection"
+      :object-selection-mode="ElementSelection.SPECIFIC"
       :object-configured-filters="configuredFiltersOfObjectType"
       :in-focus="inSelectionMenuFocus"
       :context-filters="contextFilters"
       @set-focus="emit('set-focus', $event)"
       @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
     />
-  </CmkIndent>
+  </template>
 </template>

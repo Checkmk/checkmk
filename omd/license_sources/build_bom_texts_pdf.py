@@ -2,10 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 """Python module for generating a PDF containing all license texts that can be
 found under ./license_texts/"""
-
-# mypy: disable-error-code="import-untyped,no-untyped-def"
 
 import argparse
 import csv

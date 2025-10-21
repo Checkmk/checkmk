@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Compute the cluster check function from the plug-in and parameters."""
 
+# mypy: disable-error-code="type-arg"
+
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial

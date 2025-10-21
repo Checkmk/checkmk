@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import json
 import os
 import os.path
@@ -25,7 +29,7 @@ except ImportError:
 
 
 def _output_json_section(name, data):
-    sys.stdout.write("<<<%s:sep(0)>>>\n%s\n" % (name, json.dumps(data)))
+    sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(data)}\n")
 
 
 class RadosCMD(rados.Rados):  # type: ignore[misc]

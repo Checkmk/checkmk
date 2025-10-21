@@ -9,8 +9,8 @@ import { ref, watch } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import FormIndent from '@/components/CmkIndent.vue'
-import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
@@ -62,7 +62,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 <template>
   <CmkCheckbox v-model="checkboxValue" :label="untranslated(spec.i18n.label)" />
-  <HelpText :help="untranslated(spec.help)" />
+  <CmkHelpText :help="untranslated(spec.help)" />
   <FormIndent v-if="data !== null">
     <span v-if="spec.parameter_form.title" class="embedded_title">
       {{ spec.parameter_form.title }}

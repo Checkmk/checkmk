@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { components } from '@/lib/rest-api-client/openapi_internal'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
-export type ConfiguredValues = Record<string, string | null>
+export type ConfiguredValues = Record<string, string>
 export type ConfiguredFilters = Record<string, ConfiguredValues>
 
 export type FilterDefinition = components['schemas']['FilterDomainObject']

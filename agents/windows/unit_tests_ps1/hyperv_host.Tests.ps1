@@ -216,7 +216,7 @@ Context "Hyper-V Host Plugin Tests" {
 
         Context "When Dynamic Memory is enabled" {
             It "Outputs correct dynamic memory info" {
-                $vm = [PSCustomObject]@{ Name = "TestVM"; MemoryStartup = 4096MB }
+                $vm = [PSCustomObject]@{ Name = "TestVM"; MemoryAssigned = 4096MB }
                 $clusterNode = "Node1"
                 $mockMemory = [PSCustomObject]@{
                     DynamicMemoryEnabled = $true
@@ -229,27 +229,34 @@ Context "Hyper-V Host Plugin Tests" {
 
                 $output = Get-VMRAMInfo -vm $vm -clusterNode $clusterNode
 
-                $output | Should -Contain "config.hardware.RAMType Dynamic Memory"
-                $output | Should -Contain "config.hardware.StartRAM 2048"
-                $output | Should -Contain "config.hardware.MinRAM 1024"
-                $output | Should -Contain "config.hardware.MaxRAM 4096"
+                $output | Should -Contain "config.hardware.RAMType dynamic"
+                $output | Should -Contain "config.hardware.AssignedRAM 4294967296"
+                $output | Should -Contain "config.hardware.StartRAM 2147483648"
+                $output | Should -Contain "config.hardware.MinRAM 1073741824"
+                $output | Should -Contain "config.hardware.MaxRAM 4294967296"
             }
         }
 
         Context "When Dynamic Memory is disabled" {
             It "Outputs correct static memory info" {
-                $vm = [PSCustomObject]@{ Name = "TestVM"; MemoryStartup = 4096MB }
+                $vm = [PSCustomObject]@{ Name = "TestVM"; MemoryAssigned = 4096MB }
                 $clusterNode = "Node1"
                 $mockMemory = [PSCustomObject]@{
                     DynamicMemoryEnabled = $false
+                    Startup              = 2048MB
+                    Minimum              = 1024MB
+                    Maximum              = 4096MB
                 }
 
                 Mock Get-VMMemory { $mockMemory }
 
                 $output = Get-VMRAMInfo -vm $vm -clusterNode $clusterNode
 
-                $output | Should -Contain "config.hardware.RAMType Static Memory"
-                $output | Should -Contain "config.hardware.RAM 4096"
+                $output | Should -Contain "config.hardware.RAMType static"
+                $output | Should -Contain "config.hardware.AssignedRAM 4294967296"
+                $output | Should -Contain "config.hardware.StartRAM 2147483648"
+                $output | Should -Contain "config.hardware.MinRAM 1073741824"
+                $output | Should -Contain "config.hardware.MaxRAM 4294967296"
             }
         }
     }

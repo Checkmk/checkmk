@@ -7,17 +7,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import type {
   CmkIconSize,
   CmkMultitoneIconColor,
-  CmkMultitoneIconName
-} from '@/components/CmkMultitoneIcon.vue'
-import CmkMultitoneIcon from '@/components/CmkMultitoneIcon.vue'
+  CmkMultitoneIconNames
+} from '@/components/CmkIcon/types.ts'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const icon = ref<CmkMultitoneIconName>('services')
+const icon = ref<CmkMultitoneIconNames>('services')
 const iconSuggestions = [
   { name: 'services', title: 'services' },
   { name: 'aggr', title: 'aggr' }

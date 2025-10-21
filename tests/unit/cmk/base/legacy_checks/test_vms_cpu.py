@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -32,7 +35,7 @@ def test_inventory_vms_cpu(
     [
         (
             None,
-            None,
+            {"iowait": None},
             [["1", "99.17", "0.54", "0.18", "0.00"]],
             [
                 (0, "User: 0.54%", [("user", 0.54, None, None)]),
@@ -44,7 +47,7 @@ def test_inventory_vms_cpu(
         ),
         (
             None,
-            (0.1, 0.5),
+            {"iowait": (0.1, 0.5)},
             [["1", "99.17", "0.54", "0.18", "0.00"]],
             [
                 (0, "User: 0.54%", [("user", 0.54, None, None)]),

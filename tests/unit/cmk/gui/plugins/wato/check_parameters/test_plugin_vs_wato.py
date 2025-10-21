@@ -3,13 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import abc
 import logging
 from collections.abc import Iterable, Iterator, Sequence
 from pprint import pformat
 from typing import Generic, NamedTuple, Protocol, TypeVar
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, InventoryPlugin
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
 from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
@@ -17,6 +21,7 @@ from cmk.gui.wato import RulespecGroupDiscoveryCheckParameters
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
+    FormSpecNotImplementedError,
     Rulespec,
     rulespec_registry,
     RulespecSubGroup,
@@ -156,8 +161,17 @@ class Wato(Base[TF]):
 
     def validate_parameter(self, parameters: ParametersTypeAlias | None) -> Exception | None:
         try:
-            self._element.valuespec.validate_datatype(parameters, "")
-            self._element.valuespec.validate_value(parameters, "")
+            try:
+                visitor = get_visitor(
+                    self._element.form_spec,
+                    VisitorOptions(migrate_values=False, mask_values=False),
+                )
+                validation_errors = visitor.validate(RawDiskData(parameters))
+                if validation_errors:
+                    raise MKGeneralException(f"Validation errors: {validation_errors}")
+            except FormSpecNotImplementedError:
+                self._element.valuespec.validate_datatype(parameters, "")
+                self._element.valuespec.validate_value(parameters, "")
         except Exception as exception:
             return exception
         return None

@@ -4,6 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module defines various classes and functions for handling REST API requests in Checkmk.
 
+# mypy: disable-error-code="mutable-override"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 It includes clients for different API domains, providing methods to perform create, read, update,
 delete operations and other actions.
 """
@@ -1172,6 +1177,18 @@ class GraphTimerangeClient(RestApiClient):
             url=f"/objects/{self.domain}/{graph_timerange_index}",
             expect_ok=expect_ok,
         )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
+class SidebarElementClient(RestApiClient):
+    domain: DomainType = "sidebar_element"
+    default_version = APIVersion.UNSTABLE
 
     def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
@@ -3156,32 +3173,6 @@ class ConfigurationEntityClient(RestApiClient):
         )
 
 
-class ManagedRobotsClient(RestApiClient):
-    domain: DomainType = "managed_robots"
-
-    def show(self, robot_id: str, expect_ok: bool = True) -> Response:
-        return self.request(
-            "get",
-            url=f"/objects/{self.domain}/{robot_id}",
-            expect_ok=expect_ok,
-        )
-
-    def delete(self, robot_id: str, expect_ok: bool = True) -> Response:
-        return self.request(
-            "delete",
-            url=f"/objects/{self.domain}/{robot_id}",
-            expect_ok=expect_ok,
-        )
-
-    def create(self, managed_robot_data: dict[str, Any], expect_ok: bool = True) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/collections/all",
-            body=managed_robot_data,
-            expect_ok=expect_ok,
-        )
-
-
 class BrokerConnectionClient(RestApiClient):
     domain: DomainType = "broker_connection"
 
@@ -3251,11 +3242,32 @@ class BrokerConnectionClient(RestApiClient):
 
 class OtelConfigClient(RestApiClient):
     domain: DomainType = "otel_collector_config"
+    receivers_domain: DomainType = "otel_collector_config_receivers"
+    prom_scrapers_domain: DomainType = "otel_collector_config_prom_scrape"
     default_version = APIVersion.UNSTABLE
 
     def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
-            "get", url=f"/domain-types/{self.domain}/collections/all", expect_ok=expect_ok
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def get_receivers(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.receivers_domain}/collections/all",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def get_prom_scrapers(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.prom_scrapers_domain}/collections/all",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
     def create(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
@@ -3264,6 +3276,25 @@ class OtelConfigClient(RestApiClient):
             url=f"/domain-types/{self.domain}/collections/all",
             body=dict(payload),
             expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def create_receivers(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.receivers_domain}/collections/all",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def create_prom_scrape(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.prom_scrapers_domain}/collections/all",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
     def edit(self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
@@ -3272,12 +3303,65 @@ class OtelConfigClient(RestApiClient):
             url=f"/objects/{self.domain}/{config_id}",
             body=dict(payload),
             expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def edit_receivers(
+        self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.receivers_domain}/{config_id}",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def edit_prom_scrape(
+        self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.prom_scrapers_domain}/{config_id}",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
     def delete(self, config_id: str, expect_ok: bool = True) -> Response:
         return self.request(
             "delete",
             url=f"/objects/{self.domain}/{config_id}",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def delete_receivers(self, config_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.receivers_domain}/{config_id}",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def delete_prom_scrape(self, config_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.prom_scrapers_domain}/{config_id}",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+
+class OtelCollectorClient(RestApiClient):
+    domain: DomainType = "otel_collector"
+    default_version = APIVersion.INTERNAL
+
+    def update(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/update/invoke",
+            body=dict(payload),
             expect_ok=expect_ok,
         )
 
@@ -3405,12 +3489,32 @@ class DashboardClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def clone_as_relative_grid_dashboard(
+        self, payload: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain_relative}/actions/clone/invoke",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
     def create_responsive_grid_dashboard(
         self, payload: dict[str, Any], expect_ok: bool = True
     ) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain_responsive}/collections/all",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def clone_as_responsive_grid_dashboard(
+        self, payload: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain_responsive}/actions/clone/invoke",
             body=payload,
             expect_ok=expect_ok,
         )
@@ -3486,6 +3590,13 @@ class ConstantClient(RestApiClient):
         return self.request(
             "get",
             url=f"/objects/{self.domain}/visual_info/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def list_widget_available_inventory(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/widget_available_inventory/collections/all",
             expect_ok=expect_ok,
         )
 
@@ -3565,6 +3676,31 @@ class RelayClient(RestApiClient):
         )
 
 
+class MetricBackendClient(RestApiClient):
+    domain: DomainType = "metric_backend"
+    default_version = APIVersion.INTERNAL
+
+    def update(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/update/invoke",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+
+class PagetypeTopicClient(RestApiClient):
+    domain: DomainType = "pagetype_topic"
+    default_version = APIVersion.INTERNAL
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3612,18 +3748,21 @@ class ClientRegistry:
     ServiceDiscovery: ServiceDiscoveryClient
     LdapConnection: LDAPConnectionClient
     SamlConnection: SAMLConnectionClient
+    SidebarElement: SidebarElementClient
     ParentScan: ParentScanClient
     QuickSetup: QuickSetupClient
-    ManagedRobots: ManagedRobotsClient
     BrokerConnection: BrokerConnectionClient
     BackgroundJob: BackgroundJobClient
     Acknowledge: AcknowledgeClient
     OtelConfigClient: OtelConfigClient
+    OtelCollectorClient: OtelCollectorClient
     VisualFilterClient: VisualFilterClient
     DashboardClient: DashboardClient
     ConstantClient: ConstantClient
     ViewClient: ViewClient
     RelayClient: RelayClient
+    MetricBackendClient: MetricBackendClient
+    PagetypeTopicClient: PagetypeTopicClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3665,14 +3804,17 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ParentScan=ParentScanClient(request_handler, url_prefix),
         SamlConnection=SAMLConnectionClient(request_handler, url_prefix),
         QuickSetup=QuickSetupClient(request_handler, url_prefix),
-        ManagedRobots=ManagedRobotsClient(request_handler, url_prefix),
         BrokerConnection=BrokerConnectionClient(request_handler, url_prefix),
         BackgroundJob=BackgroundJobClient(request_handler, url_prefix),
         Acknowledge=AcknowledgeClient(request_handler, url_prefix),
         OtelConfigClient=OtelConfigClient(request_handler, url_prefix),
+        OtelCollectorClient=OtelCollectorClient(request_handler, url_prefix),
         VisualFilterClient=VisualFilterClient(request_handler, url_prefix),
         DashboardClient=DashboardClient(request_handler, url_prefix),
         ConstantClient=ConstantClient(request_handler, url_prefix),
         ViewClient=ViewClient(request_handler, url_prefix),
         RelayClient=RelayClient(request_handler, url_prefix),
+        SidebarElement=SidebarElementClient(request_handler, url_prefix),
+        MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
+        PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
     )

@@ -12,7 +12,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkDualList from '@/components/CmkDualList'
 import type { DualListElement } from '@/components/CmkDualList'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 
 import { fetchData } from '../utils/autocompleters/ajax'
 import { type ValidationMessages } from '../utils/validation'

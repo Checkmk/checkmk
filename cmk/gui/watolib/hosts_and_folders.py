@@ -3,6 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 from __future__ import annotations
 
 import json
@@ -172,7 +180,16 @@ class FolderMetaData:
             if may_use_redis():
                 self._num_hosts_recursively = get_wato_redis_client(
                     self.tree
-                ).num_hosts_recursively_lua(self._path)
+                ).num_hosts_recursively_lua(
+                    self._path,
+                    skip_permission_checks=(
+                        user.may("wato.see_all_folders")
+                        or not active_config.wato_hide_folders_without_read_permissions
+                    ),
+                    user_contact_groups=(
+                        set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
+                    ),
+                )
             else:
                 self._num_hosts_recursively = self.tree.folder(
                     self._path.rstrip("/")
@@ -335,7 +352,14 @@ class _RedisHelper:
         self._loaded_wato_folders = None
         self._folder_paths = None
 
-    def choices_for_moving(self, path: PathWithoutSlash, move_type: _MoveType) -> Choices:
+    def choices_for_moving(
+        self,
+        path: PathWithoutSlash,
+        move_type: _MoveType,
+        *,
+        may_see_all_folders: bool,
+        user_contact_groups: set[str],
+    ) -> Choices:
         self._fetch_all_metadata()
         path_to_title = {x.path: x.title_path_without_root for x in self._folder_metadata.values()}
 
@@ -354,13 +378,11 @@ class _RedisHelper:
                     del path_to_title[possible_child_path]
 
         # Check permissions
-        if not user.may("wato.all_folders"):
-            assert user.id is not None
-            user_cgs = set(userdb.contactgroups_of_user(user.id))
+        if not may_see_all_folders:
             # Remove folders without permission
             for check_path in list(path_to_title.keys()):
                 if permitted_groups := self._folder_metadata[check_path].permitted_groups:
-                    if not user_cgs.intersection(set(permitted_groups)):
+                    if not user_contact_groups.intersection(set(permitted_groups)):
                         del path_to_title[check_path]
 
         return [(key.rstrip("/"), value) for key, value in path_to_title.items()]
@@ -513,7 +535,13 @@ class _RedisHelper:
     def _add_last_folder_update_to_pipeline(self, pipeline: Pipeline, timestamp: str) -> None:
         pipeline.set("wato:folder_list:last_update", timestamp)
 
-    def num_hosts_recursively_lua(self, path_with_slash: PathWithSlash) -> int:
+    def num_hosts_recursively_lua(
+        self,
+        path_with_slash: PathWithSlash,
+        *,
+        skip_permission_checks: bool,
+        user_contact_groups: set[str],
+    ) -> int:
         """Returns the number of hosts in subfolder, excluding hosts not visible to the current user"""
         recursive_hosts = self._client.register_script(
             """
@@ -546,10 +574,7 @@ class _RedisHelper:
         if not results:
             return total_hosts
 
-        if (
-            user.may("wato.see_all_folders")
-            or not active_config.wato_hide_folders_without_read_permissions
-        ):
+        if skip_permission_checks:
             return sum(map(int, results[0][1::2]))
 
         def pairwise(iterable: Iterable[str]) -> Iterator[tuple[str, str]]:
@@ -557,11 +582,9 @@ class _RedisHelper:
             a = iter(iterable)
             return zip(a, a)
 
-        assert user.id is not None
-        user_cgs = set(userdb.contactgroups_of_user(user.id))
         for folder_cgs, num_hosts in pairwise(results[0]):
             cgs = set(folder_cgs.split(","))
-            if user_cgs.intersection(cgs):
+            if user_contact_groups.intersection(cgs):
                 total_hosts += int(num_hosts)
 
         return total_hosts
@@ -735,13 +758,15 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
 class _WATOInfoStorageManager:
     """Handles read/write operations for the .wato file"""
 
-    def __init__(self) -> None:
-        self._write_storages = self._get_write_storages()
+    def __init__(self, storage_format: Literal["standard", "pickle", "raw"]) -> None:
+        self._write_storages = self._get_write_storages(storage_format)
         self._read_storages = list(reversed(self._write_storages))
 
-    def _get_write_storages(self) -> list[_ABCWATOInfoStorage]:
+    def _get_write_storages(
+        self, storage_format: Literal["standard", "pickle", "raw"]
+    ) -> list[_ABCWATOInfoStorage]:
         storages: list[_ABCWATOInfoStorage] = [_StandardWATOInfoStorage()]
-        if get_storage_format(active_config.config_storage_format) == StorageFormat.PICKLE:
+        if get_storage_format(storage_format) == StorageFormat.PICKLE:
             storages.append(_PickleWATOInfoStorage())
         return storages
 
@@ -1584,7 +1609,9 @@ class Folder(FolderProtocol):
     @classmethod
     def wato_info_storage_manager(cls) -> _WATOInfoStorageManager:
         if "wato_info_storage_manager" not in g:
-            g.wato_info_storage_manager = _WATOInfoStorageManager()
+            g.wato_info_storage_manager = _WATOInfoStorageManager(
+                active_config.config_storage_format
+            )
         return g.wato_info_storage_manager
 
     def save_folder_attributes(self) -> None:
@@ -1860,7 +1887,14 @@ class Folder(FolderProtocol):
 
         if may_use_redis():
             return self._get_sorted_choices(
-                get_wato_redis_client(self.tree).choices_for_moving(self.path(), _MoveType(what))
+                get_wato_redis_client(self.tree).choices_for_moving(
+                    self.path(),
+                    _MoveType(what),
+                    may_see_all_folders=user.may("wato.all_folders"),
+                    user_contact_groups=(
+                        set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
+                    ),
+                )
             )
 
         for folder in self.tree.all_folders().values():
@@ -3337,27 +3371,6 @@ class Host:
             and tag_groups[TagGroupID("address_family")] != TagID("no-ip")
         ):
             tag_groups[TagGroupID("ping")] = TagID("ping")
-
-        # The following code is needed to migrate host/rule matching from <1.5
-        # to 1.5 when a user did not modify the "agent type" tag group.  (See
-        # migrate_old_sample_config_tag_groups() for more information)
-        aux_tag_ids = [t.id for t in active_config.tags.aux_tag_list.get_tags()]
-
-        # Be compatible to: Agent type -> SNMP v2 or v3
-        if (
-            tag_groups[TagGroupID("agent")] == TagID("no-agent")
-            and tag_groups[TagGroupID("snmp_ds")] == TagID("snmp-v2")
-            and TagID("snmp-only") in aux_tag_ids
-        ):
-            tag_groups[TagGroupID("snmp-only")] = TagID("snmp-only")
-
-        # Be compatible to: Agent type -> Dual: SNMP + TCP
-        if (
-            tag_groups[TagGroupID("agent")] == TagID("cmk-agent")
-            and tag_groups[TagGroupID("snmp_ds")] == TagID("snmp-v2")
-            and TagID("snmp-tcp") in aux_tag_ids
-        ):
-            tag_groups[TagGroupID("snmp-tcp")] = TagID("snmp-tcp")
 
         self._cached_host_tags = tag_groups
         return tag_groups

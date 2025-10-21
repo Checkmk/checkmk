@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 import dataclasses
 import os
 import sys
@@ -66,7 +69,7 @@ def _new_migrated_rules(
 
 
 def _service_name_from_v2(rule_v2: Rule) -> str:
-    return rule_v2.value["endpoints"][0]["service_name"]["name"].removesuffix(MIGRATE_POSTFIX)  # type: ignore[no-any-return]
+    return rule_v2.value["endpoints"][0]["service_name"]["name"].removesuffix(MIGRATE_POSTFIX)
 
 
 def _render_rule(folder_title: str, rule_index: int, service_name: str) -> str:

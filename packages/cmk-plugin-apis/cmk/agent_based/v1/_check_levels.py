@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="redundant-expr"
+
 from collections.abc import Callable, Generator, Mapping
 from typing import Literal, overload
 
@@ -208,7 +211,7 @@ def _get_prediction(
             metric_name,
             direction,
             PredictionParameters.model_validate(
-                {  # type: ignore[misc]
+                {
                     "horizon": levels["horizon"],
                     "period": levels["period"],
                     "levels": levels_spec,

@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing folders"""
 
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import json
 import re
@@ -110,8 +113,8 @@ TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_popup_move_to_folder", PageAjaxPopupMoveToFolder))
-    page_registry.register(PageEndpoint("ajax_set_foldertree", PageAjaxSetFoldertree))
+    page_registry.register(PageEndpoint("ajax_popup_move_to_folder", PageAjaxPopupMoveToFolder()))
+    page_registry.register(PageEndpoint("ajax_set_foldertree", PageAjaxSetFoldertree()))
     mode_registry.register(ModeFolder)
     mode_registry.register(ModeEditFolder)
     mode_registry.register(ModeCreateFolder)
@@ -1334,7 +1337,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
     @override
-    def _from_vars(self) -> None:
+    def _handle_http_request(self) -> None:
         self._what = request.var("what")
         if self._what not in ["host", "folder"]:
             raise NotImplementedError()
@@ -1349,6 +1352,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
     def handle_page(self, config: Config) -> None:
+        self._handle_http_request()
         self._handle_exc(config, self.page)
 
     @override

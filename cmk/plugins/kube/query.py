@@ -3,12 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disallow-any-unimported
-# mypy: disallow-any-decorated
-# mypy: disallow-any-explicit
-# mypy: disallow-any-generics
-# mypy: disallow-subclassing-any
-# mypy: warn-return-any
 
 import argparse
 import enum
@@ -122,9 +116,7 @@ def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Se
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         session.verify = False
     session.proxies.update(config.requests_proxies())
-    session.headers.update(
-        {} if config.token is None else {"Authorization": f"Bearer {config.token}"}
-    )
+    session.headers.update({"Authorization": f"Bearer {config.token}"})
     return session
 
 
@@ -154,7 +146,6 @@ def send_requests(
             query=query,
             query_url=config.query_url(),
             session=session,
-            requests_verify=config.usage_verify_cert,
             requests_timeout=config.requests_timeout(),
         )
 
@@ -163,7 +154,6 @@ def _send_query_request_get(
     query: Query,
     session: requests.Session,
     query_url: str,
-    requests_verify: bool,
     requests_timeout: TCPTimeout,
 ) -> HTTPResponse:
     request = requests.Request("GET", query_url + f"?query={query}")

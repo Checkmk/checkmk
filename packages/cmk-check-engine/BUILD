@@ -57,6 +57,7 @@ py_library(
         "cmk/fetchers/_abstract.py",
         "cmk/fetchers/_agentprtcl.py",
         "cmk/fetchers/_ipmi.py",
+        "cmk/fetchers/_metric_backend.py",
         "cmk/fetchers/_nofetcher.py",
         "cmk/fetchers/_piggyback.py",
         "cmk/fetchers/_program.py",

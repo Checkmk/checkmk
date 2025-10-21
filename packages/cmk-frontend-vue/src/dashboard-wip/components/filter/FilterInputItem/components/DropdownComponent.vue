@@ -8,8 +8,8 @@ import { computed, ref, watch } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
-import type { Suggestions } from '@/components/CmkSuggestions.vue'
+import CmkDropdown from '@/components/CmkDropdown'
+import type { Suggestions } from '@/components/CmkSuggestions'
 
 import type { DropdownConfig } from '../../types.ts'
 import type { ComponentEmits, FilterComponentProps } from './types.ts'
@@ -19,7 +19,7 @@ const { _t } = usei18n()
 const props = defineProps<FilterComponentProps<DropdownConfig>>()
 const emit = defineEmits<ComponentEmits>()
 
-const getInitialValue = (): string | null => {
+const getInitialValue = (): string => {
   const storedValue = props.configuredValues?.[props.component.id]
   if (storedValue !== undefined) {
     return storedValue
@@ -50,7 +50,12 @@ const dropdownOptions = computed((): Suggestions => {
 })
 
 const handleValueUpdate = (value: string | null): void => {
-  currentValue.value = value
+  if (value === null) {
+    currentValue.value =
+      props.component.default_value !== undefined ? props.component.default_value : ''
+  } else {
+    currentValue.value = value
+  }
 }
 </script>
 

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import Service
@@ -51,23 +53,6 @@ check_info["azure_sites"] = LegacyCheckDefinition(
     discovery_function=discover_azure_sites,
     check_function=check_azure_sites,
     check_ruleset_name="webserver",
-    check_default_parameters={
-        # https://www.nngroup.com/articles/response-times-3-important-limits/
-        "avg_response_time_levels": (1.0, 10.0),
-        # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
-        "error_rate_levels": (0.01, 0.04),
-        "cpu_time_percent_levels": (85.0, 95.0),
-    },
-)
-
-# TODO: migrate to new folder struct
-check_info["azure_v2_sites"] = LegacyCheckDefinition(
-    name="azure_v2_sites",
-    parse_function=parse_resources,
-    service_name="Site %s",
-    discovery_function=discover_azure_sites,
-    check_function=check_azure_sites,
-    check_ruleset_name="azure_v2_webserver",
     check_default_parameters={
         # https://www.nngroup.com/articles/response-times-3-important-limits/
         "avg_response_time_levels": (1.0, 10.0),

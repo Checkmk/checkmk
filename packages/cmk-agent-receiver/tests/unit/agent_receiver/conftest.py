@@ -12,8 +12,8 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import UUID4
 from pytest_mock import MockerFixture
+from starlette.routing import Mount
 
-from cmk.agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
 from cmk.agent_receiver.checkmk_rest_api import ControllerCertSettings
 from cmk.agent_receiver.config import get_config
 from cmk.agent_receiver.main import main_app
@@ -161,8 +161,10 @@ def mock_controller_certificate_settings(mocker: MockerFixture) -> None:
 
 @pytest.fixture(name="client")
 def fixture_client() -> TestClient:
-    main_app()
-    return TestClient(AGENT_RECEIVER_APP)
+    app = main_app()
+    assert len(app.routes) == 1
+    assert isinstance(mount := app.routes[0], Mount)
+    return TestClient(mount.app)
 
 
 @pytest.fixture(name="uuid")

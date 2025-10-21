@@ -6,6 +6,8 @@
 and handle correct termination of all processes if a specified timeout is exceeded.
 """
 
+# mypy: disable-error-code="type-arg"
+
 import multiprocessing
 import os
 import signal

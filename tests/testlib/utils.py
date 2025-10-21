@@ -6,6 +6,10 @@
 handling file operations, and interacting with the system environment.
 """
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 import dataclasses
 import enum
 import logging
@@ -616,7 +620,7 @@ def parse_files(
         file_content = read_file(file_path, sudo=sudo, encoding="utf-8").splitlines()
         for line in file_content:
             if pattern_obj.search(line):
-                logger.info("Match found in %s: %s", file_path, line.strip())
+                logger.warning("Match found in %s: %s", file_path, line.strip())
                 match_dict[file_path] = match_dict.get(file_path, []) + [line]
     return match_dict
 

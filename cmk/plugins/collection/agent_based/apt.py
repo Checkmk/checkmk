@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # <<<apt:sep(0)>>>
 # Inst dpkg [1.17.5ubuntu5.3] (1.17.5ubuntu5.4 Ubuntu:14.04/trusty-updates [amd64])
 # Inst libtasn1-6-dev [3.4-3ubuntu0.1] (3.4-3ubuntu0.2 Ubuntu:14.04/trusty-updates [amd64]) []

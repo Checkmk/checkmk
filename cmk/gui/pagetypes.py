@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disallow-untyped-defs
-# mypy: disallow-incomplete-defs
-# mypy: disallow-untyped-decorators
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 # TODO:
 # - The classes here mix two things:
@@ -25,7 +26,7 @@ from __future__ import annotations
 import abc
 import copy
 import json
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, replace
 from typing import Generic, Literal, override, Self, TypeVar
@@ -51,6 +52,12 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
+from cmk.gui.main_menu_types import (
+    MainMenu,
+    MainMenuItem,
+    MainMenuTopic,
+    MainMenuTopicEntries,
+)
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
     make_confirmed_form_submit_link,
@@ -65,7 +72,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry, PageEndpoint
+from cmk.gui.pages import Page, page_registry, PageEndpoint, PageHandler
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission_section,
@@ -78,10 +85,6 @@ from cmk.gui.type_defs import (
     AnnotatedUserId,
     HTTPVariables,
     Icon,
-    MainMenu,
-    MainMenuItem,
-    MainMenuTopic,
-    MainMenuTopicEntries,
     PermissionName,
     Visual,
 )
@@ -298,7 +301,7 @@ class Base(abc.ABC, Generic[_T_BaseConfig]):
     # PageTypes in plugins/pages. It is simply sufficient to register a PageType and
     # all page handlers will exist :-)
     @classmethod
-    def page_handlers(cls) -> dict[str, Callable[[Config], None]]:
+    def page_handlers(cls) -> dict[str, PageHandler]:
         return {}
 
     # Object methods that *can* be overridden - for cases where
@@ -517,7 +520,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
     @override
     @classmethod
-    def page_handlers(cls) -> dict[str, Callable[[Config], None]]:
+    def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
             {
@@ -1716,7 +1719,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
 
     @override
     @classmethod
-    def page_handlers(cls) -> dict[str, Callable[[Config], None]]:
+    def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
             {
@@ -1905,7 +1908,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
 
     @override
     @classmethod
-    def page_handlers(cls) -> dict[str, Callable[[Config], None]]:
+    def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
             {
@@ -2379,7 +2382,7 @@ def _no_bi_aggregate_active() -> bool:
 # .
 
 
-def _customize_menu_topics() -> list[MainMenuTopic]:
+def _customize_menu_topics(user_permissions: UserPermissions) -> list[MainMenuTopic]:
     general_entries: MainMenuTopicEntries = []
     monitoring_entries: MainMenuTopicEntries = []
     graph_entries: MainMenuTopicEntries = []

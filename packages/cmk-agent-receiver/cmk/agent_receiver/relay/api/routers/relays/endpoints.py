@@ -54,6 +54,7 @@ async def register_relay(
     return RelayRegistrationResponse(relay_id=relay_id)
 
 
+# Do not use check_relay here, because we actually return 200 if the relay does not exist.
 @router.delete("/{relay_id}")
 async def unregister_relay(
     relay_id: str,

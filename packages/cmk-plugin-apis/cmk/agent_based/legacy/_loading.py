@@ -153,7 +153,7 @@ def discover_legacy_checks(
             continue
 
         for plugin in defined_checks.values():
-            if isinstance(plugin, LegacyCheckDefinition):  # type: ignore[misc]  # contains Any
+            if isinstance(plugin, LegacyCheckDefinition):  # contains Any
                 sane_check_info.append(plugin)
                 legacy_check_plugin_files[plugin.name] = f
             else:

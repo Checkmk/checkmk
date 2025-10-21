@@ -25,6 +25,7 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.helper_interface import FetcherType, SourceInfo, SourceType
 from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.timeperiod import TimeperiodName
 from tests.plugins_siteless.helpers import (
     BasicSubmitter,
     compare_services_states,
@@ -111,6 +112,7 @@ def test_checks_executor(
                 nodes=config_cache.nodes,
                 effective_host=config_cache.effective_host,
                 get_snmp_backend=config_cache.get_snmp_backend,
+                timeperiods_active={},
             ),
             agent_based_plugins.check_plugins,
             value_store_manager,
@@ -136,9 +138,10 @@ def test_checks_executor(
             params=HWSWInventoryParameters.from_raw({}),
             services=discovered_services,
             run_plugin_names=EVERYTHING,
-            get_check_period=lambda *_a, **_kw: None,
+            get_check_period=lambda *_a, **_kw: TimeperiodName("24X7"),
             submitter=submitter,
             exit_spec=ExitSpec(),
+            timeperiods_active={},
         )
         checks_result = submitter.results
         assert checks_result

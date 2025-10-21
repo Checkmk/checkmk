@@ -2,11 +2,17 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="mutable-override"
+
+# mypy: disable-error-code="no-untyped-def"
+
 from collections.abc import MutableMapping
 from typing import Any, override
 
 from marshmallow import INCLUDE, post_load, pre_load, ValidationError
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.gui.fields import LDAPConnectionID, Timestamp
@@ -41,7 +47,7 @@ class LDAPCheckboxSelector(OneOfSchema):
     type_field_remove = False
 
     @override
-    def get_obj_type(self, obj):  # type: ignore[no-untyped-def]
+    def get_obj_type(self, obj):
         return obj["state"]
 
 
@@ -666,7 +672,7 @@ class LDAPSyncPluginGroupsToSyncSelector(OneOfSchema):
     }
 
     @override
-    def get_data_type(self, data):  # type: ignore[no-untyped-def]
+    def get_data_type(self, data):
         data_type = data.get(self.type_field)
         if data_type not in ("start_url", "disable_notifications"):
             return "all_others"

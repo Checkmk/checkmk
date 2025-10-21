@@ -278,7 +278,7 @@ class Scriptlet:
         self.lines = lines
 
     @staticmethod
-    def _validate_step(step):
+    def _validate_step(step: PkgStep) -> None:
         expected_types = (RpmStep, DebStep, SolStep)
         if not isinstance(step, expected_types):
             raise TypeError(

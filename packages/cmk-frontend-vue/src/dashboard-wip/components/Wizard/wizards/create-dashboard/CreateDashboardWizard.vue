@@ -8,8 +8,8 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import HelpText from '@/components/HelpText.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard-wip/types/dashboard'
@@ -238,7 +238,7 @@ const cancel = () => {
         <CmkHeading type="h4">
           {{ _t('Dashboard type') }}
           <CmkSpace />
-          <HelpText
+          <CmkHelpText
             :help="
               _t(
                 'Dashboards can display one or multiple entries depending on the selected datasource. By default, all are included. You can optionally restrict the configuration to a single host or specific datasources.'

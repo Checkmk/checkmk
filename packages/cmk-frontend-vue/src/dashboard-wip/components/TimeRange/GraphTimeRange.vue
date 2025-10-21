@@ -11,8 +11,8 @@ import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n, { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
-import { type Suggestion } from '@/components/suggestions'
+import CmkDropdown from '@/components/CmkDropdown'
+import { type Suggestion } from '@/components/CmkSuggestions'
 
 import DateRangeFields from './DateRangeFields.vue'
 import DurationFields from './DurationFields.vue'

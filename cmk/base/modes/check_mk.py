@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 import dataclasses
 import enum
 import itertools
@@ -43,6 +46,7 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import (
     ConfigCache,
+    get_metric_backend_fetcher,
     handle_ip_lookup_failure,
 )
 from cmk.base.configlib.checkengine import DiscoveryConfig
@@ -127,7 +131,7 @@ from cmk.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
-from cmk.utils import config_warnings, ip_lookup, log
+from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, timeperiod
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
@@ -152,7 +156,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagID
-from cmk.utils.timeperiod import load_timeperiods
 
 from ._localize import do_localize
 
@@ -750,6 +753,11 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
             check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+            metric_backend_fetcher=get_metric_backend_fetcher(
+                hostname,
+                config_cache.explicit_host_attributes,
+                loaded_config.monitoring_core == "cmc",
+            ),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -836,6 +844,7 @@ modes.register(
 
 
 def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
+    logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
     loading_result = load_config(plugins)
     loaded_config = loading_result.loaded_config
@@ -891,6 +900,9 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
             ip_address_of=ip_address_of,
             ip_address_of_mgmt=ip_address_of_mgmt,
             simulation_mode=config.simulation_mode,
+            timeperiod_active=timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ).get,
         )
 
 
@@ -1538,6 +1550,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
             tag_list=config_cache.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
+        timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
     )
 
 
@@ -1582,7 +1595,7 @@ def _make_configured_bake_on_restart(
     except ImportError:
         return lambda: None
 
-    return make_configured_bake_on_restart_callback(
+    return make_configured_bake_on_restart_callback(  # type: ignore[no-any-return, unused-ignore]
         loading_result,
         hosts,
         agents_dir=cmk.utils.paths.agents_dir,
@@ -1598,7 +1611,7 @@ def _make_configured_notify_relay() -> Callable[[], None]:
     except ImportError:
         return lambda: None
 
-    return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config
+    return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config  # type: ignore[no-any-return, unused-ignore]
 
 
 def mode_update() -> None:
@@ -2086,7 +2099,9 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         plugin: loading_result.config_cache.notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
         parameters=config.notification_parameter,
-        get_http_proxy=config.get_http_proxy,
+        get_http_proxy=http_proxy_config.make_http_proxy_getter(
+            loading_result.loaded_config.http_proxies
+        ),
         ensure_nagios=notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         bulk_interval=config.notification_bulk_interval,
         plugin_timeout=config.notification_plugin_timeout,
@@ -2097,7 +2112,10 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         backlog_size=config.notification_backlog,
         logging_level=ConfigCache.notification_logging_level(),
         keepalive=keepalive,
-        all_timeperiods=load_timeperiods(),
+        all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
+        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, notify.logger.warning
+        ),
     )
 
 
@@ -2220,6 +2238,11 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
             inventory=1.5 * check_interval,
         ),
         password_store_file=cmk.utils.password_store.core_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     parser = CMKParser(
         config.make_parser_config(
@@ -2582,6 +2605,11 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         ),
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     for hostname in sorted(
         _preprocess_hostnames(
@@ -2827,6 +2855,11 @@ def run_checking(
         ),
         simulation_mode=config.simulation_mode,
         password_store_file=password_store_file,
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     parser = CMKParser(
         config.make_parser_config(
@@ -2843,6 +2876,9 @@ def run_checking(
         nodes=config_cache.nodes,
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
+        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, logger.warning
+        ),
     )
     summarizer = CMKSummarizer(
         hostname,
@@ -2909,9 +2945,10 @@ def run_checking(
                     service_depends_on,
                 ),
                 run_plugin_names=run_plugin_names,
-                get_check_period=lambda service_name,
-                service_labels: config_cache.check_period_of_service(
-                    hostname, service_name, service_labels
+                get_check_period=lambda service_name, service_labels: timeperiod.TimeperiodName(
+                    config_cache.check_period_of_passive_service(
+                        hostname, service_name, service_labels
+                    )
                 ),
                 submitter=get_submitter(
                     check_submission=config.check_submission,
@@ -2922,6 +2959,7 @@ def run_checking(
                     show_perfdata=options.get("perfdata", False),
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
+                timeperiods_active=checker_config.timeperiods_active,
             )
 
         checks_result = [
@@ -3113,6 +3151,11 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         ),
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     parser = CMKParser(
         config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
@@ -3410,6 +3453,11 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
 
     def summarizer(host_name: HostName) -> CMKSummarizer:

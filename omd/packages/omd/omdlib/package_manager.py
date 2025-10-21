@@ -75,7 +75,7 @@ class PackageManager(abc.ABC):
         if p.wait() != 0:
             sys.exit("Failed to uninstall package:\n%s" % output)
 
-    def _execute(self, cmd: list[str], verbose: bool) -> subprocess.Popen:
+    def _execute(self, cmd: list[str], verbose: bool) -> subprocess.Popen[str]:
         if verbose:
             sys.stdout.write("Executing: " + subprocess.list2cmdline(cmd))
 

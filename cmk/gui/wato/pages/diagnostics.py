@@ -3,10 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="type-arg"
+
 import tarfile
 import uuid
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel
 
@@ -109,7 +114,7 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("download_diagnostics_dump", PageDownloadDiagnosticsDump))
+    page_registry.register(PageEndpoint("download_diagnostics_dump", PageDownloadDiagnosticsDump()))
     mode_registry.register(ModeDiagnostics)
     automation_command_registry.register(AutomationDiagnosticsDumpGetFile)
     job_registry.register(DiagnosticsDumpBackgroundJob)
@@ -883,6 +888,7 @@ def _create_file_path() -> str:
 
 
 class PageDownloadDiagnosticsDump(Page):
+    @override
     def page(self, config: Config) -> None:
         if not user.may("wato.diagnostics"):
             raise MKAuthException(

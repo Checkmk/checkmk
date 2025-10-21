@@ -3308,6 +3308,54 @@ std::vector<char> ReadFromHandle(HANDLE handle) {
     return buf;
 }
 
+std::string ReplaceBlankLineWithSeparator(const std::string &raw,
+                                          std::string_view separator) {
+    if (raw.empty()) {
+        return raw;
+    }
+
+    if (raw == "\n") {
+        return std::string(separator) + "\n";
+    }
+
+    // Remove trailing '\n' to avoid synthetic empty row from split
+    std::string_view data = raw;
+    const bool had_trailing_nl = raw.back() == '\n';
+    if (had_trailing_nl) {
+        data.remove_suffix(1);
+    }
+
+    auto is_blank = [](const auto &rng) {
+        return std::ranges::all_of(
+            rng, [](unsigned char c) { return std::isspace(c); });
+    };
+
+    auto processed_lines =
+        data | std::views::split('\n') |
+        std::views::transform([is_blank, separator](const auto &line) {
+            if (is_blank(line)) {
+                return std::string(separator);
+            }
+            return std::string(line.begin(), line.end());
+        });
+
+    std::string result;
+    bool first = true;
+    for (const auto &line : processed_lines) {
+        if (!first) {
+            result.push_back('\n');
+        }
+        first = false;
+        result.append(line);
+    }
+
+    if (had_trailing_nl && !result.empty()) {
+        result.push_back('\n');
+    }
+
+    return result;
+}
+
 std::string RunCommand(std::wstring_view cmd) {
     AppRunner ar;
     const auto ret = ar.goExecAsJob(cmd);
@@ -3833,6 +3881,19 @@ std::optional<OsInfo> GetOsInfo() {
         return {};
     }
     return OsInfo{.name = os_info[0], .version = os_info[1]};
+}
+
+std::optional<std::tm> GetTimeAsTm(
+    std::chrono::system_clock::time_point time_point) {
+    const auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
+    std::tm buf{};
+
+    if (const auto result = ::localtime_s(&buf, &in_time_t); result != 0) {
+        XLOG::d.e("GetTimeAsTm: localtime_s failed with result {}", result);
+        return std::nullopt;
+    }
+
+    return buf;
 }
 
 }  // namespace wtools

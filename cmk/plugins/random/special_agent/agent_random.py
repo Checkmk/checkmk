@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Testing script, that can be used as a datasource program
 # and creates a number of random services with random states.
 # Call it with the hostname as the first argument.

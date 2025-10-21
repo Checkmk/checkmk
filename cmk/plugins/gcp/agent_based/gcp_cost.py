@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# mypy: disallow_untyped_defs
 import datetime
 import json
 from collections.abc import Mapping
@@ -101,5 +100,5 @@ check_plugin_gcp_cost = CheckPlugin(
     discovery_function=discover,
     check_function=check,
     check_ruleset_name="gcp_cost",
-    check_default_parameters={"levels": None},
+    check_default_parameters={"levels": ("no_levels", None)},
 )

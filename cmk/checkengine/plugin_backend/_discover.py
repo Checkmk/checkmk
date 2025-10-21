@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 from collections.abc import Iterable
 from importlib import import_module
 from typing import assert_never
@@ -49,7 +54,7 @@ def load_all_plugins(
                 # right away. This is for convenience of the reviewer of a plugin migration only:
                 # This way we can separate migration and moving.
                 # For example:
-                # "cmk.base.legacy_checks.oracle_locks"
+                # "cmk.base.legacy_checks.oracle_locks",
             )
         ):
             more_discovered_plugins = discover_plugins_from_modules(

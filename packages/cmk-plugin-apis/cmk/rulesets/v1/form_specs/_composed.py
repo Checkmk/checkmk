@@ -41,7 +41,7 @@ class CascadingSingleChoiceElement[ModelT]:
         _validate_name(self.name)
 
 
-@dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
+@dataclass(frozen=True, kw_only=True)
 class CascadingSingleChoice(FormSpec[tuple[str, object]]):
     """Specification for a single-selection from multiple options.
 
@@ -71,7 +71,7 @@ class CascadingSingleChoice(FormSpec[tuple[str, object]]):
     select a value."""
 
     def __post_init__(self) -> None:
-        avail_idents = {elem.name for elem in self.elements}  # type: ignore[misc]
+        avail_idents = {elem.name for elem in self.elements}
         if isinstance(self.prefill, DefaultValue) and self.prefill.value not in avail_idents:
             raise ValueError(
                 f"Default element {self.prefill.value!r} is not "
@@ -118,7 +118,7 @@ class DictElement[ModelT]:
     affecting the data model."""
 
 
-@dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
+@dataclass(frozen=True, kw_only=True)
 class Dictionary(FormSpec[Mapping[str, object]]):
     """
     Specifies a (multi-)selection of configuration options.
@@ -147,7 +147,7 @@ class Dictionary(FormSpec[Mapping[str, object]]):
     """
 
     def __post_init__(self) -> None:
-        current_elements = set(self.elements)  # type: ignore[misc]
+        current_elements = set(self.elements)
         for key in current_elements:
             _validate_name(key)
         if offenders := current_elements.intersection(self.ignored_elements):

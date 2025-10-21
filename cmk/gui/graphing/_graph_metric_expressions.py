@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
 from __future__ import annotations
 
 import functools
@@ -107,15 +109,21 @@ class QueryAggregationHistogramPercentile:
 @dataclass(frozen=True)
 class QueryDataKey:
     metric_name: MetricName
-    resource_attributes: Sequence[str]
-    scope_attributes: Sequence[str]
-    data_point_attributes: Sequence[str]
+    resource_attributes: tuple[str, ...]
+    scope_attributes: tuple[str, ...]
+    data_point_attributes: tuple[str, ...]
     aggregation_sum: QueryAggregationSumRate | None
     aggregation_histogram: QueryAggregationHistogramPercentile | None
 
 
+@dataclass(frozen=True)
+class QueryDataValue:
+    metric_type: Literal["gauge", "sum", "histogram", "exponential_histogram", "exemplar"]
+    time_series: TimeSeries
+
+
 type RRDData = Mapping[RRDDataKey, TimeSeries]
-type QueryData = Mapping[QueryDataKey, TimeSeries]
+type QueryData = Mapping[QueryDataKey, QueryDataValue]
 
 
 def _derive_num_points(rrd_data: RRDData) -> tuple[int, int, int, int]:
@@ -197,7 +205,7 @@ def time_series_operators() -> dict[
         "MAX": (_("Maximum"), _time_series_operator_maximum),
         "MIN": (_("Minimum"), _time_series_operator_minimum),
         "AVERAGE": (_("Average"), _time_series_operator_average),
-        "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
+        "MERGE": ("First not None", lambda x: next(iter(clean_time_series_point(x)))),
     }
 
 
@@ -210,8 +218,8 @@ class TimeSeriesMetaData:
 
 @dataclass(frozen=True)
 class AugmentedTimeSeries:
-    data: TimeSeries
-    metadata: TimeSeriesMetaData | None = None
+    time_series: TimeSeries
+    meta_data: TimeSeriesMetaData | None = None
 
 
 class GraphMetricExpression(BaseModel, ABC, frozen=True):
@@ -287,7 +295,7 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
-                data=TimeSeries(
+                time_series=TimeSeries(
                     start=start,
                     end=end,
                     step=step,
@@ -317,7 +325,7 @@ class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
-                data=TimeSeries(
+                time_series=TimeSeries(
                     start=start,
                     end=end,
                     step=step,
@@ -385,14 +393,14 @@ class GraphMetricOperation(GraphMetricExpression, frozen=True):
         if result := _time_series_math(
             self.operator_name,
             [
-                operand_evaluated.data
+                operand_evaluated.time_series
                 for operand_evaluated in chain.from_iterable(
                     operand.compute_augmented_time_series(registered_metrics, rrd_data, query_data)
                     for operand in self.operands
                 )
             ],
         ):
-            return [AugmentedTimeSeries(data=result)]
+            return [AugmentedTimeSeries(time_series=result)]
         return []
 
 
@@ -443,12 +451,12 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
                 self.scale,
             )
         ) in rrd_data:
-            return [AugmentedTimeSeries(data=rrd_data[key])]
+            return [AugmentedTimeSeries(time_series=rrd_data[key])]
 
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
-                data=TimeSeries(
+                time_series=TimeSeries(
                     start=start,
                     end=end,
                     step=step,

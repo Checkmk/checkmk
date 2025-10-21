@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Anys all over the place :-(
-# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
 
 """
 The things in this module specify the old Check_MK (<- see? Old!) check API
@@ -47,15 +46,14 @@ __all__ = [
     "LegacyDiscoveryResult",
     "LegacyResult",
     "LegacyService",
-    "passwordstore_get_cmdline",
     "STATE_MARKERS",
 ]
 
-_DiscoveredParameters = Mapping | tuple | str | None  # type: ignore[type-arg]
+_DiscoveredParameters = Mapping | tuple | str | None
 
 
-_DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]  # type: ignore[explicit-any]
-_DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]  # type: ignore[explicit-any]
+_DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]
+_DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]
 
 _OptNumber = None | int | float
 
@@ -79,30 +77,30 @@ LegacyResult = (
 )
 
 
-_CheckFunctionLegacy = Callable[  # type: ignore[explicit-any]
+_CheckFunctionLegacy = Callable[
     ...,
     None | LegacyResult | Iterable[LegacyResult] | Generator[LegacyResult, None, None],
 ]
-_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]  # type: ignore[explicit-any]
+_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]
 
 
 @dataclass(frozen=True, kw_only=True)
-class LegacyCheckDefinition:  # type: ignore[explicit-any]
+class LegacyCheckDefinition:
     name: str
     detect: SNMPDetectSpecification | None = None
     fetch: list[SNMPTree] | SNMPTree | None = None
     sections: list[str] | None = None
     check_function: _CheckFunctionV2Compliant | _CheckFunctionLegacy | None = None
     discovery_function: _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None = None
-    parse_function: Callable[[list], object] | None = None  # type: ignore[type-arg]
+    parse_function: Callable[[list], object] | None = None
     check_ruleset_name: str | None = None
-    check_default_parameters: Mapping[str, Any] | None = None  # type: ignore[explicit-any]
+    check_default_parameters: Mapping[str, Any] | None = None
     service_name: str | None = None
 
 
 STATE_MARKERS = ("", "(!)", "(!!)", "(?)")
 
-_Levels = tuple  # type: ignore[type-arg] # Has length 2 or 4
+_Levels = tuple  # Has length 2 or 4
 
 LegacyCheckResult = Generator[LegacyResult, None, None]
 
@@ -125,7 +123,7 @@ def _normalize_levels(levels: _Levels) -> _Levels:
 def _do_check_levels(
     value: int | float,
     levels: _Levels,
-    human_readable_func: Callable,  # type: ignore[type-arg]
+    human_readable_func: Callable,
 ) -> tuple[int, str]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
@@ -146,7 +144,7 @@ def _levelsinfo_ty(
     ty: str,
     warn: _OptNumber,
     crit: _OptNumber,
-    human_readable_func: Callable,  # type: ignore[type-arg]
+    human_readable_func: Callable,
 ) -> str:
     warn_str = "never" if warn is None else f"{human_readable_func(warn)}"
     crit_str = "never" if crit is None else f"{human_readable_func(crit)}"
@@ -157,19 +155,19 @@ def _build_perfdata(
     dsname: None | str,
     value: int | float,
     levels: _Levels,
-    boundaries: tuple | None,  # type: ignore[type-arg]
-) -> list:  # type: ignore[type-arg]
+    boundaries: tuple | None,
+) -> list:
     if not dsname:
         return []
     used_boundaries = boundaries if isinstance(boundaries, tuple) and len(boundaries) == 2 else ()
     return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 
-def check_levels(  # type: ignore[explicit-any]
+def check_levels(
     value: int | float,
     dsname: None | str,
     params: Any,
-    human_readable_func: Callable | None = None,  # type: ignore[type-arg]
+    human_readable_func: Callable | None = None,
     infoname: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
 ) -> tuple[int, str, list[_MetricTupleWithLevelsAndBoundary]]:
@@ -247,15 +245,3 @@ def check_levels(  # type: ignore[explicit-any]
 
     state, levelstext = _do_check_levels(value, levels, render_func)
     return state, infotext + levelstext, _build_perfdata(dsname, value, levels, boundaries)
-
-
-def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:  # type: ignore[type-arg]
-    """Use this to prepare a command line argument for using a password from the
-    Check_MK password store or an explicitly configured password."""
-    if not isinstance(pw, tuple):
-        pw = ("password", pw)
-
-    if pw[0] == "password":
-        return str(fmt % pw[1])
-
-    return ("store", pw[1], fmt)

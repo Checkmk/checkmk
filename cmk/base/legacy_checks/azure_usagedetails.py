@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 
 import collections
 from collections.abc import Mapping
@@ -73,17 +75,5 @@ check_info["azure_usagedetails"] = LegacyCheckDefinition(
     discovery_function=discover_azure_usagedetails,
     check_function=check_azure_usagedetails,
     check_ruleset_name="azure_usagedetails",
-    check_default_parameters={},
-)
-
-
-# TODO: migrate and move to new folder struct
-check_info["azure_v2_usagedetails"] = LegacyCheckDefinition(
-    name="azure_v2_usagedetails",
-    parse_function=parse_azure_usagedetails,
-    service_name="Costs %s",
-    discovery_function=discover_azure_usagedetails,
-    check_function=check_azure_usagedetails,
-    check_ruleset_name="azure_v2_usagedetails",
     check_default_parameters={},
 )

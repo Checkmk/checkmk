@@ -10,9 +10,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-import cmk.ccc.plugin_registry
 import cmk.utils.regex
-from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
@@ -21,10 +19,11 @@ from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_acti
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import CellSpec, CSVExportError
 from cmk.utils.tags import TagID
 
-from .base import Icon
+from .base import Icon, IconConfig
 from .registry import all_icons
 
 IconObjectType = Literal["host", "service"]
@@ -70,10 +69,22 @@ class PainterServiceIcons(Painter):
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_icons("service", row, _get_row_icons("service", row))
+        return _paint_icons(
+            "service",
+            row,
+            _get_row_icons(
+                "service", row, self._user_permissions, IconConfig.from_config(self.config)
+            ),
+        )
 
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[IconSpec]:
-        return [i.icon_name for i in _get_row_icons("service", row) if isinstance(i, IconEntry)]
+        return [
+            i.icon_name
+            for i in _get_row_icons(
+                "service", row, self._user_permissions, IconConfig.from_config(self.config)
+            )
+            if isinstance(i, IconEntry)
+        ]
 
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
@@ -102,10 +113,22 @@ class PainterHostIcons(Painter):
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_icons("host", row, _get_row_icons("host", row))
+        return _paint_icons(
+            "host",
+            row,
+            _get_row_icons(
+                "host", row, self._user_permissions, IconConfig.from_config(self.config)
+            ),
+        )
 
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[IconSpec]:
-        return [i.icon_name for i in _get_row_icons("host", row) if isinstance(i, IconEntry)]
+        return [
+            i.icon_name
+            for i in _get_row_icons(
+                "host", row, self._user_permissions, IconConfig.from_config(self.config)
+            )
+            if isinstance(i, IconEntry)
+        ]
 
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
@@ -141,17 +164,26 @@ def _paint_icons(
     return "icons", output
 
 
-def _get_row_icons(what: IconObjectType, row: Row) -> list[ABCIconEntry]:
+def _get_row_icons(
+    what: IconObjectType, row: Row, user_permissions: UserPermissions, icon_config: IconConfig
+) -> list[ABCIconEntry]:
     # EC: In case of unrelated events also skip rendering this painter. All the icons
     # that display a host state are useless in this case. Maybe we make this decision
     # individually for the single icons one day.
     if not row["host_name"] or row.get("event_is_unrelated"):
         return []  # Host probably does not exist
 
-    return get_icons(what, row, toplevel=True)
+    return get_icons(what, row, user_permissions, icon_config, toplevel=True)
 
 
-def get_icons(what: IconObjectType, row: Row, toplevel: bool) -> list[ABCIconEntry]:
+def get_icons(
+    what: IconObjectType,
+    row: Row,
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
+    *,
+    toplevel: bool,
+) -> list[ABCIconEntry]:
     host_custom_vars = dict(
         zip(
             row["host_custom_variable_names"],
@@ -174,7 +206,16 @@ def get_icons(what: IconObjectType, row: Row, toplevel: bool) -> list[ABCIconEnt
     user_icon_ids = custom_vars.get("ACTIONS", "").split(",")
 
     return sorted(
-        _process_icons(what, row, tags, host_custom_vars, toplevel, user_icon_ids),
+        _process_icons(
+            what,
+            row,
+            tags,
+            host_custom_vars,
+            user_permissions,
+            toplevel,
+            user_icon_ids,
+            icon_config,
+        ),
         key=lambda i: i.sort_index,
     )
 
@@ -184,8 +225,10 @@ def _process_icons(
     row: Row,
     tags: list[TagID],
     custom_vars: dict[str, str],
+    user_permissions: UserPermissions,
     toplevel: bool,
     user_icon_ids: list[str],
+    icon_config: IconConfig,
 ) -> list[ABCIconEntry]:
     icons: list[ABCIconEntry] = []
     for icon_id, icon in all_icons().items():
@@ -199,7 +242,9 @@ def _process_icons(
             continue
 
         try:
-            for result in _process_icon(what, row, tags, custom_vars, icon_id, icon):
+            for result in _process_icon(
+                what, row, tags, custom_vars, user_permissions, icon_id, icon, icon_config
+            ):
                 icons.append(result)
         except Exception:
             icons.append(
@@ -221,8 +266,10 @@ def _process_icon(
     row: Row,
     tags: list[TagID],
     custom_vars: dict[str, str],
+    user_permissions: UserPermissions,
     icon_id: str,
     icon: Icon,
+    icon_config: IconConfig,
 ) -> Iterator[ABCIconEntry]:
     # In old versions, the icons produced html code directly. The new API
     # is that the icon functions need to return:
@@ -232,9 +279,9 @@ def _process_icon(
     # d) triple        - icon, title, url
     result = None
     try:
-        result = icon.render(what, row, tags, custom_vars)
+        result = icon.render(what, row, tags, custom_vars, user_permissions, icon_config)
     except Exception:
-        if active_config.debug:
+        if icon_config.debug:
             raise
         yield IconEntry(
             sort_index=icon.sort_index,

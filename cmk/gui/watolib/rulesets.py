@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 
 from __future__ import annotations
 
@@ -40,7 +43,10 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
+from cmk.server_side_calls_backend.config_processing import (
+    GlobalProxiesWithLookup,
+    process_configuration_to_parameters,
+)
 from cmk.utils import paths
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.labels import LabelGroups, Labels
@@ -468,7 +474,13 @@ class RulesetCollection:
         # check if this contains a password. If so, the password file must be updated
         return any(
             process_configuration_to_parameters(
-                rule.value, proxy_config=None, is_alpha=True
+                rule.value,
+                global_proxies_with_lookup=GlobalProxiesWithLookup(
+                    global_proxies={},
+                    password_lookup=lambda _name: None,
+                ),
+                usage_hint=f"ruleset: {name}",
+                is_alpha=True,
             ).found_secrets
             for name, rules in rulesets.items()
             if RuleGroup.is_active_checks_rule(name) or RuleGroup.is_special_agents_rule(name)
@@ -1320,7 +1332,8 @@ class Rule:
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non Setup hosts.
         return self._to_config(
-            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else use_host_folder
+            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else use_host_folder,
+            value=self.value,
         )
 
     def to_single_base_ruleset(self) -> Sequence[RuleSpec]:
@@ -1332,24 +1345,20 @@ class Rule:
         return self._single_base_ruleset_representation
 
     def to_web_api(self) -> RuleSpec:
-        return self._to_config(use_host_folder=UseHostFolder.NONE)
+        return self._to_config(use_host_folder=UseHostFolder.NONE, value=self.value)
 
     def to_log(self) -> RuleSpec:
-        """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
-        vs = self.ruleset.valuespec()
-        masked_value_fn = lambda value: vs.value_to_json(vs.mask(self.value))
-
-        return self._to_config(use_host_folder=UseHostFolder.NONE, transform_value=masked_value_fn)
+        return self._to_config(use_host_folder=UseHostFolder.NONE, value=self.value_masked())
 
     def _to_config(
         self,
         *,
         use_host_folder: UseHostFolder,
-        transform_value: Callable[[RuleValue], RuleValue] | None = None,
+        value: object,
     ) -> RuleSpec:
         rule_spec = RuleSpec(
             id=self.id,
-            value=transform_value(self.value) if transform_value else self.value,
+            value=value,
             condition=self.conditions.to_config(use_host_folder),
         )
         if options := self.rule_options.to_config():

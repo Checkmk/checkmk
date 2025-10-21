@@ -3,6 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 # ruff: noqa: F405
 
 from __future__ import annotations
@@ -12,6 +21,7 @@ import copy
 import dataclasses
 import enum
 import itertools
+import json
 import numbers
 import os
 import pickle
@@ -39,18 +49,20 @@ import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.paths
 import cmk.utils.tags
+import cmk.utils.timeperiod
 import cmk.utils.translations
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.base import default_config
 from cmk.base.configlib.checkengine import CheckingConfig
-from cmk.base.configlib.fetchers import make_tcp_fetcher_config
+from cmk.base.configlib.fetchers import make_metric_backend_fetcher_config, make_tcp_fetcher_config
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.piggyback import (
     guess_piggybacked_hosts_time_settings,
     make_piggyback_time_settings,
 )
+from cmk.base.configlib.scheduling import make_check_interval_config
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
@@ -95,6 +107,7 @@ from cmk.fetchers import (
     FetcherTrigger,
     IPMICredentials,
     IPMIFetcher,
+    MetricBackendFetcherConfig,
     NoSelectedSNMPSections,
     PiggybackFetcher,
     PlainFetcherTrigger,
@@ -116,6 +129,7 @@ from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
     ActiveCheck,
     ActiveServiceData,
+    config_processing,
     ExecutableFinder,
     load_active_checks,
     load_special_agents,
@@ -145,12 +159,12 @@ from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
 )
-from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.misc import key_config_paths
+from cmk.utils.password_store import make_configured_passwords_lookup
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -158,11 +172,10 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
     RuleSpec,
     SingleHostRulesetMatcherMerge,
-    SingleServiceRulesetMatcherFirst,
+    SingleServiceRulesetMatcherFirstParsed,
 )
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
-from cmk.utils.timeperiod import TimeperiodName
 
 try:
     from cmk.utils.cme.labels import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
@@ -184,14 +197,10 @@ SMARTPING_CHECK_INTERVAL: Final = 0.1
 HOST_CHECK_INTERVAL: Final = 1.0
 # Services. Check and retry intervals may differ
 SERVICE_RETRY_INTERVAL: Final = 1.0
-SERVICE_CHECK_INTERVAL: Final = 1.0
+# SERVICE_CHECK_INTERVAL see configlib/scheduling (wip)
 
 ServicegroupName = str
 HostgroupName = str
-
-service_service_levels: list[RuleSpec[int]] = []
-host_service_levels: list[RuleSpec[int]] = []
-
 
 ObjectMacros = dict[str, AnyStr]
 
@@ -573,8 +582,6 @@ def load(
 
     _changed_var_names = _load_config(with_conf_d)
 
-    _initialize_derived_config_variables()
-
     loading_result = _perform_post_config_loading_actions(discovery_rulesets)
 
     if validate_hosts:
@@ -697,6 +704,10 @@ def _perform_post_config_loading_actions(
         cmc_influxdb_service_metrics=cmc_influxdb_service_metrics,
         cmc_log_levels=cmc_log_levels,
         cluster_max_cachefile_age=cluster_max_cachefile_age,
+        http_proxies=http_proxies,
+        extra_service_conf=extra_service_conf,
+        timeperiods=timeperiods,
+        check_periods=check_periods,
     )
 
     config_cache = ConfigCache(loaded_config).initialize()
@@ -892,21 +903,6 @@ def get_config_file_paths(with_conf_d: bool) -> list[Path]:
     return list_of_files
 
 
-def _initialize_derived_config_variables() -> None:
-    global service_service_levels, host_service_levels
-    service_service_levels = extra_service_conf.get("_ec_sl", [])
-    _default: list[RuleSpec[int]] = []
-    host_service_levels = extra_host_conf.get("_ec_sl", _default)
-
-
-def get_derived_config_variable_names() -> set[str]:
-    """These variables are computed from other configuration variables and not configured directly.
-
-    The origin variable (extra_service_conf) should not be exported to the helper config. Only
-    the service levels are needed."""
-    return {"service_service_levels", "host_service_levels"}
-
-
 def save_packed_config(
     config_path: Path,
     config_cache: ConfigCache,
@@ -996,7 +992,10 @@ class PackedConfigGenerator:
         def filter_extra_service_conf(
             values: dict[str, list[dict[str, str]]],
         ) -> dict[str, list[dict[str, str]]]:
-            return {"check_interval": values.get("check_interval", [])}
+            return {
+                "check_interval": values.get("check_interval", []),
+                "_ec_sl": values.get("_ec_sl", []),
+            }
 
         filter_var_functions: dict[str, Callable[[Any], Any]] = {
             "all_hosts": filter_all_hosts,
@@ -1016,17 +1015,16 @@ class PackedConfigGenerator:
         #
 
         variable_defaults = get_default_config()
-        derived_config_variable_names = get_derived_config_variable_names()
 
         global_variables = globals()
 
-        for varname in (*variable_defaults, *derived_config_variable_names):
+        for varname, default_value in variable_defaults.items():
             if varname in self._skipped_config_variable_names:
                 continue
 
             val = global_variables[varname]
 
-            if varname not in derived_config_variable_names and val == variable_defaults[varname]:
+            if val == default_value:
                 continue
 
             if varname in filter_var_functions:
@@ -1184,30 +1182,6 @@ class ServiceDependsOn:
                         except (IndexError, TypeError):
                             deps.append(depname)
         return deps
-
-
-# .
-#   .--Misc Helpers--------------------------------------------------------.
-#   |        __  __ _            _   _      _                              |
-#   |       |  \/  (_)___  ___  | | | | ___| |_ __   ___ _ __ ___          |
-#   |       | |\/| | / __|/ __| | |_| |/ _ \ | '_ \ / _ \ '__/ __|         |
-#   |       | |  | | \__ \ (__  |  _  |  __/ | |_) |  __/ |  \__ \         |
-#   |       |_|  |_|_|___/\___| |_| |_|\___|_| .__/ \___|_|  |___/         |
-#   |                                        |_|                           |
-#   +----------------------------------------------------------------------+
-#   | Different helper functions                                           |
-#   '----------------------------------------------------------------------'
-
-
-def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
-    """Returns a proxy config object to be used for HTTP requests
-
-    Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
-    """
-    return http_proxy_config_from_user_setting(
-        http_proxy,
-        http_proxies,
-    )
 
 
 # .
@@ -1507,6 +1481,24 @@ class AutochecksConfigurer:
         )
 
 
+def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.GlobalProxy:
+    proxy_config_auth = (
+        config_processing.GlobalProxyAuth(
+            user=auth["user"],
+            password=auth["password"],
+        )
+        if (auth := raw["proxy_config"].get("auth")) is not None
+        else None
+    )
+
+    return config_processing.GlobalProxy(
+        scheme=raw["proxy_config"]["scheme"],
+        proxy_server_name=raw["proxy_config"]["proxy_server_name"],
+        port=raw["proxy_config"]["port"],
+        auth=proxy_config_auth,
+    )
+
+
 class ConfigCache:
     def __init__(self, loaded_config: LoadedConfigFragment) -> None:
         super().__init__()
@@ -1556,7 +1548,6 @@ class ConfigCache:
             tuple[HostName, ServiceName, tuple[tuple[str, str], ...]],
             HostName,
         ] = {}
-        self._check_mk_check_interval: dict[HostName, float] = {}
 
         self.hosts_config = make_hosts_config(self._loaded_config)
 
@@ -1602,6 +1593,16 @@ class ConfigCache:
                 for hn in set(self.hosts_config.hosts).union(self.hosts_config.clusters)
                 if self.is_active(hn) and self.is_online(hn)
             }
+        )
+        self.check_interval = make_check_interval_config(
+            self._loaded_config, self.ruleset_matcher, self.label_manager
+        )
+        self.check_period_of_passive_service = SingleServiceRulesetMatcherFirstParsed(
+            self._loaded_config.check_periods,
+            "24X7",
+            self.ruleset_matcher,
+            self.label_manager.labels_of_host,
+            parser=str,
         )
         return self
 
@@ -2364,7 +2365,13 @@ class ConfigCache:
                 macros,
                 ip_address_of,
             ),
-            http_proxies,
+            config_processing.GlobalProxiesWithLookup(
+                global_proxies={
+                    name: _set_global_proxy(raw)
+                    for name, raw in self._loaded_config.http_proxies.items()
+                },
+                password_lookup=make_configured_passwords_lookup(),
+            ),
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             passwords,
             password_store_file,
@@ -2480,7 +2487,13 @@ class ConfigCache:
                 ip_address_of,
             ),
             host_attrs,
-            http_proxies,
+            config_processing.GlobalProxiesWithLookup(
+                global_proxies={
+                    name: _set_global_proxy(raw)
+                    for name, raw in self._loaded_config.http_proxies.items()
+                },
+                password_lookup=make_configured_passwords_lookup(),
+            ),
             passwords,
             password_store_file,
             ExecutableFinder(
@@ -2510,10 +2523,23 @@ class ConfigCache:
             """Get _all_ configured rulesets (not only the ones matching any host)"""
             return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
 
+        global_proxies_with_lookup = config_processing.GlobalProxiesWithLookup(
+            global_proxies={
+                name: _set_global_proxy(raw)
+                for name, raw in self._loaded_config.http_proxies.items()
+            },
+            password_lookup=make_configured_passwords_lookup(),
+        )
         return {
             **password_store.load(password_store.password_store_path()),
-            **extract_all_adhoc_secrets(_compose_filtered_ssc_rules(active_checks.items())),
-            **extract_all_adhoc_secrets(_compose_filtered_ssc_rules(special_agents.items())),
+            **extract_all_adhoc_secrets(
+                rules_by_name=_compose_filtered_ssc_rules(active_checks.items()),
+                global_proxies_with_lookup=global_proxies_with_lookup,
+            ),
+            **extract_all_adhoc_secrets(
+                rules_by_name=_compose_filtered_ssc_rules(special_agents.items()),
+                global_proxies_with_lookup=global_proxies_with_lookup,
+            ),
         }
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:
@@ -2732,7 +2758,7 @@ class ConfigCache:
 
     def service_level(self, hostname: HostName) -> int | None:
         entries = self.ruleset_matcher.get_host_values_all(
-            hostname, host_service_levels, self.label_manager.labels_of_host
+            hostname, extra_host_conf.get("_ec_sl", []), self.label_manager.labels_of_host
         )
         return entries[0] if entries else None
 
@@ -2879,20 +2905,8 @@ class ConfigCache:
         the host may be not discovered and should be ignore"""
         return host_attributes.get(hostname, {}).get("waiting_for_discovery", False)
 
-    def check_mk_check_interval(self, hostname: HostName) -> float:
-        if (interval := self._check_mk_check_interval.get(hostname)) is not None:
-            return interval
-
-        description = "Check_MK"
-        return self._check_mk_check_interval.setdefault(
-            hostname,
-            self.extra_attributes_of_service(
-                hostname,
-                description,
-                self.label_manager.labels_of_service(hostname, description, discovered_labels={}),
-            )["check_interval"]
-            * 60,
-        )
+    def check_mk_check_interval(self, host_name: HostName) -> float:
+        return self.check_interval(host_name, "Check_MK")
 
     def ip_stack_config(self, host_name: HostName | HostAddress) -> IPStackConfig:
         # TODO(ml): [IPv6] clarify tag_groups vs tag_groups["address_family"]
@@ -3007,22 +3021,22 @@ class ConfigCache:
     def extra_attributes_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> dict[str, Any]:
-        attrs = {
-            "check_interval": SERVICE_CHECK_INTERVAL,
-        }
-        for key, ruleset in extra_service_conf.items():
+        attrs = dict[str, object](
+            check_interval=self.check_interval(host_name, service_name) / 60.0,
+        )
+        for key, ruleset in self._loaded_config.extra_service_conf.items():
+            if key == "check_interval":
+                continue  # already handled above
+
             values = self.ruleset_matcher.get_service_values_all(
                 host_name, service_name, service_labels, ruleset, self.label_manager.labels_of_host
             )
             if not values:
                 continue
 
-            value: float | None = values[0]
+            value = values[0]
             if value is None:
                 continue
-
-            if key == "check_interval":
-                value = float(value)
 
             if key[0] == "_":
                 key = key.upper()
@@ -3104,18 +3118,6 @@ class ConfigCache:
 
         return list(cgrs)
 
-    def passive_check_period_of_service(
-        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> str:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            check_periods,
-            self.label_manager.labels_of_host,
-        )
-        return out[0] if out else "24X7"
-
     def custom_attributes_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> dict[str, str]:
@@ -3138,22 +3140,10 @@ class ConfigCache:
             host_name,
             service_name,
             service_labels,
-            service_service_levels,
+            extra_service_conf.get("_ec_sl", []),
             self.label_manager.labels_of_host,
         )
-        return out[0] if out else None
-
-    def check_period_of_service(
-        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> TimeperiodName | None:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            check_periods,
-            self.label_manager.labels_of_host,
-        )
-        return TimeperiodName(out[0]) if out and out[0] != "24X7" else None
+        return _parse(out[0], int) if out else None
 
     @staticmethod
     def get_explicit_service_custom_variables(
@@ -3682,24 +3672,12 @@ def make_parser_config(
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> ParserConfig:
-    check_interval_config = SingleServiceRulesetMatcherFirst(
-        extra_service_conf.get("check_interval", ()),
-        SERVICE_CHECK_INTERVAL,
-        ruleset_matcher,
-        label_manager.labels_of_host,
+    check_interval_config = make_check_interval_config(
+        loaded_config, ruleset_matcher, label_manager
     )
-
-    def _check_mk_check_interval(host_name: HostName) -> float:
-        """Return the check interval in seconds for a host"""
-        return 60 * check_interval_config(
-            host_name,
-            "Check_MK",
-            label_manager.labels_of_service(host_name, "Check_MK", discovered_labels={}),
-        )
-
     return ParserConfig(
         fallback_agent_output_encoding=loaded_config.fallback_agent_output_encoding,
-        check_interval=_check_mk_check_interval,
+        check_interval=lambda host_name: check_interval_config(host_name, "Check_MK"),
         piggyback_translations=SingleHostRulesetMatcherMerge(
             loaded_config.piggyback_translation, ruleset_matcher, label_manager.labels_of_host
         ),
@@ -3897,3 +3875,43 @@ class FetcherFactory:
 
     def make_piggyback_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher()
+
+
+def _parse[T](raw: object, type_: Callable[..., T], /) -> T:
+    return type_(raw)
+
+
+def get_metric_backend_fetcher(
+    host_name: HostAddress,
+    explicit_host_attributes: Callable[[HostAddress], ObjectAttributes],
+    is_cmc: bool,
+) -> ProgramFetcher | None:
+    if (
+        metrics_association := explicit_host_attributes(host_name).get("metrics_association")
+    ) is not None:
+        return make_metric_backend_fetcher(
+            host_name, make_metric_backend_fetcher_config(metrics_association), is_cmc
+        )
+    return None
+
+
+def make_metric_backend_fetcher(
+    host_name: HostName, metric_backend_fetcher_config: MetricBackendFetcherConfig, is_cmc: bool
+) -> ProgramFetcher:
+    from cmk.plugins.otel.special_agents.cce import (  # type: ignore[import-not-found, unused-ignore]
+        agent_otel,
+    )
+
+    metrics_association = json.loads(metric_backend_fetcher_config.metrics_association)
+    host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]
+    filter_args = []
+    for filter_ in metrics_association["attribute_filters"]:
+        filter_args += [
+            "--filter",
+            f"{filter_['attribute_type']}:{filter_['attribute_key']}={filter_['attribute_value']}",
+        ]
+    return ProgramFetcher(
+        cmdline=f"python3 -m {agent_otel.__spec__.name} {host_name}",
+        stdin=f"--host-name-resource-attribute-key={host_name_resource_attribute_key} {' '.join(filter_args)}",
+        is_cmc=is_cmc,
+    )

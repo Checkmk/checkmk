@@ -3,13 +3,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+
 
 from collections.abc import Sequence
+from datetime import datetime
 from unittest import mock
 
 import pytest
 
-from cmk.plugins.aws.special_agent.agent_aws import AWSSectionResult, AWSSectionsGeneric, Results
+from cmk.plugins.aws.special_agent.agent_aws import (
+    AWSSectionResult,
+    AWSSectionsGeneric,
+    get_seconds_since_midnight,
+    Results,
+)
+
+
+@pytest.mark.parametrize(
+    "now, result",
+    [
+        ("2020-07-24 00:00:16.0", 16.0),
+        ("2020-07-13 00:01:00.194", 60.194),
+    ],
+)
+def test_get_seconds_since_midnight(now: str, result: float) -> None:
+    assert get_seconds_since_midnight(datetime.strptime(now, "%Y-%m-%d %H:%M:%S.%f")) == result
 
 
 class TestAWSSections:

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for trying out the logwatch patterns"""
 
+# mypy: disable-error-code="type-arg"
+
 import re
 from collections.abc import Collection, Iterable, Mapping, Sequence
 
@@ -36,6 +38,7 @@ from cmk.gui.search import (
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.automations import (
@@ -390,7 +393,7 @@ class ModePatternEditor(WatoMode):
 
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         title = ModePatternEditor.title_pattern_analyzer()
         yield MatchItem(
             title=title,

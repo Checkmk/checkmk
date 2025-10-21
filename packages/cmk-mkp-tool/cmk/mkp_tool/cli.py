@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Command line interface for the Checkmk Extension Packages"""
 
+# mypy: disable-error-code="type-arg"
+
 import argparse
 import json
 import logging
@@ -833,7 +835,7 @@ def _no_args(_subparser: argparse.ArgumentParser) -> None:
 
 
 def _add_command(
-    subparsers: argparse._SubParsersAction,  # type: ignore[type-arg]  # providing one will crash
+    subparsers: argparse._SubParsersAction,  # providing one will crash
     cmd: str,
     args_adder: Callable[[argparse.ArgumentParser], None],
     handler: _HandlerFunction,

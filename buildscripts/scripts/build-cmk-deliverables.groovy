@@ -82,6 +82,7 @@ def main() {
         |upload_to_testbuilds:.............. │${upload_to_testbuilds}│
         |deploy_to_website:................. │${deploy_to_website}│
         |branch_base_folder:................ │${branch_base_folder}│
+        |safe_branch_name:.................. │${safe_branch_name}│
         |===================================================
         """.stripMargin());
 

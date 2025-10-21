@@ -30,6 +30,7 @@ from cmk.inventory_ui import v1_alpha
                 "BackgroundColor",
                 "BoolField",
                 "ChoiceField",
+                "Comparable",
                 "DecimalNotation",
                 "EngineeringScientificNotation",
                 "IECNotation",

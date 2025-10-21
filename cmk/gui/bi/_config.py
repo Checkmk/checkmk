@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """WATO-Module for the rules and aggregations of Checkmk BI"""
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="type-arg"
+
 import copy
 import json
 from collections.abc import Collection, Iterable
-from typing import Any, overload, TypedDict
+from typing import Any, overload, override, TypedDict
 
 import cmk.ccc.version as cmk_version
 from cmk.bi.actions import BICallARuleAction
@@ -120,8 +123,8 @@ def register(
     mode_registry: ModeRegistry,
     permission_registry: PermissionRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_bi_rule_preview", AjaxBIRulePreview))
-    page_registry.register(PageEndpoint("ajax_bi_aggregation_preview", AjaxBIAggregationPreview))
+    page_registry.register(PageEndpoint("ajax_bi_rule_preview", AjaxBIRulePreview()))
+    page_registry.register(PageEndpoint("ajax_bi_aggregation_preview", AjaxBIAggregationPreview()))
 
     main_module_topic_registry.register(MainModuleTopicBI)
     main_module_registry.register(MainModuleBI)
@@ -1527,6 +1530,7 @@ class BIAggregationForm(Dictionary):
 
 
 class AjaxBIRulePreview(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
@@ -1568,6 +1572,7 @@ class AjaxBIRulePreview(AjaxPage):
 
 
 class AjaxBIAggregationPreview(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         # Prepare compiler
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)

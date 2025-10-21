@@ -5,7 +5,7 @@
  */
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import type { ErrorResponse, Response } from '@/components/suggestions'
+import type { ErrorResponse, Response } from '@/components/CmkSuggestions'
 
 import { fetchSuggestions as fetchSuggestionsViaAjax } from './autocompleters/ajax'
 import { fetchSuggestions as fetchSuggestionsViaRest } from './autocompleters/rest'

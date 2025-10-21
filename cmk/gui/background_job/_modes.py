@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import json
 import traceback
 from collections.abc import Collection, Iterator
@@ -38,7 +40,7 @@ def register(
     main_module_registry: MainModuleRegistry,
 ) -> None:
     page_registry.register(
-        PageEndpoint("ajax_background_job_details", ModeAjaxBackgroundJobDetails)
+        PageEndpoint("ajax_background_job_details", ModeAjaxBackgroundJobDetails())
     )
     mode_registry.register(ModeBackgroundJobsOverview)
     mode_registry.register(ModeBackgroundJobDetails)

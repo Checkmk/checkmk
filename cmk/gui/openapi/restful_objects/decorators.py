@@ -4,6 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Decorators to expose API endpoints.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 Decorating a function with `Endpoint` will result in a change of the SPEC object,
 which then has to be dumped into the checkmk.yaml file.
 

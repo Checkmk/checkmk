@@ -15,11 +15,11 @@ import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import type { Suggestion } from '@/components/suggestions'
+import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 

@@ -24,7 +24,7 @@ import {
   type UnifiedSearchResult
 } from '@/lib/unified-search/unified-search'
 
-import DefaultPopup from '@/main-menu/DefaultPopup.vue'
+import DefaultPopup from '@/main-menu/changes/components/DefaultPopup.vue'
 
 import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'
 import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
@@ -47,15 +47,27 @@ const api = new Api()
 
 const searchHistoryService = new SearchHistoryService(searchId)
 
-const searchProviderIdentifiers: { id: UnifiedSearchProviderIdentifier; sort: number }[] = []
+const searchProviderIdentifiers: {
+  id: UnifiedSearchProviderIdentifier
+  sort: number
+}[] = []
 if (props.providers.setup.active) {
-  searchProviderIdentifiers.push({ id: 'setup', sort: props.providers.setup.sort })
+  searchProviderIdentifiers.push({
+    id: 'setup',
+    sort: props.providers.setup.sort
+  })
 }
 if (props.providers.customize.active) {
-  searchProviderIdentifiers.push({ id: 'customize', sort: props.providers.customize.sort })
+  searchProviderIdentifiers.push({
+    id: 'customize',
+    sort: props.providers.customize.sort
+  })
 }
 if (props.providers.monitoring.active) {
-  searchProviderIdentifiers.push({ id: 'monitoring', sort: props.providers.monitoring.sort })
+  searchProviderIdentifiers.push({
+    id: 'monitoring',
+    sort: props.providers.monitoring.sort
+  })
 }
 
 const searchHistorySearchProvider = new SearchHistorySearchProvider(

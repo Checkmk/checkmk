@@ -3,6 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="mutable-override"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="redundant-expr"
+
 # TODO: Refactor/document locking. It is not clear when and how to apply
 # locks or when they are held by which component.
 
@@ -1048,7 +1055,7 @@ class EventServer(ECServerThread):
 
         # Changed "acked" to ("acked", bool) with 1.6.0p20
         if isinstance(merge, tuple):  # TODO: Move this to upgrade time
-            merge, reset_ack = merge  # type: ignore[unreachable]
+            merge, reset_ack = merge
 
         if merge != "never":
             for event in self._event_status.events():

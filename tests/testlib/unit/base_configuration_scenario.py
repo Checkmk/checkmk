@@ -185,6 +185,11 @@ class Scenario:
     def set_ruleset(self, varname: str, ruleset: Sequence[RuleSpec[Any]]) -> None:
         self.config[varname] = ruleset
 
+    def add_to_ruleset_bundle(
+        self, bundle_name: str, varname: str, ruleset: Sequence[RuleSpec[Any]]
+    ) -> None:
+        self.config.setdefault(bundle_name, {})[varname] = ruleset
+
     def set_ruleset_bundle(
         self, varname: str, ruleset: Mapping[str, Sequence[RuleSpec[Any]]]
     ) -> None:

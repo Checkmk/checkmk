@@ -12,7 +12,11 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
+import CmkTooltip, {
+  CmkTooltipContent,
+  CmkTooltipProvider,
+  CmkTooltipTrigger
+} from '@/components/CmkTooltip'
 
 import AgentSlideOutContent from '@/mode-host/agent-connection-test/components/AgentSlideOutContent.vue'
 
@@ -40,10 +44,15 @@ const tooltipOpen = ref(true)
 </script>
 
 <template>
-  <TooltipProvider>
-    <Tooltip :open="tooltipOpen" class="tooltip">
-      <TooltipTrigger as="span"></TooltipTrigger>
-      <TooltipContent align="center" side="right" :avoid-collisions="false" class="tooltip-content">
+  <CmkTooltipProvider>
+    <CmkTooltip :open="tooltipOpen" class="tooltip">
+      <CmkTooltipTrigger as="span"></CmkTooltipTrigger>
+      <CmkTooltipContent
+        align="center"
+        side="right"
+        :avoid-collisions="false"
+        class="tooltip-content"
+      >
         <TooltipArrow
           :style="{ fill: 'var(--default-help-icon-bg-color)' }"
           :width="6"
@@ -72,9 +81,9 @@ const tooltipOpen = ref(true)
           ]"
           class="setup-agent-download-dialog__dialog"
         />
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+      </CmkTooltipContent>
+    </CmkTooltip>
+  </CmkTooltipProvider>
   <CmkSlideInDialog
     :open="slideInOpen"
     :header="{ title: slideInTitle, closeButton: true }"

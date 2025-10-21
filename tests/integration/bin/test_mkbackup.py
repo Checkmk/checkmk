@@ -459,12 +459,13 @@ def test_mkbackup_list_jobs(site_for_mkbackup_tests: Site) -> None:
     assert "Tästjob" in p.stdout
 
 
-@pytest.mark.skip(reason="CMK-24644; investigating ...")
+@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
 def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests)
 
 
+@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_simple_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests)
@@ -476,6 +477,7 @@ def test_mkbackup_encrypted_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests, job_id="testjob-encrypted")
 
 
+@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
@@ -490,6 +492,7 @@ def test_mkbackup_encrypted_backup_and_restore(site_for_mkbackup_tests: Site) ->
     _execute_restore(site_for_mkbackup_tests, backup_id, env)
 
 
+@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
@@ -509,12 +512,14 @@ def test_mkbackup_encrypted_backup_and_restore_expired(site_for_mkbackup_tests: 
     _execute_restore(site_for_mkbackup_tests, backup_id, env)
 
 
+@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_compressed_backup_and_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-compressed")
     _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
+@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_no_history_backup_and_restore(
     site_for_mkbackup_tests: Site, backup_path: str

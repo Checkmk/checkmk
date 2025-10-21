@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # <<<symantec_av_updates>>>
 # 15.05.2015 rev. 1
 
@@ -59,6 +61,6 @@ check_info["symantec_av_updates"] = LegacyCheckDefinition(
     check_function=check_symantec_av_updates,
     check_ruleset_name="antivir_update_age",
     check_default_parameters={
-        "levels": (3600 * 24 * 3, 3600 * 24 * 4),
+        "levels": ("fixed", (3600 * 24 * 3, 3600 * 24 * 4)),
     },
 )

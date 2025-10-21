@@ -4,10 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Verify or find out a hosts agent related configuration"""
 
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import base64
 import json
 from collections.abc import Collection
-from typing import NotRequired, TypedDict
+from typing import NotRequired, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -58,7 +64,7 @@ class HostSpec(TypedDict):
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register(PageEndpoint("wato_ajax_diag_host", PageAjaxDiagHost))
+    page_registry.register(PageEndpoint("wato_ajax_diag_host", PageAjaxDiagHost()))
     mode_registry.register(ModeDiagHost)
 
 
@@ -471,6 +477,7 @@ class ModeDiagHost(WatoMode):
 
 
 class PageAjaxDiagHost(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         if not user.may("wato.diag_host"):

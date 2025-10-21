@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="arg-type"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="var-annotated"
 
 # <<<elasticsearch_nodes>>>
 # mynode1 open_file_descriptors 434
@@ -16,8 +19,6 @@
 # mynode2 cpu_total_in_millis 151810
 # mynode2 mem_total_virtual_in_bytes 7107313664
 
-
-# mypy: disable-error-code="var-annotated,arg-type"
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render

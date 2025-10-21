@@ -5,24 +5,35 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
+import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
+import CmkLinkCard from '@/components/CmkLinkCard'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 
+import FirstHostSlideout from '../first-host/FirstHostSlideout.vue'
+
 const { _t } = usei18n()
 
-defineProps<{
+const cseSlideoutOpen = ref<boolean>(false)
+
+const props = defineProps<{
   step: number
-  urls: WelcomeUrls
+  cards: WelcomeCards
   accomplished: boolean
 }>()
+
+const useCseSlideout = ref<boolean>(false)
+
+if (props.cards.add_host === 'cse-first-host-slideout') {
+  useCseSlideout.value = true
+}
 </script>
 
 <template>
@@ -50,14 +61,21 @@ defineProps<{
     <StepCardsRow>
       <CmkLinkCard
         icon-name="folder"
+        :url="useCseSlideout ? undefined : cards.add_host"
         :title="_t('Server (Linux, Windows, Solaris, ...)')"
-        :url="urls.add_host"
         :open-in-new-tab="false"
+        :callback="
+          () => {
+            if (useCseSlideout) {
+              cseSlideoutOpen = true
+            }
+          }
+        "
       />
       <CmkLinkCard
         icon-name="networking"
         :title="_t('Network devices and SNMP')"
-        :url="urls.network_devices"
+        :url="cards.network_devices"
         :open-in-new-tab="false"
       />
     </StepCardsRow>
@@ -69,43 +87,45 @@ defineProps<{
       <CmkLinkCard
         icon-name="aws-logo"
         :title="_t('Amazon Web Services (AWS)')"
-        :url="urls.aws_quick_setup"
+        :url="cards.aws_quick_setup"
         :open-in-new-tab="false"
       />
       <CmkLinkCard
         icon-name="azure-vms"
         :title="_t('Microsoft Azure')"
-        :url="urls.azure_quick_setup"
+        :url="cards.azure_quick_setup"
         :open-in-new-tab="false"
       />
       <CmkLinkCard
         icon-name="gcp"
         :title="_t('Google Cloud Platform (GCP)')"
-        :url="urls.gcp_quick_setup"
+        :url="cards.gcp_quick_setup"
         :open-in-new-tab="false"
       />
     </StepCardsRow>
 
-    <template v-if="urls.synthetic_monitoring || urls.opentelemetry">
+    <template v-if="cards.synthetic_monitoring || cards.opentelemetry">
       <StepHeading>
         {{ _t('Application monitoring') }}
       </StepHeading>
       <StepCardsRow>
         <CmkLinkCard
-          v-if="urls.synthetic_monitoring"
+          v-if="cards.synthetic_monitoring"
           icon-name="synthetic-monitoring-yellow"
           :title="_t('Synthetic monitoring')"
-          :url="urls.synthetic_monitoring"
+          :url="cards.synthetic_monitoring"
           :open-in-new-tab="false"
         />
         <CmkLinkCard
-          v-if="urls.opentelemetry"
+          v-if="cards.opentelemetry"
           icon-name="opentelemetry"
           :title="_t('OpenTelemetry (Beta)')"
-          :url="urls.opentelemetry"
+          :url="cards.opentelemetry"
           :open-in-new-tab="false"
         />
       </StepCardsRow>
     </template>
   </CmkAccordionStepPanelItem>
+
+  <FirstHostSlideout v-if="useCseSlideout" v-model="cseSlideoutOpen" />
 </template>

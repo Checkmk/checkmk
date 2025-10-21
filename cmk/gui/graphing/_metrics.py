@@ -8,7 +8,11 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
-from cmk.gui.color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
+from cmk.gui.color import (
+    get_gray_tone,
+    get_palette_color_by_index,
+    parse_color_into_hexrgb,
+)
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.utils.metrics import MetricName
@@ -58,16 +62,15 @@ def get_metric_spec_with_color(
                 unit_spec=mfa.unit_spec,
                 color=get_gray_tone(color_counter),
             )
-        else:
-            fallback = _fallback_metric_spec(lookup_metric_name, color_counter)
-            return MetricSpec(
-                name=fallback.name,
-                title=_("Prediction of ") + fallback.title + _(" (lower levels)"),
-                unit_spec=fallback.unit_spec,
-                color=get_gray_tone(color_counter),
-            )
+        fallback = _fallback_metric_spec(lookup_metric_name, color_counter)
+        return MetricSpec(
+            name=fallback.name,
+            title=_("Prediction of ") + fallback.title + _(" (lower levels)"),
+            unit_spec=fallback.unit_spec,
+            color=get_gray_tone(color_counter),
+        )
 
-    elif metric_name.startswith("predict_"):
+    if metric_name.startswith("predict_"):
         if (lookup_metric_name := metric_name[8:]) in registered_metrics:
             mfa = registered_metrics[lookup_metric_name]
             return MetricSpec(
@@ -80,15 +83,15 @@ def get_metric_spec_with_color(
                 unit_spec=mfa.unit_spec,
                 color=get_gray_tone(color_counter),
             )
-        else:
-            fallback = _fallback_metric_spec(lookup_metric_name, color_counter)
-            return MetricSpec(
-                name=fallback.name,
-                title=_("Prediction of ") + fallback.title + _(" (upper levels)"),
-                unit_spec=fallback.unit_spec,
-                color=get_gray_tone(color_counter),
-            )
-    elif metric_name in registered_metrics:
+        fallback = _fallback_metric_spec(lookup_metric_name, color_counter)
+        return MetricSpec(
+            name=fallback.name,
+            title=_("Prediction of ") + fallback.title + _(" (upper levels)"),
+            unit_spec=fallback.unit_spec,
+            color=get_gray_tone(color_counter),
+        )
+
+    if metric_name in registered_metrics:
         mfa = registered_metrics[metric_name]
         return MetricSpec(
             name=metric_name,

@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="unreachable"
+
 """Check_MK's library for code used by different components of Check_MK.
 
 This library is currently handled as internal module of Check_MK and
@@ -96,6 +99,10 @@ def edition_has_license_scheduler(ed: Edition, /) -> bool:
 
 def edition_supports_nagvis(ed: Edition, /) -> bool:
     return ed is not Edition.CSE
+
+
+def edition_supports_relay(ed: Edition, /) -> bool:
+    return ed in (Edition.CME, Edition.CCE, Edition.CSE)
 
 
 def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
@@ -309,8 +316,8 @@ class Version:
                     _ReleaseCandidate(int(rc)),
                     _ReleaseMeta(meta),
                 )
-
-        raise ValueError(f'Cannot parse version string "{vstring}".')
+            case _:
+                raise ValueError(f'Cannot parse version string "{vstring}".')
 
     @classmethod
     def _parse_daily_version(cls, vstring: str) -> Self:
@@ -684,6 +691,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
         (
             Version.from_str("2.4.0p3"),  # copy acknowledged werks from version to site
             Version.from_str("2.4.0p3"),  # inventory tree transformation: repr -> json
+            Version.from_str("2.4.0p13"),  # make sure that rules.mk exists
         ),
     ),
 }

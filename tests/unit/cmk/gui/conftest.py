@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 
 from __future__ import annotations
 
@@ -285,13 +289,6 @@ def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMo
     return mocker.patch(
         "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
         side_effect=lambda *args, **kw: None,
-    )
-
-
-@pytest.fixture(name="suppress_spec_generation_in_background")
-def suppress_spec_generation_in_background(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch(
-        "cmk.gui.openapi.spec.spec_generator_job.trigger_spec_generation_in_background",
     )
 
 

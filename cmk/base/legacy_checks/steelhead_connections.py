@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.steelhead import DETECT_STEELHEAD
 
@@ -55,18 +57,11 @@ def check_steelhead_connections(item, params, info):
         else:
             perfdata = []
 
-        infotext = "%s: %d" % (title, value)
-        state = 0
         if params.get(key):
             warn, crit = params[key]
-            if value >= crit:
-                state = 2
-            elif value >= warn:
-                state = 1
-            if state > 0:
-                infotext += " (warn/crit at %d/%d)" % (warn, crit)
-
-        yield state, infotext, perfdata
+            yield check_levels(value, key if has_perf else None, (warn, crit), infoname=title)
+        else:
+            yield 0, f"{title}: {value}", perfdata
 
 
 def parse_steelhead_connections(string_table: StringTable) -> StringTable:

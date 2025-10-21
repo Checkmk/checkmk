@@ -5,10 +5,12 @@
 
 import time
 
+from cmk.agent_receiver.config import Config
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config import create_relay_config as _create_relay_config
+from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
@@ -20,7 +22,9 @@ def register_relay(ar: AgentReceiverClient, name: str) -> str:
 
 
 def test_task_expires_in_agent_receiver(
-    site: SiteMock, agent_receiver: AgentReceiverClient
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+    site_context: Config,
 ) -> None:
     """
     1. Configure agent receiver to a short expiration time.
@@ -29,6 +33,7 @@ def test_task_expires_in_agent_receiver(
     4. Wait for expiration time
     5. Verify task is no longer present
     """
+
     # Configure short expiration time
     expiration_time = 1.0
     _create_relay_config(task_ttl=1.0)
@@ -36,6 +41,8 @@ def test_task_expires_in_agent_receiver(
     # Step 1: Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])
     relay_id = register_relay(agent_receiver, "Wonderful_relay")
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a task
     task_response = push_task(
@@ -58,8 +65,7 @@ def test_task_expires_in_agent_receiver(
 
 
 def test_task_expiration_resets_on_update(
-    site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    site: SiteMock, agent_receiver: AgentReceiverClient, site_context: Config
 ) -> None:
     """
     Test that verifies that task expiration time resets when a task is updated.
@@ -78,6 +84,8 @@ def test_task_expiration_resets_on_update(
     # Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])
     relay_id = register_relay(agent_receiver, "Wonderful_relay")
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a task
     task_response = push_task(
@@ -119,6 +127,7 @@ def test_task_expiration_resets_on_update(
 def test_completed_tasks_expiration(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
+    site_context: Config,
 ) -> None:
     """
     Test that verifies that tasks expire regardless of their status.
@@ -130,6 +139,8 @@ def test_completed_tasks_expiration(
     # Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])
     relay_id = register_relay(agent_receiver, "Wonderful_relay")
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a tasks
     task_a_response = push_task(

@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Mapping
 
-from cmk.bi.lib import ABCBISearch, ABCBISearcher, bi_search_registry, SearchKind
+from cmk.bi.lib import ABCBISearch, ABCBISearcher, bi_search_registry
 from cmk.bi.schema import Schema
+from cmk.bi.type_defs import SearchKind
 
 
 @bi_search_registry.register

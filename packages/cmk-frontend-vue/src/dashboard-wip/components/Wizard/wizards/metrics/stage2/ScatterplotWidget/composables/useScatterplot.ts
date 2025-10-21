@@ -18,9 +18,11 @@ import type {
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
-import { generateWidgetProps } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { WidgetSpec } from '@/dashboard-wip/types/widget'
+import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 import { type UseAdditionalOptions, useAdditionalOptions } from './useAdditionalOptions'
 
@@ -34,8 +36,14 @@ export interface UseScatterplot
   widgetProps: Ref<WidgetProps>
 }
 
-export const useScatterplot = (metric: string, filters: ConfiguredFilters): UseScatterplot => {
-  //Todo: Fill values if they exist in serializedData
+export const useScatterplot = async (
+  metric: string,
+  filters: ConfiguredFilters,
+  dashboardConstants: DashboardConstants,
+  currentSpec?: WidgetSpec | null
+): Promise<UseScatterplot> => {
+  const currentContent = currentSpec?.content as ScatterplotContent
+
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
 
   const {
@@ -47,17 +55,23 @@ export const useScatterplot = (metric: string, filters: ConfiguredFilters): UseS
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    generateTitleSpec
-  } = useWidgetVisualizationProps(metric)
+    widgetGeneralSettings
+  } = useWidgetVisualizationProps(metric, currentSpec?.general_settings)
 
-  const { metricColor, averageColor, medianColor } = useAdditionalOptions()
+  const { metricColor, averageColor, medianColor } = useAdditionalOptions(
+    currentContent?.metric_color,
+    currentContent?.average_color,
+    currentContent?.median_color
+  )
+
+  const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()
   }
 
-  const _generateWidgetProps = (): WidgetProps => {
-    const content: ScatterplotContent = {
+  const _generateContent = (): ScatterplotContent => {
+    return {
       type: 'average_scatterplot',
       metric,
       time_range: generateTimeRangeSpec(),
@@ -65,31 +79,30 @@ export const useScatterplot = (metric: string, filters: ConfiguredFilters): UseS
       average_color: averageColor.value,
       median_color: medianColor.value
     }
-
-    return generateWidgetProps(generateTitleSpec(), content, filters)
   }
 
-  const widgetProps = ref<WidgetProps>(_generateWidgetProps())
+  const _updateWidgetProps = async () => {
+    const content = _generateContent()
+    widgetProps.value = {
+      general_settings: widgetGeneralSettings.value,
+      content,
+      effective_filter_context: await determineWidgetEffectiveFilterContext(
+        content,
+        filters,
+        dashboardConstants
+      )
+    }
+  }
 
   watch(
-    [
-      timeRange,
-      title,
-      showTitle,
-      showTitleBackground,
-      showWidgetBackground,
-      titleUrlEnabled,
-      titleUrl,
-      titleUrlValidationErrors,
-      metricColor,
-      averageColor,
-      medianColor
-    ],
+    [timeRange, widgetGeneralSettings, metricColor, averageColor, medianColor],
     useDebounceFn(() => {
-      widgetProps.value = _generateWidgetProps()
+      void _updateWidgetProps()
     }, 300),
     { deep: true }
   )
+
+  await _updateWidgetProps()
 
   return {
     timeRange,
@@ -108,6 +121,6 @@ export const useScatterplot = (metric: string, filters: ConfiguredFilters): UseS
     titleUrlValidationErrors,
     validate,
 
-    widgetProps
+    widgetProps: widgetProps as Ref<WidgetProps>
   }
 }

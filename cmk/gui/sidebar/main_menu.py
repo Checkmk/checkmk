@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Main menu processing
 
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="unreachable"
+
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the main menu
 """
 
 from dataclasses import asdict
-from typing import NamedTuple, TypedDict
+from typing import NamedTuple, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import message
@@ -20,12 +23,14 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, main_menu_registry
+from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import Icon, MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
+from cmk.gui.type_defs import Icon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 from cmk.shared_typing.unified_search import UnifiedSearchConfig
@@ -41,10 +46,10 @@ class MainMenuPopupTrigger(NamedTuple):
 class MainMenuRenderer:
     """Renders the main navigation sidebar"""
 
-    def show(self) -> None:
+    def show(self, user_permissions: UserPermissions) -> None:
         html.open_ul(id_="main_menu")
         self._modify_unified_search_config()
-        self._show_main_menu_content()
+        self._show_main_menu_content(user_permissions)
         html.close_ul()
 
     def _modify_unified_search_config(
@@ -73,8 +78,8 @@ class MainMenuRenderer:
 
                 search_item.vue_app.data = asdict(search_item.vue_app.data)
 
-    def _show_main_menu_content(self) -> None:
-        for popup_trigger in self._get_main_menu_popup_triggers():
+    def _show_main_menu_content(self, user_permissions: UserPermissions) -> None:
+        for popup_trigger in self._get_main_menu_popup_triggers(user_permissions):
             if isinstance(popup_trigger.icon, dict):
                 active_icon: Icon = {
                     "icon": popup_trigger.icon["icon"] + "_active",
@@ -87,7 +92,7 @@ class MainMenuRenderer:
             html.popup_trigger(
                 (self._get_popup_trigger_content(active_icon, popup_trigger)),
                 ident="main_menu_" + popup_trigger.name,
-                method=MethodInline(self._get_main_menu_content(popup_trigger)),
+                method=MethodInline(self._get_main_menu_content(popup_trigger, user_permissions)),
                 cssclass=[popup_trigger.name],
                 popup_group="popup_menu_handler",
                 hover_switch_delay=150,  # ms
@@ -113,10 +118,12 @@ class MainMenuRenderer:
 
         return content
 
-    def _get_main_menu_popup_triggers(self) -> list[MainMenuPopupTrigger]:
+    def _get_main_menu_popup_triggers(
+        self, user_permissions: UserPermissions
+    ) -> list[MainMenuPopupTrigger]:
         items: list[MainMenuPopupTrigger] = []
         for menu in sorted(main_menu_registry.values(), key=lambda g: g.sort_index):
-            if menu.topics and not menu.topics():
+            if menu.topics and not menu.topics(user_permissions):
                 continue  # Hide e.g. Setup menu when user is not permitted to see a single topic
 
             if menu.hide():
@@ -137,7 +144,9 @@ class MainMenuRenderer:
             )
         return items
 
-    def _get_main_menu_content(self, popup_trigger: MainMenuPopupTrigger) -> str:
+    def _get_main_menu_content(
+        self, popup_trigger: MainMenuPopupTrigger, user_permissions: UserPermissions
+    ) -> str:
         with output_funnel.plugged():
             menu = main_menu_registry[popup_trigger.name]
             classes = []
@@ -162,7 +171,7 @@ class MainMenuRenderer:
                     data=asdict(menu.vue_app.data(request)),
                 )
             else:
-                MainMenuPopupRenderer().show(menu)
+                MainMenuPopupRenderer().show(menu, user_permissions)
             html.close_div()
             return output_funnel.drain()
 
@@ -179,6 +188,7 @@ def ajax_message_read(config: Config) -> None:
 
 
 class PageAjaxSidebarChangesMenu(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         return {
             "number_of_pending_changes": ActivateChanges.get_number_of_pending_changes(
@@ -189,6 +199,7 @@ class PageAjaxSidebarChangesMenu(AjaxPage):
 
 
 class PageAjaxSitesAndChanges(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         return ActivateChanges().get_all_data_required_for_activation_popout(config.sites)
 
@@ -199,6 +210,7 @@ class PopUpMessage(TypedDict):
 
 
 class PageAjaxSidebarGetMessages(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         popup_msg: list[PopUpMessage] = []
         hint_msg: int = 0
@@ -220,6 +232,7 @@ class PageAjaxSidebarGetMessages(AjaxPage):
 
 
 class PageAjaxSidebarGetUnackIncompWerks(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         if not may_acknowledge():
             raise MKAuthException(_("You are not allowed to acknowlegde werks"))
@@ -244,7 +257,7 @@ class PageAjaxSidebarGetUnackIncompWerks(AjaxPage):
 class MainMenuPopupRenderer:
     """Renders the content of the main menu popups"""
 
-    def show(self, menu: MainMenu) -> None:
+    def show(self, menu: MainMenu, user_permissions: UserPermissions) -> None:
         more_id = "main_menu_" + menu.name
 
         show_more = user.get_show_more_setting(more_id)
@@ -261,7 +274,7 @@ class MainMenuPopupRenderer:
         if menu.info_line:
             html.span(menu.info_line(), id_="info_line_%s" % menu.name, class_="info_line")
         if menu.topics:
-            topics = menu.topics()
+            topics = menu.topics(user_permissions)
         if any_show_more_items(topics):
             html.open_div()
             html.more_button(

@@ -5,7 +5,7 @@
  */
 import usei18n from '@/lib/i18n'
 
-import type { Suggestion } from '@/components/suggestions'
+import type { Suggestion } from '@/components/CmkSuggestions'
 
 const { _t } = usei18n()
 

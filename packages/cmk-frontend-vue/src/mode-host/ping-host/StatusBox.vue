@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 
 defineProps<{
   status: DNSStatus
@@ -16,7 +17,7 @@ export interface DNSStatus {
   status: 'loading' | 'ok' | 'warn' | 'crit'
 }
 
-function getIconName(status: DNSStatus): string {
+function getIconName(status: DNSStatus): SimpleIcons {
   switch (status.status) {
     case 'loading':
       return 'load-graph'

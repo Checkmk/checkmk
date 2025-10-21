@@ -4,6 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The user can change own 2FA related settings on this page"""
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import datetime
 import http.client as http_client
@@ -12,7 +16,7 @@ import time
 from base64 import b32decode, b32encode
 from collections.abc import Sequence
 from http import HTTPStatus
-from typing import assert_never, Literal
+from typing import assert_never, Literal, override
 from urllib import parse
 from uuid import uuid4
 
@@ -233,17 +237,21 @@ overview_page_name: str = "user_two_factor_overview"
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint(overview_page_name, UserTwoFactorOverview))
-    page_registry.register(PageEndpoint("user_two_factor_enforce", UserTwoFactorEnforce))
-    page_registry.register(PageEndpoint("user_two_factor_edit_credential", EditCredentialAlias))
-    page_registry.register(PageEndpoint("user_webauthn_register_begin", UserWebAuthnRegisterBegin))
+    page_registry.register(PageEndpoint(overview_page_name, UserTwoFactorOverview()))
+    page_registry.register(PageEndpoint("user_two_factor_enforce", UserTwoFactorEnforce()))
+    page_registry.register(PageEndpoint("user_two_factor_edit_credential", EditCredentialAlias()))
     page_registry.register(
-        PageEndpoint("user_webauthn_register_complete", UserWebAuthnRegisterComplete)
+        PageEndpoint("user_webauthn_register_begin", UserWebAuthnRegisterBegin())
     )
-    page_registry.register(PageEndpoint("user_login_two_factor", UserLoginTwoFactor))
-    page_registry.register(PageEndpoint("user_webauthn_login_begin", UserWebAuthnLoginBegin))
-    page_registry.register(PageEndpoint("user_webauthn_login_complete", UserWebAuthnLoginComplete))
-    page_registry.register(PageEndpoint("user_totp_register", RegisterTotpSecret))
+    page_registry.register(
+        PageEndpoint("user_webauthn_register_complete", UserWebAuthnRegisterComplete())
+    )
+    page_registry.register(PageEndpoint("user_login_two_factor", UserLoginTwoFactor()))
+    page_registry.register(PageEndpoint("user_webauthn_login_begin", UserWebAuthnLoginBegin()))
+    page_registry.register(
+        PageEndpoint("user_webauthn_login_complete", UserWebAuthnLoginComplete())
+    )
+    page_registry.register(PageEndpoint("user_totp_register", RegisterTotpSecret()))
 
 
 class UserTwoFactorOverview(Page):
@@ -529,6 +537,7 @@ class UserTwoFactorOverview(Page):
         html.close_div()
         html.footer()
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),
@@ -704,6 +713,7 @@ class UserTwoFactorEnforce(Page):
         html.close_div()
         html.footer()
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),
@@ -868,6 +878,7 @@ class RegisterTotpSecret(Page):
             html.hidden_fields()
         html.footer()
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),
@@ -980,6 +991,7 @@ class EditCredentialAlias(Page):
             html.hidden_fields()
         html.footer()
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),
@@ -1030,6 +1042,7 @@ class EditCredentialAlias(Page):
 
 
 class JsonPage(Page, abc.ABC):
+    @override
     def handle_page(self, config: Config) -> None:
         try:
             response.set_content_type("application/json")
@@ -1065,6 +1078,7 @@ def _serialize_webauthn_state(state: dict) -> WebAuthnActionState:
 
 
 class UserWebAuthnRegisterBegin(JsonPage):
+    @override
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
@@ -1093,6 +1107,7 @@ class UserWebAuthnRegisterBegin(JsonPage):
 
 
 class UserWebAuthnRegisterComplete(JsonPage):
+    @override
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
@@ -1344,6 +1359,7 @@ class UserLoginTwoFactor(Page):
                 )
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
+    @override
     def page(self, config: Config) -> None:
         assert user.id is not None
 
@@ -1409,6 +1425,7 @@ class UserLoginTwoFactor(Page):
 
 
 class UserWebAuthnLoginBegin(JsonPage):
+    @override
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
@@ -1428,6 +1445,7 @@ class UserWebAuthnLoginBegin(JsonPage):
 
 
 class UserWebAuthnLoginComplete(JsonPage):
+    @override
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 

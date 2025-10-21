@@ -271,6 +271,11 @@ no roll back (yet). Files already updated stay updated. The file that caused the
 conflict will contain merge indicators (>>>>>> and <<<<<<). The version will not
 be switched.
 
+.B --conflict=ignore
+In case of a merge conflict install the default file of the target version and
+drop your changes. Moreover, `omd` will ignore every conflict, that arises during
+site verification.
+
 .B --conflict=ask
 This is the default behaviour of interactive conflict resolution.
 

@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="mutable-override"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 
 """Wrapper from marshmallow based NetApp-Python-Library pydantic Checkmk-NetApp-Protocol
 There is no real logic in here, just filtering, type hinting, validating, restructuring.

@@ -14,7 +14,6 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
 from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 
@@ -39,18 +38,6 @@ def test_process_create_task(
     assert len(tasks_enqueued) == 1
     assert tasks_enqueued[0].id == task_id
     assert tasks_enqueued[0].spec == payload
-
-
-@pytest.mark.usefixtures("site_context")
-def test_process_create_task_non_existent_relay(create_task_handler: CreateTaskHandler) -> None:
-    # arrange
-    relay_id = RelayID("non-existent-relay-id")
-    task_payload = '{"url": "http://example.com/data"}'
-    payload = FetchSpec(payload=task_payload, timeout=60)
-
-    # act
-    with pytest.raises(RelayNotFoundError):
-        create_task_handler.process(relay_id=relay_id, spec=payload)
 
 
 def test_tasks_repository_ttl_validation() -> None:

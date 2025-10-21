@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 """
 This module implements generic functionality of the Checkmk backup
 system. It is used to configure the site and system backup.
@@ -296,7 +298,7 @@ class MKBackupJob(abc.ABC):
 
     def state(self) -> JobState:
         try:
-            state = JobState.parse_file(self.state_file_path())
+            state = JobState.model_validate_json(self.state_file_path().read_text())
         except FileNotFoundError:
             state = JobState(
                 state=None,

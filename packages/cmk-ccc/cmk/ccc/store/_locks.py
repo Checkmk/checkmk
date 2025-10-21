@@ -6,6 +6,8 @@
 functionality is the locked file opening realized with the File() context
 manager."""
 
+# mypy: disable-error-code="comparison-overlap"
+
 import errno
 import fcntl
 import logging

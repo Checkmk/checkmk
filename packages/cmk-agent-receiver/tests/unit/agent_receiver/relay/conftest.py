@@ -81,14 +81,14 @@ def create_relay_mock_transport() -> httpx.MockTransport:
     return httpx.MockTransport(handler)
 
 
-def create_test_relays_repository() -> RelaysRepository:
+def create_test_relays_repository(helper_config_dir: Path) -> RelaysRepository:
     """Create a RelaysRepository configured with mock transport for testing."""
     client = httpx.Client(
         base_url="http://test.com/test/check_mk/api/1.0",
         headers={"Content-Type": "application/json"},
         transport=create_relay_mock_transport(),
     )
-    return RelaysRepository(client, siteid="test-site")
+    return RelaysRepository(client, siteid="test-site", helper_config_dir=helper_config_dir)
 
 
 @pytest.fixture
@@ -110,9 +110,9 @@ def test_user() -> UserAuth:
 
 
 @pytest.fixture()
-def relays_repository() -> Iterator[RelaysRepository]:
+def relays_repository(site_context: Config) -> Iterator[RelaysRepository]:
     """Provides a RelaysRepository with mock transport for testing."""
-    repository = create_test_relays_repository()
+    repository = create_test_relays_repository(site_context.helper_config_dir)
     yield repository
 
 
@@ -140,43 +140,33 @@ def unregister_relay_handler(
 
 
 @pytest.fixture()
-def create_task_handler(
-    tasks_repository: TasksRepository, relays_repository: RelaysRepository
-) -> Iterator[CreateTaskHandler]:
+def create_task_handler(tasks_repository: TasksRepository) -> Iterator[CreateTaskHandler]:
     """Provides a CreateTaskHandler with mock dependencies."""
-    handler = CreateTaskHandler(
-        tasks_repository=tasks_repository, relays_repository=relays_repository
-    )
+    handler = CreateTaskHandler(tasks_repository=tasks_repository)
     yield handler
 
 
 @pytest.fixture()
-def update_task_handler(
-    tasks_repository: TasksRepository, relays_repository: RelaysRepository
-) -> Iterator[UpdateTaskHandler]:
+def update_task_handler(tasks_repository: TasksRepository) -> Iterator[UpdateTaskHandler]:
     """Provides an UpdateTaskHandler with mock dependencies."""
-    handler = UpdateTaskHandler(
-        tasks_repository=tasks_repository, relays_repository=relays_repository
-    )
+    handler = UpdateTaskHandler(tasks_repository=tasks_repository)
     yield handler
 
 
 @pytest.fixture()
-def get_task_handler(
-    tasks_repository: TasksRepository, relays_repository: RelaysRepository
-) -> Iterator[GetRelayTaskHandler]:
-    handler = GetRelayTaskHandler(
-        tasks_repository=tasks_repository, relay_repository=relays_repository
-    )
+def get_task_handler(tasks_repository: TasksRepository) -> Iterator[GetRelayTaskHandler]:
+    handler = GetRelayTaskHandler(tasks_repository=tasks_repository)
     yield handler
 
 
 @pytest.fixture()
 def get_tasks_handler(
-    tasks_repository: TasksRepository, relays_repository: RelaysRepository
+    tasks_repository: TasksRepository,
+    config_task_factory: ConfigTaskFactory,
 ) -> Iterator[GetRelayTasksHandler]:
     handler = GetRelayTasksHandler(
-        tasks_repository=tasks_repository, relay_repository=relays_repository
+        tasks_repository=tasks_repository,
+        config_task_factory=config_task_factory,
     )
     yield handler
 

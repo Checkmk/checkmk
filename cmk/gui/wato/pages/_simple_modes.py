@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """These modes implement a complete set of modes for managing a set of standard objects
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 Together with WatoSimpleConfigFile() as store class this implements
 
 a) A list mode where all objects are shown. All objects can be deleted here.
@@ -679,7 +682,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     def _update_entry_from_vars(self) -> None:
         render_mode, form_spec = self._get_render_mode()
         match render_mode:
-            case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
+            case RenderMode.FRONTEND:
                 assert form_spec is not None
                 self._update_entry_from_vars_form_spec(form_spec)
             case RenderMode.BACKEND:

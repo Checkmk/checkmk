@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checker to prevent disallowed imports of modules"""
 
+# mypy: disable-error-code="misc"
+
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
@@ -139,7 +141,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.version",  # edition detection
         "cmk.ccc.hostaddress",  # FormSpec validation
         "cmk.plugins.lib",  # ?
-        "cmk.plugins.lib.azure_app_gateway",  # FIXME
         "cmk.plugins.lib.azure",  # FIXME
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
@@ -149,8 +150,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.version",  # edition detection
         "cmk.ccc.hostaddress",  # FormSpec validation
         "cmk.plugins.lib",  # ?
-        "cmk.plugins.lib.azure_app_gateway",  # FIXME
-        "cmk.plugins.lib.azure",  # FIXME
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
@@ -248,6 +247,8 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.gui.form_specs.unstable",
         "cmk.otel_collector",
         "cmk.shared_typing.vue_formspec_components",
+        "cmk.metric_backend",
+        "cmk.utils.paths",
     ),
     "redfish": (
         "cmk.plugins.lib.elphase",
@@ -275,6 +276,7 @@ PACKAGE_PLUGIN_APIS = (
     "cmk.bakery.v2_alpha",
     "cmk.graphing.v1",
     "cmk.inventory_ui.v1_alpha",
+    "cmk.password_store.v1_alpha",
     "cmk.rulesets.v1",
     "cmk.server_side_calls.v1",
     "cmk.server_side_calls.alpha",
@@ -291,6 +293,10 @@ PACKAGE_WERKS = ("cmk.werks",)
 PACKAGE_CRYPTO = ("cmk.crypto",)
 
 PACKAGE_TRACE = ("cmk.trace",)
+
+PACKAGE_METRIC_BACKEND = ("cmk.metric_backend",)
+
+PACKAGE_RELAY_PROTOCOLS = ("cmk.relay_protocols",)
 
 CLEAN_UTILS_MODULES = (
     "agent_registration",
@@ -351,7 +357,6 @@ CROSS_DEPENDING_UTILS_MODULES = (
     "msi_engine",
     "msi_patch",
     "observer",
-    "password_store",
     "paths",
     "redis",
     "render",
@@ -373,6 +378,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.helper_interface",
         "cmk.utils.check_utils",
         "cmk.utils.config_warnings",
+        "cmk.utils.http_proxy_config",
         "cmk.utils.ip_lookup",
         "cmk.utils.labels",
         "cmk.utils.notify_types",
@@ -411,8 +417,36 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.helper_interface",
         "cmk.utils",
     ),
+    Component("cmk.base.config"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_TRACE,
+        "cmk.automations",
+        "cmk.base.default_config",
+        "cmk.base.configlib",
+        "cmk.base.parent_scan",
+        "cmk.base.snmp_plugin_store",
+        "cmk.base.sources",
+        "cmk.cee.bakery",
+        "cmk.fetcher_helper",
+        "cmk.checkengine",
+        "cmk.discover_plugins",
+        "cmk.ec",
+        "cmk.events",
+        "cmk.fetchers",
+        "cmk.helper_interface",
+        "cmk.inventory",
+        "cmk.piggyback",
+        "cmk.plugins.otel.special_agents.cce.agent_otel",
+        "cmk.relay_fetcher_trigger",
+        "cmk.rrd",
+        "cmk.server_side_calls_backend",
+        "cmk.snmplib",
+        "cmk.utils",
+    ),
     Component("cmk.base.core.cee"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_RELAY_PROTOCOLS,
         "cmk.base.cee",
         "cmk.base.config",
         "cmk.base.core",
@@ -521,8 +555,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.fetchers"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
+        *PACKAGE_RELAY_PROTOCOLS,
         "cmk.helper_interface",
-        "cmk.relay_protocols",
         "cmk.snmplib",
     ),
     Component("cmk.fields"): _allow(*PACKAGE_CCC),
@@ -595,6 +629,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.gui.cce"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_METRIC_BACKEND,
         "cmk.cce.metric_backend.gui",
         "cmk.checkengine",
         "cmk.cee.robotmk.gui",
@@ -602,6 +637,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui",
         "cmk.otel_collector",
         "cmk.shared_typing",
+        "cmk.utils.certs",
         "cmk.utils.agent_registration",
         "cmk.utils.cee",
         "cmk.utils.config_warnings",
@@ -861,6 +897,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         "cmk.utils.log",
     ),
+    Component("cmk.utils.password_store"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.utils.paths",
+        "cmk.utils.global_ident_type",
+    ),
     Component("cmk.utils.prediction"): _allow(
         *PACKAGE_CCC,
         "cmk.agent_based.prediction_backend",
@@ -910,6 +952,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
             *PACKAGE_CCC,
             *PACKAGE_CRYPTO,
             *(f"cmk.utils.{m}" for m in CROSS_DEPENDING_UTILS_MODULES),
+            "cmk.utils.password_store",
         )
         for module in CROSS_DEPENDING_UTILS_MODULES
     },
@@ -921,16 +964,17 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.otel_collector",
     ),
     Component("cmk.cce.metric_backend.dcd"): _allow(
+        *PACKAGE_METRIC_BACKEND,
         "cmk.ccc",
         "cmk.cee.dcd",
         "cmk.utils",
     ),
     Component("cmk.cce.metric_backend.gui"): _allow(
         *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_METRIC_BACKEND,
         "cmk.ccc",
         "cmk.fields",
         "cmk.gui",
-        "cmk.metric_backend",
         "cmk.utils",
     ),
     Component("omdlib"): _allow(
@@ -961,6 +1005,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         "cmk.utils.cee.licensing",
         "cmk.utils.paths",
+    ),
+    Component("tests.integration.cce.metric_backend"): _allow(
+        *PACKAGE_METRIC_BACKEND,
     ),
     Component("tests.integration.cmk.base"): _allow(
         *PACKAGE_CCC,
@@ -1001,6 +1048,10 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         "cmk.otel_collector.constants",
     ),
+    Component("tests.integration.relay"): _allow(
+        *PACKAGE_RELAY_PROTOCOLS,
+        "cmk.agent_receiver.certs",
+    ),
     Component("tests.integration"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MKP_TOOL,
@@ -1023,22 +1074,23 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("tests.unit.cmk.fetchers"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_RELAY_PROTOCOLS,
         "cmk.agent_based",
         "cmk.checkengine",
         "cmk.fetchers",
         "cmk.inline_snmp",
         "cmk.helper_interface",
-        "cmk.relay_protocols",
         "cmk.relay_fetcher_trigger",
         "cmk.snmplib",
         "cmk.utils",
     ),
     Component("tests.unit.cmk"): _allow(
         *PACKAGE_CCC,
-        *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CRYPTO,
         *PACKAGE_MESSAGING,
         *PACKAGE_MKP_TOOL,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_RELAY_PROTOCOLS,
         *PACKAGE_TRACE,
         *PACKAGE_WERKS,
         "cmk.automations",
@@ -1095,31 +1147,32 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
 }
 
 _EXPLICIT_FILE_TO_COMPONENT = {
-    ModulePath("web/app/index.wsgi"): Component("cmk.gui"),
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-automation-helper"): Component("cmk.base"),
     ModulePath("bin/cmk-cert"): Component("cmk.cmkcert"),
-    ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
+    ModulePath("bin/cmk-convert-rrds"): Component("cmk.rrd"),
+    ModulePath("bin/cmk-create-rrd"): Component("cmk.rrd"),
+    ModulePath("bin/cmk-migrate-extension-rulesets"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-migrate-http"): Component("cmk.update_config"),
     ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
     ModulePath("bin/cmk-ui-job-scheduler"): Component("cmk.gui"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
-    ModulePath("bin/cmk-migrate-http"): Component("cmk.update_config"),
-    ModulePath("bin/cmk-migrate-extension-rulesets"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
-    ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
-    ModulePath("bin/cmk-convert-rrds"): Component("cmk.rrd"),
-    ModulePath("bin/cmk-create-rrd"): Component("cmk.rrd"),
+    ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("cmk/active_checks/check_cmk_inv.py"): Component("cmk.base"),
     ModulePath("omd/packages/appliance/webconf_snapin.py"): Component("cmk.gui"),
-    ModulePath("omd/packages/enterprise/bin/cmk-dcd"): Component("cmk.cee.dcd"),
-    ModulePath("omd/packages/enterprise/bin/dcd"): Component("cmk.cee.dcd"),
+    ModulePath("omd/non-free/packages/cmk-dcd/cmk-dcd.py"): Component("cmk.cee.dcd"),
+    ModulePath("omd/non-free/packages/cmk-dcd/dcd.py"): Component("cmk.cee.dcd"),
     ModulePath("omd/packages/enterprise/bin/fetch-ad-hoc"): Component("cmk.fetcher_helper"),
     ModulePath("omd/packages/enterprise/bin/fetcher"): Component("cmk.fetcher_helper"),
-    ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
+    ModulePath("omd/non-free/packages/cmk-liveproxyd/liveproxyd.py"): Component(
+        "cmk.cee.liveproxy"
+    ),
     ModulePath("omd/packages/enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("omd/packages/maintenance/diskspace.py"): Component("cmk.diskspace"),
+    ModulePath("web/app/index.wsgi"): Component("cmk.gui"),
     # Notification plugins
     ModulePath("notifications/asciimail"): Component("cmk.notification_plugins"),
     ModulePath("notifications/cisco_webex_teams"): Component("cmk.notification_plugins"),
@@ -1178,7 +1231,7 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
     ModulePath("buildscripts/scripts/unpublish-container-image.py"): _allow(*PACKAGE_CCC),
     ModulePath("buildscripts/scripts/lib/registry.py"): _allow(*PACKAGE_CCC),
     ModulePath("omd/packages/check_mk/post-create/01_create-sample-config.py"): _allow(),
-    ModulePath("omd/packages/enterprise/bin/cmk-license-email-notification"): _allow(
+    ModulePath("omd/non-free/packages/licensing/cmk-license-email-notification.py"): _allow(
         "cmk.utils.cee.licensing"
     ),
 }

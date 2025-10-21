@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import os
 import re
 from itertools import repeat
@@ -52,8 +56,6 @@ def expected_output_engine():
     return repeat(re_str)
 
 
-def test_section_winperf(  # type: ignore[no-untyped-def]
-    request, testconfig, expected_output, actual_output, testfile
-) -> None:
+def test_section_winperf(request, testconfig, expected_output, actual_output, testfile) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

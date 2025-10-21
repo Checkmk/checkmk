@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 import copy
 import os
 import sys
@@ -242,7 +247,7 @@ def make_config_object(raw_config: dict[str, Any]) -> Config:
             bases=(Config,),
         )
 
-    return cls(**raw_config)  # type: ignore[no-any-return]
+    return cls(**raw_config)
 
 
 def execute_post_config_load_hooks(config: Config) -> None:

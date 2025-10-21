@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for automatic scan of parents."""
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Collection
 from dataclasses import dataclass
 from typing import cast, Literal, override

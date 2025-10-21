@@ -6,8 +6,9 @@
 from collections.abc import Callable
 
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenuTopic
 from cmk.gui.pages import PageRegistry
-from cmk.gui.type_defs import MainMenuTopic
+from cmk.gui.utils.roles import UserPermissions
 
 from . import async_replication, change_password, edit_profile, main_menu, replicate, two_factor
 
@@ -15,7 +16,7 @@ from . import async_replication, change_password, edit_profile, main_menu, repli
 def register(
     page_registry: PageRegistry,
     main_menu_registry: MainMenuRegistry,
-    user_menu_topics: Callable[[], list[MainMenuTopic]],
+    user_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
     main_menu.register(page_registry, main_menu_registry, user_menu_topics)
     two_factor.register(page_registry)

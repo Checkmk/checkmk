@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Iterator
 
 import cmk.utils.paths
@@ -16,6 +19,7 @@ from cmk.gui.i18n import _
 from cmk.gui.inventory import get_raw_status_data_via_livestatus, load_latest_delta_tree, load_tree
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import (
+    AllViewSpecs,
     HTTPVariables,
     PermittedViewSpecs,
     Rows,
@@ -23,8 +27,9 @@ from cmk.gui.type_defs import (
     Visual,
     VisualContext,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Hostname
-from cmk.gui.views.store import get_permitted_views
+from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.visuals.type import VisualType
 from cmk.inventory.structured_data import (
     HistoryStore,
@@ -61,7 +66,9 @@ class VisualTypeViews(VisualType):
     def show_url(self) -> str:
         return "view.py"
 
-    def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
+    def page_menu_add_to_entries(
+        self, add_type: str, user_permissions: UserPermissions
+    ) -> Iterator[PageMenuEntry]:
         return iter(())
 
     def add_visual_handler(
@@ -70,14 +77,16 @@ class VisualTypeViews(VisualType):
         add_type: str,
         context: VisualContext | None,
         parameters: dict,
+        user_permissions: UserPermissions,
     ) -> None:
         return None
 
-    def load_handler(self) -> None:
-        pass
+    def visuals(self) -> AllViewSpecs:
+        return get_all_views()
 
-    @property
-    def permitted_visuals(self) -> PermittedViewSpecs:
+    def permitted_visuals(
+        self, visuals: AllViewSpecs, user_permissions: UserPermissions
+    ) -> PermittedViewSpecs:
         return get_permitted_views()
 
     def link_from(

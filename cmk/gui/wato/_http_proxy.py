@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import urllib.parse
 from collections.abc import Iterable
 from typing import get_args, Literal
@@ -10,13 +12,18 @@ from typing import get_args, Literal
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,
+    Dictionary,
     DropdownChoice,
     DropdownChoiceEntries,
     FixedValue,
-    Url,
+    NetworkPort,
+    TextInput,
     ValueSpec,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.password_store import (
+    postprocessable_ios_password,
+)
 
 _Schemes = Literal["http", "https", "socks4", "socks4a", "socks5", "socks5h"]
 _allowed_schemes = frozenset(get_args(_Schemes))
@@ -77,10 +84,37 @@ def HTTPProxyReference(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -
     )
 
 
-def HTTPProxyInput(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -> Url:
-    """Use this valuespec in case you want the user to input a HTTP proxy setting"""
-    return Url(
-        title=_("Proxy URL"),
-        default_scheme="http",
-        allowed_schemes=[str(s) for s in allowed_schemes],
+def HTTPProxyInput(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -> Dictionary:
+    return Dictionary(
+        required_keys=["scheme", "proxy_server_name", "port"],
+        title=_("Proxy"),
+        elements=[
+            (
+                "scheme",
+                DropdownChoice(
+                    title=_("Scheme"),
+                    choices=[(scheme, scheme) for scheme in allowed_schemes],
+                    default_value="http",
+                ),
+            ),
+            (
+                "proxy_server_name",
+                TextInput(title=_("Proxy server name or IP address")),
+            ),
+            (
+                "port",
+                NetworkPort(title=_("Port")),
+            ),
+            (
+                "auth",
+                Dictionary(
+                    required_keys=["user", "password"],
+                    title=_("Authentication for proxy required"),
+                    elements=[
+                        ("user", TextInput(title=_("Username"))),
+                        ("password", postprocessable_ios_password(title=_("Password"))),
+                    ],
+                ),
+            ),
+        ],
     )

@@ -9,4 +9,4 @@ from .pages import PageUnifiedSearch
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_unified_search", PageUnifiedSearch))
+    page_registry.register(PageEndpoint("ajax_unified_search", PageUnifiedSearch()))

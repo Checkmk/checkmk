@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plug-ins"""
 
+# mypy: disable-error-code="redundant-expr"
+
 from __future__ import annotations
 
 import enum
@@ -408,7 +410,7 @@ class Result(_ResultTuple):
         cls,
         **kwargs,
     ) -> Result:
-        state, summary, details = _create_result_fields(**kwargs)  # type: ignore[misc]
+        state, summary, details = _create_result_fields(**kwargs)
         return super().__new__(
             cls,
             state=state,

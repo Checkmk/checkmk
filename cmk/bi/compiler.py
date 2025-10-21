@@ -280,19 +280,21 @@ class BICompiler:
             aggregation.node.restrict_rule_title = None
 
     def _compilation_required(self, current_configstatus: ConfigStatus) -> bool:
-        # Check monitoring core changes
-        if self._site_status_changed(current_configstatus["online_sites"]):
-            return True
-
         # Check BI configuration changes
         last_compilation = self._metadata_store.get_last_compilation()
-        return current_configstatus["configfile_timestamp"] > last_compilation
+        if current_configstatus["configfile_timestamp"] > last_compilation:
+            return True
 
-    def _site_status_changed(self, required_program_starts: set[SiteProgramStart]) -> bool:
-        # The cached data may include more data than the currently required_program_starts
-        # Empty branches are simply not shown during computation
+        # Check monitoring core changes as the cached data may include more data than the currently
+        # required_program_starts. Empty branches are simply not shown during computation
         cached_program_starts = self._bi_structure_fetcher.get_cached_program_starts()
-        return len(required_program_starts - cached_program_starts) > 0
+        required_program_starts = current_configstatus["online_sites"]
+
+        if differing_program_starts := required_program_starts - cached_program_starts:
+            differing_site_ids = ", ".join(site_id for site_id, _ in differing_program_starts)
+            _LOGGER.debug(f"Detected restarts for the following site ids: {differing_site_ids}")
+
+        return bool(differing_program_starts)
 
     def compute_current_configstatus(self) -> ConfigStatus:
         current_configstatus: ConfigStatus = {

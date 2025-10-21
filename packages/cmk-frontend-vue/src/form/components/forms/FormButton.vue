@@ -6,10 +6,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 
 export interface FormButtonProps {
-  icon?: string | null
+  icon?: SimpleIcons | null
 }
 const buttonRef = ref<HTMLButtonElement | null>(null)
 

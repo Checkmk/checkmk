@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import atexit
 import json
 import os
@@ -43,7 +46,7 @@ if cassette:
 
         # Configure VCR with settings from pytest fixtures
         print(f"Creating VCR with config: {vcr_config}", file=sys.stderr, flush=True)
-        myvcr = vcr.VCR(**vcr_config)
+        myvcr = vcr.VCR(**vcr_config)  # type: ignore[attr-defined]
 
         ctx = myvcr.use_cassette(str(cassette_path))
 

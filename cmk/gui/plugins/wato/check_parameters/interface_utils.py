@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for interface check parameter module internals"""
 
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import PredictiveLevels
 from cmk.gui.valuespec import CascadingDropdown, Integer, Migrate, Percentage, Tuple, ValueSpec

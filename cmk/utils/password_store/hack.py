@@ -5,6 +5,8 @@
 """This consolidates the hack that we currently use to make plugins
 password store compatible.
 
+# mypy: disable-error-code="redundant-expr"
+
 We are working towards a more staight forward solution.
 """
 
@@ -80,6 +82,7 @@ HACK_AGENTS = {
     "ruckus_spot": True,
     "kube": True,
     "otel": False,  # needs no secret
+    "metric_backend_custom_query": False,  # needs no secret
 }
 
 

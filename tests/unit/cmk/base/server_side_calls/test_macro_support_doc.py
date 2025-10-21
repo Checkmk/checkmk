@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Test documentation of supported macros in server side calls
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+
 These tests are a single point of truth about supported macros
 in active check and special agent SSC plugins.
 """

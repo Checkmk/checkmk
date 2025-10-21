@@ -3,9 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { Ref } from 'vue'
 
-import type { components } from '@/lib/rest-api-client/openapi_internal'
+import type { SimpleIcons } from '@/components/CmkIcon'
 
 import type {
   EffectiveWidgetFilterContext,
@@ -23,7 +24,7 @@ export interface FilterItem extends LabelValueItem {
 }
 
 export interface ActionButtonIcon extends QuickSetupStageActionIcon {
-  name: string
+  name: SimpleIcons
   side: 'left' | 'right'
   rotate?: number | undefined
 }
@@ -35,11 +36,11 @@ export interface HostServiceContext {
   service?: { service: string }
 }
 
-export interface UseValidable {
+export interface UseValidate {
   validate: () => boolean
 }
 
-export interface UseWidgetHandler extends UseValidable {
+export interface UseWidgetHandler extends UseValidate {
   widgetProps: Ref<WidgetProps>
 }
 export interface WidgetProps {
@@ -64,6 +65,7 @@ export type WidgetFiltersType = {
 }
 
 export type WidgetContentType =
+  | InventoryContent
   | BarplotContent
   | GaugeContent
   | GraphContent
@@ -74,6 +76,13 @@ export type WidgetContentType =
   | HostStateSummaryContent
   | HostStatisticsContent
   | SiteOverviewContent
+  | ServiceStateContent
+  | ServiceStateSummaryContent
+  | ServiceStatisticsContent
+  | CombinedGraphContent
+  | PerformanceGraphContent
+
+export type InventoryContent = components['schemas']['InventoryContent']
 
 export type MetricDisplayRangeModel = components['schemas']['MetricDisplayRangeModel']
 export type FixedDataRangeModel = components['schemas']['MetricDisplayRangeFixedModel']
@@ -87,8 +96,16 @@ export type HostStateContent = components['schemas']['HostStateContent']
 export type HostStateSummaryContent = components['schemas']['HostStateSummaryContent']
 export type HostStatisticsContent = components['schemas']['HostStatsContent']
 export type SiteOverviewContent = components['schemas']['SiteOverviewContent']
+export type ServiceStateContent = components['schemas']['ServiceStateContent']
+export type ServiceStateSummaryContent = components['schemas']['ServiceStateSummaryContent']
+export type ServiceState = components['schemas']['MonitoringState']
+export type ServiceStatisticsContent = components['schemas']['ServiceStatsContent']
+export type CombinedGraphContent = components['schemas']['CombinedGraphContent']
+export type PerformanceGraphContent = components['schemas']['PerformanceGraphContent']
 
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']
 export type GraphRenderOptions = components['schemas']['GraphRenderOptions']
 export type HostState = components['schemas']['HostState']
+export type CombinedGraphContentPresentation =
+  components['schemas']['CombinedGraphContent']['presentation']

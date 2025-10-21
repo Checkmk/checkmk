@@ -212,7 +212,7 @@ If you want to execute the full test suite, you can do this by executing these c
 $ make -C tests test-ruff
 $ make -C tests test-bandit
 $ make -C tests test-unit
-$ make -C tests test-format-python
+$ make -C tests test-format
 $ make -C tests test-mypy-raw
 ```
 
@@ -482,7 +482,7 @@ def worst_service_state(*states: int, default: int) -> int:
 ### Automatic formatting/sorting with ruff
 
 The `ruff` configuration file(s), `pyproject.toml`, live in the corresponding directories of the project repository, where `ruff` will pick it up automatically.
-`ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`, you can run it with `make format-python`.
+`ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`, you can run it with `make format`.
 
 This make target will then format your codebase as well as sort the import statements.
 
@@ -506,7 +506,7 @@ $ ruff check --fix [the_file.py]
 Our CI executes `ruff` formatting/sorting test on the whole codebase:
 
 ```console
-$ make -C tests test-format-python
+$ make -C tests test-format
 ```
 
 Our review tests jobs prevent un-formatted code from being added to the repository.

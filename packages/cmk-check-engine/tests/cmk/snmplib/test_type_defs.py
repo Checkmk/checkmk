@@ -81,7 +81,7 @@ class TestSNMPHostConfig:
 
 class TestSNMPDetectSpec:
     @pytest.fixture
-    def specs(self):
+    def specs(self) -> SNMPDetectSpec:
         return SNMPDetectSpec(
             [
                 [

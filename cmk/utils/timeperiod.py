@@ -3,22 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+# mypy: disable-error-code="exhaustive-match"
+
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
-from typing import NewType, NotRequired, TypeAlias, TypedDict, TypeGuard
+from typing import NewType, NotRequired, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
 
-import livestatus
-
-import cmk.ccc.cleanup
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.i18n import _
-from cmk.ccc.store import load_from_mk_file
-from cmk.utils.caching import cache_manager
 from cmk.utils.dateutils import Weekday, weekday_ids
-from cmk.utils.paths import check_mk_config_dir
 
 __all__ = [
     "TimeperiodName",
@@ -28,7 +22,7 @@ __all__ = [
 ]
 
 TimeperiodName = NewType("TimeperiodName", str)
-DayTimeFrame: TypeAlias = tuple[str, str]
+type DayTimeFrame = tuple[str, str]
 
 
 # TODO: in python 3.13 we may be able to add support for the
@@ -54,19 +48,52 @@ class TimeperiodSpec(TypedDict):
 TimeperiodSpecs = Mapping[TimeperiodName, TimeperiodSpec]
 
 
-def add_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
-    return {**timeperiods, **_builtin_timeperiods()}
+def get_all_timeperiods(raw_configured_timeperiods: object) -> TimeperiodSpecs:
+    return {
+        **_parse_configured_timeperiods(raw_configured_timeperiods),
+        **builtin_timeperiods(),
+    }
+
+
+def _parse_configured_timeperiods(raw: object) -> TimeperiodSpecs:
+    if not isinstance(raw, Mapping):
+        raise TypeError(f"Error parsing configured timeperiods: {raw!r}")
+
+    # This is easier once all keys are mandatory...
+    return {
+        TimeperiodName(raw_name): TimeperiodSpec(
+            alias=str(raw_spec["alias"]),
+            **{  # type: ignore[typeddict-item]
+                k: [_parse_daytimeframe(t) for t in v]
+                for k, v in raw_spec.items()
+                if k not in ("alias", "exclude")
+            },
+            **(
+                {"exclude": [TimeperiodName(e) for e in raw_spec["exclude"]]}
+                if "exclude" in raw_spec
+                else {}
+            ),
+        )
+        for raw_name, raw_spec in raw.items()
+    }
+
+
+def _parse_daytimeframe(value: object) -> DayTimeFrame:
+    match value:
+        case (start, end):
+            return (str(start), str(end))
+    raise TypeError(f"Error parsing DayTimeFrame: {value!r}")
 
 
 def remove_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
-    return {k: timeperiods[k] for k in timeperiods.keys() - _builtin_timeperiods().keys()}
+    return {k: timeperiods[k] for k in timeperiods.keys() - builtin_timeperiods().keys()}
 
 
 def is_builtin_timeperiod(name: TimeperiodName) -> bool:
-    return name in _builtin_timeperiods()
+    return name in builtin_timeperiods()
 
 
-def _builtin_timeperiods() -> TimeperiodSpecs:
+def builtin_timeperiods() -> TimeperiodSpecs:
     return {
         TimeperiodName("24X7"): TimeperiodSpec(
             alias=_("Always"),
@@ -79,15 +106,6 @@ def _builtin_timeperiods() -> TimeperiodSpecs:
             sunday=[("00:00", "24:00")],
         )
     }
-
-
-# NOTE: This is a variation of cmk.gui.watolib.timeperiods.load_timeperiods(). Can we somehow unify this?
-def load_timeperiods() -> TimeperiodSpecs:
-    return add_builtin_timeperiods(
-        load_from_mk_file(
-            check_mk_config_dir / "wato/timeperiods.mk", key="timeperiods", default={}, lock=False
-        )
-    )
 
 
 def _is_time_range(obj: object) -> TypeGuard[DayTimeFrame]:
@@ -107,59 +125,43 @@ def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = "") ->
     raise Exception(f"invalid timeperiod alias {alias!r}")
 
 
-def check_timeperiod(timeperiod: TimeperiodName) -> bool:
-    """Check if a time period is currently active. We have no other way than
-    doing a Livestatus query. This is not really nice, but if you have a better
-    idea, please tell me..."""
-    # Let exceptions happen, they will be handled upstream.
-    try:
-        update_timeperiods_cache()
-    except MKTimeout:
-        raise
-
-    except Exception:
-        if cmk.ccc.debug.enabled():
-            raise
-
-        # If the query is not successful better skip this check then fail
-        return True
-
-    # Note: This also returns True when the time period is unknown
-    #       The following function time period_active handles this differently
-    return cache_manager.obtain_cache("timeperiods_cache").get(timeperiod, True)
+type _Logger = Callable[[str], object]
 
 
-def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:
-    """Returns
-    True : active
-    False: inactive
-    None : unknown timeperiod
+class TimeperiodActiveCoreLookup(Mapping[str, bool]):
+    """A mapping that queries livestatus for timeperiod states on first access.
 
-    Raises an exception if e.g. a timeout or connection error appears.
-    This way errors can be handled upstream."""
-    update_timeperiods_cache()
-    return cache_manager.obtain_cache("timeperiods_cache").get(timeperiod)
+    The response of the livestatus query is cached for the lifetime of this object.
+    """
 
+    def __init__(
+        self,
+        livestatus_access: Callable[[_Logger], Mapping[str, bool] | None],
+        log: _Logger,
+    ) -> None:
+        self._livestatus_access = livestatus_access
+        self._log = log
+        self.__core_response: Mapping[str, bool] | None = None
 
-def update_timeperiods_cache() -> None:
-    # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
-    # The value is store within the config cache since we need a fresh start on reload
-    tp_cache: dict[TimeperiodName, bool] = cache_manager.obtain_cache("timeperiods_cache")
+    @property
+    def _core_response(self) -> Mapping[str, bool]:
+        if self.__core_response is not None:
+            return self.__core_response
 
-    if not tp_cache:
-        tp_cache.update(
-            {
-                TimeperiodName(k): v
-                for k, v in livestatus.get_timeperiods_active_map(timeout=2).items()
-            }
-        )
+        if (response := self._livestatus_access(self._log)) is None:
+            return {}
 
+        self.__core_response = response
+        return self.__core_response
 
-def cleanup_timeperiod_caches() -> None:
-    cache_manager.obtain_cache("timeperiods_cache").clear()
+    def __getitem__(self, key: str) -> bool:
+        return self._core_response.__getitem__(key)
 
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._core_response)
 
-cmk.ccc.cleanup.register_cleanup(cleanup_timeperiod_caches)
+    def __len__(self) -> int:
+        return len(self._core_response)
 
 
 def _is_time_in_timeperiod(
@@ -191,15 +193,7 @@ def is_timeperiod_active(
     ):
         return False
 
-    days: list[Weekday] = [
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday",
-    ]
+    days = weekday_ids()
     current_datetime = datetime.fromtimestamp(timestamp, tzlocal())
     if _is_timeperiod_active_via_exception(
         timeperiod_definition,

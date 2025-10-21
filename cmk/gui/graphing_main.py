@@ -28,21 +28,20 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.config import Config
-from cmk.gui.graphing import _legacy as graphing_legacy
-from cmk.gui.graphing import metric_backend_registry
-from cmk.gui.graphing._from_api import (
+from cmk.gui.graphing import (
+    check_metrics,
+    CheckMetricEntry,
+    get_temperature_unit,
+    GraphRenderConfig,
     graphs_from_api,
-    metrics_from_api,
-    parse_metric_from_api,
-    perfometers_from_api,
-)
-from cmk.gui.graphing._graph_render_config import GraphRenderConfig
-from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
-from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
+    metric_backend_registry,
+    metrics_from_api,
+    parse_metric_from_api,
+    parse_raw_graph_specification,
+    perfometers_from_api,
 )
-from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
@@ -132,7 +131,7 @@ def _parse_translation(
     translation: (
         translations_api.RenameTo | translations_api.ScaleBy | translations_api.RenameToAndScaleBy
     ),
-) -> graphing_legacy.CheckMetricEntry:
+) -> CheckMetricEntry:
     match translation:
         case translations_api.RenameTo():
             return {"name": translation.metric_name}
@@ -159,7 +158,7 @@ def _add_graphing_plugins(
 
         elif isinstance(plugin, translations_api.Translation):
             for check_command in plugin.check_commands:
-                graphing_legacy.check_metrics[_parse_check_command_from_api(check_command)] = {
+                check_metrics[_parse_check_command_from_api(check_command)] = {
                     MetricName(old_name): _parse_translation(translation)
                     for old_name, translation in plugin.translations.items()
                 }

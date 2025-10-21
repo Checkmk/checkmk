@@ -4,6 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Status sidebar rendering"""
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 from __future__ import annotations
 
 import copy
@@ -12,9 +17,8 @@ import textwrap
 import traceback
 from collections.abc import Callable, Sequence
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.gui import hooks, pagetypes, sites
@@ -29,12 +33,13 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenuTopic
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry, PermissionSectionRegistry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import MainMenuTopic
 from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.userdb import load_custom_attr
 from cmk.gui.utils import load_web_plugins
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -88,26 +93,26 @@ def register(
     snapin_registry_: SnapinRegistry,
     dashlet_registry: DashletRegistry,
     main_menu_registry_: MainMenuRegistry,
-    view_menu_topics: Callable[[], list[MainMenuTopic]],
+    view_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
-    page_registry.register(PageEndpoint("sidebar_fold", AjaxFoldSnapin))
-    page_registry.register(PageEndpoint("sidebar_openclose", AjaxOpenCloseSnapin))
-    page_registry.register(PageEndpoint("sidebar_ajax_add_snapin", AjaxAddSnapin))
+    page_registry.register(PageEndpoint("sidebar_fold", AjaxFoldSnapin()))
+    page_registry.register(PageEndpoint("sidebar_openclose", AjaxOpenCloseSnapin()))
+    page_registry.register(PageEndpoint("sidebar_ajax_add_snapin", AjaxAddSnapin()))
     page_registry.register(PageEndpoint("side", page_side))
     page_registry.register(PageEndpoint("sidebar_snapin", ajax_snapin))
     page_registry.register(PageEndpoint("sidebar_move_snapin", move_snapin))
     page_registry.register(PageEndpoint("sidebar_add_snapin", page_add_snapin))
     page_registry.register(PageEndpoint("sidebar_ajax_set_snapin_site", ajax_set_snapin_site))
     page_registry.register(PageEndpoint("sidebar_message_read", ajax_message_read))
-    page_registry.register(PageEndpoint("ajax_sidebar_get_messages", PageAjaxSidebarGetMessages))
+    page_registry.register(PageEndpoint("ajax_sidebar_get_messages", PageAjaxSidebarGetMessages()))
     page_registry.register(
-        PageEndpoint("ajax_sidebar_get_unack_incomp_werks", PageAjaxSidebarGetUnackIncompWerks)
+        PageEndpoint("ajax_sidebar_get_unack_incomp_werks", PageAjaxSidebarGetUnackIncompWerks())
     )
     page_registry.register(
-        PageEndpoint("ajax_sidebar_get_number_of_pending_changes", PageAjaxSidebarChangesMenu)
+        PageEndpoint("ajax_sidebar_get_number_of_pending_changes", PageAjaxSidebarChangesMenu())
     )
     page_registry.register(
-        PageEndpoint("ajax_sidebar_get_sites_and_changes", PageAjaxSitesAndChanges)
+        PageEndpoint("ajax_sidebar_get_sites_and_changes", PageAjaxSitesAndChanges())
     )
     permission_section_registry.register(PERMISSION_SECTION_SIDEBAR_SNAPINS)
     _snapin.register(
@@ -471,11 +476,11 @@ class SidebarRenderer:
             id_="check_mk_navigation",
             class_="min" if user.get_attribute("nav_hide_icons_title") else None,
         )
-        self._show_sidebar_head(start_url)
+        self._show_sidebar_head(start_url, user_permissions)
         html.close_div()
 
         assert user.id is not None
-        sidebar_position = cmk.gui.userdb.load_custom_attr(
+        sidebar_position = load_custom_attr(
             user_id=user.id,
             key="ui_sidebar_position",
             parser=lambda x: None if x == "None" else "left",
@@ -683,7 +688,7 @@ class SidebarRenderer:
             html.write_html(content)
         html.close_div()
 
-    def _show_sidebar_head(self, start_url: str) -> None:
+    def _show_sidebar_head(self, start_url: str, user_permissions: UserPermissions) -> None:
         html.open_div(id_="side_header")
         html.open_a(
             href=user.start_url or start_url,
@@ -694,7 +699,7 @@ class SidebarRenderer:
         html.close_a()
         html.close_div()
 
-        MainMenuRenderer().show()
+        MainMenuRenderer().show(user_permissions)
 
         hooks.call("show-main-menu-bottom")
 
@@ -791,6 +796,7 @@ def ajax_snapin(config: Config) -> None:
 
 
 class AjaxFoldSnapin(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
@@ -803,6 +809,7 @@ class AjaxFoldSnapin(AjaxPage):
 
 
 class AjaxOpenCloseSnapin(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
@@ -942,6 +949,7 @@ def _used_snapins(config: Config, user_permissions: UserPermissions) -> list[Any
 
 
 class AjaxAddSnapin(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         if not user.may("general.configure_sidebar"):

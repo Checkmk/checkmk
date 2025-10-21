@@ -2,9 +2,14 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import json
 import time
-from typing import Any
+from typing import Any, override
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.computer import BIAggregationFilter
@@ -37,15 +42,15 @@ def register(
     filter_registry: FilterRegistry,
     _icon_and_action_registry: IconRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_fetch_aggregation_data", AjaxFetchAggregationData))
+    page_registry.register(PageEndpoint("ajax_fetch_aggregation_data", AjaxFetchAggregationData()))
     page_registry.register(
-        PageEndpoint("ajax_save_bi_aggregation_layout", AjaxSaveBIAggregationLayout)
+        PageEndpoint("ajax_save_bi_aggregation_layout", AjaxSaveBIAggregationLayout())
     )
     page_registry.register(
-        PageEndpoint("ajax_delete_bi_aggregation_layout", AjaxDeleteBIAggregationLayout)
+        PageEndpoint("ajax_delete_bi_aggregation_layout", AjaxDeleteBIAggregationLayout())
     )
     page_registry.register(
-        PageEndpoint("ajax_load_bi_aggregation_layout", AjaxLoadBIAggregationLayout)
+        PageEndpoint("ajax_load_bi_aggregation_layout", AjaxLoadBIAggregationLayout())
     )
     page_registry.register(PageEndpoint("bi_map", _bi_map))
     filter_registry.register(FilterTopologyMeshDepth())
@@ -54,6 +59,7 @@ def register(
 
 
 class AjaxFetchAggregationData(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         aggregations_var = request.get_str_input_mandatory("aggregations", "[]")
         filter_names = json.loads(aggregations_var)
@@ -271,6 +277,7 @@ class NodeVisualizationBIDataMapper:
 
 
 class AjaxSaveBIAggregationLayout(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         layout_var = request.get_str_input_mandatory("layout", "{}")
@@ -281,6 +288,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 
 
 class AjaxDeleteBIAggregationLayout(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         for_aggregation = request.var("aggregation_name")
@@ -290,6 +298,7 @@ class AjaxDeleteBIAggregationLayout(AjaxPage):
 
 
 class AjaxLoadBIAggregationLayout(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         aggregation_name = request.var("aggregation_name")
         return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)

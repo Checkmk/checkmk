@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="redundant-expr"
+
 """Cares about backing up the files of a site"""
 
 import contextlib
@@ -23,8 +26,6 @@ from omdlib.contexts import SiteContext
 from omdlib.global_options import GlobalOptions
 from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
-
-from cmk.utils.paths import mkbackup_lock_dir
 
 
 def _try_backup_site_to_tarfile(
@@ -79,6 +80,7 @@ def main_backup(
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:
+    mkbackup_lock_dir = Path("/run/lock/mkbackup")
     try:
         mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
         shutil.chown(mkbackup_lock_dir, group="omd")
@@ -180,7 +182,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     return excludes
 
 
-class _RRDSocket(contextlib.AbstractContextManager):
+class _RRDSocket(contextlib.AbstractContextManager["_RRDSocket"]):
     def __init__(self, site_stopped: bool, site_name: str, verbose: bool) -> None:
         self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(

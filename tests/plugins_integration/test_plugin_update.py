@@ -2,6 +2,10 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+
 import logging
 
 import pytest
@@ -24,11 +28,13 @@ def _skip_dumps():
     #   after update. See CMK-19103.
     # * Ceph dump containing "Systemd Service Summary" changing between 2.3.0 and 2.4.0. SUP-21093.
     # * Proxmox dump containing "Systemd Service Summary" changing between versions. SUP-22010.
+    # * Netapp dump containing "CPU utilization" changing between versions. SUP-25708.
     config.skipped_dumps = [
         "snmp-sw-arista.demo.checkmk.com_2_2_p12",
         "snmp-f5-bigip-failover-cluster",
         "agent-2.2.0p8-ceph-17.2.6",
         "agent-2.2.0p14-proxmox",
+        "agent-2.3.0p12-netapp-ontap",
     ]
     try:
         yield

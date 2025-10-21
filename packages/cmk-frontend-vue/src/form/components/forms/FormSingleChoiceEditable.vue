@@ -11,10 +11,10 @@ import { onMounted, ref, toRaw } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
@@ -126,7 +126,7 @@ function openSlideIn(objectId: null | OptionId) {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const { ErrorBoundary, error } = useErrorBoundary()
+const { CmkErrorBoundary, error } = useCmkErrorBoundary()
 </script>
 
 <template>
@@ -166,7 +166,7 @@ const { ErrorBoundary, error } = useErrorBoundary()
       }"
       @close="closeSlideIn"
     >
-      <ErrorBoundary>
+      <CmkErrorBoundary>
         <FormSingleChoiceEditableEditAsync
           :object-id="slideInObjectId"
           :api="slideInAPI"
@@ -183,7 +183,7 @@ const { ErrorBoundary, error } = useErrorBoundary()
           @cancel="closeSlideIn"
           @submitted="slideInSubmitted"
         />
-      </ErrorBoundary>
+      </CmkErrorBoundary>
     </CmkSlideInDialog>
   </div>
   <FormValidation :validation="validation"></FormValidation>

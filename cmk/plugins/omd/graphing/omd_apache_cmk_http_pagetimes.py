@@ -37,6 +37,48 @@ metric_secs_cmk_dashboards = metrics.Metric(
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )
+metric_secs_cmk_api = metrics.Metric(
+    name="secs_cmk_api",
+    title=Title("Checkmk: API: Secs"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.ORANGE,
+)
+metric_secs_cmk_ajax = metrics.Metric(
+    name="secs_cmk_ajax",
+    title=Title("Checkmk: Ajax: Secs"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.LIGHT_YELLOW,
+)
+metric_secs_cmk_index = metrics.Metric(
+    name="secs_cmk_index",
+    title=Title("Checkmk: Index: Secs"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.DARK_YELLOW,
+)
+metric_secs_cmk_login = metrics.Metric(
+    name="secs_cmk_login",
+    title=Title("Checkmk: Login: Secs"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.DARK_RED,
+)
+metric_secs_cmk_search = metrics.Metric(
+    name="secs_cmk_search",
+    title=Title("Checkmk: Search: Secs"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.LIGHT_BROWN,
+)
+metric_secs_cmk_sidebar = metrics.Metric(
+    name="secs_cmk_sidebar",
+    title=Title("Checkmk: Sidebar: Secs"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.BROWN,
+)
+metric_secs_cmk_graphs = metrics.Metric(
+    name="secs_cmk_graphs",
+    title=Title("Checkmk: Graphs: Secs"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.DARK_BROWN,
+)
 metric_secs_cmk_other = metrics.Metric(
     name="secs_cmk_other",
     title=Title("Checkmk: Other: Secs"),
@@ -95,6 +137,13 @@ graph_cmk_http_pagetimes = graphs.Graph(
         "secs_cmk_bi",
         "secs_cmk_snapins",
         "secs_cmk_dashboards",
+        "secs_cmk_api",
+        "secs_cmk_ajax",
+        "secs_cmk_index",
+        "secs_cmk_login",
+        "secs_cmk_search",
+        "secs_cmk_sidebar",
+        "secs_cmk_graphs",
         "secs_cmk_other",
         "secs_nagvis_snapin",
         "secs_nagvis_ajax",

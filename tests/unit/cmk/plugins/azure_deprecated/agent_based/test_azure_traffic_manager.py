@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -13,7 +15,7 @@ from cmk.plugins.azure_deprecated.agent_based.azure_traffic_manager import (
     check_probe_state,
     check_qps,
 )
-from cmk.plugins.lib.azure import AzureMetric, Resource, Section
+from cmk.plugins.azure_deprecated.agent_based.lib import AzureMetric, Resource, Section
 
 
 @pytest.mark.parametrize(

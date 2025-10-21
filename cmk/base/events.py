@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 # This file is being used by the rule based notifications and (CEE
 # only) by the alert handling
 
@@ -14,7 +20,7 @@ import sys
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, cast, Literal
+from typing import Any, cast, Literal, Protocol
 from urllib.parse import quote, urlencode
 
 import livestatus
@@ -26,19 +32,31 @@ from cmk.ccc.site import omd_site
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
-from cmk.utils.notify_types import EventRule, NotifyPluginParamsDict
+from cmk.utils.notify_types import EventRule
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
+from cmk.utils.timeperiod import (
+    TimeperiodActiveCoreLookup,
+    TimeperiodSpecs,
+)
 
 ContactList = list  # TODO Improve this
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
 Matcher = Callable[[EventRule, EventContext, bool, TimeperiodSpecs], str | None]
+
+type _RulesetProxySpec = tuple[
+    Literal["cmk_postprocessed"],
+    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+    str,
+]
+type ProxyGetter = Callable[[tuple[str, str | None] | _RulesetProxySpec], HTTPProxyConfig]
+
+type CoreTimeperiodsActive = Mapping[str, bool]
 
 logger = logging.getLogger("cmk.base.events")
 
@@ -48,9 +66,19 @@ def _send_reply_ready() -> None:
     sys.stdout.flush()
 
 
+class _EventFunction(Protocol):
+    def __call__(
+        self, context: EventContext, timeperiods_active: CoreTimeperiodsActive
+    ) -> object: ...
+
+
+class _LoopIntervalFunction(Protocol):
+    def __call__(self, timeperiods_active: CoreTimeperiodsActive) -> object: ...
+
+
 def event_keepalive(
-    event_function: Callable[[EventContext], object],
-    call_every_loop: Callable[[], object] | None = None,
+    event_function: _EventFunction,
+    call_every_loop: _LoopIntervalFunction | None = None,
     loop_interval: int | None = None,
     shutdown_function: Callable[[], object] | None = None,
 ) -> None:
@@ -66,8 +94,9 @@ def event_keepalive(
 
     while True:
         try:
-            # Invalidate timeperiod caches
-            cleanup_timeperiod_caches()
+            timeperiods_active = TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, logger.warning
+            )
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next event arrives. We must
@@ -115,7 +144,7 @@ def event_keepalive(
 
                 try:
                     context = raw_context_from_string(data.rstrip(b"\n").decode("utf-8"))
-                    event_function(context)
+                    event_function(context, timeperiods_active)
                 except Exception:
                     if cmk.ccc.debug.enabled():
                         raise
@@ -131,7 +160,7 @@ def event_keepalive(
 
         if call_every_loop:
             try:
-                call_every_loop()
+                call_every_loop(timeperiods_active)
             except Exception:
                 if cmk.ccc.debug.enabled():
                     raise
@@ -495,7 +524,8 @@ def event_match_rule(
     context: EventContext,
     define_servicegroups: Mapping[str, str],
     all_timeperiods: TimeperiodSpecs,
-    analyse: bool = False,
+    analyse: bool,
+    timeperiods_active: CoreTimeperiodsActive,
 ) -> str | None:
     return apply_matchers(
         [
@@ -537,7 +567,9 @@ def event_match_rule(
             event_match_exclude_services,
             event_match_plugin_output,
             event_match_checktype,
-            lambda rule, context, analyse, all_timeperiods: event_match_timeperiod(rule, analyse),
+            lambda rule, context, analyse, all_timeperiods: event_match_timeperiod(
+                rule, analyse, timeperiods_active
+            ),
             event_match_servicelevel,
             event_match_hostlabels,
             event_match_servicelabels,
@@ -971,6 +1003,7 @@ def event_match_checktype(
 def event_match_timeperiod(
     rule: EventRule,
     analyse: bool,
+    timeperiods_active: CoreTimeperiodsActive,
 ) -> str | None:
     # don't test on notification tests, in that case this is done within
     # notify.rbn_match_timeperiod
@@ -984,7 +1017,7 @@ def event_match_timeperiod(
     if timeperiod == "24X7":
         return None
 
-    if check_timeperiod(timeperiod):
+    if timeperiods_active.get(timeperiod, True):
         return None
 
     return "The timeperiod '%s' is currently not active." % timeperiod
@@ -1060,29 +1093,6 @@ def add_context_to_environment(
         os.putenv(prefix + key, value.encode("utf-8"))
 
 
-def convert_proxy_params(params: NotifyPluginParamsDict) -> dict[str, Any]:
-    """
-    This is needed before add_to_event_context() to keep the 2.3 structure for
-    the changes we made in 2.4. The new format can not be handled by add_to_event_context()
-    """
-    params_dict = dict(params)
-    proxy_params = params["proxy_url"]  # type: ignore[typeddict-item]
-    match proxy_params:
-        case "cmk_postprocessed", "environment_proxy", str():
-            params_dict["proxy_url"] = ("environment", "environment")
-        case "cmk_postprocessed", "no_proxy", str():
-            params_dict["proxy_url"] = ("no_proxy", None)
-        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
-            params_dict["proxy_url"] = ("global", stored_proxy_id)
-        case "cmk_postprocessed", "explicit_proxy", str(url):
-            params_dict["proxy_url"] = ("url", url)
-        case _:
-            # unknown format, take it as it is
-            pass
-
-    return params_dict
-
-
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters
 #  into a flat contextlist for use as environment variables in plugins
 #
@@ -1094,7 +1104,7 @@ def add_to_event_context(
     context: EventContext | dict[str, str],
     prefix: str,
     param: object,
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: ProxyGetter,
 ) -> None:
     if isinstance(param, list | tuple):
         if all(isinstance(p, str) for p in param):

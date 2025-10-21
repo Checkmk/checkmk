@@ -2,6 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 import re
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
@@ -9,7 +15,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import (
+from cmk.server_side_calls.alpha import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     EnvProxy,

@@ -11,20 +11,14 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Spec,
     TasksRepository,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError, TaskID
-from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
 
 
 @dataclasses.dataclass
 class CreateTaskHandler:
     tasks_repository: TasksRepository
-    relays_repository: RelaysRepository
 
     def process(self, relay_id: RelayID, spec: Spec) -> TaskID:
-        auth = InternalAuth()
-        if not self.relays_repository.has_relay(relay_id, auth):
-            raise RelayNotFoundError(relay_id)
         now = datetime.now(UTC)
         task = RelayTask(spec=spec, creation_timestamp=now, update_timestamp=now)
         with bound_contextvars(task_id=task.id):

@@ -12,6 +12,8 @@
 # (c) 2024 SWR
 # @author Frank Baier <frank.baier@swr.de>
 
+# mypy: disable-error-code="type-arg"
+
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field

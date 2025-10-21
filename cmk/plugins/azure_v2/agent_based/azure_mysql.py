@@ -6,8 +6,8 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, render
-from cmk.plugins.lib.azure import (
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, InventoryPlugin, render
+from cmk.plugins.azure_v2.agent_based.lib import (
     check_connections,
     check_cpu,
     check_memory,
@@ -15,36 +15,59 @@ from cmk.plugins.lib.azure import (
     check_storage,
     create_check_metrics_function,
     create_discover_by_metrics_function,
+    create_discover_by_metrics_function_single,
+    create_inventory_function,
     MetricData,
+    Resource,
     Section,
 )
 
 DB_MYSQL_RESOURCE_TYPES = ["Microsoft.DBforMySQL/servers", "Microsoft.DBforMySQL/flexibleServers"]
 
 
+inventory_plugin_azure_mysql = InventoryPlugin(
+    name="azure_v2_mysql",
+    sections=["azure_v2_servers"],
+    inventory_function=create_inventory_function(),
+)
+
+
+def discover_azure_mysql_memory(section: Resource) -> DiscoveryResult:
+    yield from create_discover_by_metrics_function(
+        "average_memory_percent", resource_types=DB_MYSQL_RESOURCE_TYPES
+    )({"Memory": section})
+
+
 check_plugin_azure_mysql_memory = CheckPlugin(
     name="azure_v2_mysql_memory",
     sections=["azure_v2_servers"],
-    service_name="Azure/DB for MySQL %s Memory",
-    discovery_function=create_discover_by_metrics_function(
-        "average_memory_percent", resource_types=DB_MYSQL_RESOURCE_TYPES
-    ),
+    service_name="Azure/DB for MySQL %s",
+    discovery_function=discover_azure_mysql_memory,
     check_function=check_memory(),
     check_ruleset_name="memory_utilization",
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
+
 check_plugin_azure_mysql_cpu = CheckPlugin(
     name="azure_v2_mysql_cpu",
     sections=["azure_v2_servers"],
-    service_name="Azure/DB for MySQL %s CPU",
-    discovery_function=create_discover_by_metrics_function(
+    service_name="Azure/DB for MySQL CPU",
+    discovery_function=create_discover_by_metrics_function_single(
         "average_cpu_percent", resource_types=DB_MYSQL_RESOURCE_TYPES
     ),
     check_function=check_cpu(),
-    check_ruleset_name="cpu_utilization_with_item",
+    check_ruleset_name="cpu_utilization",
     check_default_parameters={"levels": (65.0, 90.0)},
 )
+
+
+def discover_azure_mysql_replication(section: Resource) -> DiscoveryResult:
+    yield from create_discover_by_metrics_function(
+        "maximum_seconds_behind_master",  # single server metric name
+        "maximum_replication_lag",  # flexible server metric name
+        resource_types=DB_MYSQL_RESOURCE_TYPES,
+    )({"Replication": section})
 
 
 def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
@@ -71,12 +94,8 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
 check_plugin_azure_mysql_replication = CheckPlugin(
     name="azure_v2_mysql_replication",
     sections=["azure_v2_servers"],
-    service_name="Azure/DB for MySQL %s Replication",
-    discovery_function=create_discover_by_metrics_function(
-        "maximum_seconds_behind_master",  # single server metric name
-        "maximum_replication_lag",  # flexible server metric name
-        resource_types=DB_MYSQL_RESOURCE_TYPES,
-    ),
+    service_name="Azure/DB for MySQL %s",
+    discovery_function=discover_azure_mysql_replication,
     check_function=check_replication(),
     check_ruleset_name="replication_lag",
     check_default_parameters={"levels": (60, 600)},
@@ -85,8 +104,8 @@ check_plugin_azure_mysql_replication = CheckPlugin(
 check_plugin_azure_mysql_connections = CheckPlugin(
     name="azure_v2_mysql_connections",
     sections=["azure_v2_servers"],
-    service_name="Azure/DB for MySQL %s Connections",
-    discovery_function=create_discover_by_metrics_function(
+    service_name="Azure/DB for MySQL Connections",
+    discovery_function=create_discover_by_metrics_function_single(
         "average_active_connections",
         "total_connections_failed",  # single server metric name
         "total_aborted_connections",  # flexible server metric name
@@ -100,22 +119,22 @@ check_plugin_azure_mysql_connections = CheckPlugin(
 check_plugin_azure_mysql_network = CheckPlugin(
     name="azure_v2_mysql_network",
     sections=["azure_v2_servers"],
-    service_name="Azure/DB for MySQL %s Network",
-    discovery_function=create_discover_by_metrics_function(
+    service_name="Azure/DB for MySQL Network",
+    discovery_function=create_discover_by_metrics_function_single(
         "total_network_bytes_ingress",
         "total_network_bytes_egress",
         resource_types=DB_MYSQL_RESOURCE_TYPES,
     ),
     check_function=check_network(),
-    check_ruleset_name="network_io",
+    check_ruleset_name="network_io_without_item",
     check_default_parameters={},
 )
 
 check_plugin_azure_mysql_storage = CheckPlugin(
     name="azure_v2_mysql_storage",
     sections=["azure_v2_servers"],
-    service_name="Azure/DB for MySQL %s Storage",
-    discovery_function=create_discover_by_metrics_function(
+    service_name="Azure/DB for MySQL Storage",
+    discovery_function=create_discover_by_metrics_function_single(
         "average_io_consumption_percent",
         "average_serverlog_storage_percent",
         "average_storage_percent",

@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Definitions of timeouts during e2e testing."""
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Iterator
 from contextlib import contextmanager
 

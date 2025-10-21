@@ -10,6 +10,8 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Percentage, TextInput, Tuple
 
+# mypy: disable-error-code="no-untyped-def"
+
 
 def _item_spec_prism_container():
     return TextInput(

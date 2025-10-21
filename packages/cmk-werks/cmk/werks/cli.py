@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk development script to manage werks"""
 
+# mypy: disable-error-code="comparison-overlap"
+
 import argparse
-import ast
-import datetime
 import errno
 import os
 import shlex
@@ -17,9 +17,7 @@ import traceback
 from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
-from typing import ClassVar, Literal, NamedTuple, override, TypeVar
-
-from pydantic import BaseModel, Field
+from typing import Literal, NamedTuple
 
 from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
@@ -41,6 +39,7 @@ from .in_out_elements import (
     TTY_RED,
 )
 from .meisterwerk import (
+    build_meisterwerk_payload,
     Choice,
     display_evaluation,
     display_rewritten_werk,
@@ -49,16 +48,14 @@ from .meisterwerk import (
     propose_rewriting,
     rewrite_werk,
     user_understanding_of_werk,
-    build_meisterwerk_payload,
 )
-from .parse import WerkV2ParseResult, parse_werk_v2
+from .parse import WerkV2ParseResult
 from .schemas.requests import Werk as WerkRequest
 from .schemas.werk import (
-    WerkId,
-    Werk,
     Stash,
+    Werk,
+    WerkId,
 )
-
 
 WerkVersion = Literal["v1", "v2"]
 
@@ -574,7 +571,7 @@ def werk_class(werk: Werk) -> str:
     cl = werk.content.metadata["class"]
     for entry in get_config().classes:
         # typing: why would this be? LH: Tuple[str, str, str], RH: str
-        if entry == cl:  # type: ignore[comparison-overlap]
+        if entry == cl:
             return cl
 
         if entry[0] == cl:
@@ -963,7 +960,8 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
 
 
 def current_branch() -> str:
-    return [line for line in os.popen("git branch") if line.startswith("*")][0].split()[-1]
+    result = subprocess.run(["git", "branch", "--show-current"], check=True, capture_output=True)
+    return result.stdout.strip().decode("utf-8")
 
 
 def current_repo() -> str:

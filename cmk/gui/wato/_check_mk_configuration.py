@@ -3,6 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="redundant-expr"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 import logging
 import re
 from collections.abc import Generator, Iterable, Mapping, Sequence
@@ -715,7 +723,6 @@ ConfigVariableExperimentalFeatures = ConfigVariable(
                     choices=[
                         ("frontend", "Frontend (vue rendering)"),
                         ("backend", "Backend (legacy rendering)"),
-                        ("backend_and_frontend", "Backend and Frontend"),
                     ],
                 ),
             ),
@@ -2773,7 +2780,7 @@ ConfigVariableHTTPProxies = ConfigVariable(
                             size=80,
                         ),
                     ),
-                    ("proxy_url", HTTPProxyInput()),
+                    ("proxy_config", HTTPProxyInput()),
                 ],
                 optional_keys=False,
             ),

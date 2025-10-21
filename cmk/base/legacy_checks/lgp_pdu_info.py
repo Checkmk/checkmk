@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Check has been developed using a Emerson Network Power Rack PDU Card
 # Agent App Firmware Version  4.840.0
 # Agent Boot Firmware Version 4.540.3

@@ -53,6 +53,7 @@ py_library(
         "cmk/bakery/v1/_constants.py",
         "cmk/bakery/v1/_function_types.py",
         "cmk/bakery/v2_alpha/__init__.py",
+        "cmk/bakery/v2_alpha/_artifact_types.py",
         "cmk/bakery/v2_alpha/_config.py",
         "cmk/bakery/v2_alpha/_plugins.py",
     ],
@@ -102,6 +103,20 @@ py_library(
 )
 
 py_library(
+    name = "password_store",
+    srcs = [
+        "cmk/password_store/v1_alpha/__init__.py",
+        "cmk/password_store/v1_alpha/_impl.py",
+    ],
+    data = ["cmk/password_store/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("cryptography"),
+    ],
+)
+
+py_library(
     name = "server_side_calls",
     srcs = [
         "cmk/server_side_calls/__init__.py",
@@ -129,7 +144,6 @@ py_library(
         "cmk/inventory_ui/v1_alpha/_localize.py",
         "cmk/inventory_ui/v1_alpha/_node.py",
         "cmk/inventory_ui/v1_alpha/_style.py",
-        "cmk/inventory_ui/v1_alpha/_types.py",
         "cmk/inventory_ui/v1_alpha/_unit.py",
     ],
     data = ["cmk/inventory_ui/py.typed"],
@@ -207,6 +221,19 @@ py_test(
 )
 
 py_test(
+    name = "password_store-test",
+    size = "small",
+    srcs = glob(["tests/cmk/password_store/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":password_store",
+        requirement("cryptography"),
+        requirement("pytest"),
+    ],
+)
+
+py_test(
     name = "server_side_calls-test",
     size = "small",
     srcs = glob(["tests/cmk/server_side_calls/**/*.py"]) + [":__test__.py"],
@@ -241,6 +268,7 @@ py_wheel(
         ":bakery",
         ":graphing",
         ":inventory_ui",
+        ":password_store",
         ":py_typed",
         ":rulesets",
         ":server_side_calls",
@@ -254,6 +282,7 @@ filegroup(
         "cmk/bakery/py.typed",
         "cmk/graphing/py.typed",
         "cmk/inventory_ui/py.typed",
+        "cmk/password_store/py.typed",
         "cmk/rulesets/py.typed",
         "cmk/server_side_calls/py.typed",
     ],

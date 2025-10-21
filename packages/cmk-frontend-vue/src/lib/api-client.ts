@@ -72,6 +72,47 @@ export class Api {
     return this.fetch(url, params)
   }
 
+  public async getRaw(url: string, options: ApiOptions = {}): Promise<ApiResponseBody<unknown>> {
+    const params = this.prepareOptions(options, {
+      method: 'GET'
+    })
+
+    return this.fetchRaw(url, params)
+  }
+
+  public async postRaw(
+    url: string,
+    body: unknown | null = null,
+    options: ApiOptions = {}
+  ): Promise<ApiResponseBody<unknown>> {
+    const opts: RequestInit = {
+      method: 'POST'
+    }
+    if (body !== null) {
+      opts.body = JSON.stringify(body)
+    }
+    const params = this.prepareOptions(options, opts)
+    return this.fetchRaw(url, params)
+  }
+
+  private async fetchRaw(
+    url: string,
+    options: RequestInit
+  ): Promise<ApiResponseBody<unknown> | null> {
+    if (this.baseUrl) {
+      url = this.baseUrl + url
+    }
+
+    const res = await fetch(url, options)
+
+    const json = await res.json()
+    if (!('result' in json)) {
+      return json
+    } else {
+      return json.result // only ajax call have this result field
+    }
+  }
+
   private async fetch(url: string, params: RequestInit): Promise<ApiResponseBody<unknown> | null> {
     if (this.baseUrl) {
       url = this.baseUrl + url

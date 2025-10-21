@@ -4,11 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for creating and editing hosts"""
 
+# mypy: disable-error-code="exhaustive-match"
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import copy
 from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
-from typing import Final, Literal, overload
+from typing import Final, Literal, overload, override
 from urllib.parse import unquote
 
 from livestatus import SiteConfigurations
@@ -105,8 +112,8 @@ def register(mode_registry: ModeRegistry, page_registry: PageRegistry) -> None:
     mode_registry.register(ModeEditHost)
     mode_registry.register(ModeCreateHost)
     mode_registry.register(ModeCreateCluster)
-    page_registry.register(PageEndpoint("ajax_ping_host", PageAjaxPingHost))
-    page_registry.register(PageEndpoint("wato_ajax_diag_cmk_agent", PageAjaxDiagCmkAgent))
+    page_registry.register(PageEndpoint("ajax_ping_host", PageAjaxPingHost()))
+    page_registry.register(PageEndpoint("wato_ajax_diag_cmk_agent", PageAjaxDiagCmkAgent()))
 
 
 class ABCHostMode(WatoMode, abc.ABC):
@@ -1008,6 +1015,7 @@ class ModeCreateCluster(CreateHostMode):
 
 
 class PageAjaxPingHost(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
         ip_or_dns_name = request.get_ascii_input_mandatory("ip_or_dns_name")
@@ -1028,6 +1036,7 @@ class PageAjaxPingHost(AjaxPage):
 
 
 class PageAjaxDiagCmkAgent(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         api_request = self.webapi_request()
         result = diag_cmk_agent(

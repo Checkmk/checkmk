@@ -31,10 +31,10 @@ _HostLabelFunctionAllParams = Callable[
 ]
 
 AgentParseFunction = Callable[[StringTable], _Section | None]
-InventoryFunction = Callable[..., InventoryResult]  # type: ignore[explicit-any]
+InventoryFunction = Callable[..., InventoryResult]
 
-CheckFunction = Callable[..., CheckResult]  # type: ignore[explicit-any]
-DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[explicit-any]
+CheckFunction = Callable[..., CheckResult]
+DiscoveryFunction = Callable[..., DiscoveryResult]
 
 
 @dataclass
@@ -627,18 +627,16 @@ class InventoryPlugin:
         _ = _validate_name(self.name)
 
 
-def entry_point_prefixes() -> (  # type: ignore[explicit-any]
-    Mapping[
-        type[
-            AgentSection[Any]
-            | CheckPlugin
-            | InventoryPlugin
-            | SimpleSNMPSection[Any, Any]
-            | SNMPSection[Any, Any]
-        ],
-        str,
-    ]
-):
+def entry_point_prefixes() -> Mapping[
+    type[
+        AgentSection[Any]
+        | CheckPlugin
+        | InventoryPlugin
+        | SimpleSNMPSection[Any, Any]
+        | SNMPSection[Any, Any]
+    ],
+    str,
+]:
     """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
     These types can be used to create plug-ins that can be discovered by Checkmk.

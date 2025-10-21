@@ -181,6 +181,6 @@ check_plugin_ups_test = CheckPlugin(
     check_function=check_ups_test,
     check_ruleset_name="ups_test",
     check_default_parameters={
-        "levels_elapsed_time": None,
+        "levels_elapsed_time": ("no_levels", None),
     },
 )

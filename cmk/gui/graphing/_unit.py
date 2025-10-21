@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import assert_never, Literal
@@ -107,16 +109,13 @@ class _Conversion:
 def user_specific_unit(
     unit_specification: ConvertibleUnitSpecification | NonConvertibleUnitSpecification,
     temperature_unit: TemperatureUnit,
-    source_symbol_to_conversion_computer: (
-        Mapping[str, Callable[[LoggedInUser, str], _Conversion]] | None
-    ) = None,
 ) -> UserSpecificUnit:
     noop_conversion = _Conversion(
         symbol=unit_specification.notation.symbol,
         converter=lambda v: v,
     )
     conversion = (
-        (source_symbol_to_conversion_computer or _TEMPERATURE_CONVERSION_COMPUTER).get(
+        _TEMPERATURE_CONVERSION_COMPUTER.get(
             unit_specification.notation.symbol,
             lambda *_: noop_conversion,
         )(temperature_unit)

@@ -2,6 +2,11 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import contextlib
 import http.client
 import json
@@ -36,7 +41,7 @@ GroupDomainType = Literal[
 ]
 
 
-def complement_customer(details):
+def complement_customer(details: dict[str, Any]) -> dict[str, Any]:
     if edition(paths.omd_root) is not Edition.CME:
         return details
 

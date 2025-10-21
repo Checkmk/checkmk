@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 
 # mypy: disable-error-code="var-annotated"
 
@@ -84,14 +87,6 @@ check_info["azure_ad"] = LegacyCheckDefinition(
     check_function=check_azure_users,
 )
 
-# TODO: migrate and move to new folder struct
-check_info["azure_v2_ad"] = LegacyCheckDefinition(
-    name="azure_v2_ad",
-    parse_function=parse_azure_ad,
-    service_name="AD Users",
-    discovery_function=discover_ad_users,
-    check_function=check_azure_users,
-)
 
 # .
 #   .--sync----------------------------------------------------------------.
@@ -149,19 +144,6 @@ check_info["azure_ad.sync"] = LegacyCheckDefinition(
     discovery_function=discover_sync,
     check_function=check_azure_sync,
     check_ruleset_name="azure_ad",
-    check_default_parameters={
-        "age": (3600, 7200),
-    },
-)
-
-# TODO: migrate and move to new folder struct
-check_info["azure_v2_ad.sync"] = LegacyCheckDefinition(
-    name="azure_v2_ad_sync",
-    service_name="AD Sync %s",
-    sections=["azure_v2_ad"],
-    discovery_function=discover_sync,
-    check_function=check_azure_sync,
-    check_ruleset_name="azure_v2_ad",
     check_default_parameters={
         "age": (3600, 7200),
     },

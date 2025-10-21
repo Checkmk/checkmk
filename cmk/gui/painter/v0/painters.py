@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import time
 from collections.abc import Iterable, Mapping, Sequence
@@ -16,14 +22,17 @@ from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui import sites
 from cmk.gui.color import render_color_icon
 from cmk.gui.config import Config
-from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
-from cmk.gui.graphing._metrics import get_metric_spec, registered_metric_ids_and_titles
-from cmk.gui.graphing._translated_metrics import (
+from cmk.gui.graphing import (
+    get_metric_spec,
+    get_temperature_unit,
+    metrics_from_api,
     parse_perf_data,
+    registered_metric_ids_and_titles,
+    RegisteredMetric,
     translate_metrics,
     TranslatedMetric,
+    user_specific_unit,
 )
-from cmk.gui.graphing._unit import get_temperature_unit, user_specific_unit
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -526,7 +535,7 @@ def service_state_short(row: Row) -> tuple[str, str]:
 
 def _paint_service_state_short(row: Row, *, config: Config) -> CellSpec:
     state, name = service_state_short(row)
-    if is_stale(row, config=config):
+    if is_stale(row, config.staleness_threshold):
         state = state + " stale"
     return "state svcstate state%s" % state, HTMLWriter.render_span(
         name, class_=["state_rounded_fill"]
@@ -547,7 +556,7 @@ def host_state_short(row: Row) -> tuple[str, str]:
 
 def _paint_host_state_short(row: Row, short: bool = False, *, config: Config) -> CellSpec:
     state, name = host_state_short(row)
-    if is_stale(row, config=config):
+    if is_stale(row, config.staleness_threshold):
         state = state + " stale"
 
     if short:
@@ -607,7 +616,7 @@ class PainterSvcPluginOutput(Painter):
         return paint_stalified(
             row,
             format_plugin_output(row["service_plugin_output"], request=self.request, row=row),
-            config=self.config,
+            self.config.staleness_threshold,
         )
 
 
@@ -684,7 +693,7 @@ class PainterSvcLongPluginOutput(Painter):
                 + content
             )
 
-        return paint_stalified(row, content, config=self.config)
+        return paint_stalified(row, content, self.config.staleness_threshold)
 
 
 class PainterSvcPerfData(Painter):
@@ -703,7 +712,7 @@ class PainterSvcPerfData(Painter):
         return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_stalified(row, row["service_perf_data"], config=self.config)
+        return paint_stalified(row, row["service_perf_data"], self.config.staleness_threshold)
 
 
 class PainterSvcMetrics(Painter):
@@ -824,7 +833,9 @@ class PainterSvcPerfVal(Painter):
         return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_stalified(row, get_perfdata_nth_value(row, self._num - 1), config=self.config)
+        return paint_stalified(
+            row, get_perfdata_nth_value(row, self._num - 1), self.config.staleness_threshold
+        )
 
 
 class PainterSvcPerfVal01(PainterSvcPerfVal):
@@ -1064,7 +1075,7 @@ def _paint_checked(
         painter_options=painter_options,
     )
     assert css is not None
-    if is_stale(row, config=config):
+    if is_stale(row, config.staleness_threshold):
         css += " staletime"
     return css, td
 
@@ -1785,8 +1796,8 @@ class PainterSvcStaleness(Painter):
         return ("", "%0.2f" % row.get("service_staleness", 0))
 
 
-def _paint_is_stale(row: Row, *, config: Config) -> CellSpec:
-    if is_stale(row, config=config):
+def _paint_is_stale(row: Row, staleness_threshold: float) -> CellSpec:
+    if is_stale(row, staleness_threshold):
         return "badflag", HTMLWriter.render_span(_("yes"))
     return "goodflag", _("no")
 
@@ -1811,7 +1822,7 @@ class PainterSvcIsStale(Painter):
         return "svc_staleness"
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_is_stale(row, config=self.config)
+        return _paint_is_stale(row, self.config.staleness_threshold)
 
 
 def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> CellSpec:
@@ -3394,7 +3405,7 @@ class PainterHostIsStale(Painter):
         return "svc_staleness"
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_is_stale(row, config=self.config)
+        return _paint_is_stale(row, self.config.staleness_threshold)
 
 
 class PainterHostCustomVariables(Painter):
@@ -4208,7 +4219,11 @@ class PainterCommentEntryType(Painter):
         code: str | HTML = html.render_icon(icon, help_txt, theme=self.theme)
         if linkview:
             code = render_link_to_view(
-                code, row, VisualLinkSpec("views", linkview), request=self.request
+                code,
+                row,
+                VisualLinkSpec("views", linkview),
+                self._user_permissions,
+                request=self.request,
             )
         return "icons", code
 
@@ -4561,7 +4576,7 @@ class PainterLogDetailsHistory(Painter):
                 + content
             )
 
-        return paint_stalified(row, content, config=self.config)
+        return paint_stalified(row, content, self.config.staleness_threshold)
 
 
 class PainterLogMessage(Painter):

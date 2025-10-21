@@ -10,7 +10,6 @@ import termios
 import tty
 from typing import NoReturn
 
-
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
     TTY_RED = "\033[31m"

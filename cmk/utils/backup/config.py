@@ -38,7 +38,7 @@ class SiteConfig(BaseModel, frozen=True):
 
     @classmethod
     def load(cls, path: Path) -> SiteConfig:
-        return cls.construct(
+        return cls.model_construct(
             **load_object_from_file(
                 path,
                 default={

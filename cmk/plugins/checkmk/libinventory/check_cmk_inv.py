@@ -22,6 +22,7 @@ from cmk.base.checkers import (
     CMKSummarizer,
     SectionPluginMapper,
 )
+from cmk.base.config import get_metric_backend_fetcher
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.errorhandling import CheckResultErrorHandler
@@ -200,6 +201,11 @@ def inventory_as_check(
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     parser = CMKParser(
         config.make_parser_config(loaded_config, ruleset_matcher, label_manager),

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for showing the certificates."""
 
+# mypy: disable-error-code="type-arg"
+
 import urllib.parse
 from collections.abc import Collection
 from dataclasses import dataclass

@@ -16,7 +16,7 @@ def _extract_bound(
 ) -> tuple[_NumberT, _NumberT] | None:
     match (model, level_dir):
         case ({"levels_upper_min": (warn, crit)}, LevelDirection.UPPER):
-            return ntype(warn * scale), ntype(crit * scale)  # type: ignore[misc]
+            return ntype(warn * scale), ntype(crit * scale)
         case _:
             return None
 
@@ -73,7 +73,7 @@ def _parse_to_predictive_levels(
             return _PredictiveLevelsT[_NumberT](
                 period=p,
                 horizon=h,
-                levels=_extract_levels(raw_levels, scale, ntype),  # type: ignore[misc]
+                levels=_extract_levels(raw_levels, scale, ntype),
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate lower predictive levels
@@ -87,7 +87,7 @@ def _parse_to_predictive_levels(
             return _PredictiveLevelsT[_NumberT](
                 period=p,
                 horizon=h,
-                levels=_extract_levels(raw_levels, scale, ntype),  # type: ignore[misc]
+                levels=_extract_levels(raw_levels, scale, ntype),
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate not configured predictive levels
@@ -150,7 +150,8 @@ def _parse_already_migrated(
             ) is None:
                 return "no_levels", None
             return "cmk_postprocessed", "predictive_levels", pred_levels
-    return None
+        case _:
+            return None
 
 
 def migrate_to_upper_integer_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[int]:
@@ -297,7 +298,8 @@ def migrate_to_password(
         case "cmk_postprocessed", "stored_password", (str(password_store_id), str(password)):
             return "cmk_postprocessed", "stored_password", (password_store_id, password)
 
-    raise TypeError(f"Could not migrate {model!r} to Password.")
+        case _:
+            raise TypeError(f"Could not migrate {model!r} to Password.")
 
 
 def migrate_to_proxy(
@@ -336,8 +338,8 @@ def migrate_to_proxy(
             return "cmk_postprocessed", "explicit_proxy", url
         case "cmk_postprocessed", "no_proxy", str():
             return "cmk_postprocessed", "no_proxy", ""
-
-    raise TypeError(f"Could not migrate {model!r} to Proxy.")
+        case _:
+            raise TypeError(f"Could not migrate {model!r} to Proxy.")
 
 
 def migrate_to_time_period(
@@ -357,5 +359,5 @@ def migrate_to_time_period(
             return "cmk_postprocessed", "stored_time_period", time_period
         case "cmk_postprocessed", "stored_time_period", str(time_period):
             return "cmk_postprocessed", "stored_time_period", time_period
-
-    raise TypeError(f"Could not migrate {model!r} to TimePeriod.")
+        case _:
+            raise TypeError(f"Could not migrate {model!r} to TimePeriod.")

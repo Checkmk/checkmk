@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 import abc
 import glob
 import json
@@ -13,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import livestatus
 
@@ -81,7 +86,7 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.views.icon import Icon, IconRegistry
+from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
@@ -100,12 +105,12 @@ def register(
     icon_and_action_registry: IconRegistry,
     cron_job_registry: CronJobRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("parent_child_topology", ParentChildTopologyPage))
-    page_registry.register(PageEndpoint("network_topology", NetworkTopologyPage))
+    page_registry.register(PageEndpoint("parent_child_topology", ParentChildTopologyPage()))
+    page_registry.register(PageEndpoint("network_topology", NetworkTopologyPage()))
     page_registry.register(
-        PageEndpoint("ajax_initial_topology_filters", AjaxInitialTopologyFilters)
+        PageEndpoint("ajax_initial_topology_filters", AjaxInitialTopologyFilters())
     )
-    page_registry.register(PageEndpoint("ajax_fetch_topology", AjaxFetchTopology))
+    page_registry.register(PageEndpoint("ajax_fetch_topology", AjaxFetchTopology()))
     icon_and_action_registry.register(NetworkTopologyIcon)
     cron_job_registry.register(
         CronJob(
@@ -126,6 +131,8 @@ def _render_network_topology_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str, str] | None:
     # Only show this icon if topology data is available
     files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")
@@ -215,6 +222,7 @@ class ABCTopologyPage(Page):
     def visual_spec(cls):
         raise NotImplementedError
 
+    @override
     def page(self, config: Config) -> None:
         """Determines the hosts to be shown"""
         user.need_permission("general.parent_child_topology")
@@ -375,6 +383,7 @@ class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
 
 
 class AjaxFetchTopology(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         topology_type = request.get_str_input_mandatory("topology_type")
         if topology_type == "network_topology":

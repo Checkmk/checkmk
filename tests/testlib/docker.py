@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-def"
+
 """
 Module for managing Checkmk Docker containers in integration tests.
 
@@ -35,7 +38,7 @@ import requests
 from cmk.crypto.password import Password
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
-from tests.testlib.openapi_session import CMKOpenApiSession
+from tests.testlib.openapi_session import AgentReceiverApiSession, CMKOpenApiSession
 from tests.testlib.package_manager import ABCPackageManager
 from tests.testlib.utils import is_cleanup_enabled
 from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
@@ -315,6 +318,9 @@ class CheckmkApp:
             port=self.port,
             site=self.site_id,
             api_version=self.api_version,
+        )
+        self.openapi_agent_receiver = AgentReceiverApiSession(
+            openapi_session=self.openapi,
         )
         self._create_automation_user()
 

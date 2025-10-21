@@ -2,6 +2,13 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="redundant-expr"
+
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -800,7 +807,7 @@ def groups_to_attributes_internal_to_api(
             case "force_authuser":
                 fa = cast(FORCE_AUTH_USER, group["attribute"])
                 api_groups.append(
-                    {
+                    {  # type: ignore[arg-type,misc]
                         "group_cn": group["cn"],
                         "attribute_to_set": "visibility_of_hosts_or_services",
                         "value": ("show_all" if fa[1] is None else "show_for_user_contacts_only"),

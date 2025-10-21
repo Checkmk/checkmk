@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { components } from '@/lib/rest-api-client/openapi_internal'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
 export interface Thresholds {
   height: number
@@ -22,6 +22,8 @@ export type RelativeGridDashboardDomainObject =
 export type ResponsiveGridDashboardDomainObject =
   components['schemas']['ResponsiveGridDashboardDomainObject']
 export type DashboardFilterContext = components['schemas']['DashboardFilterContext']
+export type DashboardFilterContextWithSingleInfos =
+  components['schemas']['DashboardFilterContextResponse']
 export type DashboardGeneralSettings = components['schemas']['DashboardGeneralSettings']
 export type DashboardRelativeGridLayout = components['schemas']['DashboardRelativeGridLayout']
 export type DashboardResponsiveGridLayout = components['schemas']['DashboardResponsiveGridLayout']
@@ -39,7 +41,7 @@ export type ContentResponsiveGrid = {
 export type DashboardModel<T = ContentResponsiveGrid | ContentRelativeGrid> = {
   owner: string
   general_settings: DashboardGeneralSettings
-  filter_context: DashboardFilterContext
+  filter_context: DashboardFilterContextWithSingleInfos
   content: T
 }
 

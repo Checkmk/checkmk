@@ -3,13 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="mutable-override"
+
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import cast, override, TypedDict
 
 from marshmallow import post_dump, post_load, pre_dump, pre_load
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.bi.lib import (
@@ -25,9 +31,19 @@ from cmk.bi.lib import (
     ReqList,
     ReqNested,
     ReqString,
-    SearchKind,
 )
 from cmk.bi.schema import Schema
+from cmk.bi.type_defs import (
+    HostConditions,
+    HostServiceConditions,
+    LabelGroupCondition,
+    ReferTo,
+    ReferToChildWith,
+    ReferToType,
+    SearchKind,
+    SearchResult,
+    SearchSerialized,
+)
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.labels import AndOrNotLiteral, LabelGroup
 
@@ -82,8 +98,8 @@ class LabelGroupConditionSchema(Schema):
 
     @pre_dump
     def _pre_dump(
-        self, data: dict[str, Any] | tuple[AndOrNotLiteral, LabelGroup], **kwargs: Any
-    ) -> dict[str, Any]:
+        self, data: LabelGroupCondition | tuple[AndOrNotLiteral, LabelGroup], **_: object
+    ) -> LabelGroupCondition:
         if isinstance(data, dict):
             return data
         return {
@@ -92,7 +108,9 @@ class LabelGroupConditionSchema(Schema):
         }
 
     @post_load
-    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> tuple[AndOrNotLiteral, LabelGroup]:
+    def _post_load(
+        self, data: LabelGroupCondition, **_: object
+    ) -> tuple[AndOrNotLiteral, LabelGroup]:
         op: AndOrNotLiteral = data["operator"]
         label_group: LabelGroup = [
             (label_condition["operator"], label_condition["label"])
@@ -176,6 +194,7 @@ class ServiceConditionsSchema(HostConditionsSchema):
 #   |                  |_____|_| |_| |_| .__/ \__|\__, |                   |
 #   |                                  |_|        |___/                    |
 #   +----------------------------------------------------------------------+
+class BIEmptySearchSerialized(SearchSerialized): ...
 
 
 @bi_search_registry.register
@@ -191,11 +210,11 @@ class BIEmptySearch(ABCBISearch):
         return BIEmptySearchSchema
 
     @override
-    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[SearchResult]:
         return [{}]
 
     @override
-    def serialize(self):
+    def serialize(self) -> BIEmptySearchSerialized:
         return {
             "type": self.kind(),
         }
@@ -215,6 +234,11 @@ class BIEmptySearchSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
+class BIHostSearchSerialized(SearchSerialized):
+    conditions: HostConditions
+    refer_to: ReferTo | str
+
+
 @bi_search_registry.register
 class BIHostSearch(ABCBISearch):
     @override
@@ -228,21 +252,21 @@ class BIHostSearch(ABCBISearch):
         return BIHostSearchSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> BIHostSearchSerialized:
         return {
             "type": self.kind(),
             "conditions": self.conditions,
             "refer_to": self.refer_to,
         }
 
-    def __init__(self, search_config: dict[str, Any]) -> None:
+    def __init__(self, search_config: BIHostSearchSerialized) -> None:
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
         self.refer_to = search_config["refer_to"]
 
     @override
-    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
-        new_conditions = replace_macros(self.conditions, macros)
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[SearchResult]:
+        new_conditions = cast(HostConditions, replace_macros(self.conditions, macros))  # type: ignore[call-overload]
         search_matches: list[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
 
         if isinstance(self.refer_to, str):
@@ -257,11 +281,12 @@ class BIHostSearch(ABCBISearch):
         if referred_type == "parent":
             return self._refer_to_parent_results(search_matches)
         if referred_type == "child_with":
-            return self._refer_to_children_with_results(search_matches, bi_searcher, self.refer_to)
+            refer_to = cast(ReferToChildWith, self.refer_to)
+            return self._refer_to_children_with_results(search_matches, bi_searcher, refer_to)
 
         raise NotImplementedError(f"Invalid refer to type {self.refer_to!r}")
 
-    def _refer_to_host_results(self, search_matches: list[BIHostSearchMatch]) -> list[dict]:
+    def _refer_to_host_results(self, search_matches: list[BIHostSearchMatch]) -> list[SearchResult]:
         search_results = []
         for search_match in search_matches:
             search_result = {
@@ -276,7 +301,7 @@ class BIHostSearch(ABCBISearch):
 
     def _refer_to_children_results(
         self, search_matches: list[BIHostSearchMatch], bi_searcher: ABCBISearcher
-    ) -> list[dict]:
+    ) -> list[SearchResult]:
         search_results = []
         handled_children = set()
         for search_match in search_matches:
@@ -292,7 +317,9 @@ class BIHostSearch(ABCBISearch):
                 search_results.append(search_result)
         return search_results
 
-    def _refer_to_parent_results(self, search_matches: list[BIHostSearchMatch]) -> list[dict]:
+    def _refer_to_parent_results(
+        self, search_matches: list[BIHostSearchMatch]
+    ) -> list[SearchResult]:
         search_results = []
         handled_parents = set()
         for search_match in search_matches:
@@ -311,8 +338,11 @@ class BIHostSearch(ABCBISearch):
         return search_results
 
     def _refer_to_children_with_results(
-        self, search_matches: list[BIHostSearchMatch], bi_searcher: ABCBISearcher, refer_to: dict
-    ) -> list[dict]:
+        self,
+        search_matches: list[BIHostSearchMatch],
+        bi_searcher: ABCBISearcher,
+        refer_to: ReferToChildWith,
+    ) -> list[SearchResult]:
         all_children: set[HostName] = set()
 
         # Determine pool of children
@@ -334,7 +364,7 @@ class BIHostSearch(ABCBISearch):
             matched_hosts, conditions["host_label_groups"]
         )
 
-        search_results = []
+        search_results: list[SearchResult] = []
         for host in matched_hosts:
             # Note: The parameter $1$ does not reflect the first regex match group for the initial host
             #       This information was lost when all children were put into the all_children pool
@@ -385,7 +415,7 @@ class ReferToSchema(OneOfSchema):
     }
 
     @override
-    def get_obj_type(self, obj: str | dict[str, Any]) -> str:
+    def get_obj_type(self, obj: ReferToType | ReferTo) -> ReferToType:
         return obj if isinstance(obj, str) else obj["type"]
 
 
@@ -403,14 +433,14 @@ class BIHostSearchSchema(Schema):
     )
 
     @pre_load
-    def pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        if isinstance(data["refer_to"], str):
+    def pre_load(self, data: BIHostSearchSerialized, **_: object) -> BIHostSearchSerialized:
+        if isinstance((raw_refer_to := data["refer_to"]), str):
             # Fixes legacy schema config: {"refer_to": "host"}
-            data["refer_to"] = {"type": data["refer_to"]}
+            data["refer_to"] = {"type": cast(ReferToType, raw_refer_to)}
         return data
 
     @post_dump
-    def post_dump(self, data: str | dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+    def post_dump(self, data: ReferToType | ReferTo, **_: object) -> ReferTo:
         # Fixes legacy schema config: {"refer_to": "host"}
         return {"type": data} if isinstance(data, str) else data
 
@@ -423,6 +453,10 @@ class BIHostSearchSchema(Schema):
 #   |                 |____/ \___|_|    \_/ |_|\___\___|                   |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+
+
+class BIServiceSearchSerialized(SearchSerialized):
+    conditions: HostServiceConditions
 
 
 @bi_search_registry.register
@@ -438,21 +472,21 @@ class BIServiceSearch(ABCBISearch):
         return BIServiceSearchSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> BIServiceSearchSerialized:
         return {
             "type": self.kind(),
             "conditions": self.conditions,
         }
 
-    def __init__(self, search_config: dict[str, Any]) -> None:
+    def __init__(self, search_config: BIServiceSearchSerialized) -> None:
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
 
     @override
-    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
-        new_conditions = replace_macros(self.conditions, macros)
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[SearchResult]:
+        new_conditions = cast(HostServiceConditions, replace_macros(self.conditions, macros))  # type: ignore[call-overload]
         search_matches: list[BIServiceSearchMatch] = bi_searcher.search_services(new_conditions)
-        search_results = []
+        search_results: list[SearchResult] = []
         for search_match in sorted(search_matches, key=lambda x: x.service_description):
             search_result = {
                 "$1$": next(iter(search_match.host_match.match_groups), ""),
@@ -487,6 +521,15 @@ class BIServiceSearchSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
+class FixedArguments(TypedDict):
+    key: str
+    values: list[str]
+
+
+class BIFixedArgumentsSearchSerialized(SearchSerialized):
+    arguments: list[FixedArguments]
+
+
 @bi_search_registry.register
 class BIFixedArgumentsSearch(ABCBISearch):
     @override
@@ -495,7 +538,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
         return "fixed_arguments"
 
     @override
-    def serialize(self):
+    def serialize(self) -> BIFixedArgumentsSearchSerialized:
         return {
             "type": self.kind(),
             "arguments": self.arguments,
@@ -506,14 +549,14 @@ class BIFixedArgumentsSearch(ABCBISearch):
     def schema(cls) -> type[BIFixedArgumentsSearchSchema]:
         return BIFixedArgumentsSearchSchema
 
-    def __init__(self, search_config: dict[str, Any]) -> None:
+    def __init__(self, search_config: BIFixedArgumentsSearchSerialized) -> None:
         super().__init__(search_config)
         self.arguments = search_config["arguments"]
 
     @override
-    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
-        results: list[dict] = []
-        new_vars = replace_macros(self.arguments, macros)
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[SearchResult]:
+        results: list[SearchResult] = []
+        new_vars = cast(list[FixedArguments], replace_macros(self.arguments, macros))  # type: ignore[arg-type]
         for argument in new_vars:
             key = argument["key"]
             for idx, value in enumerate(argument["values"]):
@@ -552,5 +595,5 @@ class BISearchSchema(OneOfSchema):
     type_schemas = {k: v.schema() for k, v in bi_search_registry.items()}
 
     @override
-    def get_obj_type(self, obj: ABCBISearch | dict) -> str:
+    def get_obj_type(self, obj: ABCBISearch | SearchSerialized) -> SearchKind:
         return obj["type"] if isinstance(obj, dict) else obj.kind()

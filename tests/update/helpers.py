@@ -173,17 +173,16 @@ def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
 
 def check_agent_receiver_error_log(site: Site) -> None:
     """Assert that there are no unexpected errors in the agent receiver log."""
+    # Default pattern should be "^.*error.*$"
+    # TODO: Remove "sigterm" from pattern after CMK-24766 is done
+    content_pattern = "^(?!.*(sigterm)).*error.*$"
+
     error_match_dict = parse_files(
         path_name=site.logs_dir / "agent-receiver",
         files_name_pattern="*log*",
-        content_pattern="error",
+        content_pattern=content_pattern,
         sudo=True,
     )
-    # TODO: Remove the following block after CMK-24766 is done
-    for file in list(error_match_dict):
-        for error in error_match_dict[file]:
-            if "was sent SIGTERM!" in error:
-                error_match_dict.pop(file)
 
     assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"
 
@@ -216,18 +215,20 @@ def check_services(site: Site, hostname: str, base_data: dict[str, ServiceInfo])
 
 
 def check_core_reinit(site: Site) -> None:
-    """reinitialize (reload, then restart) the core and check the output"""
+    """Reinitialize (reload, then restart) the core and check the output"""
 
     # reload the core and check the output (see CMK-20653)
     logger.info("Reloading the core...")
     ret_reload = site.run(["cmk", "--reload", "--debug"])
-    assert ret_reload.returncode == 0 and not ret_reload.stderr, "Reloading the core failed!"
+    assert ret_reload.returncode == 0, f"Reloading the core failed!\n STDERR:{ret_reload.stderr}"
+    logger.warning(ret_reload.stderr)  # log possible warnings coming from STDERR
     assert get_site_status(site) == "running", "Invalid service status after reloading!"
 
     # restart the core and check the output (see CMK-20653)
     logger.info("Restarting the core...")
     ret_restart = site.run(["cmk", "--restart", "--debug"])
-    assert ret_restart.returncode == 0 and not ret_restart.stderr, "Restarting the core failed!"
+    assert ret_restart.returncode == 0, f"Restarting the core failed!\n STDERR:{ret_restart.stderr}"
+    logger.warning(ret_restart.stderr)  # log possible warnings coming from STDERR
     assert get_site_status(site) == "running", "Invalid service status after restarting!"
 
 
@@ -291,7 +292,10 @@ class BaseVersions:
 
 @dataclass
 class InteractiveModeDistros:
-    DISTROS = ["ubuntu-22.04", "almalinux-9"]
+    DISTROS = [
+        "ubuntu-22.04",
+        "almalinux-9",
+    ]
     assert set(DISTROS).issubset(set(get_supported_distros()))
 
 

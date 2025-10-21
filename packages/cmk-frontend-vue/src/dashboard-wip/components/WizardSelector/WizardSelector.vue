@@ -4,26 +4,31 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import MetricsWizard from '@/dashboard-wip/components/Wizard/MetricsWizard.vue'
-import ViewWizard from '@/dashboard-wip/components/Wizard/wizards/view/ViewWizard.vue'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
-import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
+import CmkSlideIn from '@/components/CmkSlideIn.vue'
+
+import type { DashboardConstants } from '../../types/dashboard.ts'
+import type { ContextFilters } from '../../types/filter.ts'
 import type {
   WidgetContent,
   WidgetFilterContext,
   WidgetGeneralSettings,
   WidgetSpec
-} from '@/dashboard-wip/types/widget'
-
-import HostsSiteWizard from '../Wizard/HostsSiteWizard.vue'
+} from '../../types/widget'
+import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
+import HwSwInventoryWizard from '../Wizard/wizards/hw_sw_inventory/HwSwInventoryWizard.vue'
+import MetricsWizard from '../Wizard/wizards/metrics/MetricsWizard.vue'
+import ServicesOverviewWizard from '../Wizard/wizards/services/ServicesOverviewWizard.vue'
+import ViewWizard from '../Wizard/wizards/view/ViewWizard.vue'
 
 interface AllWizardsProps {
+  isOpen: boolean
   selectedWizard: string
   dashboardConstants: DashboardConstants
   dashboardName: string
   dashboardOwner: string
   contextFilters: ContextFilters
   editWidgetSpec: WidgetSpec | null
+  editWidgetId: string | null
 }
 
 const emit = defineEmits<{
@@ -46,44 +51,75 @@ const props = defineProps<AllWizardsProps>()
 const handleGoBack = () => {
   emit('back-button')
 }
+
+const handleAddEditWidget = (
+  content: WidgetContent,
+  generalSettings: WidgetGeneralSettings,
+  filterContext: WidgetFilterContext
+) => {
+  if (props.editWidgetId) {
+    emit('edit-widget', props.editWidgetId, content, generalSettings, filterContext)
+  } else {
+    emit('add-widget', content, generalSettings, filterContext)
+  }
+}
 </script>
 
 <template>
-  <div v-if="!props.selectedWizard"></div>
+  <div v-if="!selectedWizard"></div>
   <div v-else>
-    <MetricsWizard
-      v-if="props.selectedWizard === 'metrics_graphs'"
-      :dashboard-name="props.dashboardName"
-      :dashboard-constants="props.dashboardConstants"
-      :context-filters="contextFilters"
-      @go-back="handleGoBack"
-      @add-widget="
-        (content, generalSettings, filterContext) =>
-          emit('add-widget', content, generalSettings, filterContext)
-      "
-    />
-    <HostsSiteWizard
-      v-else-if="selectedWizard === 'host_site_overview'"
-      :dashboard-name="dashboardName"
-      :dashboard-constants="dashboardConstants"
-      :context-filters="contextFilters"
-      @go-back="handleGoBack"
-      @add-widget="
-        (content, generalSettings, filterContext) =>
-          emit('add-widget', content, generalSettings, filterContext)
-      "
-    />
-    <ViewWizard
-      v-else-if="selectedWizard === 'views'"
-      :dashboard-name="dashboardName"
-      :dashboard-owner="dashboardOwner"
-      :dashboard-constants="dashboardConstants"
-      :context-filters="contextFilters"
-      @go-back="handleGoBack"
-      @add-widget="
-        (content, generalSettings, filterContext) =>
-          emit('add-widget', content, generalSettings, filterContext)
-      "
-    />
+    <CmkSlideIn :open="isOpen">
+      <HostsSiteWizard
+        v-if="selectedWizard === 'host_site_overview'"
+        :dashboard-name="dashboardName"
+        :dashboard-constants="dashboardConstants"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <HwSwInventoryWizard
+        v-if="selectedWizard === 'hw_sw_inventory'"
+        :dashboard-name="dashboardName"
+        :context-filters="contextFilters"
+        :dashboard-constants="dashboardConstants"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <MetricsWizard
+        v-if="selectedWizard === 'metrics_graphs'"
+        :dashboard-name="dashboardName"
+        :dashboard-constants="dashboardConstants"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <ServicesOverviewWizard
+        v-if="selectedWizard === 'service_overview'"
+        :dashboard-name="dashboardName"
+        :dashboard-constants="dashboardConstants"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <ViewWizard
+        v-if="selectedWizard === 'views'"
+        :dashboard-name="dashboardName"
+        :dashboard-owner="dashboardOwner"
+        :dashboard-constants="dashboardConstants"
+        :context-filters="contextFilters"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <!-- Other wizards can be added here similarly -->
+    </CmkSlideIn>
   </div>
 </template>

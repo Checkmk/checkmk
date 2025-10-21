@@ -49,6 +49,7 @@ interface DashboardProperties<T> {
   refresh_dashlets: [number, number, T][]
   on_resize_dashlets: Record<number, T | undefined>
   dashboard_name: string
+  dashboard_owner: string
   dashboard_mtime: number
   dashlets: Dashlet[]
   slim_editor_thresholds: Thresholds
@@ -703,6 +704,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         const back_url = makeuri({}, window.location.href, 'dashboard.py')
         location.href = makeuri_contextless(
           {
+            owner: dashboard_properties.dashboard_owner,
             name: dashboard_properties.dashboard_name,
             id: nr,
             back: back_url
@@ -1030,7 +1032,9 @@ function persist_dashlet_pos(nr: number) {
   }
 
   call_ajax(
-    'ajax_dashlet_pos.py?name=' +
+    'ajax_dashlet_pos.py?owner=' +
+      dashboard_properties.dashboard_owner +
+      '&name=' +
       dashboard_properties.dashboard_name +
       '&id=' +
       nr +

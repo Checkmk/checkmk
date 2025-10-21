@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 #################################################################################
 # NOTE: This check really only makes sense as a cluster check!
 #       Read comment in parse function to understand why.

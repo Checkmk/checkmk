@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host status
 
+# mypy: disable-error-code="type-arg"
+
 The host status provides the host's "health" information.
 
 ### Related documentation

@@ -5,18 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import type { Ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkIcon from '@/components/CmkIcon'
+import CmkLinkCard from '@/components/CmkLinkCard'
+import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
@@ -28,7 +26,7 @@ const { _t } = usei18n()
 const props = defineProps<{
   step: number
   stepId: StepId
-  urls: WelcomeUrls
+  cards: WelcomeCards
   accomplished: boolean
 }>()
 const emit = defineEmits(['step-completed'])
@@ -74,7 +72,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="folder"
               :title="_t('View host table')"
-              :url="urls.setup_hosts"
+              :url="cards.setup_hosts"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
@@ -146,7 +144,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="main-changes"
               :title="_t('Activate changes')"
-              :url="urls.activate_changes"
+              :url="cards.activate_changes"
               :open-in-new-tab="false"
             />
           </StepCardsRow>

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Callable, Iterable, Mapping, Reversible, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,8 +17,8 @@ from cmk.utils.servicename import ServiceName
 
 from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords
 from .config_processing import (
+    GlobalProxiesWithLookup,
     process_configuration_to_parameters,
-    ProxyConfig,
 )
 
 
@@ -35,7 +37,7 @@ class ActiveCheck:
         plugins: Mapping[PluginLocation, alpha.ActiveCheckConfig | v1.ActiveCheckConfig],
         host_name: HostName,
         host_config: v1.HostConfig,
-        http_proxies: Mapping[str, Mapping[str, str]],
+        global_proxies_with_lookup: GlobalProxiesWithLookup,
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
@@ -47,7 +49,7 @@ class ActiveCheck:
         self._modules = {p.name: l.module for l, p in plugins.items()}
         self.host_name = host_name
         self.host_config = host_config
-        self._http_proxies = http_proxies
+        self._global_proxies_with_lookup = global_proxies_with_lookup
         self._service_name_finalizer = service_name_finalizer
         self.stored_passwords = stored_passwords or {}
         self.password_store_file = password_store_file
@@ -67,13 +69,13 @@ class ActiveCheck:
         if (active_check := self._plugins.get(plugin_name)) is None:
             return ()
 
-        proxy_config = ProxyConfig(self.host_name, self._http_proxies)
         original_and_processed_configs = (
             (
                 config_set,
                 process_configuration_to_parameters(
                     config_set,
-                    proxy_config,
+                    self._global_proxies_with_lookup,
+                    usage_hint=f"plugin: {plugin_name}",
                     is_alpha=isinstance(active_check, alpha.ActiveCheckConfig),
                 ),
             )

@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
 from collections.abc import Mapping
 from http import HTTPMethod, HTTPStatus
 from typing import Literal
@@ -11,6 +13,8 @@ from pydantic import BaseModel, Field
 
 PatternType = Literal["matchesJsonSchema", "equalTo", "matches", "equalToJson"]
 AllowedHeader = Literal["Content-Type", "Authorization"]
+
+Method = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "ANY"]
 
 
 class Request(BaseModel):
@@ -64,7 +68,7 @@ class Wiremock(BaseModel):
         )
         assert response.status_code < 400, response.text
 
-    def get_all_url_path_requests(self, url_path: str, method: HTTPMethod) -> list[dict]:
+    def get_all_url_path_requests(self, url_path: str, method: HTTPMethod) -> list[FoundRequests]:
         query = {
             "urlPathPattern": url_path,
             "method": method,
@@ -76,6 +80,19 @@ class Wiremock(BaseModel):
             timeout=1,
         )
         assert response.status_code < 400, response.text
+        data = _FoundRequestsResponse.model_validate_json(response.text)
+        return data.requests
 
-        all_requests = response.json()["requests"]
-        return list(all_requests)
+
+class FoundRequests(BaseModel):
+    url: str
+    absoluteUrl: str
+    method: Method
+    headers: Mapping[str, str]
+    body: str
+    loggedDate: int
+    loggedDateString: str
+
+
+class _FoundRequestsResponse(BaseModel):
+    requests: list[FoundRequests]

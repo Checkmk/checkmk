@@ -8,10 +8,11 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import type { ButtonVariants } from '@/components/CmkButton.vue'
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 
 interface ActionButtonIcon {
-  name: string
+  name: SimpleIcons
   side?: 'left' | 'right'
   rotate?: number
 }

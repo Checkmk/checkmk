@@ -3,54 +3,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+    LegacyDiscoveryResult,
+)
 from cmk.agent_based.v2 import StringTable
 
 check_info = {}
 
 
-def saveint(i: str) -> int:
-    """Tries to cast a string to an integer and return it. In case this
-    fails, it returns 0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0 back from this function,
-    you can not know whether it is really 0 or something went wrong."""
-    try:
-        return int(i)
-    except (TypeError, ValueError):
-        return 0
+@dataclass(frozen=True)
+class Queue:
+    length: int
 
 
-def discover_qmail_stats(info):
-    if info:
-        yield None, {}
+def parse_qmail_stats(string_table: StringTable) -> Queue:
+    return Queue(int(string_table[0][0]))
 
 
-def check_qmail_stats(_no_item, params, info):
-    if not isinstance(params, dict):
-        params = {
-            "deferred": params,
-        }
-    warn, crit = params["deferred"]
-    queue_length = saveint(info[0][-1])
-    state = 0
-    label = ""
-    if queue_length >= crit:
-        state = 2
-    elif queue_length >= warn:
-        state = 1
-    if state:
-        label = "(Levels at %d/%d)" % (warn, crit)
-
-    perf = [("queue", queue_length, warn, crit)]
-    message = "Mailqueue length is %d %s" % (queue_length, label)
-    return state, message, perf
+def discover_qmail_stats(section: Queue) -> LegacyDiscoveryResult:
+    yield None, {}
 
 
-def parse_qmail_stats(string_table: StringTable) -> StringTable:
-    return string_table
+def check_qmail_stats(
+    _no_item: None, params: Mapping[str, Any], section: Queue
+) -> LegacyCheckResult:
+    yield check_levels(
+        section.length,
+        "queue",
+        params["deferred"],
+        infoname="Deferred mails",
+        human_readable_func=str,
+    )
 
 
 check_info["qmail_stats"] = LegacyCheckDefinition(

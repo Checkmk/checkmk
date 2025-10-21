@@ -44,23 +44,21 @@ const componentId = useId()
       type="file"
       :aria-label="spec.title"
     />
-    <div v-if="value.file_name" class="replace">
+    <div v-if="value.file_name" class="form-file-upload__replace">
       <CmkButton @click="value.file_name = null">{{ spec.i18n.replace_file }}</CmkButton>
-      <FormLabel class="filename"> {{ value.file_name }}</FormLabel>
+      <FormLabel class="form-file-upload__filename"> {{ value.file_name }}</FormLabel>
     </div>
     <FormValidation :validation="validation"></FormValidation>
   </span>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-div.replace {
+.form-file-upload__replace {
   cursor: pointer;
   margin-bottom: -8px;
+}
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  label.filename {
-    padding-left: 10px;
-  }
+.form-file-upload__filename {
+  padding-left: 10px;
 }
 </style>

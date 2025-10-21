@@ -145,6 +145,6 @@ check_plugin_mysql_replica_slave = CheckPlugin(
     check_function=check_mysql_replica_slave,
     check_ruleset_name="mysql_slave",
     check_default_parameters={
-        "seconds_behind_master": None,
+        "seconds_behind_master": ("no_levels", None),
     },
 )

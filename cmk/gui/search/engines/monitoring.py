@@ -38,6 +38,7 @@ from cmk.gui.utils.labels import (
     Labels,
 )
 from cmk.gui.utils.regex import validate_regex
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -162,9 +163,15 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
     There is no aggregation done by this conductor. It deals with a single search plug-in.
     """
 
-    def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
+    def __init__(
+        self,
+        used_filters: UsedFilters,
+        filter_behaviour: FilterBehaviour,
+        user_permissions: UserPermissions,
+    ) -> None:
         super().__init__(used_filters, filter_behaviour)
         self._results: list[SearchResult] = []
+        self._user_permissions = user_permissions
 
     @override
     def do_query(self) -> None:
@@ -176,7 +183,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         assert isinstance(plugin, ABCBasicMatchPlugin)
 
         assert len(queries) == 1, "Only supporting single query lookups"
-        self._results = plugin.get_results(queries[0])
+        self._results = plugin.get_results(queries[0], self._user_permissions)
 
     @override
     def num_rows(self) -> int:
@@ -510,13 +517,15 @@ class QuicksearchManager:
     def __init__(self, raise_too_many_rows_error: bool = True) -> None:
         self.raise_too_many_rows_error = raise_too_many_rows_error
 
-    def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
-        search_objects = self._determine_search_objects(query)
+    def generate_results(
+        self, query: SearchQuery, user_permissions: UserPermissions
+    ) -> SearchResultsByTopic:
+        search_objects = self._determine_search_objects(query, user_permissions)
         self._conduct_search(search_objects)
         return self._evaluate_results(search_objects)
 
-    def generate_search_url(self, query: SearchQuery) -> str:
-        search_objects = self._determine_search_objects(query)
+    def generate_search_url(self, query: SearchQuery, user_permissions: UserPermissions) -> str:
+        search_objects = self._determine_search_objects(query, user_permissions)
 
         # Hitting enter on the search field to open the search in the
         # page content area is currently only supported for livestatus
@@ -548,7 +557,9 @@ class QuicksearchManager:
 
         return _build_url(url_params)
 
-    def _determine_search_objects(self, query: SearchQuery) -> list[ABCQuicksearchConductor]:
+    def _determine_search_objects(
+        self, query: SearchQuery, user_permissions: UserPermissions
+    ) -> list[ABCQuicksearchConductor]:
         """Construct search objects from the query
 
         Try to find search object expressions and construct objects or
@@ -577,6 +588,7 @@ class QuicksearchManager:
                 filter_name,
                 {filter_name: [_to_regex(query)]},
                 FilterBehaviour[filter_behaviour_str.upper()],
+                user_permissions,
             )
             for filter_name, filter_behaviour_str in active_config.quicksearch_search_order
         ]
@@ -623,12 +635,13 @@ class QuicksearchManager:
         filter_name: str,
         used_filters: UsedFilters,
         filter_behaviour: FilterBehaviour,
+        user_permissions: UserPermissions,
     ) -> ABCQuicksearchConductor:
         plugin = match_plugin_registry[filter_name]
         if isinstance(plugin, ABCLivestatusMatchPlugin):
             return LivestatusQuicksearchConductor(used_filters, filter_behaviour)
 
-        return BasicPluginQuicksearchConductor(used_filters, filter_behaviour)
+        return BasicPluginQuicksearchConductor(used_filters, filter_behaviour, user_permissions)
 
     def _conduct_search(self, search_objects: list[ABCQuicksearchConductor]) -> None:
         """Collect the raw data from livestatus
@@ -723,7 +736,7 @@ class ABCBasicMatchPlugin(ABCMatchPlugin):
     """Base class for all non livestatus based match plugins"""
 
     @abc.abstractmethod
-    def get_results(self, query: str) -> list[SearchResult]:
+    def get_results(self, query: str, user_permissions: UserPermissions) -> list[SearchResult]:
         raise NotImplementedError()
 
 
@@ -1339,14 +1352,14 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
         return _("Monitor")
 
     @override
-    def get_results(self, query: str) -> list[SearchResult]:
+    def get_results(self, query: str, user_permissions: UserPermissions) -> list[SearchResult]:
         return [
             SearchResult(
                 title=main_menu_item.title,
                 url=main_menu_item.url,
             )
             for main_menu_topic in (
-                main_menu_registry["monitoring"].topics()
+                main_menu_registry["monitoring"].topics(user_permissions)
                 if main_menu_registry["monitoring"].topics
                 else []
             )
@@ -1366,11 +1379,14 @@ match_plugin_registry.register(MonitorMenuMatchPlugin())
 
 # TODO: rework monitoring search façade to return correct payload for unified search.
 class MonitoringSearchEngine:
-    def __init__(self) -> None:
+    def __init__(self, user_permissions: UserPermissions) -> None:
         self._legacy_engine = QuicksearchManager(raise_too_many_rows_error=False)
+        self._user_permissions = user_permissions
 
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
         return itertools.chain.from_iterable(
             transform_legacy_results_to_unified(results, topic, provider="monitoring")
-            for topic, results in self._legacy_engine.generate_results(query)
+            for topic, results in self._legacy_engine.generate_results(
+                query, self._user_permissions
+            )
         )

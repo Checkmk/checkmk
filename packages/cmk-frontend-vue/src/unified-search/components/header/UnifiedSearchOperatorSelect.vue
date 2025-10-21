@@ -9,7 +9,7 @@ import { ref, useTemplateRef } from 'vue'
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
@@ -217,6 +217,7 @@ function toggleOperatorOptions() {
   opacity: 0.5;
   font-weight: var(--font-weight-bold);
   padding: var(--dimension-2) var(--dimension-3) !important;
+  list-style-type: none;
 }
 
 .unified-search-operator-option-list {

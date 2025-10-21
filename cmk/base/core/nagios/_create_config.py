@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for support of Nagios (and compatible) cores"""
 
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
+
 import base64
 import itertools
 import os
@@ -64,7 +67,7 @@ from cmk.utils.notify_types import Contact
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
-from cmk.utils.timeperiod import add_builtin_timeperiods
+from cmk.utils.timeperiod import TimeperiodSpecs
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
@@ -78,10 +81,13 @@ class NagiosCore(MonitoringCore):
         licensing_handler_type: type[LicensingHandler],
         init_script_path: Path,
         objects_file_path: Path,
+        # we should consider passing a NagiosConfig here, in analogy to CmcPb
+        timeperiods: TimeperiodSpecs,
     ) -> None:
         super().__init__(licensing_handler_type)
         self.init_script_path: Final = init_script_path
         self.objects_file_path: Final = objects_file_path
+        self.timeperiods: Final = timeperiods
 
     @classmethod
     def name(cls) -> Literal["nagios"]:
@@ -214,6 +220,7 @@ class NagiosCore(MonitoringCore):
             default_address_family=default_address_family,
             ip_address_of=ip_address_of,
             service_depends_on=service_depends_on,
+            timeperiods=self.timeperiods,
         )
 
         store.save_text_to_file(self.objects_file_path, config_buffer.getvalue())
@@ -264,7 +271,9 @@ class NagiosCore(MonitoringCore):
 
 
 class NagiosConfig:
-    def __init__(self, outfile: IO[str], hostnames: Sequence[HostName] | None) -> None:
+    def __init__(
+        self, outfile: IO[str], hostnames: Sequence[HostName] | None, timeperiods: TimeperiodSpecs
+    ) -> None:
         super().__init__()
         self._outfile = outfile
         self.hostnames = hostnames
@@ -276,6 +285,7 @@ class NagiosConfig:
         self.active_checks_to_define: dict[str, str] = {}
         self.custom_commands_to_define: set[CoreCommandName] = set()
         self.hostcheck_commands_to_define: list[tuple[CoreCommand, str]] = []
+        self.timeperiods: Final = timeperiods
 
     def write_str(self, x: str) -> None:
         self._outfile.write(x)
@@ -314,8 +324,9 @@ def create_config(
     ],
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+    timeperiods: TimeperiodSpecs,
 ) -> None:
-    cfg = NagiosConfig(outfile, hostnames)
+    cfg = NagiosConfig(outfile, hostnames, timeperiods)
 
     _output_conf_header(cfg)
 
@@ -1179,12 +1190,10 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
-    timeperiods = add_builtin_timeperiods(config.timeperiods)
     cfg.write_str("\n# ------------------------------------------------------------\n")
     cfg.write_str("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
     cfg.write_str("# ------------------------------------------------------------\n\n")
-    for name in sorted(timeperiods):
-        tp = timeperiods[name]
+    for name, tp in sorted(cfg.timeperiods.items()):
         timeperiod_spec = {
             "timeperiod_name": name,
             "alias": tp["alias"],

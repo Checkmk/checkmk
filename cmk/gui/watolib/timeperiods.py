@@ -15,8 +15,7 @@ from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.timeperiod import (
-    add_builtin_timeperiods,
-    cleanup_timeperiod_caches,
+    builtin_timeperiods,
     is_builtin_timeperiod,
     remove_builtin_timeperiods,
     timeperiod_spec_alias,
@@ -61,14 +60,13 @@ def _project(name: TimeperiodName) -> str:
 # NOTE: This is a variation of cmk.utils.timeperiod.load_timeperiods(). Can we somehow unify this?
 @request_memoize()
 def load_timeperiods() -> TimeperiodSpecs:
-    return add_builtin_timeperiods(TimePeriodsConfigFile().load_timeperiod_specs_for_reading())
+    return {**TimePeriodsConfigFile().load_timeperiod_specs_for_reading(), **builtin_timeperiods()}
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs, pprint_value: bool) -> None:
     TimePeriodsConfigFile().save_timeperiod_specs(
         remove_builtin_timeperiods(timeperiods), pprint_value
     )
-    cleanup_timeperiod_caches()
     load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
 

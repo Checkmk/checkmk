@@ -6,6 +6,8 @@
 Special agent for monitoring Promtheus Alertmanager with Checkmk.
 """
 
+# mypy: disable-error-code="no-any-return"
+
 import argparse
 import ast
 import json

@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_SCREENOS
 
 check_info = {}
@@ -18,28 +20,14 @@ def inventory_juniper_screenos_cpu(info):
 def check_juniper_screenos_cpu(_no_item, params, info):
     util1, util15 = map(float, info[0])
     warn, crit = params.get("util", (None, None)) if isinstance(params, dict) else params
-    label15 = ""
-    state = 0
-    if util15 >= crit:
-        state = 2
-        label15 = "(!!)"
-    elif util15 >= warn:
-        state = max(state, 1)
-        label15 = "(!)"
 
-    perf = [
-        ("util1", util1, warn, crit),
-        ("util15", util15, warn, crit),
-    ]
+    # Report 1min utilization as informational
+    yield check_levels(util1, "util1", None, human_readable_func=render.percent, infoname="1min")
 
-    message = "%d%% 1min, %d%% 15min%s (warn/crit at %d%%/%d%%)" % (
-        util1,
-        util15,
-        label15,
-        warn,
-        crit,
+    # Check levels on 15min utilization
+    yield check_levels(
+        util15, "util15", (warn, crit), human_readable_func=render.percent, infoname="15min"
     )
-    return state, message, perf
 
 
 def parse_juniper_screenos_cpu(string_table: StringTable) -> StringTable | None:

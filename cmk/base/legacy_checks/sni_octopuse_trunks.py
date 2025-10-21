@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # .1.3.6.1.4.1.231.7.2.9.3.8.1.3.1  "OpenStage 30"
 # .1.3.6.1.4.1.231.7.2.9.3.8.1.3.2  "OpenStage 30"
 # .1.3.6.1.4.1.231.7.2.9.3.8.1.3.7  "P. O. T."

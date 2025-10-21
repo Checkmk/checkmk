@@ -21,9 +21,9 @@ import useDragging from '@/lib/useDragging'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
+import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkSwitch from '@/components/CmkSwitch.vue'
-import type { Suggestion } from '@/components/suggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
@@ -53,6 +53,7 @@ const props = defineProps<{
   graph_options: GraphOptions
   graph_renderer: GraphRenderer
   metric_backend_available: boolean
+  create_services_available: boolean
 }>()
 
 const preventLeaving = ref(false)
@@ -722,6 +723,14 @@ function dragElement(event: DragEvent) {
   graphLines.value.splice(dragReturn.targetIndex, 0, movedEntry)
 }
 
+// Create services
+
+function createServices(graphLine: GraphLine) {
+  if (graphLine.type !== 'query') {
+    return
+  }
+}
+
 // Graph update
 
 function computeGraphOptions(): GraphOptions {
@@ -846,6 +855,13 @@ const graphDesignerContentAsJson = computed(() => {
             src="themes/facelift/images/icon_delete.svg"
             class="icon iconbutton"
             @click="deleteGraphLine(graphLine)"
+          />
+          <img
+            v-if="props.create_services_available && graphLine.type === 'query'"
+            :title="_t('Create services')"
+            src="themes/facelift/images/icon_checkmk.svg"
+            class="icon iconbutton"
+            @click="createServices(graphLine)"
           />
         </td>
         <td class="narrow"><CmkColorPicker v-model:data="graphLine.color" /></td>

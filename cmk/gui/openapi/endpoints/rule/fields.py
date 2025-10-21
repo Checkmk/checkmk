@@ -2,13 +2,20 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="mutable-override"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="unreachable"
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any, cast, Literal, TYPE_CHECKING, TypedDict
 
 from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.gui import fields as gui_fields
@@ -534,7 +541,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
             raise ValidationError(f"Unknown format: {_entry}")
 
-        def _ensure_list(_entry) -> list[str]:  # type: ignore[no-untyped-def]
+        def _ensure_list(_entry) -> list[str]:
             if isinstance(_entry, list):
                 return _entry
 

@@ -2,6 +2,11 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Mapping, Sequence
 from typing import Final
 
@@ -60,12 +65,13 @@ RAW_AZURE_SERVICES: Final = [
     ),
     ("Microsoft.Network/trafficmanagerprofiles", Title("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", Title("Load Balancer")),
-    ("Microsoft.Cache/Redis", Title("Redis Caches")),
 ]
 
 CCE_AZURE_SERVICES: Final = [
     ("Microsoft.RecoveryServices/vaults", Title("Recovery Services Vault")),
     ("Microsoft.Network/applicationGateways", Title("Application Gateway")),
+    ("Microsoft.Cache/Redis", Title("Redis Caches")),
+    ("Microsoft.Network/natGateways", Title("NAT Gateways")),
 ]
 
 

@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="mutable-override"
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="type-arg"
+
 # A pylint checker for Checkmk layering conventions. The basic idea is very simple: We partition
 # qualified names into "virtual packages" (see PackageFor protocol below) and check if imports
 # between these virtual packages are explicitly allowed (see IsPackageRelationshipOK protocol

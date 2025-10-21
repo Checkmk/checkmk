@@ -5,12 +5,14 @@
 """Render Checkmk graphs as PNG images.
 This is needed for the graphs sent with mail notifications."""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import base64
 import json
 import time
 import traceback
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, override
 
 from pydantic import ValidationError as PydanticValidationError
 
@@ -23,11 +25,6 @@ from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import pdf
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
-from cmk.gui.graphing._graph_templates import (
-    get_template_graph_specification,
-    MKGraphNotFound,
-)
-from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -57,12 +54,17 @@ from ._graph_specification import (
     GraphRecipe,
     parse_raw_graph_specification,
 )
+from ._graph_templates import (
+    get_template_graph_specification,
+    MKGraphNotFound,
+)
 from ._html_render import GraphDestinations
 from ._metric_backend_registry import (
     FetchTimeSeries,
     metric_backend_registry,
 )
-from ._utils import get_graph_data_from_livestatus
+from ._rrd import get_graph_data_from_livestatus
+from ._unit import get_temperature_unit
 
 
 # NOTE
@@ -74,6 +76,7 @@ from ._utils import get_graph_data_from_livestatus
 # of a host or service.
 #    # Needed by mail notification plug-in (-> no authentication from localhost)
 class AjaxGraphImagesForNotifications(Page):
+    @override
     def page(self, config: Config) -> None:
         """Registered as `ajax_graph_images`."""
         if not isinstance(user, LoggedInSuperUser):

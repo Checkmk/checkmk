@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="mutable-override"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="unreachable"
+
 import abc
 import ast
 import glob
@@ -33,6 +39,7 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.password_store
 import cmk.utils.paths
+import cmk.utils.timeperiod
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -102,6 +109,7 @@ from cmk.base.checkers import (
 from cmk.base.config import (
     ConfigCache,
     EnforcedServicesTable,
+    get_metric_backend_fetcher,
     handle_ip_lookup_failure,
     load_resource_cfg_macros,
     snmp_default_community,
@@ -183,6 +191,7 @@ from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (
+    config_processing,
     ExecutableFinder,
     load_special_agents,
     SpecialAgent,
@@ -198,7 +207,7 @@ from cmk.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
-from cmk.utils import config_warnings, ip_lookup, log, man_pages
+from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, man_pages
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
@@ -208,6 +217,7 @@ from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager, Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.password_store import make_staged_passwords_lookup
 from cmk.utils.paths import (
     autochecks_dir,
     autodiscovery_dir,
@@ -234,7 +244,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
 )
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.timeperiod import load_timeperiods, timeperiod_active
+from cmk.utils.timeperiod import get_all_timeperiods
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -407,6 +417,11 @@ class AutomationDiscovery(DiscoveryAutomation):
             mode=Mode.DISCOVERY,
             simulation_mode=config.simulation_mode,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+                hn,
+                config_cache.explicit_host_attributes,
+                loaded_config.monitoring_core == "cmc",
+            ),
         )
         # sort clusters last, to have them operate with the new nodes host labels.
         for is_cluster, hostname in sorted((h in hosts_config.clusters, h) for h in hostnames):
@@ -474,6 +489,24 @@ class AutomationDiscovery(DiscoveryAutomation):
 automations.register(AutomationDiscovery())
 
 
+def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.GlobalProxy:
+    proxy_config_auth = (
+        config_processing.GlobalProxyAuth(
+            user=auth["user"],
+            password=auth["password"],
+        )
+        if (auth := raw["proxy_config"].get("auth")) is not None
+        else None
+    )
+
+    return config_processing.GlobalProxy(
+        scheme=raw["proxy_config"]["scheme"],
+        proxy_server_name=raw["proxy_config"]["proxy_server_name"],
+        port=raw["proxy_config"]["port"],
+        auth=proxy_config_auth,
+    )
+
+
 class AutomationSpecialAgentDiscoveryPreview(Automation):
     cmd = "special-agent-discovery-preview"
 
@@ -510,8 +543,15 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.params,
                 password_store_file,
                 run_settings.passwords,
-                run_settings.http_proxies,
+                config_processing.GlobalProxiesWithLookup(
+                    global_proxies={
+                        name: _set_global_proxy(raw)
+                        for name, raw in run_settings.http_proxies.items()
+                    },
+                    password_lookup=make_staged_passwords_lookup(),
+                ),
             )
+
             fetcher = SpecialAgentFetcher(
                 PlainFetcherTrigger(),  # no relay support yet
                 agent_name=run_settings.agent_name,
@@ -635,6 +675,11 @@ class AutomationDiscoveryPreview(Automation):
             # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
             # and tabula rasa)
             max_cachefile_age=MaxAge.zero(),
+            metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+                hn,
+                config_cache.explicit_host_attributes,
+                loaded_config.monitoring_core == "cmc",
+            ),
         )
         hosts_config = config.make_hosts_config(loaded_config)
         ip_family = ip_lookup_config.default_address_family(host_name)
@@ -868,6 +913,9 @@ def _execute_discovery(
         nodes=config_cache.nodes,
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
+        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, logger.warning
+        ),
     )
     autochecks_config = config.AutochecksConfigurer(
         config_cache, plugins.check_plugins, passive_service_name_config
@@ -945,6 +993,7 @@ def _execute_discovery(
                 )(host_name).items()
             },
             on_error=on_error,
+            timeperiods_active=checker_config.timeperiods_active,
         )
     return CheckPreview(
         table={
@@ -1000,7 +1049,7 @@ def _make_configured_bake_on_restart_callback(
     except ImportError:
         return lambda: None
 
-    return make_configured_bake_on_restart_callback(
+    return make_configured_bake_on_restart_callback(  # type: ignore[no-any-return, unused-ignore]
         loading_result,
         hosts,
         agents_dir=cmk.utils.paths.agents_dir,
@@ -1016,7 +1065,7 @@ def _make_configured_notify_relay() -> Callable[[], None]:
     except ImportError:
         return lambda: None
 
-    return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config
+    return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config  # type: ignore[no-any-return, unused-ignore]
 
 
 def _execute_autodiscovery(
@@ -1117,6 +1166,11 @@ def _execute_autodiscovery(
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
     host_label_plugins = HostLabelPluginMapper(
@@ -1971,6 +2025,7 @@ class AutomationAnalyseServices(Automation):
     ) -> AnalyseServiceResult:
         host_name = HostName(args[0])
         servicedesc = args[1]
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
         if plugins is None:
             plugins = load_plugins()
@@ -2028,6 +2083,9 @@ class AutomationAnalyseServices(Automation):
                         allow_empty=loading_result.config_cache.hosts_config.clusters,
                         error_handler=config.handle_ip_lookup_failure,
                     ),
+                    timeperiod_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                        livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                    ).get,
                 )
             )
             else AnalyseServiceResult(
@@ -2053,6 +2111,7 @@ class AutomationAnalyseServices(Automation):
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         servicedesc: str,
         ip_address_of: ip_lookup.IPLookup,
+        timeperiod_active: Callable[[cmk.utils.timeperiod.TimeperiodName], bool | None],
     ) -> _FoundService | None:
         return next(
             chain(
@@ -2061,6 +2120,7 @@ class AutomationAnalyseServices(Automation):
                 self._search_enforced_checks(
                     enforced_services_table(host_name).values(),
                     servicedesc,
+                    timeperiod_active,
                 ),
                 self._search_discovered_checks(
                     config_cache,
@@ -2069,6 +2129,7 @@ class AutomationAnalyseServices(Automation):
                     host_name,
                     servicedesc,
                     plugins.check_plugins,
+                    timeperiod_active,
                 ),
                 self._search_classical_checks(config_cache, host_name, servicedesc),
                 self._search_active_checks(
@@ -2103,6 +2164,7 @@ class AutomationAnalyseServices(Automation):
     def _search_enforced_checks(
         enforced_services: Iterable[tuple[str, ConfiguredService]],
         servicedesc: str,
+        timeperiod_active: Callable[[cmk.utils.timeperiod.TimeperiodName], bool | None],
     ) -> Iterable[_FoundService]:
         for checkgroup_name, service in enforced_services:
             if service.description == servicedesc:
@@ -2128,6 +2190,7 @@ class AutomationAnalyseServices(Automation):
         host_name: HostName,
         servicedesc: str,
         check_plugins: Mapping[CheckPluginName, CheckPlugin],
+        timeperiod_active: Callable[[cmk.utils.timeperiod.TimeperiodName], bool | None],
     ) -> Iterable[_FoundService]:
         # NOTE: Iterating over the check table would make things easier. But we might end up with
         # different information.
@@ -2972,7 +3035,7 @@ def get_special_agent_commandline(
     params: Mapping[str, object],
     password_store_file: Path,
     passwords: Mapping[str, str],
-    http_proxies: Mapping[str, Mapping[str, str]],
+    global_proxies_with_lookup: config_processing.GlobalProxiesWithLookup,
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
         load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
@@ -2989,7 +3052,7 @@ def get_special_agent_commandline(
             _disabled_ip_lookup,
         ),
         host_config.host_attrs,
-        http_proxies,
+        global_proxies_with_lookup,
         passwords,
         password_store_file,
         ExecutableFinder(
@@ -3037,7 +3100,13 @@ class AutomationDiagSpecialAgent(Automation):
                 diag_special_agent_input.params,
                 password_store_file,
                 diag_special_agent_input.passwords,
-                diag_special_agent_input.http_proxies,
+                config_processing.GlobalProxiesWithLookup(
+                    global_proxies={
+                        name: _set_global_proxy(raw)
+                        for name, raw in diag_special_agent_input.http_proxies.items()
+                    },
+                    password_lookup=make_staged_passwords_lookup(),
+                ),
             )
             for cmd in cmds:
                 fetcher = ProgramFetcher(
@@ -3459,6 +3528,11 @@ class AutomationDiagHost(Automation):
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
             check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
+            metric_backend_fetcher=get_metric_backend_fetcher(
+                host_name,
+                config_cache.explicit_host_attributes,
+                loaded_config.monitoring_core == "cmc",
+            ),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -4018,6 +4092,11 @@ class AutomationGetAgentOutput(Automation):
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),
                     check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+                    metric_backend_fetcher=get_metric_backend_fetcher(
+                        hostname,
+                        config_cache.explicit_host_attributes,
+                        loaded_config.monitoring_core == "cmc",
+                    ),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:
@@ -4116,13 +4195,14 @@ class AutomationNotificationReplay(Automation):
     ) -> NotificationReplayResult:
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
         nr = args[0]
         notify.notification_replay_backlog(
             lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                 hostname, plugin
             ),
-            config.get_http_proxy,
+            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
             rules=config.notification_rules,
@@ -4135,7 +4215,10 @@ class AutomationNotificationReplay(Automation):
             spooling=ConfigCache.notification_spooling(),
             backlog_size=config.notification_backlog,
             logging_level=ConfigCache.notification_logging_level(),
-            all_timeperiods=load_timeperiods(),
+            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
+            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ),
         )
         return NotificationReplayResult()
 
@@ -4154,6 +4237,7 @@ class AutomationNotificationAnalyse(Automation):
     ) -> NotificationAnalyseResult:
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
         nr = args[0]
         return NotificationAnalyseResult(
@@ -4161,7 +4245,7 @@ class AutomationNotificationAnalyse(Automation):
                 lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                     hostname, plugin
                 ),
-                config.get_http_proxy,
+                http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
                 notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
                 int(nr),
                 rules=config.notification_rules,
@@ -4174,7 +4258,10 @@ class AutomationNotificationAnalyse(Automation):
                 spooling=ConfigCache.notification_spooling(),
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
-                all_timeperiods=load_timeperiods(),
+                all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
+                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                ),
             )
         )
 
@@ -4197,6 +4284,7 @@ class AutomationNotificationTest(Automation):
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
         ensure_nagios = notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core)
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
         return NotificationTestResult(
             notify.notification_test(
@@ -4204,7 +4292,7 @@ class AutomationNotificationTest(Automation):
                 lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                     hostname, plugin
                 ),
-                config.get_http_proxy,
+                http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
                 ensure_nagios,
                 rules=config.notification_rules,
                 parameters=config.notification_parameter,
@@ -4216,8 +4304,11 @@ class AutomationNotificationTest(Automation):
                 spooling=ConfigCache.notification_spooling(),
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
-                all_timeperiods=load_timeperiods(),
+                all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
                 dispatch=dispatch,
+                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                ),
             )
         )
 
@@ -4235,8 +4326,15 @@ class AutomationGetBulks(Automation):
         loading_result: config.LoadingResult | None,
     ) -> NotificationGetBulksResult:
         only_ripe = args[0] == "1"
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
         return NotificationGetBulksResult(
-            notify.find_bulks(only_ripe, bulk_interval=config.notification_bulk_interval)
+            notify.find_bulks(
+                only_ripe,
+                bulk_interval=config.notification_bulk_interval,
+                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                ),
+            )
         )
 
 

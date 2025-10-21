@@ -10,10 +10,14 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
+import CmkTooltip, {
+  CmkTooltipContent,
+  CmkTooltipProvider,
+  CmkTooltipTrigger
+} from '@/components/CmkTooltip'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 const { _t } = usei18n()
@@ -102,12 +106,12 @@ const toggleExpansion = () => {
           </CmkButton>
         </div>
       </div>
-      <TooltipProvider>
-        <Tooltip :open="showMessage">
-          <TooltipTrigger as-child @click="copyToClipboard">
+      <CmkTooltipProvider>
+        <CmkTooltip :open="showMessage">
+          <CmkTooltipTrigger as-child @click="copyToClipboard">
             <CmkIconButton name="copied" size="medium" class="copy_button" />
-          </TooltipTrigger>
-          <TooltipContent
+          </CmkTooltipTrigger>
+          <CmkTooltipContent
             side="top"
             align="center"
             as-child
@@ -125,9 +129,9 @@ const toggleExpansion = () => {
                   : _t('Copied to clipboard')
               }}
             </div>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+          </CmkTooltipContent>
+        </CmkTooltip>
+      </CmkTooltipProvider>
     </div>
   </div>
 </template>

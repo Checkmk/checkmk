@@ -96,7 +96,7 @@ def reset_context(**tokens: contextvars.Token[object]) -> None:
 
 
 @contextmanager
-def bound_contextvars(**kwargs: object) -> Generator[None, None, None]:
+def bound_contextvars(**kwargs: object) -> Generator[None]:
     """
     Context manager that temporarily binds key-value pairs to context variables.
 

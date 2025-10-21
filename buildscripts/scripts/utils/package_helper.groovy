@@ -25,9 +25,52 @@ def branch_base_folder(with_testing_prefix) {
     return project_name_components[checkmk_index..checkmk_index + 1].join('/');
 }
 
+def directory_sha256sum(directories) {
+    return directories.collectEntries({ path ->
+        [("${path}".toString()): cmd_output("sha256sum <(find ${path} -type f -exec sha256sum {} \\; | sort) | cut -d' ' -f1")]
+    });
+}
+
+def dependency_paths_mapping() {
+    return [
+        "build-linux-agent-updater": [
+            "agents",
+            "non-free/packages/cmk-update-agent",
+        ],
+        "winagt-build": [
+            "agents",
+            "packages/cmk-agent-ctl",
+            "packages/mk-sql",
+            "third_party/asio",
+            "third_party/fmt",
+            "third_party/googletest",
+            "third_party/openhardwaremonitor",
+            "third_party/simpleini",
+            "third_party/yaml-cpp",
+        ],
+        "winagt-build-modules": [
+            "agents/modules/windows",
+        ],
+    ];
+}
+
+def dependency_paths_hashes() {
+    dir("${checkout_dir}") {
+        return dependency_paths_mapping().collectEntries({ job_name, paths ->
+            [("${job_name}".toString()) : {
+                def all_directory_hash_map = directory_sha256sum(paths);
+                def all_directory_hash = all_directory_hash_map.collect { k, v -> "${k}=${v}" }.join('-');
+                return all_directory_hash
+          }()]
+        });
+    }
+}
+
+/* groovylint-disable MethodSize */
 def provide_agent_binaries(Map args) {
     // always download and move artifacts unless specified differently
     def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();
+    def all_dependency_paths_hashes = dependency_paths_hashes();
 
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
@@ -44,6 +87,7 @@ def provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
+            dependency_paths_hash: all_dependency_paths_hashes["build-linux-agent-updater"],
             install_cmd: """\
                 # check-mk-agent-*.{deb,rpm}
                 cp *.deb *.rpm ${checkout_dir}/agents/
@@ -63,7 +107,11 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
+            dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
             install_cmd: """\
+                cp \
+                    mk-oracle.exe \
+                    ${checkout_dir}/cmk/plugins/oracle/agents/
                 cp \
                     check_mk_agent-64.exe \
                     check_mk_agent.exe \
@@ -72,9 +120,6 @@ def provide_agent_binaries(Map args) {
                     cmk-agent-ctl.exe \
                     check_mk.yml \
                     check_mk.user.yml \
-                    OpenHardwareMonitorLib.dll \
-                    OpenHardwareMonitorCLI.exe \
-                    mk-oracle.exe \
                     mk-sql.exe \
                     robotmk_ext.exe \
                     windows_files_hashes.txt \
@@ -96,6 +141,7 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
+            dependency_paths_hash: all_dependency_paths_hashes["winagt-build-modules"],
             install_cmd: """\
                 cp \
                     ./*.cab \
@@ -121,17 +167,38 @@ def provide_agent_binaries(Map args) {
                 def this_parameters = [
                     use_upstream_build: true,
                     relative_job_name: details.relative_job_name,
-                    build_params: [
-                        CUSTOM_GIT_REF: effective_git_ref,
-                        VERSION: args.version,
-                        DISABLE_CACHE: args.disable_cache,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                        CIPARAM_BISECT_COMMENT: args.bisect_comment,
-                    ],
                     download: false,
                 ];
+
+                if (details.dependency_paths_hash) {
+                    // if dependency_paths are specified these will be used as unique identifier
+                    // CUSTOM_GIT_REF is handed over as well, but not activly checked by ci-artifacts
+                    this_parameters += [
+                        build_params: [
+                            CIPARAM_PATH_HASH: details.dependency_paths_hash,
+                            VERSION: args.version,
+                            DISABLE_CACHE: args.disable_cache,
+                        ],
+                        build_params_no_check: [
+                            CUSTOM_GIT_REF: effective_git_ref,
+                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                            CIPARAM_BISECT_COMMENT: args.bisect_comment,
+                        ],
+                    ]
+                } else {
+                    this_parameters += [
+                        build_params: [
+                            CUSTOM_GIT_REF: effective_git_ref,
+                            VERSION: args.version,
+                            DISABLE_CACHE: args.disable_cache,
+                        ],
+                        build_params_no_check: [
+                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                            CIPARAM_BISECT_COMMENT: args.bisect_comment,
+                        ],
+                    ]
+                }
+
                 if (move_artifacts) {
                     // specify to download artifacts to desired destination
                     this_parameters += [

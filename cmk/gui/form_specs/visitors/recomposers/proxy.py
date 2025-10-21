@@ -2,6 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="exhaustive-match"
+
 import urllib.parse
 from typing import Any, Literal
 
@@ -106,7 +109,6 @@ def recompose(
             title=Title("%s") % p["title"],
         )
         for p in global_proxies
-        if urllib.parse.urlparse(p["proxy_url"]).scheme in form_spec.allowed_schemas
     ]
 
     elements: list[CascadingSingleChoiceElement[Any]] = [

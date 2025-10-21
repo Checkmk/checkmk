@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import HelpText from '@/components/HelpText.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 
 const lorem = `
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -27,9 +27,9 @@ defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>
-  <p>help <HelpText help="This is a demo help text." /></p>
+  <p>help <CmkHelpText help="This is a demo help text." /></p>
   <p>
     long help
-    <HelpText :help="`${Array.from({ length: 10 }, () => `<p>${lorem}</p>`).join('')}`" />
+    <CmkHelpText :help="`${Array.from({ length: 10 }, () => `<p>${lorem}</p>`).join('')}`" />
   </p>
 </template>

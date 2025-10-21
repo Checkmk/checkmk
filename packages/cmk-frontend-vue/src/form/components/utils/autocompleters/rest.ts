@@ -13,7 +13,7 @@ import type { CmkError } from '@/lib/error'
 import { untranslated } from '@/lib/i18n'
 import { API_ROOT } from '@/lib/rest-api-client/constants'
 
-import { ErrorResponse, Response } from '@/components/suggestions'
+import { ErrorResponse, Response } from '@/components/CmkSuggestions'
 
 const AUTOCOMPLETER_API = `${API_ROOT}/objects/autocomplete/{autocompleter}`
 

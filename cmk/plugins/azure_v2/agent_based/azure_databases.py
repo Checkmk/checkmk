@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -10,27 +9,35 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    InventoryPlugin,
     render,
     Result,
     Service,
     State,
 )
-from cmk.plugins.lib.azure import (
-    CheckFunction,
-    create_check_metrics_function,
-    create_discover_by_metrics_function,
+from cmk.plugins.azure_v2.agent_based.lib import (
+    CheckFunctionWithoutItem,
+    create_check_metrics_function_single,
+    create_discover_by_metrics_function_single,
+    create_inventory_function,
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
-    parse_resources,
-    Section,
+    parse_resource,
+    Resource,
 )
 
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
 
 
-def create_check_azure_databases_storage() -> CheckFunction:
-    return create_check_metrics_function(
+inventory_plugin_azure_databases = InventoryPlugin(
+    name="azure_v2_databases",
+    inventory_function=create_inventory_function(),
+)
+
+
+def create_check_azure_databases_storage() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "average_storage_percent",
@@ -46,17 +53,17 @@ def create_check_azure_databases_storage() -> CheckFunction:
 
 check_plugin_azure_databases_storage = CheckPlugin(
     name="azure_v2_databases_storage",
-    service_name="DB %s Storage",
+    service_name="Azure/DB Storage",
     sections=["azure_v2_databases"],
-    discovery_function=create_discover_by_metrics_function("average_storage_percent"),
+    discovery_function=create_discover_by_metrics_function_single("average_storage_percent"),
     check_function=create_check_azure_databases_storage(),
     check_ruleset_name="azure_v2_databases_storage",
     check_default_parameters={"storage_percent": ("no_levels", None)},
 )
 
 
-def create_check_azure_databases_deadlock() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_databases_deadlock() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "average_deadlock",
@@ -72,17 +79,17 @@ def create_check_azure_databases_deadlock() -> CheckFunction:
 
 check_plugin_azure_databases_deadlock = CheckPlugin(
     name="azure_v2_databases_deadlock",
-    service_name="DB %s Deadlocks",
+    service_name="Azure/DB Deadlocks",
     sections=["azure_v2_databases"],
-    discovery_function=create_discover_by_metrics_function("average_deadlock"),
+    discovery_function=create_discover_by_metrics_function_single("average_deadlock"),
     check_function=create_check_azure_databases_deadlock(),
     check_ruleset_name="azure_v2_databases_deadlock",
     check_default_parameters={"deadlocks": ("no_levels", None)},
 )
 
 
-def create_check_azure_databases_cpu() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_databases_cpu() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "average_cpu_percent",
@@ -98,17 +105,17 @@ def create_check_azure_databases_cpu() -> CheckFunction:
 
 check_plugin_azure_databases_cpu = CheckPlugin(
     name="azure_v2_databases_cpu",
-    service_name="DB %s CPU",
+    service_name="Azure/DB CPU",
     sections=["azure_v2_databases"],
-    discovery_function=create_discover_by_metrics_function("average_cpu_percent"),
+    discovery_function=create_discover_by_metrics_function_single("average_cpu_percent"),
     check_function=create_check_azure_databases_cpu(),
     check_ruleset_name="azure_v2_databases_cpu",
     check_default_parameters={"cpu_percent": ("no_levels", None)},
 )
 
 
-def create_check_azure_databases_dtu() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_databases_dtu() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "average_dtu_consumption_percent",
@@ -124,17 +131,19 @@ def create_check_azure_databases_dtu() -> CheckFunction:
 
 check_plugin_azure_databases_dtu = CheckPlugin(
     name="azure_v2_databases_dtu",
-    service_name="DB %s DTU",
+    service_name="Azure/DB DTU",
     sections=["azure_v2_databases"],
-    discovery_function=create_discover_by_metrics_function("average_dtu_consumption_percent"),
+    discovery_function=create_discover_by_metrics_function_single(
+        "average_dtu_consumption_percent"
+    ),
     check_function=create_check_azure_databases_dtu(),
     check_ruleset_name="azure_v2_databases_dtu",
     check_default_parameters={"dtu_percent": ("no_levels", None)},
 )
 
 
-def create_check_azure_databases_connections() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_databases_connections() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "average_connection_successful",
@@ -158,9 +167,9 @@ def create_check_azure_databases_connections() -> CheckFunction:
 
 check_plugin_azure_databases_connections = CheckPlugin(
     name="azure_v2_databases_connections",
-    service_name="DB %s Connections",
+    service_name="Azure/DB Connections",
     sections=["azure_v2_databases"],
-    discovery_function=create_discover_by_metrics_function(
+    discovery_function=create_discover_by_metrics_function_single(
         "average_connection_successful", "average_connection_failed"
     ),
     check_function=create_check_azure_databases_connections(),
@@ -169,30 +178,21 @@ check_plugin_azure_databases_connections = CheckPlugin(
 )
 
 
-def check_azure_databases(item: str, section: Section) -> CheckResult:
-    resource = section.get(item)
-    if not resource:
-        return
-    for k, v in iter_resource_attributes(resource):
+def check_azure_databases(section: Resource) -> CheckResult:
+    for k, v in iter_resource_attributes(section):
         yield Result(state=State.OK, summary=f"{k}: {v}")
 
 
-def discover_azure_databases(section: Any) -> DiscoveryResult:
-    yield from (
-        Service(
-            item=item,
-            labels=get_service_labels_from_resource_tags(resource.tags),
-        )
-        for item, resource in section.items()
-    )
+def discover_azure_databases(section: Resource) -> DiscoveryResult:
+    yield Service(labels=get_service_labels_from_resource_tags(section.tags))
 
 
 agent_section_azure_databases = AgentSection(
-    name="azure_v2_databases", parse_function=parse_resources
+    name="azure_v2_databases", parse_function=parse_resource
 )
 check_plugin_azure_databases = CheckPlugin(
     name="azure_v2_databases",
-    service_name="DB %s",
+    service_name="Azure/DB",
     discovery_function=discover_azure_databases,
     check_function=check_azure_databases,
 )

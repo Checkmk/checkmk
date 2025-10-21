@@ -4,8 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import io
 import secrets
+import tarfile
 from pathlib import Path
+
+from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import (
+    _ARCHIVE_ROOT_NAME as ROOT,
+)
 
 RelayId = str
 FileName = str
@@ -22,11 +28,28 @@ _FOLDER_STRUCTURE: list[FileName] = [
     "maybe-some-hosts.json",
 ]
 
+# TODO find a way to determine this number
+_NUMBER_OF_FOLDERS_IN_STRUCTURE = 2  # config and config/workers
+
 
 @dataclasses.dataclass(frozen=True)
 class ConfigFolder:
     serial: str
     files: ConfigFiles
+
+    def assert_tar_content(self, relay_id: RelayId, tar_data: str) -> None:
+        relay_files = self.files[relay_id]
+        tar_bytes = tar_data.encode()
+        tar_buffer = io.BytesIO(tar_bytes)
+        with tarfile.open(fileobj=tar_buffer, mode="r") as tar:
+            members = tar.getmembers()
+            assert len(members) == len(_FOLDER_STRUCTURE) + _NUMBER_OF_FOLDERS_IN_STRUCTURE
+            for filename in _FOLDER_STRUCTURE:
+                tar_info = tar.getmember(f"{ROOT}/{filename}")
+                file_obj = tar.extractfile(tar_info)
+                assert file_obj is not None
+                file_content = file_obj.read().decode("utf-8")
+                assert relay_files[filename] == file_content, f"Failed for {relay_id=}, {filename=}"
 
 
 def create_config_folder(root: Path, relays: list[RelayId]) -> ConfigFolder:
@@ -49,6 +72,7 @@ def create_config_folder(root: Path, relays: list[RelayId]) -> ConfigFolder:
             relay_files[filename] = content
         config_files[relay_id] = relay_files
 
+    # Update "latest" symlink to point to the new serial folder
     symlink_path = root / _SUBPATH / "latest"
     if symlink_path.is_symlink():
         symlink_path.unlink()

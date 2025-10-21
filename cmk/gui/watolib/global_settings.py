@@ -3,19 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any
 
+from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib import config_domain_name
+from cmk.gui.watolib.audit_log import LogMessage
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
+    ConfigVariable,
     UNREGISTERED_SETTINGS,
 )
 from cmk.utils import paths
+
+STATIC_PERMISSIONS_GLOBAL_SETTINGS = ["global"]
 
 
 def load_configuration_settings(
@@ -83,3 +90,27 @@ def save_site_global_settings(
     settings: GlobalSettings, custom_site_path: str | None = None
 ) -> None:
     save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)
+
+
+def add_global_settings_change(
+    config_variable: ConfigVariable,
+    *,
+    user_id: UserId | None,
+    text: LogMessage,
+    sites: Sequence[SiteId] | None,
+    use_git: bool,
+) -> None:
+    add_change(
+        action_name="edit-configvar",
+        text=text,
+        user_id=user_id,
+        use_git=use_git,
+        need_restart=config_variable.need_restart(),
+        need_apache_reload=config_variable.need_apache_reload(),
+        domains=list(config_variable.all_domains()),
+        sites=sites,
+        domain_settings={
+            domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
+            for domain in config_variable.all_domains()
+        },
+    )

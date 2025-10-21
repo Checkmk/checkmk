@@ -8,9 +8,8 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
-
+import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleContent.vue'
+import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import { ElementSelection } from '@/dashboard-wip/components/Wizard/types.ts'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
@@ -112,13 +111,13 @@ const displayLabels = computed(() => {
 
 <template>
   <div v-if="showContextFiltersSection">
-    <CmkCollapsibleTitle
+    <CollapsibleTitle
       :title="displayLabels.contextFilterTitle"
       :help_text="displayLabels.contextFilterTooltip"
       :open="toggleContextFiltersSection"
       @toggle-open="toggleContextFiltersSection = !toggleContextFiltersSection"
     />
-    <CmkCollapsible :open="toggleContextFiltersSection">
+    <CollapsibleContent :open="toggleContextFiltersSection">
       <!-- object-configured-filters is not being recognized as a props -->
       <!-- @vue-ignore -->
       <DisplayContextFilters
@@ -127,7 +126,7 @@ const displayLabels = computed(() => {
         :empty-filters-title="displayLabels.emptyContextTitle"
         :empty-filters-message="displayLabels.emptyContextMessage"
       />
-    </CmkCollapsible>
+    </CollapsibleContent>
   </div>
   <ObjectTypeFilterConfiguration
     :object-type="objectType"

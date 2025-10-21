@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import HelpText from '@/components/HelpText.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 
 import { DashboardLayout } from '@/dashboard-wip/types/dashboard'
 
@@ -39,7 +39,7 @@ const _updateDashboardLayout = (newLayout: string) => {
     <TableFormRow>
       <FieldDescription>
         {{ _t('Dashboard layout') }}
-        <HelpText
+        <CmkHelpText
           :help="
             _t(
               'You can choose between a fixed layout or a responsive, scrollable grid layout. By default, the responsive grid layout is selected.'

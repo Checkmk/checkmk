@@ -14,10 +14,10 @@ import { computed, ref, toRaw, watch } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import FormIndent from '@/components/CmkIndent.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import HelpText from '@/components/HelpText.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
@@ -160,7 +160,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       </template>
       <template v-if="activeElement !== null">
         <CmkSpace size="small" />
-        <HelpText :help="untranslated(activeElement.spec.help)" />
+        <CmkHelpText :help="untranslated(activeElement.spec.help)" />
       </template>
     </div>
     <CmkSpace v-if="props.spec.layout === 'horizontal'" :size="'medium'" />

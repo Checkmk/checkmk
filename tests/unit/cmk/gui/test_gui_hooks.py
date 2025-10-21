@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-untyped-def"
+
 import datetime
 import threading
 from collections.abc import Generator
+from typing import override
 
 import pytest
 from pytest_mock import MockerFixture
@@ -18,7 +22,7 @@ from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
 @pytest.fixture()
-def reset_hooks() -> Generator[None, None, None]:
+def reset_hooks() -> Generator[None]:
     old_hooks = hooks.hooks
     try:
         hooks.hooks = {}
@@ -76,6 +80,7 @@ def test_request_memoize_request_integration(
         return mock()
 
     class PageClass(Page):
+        @override
         def page(self, config: Config) -> None:
             mock.return_value = 1
             assert memoized() == 1
@@ -84,7 +89,7 @@ def test_request_memoize_request_integration(
             mock.return_value = 2
             assert memoized() == 1
 
-    page_registry.register(PageEndpoint("my_page", PageClass))
+    page_registry.register(PageEndpoint("my_page", PageClass()))
 
     # Try a first request. Memoization within this request is tested in page() above.
     logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
@@ -137,6 +142,7 @@ def test_threaded_memoize(
         return x * x
 
     class PageClass(Page):
+        @override
         def page(self, config: Config) -> None:
             def worker(i: int) -> None:
                 cached_function(i)
@@ -166,7 +172,7 @@ def test_threaded_memoize(
             else:
                 assert cached_function.cache_info() is None  # type: ignore[attr-defined]
 
-    page_registry.register(PageEndpoint("my_page", PageClass))
+    page_registry.register(PageEndpoint("my_page", PageClass()))
 
     logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
     # Note: Even after the get request from the line above, no request end has been called yet

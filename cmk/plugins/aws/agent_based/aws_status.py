@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 import calendar
 import dataclasses
 import datetime
@@ -91,7 +93,7 @@ class AWSRSSFeed(pydantic.BaseModel):
 
     @classmethod
     def parse_rss(cls, element: str) -> "AWSRSSFeed":
-        return cls.model_validate(feedparser.parse(element))
+        return cls.model_validate(feedparser.parse(element))  # type: ignore[attr-defined]
 
 
 class DiscoveryParam(pydantic.BaseModel):

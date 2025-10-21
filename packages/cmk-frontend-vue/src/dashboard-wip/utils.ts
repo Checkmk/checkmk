@@ -25,6 +25,7 @@ import type {
   EffectiveWidgetFilterContext,
   TopListContent,
   VisualContext,
+  WidgetAvailableInventory,
   WidgetContent
 } from '@/dashboard-wip/types/widget.ts'
 
@@ -38,7 +39,7 @@ type EditRelativeGridResult =
   | { success: false; status: 400; error: BadRequestBody }
   | { success: false; status: number; error: unknown }
 
-const API_ROOT = 'api/unstable'
+const API_ROOT = 'api/internal'
 
 export const dashboardAPI = {
   getRelativeDashboard: async (
@@ -136,6 +137,12 @@ export const dashboardAPI = {
     await response.raiseForStatus()
     return await response.json()
   },
+  listAvailableInventory: async (): Promise<WidgetAvailableInventory> => {
+    const url = `${API_ROOT}/objects/constant/widget_available_inventory/collections/all`
+    const response = await fetchRestAPI(url, 'GET')
+    await response.raiseForStatus()
+    return await response.json()
+  },
   computeWidgetAttributes: async (
     widgetContent: WidgetContent
   ): Promise<ComputedWidgetSpecResponse> => {
@@ -163,8 +170,54 @@ export const determineWidgetEffectiveFilterContext = async (
   const resp = await dashboardAPI.computeWidgetAttributes(widgetContent)
   return {
     uses_infos: resp.value.filter_context.uses_infos,
-    // @ts-expect-error TODO: change configuredFilters to be <string, string> only
     filters: filters,
     restricted_to_single: constants.widgets[widgetContent.type]!.filter_context.restricted_to_single
   }
+}
+
+export const urlHandler = {
+  setDashboardName(input: string, dashboardName: string): URL {
+    const url = new URL(input)
+    url.searchParams.set('name', dashboardName)
+    return url
+  },
+
+  /**
+   * Update query params while **preserving** the specified keys.
+   * - `preserveKeys`: keys to keep unmodified (e.g., ['name'])
+   * - `updates`: keys to add/update (others remain untouched unless updated)
+   */
+  updateWithPreserve(input: string, preserveKeys: string[], updates: Record<string, string>): URL {
+    const url = new URL(input)
+    const preserve = new Set(preserveKeys)
+
+    const toDelete: string[] = []
+    for (const key of url.searchParams.keys()) {
+      if (!preserve.has(key)) {
+        toDelete.push(key)
+      }
+    }
+    for (const key of toDelete) {
+      url.searchParams.delete(key)
+    }
+
+    for (const [k, v] of Object.entries(updates)) {
+      if (preserve.has(k)) {
+        continue
+      }
+      url.searchParams.set(k, v)
+    }
+
+    return url
+  },
+
+  updateCheckmkPageUrl(dashboardAppUrl: URL): void {
+    const checkmkUrl = new URL(window.parent.location.href)
+    checkmkUrl.searchParams.set('start_url', toPathAndSearch(dashboardAppUrl))
+    window.parent.history.replaceState({}, '', checkmkUrl.toString())
+  }
+}
+
+export function toPathAndSearch(url: URL): string {
+  return url.pathname + url.search
 }

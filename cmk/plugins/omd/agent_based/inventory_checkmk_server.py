@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+
 # README: HISTORICAL HINT
 # This inventory plug-in used to be split-up into the inventory plugins "livestatus_status",
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple

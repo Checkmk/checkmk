@@ -16,7 +16,6 @@ from requests.auth import HTTPBasicAuth
 from cmk.special_agents.v0_unstable.request_helper import (
     ApiSession,
     HostnameValidationAdapter,
-    parse_api_url,
 )
 from cmk.utils.password_store import lookup
 
@@ -102,11 +101,7 @@ def _lookup_from_password_store(raw_reference: str) -> str:
 
 
 def get_api_url(connection: str, protocol: Literal["http", "https"]) -> str:
-    return parse_api_url(
-        server_address=connection,
-        api_path="api/v1/",
-        protocol=protocol,
-    )
+    return f"{protocol}://{connection}/api/v1/"
 
 
 def generate_api_session(

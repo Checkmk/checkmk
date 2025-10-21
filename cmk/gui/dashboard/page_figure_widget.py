@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 import json
-from typing import Annotated, cast
+from typing import Annotated, cast, override
 
 from pydantic import Discriminator, TypeAdapter, ValidationError
 
@@ -110,6 +112,7 @@ def _get_figure_config() -> FigureDashletConfig:
 
 
 class FigureWidgetPage(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         figure_config: FigureDashletConfig = _get_figure_config()
         dashlet_type = cast(type[ABCFigureDashlet], dashlet_registry[figure_config["type"]])

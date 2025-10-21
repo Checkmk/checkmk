@@ -37,6 +37,48 @@ metric_bytes_cmk_dashboards = metrics.Metric(
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )
+metric_bytes_cmk_api = metrics.Metric(
+    name="bytes_cmk_api",
+    title=Title("Checkmk: API: Bytes"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.ORANGE,
+)
+metric_bytes_cmk_ajax = metrics.Metric(
+    name="bytes_cmk_ajax",
+    title=Title("Checkmk: Ajax: Bytes"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.LIGHT_YELLOW,
+)
+metric_bytes_cmk_index = metrics.Metric(
+    name="bytes_cmk_index",
+    title=Title("Checkmk: Index: Bytes"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.DARK_YELLOW,
+)
+metric_bytes_cmk_login = metrics.Metric(
+    name="bytes_cmk_login",
+    title=Title("Checkmk: Login: Bytes"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.DARK_RED,
+)
+metric_bytes_cmk_search = metrics.Metric(
+    name="bytes_cmk_search",
+    title=Title("Checkmk: Search: Bytes"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.LIGHT_BROWN,
+)
+metric_bytes_cmk_sidebar = metrics.Metric(
+    name="bytes_cmk_sidebar",
+    title=Title("Checkmk: Sidebar: Bytes"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.BROWN,
+)
+metric_bytes_cmk_graphs = metrics.Metric(
+    name="bytes_cmk_graphs",
+    title=Title("Checkmk: Graphs: Bytes"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.DARK_BROWN,
+)
 metric_bytes_cmk_other = metrics.Metric(
     name="bytes_cmk_other",
     title=Title("Checkmk: Other: Bytes"),
@@ -95,6 +137,13 @@ graph_cmk_http_traffic = graphs.Graph(
         "bytes_cmk_bi",
         "bytes_cmk_snapins",
         "bytes_cmk_dashboards",
+        "bytes_cmk_api",
+        "bytes_cmk_ajax",
+        "bytes_cmk_index",
+        "bytes_cmk_login",
+        "bytes_cmk_search",
+        "bytes_cmk_sidebar",
+        "bytes_cmk_graphs",
         "bytes_cmk_other",
         "bytes_nagvis_snapin",
         "bytes_nagvis_ajax",

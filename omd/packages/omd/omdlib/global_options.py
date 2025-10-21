@@ -12,7 +12,6 @@ class GlobalOptions:
     version: str | None = None
     verbose: bool = False
     force: bool = False
-    interactive: bool = False
 
 
 def parse_global_opts(main_args: list[str]) -> tuple[GlobalOptions, list[str]]:
@@ -34,29 +33,17 @@ def _handle_global_option(
     version = global_opts.version
     verbose = global_opts.verbose
     force = global_opts.force
-    interactive = global_opts.interactive
 
     if opt in ["V", "version"]:
         version, main_args = _opt_arg(main_args, opt)
     elif opt in ["f", "force"]:
         force = True
-        interactive = False
-    elif opt in ["i", "interactive"]:
-        force = False
-        interactive = True
     elif opt in ["v", "verbose"]:
         verbose = True
     else:
         sys.exit("Invalid global option %s.\nCall omd help for available options." % orig)
 
-    new_global_opts = GlobalOptions(
-        version=version,
-        verbose=verbose,
-        force=force,
-        interactive=interactive,
-    )
-
-    return new_global_opts, main_args
+    return GlobalOptions(version=version, verbose=verbose, force=force), main_args
 
 
 def _opt_arg(main_args: list[str], opt: str) -> tuple[str, list[str]]:

@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 import csv
 import io
 import json
@@ -13,6 +17,7 @@ import subprocess
 from collections.abc import Sequence
 from functools import cache
 from pathlib import Path, PosixPath
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import NamedTuple
 
 import pytest
@@ -615,3 +620,60 @@ def test_unwanted_package_dependencies(package_path: str) -> None:
     assert not actual_unwanted_dependencies, "\n" + "\n".join(
         [u.printable() for u in actual_unwanted_dependencies]
     )
+
+
+def _verify_signature(file_path: Path) -> None | str:
+    result = subprocess.run(
+        [
+            "osslsigncode",
+            "verify",
+            file_path,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return f"{file_path.name}: " + result.stderr
+    return None
+
+
+def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> None:
+    signing_failures = []
+
+    mk_sql = "mk-sql.exe"
+    path_prefix = (
+        "agents/windows" if package_path.endswith(".tar.gz") else "share/check_mk/agents/windows"
+    )
+
+    with NamedTemporaryFile() as mk_sql_temp:
+        mk_sql_temp.write(
+            _get_file_from_package(package_path, cmk_version, f"{path_prefix}/{mk_sql}")
+        )
+        mk_sql_temp.flush()
+        signing_failures.append(_verify_signature(Path(mk_sql_temp.name)))
+
+    # TODO: Clarify why the msi is missing in the source.tar.gz CMK-26785
+    if not package_path.endswith(".tar.gz"):
+        with NamedTemporaryFile() as msi_file:
+            msi_file.write(
+                _get_file_from_package(
+                    package_path, cmk_version, f"{path_prefix}/check_mk_agent.msi"
+                )
+            )
+            msi_file.flush()
+            signing_failures.append(_verify_signature(Path(msi_file.name)))
+            with TemporaryDirectory() as msi_content:
+                subprocess.run(
+                    ["msiextract", "-C", msi_content, msi_file.name],
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                )
+                for file in ("check_mk_agent.exe", "cmk-agent-ctl.exe"):
+                    signing_failures.append(
+                        _verify_signature(
+                            Path(msi_content + "/Program Files/checkmk/service/" + file)
+                        )
+                    )
+
+    assert not any(signing_failures)

@@ -5,6 +5,8 @@
 """This is an unsorted collection of small unrelated helper functions which are
 usable in all components of the web GUI of Check_MK
 
+# mypy: disable-error-code="type-arg"
+
 Please try to find a better place for the things you want to put here."""
 
 import marshal

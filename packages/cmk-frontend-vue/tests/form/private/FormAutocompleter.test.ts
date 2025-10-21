@@ -6,7 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/vue'
 
-import { Response } from '@/components/suggestions'
+import { Response } from '@/components/CmkSuggestions'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 

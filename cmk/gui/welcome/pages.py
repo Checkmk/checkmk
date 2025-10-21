@@ -17,8 +17,8 @@ from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.gui.welcome.registry import welcome_url_registry
-from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
+from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
+from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomeCards, WelcomePage
 from cmk.utils.urls import is_allowed_url
 
 
@@ -26,7 +26,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("welcome", _welcome_page))
     page_registry.register(PageEndpoint("ajax_mark_step_as_complete", _ajax_mark_step_as_complete))
     page_registry.register(
-        PageEndpoint("ajax_get_welcome_page_stage_information", PageWelcomePageStageInformation)
+        PageEndpoint("ajax_get_welcome_page_stage_information", PageWelcomePageStageInformation())
     )
 
 
@@ -51,10 +51,14 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
             break
 
 
-def make_url_from_registry(identifier: str, permitted: bool = True) -> str | None:
-    url = welcome_url_registry.get(identifier)
+def make_url_or_callback_from_registry(identifier: str, permitted: bool = True) -> str | None:
+    url = welcome_card_registry.get(identifier)
     if url is None or not permitted:
         return None
+
+    if isinstance(url, WelcomeCardCallback):
+        return url.callback_id
+
     return makeuri(
         request,
         addvars=url.vars,
@@ -124,10 +128,12 @@ def _welcome_page(config: Config) -> None:
 
     html.vue_component(component_name="cmk-welcome", data=asdict(get_welcome_data()))
 
+    html.footer()
+
 
 def get_welcome_data() -> WelcomePage:
     return WelcomePage(
-        urls=WelcomeUrls(
+        cards=WelcomeCards(
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
             checkmk_docs=doc_reference_url(),
@@ -158,12 +164,13 @@ def get_welcome_data() -> WelcomePage:
                 addvars=[("mode", "licensing")],
                 filename="wato.py",
             ),
-            add_host=makeuri(
+            add_host=make_url_or_callback_from_registry("add_host")
+            or makeuri(
                 request,
                 addvars=[("mode", "newhost")],
                 filename="wato.py",
             ),
-            network_devices=make_url_from_registry("relays")
+            network_devices=make_url_or_callback_from_registry("relays")
             or makeuri(
                 request,
                 addvars=[("mode", "newhost"), ("prefill", "snmp")],
@@ -193,10 +200,10 @@ def get_welcome_data() -> WelcomePage:
                 ],
                 filename="wato.py",
             ),
-            synthetic_monitoring=make_url_from_registry(
+            synthetic_monitoring=make_url_or_callback_from_registry(
                 "robotmk_managed_robots_overview", user.may("edit_managed_robots")
             ),
-            opentelemetry=make_url_from_registry("otel_collectors"),
+            opentelemetry=make_url_or_callback_from_registry("otel_collectors"),
             activate_changes=makeuri(
                 request,
                 addvars=[("mode", "changelog")],

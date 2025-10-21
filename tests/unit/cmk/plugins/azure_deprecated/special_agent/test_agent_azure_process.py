@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -775,7 +777,7 @@ def test_usage_details(
                 }
             ],
             "<<<<test1>>>>\n"
-            "<<<azure_resource_health:sep(124)>>>\n"
+            "<<<azure_resource_health:sep(0)>>>\n"
             '{"id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", "reasonType": "", "occuredTime": "2023-02-09T16: 19: 01Z", "tags": {}}\n'
             "<<<<>>>>\n",
             id="virtual_machine",
@@ -817,7 +819,7 @@ def test_usage_details(
                 }
             ],
             "<<<<test1>>>>\n"
-            "<<<azure_resource_health:sep(124)>>>\n"
+            "<<<azure_resource_health:sep(0)>>>\n"
             '{"id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", "reasonType": "", "occuredTime": "2023-02-09T16: 19: 01Z", "tags": {"tag1": "value1"}}\n'
             "<<<<>>>>\n",
             id="virtual_machine_import_tags",

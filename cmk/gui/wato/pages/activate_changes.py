@@ -5,13 +5,19 @@
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed Setup."""
 
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import ast
 import enum
 import json
 import os
 import tarfile
 from collections.abc import Collection, Iterator, Sequence
-from typing import Literal
+from typing import Literal, override
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
@@ -82,8 +88,8 @@ def register(
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_start_activation", PageAjaxStartActivation))
-    page_registry.register(PageEndpoint("ajax_activation_state", PageAjaxActivationState))
+    page_registry.register(PageEndpoint("ajax_start_activation", PageAjaxStartActivation()))
+    page_registry.register(PageEndpoint("ajax_activation_state", PageAjaxActivationState()))
     mode_registry.register(ModeActivateChanges)
     mode_registry.register(ModeRevertChanges)
     automation_command_registry.register(AutomationActivateChanges)
@@ -1031,6 +1037,7 @@ def _vs_activation(
 
 
 class PageAjaxStartActivation(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         user.need_permission("wato.activate")
@@ -1088,6 +1095,7 @@ class PageAjaxStartActivation(AjaxPage):
 
 
 class PageAjaxActivationState(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         user.need_permission("wato.activate")
 

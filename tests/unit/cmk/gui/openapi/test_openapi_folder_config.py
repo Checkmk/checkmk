@@ -342,7 +342,6 @@ def _create_criticality_tag(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_create_folder_with_network_scan(
     aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
@@ -407,7 +406,6 @@ def test_openapi_create_folder_with_network_scan(
     }
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_openapi_show_folder_with_network_scan_result(
     aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:

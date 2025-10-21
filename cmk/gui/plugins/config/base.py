@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Checkmk GUI"""
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -299,13 +301,6 @@ class CREConfig:
 
     # Whether the livestatu proxy daemon is available
     liveproxyd_enabled: bool = False
-
-    # Set this to a list in order to globally control which views are
-    # being displayed in the sidebar snap-in "Views"
-    visible_views: list[str] | None = None
-
-    # Set this list in order to actively hide certain views
-    hidden_views: list[str] | None = None
 
     # Patterns to group services in table views together
     service_view_grouping: list[GroupSpec] = field(default_factory=list)

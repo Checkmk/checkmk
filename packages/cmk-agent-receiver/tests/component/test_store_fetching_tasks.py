@@ -6,8 +6,10 @@
 import uuid
 from http import HTTPStatus
 
+from cmk.agent_receiver.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
@@ -15,9 +17,12 @@ from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 def test_store_fetching_task(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
+    site_context: Config,
 ) -> None:
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     push_task(
         agent_receiver=agent_receiver,
@@ -34,10 +39,14 @@ def test_store_fetching_task(
 def test_store_fetching_tasks_does_not_affect_other_relays(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
+    site_context: Config,
 ) -> None:
     relay_id_A = str(uuid.uuid4())
     relay_id_B = str(uuid.uuid4())
     site.set_scenario([relay_id_A, relay_id_B])
+
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id_A, relay_id_B])
+    agent_receiver.set_serial(cf.serial)
 
     push_task(
         agent_receiver=agent_receiver,

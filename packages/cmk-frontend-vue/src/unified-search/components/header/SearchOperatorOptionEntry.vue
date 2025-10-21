@@ -41,6 +41,7 @@ immediateWatch(
 <style scoped>
 li {
   line-height: 20px;
+  list-style-type: none;
 
   > button {
     background: transparent;

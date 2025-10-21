@@ -18,7 +18,11 @@ from cmk.agent_based.v2 import (
     Result,
     State,
 )
-from cmk.plugins.lib.azure import create_discover_by_metrics_function, parse_resources, Section
+from cmk.plugins.azure_deprecated.agent_based.lib import (
+    create_discover_by_metrics_function,
+    parse_resources,
+    Section,
+)
 
 agent_section_azure_trafficmanagerprofiles = AgentSection(
     name="azure_trafficmanagerprofiles",

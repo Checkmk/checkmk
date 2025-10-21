@@ -1,6 +1,7 @@
 # The common set of distros which gets build during an official release
 common: &common
     - "debian-12"
+    - "debian-13"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "almalinux-8"

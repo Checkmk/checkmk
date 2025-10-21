@@ -307,6 +307,7 @@ editions = {
         "@cmk//distro:almalinux-9": "el9-38",
         "@cmk//distro:almalinux-10": "el10-38",
         "@cmk//distro:debian-12": "0.bookworm",
+        "@cmk//distro:debian-13": "0.trixie",
         "@cmk//distro:sles-15sp5": "sles15sp5",
         "@cmk//distro:sles-15sp6": "sles15sp6",
         "@cmk//distro:ubuntu-22.04": "0.jammy",

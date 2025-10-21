@@ -11,6 +11,7 @@ string_flag(
         "almalinux-9",
         "almalinux-10",
         "debian-12",
+        "debian-13",
         "sles-15sp5",
         "sles-15sp6",
         "ubuntu-22.04",
@@ -47,10 +48,16 @@ config_setting(
     flag_values = {":distro": "debian-12"},
 )
 
+config_setting(
+    name = "debian-13",
+    flag_values = {":distro": "debian-13"},
+)
+
 selects.config_setting_group(
     name = "debian",
     match_any = [
         ":debian-12",
+        ":debian-13",
     ],
 )
 

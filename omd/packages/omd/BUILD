@@ -244,6 +244,9 @@ pkg_tar(
             ":wrapper_scp",
             ":wrapper_ssh",
         ],
+        "@cmk//distro:debian-13": [
+            ":wrapper_curl",
+        ],
         "//conditions:default": [],
     }),
     empty_dirs = [

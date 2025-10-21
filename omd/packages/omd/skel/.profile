@@ -29,6 +29,11 @@ export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt
 # Make the openssl trust the CAs configured in Check_MK
 export SSL_CERT_FILE=$OMD_ROOT/var/ssl/ca-certificates.crt
 
+# SQLite should put the temporary DB created during VACUUM (plus some other
+# temporary files) into the site, not into some global temporary directory.
+# This will restrict any potential disk space issues to the site only.
+export SQLITE_TMPDIR="${OMD_ROOT}/tmp"
+
 # Enforce a non localized environment. The reason for this configuration is
 # that the parameters and outputs of the monitoring plug-ins are localized. If
 # they are called from the core, they are always language-neutral. During

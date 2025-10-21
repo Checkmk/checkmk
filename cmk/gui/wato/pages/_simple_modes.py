@@ -374,7 +374,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
 class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     """Base class for edit modes"""
 
-    def __init__(self, mode_type, store):
+    def __init__(self, mode_type: SimpleModeType[T], store: WatoSimpleConfigFile[T]):
         self._ident: str | None = None
         self._clone: str | None = None
         self._new: bool = True

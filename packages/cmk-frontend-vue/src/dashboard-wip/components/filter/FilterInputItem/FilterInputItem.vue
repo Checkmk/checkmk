@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 
 import type { ComponentConfig, ConfiguredValues } from '../types.ts'
@@ -15,8 +17,10 @@ import type { FilterEmits } from './components/types.ts'
 interface Props {
   filterId: string
   configuredFilterValues: ConfiguredValues | null
+  showRequiredLabel?: boolean | undefined
 }
 
+const { _t } = usei18n()
 const props = defineProps<Props>()
 const emit = defineEmits<FilterEmits>()
 
@@ -54,6 +58,7 @@ const handleComponentChange = (_componentId: string, values: ConfiguredValues): 
   <div class="filter-container">
     <div class="filter-title">
       {{ filterDefinition.title }}
+      <span v-if="showRequiredLabel" class="filter-required-label"> {{ _t('(required)') }} </span>
     </div>
     <div class="filter-components">
       <FilterInputComponentRenderer
@@ -74,6 +79,12 @@ const handleComponentChange = (_componentId: string, values: ConfiguredValues): 
   font-size: var(--font-size-normal);
   margin-bottom: var(--dimension-4);
   color: var(--font-color);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-required-label {
+  color: var(--color-corporate-green-50);
+  font-weight: var(--font-weight-default);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

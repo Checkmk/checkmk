@@ -16,6 +16,7 @@ interface Props {
   configuredFilterValues: ConfiguredValues | null
   filterDefinitions: Record<string, FilterDefinition>
   allowRemove?: boolean
+  showRequiredLabel?: boolean
 }
 
 interface Emits {
@@ -43,6 +44,7 @@ const handleRemoveFilter = () => {
     <FilterInputItem
       :filter-id="filterId"
       :configured-filter-values="configuredFilterValues"
+      :show-required-label="showRequiredLabel"
       @update-filter-values="handleUpdateFilterValues"
     />
     <button

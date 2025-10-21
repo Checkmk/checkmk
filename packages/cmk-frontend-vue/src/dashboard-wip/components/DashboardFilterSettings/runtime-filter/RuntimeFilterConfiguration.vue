@@ -31,6 +31,7 @@ const props = defineProps<{
   dashboardFilters: ConfiguredFilters
   mandatoryFilters: Set<string>
   runtimeFiltersMode: RuntimeFilterMode
+  canEdit: boolean
 }>()
 
 const emit = defineEmits<{
@@ -112,7 +113,7 @@ watch(
       <CmkButton variant="primary" @click="applyRuntimeFilters">
         {{ _t('Apply to dashboard') }}
       </CmkButton>
-      <CmkButton variant="secondary" @click="switchToRequiredConfiguration">
+      <CmkButton v-if="canEdit" variant="secondary" @click="switchToRequiredConfiguration">
         {{ _t('Edit required runtime filters') }}
       </CmkButton>
     </div>
@@ -142,6 +143,7 @@ watch(
           "
           :filter-definitions="filterDefinitions"
           :allow-remove="!mandatoryFilters.has(filterId)"
+          :show-required-label="mandatoryFilters.has(filterId)"
           @update-filter-values="handleUpdateFilterValues"
           @remove-filter="handleRemoveFilter"
         />

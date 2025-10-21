@@ -225,7 +225,7 @@ watch(
                     {{ _t('Filters included by dashboard owner') }}</CmkLabel
                   >
                   <CmkLabel>
-                    {{ _t('You can override these by adding a quick filter') }}
+                    {{ _t('You can override these by adding a runtime filter') }}
                   </CmkLabel>
                 </div>
                 <FilterCollection
@@ -329,6 +329,7 @@ watch(
                 :dashboard-filters="dashboardFilters.getFilters()"
                 :mandatory-filters="new Set(mandatoryRuntimeFilters.getSelectedFilters())"
                 :runtime-filters-mode="runtimeFiltersMode"
+                :can-edit="canEdit"
                 @update:runtime-filters-mode="handleUpdateRuntimeFiltersMode"
                 @apply-runtime-filters="applyRuntimeFilters"
                 @set-configuration-target="setRuntimeFilterConfigurationTarget"

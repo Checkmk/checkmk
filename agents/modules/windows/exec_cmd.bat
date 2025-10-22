@@ -13,6 +13,7 @@
 if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.12 0" -foreground red && exit /b 1
 set PY_VER=%2
 set PY_SUBVER=%3
+set PLATFORM=%4
 :: remove dot from the PY_VER
 set PY_VER_COMPACT=%PY_VER:.=%
 
@@ -34,8 +35,13 @@ set chm_file=%chm_dir%\python%PY_VER_COMPACT%%PY_SUBVER%.chm
 set my_tmp=%cd%\tmp\%PY_VER%
 set build_dir=%my_tmp%\out
 set uninstall_dir=%my_tmp%\uninstall
-set pexe=%build_dir%\win32\%p_full_name%.exe
-set pexe_uninstall=%uninstall_dir%\%p_full_name%.exe
+if "%PLATFORM%"=="win32" (
+    set pexe=%build_dir%\%PLATFORM%\%p_full_name%.exe
+    set pexe_uninstall=%uninstall_dir%\%p_full_name%.exe
+) else (
+    set pexe=%build_dir%\%PLATFORM%\%p_full_name%-%PLATFORM%.exe
+    set pexe_uninstall=%uninstall_dir%\%p_full_name%-%PLATFORM%.exe
+)
 set install_dir=%my_tmp%\to_install
 set save_dir=%my_tmp%\to_save
 set build_msi=python\%PY_VER%\%p_full_name%\Tools\msi

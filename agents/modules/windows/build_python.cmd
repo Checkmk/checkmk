@@ -15,7 +15,6 @@ for /f %%i in ('where python') do set HOST_PYTHON=%%i
 if "%HOST_PYTHON%" == "" powershell Write-Host "Python not found" -Foreground Red && exit /b 4
 powershell Write-Host "Using python %HOST_PYTHON%" -Foreground Green
 set
-@echo call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip
 
 :: we do not need doc anyway, build of the doc may lead to error
 copy /Y %cur_dir%\patches\doc.wxs doc\doc.wxs
@@ -25,6 +24,7 @@ if "%PY_VER%" == "3.6" (
   powershell Write-Host "Creating empty %chm_368%" -foreground white
   del %chm_368%
   type nul >>%chm_368%
+  @echo call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip -D
   call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip -D
 )else (
   powershell Write-Host "Creating dir %chm_dir%" -foreground white
@@ -32,6 +32,19 @@ if "%PY_VER%" == "3.6" (
   powershell Write-Host "Creating empty %chm_file%" -foreground white
   del %chm_file%
   type nul >>%chm_file%
-  call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip -D
+  if "%PLATFORM%" == "win32" (
+    @echo call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip -D
+    call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip -D
+  )
+  else (
+    if "%PLATFORM%" == "amd64" (
+        SET PreferredToolArchitecture=x64
+        @echo call buildrelease.bat  -o %build_dir% -b -x64 --skip-nuget --skip-pgo --skip-zip -D
+        call buildrelease.bat  -o %build_dir% -b -x64 --skip-nuget --skip-pgo --skip-zip -D
+    )else (
+        @echo Unsupported platform %platform%
+        exit /b 1
+    )
+  )
 )
 

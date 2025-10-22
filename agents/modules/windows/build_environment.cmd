@@ -14,6 +14,6 @@ set PYTHONHOME=%cd%
 set PATH=%cd%\;%cd%\Scripts\;%PATH%
 %cd%\python.exe -m pipenv sync --python=%cd%\python.exe || exit /b 5
 :: we use plain copy since 3.12(changed location of files)
-xcopy %build_dir%\win32\binaries\*.* %save_dir%\.venv\Scripts /Y /Q || powershell Write-Host "`'%save_dir%`' xcopy failed" -Foreground red && exit /b 8
+xcopy %build_dir%\%PLATFORM%\binaries\*.* %save_dir%\.venv\Scripts /Y /Q || powershell Write-Host "`'%save_dir%`' xcopy failed" -Foreground red && exit /b 8
 
 exit /b 0

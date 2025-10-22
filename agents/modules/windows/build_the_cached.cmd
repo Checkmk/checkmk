@@ -19,7 +19,8 @@ if "%3"=="" powershell Write-Host "Invalid parameters - url should be defined" -
 if "%4"=="" powershell Write-Host "Invalid parameters - disable_cache should be defined" -Foreground red && exit /B 10
 if "%5"=="" powershell Write-Host "Invalid parameters - version should be defined" -Foreground red && exit /B 10
 if "%6"=="" powershell Write-Host "Invalid parameters - subversion should be defined" -Foreground red && exit /B 10
-echo run: %0 %1 %2 %3 %4 %5 %6
+if "%7"=="" powershell Write-Host "Invalid parameters - platform should be defined" -Foreground red && exit /B 10
+echo run: %0 %1 %2 %3 %4 %5 %6 %7
 
 :: Increase the value in file BUILD_NUM to rebuild master
 set /p BUILD_NUM=<BUILD_NUM
@@ -34,6 +35,7 @@ set url=%3
 set disable_cache=%4
 set version=%5
 set subversion=%6
+set platform=%7
 
 powershell Write-Host "Used URL is `'%url%`'"  -Foreground cyan
 powershell Write-Host "disable_cache is `'%disable_cache%`'"  -Foreground cyan
@@ -49,7 +51,7 @@ if "%git_hash%" == "" Powershell Write-Host "Git directory is ABSENT. Using PRED
 rem remove quotes from the result
 set git_hash=%git_hash:'=%
 
-set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
+set fname=python-%version%.%subversion%-%platform%_%git_hash%_%BUILD_NUM%.cab
 set artifact_name=%arti_dir%\python-3.cab
 echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
@@ -71,10 +73,7 @@ exit /b 0
 
 :: Either a cached artifact was not found or disable_cache is true.
 :build
-powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
-
-:: BUILDING
-make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
+make build PY_VER=%version% PY_SUBVER=%subversion% PLATFORM=%platform% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
 
 echo "Checking the result of the build..."
 if NOT exist %artifact_name% (

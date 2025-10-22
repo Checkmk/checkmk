@@ -17,6 +17,7 @@ PY_SUBVER          ?= $(PYTHON_VERSION_WINDOWS_PATCH)
 #MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
 MSBUILD            ?= C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
 
+PLATFORM=amd64
 
 # internal dirs:
 PYTHON_SRC_DIR     := python\$(PY_VER)
@@ -39,7 +40,12 @@ PYTHON_MODULE_NAME := python-$(PY_VER).cab
 PYTHON_TIMESTAMP   := $(PYTHON_SRC_DIR)\$(PYTHON_NAME).timestamp
 PYTHON_PACKAGE     := $(PYTHON_NAME).tar.xz
 
-PYTHON_INSTALLER   := $(PYTHON_TMP_DIR)\out\win32\python-$(PY_VER).$(PY_SUBVER).exe
+ifeq ($(PLATFORM),win32)
+PYTHON_INSTALLER := $(PYTHON_TMP_DIR)\out\$(PLATFORM)\python-$(PY_VER).$(PY_SUBVER).exe
+else
+PYTHON_INSTALLER := $(PYTHON_TMP_DIR)\out\$(PLATFORM)\python-$(PY_VER).$(PY_SUBVER)-$(PLATFORM).exe
+endif
+
 SRC_PIPFILE        := $(SRC_PIPFILE_DIR)\Pipfile
 
 PYTHON_PIPFILE     := $(PYTHON_SAVE_DIR)\Pipfile
@@ -60,7 +66,7 @@ usage:
 	@powershell Write-Host "make build PY_VER=3.9 PY_SUBVER=7" -foreground Green
 
 python_version:
-	@echo $(PY_VER) $(PY_SUBVER)
+	@echo $(PY_VER) $(PY_SUBVER) $(PLATFORM)
 
 $(PYTHON_PACKAGE):
 	@powershell where curl.exe > nul 2>&1 ||  powershell Write-Host "[-] curl not found"  -Foreground red && exit /B 10
@@ -90,17 +96,17 @@ unpack: 7zip $(PYTHON_TIMESTAMP) ## unpacking python sources
 
 $(PYTHON_INSTALLER): $(PYTHON_TIMESTAMP)    ## python installer
 	@powershell Write-Host "Target $@" -foreground white
-	@call exec_cmd.bat build_python.cmd $(PY_VER) $(PY_SUBVER)
+	@call exec_cmd.bat build_python.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
 	@powershell Write-Host -foreground Green "Python is built"
 
 python_install: $(PYTHON_INSTALLER)    ## python installation
 	@powershell Write-Host "Target $@" -foreground white
-	exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
-	exec_cmd.bat install_python.cmd $(PY_VER) $(PY_SUBVER)
-	exec_cmd.bat upgrade_pip.cmd $(PY_VER) $(PY_SUBVER)
-	exec_cmd.bat install_pipenv.cmd $(PY_VER) $(PY_SUBVER)
-	exec_cmd.bat save_python.cmd $(PY_VER) $(PY_SUBVER)
-	exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
+	exec_cmd.bat install_python.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
+	exec_cmd.bat upgrade_pip.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
+	exec_cmd.bat install_pipenv.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
+	exec_cmd.bat save_python.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
+	exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
 	@powershell Write-Host -foreground Green "Python is saved"
 
 
@@ -113,15 +119,15 @@ $(PYTHON_PIPFILE): $(SRC_PIPFILE) ## pifile copy and patch
 
 $(PYTHON_PIPFILE_LOCK): $(PYTHON_PIPFILE) ## piplock building
 	@powershell Write-Host "Target $@" -foreground white
-	@call exec_cmd.bat build_pipfile_lock.cmd $(PY_VER) $(PY_SUBVER)
+	@call exec_cmd.bat build_pipfile_lock.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
 
 python_pipfile: $(PYTHON_PIPFILE_LOCK)
 
 venv: python_install python_pipfile ## venv building
 	@powershell Write-Host "Target '$@'" -foreground white
-	exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER)
-	exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER)
-	exec_cmd.bat patch_environment.cmd $(PY_VER) $(PY_SUBVER)
+	exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
+	exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
+	exec_cmd.bat patch_environment.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
 
 
 $(PYTHON_MODULE): venv ## compressing venv
@@ -136,12 +142,12 @@ $(ARTEFACT_MODULE): $(PYTHON_MODULE) ## copy to artefacts
 
 build: unpack $(ARTEFACT_MODULE) ## building all
 	@powershell Write-Host -foreground Green "Build finished, uninstalling python"
-	@echo NOT REQUIRED call exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
+	@echo NOT REQUIRED call exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
 
 
 clean:
 	@powershell Write-Host -foreground Green "Cleaninn..."
-	@call exec_cmd.bat uninstall.cmd
+	@call exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER) $(PLATFORM)
 	@rmdir /s/q .\$(PYTHON_TMP_DIR)
 	@rmdir /s/q .\$(PYTHON_SRC_DIR)
 

@@ -125,10 +125,7 @@ def _bind_to_rule_pack_proxies(
 
 # Used by ourselves *and* the GUI!
 def _load_config(  # pylint: disable=too-many-branches
-    settings: Settings,
-    config_files: Iterable[Path],
-    *,
-    apply_binding: bool,
+    settings: Settings, config_files: Iterable[Path]
 ) -> ConfigFromWATO:
     """Load event console configuration."""
     # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the copy/assert/cast below.
@@ -140,14 +137,7 @@ def _load_config(  # pylint: disable=too-many-branches
             exec(compile(file_object.read(), path, "exec"), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
     assert isinstance(global_context["mkp_rule_packs"], Mapping)
-
-    if apply_binding:
-        # We need to have the choice to not bind the proxies, e.g. when
-        # uninstalling packaged rule packs.
-        # I think a better design would be to create instances of `BoundProxy` and `UnboundProxy`,
-        # forcing the caller to deal with unbound proxies as they see fit.
-        _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
-
+    _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
     global_context.pop("mkp_rule_packs", None)
     global_context.pop("MkpRulePackProxy", None)
     config = cast(ConfigFromWATO, global_context)
@@ -207,7 +197,7 @@ def _load_config(  # pylint: disable=too-many-branches
 
 
 # TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.eventd_configuration()
-def load_config(settings: Settings, apply_binding: bool = True) -> ConfigFromWATO:
+def load_config(settings: Settings) -> ConfigFromWATO:
     """WATO needs all configured rule packs and other stuff - especially the central site in
     distributed setups."""
     return _load_config(
@@ -216,7 +206,6 @@ def load_config(settings: Settings, apply_binding: bool = True) -> ConfigFromWAT
             [settings.paths.main_config_file.value]
             + sorted(settings.paths.config_dir.value.glob("**/*.mk"))
         ),
-        apply_binding=apply_binding,
     )
 
 
@@ -224,11 +213,7 @@ def load_config(settings: Settings, apply_binding: bool = True) -> ConfigFromWAT
 def load_active_config(settings: Settings) -> ConfigFromWATO:
     """The EC itself only uses (active) rule packs from the active config dir. Active rule packs
     are filtered rule packs, especially in distributed managed setups."""
-    return _load_config(
-        settings,
-        sorted(settings.paths.active_config_dir.value.glob("**/*.mk")),
-        apply_binding=True,
-    )
+    return _load_config(settings, sorted(settings.paths.active_config_dir.value.glob("**/*.mk")))
 
 
 # TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.save_active_config()
@@ -274,10 +259,10 @@ def save_active_config(
             shutil.copy(path, target)
 
 
-def load_rule_packs(apply_binding: bool = True) -> Sequence[ECRulePack]:
+def load_rule_packs() -> Sequence[ECRulePack]:
     """Returns all rule packs (including MKP rule packs) of a site. Proxy objects
     in the rule packs are already bound to the referenced object."""
-    return load_config(_default_settings(), apply_binding=apply_binding)["rule_packs"]
+    return load_config(_default_settings())["rule_packs"]
 
 
 def save_rule_packs(
@@ -343,13 +328,7 @@ def install_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     of file names. The file names without the file extension are used as
     the ID of the rule pack.
     """
-    rule_packs = list(
-        load_rule_packs(
-            # Do not bind proxies when loading rule packs here.
-            # We expect it should be possible, but let's not needlessly fail in case something else is awry.
-            apply_binding=False,
-        )
-    )
+    rule_packs = list(load_rule_packs())
     rule_pack_ids = {rp["id"]: i for i, rp in enumerate(rule_packs)}
     ids = [fn.stem for fn in file_names]
     for id_ in ids:
@@ -385,13 +364,7 @@ def release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
         2. Upon release of a MKP package with locally modified rule packs the
            modified rule pack updates the exported version.
     """
-    rule_packs = list(
-        load_rule_packs(
-            # Do not bind proxies when loading rule packs here.
-            # We expect it should be possible, but let's not needlessly fail in case something else is awry.
-            apply_binding=False,
-        )
-    )
+    rule_packs = list(load_rule_packs())
     rule_pack_ids = [rp["id"] for rp in rule_packs]
     affected_ids = [fn.stem for fn in file_names]
 
@@ -415,10 +388,4 @@ def uninstall_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     deleted the exported rule pack and the rule pack in rules.mk are both deleted.
     """
     affected_ids = {fn.stem for fn in file_names}
-    save_rule_packs(
-        # Do not try to bind the proxies.
-        # We're calling this to drop the onces we can't bind anymore.
-        rp
-        for rp in load_rule_packs(apply_binding=False)
-        if rp["id"] not in affected_ids
-    )
+    save_rule_packs(rp for rp in load_rule_packs() if rp["id"] not in affected_ids)

@@ -2,4 +2,4 @@
 
 Pipfile is developed only to support minmal feature set for python on agent side.
 
-Pifile.lock is not NOW used for Windows build. 
+Pifile.lock is not NOW used for Windows build.

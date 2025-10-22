@@ -8,10 +8,10 @@ Python 3.12, provided as source tarball by standard Checkmk development process
 
 ### Changing or updating Python
 
-1. _mandatory_   Add new file in `omd/packages/Python` with a name `Python-Version.Subversion.tar.xz`, align with the Python version in `package_versions.bzl`
+1. _mandatory_ Add new file in `omd/packages/Python` with a name `Python-Version.Subversion.tar.xz`, align with the Python version in `package_versions.bzl`
 2. _recommended_ Update documentation
-3. _optional_    Update `agents/modules/windows/Makefile` (for default parameters)
-4. _optional_    Add line `del /Q python-<Version>.cab` to the `agents/modules/windows/clean_environment.cmd` script
+3. _optional_ Update `agents/modules/windows/Makefile` (for default parameters)
+4. _optional_ Add line `del /Q python-<Version>.cab` to the `agents/modules/windows/clean_environment.cmd` script
 
 ### Required Tools
 
@@ -23,13 +23,13 @@ Python 3.12, provided as source tarball by standard Checkmk development process
 ### IMPORTANT
 
 1. You must always uninstall Python before deleting folders and or building.
-Normally this is done automatically by build scripts. Just do not forget this
-if you are modifying scripts.
+   Normally this is done automatically by build scripts. Just do not forget this
+   if you are modifying scripts.
 2. Patch the registry with the `agents/modules/windows/WindowsServerPatch.reg` if you are using Windows Server.
-Windows Server by default disables MSI installation even on per-user basis.
-We must set registry value `MsiDisable = 0` as in Windows 10.
+   Windows Server by default disables MSI installation even on per-user basis.
+   We must set registry value `MsiDisable = 0` as in Windows 10.
 3. You must switch jenkins slave to real user-admin account (use `services.msc`), otherwise
-installation is not possible. The error is `cannot install` or similar.
+   installation is not possible. The error is `cannot install` or similar.
 4. You must increase value in `agents/modules/windows/BUILD_NUM` to get a rebuild binary.
 5. You may need to unpack `agents/modules/windows/libffi-7.zip` into correspoding python source directory.
 
@@ -43,9 +43,9 @@ This procedure may be quite annoying, you have to check next points:
 - Checkmk root `Makefile`. Packaging self
 - Add to integration tests new file name:
 
-   `cd agents/modules/windows/tests/integration/* && grep -R "python-*"`
+  `cd agents/modules/windows/tests/integration/* && grep -R "python-*"`
 
-   Usually it is `agents/modules/windows/tests/integration/conftest.py` and `agents/modules/windows/Makefile`.
+  Usually it is `agents/modules/windows/tests/integration/conftest.py` and `agents/modules/windows/Makefile`.
 
 - Check `build_the_module.cmd` for 3.12 and et cetera
 - Check the Windows node builds artifacts succesfully
@@ -171,6 +171,7 @@ xfreerdp /u:<SEE BITWARDEN> /v:<SEE BITWARDEN>
 ### Failing Windows Builds
 
 Possible error messages you might encounter are:
+
 - `WARNING: Operation did not complete successfully because the file contains a virus or potentially unwanted software.`
 - `ModuleNotFoundError: No module named <module name>`
 

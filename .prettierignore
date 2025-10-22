@@ -19,7 +19,3 @@ packages/cmk-frontend/src/js/modules/figures/cmk_stats.ts
 packages/cmk-frontend-vue/demo/public/mockServiceWorker.js
 packages/cmk-frontend-vue/dist-dev/
 packages/cmk-frontend-vue/*.md
-
-# broken CI build
-agents/modules/
-agents/wnx/

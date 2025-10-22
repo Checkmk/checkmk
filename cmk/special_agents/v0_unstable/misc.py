@@ -18,7 +18,7 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -148,7 +148,6 @@ def _check_path(filename: str) -> None:
         raise ValueError(f"Traces can only be stored in {allowed_path}")
 
 
-# typing is still lacking, but at least our user interface is typed :-/
 def vcrtrace(
     before_record_request: Callable[[Request], Request] | None = None,
     filter_query_parameters: Sequence[tuple[str, str | None]] = (),
@@ -168,20 +167,48 @@ def vcrtrace(
     If the file already exists, no requests are sent to the server, but the responses will be
     replayed from the tracefile.
 
-    No attribute on the created argparse.Namespace will be set.
+    The destination attribute will be set to `True` if the option was specified, the
+    provided default otherwise.
     """
 
-    class VcrTraceAction(argparse.Action):
-        def __init__(self, *args, **kwargs):
-            kwargs.setdefault("metavar", "TRACEFILE")
+    class VcrTraceAction[T](argparse.Action):
+        def __init__(
+            self,
+            option_strings: Sequence[str],
+            dest: str,
+            nargs: int | str | None = None,
+            const: T | None = None,
+            default: T | str | None = None,
+            type: Callable[[str], T] | argparse.FileType | None = None,
+            choices: Iterable[T] | None = None,
+            required: bool = False,
+            help: str | None = None,
+            metavar: str | tuple[str, ...] | None = "TRACEFILE",
+        ) -> None:
             help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
-            kwargs["help"] = "{} {}".format(help_part, kwargs.get("help", ""))
-            # NOTE: There are various mypy issues around the kwargs Kung Fu
-            # below, see e.g. https://github.com/python/mypy/issues/6799.
-            super().__init__(*args, nargs=None, default=False, **kwargs)  # type: ignore[misc]
+            help = f"{help_part} {help}" if help else help_part
 
-        def __call__(self, _parser, namespace, filename, option_string=None):
-            if not filename:
+            super().__init__(
+                option_strings=option_strings,
+                dest=dest,
+                nargs=nargs,
+                const=const,
+                default=False,
+                type=type,
+                choices=choices,
+                required=required,
+                help=help,
+                metavar=metavar,
+            )
+
+        def __call__(
+            self,
+            parser: argparse.ArgumentParser,
+            namespace: argparse.Namespace,
+            values: str | Sequence[Any] | None,
+            option_string: str | None = None,
+        ) -> None:
+            if not isinstance(filename := values, str):
                 return
 
             if not sys.stdin.isatty():
@@ -194,6 +221,7 @@ def vcrtrace(
 
             import vcr
 
+            setattr(namespace, self.dest, True)
             use_cassette = vcr.VCR(  # type: ignore[attr-defined]
                 before_record_request=before_record_request,
                 filter_query_parameters=filter_query_parameters,

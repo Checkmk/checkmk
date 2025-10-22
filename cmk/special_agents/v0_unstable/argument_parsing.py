@@ -31,7 +31,13 @@ def create_default_argument_parser(description: str | None) -> argparse.Argument
     )
     parser.add_argument("--verbose", "-v", action="count", default=0)
     parser.add_argument(
-        "--vcrtrace", "--tracefile", action=vcrtrace(filter_headers=[("authorization", "****")])
+        "--vcrtrace",
+        "--tracefile",
+        default=False,
+        action=vcrtrace(
+            # this depends very much on the caller.
+            filter_headers=[("authorization", "****")],
+        ),
     )
     return parser
 

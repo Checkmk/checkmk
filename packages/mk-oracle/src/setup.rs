@@ -34,6 +34,9 @@ pub struct Env {
     /// detect instances and stop
     detect_only: bool,
 
+    /// detect runtime and stop
+    find_runtime: bool,
+
     /// detect instances and stop
     execution: SectionFilter,
 
@@ -55,6 +58,7 @@ impl Env {
             state_dir,
             disable_caching: args.no_spool,
             detect_only: args.detect_only,
+            find_runtime: args.find_runtime,
             execution: args.filter.clone().unwrap_or_default(),
             generate_plugins: args.generate_plugins.clone(),
         }
@@ -81,6 +85,10 @@ impl Env {
 
     pub fn detect_only(&self) -> bool {
         self.detect_only
+    }
+
+    pub fn find_runtime(&self) -> bool {
+        self.find_runtime
     }
 
     pub fn generate_plugins(&self) -> Option<&Path> {
@@ -272,6 +280,10 @@ pub const RUNTIME_SUB_DIR: &str = "mk-oracle";
 
 pub fn detect_host_runtime() -> Option<PathBuf> {
     match get_local_instances() {
+        Err(e) => try_find_instance_runtime(&e.to_string()),
+        Ok(instances) if instances.is_empty() => {
+            try_find_instance_runtime("detection list is empty too")
+        }
         Ok(instances) => {
             if instances.is_empty() {
                 log::warn!("No local Oracle instances found");
@@ -293,14 +305,37 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
             }
             None
         }
-        Err(e) => {
-            log::error!("Failed to get local Oracle instances: {e}");
-            None
-        }
     }
 }
 
-pub fn find_current_instance_runtime(env_var: &str) -> Option<PathBuf> {
+fn try_find_instance_runtime(message: &str) -> Option<PathBuf> {
+    const CLIENT_ENV_VAR: &str = "ORACLE_INSTANT_CLIENT";
+    if let Ok(env_var) = std::env::var(CLIENT_ENV_VAR) {
+        let candidate = PathBuf::from(env_var);
+        return if candidate.is_dir() && validate_permissions(&candidate) {
+            Some(candidate)
+        } else {
+            log::warn!(
+                "{} path {:?} is not a directory or has wrong permissions",
+                CLIENT_ENV_VAR,
+                candidate
+            );
+            None
+        };
+    };
+
+    const ENV_VAR: &str = "ORACLE_HOME";
+    if let Some(runtime) =
+        find_default_instance_runtime(ENV_VAR).filter(|r| validate_permissions(r))
+    {
+        Some(runtime)
+    } else {
+        log::error!("Failed to get local Oracle instances using {ENV_VAR}, also {message}");
+        None
+    }
+}
+
+pub fn find_default_instance_runtime(env_var: &str) -> Option<PathBuf> {
     let oracle_home = match std::env::var(env_var) {
         Ok(path) => path,
         Err(_) => {
@@ -413,11 +448,11 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 }
 
 /// Validate permissions of the given path(see mk-oracle)
-pub fn validate_permissions(_p: &Path) -> bool {
+pub fn validate_permissions(p: &Path) -> bool {
     // TODO. Implement permission checks for Oracle home/bin
     // If executable is elevated,
     // then permissions for directory and all required binaries should be admin only.
-    log::warn!("CHECK PERMISSIONS is not implemented yet");
+    log::warn!("CHECK PERMISSIONS is not implemented yet, {p:?} is allowed to be used");
     true
 }
 

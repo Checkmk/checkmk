@@ -45,6 +45,9 @@ pub struct Args {
     #[arg(long)]
     pub detect_only: bool,
 
+    #[arg(long)]
+    pub find_runtime: bool,
+
     /// Prepared runtime status, If yes skip setting PATH LD_LIBRARY_PATH, whatever
     #[arg(long)]
     pub runtime_ready: bool,

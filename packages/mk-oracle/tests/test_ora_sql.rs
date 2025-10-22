@@ -1608,19 +1608,19 @@ fn test_create_plugin_async() {
 
 #[test]
 fn test_find_current_instance_runtime() {
-    use mk_oracle::setup::find_current_instance_runtime;
-    assert!(find_current_instance_runtime("HURZ-burz").is_none());
-    assert!(find_current_instance_runtime("PATH").is_none());
+    use mk_oracle::setup::find_default_instance_runtime;
+    assert!(find_default_instance_runtime("HURZ-burz").is_none());
+    assert!(find_default_instance_runtime("PATH").is_none());
     let db_location = tempfile::tempdir().unwrap();
     let temp_var = "ORACLE_HOME_TEST_VAR";
     unsafe {
         std::env::set_var(temp_var, db_location.path());
     }
-    assert!(find_current_instance_runtime(temp_var).is_none());
+    assert!(find_default_instance_runtime(temp_var).is_none());
     let lib_path = db_location.path().join("lib");
     std::fs::create_dir_all(&lib_path).unwrap();
     assert_eq!(
-        find_current_instance_runtime(temp_var).unwrap(),
+        find_default_instance_runtime(temp_var).unwrap(),
         db_location.path().join("lib")
     );
 }

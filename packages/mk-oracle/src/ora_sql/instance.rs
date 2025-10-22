@@ -7,8 +7,8 @@ use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, OpenedSpo
 use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
-use crate::setup::Env;
-use crate::types::{InstanceName, SqlBindParam, SqlQuery};
+use crate::setup::{detect_runtime, Env};
+use crate::types::{InstanceName, SqlBindParam, SqlQuery, UseHostClient};
 use crate::utils;
 use std::collections::HashSet;
 
@@ -23,7 +23,16 @@ impl OracleConfig {
         if let Some(ora_sql) = self.ora_sql() {
             if environment.detect_only() {
                 return Ok(dump_local_instances());
-            };
+            }
+            if environment.find_runtime() {
+                let use_host_client: UseHostClient = ora_sql.options().use_host_client().clone();
+                return Ok(detect_runtime(&use_host_client, None)
+                    .map(|t| format!("{:?}", t))
+                    .unwrap_or_else(|| {
+                        log::error!("Error detecting runtime");
+                        "Error detecting runtime".to_string()
+                    }));
+            }
             OracleConfig::prepare_cache_sub_dir(environment, &ora_sql.config_cache_dir());
             log::info!("Generating main data");
             let mut output: Vec<String> = Vec::new();

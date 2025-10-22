@@ -46,6 +46,19 @@ async fn main() {
                     1
                 }
             }
+        } else if args.contains(&"--detect-only".to_string())
+            || args.contains(&"--find-runtime".to_string())
+        {
+            match config.exec(&environment).await {
+                Ok(output) => {
+                    print!("{output}");
+                    0
+                }
+                Err(e) => {
+                    display_and_log(e);
+                    1
+                }
+            }
         } else if let Some(old_path) = setup::add_runtime_path_to_env(&config, None, None) {
             log::info!("Spawn new process");
             spawn_new_process(args, old_path)

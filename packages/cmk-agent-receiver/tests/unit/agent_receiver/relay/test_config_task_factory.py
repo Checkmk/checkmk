@@ -130,3 +130,34 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
 
     assert len(tasks_for_relay_2) == 1
     assert tasks_for_relay_2[0] == stored_task
+
+
+def test_create_task_for_single_chosen_relay_when_relay_folder_does_not_exist(
+    config_task_factory: ConfigTaskFactory,
+    relays_repository: RelaysRepository,
+    tasks_repository: TasksRepository,
+    test_user: InternalAuth,
+    site_context: Config,
+) -> None:
+    """
+    Should not create a task for the specified relay when the relay folder is not created (yet).
+    """
+
+    # Register more relays
+    relay_id_1 = relays_repository.add_relay(test_user, alias="test-relay-1")
+    relay_id_2 = relays_repository.add_relay(test_user, alias="test-relay-2")
+    relay_id_3 = relays_repository.add_relay(test_user, alias="test-relay-3")
+
+    # If we don't have a relay folder for relay 2 for this serial...
+
+    _ = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_3])
+
+    # ...then we cannot create tasks for chosen relay: relay_id_2
+
+    created_task = config_task_factory.create_for_relay(relay_id_2)
+    assert created_task is None
+
+    # assert no tasks are created for the other relays
+
+    assert len(tasks_repository.get_tasks(relay_id_1)) == 0
+    assert len(tasks_repository.get_tasks(relay_id_3)) == 0

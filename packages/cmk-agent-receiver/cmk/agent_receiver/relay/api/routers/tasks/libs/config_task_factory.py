@@ -9,7 +9,7 @@ from datetime import datetime, UTC
 from pathlib import Path
 
 from cmk.agent_receiver.config import get_config
-from cmk.agent_receiver.log import bound_contextvars
+from cmk.agent_receiver.log import bound_contextvars, logger
 from cmk.agent_receiver.relay.api.routers.tasks.libs.retrieve_config_serial import (
     retrieve_config_serial,
 )
@@ -43,27 +43,48 @@ class ConfigTaskFactory:
         Creates a relay config task for the specified relay.
         If the relay has already a pending relay for the current serial value, the function
         does nothing and returns None.
+        If the relay does not have a configuration folder created yet, the function
+        does nothing and returns None.
         """
         result = self._create([relay_id])
         return None if not result else result[0]
 
     def _create(self, relay_ids: list[RelayID]) -> list[RelayTask]:
         now = datetime.now(UTC)
-        created_tasks: list[RelayTask] = []
         serial = retrieve_config_serial()
         config = get_config()
 
-        for rid in relay_ids:
-            # TODO This check should be performed in TasksRepository, when saving
-            if self._pending_configuration_task_exists(rid, serial):
-                continue  # Skip creating duplicate pending tasks
-            parent = config.helper_config_dir / f"{serial}/relays/{rid}"
-            relay_config_spec = RelayConfigSpec(serial=serial, tar_data=create_tar(parent))
-            task = RelayTask(spec=relay_config_spec, creation_timestamp=now, update_timestamp=now)
-            with bound_contextvars(task_id=task.id):
-                self.tasks_repository.store_task(rid, task)
-                created_tasks.append(task)
-        return created_tasks
+        tasks = (
+            self._safe_single_task(
+                relay_id=rid,
+                serial=serial,
+                helper_config_dir=config.helper_config_dir,
+                timestamp=now,
+            )
+            for rid in relay_ids
+        )
+        return [t for t in tasks if t is not None]
+
+    def _safe_single_task(
+        self, relay_id: RelayID, serial: str, helper_config_dir: Path, timestamp: datetime
+    ) -> RelayTask | None:
+        with bound_contextvars(relay_id=relay_id, serial=serial):
+            try:
+                # TODO This check should be performed in TasksRepository, when saving
+                if self._pending_configuration_task_exists(relay_id, serial):
+                    logger.info("Skipping config task creation, pending")
+                    return None  # Skip creating duplicate pending tasks
+                parent = helper_config_dir / f"{serial}/relays/{relay_id}"
+                relay_config_spec = RelayConfigSpec(serial=serial, tar_data=create_tar(parent))
+                task = RelayTask(
+                    spec=relay_config_spec, creation_timestamp=timestamp, update_timestamp=timestamp
+                )
+                with bound_contextvars(task_id=task.id):
+                    self.tasks_repository.store_task(relay_id, task)
+                    return task
+            except Exception as e:
+                logger.exception(e)
+                return None
 
     def _pending_configuration_task_exists(
         self,

@@ -76,6 +76,7 @@ RUN yum -y makecache \
     perl-devel \
     php \
     postgresql-devel \
+    postgresql-server-devel \
     procps \
     readline-devel \
     rpcbind \

@@ -187,7 +187,7 @@ def _setup_datasource(site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
-    base_package = CMKPackageInfo(CMKVersion("2.4.0p12"), CMKEdition(CMKEdition.CEE))
+    base_package = CMKPackageInfo(CMKVersion("2.4.0p14"), CMKEdition(CMKEdition.CEE))
     return get_site_factory(prefix="update_", package=base_package)
 
 

@@ -37,7 +37,7 @@ def load_cfg(cfg_file_path: Path = DEFAULT_CFG_PATH) -> PodmanConfig | None:
         return PodmanConfig(
             socket_detection=tuple(data["socket_detection"])
             if isinstance(data["socket_detection"], list)
-            else data["socket_detection"],
+            else AutomaticSocketDetectionMethod(data["socket_detection"]),
         )
     except Exception as e:
         write_section(

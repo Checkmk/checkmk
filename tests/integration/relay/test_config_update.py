@@ -112,8 +112,7 @@ class TestRelay:
 
         # unpack
         tar_data = tasks[0].spec.tar_data
-        raw = tar_data
-        with tarfile.open(fileobj=io.BytesIO(raw.encode("ascii")), mode="r:") as tf:
+        with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:") as tf:
             members = tf.getmembers()
             # Check for empty archive
             assert members, "Empty config archive in test"

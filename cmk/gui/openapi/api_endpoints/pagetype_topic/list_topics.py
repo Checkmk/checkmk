@@ -44,6 +44,16 @@ class PagetypeTopicExtensions:
 @api_model
 class PagetypeTopicModel(DomainObjectModel):
     domainType: Literal["pagetype_topic"] = api_field(description="The domain type of the object.")
+    id: str = api_field(
+        title="ID",
+        description="The unique identifier for this topic.",
+        example="other",
+    )
+    title: str = api_field(
+        title="Title",
+        description="A human readable title of this object. Can be used for user interfaces.",
+        example="Other",
+    )
     extensions: PagetypeTopicExtensions = api_field(
         description="Additional properties of the pagetype topic."
     )

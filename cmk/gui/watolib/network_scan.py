@@ -99,6 +99,7 @@ def execute_network_scan_job(config: Config) -> None:
                 raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
 
             _add_scanned_hosts_to_folder(
+                tree,
                 folder,
                 found,
                 run_as,
@@ -141,6 +142,7 @@ def _find_folder_to_scan(tree: FolderTree) -> Folder | None:
 
 
 def _add_scanned_hosts_to_folder(
+    tree: FolderTree,
     folder: Folder,
     found: NetworkScanFoundHosts,
     username: UserId,
@@ -183,7 +185,7 @@ def _add_scanned_hosts_to_folder(
     with store.lock_checkmk_configuration(configuration_lockfile):
         folder.create_hosts(entries, pprint_value=pprint_value, use_git=use_git)
         folder.save_folder_attributes()
-        folder_tree().invalidate_caches()
+        tree.invalidate_caches()
 
     bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries), debug=debug)
 

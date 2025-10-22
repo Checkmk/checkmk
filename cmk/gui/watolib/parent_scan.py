@@ -46,6 +46,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
     Folder,
     folder_tree,
+    FolderTree,
     Host,
 )
 from cmk.utils.paths import configuration_lockfile
@@ -110,9 +111,10 @@ class ParentScanBackgroundJob(BackgroundJob):
             self._initialize_statistics()
             self._logger.info("Parent scan started...")
 
+            tree = folder_tree()
             for task in tasks:
                 self._process_task(
-                    task, settings, pprint_value=pprint_value, debug=debug, use_git=use_git
+                    task, settings, tree, pprint_value=pprint_value, debug=debug, use_git=use_git
                 )
 
             self._logger.info("Summary:")
@@ -144,6 +146,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         self,
         task: ParentScanTask,
         settings: ParentScanSettings,
+        tree: FolderTree,
         *,
         pprint_value: bool,
         debug: bool,
@@ -155,6 +158,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             self._process_parent_scan_results(
                 task,
                 settings,
+                tree,
                 self._execute_parent_scan(task, settings, debug=debug),
                 pprint_value=pprint_value,
                 debug=debug,
@@ -189,6 +193,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         self,
         task: ParentScanTask,
         settings: ParentScanSettings,
+        tree: FolderTree,
         results: Sequence[GatewayResult],
         *,
         pprint_value: bool,
@@ -203,6 +208,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                     self._configure_host_and_gateway(
                         task,
                         settings,
+                        tree,
                         result.gateway,
                         pprint_value=pprint_value,
                         debug=debug,
@@ -229,13 +235,13 @@ class ParentScanBackgroundJob(BackgroundJob):
         self,
         task: ParentScanTask,
         settings: ParentScanSettings,
+        tree: FolderTree,
         gateway: Gateway | None,
         *,
         pprint_value: bool,
         debug: bool,
         use_git: bool,
     ) -> None:
-        tree = folder_tree()
         tree.invalidate_caches()
         host_folder = tree.folder(task.host_folder_path)
         gateway_folder = (

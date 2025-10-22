@@ -16,9 +16,10 @@
 SETLOCAL EnableExtensions EnableDelayedExpansion
 
 if "%3"=="" powershell Write-Host "Invalid parameters - url should be defined" -Foreground red && exit /B 9
-if "%4"=="" powershell Write-Host "Invalid parameters - version should be defined" -Foreground red && exit /B 10
-if "%5"=="" powershell Write-Host "Invalid parameters - subversion should be defined" -Foreground red && exit /B 10
-echo run: %0 %1 %2 %3 %4 %5
+if "%4"=="" powershell Write-Host "Invalid parameters - disable_cache should be defined" -Foreground red && exit /B 10
+if "%5"=="" powershell Write-Host "Invalid parameters - version should be defined" -Foreground red && exit /B 10
+if "%6"=="" powershell Write-Host "Invalid parameters - subversion should be defined" -Foreground red && exit /B 10
+echo run: %0 %1 %2 %3 %4 %5 %6
 
 :: Increase the value in file BUILD_NUM to rebuild master
 set /p BUILD_NUM=<BUILD_NUM
@@ -30,10 +31,12 @@ powershell Write-Host "[+] curl found" -Foreground green
 set arti_dir=%1
 set creds=%2
 set url=%3
-set version=%4
-set subversion=%5
+set disable_cache=%4
+set version=%5
+set subversion=%6
 
 powershell Write-Host "Used URL is `'%url%`'"  -Foreground cyan
+powershell Write-Host "disable_cache is `'%disable_cache%`'"  -Foreground cyan
 if not exist %arti_dir% powershell Write-Host "Directory `'%arti_dir%`' doesn`'t exist" -Foreground red && exit /B 12
 
 
@@ -51,39 +54,47 @@ set artifact_name=%arti_dir%\python-3.cab
 echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
 curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
+IF /I "!ERRORLEVEL!" NEQ "0"  (
+    powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
+    goto build
+)
+IF /I "%disable_cache%" EQU "true" (
+    powershell Write-Host "DISABLE_CACHE is %disable_cache%, building python %version%.%subversion% ..." -Foreground cyan
+    goto build
+)
+
+:: Most probable case. We have the python cab in the cache, just copy cached file to the artifact folder
+powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green
+move /Y %fname% %artifact_name%
+powershell Write-Host "[+] Downloaded successfully" -Foreground green
+exit /b 0
+
+:: Either a cached artifact was not found or disable_cache is true.
+:build
+powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
+
+:: BUILDING
+make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
+
+echo "Checking the result of the build..."
+if NOT exist %artifact_name% (
+  echo "The file %artifact_name% absent, build failed"
+  exit /B 14
+)
+powershell Write-Host "Build successful" -Foreground green
+
+:: UPLOADING to the Nexus Cache:
+echo Uploading to cache %artifact_name% ... %fname% ...
+copy %artifact_name% %fname%
+
+powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%" -foreground white
+curl -sSf --user %creds% --upload-file %fname% %url%
 IF /I "!ERRORLEVEL!" NEQ "0" (
-  powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
-
-  :: BUILDING
-  make build PY_VER=%version% PY_SUBVER=%subversion% ||  powershell Write-Host "[-] make failed"  -Foreground red && exit /B 34
-
-
-  echo "Checking the result of the build..."
-  if NOT exist %artifact_name% (
-    echo "The file %artifact_name% absent, build failed"
-    exit /B 14
-  )
-  powershell Write-Host "Build successful" -Foreground green
-
-  :: UPLOADING to the Nexus Cache:
-  echo Uploading to cache %artifact_name% ... %fname% ...
-  copy %artifact_name% %fname%
-
-  powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%" -foreground white
-  curl -sSf --user %creds% --upload-file %fname% %url%
-  IF /I "!ERRORLEVEL!" NEQ "0" (
-    del %fname% > nul
-    powershell Write-Host "[-] Failed to upload" -Foreground red
-    exit /B 35
-  ) else (
-    del %fname% > nul
-    powershell Write-Host "[+] Uploaded successfully" -Foreground green
-    exit /B 0
-  )
+  del %fname% > nul
+  powershell Write-Host "[-] Failed to upload" -Foreground red
+  exit /B 35
 ) else (
-  :: Most probable case. We have the python cab in the cache, just copy cached file to the artifact folder
-  powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green
-  move /Y %fname% %artifact_name%
-  powershell Write-Host "[+] Downloaded successfully" -Foreground green
-  exit /b 0
+  del %fname% > nul
+  powershell Write-Host "[+] Uploaded successfully" -Foreground green
+  exit /B 0
 )

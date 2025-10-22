@@ -78,8 +78,8 @@ build_the_module cached <CREDENTIALS> <CACHE_URL>
 In one turn the script makes two calls:
 
 ```bat
-:: build_the_cached.cmd <ARTEFACT_DIR> <CREDENTIALS> <CACHE_URL> <PYTHON_VERSION> <PYTHON_SUBVERSION>
-build_the_cached.cmd artefact_dir credentials url 3.12 6
+:: build_the_cached.cmd <ARTEFACT_DIR> <CREDENTIALS> <CACHE_URL> <DISABLE_CACHE> <PYTHON_VERSION> <PYTHON_SUBVERSION>
+build_the_cached.cmd artefact_dir credentials url false 3.12 6
 ```
 
 #### Caching

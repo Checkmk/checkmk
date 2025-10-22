@@ -3,7 +3,10 @@
 /// file: winagt-build-modules.groovy
 
 def main() {
-    check_job_parameters(["VERSION"]);
+    check_job_parameters(
+        ["VERSION"],
+        ["DISABLE_CACHE", false],
+    );
 
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -26,7 +29,8 @@ def main() {
                 windows.build(
                     TARGET: 'cached',
                     CREDS: NEXUS_USERNAME+':'+NEXUS_PASSWORD,
-                    CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
+                    CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/',
+                    DISABLE_CACHE: params.DISABLE_CACHE
                 );
             }
         }

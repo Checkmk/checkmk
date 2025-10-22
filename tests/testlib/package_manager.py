@@ -10,6 +10,7 @@ import abc
 import hashlib
 import logging
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import NewType
@@ -19,6 +20,7 @@ import requests
 from tests.testlib.utils import (
     get_cmk_download_credentials,
     package_hash_path,
+    parse_raw_edition,
     run,
 )
 from tests.testlib.version import CMKVersion, version_from_env
@@ -65,6 +67,27 @@ class ABCPackageManager(abc.ABC):
             return PackageManagerCMA(distro_name)
 
         return PackageManagerDEB(distro_name)
+
+    @classmethod
+    def from_package(cls, package_path: Path) -> "ABCPackageManager":
+        """Create a package manager instance from a package file path.
+
+        Determines the appropriate subclass based on the package file extension
+        and distro information embedded in the filename.
+        """
+        package_name = package_path.name
+
+        # Determine package manager type based on file extension
+        if package_name.endswith(".deb"):
+            return PackageManagerDEB.from_package_file(package_path)
+
+        if package_name.endswith(".rpm"):
+            return ABCPackageManagerRPM.from_package_file(package_path)
+
+        if package_name.endswith(".cma"):
+            return PackageManagerCMA.from_package_file(package_path)
+
+        raise ValueError(f"Unknown package type for file: {package_name}")
 
     def __init__(self, distro_name: str) -> None:
         self.distro_name = distro_name
@@ -130,6 +153,14 @@ class ABCPackageManager(abc.ABC):
 
     @abc.abstractmethod
     def package_name(self, edition: Edition, version: str) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_edition(self, package_path: Path) -> Edition:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_version(self, package_path: Path) -> str:
         raise NotImplementedError()
 
     def _build_system_package_path(self, version: str, package_name: str) -> Path:
@@ -199,8 +230,39 @@ class ABCPackageManager(abc.ABC):
 
 
 class PackageManagerDEB(ABCPackageManager):
+    @classmethod
+    def from_package_file(cls, package_path: Path) -> "PackageManagerDEB":
+        package_name = package_path.name
+        # Extract distro name from DEB package filename
+        # Format: check-mk-{edition}-{version}_0.{distro}_amd64.deb
+        match = re.search(r"_0\.([^_]+)_amd64\.deb$", package_name)
+        if not match:
+            raise ValueError(f"Could not extract distro name from DEB package: {package_name}")
+
+        distro_name = match.group(1)
+        return cls(distro_name)
+
     def package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}_0.{self.distro_name}_amd64.deb"
+
+    def get_edition(self, package_path: Path) -> Edition:
+        package_name = package_path.name
+        # Match: check-mk-{edition}-...
+        match = re.match(r"check-mk-([^-]+)-", package_name)
+        if not match:
+            raise ValueError(f"Could not extract edition from DEB package: {package_name}")
+
+        edition_str = match.group(1)
+        return parse_raw_edition(edition_str)
+
+    def get_version(self, package_path: Path) -> str:
+        package_name = package_path.name
+        # Match: check-mk-{edition}-{version}_0.{distro}_amd64.deb
+        match = re.match(r"check-mk-[^-]+-(.+)_0\.[^_]+_amd64\.deb$", package_name)
+        if not match:
+            raise ValueError(f"Could not extract version from DEB package: {package_name}")
+
+        return match.group(1)
 
     def _install_package(self, package_path: Path) -> None:
         # all dependencies are installed via install-cmk-dependencies.sh in the Dockerfile
@@ -212,8 +274,44 @@ class PackageManagerDEB(ABCPackageManager):
 
 
 class ABCPackageManagerRPM(ABCPackageManager):
+    @classmethod
+    def from_package_file(cls, package_path: Path) -> "ABCPackageManagerRPM":
+        package_name = package_path.name
+        # Extract distro name from RPM package filename
+        # Format: check-mk-{edition}-{version}-{distro}-38.x86_64.rpm
+        match = re.search(r"-([^-]+)-38\.x86_64\.rpm$", package_name)
+        if not match:
+            raise ValueError(f"Could not extract distro name from RPM package: {package_name}")
+
+        distro_name = match.group(1)
+        if distro_name.startswith("sles"):
+            return PackageManagerSuSE(distro_name)
+        if distro_name.startswith("el"):
+            return PackageManagerRHEL(distro_name)
+        # Default to RHEL for other RPM-based distros
+        return PackageManagerRHEL(distro_name)
+
     def package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name}-38.x86_64.rpm"
+
+    def get_edition(self, package_path: Path) -> Edition:
+        package_name = package_path.name
+        # Match: check-mk-{edition}-...
+        match = re.match(r"check-mk-([^-]+)-", package_name)
+        if not match:
+            raise ValueError(f"Could not extract edition from RPM package: {package_name}")
+
+        edition_str = match.group(1)
+        return parse_raw_edition(edition_str)
+
+    def get_version(self, package_path: Path) -> str:
+        package_name = package_path.name
+        # Match: check-mk-{edition}-{version}-{distro}-38.x86_64.rpm
+        match = re.match(r"check-mk-[^-]+-(.+)-[^-]+-38\.x86_64\.rpm$", package_name)
+        if not match:
+            raise ValueError(f"Could not extract version from RPM package: {package_name}")
+
+        return match.group(1)
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
@@ -233,8 +331,67 @@ class PackageManagerRHEL(ABCPackageManagerRPM):
 
 
 class PackageManagerCMA(PackageManagerDEB):
+    @classmethod
+    def from_package_file(cls, package_path: Path) -> "PackageManagerCMA":
+        package_name = package_path.name
+        # Extract CMA version from package filename
+        # Format: check-mk-{edition}-{version}-{cma_version}-x86_64.cma
+        match = re.search(r"-(\d+)-x86_64\.cma$", package_name)
+        if not match:
+            raise ValueError(f"Could not extract CMA version from package: {package_name}")
+
+        cma_version = match.group(1)
+        distro_name = f"cma-{cma_version}"
+        return cls(distro_name)
+
     def package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name.split('-')[1]}-x86_64.cma"
+
+    def get_edition(self, package_path: Path) -> Edition:
+        package_name = package_path.name
+        # Match: check-mk-{edition}-...
+        match = re.match(r"check-mk-([^-]+)-", package_name)
+        if not match:
+            raise ValueError(f"Could not extract edition from CMA package: {package_name}")
+
+        edition_str = match.group(1)
+        return parse_raw_edition(edition_str)
+
+    def get_version(self, package_path: Path) -> str:
+        package_name = package_path.name
+        # Match: check-mk-{edition}-{version}-{cma_version}-x86_64.cma
+        match = re.match(r"check-mk-[^-]+-(.+)-\d+-x86_64\.cma$", package_name)
+        if not match:
+            raise ValueError(f"Could not extract version from CMA package: {package_name}")
+
+        return match.group(1)
+
+
+def version_from_path(package_path: Path) -> CMKVersion:
+    """Extract the CMKVersion from a package file path. (DEB, RPM, or CMA)
+
+    note: CMKVersion combines both version string and edition, e.g. '2.4.0-2025.10.30.cee'
+    """
+    from tests.testlib.version import CMKVersion
+
+    if package_path.suffix != ".gz":
+        pkg_manager = ABCPackageManager.from_package(package_path)
+        edition = pkg_manager.get_edition(package_path)
+        version_str = pkg_manager.get_version(package_path)
+    else:
+        match = re.match(
+            r"check-mk-(raw|enterprise|managed|cloud|saas|free)-([^_]+).(cme|cee|cre|cce).tar.gz$",
+            package_path.name,
+        )
+        if not match:
+            raise ValueError(
+                f"Could not extract edition and version from package: {package_path.name}"
+            )
+        edition_text, version_str, _ = match.groups()
+        edition = parse_raw_edition(edition_text)
+    version = CMKVersion(version_str, edition)
+
+    return version
 
 
 def _sha256_file(path: Path) -> str:

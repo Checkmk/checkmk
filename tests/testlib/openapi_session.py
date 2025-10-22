@@ -1119,6 +1119,7 @@ class SitesAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
 
     def update(self, site_id: str, site_config: dict) -> None:
+        site_config.pop("logged_in", None)
         response = self.session.put(
             f"/objects/site_connection/{site_id}",
             headers={

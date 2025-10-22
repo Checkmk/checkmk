@@ -195,8 +195,22 @@ export const determineWidgetEffectiveFilterContext = async (
   constants: DashboardConstants
 ): Promise<EffectiveWidgetFilterContext> => {
   const resp = await dashboardAPI.computeWidgetAttributes(widgetContent)
+  return buildWidgetEffectiveFilterContext(
+    widgetContent,
+    filters,
+    resp.value.filter_context.uses_infos,
+    constants
+  )
+}
+
+export const buildWidgetEffectiveFilterContext = (
+  widgetContent: WidgetContent,
+  filters: ConfiguredFilters,
+  usesInfos: string[],
+  constants: DashboardConstants
+): EffectiveWidgetFilterContext => {
   return {
-    uses_infos: resp.value.filter_context.uses_infos,
+    uses_infos: usesInfos,
     filters: filters,
     restricted_to_single: constants.widgets[widgetContent.type]!.filter_context.restricted_to_single
   }

@@ -14,6 +14,7 @@ import type {
   WidgetGeneralSettings,
   WidgetSpec
 } from '../../types/widget'
+import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
 import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
 import HwSwInventoryWizard from '../Wizard/wizards/hw_sw_inventory/HwSwInventoryWizard.vue'
 import MetricsWizard from '../Wizard/wizards/metrics/MetricsWizard.vue'
@@ -57,6 +58,11 @@ const handleAddEditWidget = (
   generalSettings: WidgetGeneralSettings,
   filterContext: WidgetFilterContext
 ) => {
+  console.log('handleAddEditWidget called with:', {
+    content,
+    generalSettings,
+    filterContext
+  })
   if (props.editWidgetId) {
     emit('edit-widget', props.editWidgetId, content, generalSettings, filterContext)
   } else {
@@ -115,6 +121,16 @@ const handleAddEditWidget = (
         :dashboard-owner="dashboardOwner"
         :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+      />
+
+      <EventsWizard
+        v-if="selectedWizard === 'event_stats'"
+        :dashboard-name="dashboardName"
+        :dashboard-constants="dashboardConstants"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
       />

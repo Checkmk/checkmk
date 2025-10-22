@@ -33,6 +33,10 @@ export function widgetTypeToSelectorMatcher(
       return 'host_site_overview'
     }
 
+    case 'event_stats': {
+      return 'event_stats'
+    }
+
     default: {
       throw new Error(
         `No selector defined widget content type: ${widgetContentType}. Please add it.`

@@ -55,7 +55,7 @@ export const dashboardWidgetWorkflows: Record<string, WorkflowItem> = {
     subtitle: _t('Summarize alerts and notifications'),
     icon: 'alerts'
   },
-  events: {
+  event_stats: {
     title: _t('Events'),
     subtitle: _t('Summarize events'),
     icon: 'event-console'

@@ -29,7 +29,7 @@ import type {
   WidgetContent
 } from '@/dashboard-wip/types/widget.ts'
 
-const DEFAULT_HEADER = {
+const CONTENT_TYPE_HEADER = {
   params: {
     header: { 'Content-Type': 'application/json' }
   }
@@ -64,7 +64,6 @@ export const dashboardAPI = {
     return unwrap(
       await client.GET('/objects/dashboard_relative_grid/{dashboard_id}', {
         params: {
-          ...DEFAULT_HEADER.params,
           path: { dashboard_id: dashboardName }
         }
       })
@@ -76,7 +75,6 @@ export const dashboardAPI = {
     return unwrap(
       await client.GET('/objects/dashboard_responsive_grid/{dashboard_id}', {
         params: {
-          ...DEFAULT_HEADER.params,
           path: { dashboard_id: dashboardName }
         }
       })
@@ -88,7 +86,7 @@ export const dashboardAPI = {
   ): Promise<EditRelativeGridResult> => {
     const result = await client.PUT('/objects/dashboard_relative_grid/{dashboard_id}', {
       params: {
-        ...DEFAULT_HEADER.params,
+        ...CONTENT_TYPE_HEADER.params,
         path: { dashboard_id: dashboardName }
       },
       body: dashboard
@@ -101,7 +99,7 @@ export const dashboardAPI = {
   ): Promise<EditResponsiveGridResult> => {
     const result = await client.PUT('/objects/dashboard_responsive_grid/{dashboard_id}', {
       params: {
-        ...DEFAULT_HEADER.params,
+        ...CONTENT_TYPE_HEADER.params,
         path: { dashboard_id: dashboardName }
       },
       body: dashboard
@@ -113,7 +111,7 @@ export const dashboardAPI = {
   ): Promise<RelativeGridDashboardDomainObject> => {
     return unwrap(
       await client.POST('/domain-types/dashboard_relative_grid/collections/all', {
-        ...DEFAULT_HEADER,
+        ...CONTENT_TYPE_HEADER,
         body: dashboard
       })
     )
@@ -123,7 +121,7 @@ export const dashboardAPI = {
   ): Promise<ResponsiveGridDashboardDomainObject> => {
     return unwrap(
       await client.POST('/domain-types/dashboard_responsive_grid/collections/all', {
-        ...DEFAULT_HEADER,
+        ...CONTENT_TYPE_HEADER,
         body: dashboard
       })
     )
@@ -133,54 +131,53 @@ export const dashboardAPI = {
     dashboardId: string,
     generalSettings: DashboardGeneralSettings
   ): Promise<void> => {
-    const url = `${API_ROOT}/domain-types/dashboard_relative_grid/actions/clone/invoke`
-    const response = await fetchRestAPI(url, 'POST', {
-      dashboard_id: dashboardId,
-      reference_dashboard_id: referenceDashboardId,
-      general_settings: generalSettings
-    })
-    await response.raiseForStatus()
+    unwrap(
+      await client.POST('/domain-types/dashboard_relative_grid/actions/clone/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        body: {
+          dashboard_id: dashboardId,
+          reference_dashboard_id: referenceDashboardId,
+          general_settings: generalSettings
+        }
+      })
+    )
   },
   cloneAsResponsiveGridDashboard: async (
     referenceDashboardId: string,
     dashboardId: string,
     generalSettings: DashboardGeneralSettings
   ): Promise<void> => {
-    const url = `${API_ROOT}/domain-types/dashboard_responsive_grid/actions/clone/invoke`
-    const response = await fetchRestAPI(url, 'POST', {
-      dashboard_id: dashboardId,
-      reference_dashboard_id: referenceDashboardId,
-      general_settings: generalSettings
-    })
-    await response.raiseForStatus()
+    unwrap(
+      await client.POST('/domain-types/dashboard_responsive_grid/actions/clone/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        body: {
+          dashboard_id: dashboardId,
+          reference_dashboard_id: referenceDashboardId,
+          general_settings: generalSettings
+        }
+      })
+    )
   },
   getDashboardConstants: async (): Promise<DashboardConstants> => {
-    const data = unwrap(await client.GET('/objects/constant/dashboard', DEFAULT_HEADER))
+    const data = unwrap(await client.GET('/objects/constant/dashboard'))
     return data.extensions
   },
   listDashboardMetadata: async (): Promise<DashboardMetadata[]> => {
-    const data = unwrap(
-      await client.GET('/domain-types/dashboard_metadata/collections/all', DEFAULT_HEADER)
-    )
+    const data = unwrap(await client.GET('/domain-types/dashboard_metadata/collections/all'))
     return data.value.map((model) => model.extensions).filter(Boolean)
   },
   listFilterCollection: async (): Promise<FilterCollection> => {
-    return unwrap(await client.GET('/domain-types/visual_filter/collections/all', DEFAULT_HEADER))
+    return unwrap(await client.GET('/domain-types/visual_filter/collections/all'))
   },
   listAvailableInventory: async (): Promise<WidgetAvailableInventory> => {
-    return unwrap(
-      await client.GET(
-        '/objects/constant/widget_available_inventory/collections/all',
-        DEFAULT_HEADER
-      )
-    )
+    return unwrap(await client.GET('/objects/constant/widget_available_inventory/collections/all'))
   },
   computeWidgetAttributes: async (
     widgetContent: WidgetContent
   ): Promise<ComputedWidgetSpecResponse> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-widget-attributes/invoke', {
-        ...DEFAULT_HEADER,
+        ...CONTENT_TYPE_HEADER,
         body: { content: widgetContent }
       })
     )
@@ -191,7 +188,7 @@ export const dashboardAPI = {
   ): Promise<ComputedTopListResponse> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-top-list/invoke', {
-        ...DEFAULT_HEADER,
+        ...CONTENT_TYPE_HEADER,
         body: { content, context }
       })
     )

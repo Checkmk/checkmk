@@ -21,7 +21,7 @@ from werkzeug.local import LocalProxy
 
 T = TypeVar("T")
 
-VarName = Literal[
+RequestLocalVarName = Literal[
     "config",
     "display_options",
     "html",
@@ -34,8 +34,10 @@ VarName = Literal[
     "user_errors",
 ]
 
+SessionVarName = Literal["user"] | tuple[Literal["user"], Literal["transactions"]]
 
-def set_global_var(name: VarName, obj: Any) -> None:
+
+def set_global_var(name: RequestLocalVarName, obj: Any) -> None:
     # We ignore this, so we don't have to introduce cyclical dependencies.
     request.meta[name] = obj  # type: ignore[attr-defined]
 
@@ -80,7 +82,7 @@ class Unset:
 unset = Unset()
 
 
-def global_var(name: VarName, default: Any | Unset = unset) -> Any:
+def global_var(name: RequestLocalVarName, default: Any | Unset = unset) -> Any:
     if default is unset:
         try:
             return request.meta[name]  # type: ignore[attr-defined]
@@ -90,9 +92,7 @@ def global_var(name: VarName, default: Any | Unset = unset) -> Any:
     return request.meta.get(name, default)  # type: ignore[attr-defined]
 
 
-def session_attr(
-    name: str | tuple[Literal["user"], Literal["transactions"]], type_class: type[T]
-) -> T:
+def session_attr(name: SessionVarName, type_class: type[T]) -> T:
     def get_attr_or_item(obj, key):
         if hasattr(obj, key):
             return getattr(obj, key)
@@ -128,7 +128,7 @@ def session_attr(
     )  # type: ignore[return-value]
 
 
-def request_local_attr(name: str, type_class: type[T]) -> T:
+def request_local_attr(name: RequestLocalVarName, type_class: type[T]) -> T:
     """Delegate access to the corresponding attribute on RequestContext
 
     When the returned object is accessed, the Proxy will fetch the current

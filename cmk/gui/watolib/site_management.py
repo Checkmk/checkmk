@@ -532,6 +532,7 @@ class SiteConfig:
     basic_settings: BasicSettings
     status_connection: StatusConnection
     configuration_connection: ConfigurationConnection
+    logged_in: bool | None = None
 
     @classmethod
     def from_internal(cls, site_id: SiteId, internal_config: SiteConfiguration) -> SiteConfig:
@@ -541,22 +542,43 @@ class SiteConfig:
             configuration_connection=ConfigurationConnection.from_internal(
                 site_id, internal_config
             ),
+            logged_in=bool(internal_config.get("secret"))
+            if not site_is_local(active_config, site_id)
+            else None,
         )
 
     @classmethod
-    def from_external(cls, external_config: dict[str, Any]) -> SiteConfig:
+    def from_external(
+        cls,
+        site_id: SiteId,
+        external_config: dict[str, Any],
+        previous_site_config: None | SiteConfiguration,
+    ) -> SiteConfig:
+        logged_in: bool | None
+        if previous_site_config is None:
+            logged_in = False
+        else:
+            logged_in = (
+                bool(previous_site_config.get("secret"))
+                if not site_is_local(active_config, site_id)
+                else None
+            )
+
         return cls(
             basic_settings=BasicSettings(**external_config["basic_settings"]),
             status_connection=StatusConnection.from_external(external_config["status_connection"]),
             configuration_connection=ConfigurationConnection.from_external(
                 external_config["configuration_connection"]
             ),
+            logged_in=logged_in,
         )
 
-    def to_external(self) -> Iterator[tuple[str, dict | None | str]]:
+    def to_external(self) -> Iterator[tuple[str, dict | None | str | bool]]:
         yield "basic_settings", dict(self.basic_settings.to_external())
         yield "status_connection", dict(self.status_connection.to_external())
         yield "configuration_connection", dict(self.configuration_connection.to_external())
+        if self.logged_in is not None:
+            yield "logged_in", self.logged_in
 
     def to_internal(self) -> SiteConfiguration:
         internal_config: SiteConfiguration = (

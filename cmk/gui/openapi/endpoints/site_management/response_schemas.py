@@ -296,6 +296,11 @@ class SiteConfigAttributes(BaseSchema):
     configuration_connection = fields.Nested(
         ConfigurationConnectionAttributesOutput,
     )
+    logged_in = fields.Boolean(
+        description="If a remote site is currently logged in, this will be True, "
+        "if not it will be False. For the main site, nothing is returned.",
+        example=True,
+    )
 
 
 class SiteConnectionResponse(DomainObject):

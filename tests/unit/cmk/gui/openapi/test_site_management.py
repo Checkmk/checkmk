@@ -199,7 +199,9 @@ def test_create_then_get_site_connection(clients: ClientRegistry) -> None:
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
     resp = clients.SiteManagement.get(site_id=site_id)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 def test_create_site_connection_url_without_tld(clients: ClientRegistry) -> None:
@@ -209,14 +211,18 @@ def test_create_site_connection_url_without_tld(clients: ClientRegistry) -> None
     config["configuration_connection"]["url_of_remote_site"] = url
     clients.SiteManagement.create(site_config=config)
     resp = clients.SiteManagement.get(site_id=site_id)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 def test_update_site_connection(clients: ClientRegistry) -> None:
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 def test_update_site_connection_that_doesnt_exist(
@@ -234,7 +240,9 @@ def test_update_site_connection_alias(clients: ClientRegistry) -> None:
     config["basic_settings"]["alias"] = "edited alias"
     clients.SiteManagement.update(site_id=site_id, site_config=config)
     resp = clients.SiteManagement.get(site_id=site_id)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 connection_test_data_200: list[Connection] = [
@@ -272,7 +280,9 @@ def test_update_site_connection_status_connection_200(
     clients.SiteManagement.create(site_config=config)
     config["status_connection"]["connection"] = data
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 connection_test_data_400: list[Connection] = [
@@ -450,7 +460,9 @@ def test_update_site_connection_proxy_200(
     clients.SiteManagement.create(site_config=config)
     config["status_connection"]["proxy"] = data
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 @pytest.mark.parametrize("data", proxy_test_data_400)
@@ -474,7 +486,9 @@ def test_update_site_connection_user_sync(clients: ClientRegistry) -> None:
     edited_user_sync = {"sync_with_ldap_connections": "disabled"}
     config["configuration_connection"]["user_sync"] = edited_user_sync
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 def test_update_site_connection_user_sync_with_ldap_connections_200(
@@ -499,7 +513,9 @@ def test_update_site_connection_user_sync_with_ldap_connections_200(
     }
     config["configuration_connection"]["user_sync"] = edited_user_sync
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 def test_update_site_connection_user_sync_with_ldap_connections_400(
@@ -563,7 +579,9 @@ def test_update_configuration_connection_200(
     clients.SiteManagement.create(site_config=config)
     config["configuration_connection"] = data
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 config_cnx_test_data_400: list[ConfigurationConnection] = [
@@ -637,7 +655,9 @@ def test_update_status_host_200(
     data: StatusHost = {"status_host_set": "enabled", "site": "NO_SITE", "host": "host1"}
     config["status_connection"]["status_host"] = data
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 status_host_test_data: list[StatusHost] = [
@@ -687,7 +707,9 @@ def test_update_url_of_remote_site_200(
     clients.SiteManagement.create(site_config=config)
     config["configuration_connection"]["url_of_remote_site"] = data
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 url_of_remote_site_test_data_400: list[str] = [
@@ -720,7 +742,9 @@ def test_update_url_prefix_200(clients: ClientRegistry) -> None:
     clients.SiteManagement.create(site_config=config)
     config["status_connection"]["url_prefix"] = "/remote_site_1/"
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
-    assert resp.json["extensions"] == config
+    extensions = resp.json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
 
 
 def test_update_url_prefix_400(clients: ClientRegistry) -> None:
@@ -788,3 +812,29 @@ def test_create_no_sync_site_connection(clients: ClientRegistry) -> None:
 
     resp = clients.SiteManagement.get(site_id=site_id)
     assert resp.json["extensions"]["configuration_connection"] == config["configuration_connection"]
+
+
+def test_remote_site_logged_in(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.do_site_login",
+        lambda site_id, username, password: "watosecret",
+    )
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
+        lambda site_id, settings: None,
+    )
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    clients.SiteManagement.login(site_id=site_id, username="cmkadmin", password="cmk")
+    assert clients.SiteManagement.get(site_id=site_id).json["extensions"]["logged_in"]
+
+
+def test_remote_site_not_logged_in(clients: ClientRegistry) -> None:
+    config, _site_id = _default_config_with_site_id()
+    assert not clients.SiteManagement.create(site_config=config).json["extensions"]["logged_in"]
+
+
+def test_main_site_no_logged_in(clients: ClientRegistry) -> None:
+    assert "logged_in" not in clients.SiteManagement.get(site_id="NO_SITE").json["extensions"]

@@ -61,7 +61,7 @@ _INTERFACE_MODELS = [
     IpInterfaceModelFactory.build(
         name="interface2",
         uuid="uuid1",
-        state="up",
+        state="down",
         enabled=True,
         node_name="node_name",
         port_name="port2",

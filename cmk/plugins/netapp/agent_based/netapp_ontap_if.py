@@ -148,10 +148,10 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
         interfaces_data_section[interface_name] = interface
 
         computed_state = None
-        if port_state := interface.get("port_state"):
-            computed_state = "1" if port_state == "up" else "2"
-        elif interface_state := interface.get("interface_state"):
+        if interface_state := interface.get("state"):
             computed_state = "1" if interface_state == "up" else "2"
+        elif port_state := interface.get("port_state"):
+            computed_state = "1" if port_state == "up" else "2"
 
         # ! if the port type is not physical, than is virtual?!?!?!?
         if interface.get("port_type") != "physical":

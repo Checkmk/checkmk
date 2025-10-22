@@ -17,7 +17,6 @@ const { _t } = usei18n()
 export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSettings) {
   // shorthand
   const s = initialSettings
-  console.log('S: ', s)
 
   const name = ref<string>('')
   const nameErrors = ref<string[]>([])

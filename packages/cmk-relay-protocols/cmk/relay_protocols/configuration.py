@@ -11,6 +11,9 @@ from typing import Annotated, NamedTuple, NewType, Self
 
 from pydantic import BaseModel, Field, HttpUrl
 
+# The name of the folder in the tar archive that contains the relay config files
+CONFIG_ARCHIVE_ROOT_FOLDER_NAME: str = "config"
+
 Timestamp = NewType("Timestamp", float)
 Seconds = NewType("Seconds", float)
 

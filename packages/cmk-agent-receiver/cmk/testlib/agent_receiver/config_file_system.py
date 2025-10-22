@@ -9,9 +9,7 @@ import secrets
 import tarfile
 from pathlib import Path
 
-from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import (
-    _ARCHIVE_ROOT_NAME as ROOT,
-)
+from cmk.relay_protocols.configuration import CONFIG_ARCHIVE_ROOT_FOLDER_NAME
 
 RelayId = str
 FileName = str
@@ -44,7 +42,7 @@ class ConfigFolder:
             members = tar.getmembers()
             assert len(members) == len(_FOLDER_STRUCTURE) + _NUMBER_OF_FOLDERS_IN_STRUCTURE
             for filename in _FOLDER_STRUCTURE:
-                tar_info = tar.getmember(f"{ROOT}/{filename}")
+                tar_info = tar.getmember(f"{CONFIG_ARCHIVE_ROOT_FOLDER_NAME}/{filename}")
                 file_obj = tar.extractfile(tar_info)
                 assert file_obj is not None
                 file_content = file_obj.read().decode("utf-8")

@@ -21,8 +21,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-
-_ARCHIVE_ROOT_NAME = "config"
+from cmk.relay_protocols.configuration import CONFIG_ARCHIVE_ROOT_FOLDER_NAME
 
 
 @dataclasses.dataclass
@@ -113,7 +112,7 @@ def create_tar(parent: Path) -> bytes:
 
     # Create tar archive in memory
     with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
-        tar.add(parent, arcname=_ARCHIVE_ROOT_NAME)
+        tar.add(parent, arcname=CONFIG_ARCHIVE_ROOT_FOLDER_NAME)
 
     # Get the binary content of the tar archive
     return tar_buffer.getvalue()

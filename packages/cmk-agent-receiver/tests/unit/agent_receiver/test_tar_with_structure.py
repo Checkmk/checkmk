@@ -11,11 +11,9 @@ from pathlib import Path
 import pytest
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import (
-    _ARCHIVE_ROOT_NAME as ROOT,
-)
-from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import (
     create_tar,
 )
+from cmk.relay_protocols.configuration import CONFIG_ARCHIVE_ROOT_FOLDER_NAME as ROOT
 
 
 @pytest.fixture

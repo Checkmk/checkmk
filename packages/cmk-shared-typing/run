@@ -88,7 +88,7 @@ run_build() {
 run_update_openapi_spec() {
     # Note: This is called after cd to script directory in main()
     local spec_path="$PWD/source/openapi_spec_internal.yaml"
-    bazel run //cmk:generate_api_spec_repo -- generate --version internal --format yaml --out "$spec_path"
+    bazel run //cmk:generate_api_spec -- generate --version internal --format yaml --out "$spec_path"
 }
 
 run_check_format() {
@@ -104,9 +104,9 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
+    test ${RUN_UPDATE_OPENAPI_SPEC} = yes && run_update_openapi_spec
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
-    test ${RUN_UPDATE_OPENAPI_SPEC} = yes && run_update_openapi_spec
     test ${RUN_FORMAT} = yes && run_format
     true
 }

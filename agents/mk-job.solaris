@@ -53,10 +53,8 @@ main() {
     cleanup_running_files "$JOB_DIR" "$JOB_NAME"
 
     if [ ! -d "${JOB_DIR}" ]; then
-        if [ "${CURRENT_USER}" = root ]; then
-            mkdir -p "${JOB_DIR}"
-        else
-            echo "ERROR: Missing output directory ${JOB_DIR} for non-root user '${CURRENT_USER}'." >&2
+        if ! mkdir -p "${JOB_DIR}" 2>/dev/null; then
+            echo "ERROR: Unable to create output directory ${JOB_DIR} for user '${CURRENT_USER}'." >&2
             exit 1
         fi
     fi

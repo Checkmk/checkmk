@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
+from collections.abc import Mapping
 from datetime import datetime
-from typing import TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -24,8 +25,8 @@ from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo
 
 
 class Params(TypedDict):
-    required_node_status: str
-    required_subscription_status: str
+    required_node_status: NotRequired[Mapping[str, Literal[0, 1, 2, 3]]]
+    required_subscription_status: NotRequired[Mapping[str, Literal[0, 1, 2, 3]]]
     subscription_expiration_days_levels: NoLevelsT | FixedLevelsT[int]
 
 
@@ -55,18 +56,16 @@ def _check_days_until_expiration(
 
 
 def check_proxmox_ve_node_info(params: Params, section: SectionNodeInfo) -> CheckResult:
-    req_node_status = params["required_node_status"].lower()
     yield Result(
-        state=State.OK if not req_node_status or req_node_status == section.status else State.WARN,
-        summary=f"Status: {section.status}{f' (required: {req_node_status})' if req_node_status else ''}",
+        state=State(params.get("required_node_status", {}).get(section.status, 0)),
+        summary=f"Status: {section.status}",
     )
 
-    req_subs_status = params["required_subscription_status"].lower()
     yield Result(
-        state=State.OK
-        if not req_subs_status or req_subs_status == section.subscription.status
-        else State.WARN,
-        summary=f"Subscription: {section.subscription.status}{f' (required: {req_subs_status})' if req_subs_status else ''}",
+        state=State(
+            params.get("required_subscription_status", {}).get(section.subscription.status, 0)
+        ),
+        summary=f"Subscription: {section.subscription.status}",
     )
 
     if section.subscription.next_due_date:
@@ -95,8 +94,6 @@ check_plugin_proxmox_ve_node_info = CheckPlugin(
     check_function=check_proxmox_ve_node_info,
     check_ruleset_name="proxmox_ve_node_info",
     check_default_parameters={
-        "required_node_status": "online",
-        "required_subscription_status": "Active",
         "subscription_expiration_days_levels": ("fixed", (30, 7)),
     },
 )

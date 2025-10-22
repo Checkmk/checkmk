@@ -4,9 +4,11 @@ catalog: os/misc
 license: GPLv2
 distribution: check_mk
 description:
- This check is OK when a given Proxmox VE node's `status` and it's subscription 'status' match the
-  given configured values, WARN otherwise.
- It shows the node status, subscription status, Proxmox VE version and number of hosted VMs.
+ This check monitors a Proxmox VE node's status and subscription status. The service state for each
+ status can be individually configured in the ruleset (OK, WARN, CRIT). By default, node status
+ "online" and subscription statuses "new" and "active" are considered OK, while other statuses
+ trigger appropriate warning or critical states.
+ It shows the node status, subscription status and time until expiration, Proxmox VE version and number of hosted VMs.
 
 discovery:
  One service per system is created.

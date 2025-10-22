@@ -42,14 +42,14 @@ NODE_DATA = parse_proxmox_ve_node_info(
     [
         pytest.param(
             {
-                "required_node_status": "online",
-                "required_subscription_status": "active",
+                "required_node_status": {"active": 0, "offline": 1, "unknown": 1},
+                "required_subscription_status": {"new": 0, "active": 0},
                 "subscription_expiration_days_levels": ("fixed", (30, 7)),
             },
             NODE_DATA,
             [
-                Result(state=State.OK, summary="Status: online (required: online)"),
-                Result(state=State.OK, summary="Subscription: active (required: active)"),
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Subscription: active"),
                 Result(state=State.OK, summary="Version: 6.2-15"),
                 Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ],
@@ -57,18 +57,31 @@ NODE_DATA = parse_proxmox_ve_node_info(
         ),
         pytest.param(
             {
-                "required_node_status": "offline",
-                "required_subscription_status": "Inactive",
+                "required_node_status": {"offline": 0, "online": 1, "unknown": 1},
+                "required_subscription_status": {"inactive": 0, "active": 1},
                 "subscription_expiration_days_levels": ("fixed", (30, 7)),
             },
             NODE_DATA,
             [
-                Result(state=State.WARN, summary="Status: online (required: offline)"),
-                Result(state=State.WARN, summary="Subscription: active (required: inactive)"),
+                Result(state=State.WARN, summary="Status: online"),
+                Result(state=State.WARN, summary="Subscription: active"),
                 Result(state=State.OK, summary="Version: 6.2-15"),
                 Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ],
             id="All WARN -> both not as required",
+        ),
+        pytest.param(
+            {
+                "subscription_expiration_days_levels": ("fixed", (30, 7)),
+            },
+            NODE_DATA,
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Subscription: active"),
+                Result(state=State.OK, summary="Version: 6.2-15"),
+                Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
+            ],
+            id="All OK -> no params given",
         ),
     ],
 )

@@ -47,7 +47,7 @@ def build(Map args) {
         def (subdir, command, artifacts) = (
             (args.TARGET == "cached") ? [
                 "agents/modules/windows",
-                "call build_the_module.cmd cached ${args.CREDS} ${args.CACHE_URL}",
+                "call build_the_module.cmd cached ${args.CREDS} ${args.CACHE_URL} ${args.DISABLE_CACHE}",
                 "python-3.cab"] :
             (args.TARGET == "agent_with_sign") || (args.TARGET == "agent_with_sign_azure") ? [
                 "agents/wnx",

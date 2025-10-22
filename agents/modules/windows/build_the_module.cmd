@@ -29,7 +29,7 @@ set /p python_version= < %tmpFile%
 del %tmpFile%
 powershell Write-Host "python_version=" %python_version% -foreground white
 @if NOT "%3"=="" (
-  call build_the_cached.cmd "%artefact_dir%" %2 %3 %python_version% || powershell Write-Host "Failed python" -foreground red && exit /b 12
+  call build_the_cached.cmd "%artefact_dir%" %2 %3 %4 %python_version% || powershell Write-Host "Failed python" -foreground red && exit /b 12
   powershell Write-Host "Builds are successfull" -foreground green
   make integration || powershell Write-Host "Failed integration" -foreground red && exit /b 13
   goto exit

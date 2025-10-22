@@ -16,9 +16,10 @@
 SETLOCAL EnableExtensions EnableDelayedExpansion
 
 if "%3"=="" powershell Write-Host "Invalid parameters - url should be defined" -Foreground red && exit /B 9
-if "%4"=="" powershell Write-Host "Invalid parameters - version should be defined" -Foreground red && exit /B 10
-if "%5"=="" powershell Write-Host "Invalid parameters - subversion should be defined" -Foreground red && exit /B 10
-echo run: %0 %1 %2 %3 %4 %5
+if "%4"=="" powershell Write-Host "Invalid parameters - disable_cache should be defined" -Foreground red && exit /B 10
+if "%5"=="" powershell Write-Host "Invalid parameters - version should be defined" -Foreground red && exit /B 10
+if "%6"=="" powershell Write-Host "Invalid parameters - subversion should be defined" -Foreground red && exit /B 10
+echo run: %0 %1 %2 %3 %4 %5 %6
 
 :: Increase the value in file BUILD_NUM to rebuild master
 set /p BUILD_NUM=<BUILD_NUM
@@ -30,10 +31,12 @@ powershell Write-Host "[+] curl found" -Foreground green
 set arti_dir=%1
 set creds=%2
 set url=%3
-set version=%4
-set subversion=%5
+set disable_cache=%4
+set version=%5
+set subversion=%6
 
 powershell Write-Host "Used URL is `'%url%`'"  -Foreground cyan
+powershell Write-Host "disable_cache is `'%disable_cache%`'"  -Foreground cyan
 if not exist %arti_dir% powershell Write-Host "Directory `'%arti_dir%`' doesn`'t exist" -Foreground red && exit /B 12
 
 
@@ -54,7 +57,14 @@ set artifact_name=%arti_dir%\python-3.cab
 echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
 call :http_request "%url%/%fname%" "%fname%"
-if "!http_code!" == "200" goto :from_cache
+if "!http_code!" == "200" (
+  if /I "%disable_cache%" == "true" (
+    powershell Write-Host "DISABLE_CACHE is %disable_cache%, building python %version%.%subversion% ..." -Foreground cyan
+    del %fname% > nul 2>&1
+    goto :build
+  )
+  goto :from_cache
+)
 
 del %fname% > nul 2>&1
 if "!http_code!" == "404" (

@@ -28,7 +28,11 @@ def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
+    def branch_version = versioning.get_branch_version(checkout_dir);
     def branch_base_folder = package_helper.branch_base_folder(false);
+
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def causes = currentBuild.getBuildCauses();
     def triggerd_by = "";
@@ -54,6 +58,16 @@ def main() {
     if (params.CIPARAM_OVERRIDE_BUILD_NODE == "fips") {
         // Builds can not be done on FIPS node
         error("Package builds can not be done on FIPS node");
+    }
+
+    // to get the same path hash as the sub jobs triggered by this job, the "Prepare workspace" has to be done here
+    // as the sub jobs do this task as well and here a different Windows build would be requested compared to the sub jobs
+    stage("Prepare workspace") {
+        inside_container_minimal(safe_branch_name: safe_branch_name) {
+            dir("${checkout_dir}") {
+                versioning.configure_checkout_folder(edition, cmk_version);
+            }
+        }
     }
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {

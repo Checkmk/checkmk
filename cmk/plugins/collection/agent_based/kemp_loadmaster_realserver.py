@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.kemp_loadmaster import DETECT_KEMP_LOADMASTER, VSSection
+from cmk.plugins.kemp_loadmaster.lib import DETECT_KEMP_LOADMASTER, VSSection
 
 
 class RealServer(NamedTuple):

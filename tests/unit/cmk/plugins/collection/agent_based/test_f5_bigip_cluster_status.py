@@ -17,8 +17,8 @@ from cmk.plugins.collection.agent_based.f5_bigip_cluster_status import (
     parse_f5_bigip_cluster_status,
     parse_f5_bigip_vcmpfailover,
 )
-from cmk.plugins.lib.f5_bigip import F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params
-from cmk.plugins.lib.f5_bigip import F5BigipClusterStatusVSResult
+from cmk.plugins.f5_bigip.lib import F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params
+from cmk.plugins.f5_bigip.lib import F5BigipClusterStatusVSResult
 
 
 @pytest.mark.parametrize(

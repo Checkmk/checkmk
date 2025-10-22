@@ -11,8 +11,8 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.lib.rabbitmq import Section
 from cmk.plugins.rabbitmq.agent_based.nodes_proc import check_rabbitmq_nodes_proc
+from cmk.plugins.rabbitmq.lib import Section
 
 
 @pytest.mark.parametrize(

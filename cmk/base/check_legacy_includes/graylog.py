@@ -12,7 +12,7 @@ import time
 
 from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, render
-from cmk.plugins.lib import graylog
+from cmk.plugins.graylog import lib as graylog
 
 json = json_module
 parse_graylog_agent_data = graylog.deserialize_and_merge_json

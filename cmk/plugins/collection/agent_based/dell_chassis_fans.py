@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.dell import DETECT_CHASSIS
+from cmk.plugins.dell.lib import DETECT_CHASSIS
 
 
 def inventory_dell_chassis_fans(section: StringTable) -> DiscoveryResult:

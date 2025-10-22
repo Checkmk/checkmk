@@ -11,8 +11,9 @@ from dataclasses import dataclass, field
 from itertools import chain
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib import diskstat, docker
-from cmk.plugins.lib.docker import is_string_table_heading
+from cmk.plugins.docker import lib as docker
+from cmk.plugins.docker.lib import is_string_table_heading
+from cmk.plugins.lib import diskstat
 
 MAPPING = {
     ("io_service_bytes_recursive", "read"): "read_throughput",

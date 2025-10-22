@@ -17,8 +17,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+from cmk.plugins.juniper.lib import DETECT_JUNIPER
 from cmk.plugins.lib.cpu_util import check_cpu_util
-from cmk.plugins.lib.juniper import DETECT_JUNIPER
 
 Section = Mapping[str, int]
 

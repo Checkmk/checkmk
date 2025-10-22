@@ -10,7 +10,7 @@ import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionName
-from cmk.plugins.lib.sap_hana import ParsedSection
+from cmk.plugins.sap_hana.lib import ParsedSection
 
 
 @pytest.mark.parametrize(

@@ -31,7 +31,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cisco_sensor_item import cisco_sensor_item
+from cmk.plugins.cisco.lib_sensor_item import cisco_sensor_item
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 Section = Mapping[str, Mapping[str, Mapping[str, Any]]]  # oh boy.

@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.sentry import DEVICE_STATES_V4
+from cmk.plugins.sentry.lib import DEVICE_STATES_V4
 
 
 class PDU(NamedTuple):

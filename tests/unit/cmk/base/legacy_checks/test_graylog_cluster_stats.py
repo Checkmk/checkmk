@@ -16,7 +16,7 @@ from cmk.base.legacy_checks.graylog_cluster_stats import (
     check_graylog_cluster_stats,
     discover_graylog_cluster_stats,
 )
-from cmk.plugins.lib.graylog import deserialize_and_merge_json
+from cmk.plugins.graylog.lib import deserialize_and_merge_json
 
 
 @pytest.mark.parametrize(

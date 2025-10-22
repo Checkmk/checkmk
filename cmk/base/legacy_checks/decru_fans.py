@@ -11,7 +11,7 @@ from cmk.agent_based.legacy.v0_unstable import (
     LegacyCheckResult,
 )
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
-from cmk.plugins.lib.decru import DETECT_DECRU
+from cmk.plugins.decru.lib import DETECT_DECRU
 
 check_info = {}
 

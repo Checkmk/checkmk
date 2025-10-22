@@ -21,8 +21,8 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
+from cmk.plugins.docker.lib import AgentOutputMalformatted, MultipleNodesMarker
 from cmk.plugins.lib import uptime
-from cmk.plugins.lib.docker import AgentOutputMalformatted, MultipleNodesMarker
 
 STRING_TABLE_WITH_VERSION = [
     [

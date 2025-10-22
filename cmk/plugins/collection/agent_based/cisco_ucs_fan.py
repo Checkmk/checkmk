@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.cisco_ucs import check_cisco_fault, DETECT, Fault, Operability
+from cmk.plugins.cisco.lib_ucs import check_cisco_fault, DETECT, Fault, Operability
 
 
 @dataclass(frozen=True, kw_only=True)

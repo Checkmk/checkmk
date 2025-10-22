@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import AgentSection, Attributes, InventoryPlugin, InventoryResult
-from cmk.plugins.lib.citrix_controller import parse_citrix_controller, Section
+from cmk.plugins.citrix.lib_controller import parse_citrix_controller, Section
 
 agent_section_citrix_controller = AgentSection(
     name="citrix_controller",

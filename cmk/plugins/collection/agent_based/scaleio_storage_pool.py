@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
-from cmk.plugins.lib.scaleio import (
+from cmk.plugins.scaleio.lib import (
     convert_scaleio_space_into_mb,
     create_disk_read_write,
     DiskReadWrite,

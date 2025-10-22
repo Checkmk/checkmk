@@ -21,8 +21,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.brocade.lib import DETECT_MLX
 from cmk.plugins.lib import interfaces, temperature
-from cmk.plugins.lib.brocade import DETECT_MLX
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal

@@ -16,8 +16,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.primekey import DETECT_PRIMEKEY
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+from cmk.plugins.primekey.lib import DETECT_PRIMEKEY
 
 _Section = Mapping[str, float]
 

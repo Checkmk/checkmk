@@ -10,7 +10,7 @@ from collections.abc import Iterable, Mapping
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.plugins.lib.kentix import DETECT_KENTIX
+from cmk.plugins.kentix.lib import DETECT_KENTIX
 
 check_info = {}
 

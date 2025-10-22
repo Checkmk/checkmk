@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.lgp import DETECT_LGP
+from cmk.plugins.lgp.lib import DETECT_LGP
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 Section = Mapping[str, int]

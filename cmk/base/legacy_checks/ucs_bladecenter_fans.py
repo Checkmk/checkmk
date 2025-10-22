@@ -10,7 +10,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
-from cmk.plugins.lib import ucs_bladecenter
+from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
 
 check_info = {}
 

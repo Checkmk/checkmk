@@ -27,7 +27,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.brocade import (
+from cmk.plugins.brocade.lib import (
     brocade_fcport_getitem,
     brocade_fcport_inventory_this_port,
     DETECT,

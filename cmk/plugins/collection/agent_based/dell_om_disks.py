@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.dell import DETECT_OPENMANAGE
+from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 
 
 def saveint(i: str) -> int:

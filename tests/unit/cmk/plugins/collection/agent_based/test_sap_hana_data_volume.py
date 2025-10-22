@@ -22,7 +22,8 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.collection.agent_based import sap_hana_data_volume
-from cmk.plugins.lib import df, sap_hana
+from cmk.plugins.lib import df
+from cmk.plugins.sap_hana import lib as sap_hana
 
 NOW_SIMULATED = datetime.fromisoformat("1988-06-08 17:00:00.000000Z")
 

@@ -14,7 +14,7 @@ from cmk.base.check_legacy_includes.huawei_switch import (
     Section,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
+from cmk.plugins.huawei.lib import DETECT_HUAWEI_SWITCH
 
 check_info = {}
 

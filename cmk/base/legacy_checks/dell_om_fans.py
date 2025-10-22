@@ -10,7 +10,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.plugins.lib.dell import DETECT_OPENMANAGE
+from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 
 check_info = {}
 

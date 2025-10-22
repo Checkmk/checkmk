@@ -11,7 +11,7 @@ from cmk.plugins.collection.agent_based.inventory_docker_container_node_name imp
     parse_docker_container_node_name,
     Section,
 )
-from cmk.plugins.lib.docker import AgentOutputMalformatted
+from cmk.plugins.docker.lib import AgentOutputMalformatted
 
 AGENT_OUTPUT = """@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}
 {"NodeName": "klappben"}"""

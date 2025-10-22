@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.lib import docker
+from cmk.plugins.docker.lib import get_short_id
 
 pytestmark = pytest.mark.checks
 
@@ -20,5 +20,5 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_parse_short_id(indata: str, expected: str) -> None:
-    actual = docker.get_short_id(indata)
+    actual = get_short_id(indata)
     assert actual == expected

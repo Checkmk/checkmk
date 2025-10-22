@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import CheckPlugin, SimpleSNMPSection, SNMPTree
-from cmk.plugins.lib.enviromux import (
+from cmk.plugins.enviromux.lib import (
     check_enviromux_humidity,
     check_enviromux_temperature,
     DETECT_ENVIROMUX_MICRO,

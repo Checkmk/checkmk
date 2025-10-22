@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.prism import load_json, PRISM_POWER_STATES
+from cmk.plugins.prism.lib import load_json, PRISM_POWER_STATES
 
 Section = Mapping[str, Mapping[str, Any]]
 

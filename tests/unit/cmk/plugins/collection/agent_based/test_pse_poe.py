@@ -18,7 +18,7 @@ from cmk.plugins.collection.agent_based.pse_poe import (
     parse_pse_poe,
     Section,
 )
-from cmk.plugins.lib.poe import PoeStatus, PoeValues
+from cmk.plugins.poe.lib import PoeStatus, PoeValues
 
 info = [
     ["1", "420", "1", "83"],

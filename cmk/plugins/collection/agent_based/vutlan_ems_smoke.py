@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
+from cmk.plugins.vutlan.lib import DETECT_VUTLAN_EMS
 
 
 class SmokeSensor(NamedTuple):

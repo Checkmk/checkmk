@@ -19,8 +19,8 @@ from cmk.plugins.collection.agent_based.storeonce4x_appliances import (
     parse_storeonce4x_appliances,
     Section,
 )
-from cmk.plugins.lib import storeonce
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.storeonce import lib as storeonce
 
 STRING_TABLE = [
     [

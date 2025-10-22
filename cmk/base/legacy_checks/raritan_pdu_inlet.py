@@ -11,7 +11,7 @@ from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.raritan import raritan_map_state, raritan_map_type
-from cmk.plugins.lib.raritan import DETECT_RARITAN
+from cmk.plugins.raritan.lib import DETECT_RARITAN
 
 check_info = {}
 

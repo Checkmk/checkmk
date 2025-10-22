@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.poe import PoeStatus, PoeValues
+from cmk.plugins.poe.lib import PoeStatus, PoeValues
 from cmk.plugins.tplink.agent_based.tplink_poe import (
     check_tplink_poe,
     discover_tplink_poe,

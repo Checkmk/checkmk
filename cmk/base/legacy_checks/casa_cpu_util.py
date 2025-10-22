@@ -12,7 +12,7 @@ from collections.abc import Iterable, Sequence
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
-from cmk.plugins.lib.casa import DETECT_CASA
+from cmk.plugins.casa.lib import DETECT_CASA
 
 check_info = {}
 

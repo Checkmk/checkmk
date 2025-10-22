@@ -10,7 +10,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
+from cmk.plugins.vutlan.lib import DETECT_VUTLAN_EMS
 
 check_info = {}
 

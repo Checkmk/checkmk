@@ -27,7 +27,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
+from cmk.plugins.fortinet.lib import DETECT_FORTIGATE
 
 FortigateSignatureKey = Literal["av_age", "ips_age", "av_ext_age", "ips_ext_age"]
 

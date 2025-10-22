@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.aruba import DETECT_2930M
+from cmk.plugins.aruba.lib import DETECT_2930M
 
 
 class FanType(Enum):

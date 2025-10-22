@@ -17,7 +17,7 @@ from cmk.agent_based.legacy.v0_unstable import (
 )
 from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.azure import get_data_or_go_stale
-from cmk.plugins.lib.azure import parse_resources
+from cmk.plugins.azure.lib import parse_resources
 
 check_info = {}
 

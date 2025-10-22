@@ -19,7 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import synology, temperature
+from cmk.plugins.lib import temperature
+from cmk.plugins.synology import lib as synology
 
 
 @dataclass(frozen=True)

@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.bvip import DETECT_BVIP
+from cmk.plugins.bvip.lib import DETECT_BVIP
 
 check_info = {}
 

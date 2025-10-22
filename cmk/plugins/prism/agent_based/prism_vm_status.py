@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.prism import PRISM_POWER_STATES
+from cmk.plugins.prism.lib import PRISM_POWER_STATES
 
 Section = Mapping[str, Any]
 

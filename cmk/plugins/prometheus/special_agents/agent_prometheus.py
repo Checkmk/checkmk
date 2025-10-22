@@ -27,7 +27,7 @@ from typing import Any
 import requests
 
 from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric, SectionStr
-from cmk.plugins.lib.prometheus import (
+from cmk.plugins.prometheus.lib import (
     add_authentication_args,
     authentication_from_args,
     generate_api_session,

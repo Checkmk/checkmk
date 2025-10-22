@@ -6,7 +6,8 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import CheckPlugin, RuleSetType, SNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib import hitachi_hnas, if64, interfaces
+from cmk.plugins.hitachi_hnas import lib as hitachi_hnas
+from cmk.plugins.lib import if64, interfaces
 
 
 def parse_hitachi_hnas_fc_if(

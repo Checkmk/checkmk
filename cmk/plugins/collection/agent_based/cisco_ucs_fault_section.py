@@ -7,7 +7,7 @@
 from collections import defaultdict
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib.cisco_ucs import DETECT, Fault, FaultSeverity
+from cmk.plugins.cisco.lib_ucs import DETECT, Fault, FaultSeverity
 
 type Section = dict[str, list[Fault]]  # FIXME
 

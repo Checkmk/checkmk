@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import akcp_sensor
+from cmk.plugins.akcp import lib_sensor as akcp_sensor
 
 STRING_TABLE_1 = [["Dual Humidity Port 1", "30", "7", "1"]]
 STRING_TABLE_2 = [["Humidity1 Description", "", "7", "1"], ["Humidity2 Description", "", "0", "2"]]

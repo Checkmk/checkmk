@@ -14,7 +14,7 @@ from cmk.base.check_legacy_includes.didactum import (
     discover_didactum_sensors,
     parse_didactum_sensors,
 )
-from cmk.plugins.lib.didactum import DETECT_DIDACTUM
+from cmk.plugins.didactum.lib import DETECT_DIDACTUM
 
 check_info = {}
 

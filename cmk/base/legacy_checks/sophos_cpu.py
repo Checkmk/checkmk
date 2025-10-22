@@ -9,7 +9,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.plugins.lib.sophos import DETECT_SOPHOS
+from cmk.plugins.sophos.lib import DETECT_SOPHOS
 
 check_info = {}
 

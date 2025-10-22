@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.fortinet import DETECT_FORTIMAIL
+from cmk.plugins.fortinet.lib import DETECT_FORTIMAIL
 
 Section = Mapping[str, float]
 

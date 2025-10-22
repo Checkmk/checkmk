@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     Result,
     State,
 )
-from cmk.plugins.lib.rabbitmq import discover_key, Section
+from cmk.plugins.rabbitmq.lib import discover_key, Section
 
 # <<<rabbitmq_nodes>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,

@@ -12,8 +12,9 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Attributes, Metric, Result, Service, State, StringTable, TableRow
+from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.collection.agent_based import lnx_if
-from cmk.plugins.lib import bonding, interfaces
+from cmk.plugins.lib import interfaces
 
 
 @pytest.mark.parametrize(

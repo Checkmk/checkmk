@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.datapower import DETECT
+from cmk.plugins.datapower.lib import DETECT
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 DATAPOWER_TEMP_STATUS_MAPPING = {

@@ -6,8 +6,8 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import OIDEnd, SNMPSection, SNMPTree, StringTable
+from cmk.plugins.emc.lib import DETECT_VPLEX
 from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.emc import DETECT_VPLEX
 
 
 def parse_emc_vplex_if(

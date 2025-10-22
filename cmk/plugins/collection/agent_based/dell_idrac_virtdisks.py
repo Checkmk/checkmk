@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 
 # .1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.1 System --> IDRAC-MIB::virtualDiskName.1
 # .1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.2.2 Oracle --> IDRAC-MIB::virtualDiskName.2

@@ -18,13 +18,13 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.hitachi_hnas.lib import DETECT, parse_physical_volumes, parse_virtual_volumes
 from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,
     FILESYSTEM_DEFAULT_PARAMS,
     mountpoints_in_group,
 )
-from cmk.plugins.lib.hitachi_hnas import DETECT, parse_physical_volumes, parse_virtual_volumes
 
 STATE_MAP = {
     "mounted": State.OK,

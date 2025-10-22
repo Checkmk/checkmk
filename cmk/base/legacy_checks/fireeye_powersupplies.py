@@ -10,7 +10,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
-from cmk.plugins.lib.fireeye import DETECT
+from cmk.plugins.fireeye.lib import DETECT
 
 check_info = {}
 

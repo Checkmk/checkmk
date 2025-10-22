@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import storeonce
+from cmk.plugins.storeonce import lib as storeonce
 
 Section = Mapping[str, Mapping[str, str]]
 

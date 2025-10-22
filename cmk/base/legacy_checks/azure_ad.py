@@ -15,7 +15,7 @@ from calendar import timegm
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
-from cmk.plugins.lib.azure import AZURE_AGENT_SEPARATOR
+from cmk.plugins.azure.lib import AZURE_AGENT_SEPARATOR
 
 check_info = {}
 

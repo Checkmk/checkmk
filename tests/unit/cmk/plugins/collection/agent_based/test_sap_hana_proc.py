@@ -15,7 +15,7 @@ from cmk.plugins.collection.agent_based.sap_hana_proc import (
     discovery_sap_hana_proc,
     parse_sap_hana_proc,
 )
-from cmk.plugins.lib.sap_hana import ParsedSection
+from cmk.plugins.sap_hana.lib import ParsedSection
 
 
 @pytest.mark.parametrize(

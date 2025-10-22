@@ -7,7 +7,7 @@
 from collections.abc import Mapping
 from typing import Final, Literal
 
-from cmk.plugins.lib.cisco_ucs import DETECT
+from cmk.plugins.cisco.lib_ucs import DETECT
 
 MAP_OPERABILITY: Final[Mapping[str, tuple[Literal[0, 1, 2], str]]] = {
     "0": (2, "unknown"),

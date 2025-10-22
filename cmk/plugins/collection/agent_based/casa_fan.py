@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.casa import DETECT_CASA
+from cmk.plugins.casa.lib import DETECT_CASA
 
 
 def inventory_casa_fan(section: Sequence[StringTable]) -> DiscoveryResult:

@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.enviromux import DETECT_ENVIROMUX_MICRO
+from cmk.plugins.enviromux.lib import DETECT_ENVIROMUX_MICRO
 
 
 @dataclass

@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.emc import DETECT_ISILON
+from cmk.plugins.emc.lib import DETECT_ISILON
 
 check_info = {}
 

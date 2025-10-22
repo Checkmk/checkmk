@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cisco import DETECT_CISCO
+from cmk.plugins.cisco.lib import DETECT_CISCO
 
 # .1.3.6.1.4.1.9.9.13.1.5.1.2.1 "removed"
 # .1.3.6.1.4.1.9.9.13.1.5.1.2.2 "AC Power Supply"

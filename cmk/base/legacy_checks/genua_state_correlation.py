@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.genua import DETECT_GENUA
+from cmk.plugins.genua.lib import DETECT_GENUA
 
 check_info = {}
 

@@ -16,7 +16,7 @@
 
 
 from cmk.agent_based.v2 import any_of, CheckPlugin, equals, SNMPSection, SNMPTree
-from cmk.plugins.lib.fjdarye import check_fjdarye_item, discover_fjdarye_item, parse_fjdarye_item
+from cmk.plugins.fjdarye.lib import check_fjdarye_item, discover_fjdarye_item, parse_fjdarye_item
 
 FJDARYE_SYSTEM_CAPACITORS = {
     ".1.3.6.1.4.1.211.1.21.1.60": ".2.5.2.1",  # fjdarye60

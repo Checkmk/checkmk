@@ -17,7 +17,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib import huawei, interfaces
+from cmk.plugins.huawei import lib as huawei
+from cmk.plugins.lib import interfaces
 
 Section = Mapping[str, interfaces.InterfaceWithCounters]
 

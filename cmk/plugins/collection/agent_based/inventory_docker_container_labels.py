@@ -11,7 +11,7 @@ from cmk.agent_based.v2 import (
     InventoryResult,
     StringTable,
 )
-from cmk.plugins.lib import docker
+from cmk.plugins.docker import lib as docker
 
 SectionStandard = dict[str, str]
 

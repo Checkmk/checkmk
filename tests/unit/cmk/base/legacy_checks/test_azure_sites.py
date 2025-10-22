@@ -12,7 +12,7 @@ import pytest
 
 from cmk.agent_based.v1 import get_value_store
 from cmk.base.legacy_checks.azure_sites import check_azure_sites, discover_azure_sites
-from cmk.plugins.lib.azure import parse_resources, Resource
+from cmk.plugins.azure.lib import parse_resources, Resource
 
 
 @pytest.fixture(name="string_table")

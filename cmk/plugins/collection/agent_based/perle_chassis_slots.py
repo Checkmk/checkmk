@@ -33,7 +33,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.perle import DETECT_PERLE
+from cmk.plugins.perle.lib import DETECT_PERLE
 
 Section = StringTable
 

@@ -9,7 +9,7 @@ from collections.abc import Iterable, Mapping
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
-from cmk.plugins.lib.juniper import DETECT_JUNIPER
+from cmk.plugins.juniper.lib import DETECT_JUNIPER
 
 check_info = {}
 

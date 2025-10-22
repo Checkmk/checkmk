@@ -7,7 +7,7 @@ import re
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import any_of, equals, matches, SNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib.cisco_wlc import CISCO_WLC_OIDS
+from cmk.plugins.cisco.lib_wlc import CISCO_WLC_OIDS
 from cmk.plugins.lib.wlc_clients import ClientsPerInterface, ClientsTotal, WlcClientsSection
 
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"

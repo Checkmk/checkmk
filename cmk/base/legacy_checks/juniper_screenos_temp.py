@@ -9,7 +9,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.plugins.lib.juniper import DETECT_JUNIPER_SCREENOS
+from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS
 
 check_info = {}
 

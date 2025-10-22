@@ -9,7 +9,7 @@
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, render, SNMPTree
 from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
-from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
+from cmk.plugins.huawei.lib import DETECT_HUAWEI_SWITCH
 
 check_info = {}
 

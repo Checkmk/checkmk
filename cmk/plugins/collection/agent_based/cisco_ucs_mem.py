@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cisco_ucs import check_cisco_fault, DETECT, Fault, Operability, Presence
+from cmk.plugins.cisco.lib_ucs import check_cisco_fault, DETECT, Fault, Operability, Presence
 
 
 class MemoryType(Enum):

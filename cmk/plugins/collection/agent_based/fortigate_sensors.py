@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
+from cmk.plugins.fortinet.lib import DETECT_FORTIGATE
 
 
 class FortigateSensors(NamedTuple):

@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     render,
     Service,
 )
-from cmk.plugins.lib.azure import (
+from cmk.plugins.azure.lib import (
     get_service_labels_from_resource_tags,
     Resource,
 )

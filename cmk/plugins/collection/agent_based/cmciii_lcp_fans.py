@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cmciii import DETECT_CMCIII_LCP
+from cmk.plugins.cmciii.lib import DETECT_CMCIII_LCP
 
 
 def inventory_cmciii_lcp_fans(section: StringTable) -> DiscoveryResult:

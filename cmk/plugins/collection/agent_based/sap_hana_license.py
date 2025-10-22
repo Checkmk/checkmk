@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import sap_hana
+from cmk.plugins.sap_hana import lib as sap_hana
 
 
 class SAP_HANA_MAYBE(NamedTuple):

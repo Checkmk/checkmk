@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.domino import DETECT
+from cmk.plugins.domino.lib import DETECT
 
 # Example SNMP walk:
 #

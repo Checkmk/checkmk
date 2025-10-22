@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.ibm import DETECT_IBM_IMM
+from cmk.plugins.ibm.lib import DETECT_IBM_IMM
 
 check_info = {}
 

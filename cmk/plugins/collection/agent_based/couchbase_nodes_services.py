@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.couchbase import parse_couchbase_lines
+from cmk.plugins.couchbase.lib import parse_couchbase_lines
 
 
 def discover_couchbase_nodes_services(section: Any) -> DiscoveryResult:

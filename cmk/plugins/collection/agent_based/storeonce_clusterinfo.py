@@ -16,7 +16,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import df, storeonce, uptime
+from cmk.plugins.lib import df, uptime
+from cmk.plugins.storeonce import lib as storeonce
 
 Section = Mapping[str, str]
 

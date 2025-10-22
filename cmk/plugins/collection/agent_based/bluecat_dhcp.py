@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import (
     SimpleSNMPSection,
     SNMPTree,
 )
-from cmk.plugins.lib.bluecat import (
+from cmk.plugins.bluecat.lib import (
     check_bluecat_operational_state,
     CHECK_DEFAULT_PARAMETERS,
     cluster_check_bluecat_operational_state,

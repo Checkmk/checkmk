@@ -8,7 +8,8 @@
 
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib import interfaces, ucs_bladecenter
+from cmk.plugins.lib import interfaces
+from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
 
 # <<ucs_bladecenter_if:sep(9)>>>
 # fcStats Dn sys/switch-A/slot-1/switch-fc/port-37/stats  BytesRx 2411057759048   BytesTx 1350394110752   Suspect no

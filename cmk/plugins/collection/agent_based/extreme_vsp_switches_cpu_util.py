@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.cpu_util import check_cpu_util
-from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+from cmk.plugins.netextreme.lib import DETECT_NETEXTREME
 
 
 @dataclass

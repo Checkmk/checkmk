@@ -5,6 +5,7 @@
 
 
 from cmk.agent_based.v2 import Attributes, Result, State
+from cmk.plugins.citrix.lib_state import parse_citrix_state
 from cmk.plugins.collection.agent_based.citrix_state import (
     check_citrix_state,
     check_citrix_state_controller,
@@ -12,7 +13,6 @@ from cmk.plugins.collection.agent_based.citrix_state import (
     DEFAULT_PARAMS,
 )
 from cmk.plugins.collection.agent_based.inventory_citrix_state import inventory_citrix_state
-from cmk.plugins.lib.citrix_state import parse_citrix_state
 
 from .utils_inventory import sort_inventory_result
 

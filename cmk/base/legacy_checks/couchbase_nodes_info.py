@@ -7,7 +7,7 @@
 
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.plugins.lib.couchbase import parse_couchbase_lines
+from cmk.plugins.couchbase.lib import parse_couchbase_lines
 
 check_info = {}
 

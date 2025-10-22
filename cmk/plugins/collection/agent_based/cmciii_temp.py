@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.cmciii import (
+from cmk.plugins.cmciii.lib import (
     discovery_default_parameters,
     DiscoveryParams,
     get_item,

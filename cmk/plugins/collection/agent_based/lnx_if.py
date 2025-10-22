@@ -18,7 +18,8 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib import bonding, interfaces
+from cmk.plugins.bonding import lib as bonding
+from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.interfaces import InterfaceWithCounters
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
 from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces

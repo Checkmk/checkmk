@@ -11,7 +11,7 @@ import time
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
-from cmk.plugins.lib.f5_bigip import F5_BIGIP
+from cmk.plugins.f5_bigip.lib import F5_BIGIP
 
 check_info = {}
 

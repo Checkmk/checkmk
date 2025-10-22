@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.apc import DETECT_ATS
+from cmk.plugins.apc.lib_ats import DETECT_ATS
 
 
 class ATS(TypedDict, total=False):

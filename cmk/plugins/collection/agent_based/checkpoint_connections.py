@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib import checkpoint
+from cmk.plugins.checkpoint import lib as checkpoint
 
 
 class Section(NamedTuple):

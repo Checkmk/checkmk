@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.perle import DETECT_PERLE
+from cmk.plugins.perle.lib import DETECT_PERLE
 
 # .1.3.6.1.4.1.1966.21.1.1.1.1.2.1.2.1.1 1 --> PERLE-MCR-MGT-MIB::mcrPsmuIndex.1.a
 # .1.3.6.1.4.1.1966.21.1.1.1.1.2.1.2.1.2 2 --> PERLE-MCR-MGT-MIB::mcrPsmuIndex.1.b

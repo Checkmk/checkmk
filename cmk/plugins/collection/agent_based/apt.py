@@ -44,7 +44,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.apt import (
+from cmk.plugins.apt.lib import (
     ESM_ENABLED,
     ESM_NOT_ENABLED,
     NOTHING_PENDING_FOR_INSTALLATION,

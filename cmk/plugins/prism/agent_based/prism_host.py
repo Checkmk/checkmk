@@ -6,7 +6,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, HostLabel, HostLabelGenerator, StringTable
-from cmk.plugins.lib.prism import load_json
+from cmk.plugins.prism.lib import load_json
 
 Section = dict[str, Any]
 

@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.fortinet import DETECT_FORTIAUTHENTICATOR
+from cmk.plugins.fortinet.lib import DETECT_FORTIAUTHENTICATOR
 
 Section = Mapping[str, str]
 

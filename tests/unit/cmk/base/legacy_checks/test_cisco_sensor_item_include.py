@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.plugins.lib.cisco_sensor_item import cisco_sensor_item
+from cmk.plugins.cisco.lib_sensor_item import cisco_sensor_item
 
 pytestmark = pytest.mark.checks
 

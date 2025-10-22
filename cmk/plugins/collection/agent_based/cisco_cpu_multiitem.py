@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.cisco_mem import DETECT_MULTIITEM
+from cmk.plugins.cisco.lib_mem import DETECT_MULTIITEM
 from cmk.plugins.lib.entity_mib import PhysicalClasses
 
 DISCOVERY_DEFAULT_PARAMETERS = {"individual": True, "average": False}

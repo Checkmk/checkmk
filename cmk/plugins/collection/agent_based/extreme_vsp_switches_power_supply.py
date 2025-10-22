@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+from cmk.plugins.netextreme.lib import DETECT_NETEXTREME
 
 
 class PowerInformation(NamedTuple):

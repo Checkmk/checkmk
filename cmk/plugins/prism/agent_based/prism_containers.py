@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.prism import load_json
+from cmk.plugins.prism.lib import load_json
 
 Section = Mapping[str, Mapping[str, Any]]
 

@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.juniper import DETECT_JUNIPER
+from cmk.plugins.juniper.lib import DETECT_JUNIPER
 
 
 @dataclass(frozen=True, kw_only=True)

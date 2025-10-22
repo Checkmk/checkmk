@@ -55,7 +55,7 @@
 from collections.abc import Mapping
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib.juniper import DETECT_JUNIPER
+from cmk.plugins.juniper.lib import DETECT_JUNIPER
 
 
 def parse_juniper_fru(string_table: StringTable) -> Mapping[str, Mapping[str, str]]:

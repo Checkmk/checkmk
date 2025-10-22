@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
-from cmk.plugins.lib.hitachi_hnas import DETECT
+from cmk.plugins.hitachi_hnas.lib import DETECT
 
 check_info = {}
 

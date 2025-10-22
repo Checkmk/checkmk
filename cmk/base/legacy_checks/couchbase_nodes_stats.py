@@ -10,7 +10,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
-from cmk.plugins.lib.couchbase import parse_couchbase_lines
+from cmk.plugins.couchbase.lib import parse_couchbase_lines
 
 check_info = {}
 

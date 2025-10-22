@@ -16,8 +16,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     State,
 )
-from cmk.plugins.lib.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171, parse_ciena_oper_state
-from cmk.plugins.lib.ciena_ces import OperStateSection as Section
+from cmk.plugins.ciena_ces.lib import DETECT_CIENA_5142, DETECT_CIENA_5171, parse_ciena_oper_state
+from cmk.plugins.ciena_ces.lib import OperStateSection as Section
 
 
 def discover_ciena_tunnel(section: Section) -> DiscoveryResult:

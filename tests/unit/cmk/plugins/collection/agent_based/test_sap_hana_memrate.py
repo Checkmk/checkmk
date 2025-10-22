@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.collection.agent_based import sap_hana_memrate
-from cmk.plugins.lib.sap_hana import ParsedSection
+from cmk.plugins.sap_hana.lib import ParsedSection
 
 
 @pytest.mark.parametrize(

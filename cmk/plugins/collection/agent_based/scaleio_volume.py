@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
-from cmk.plugins.lib.scaleio import (
+from cmk.plugins.scaleio.lib import (
     create_disk_read_write,
     DiskReadWrite,
     parse_scaleio,

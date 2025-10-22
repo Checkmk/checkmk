@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.bluecat import DETECT_BLUECAT
+from cmk.plugins.bluecat.lib import DETECT_BLUECAT
 
 check_info = {}
 

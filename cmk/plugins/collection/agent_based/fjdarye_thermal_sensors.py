@@ -16,7 +16,7 @@
 
 
 from cmk.agent_based.v2 import CheckPlugin, SNMPSection, SNMPTree
-from cmk.plugins.lib.fjdarye import (
+from cmk.plugins.fjdarye.lib import (
     check_fjdarye_item,
     DETECT_FJDARYE,
     discover_fjdarye_item,

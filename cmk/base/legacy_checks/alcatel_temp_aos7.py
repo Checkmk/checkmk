@@ -8,7 +8,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.plugins.lib.alcatel import DETECT_ALCATEL_AOS7
+from cmk.plugins.alcatel.lib import DETECT_ALCATEL_AOS7
 
 check_info = {}
 

@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import sap_hana
+from cmk.plugins.sap_hana import lib as sap_hana
 
 SAP_HANA_EVENTS_MAP: Final = {
     "open_events": (State.CRIT, "Unacknowledged events"),

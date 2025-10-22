@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.bvip import DETECT_BVIP
+from cmk.plugins.bvip.lib import DETECT_BVIP
 
 
 def inventory_bvip_info(section: StringTable) -> DiscoveryResult:

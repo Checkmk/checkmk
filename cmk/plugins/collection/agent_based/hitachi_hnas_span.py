@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib import hitachi_hnas
+from cmk.plugins.hitachi_hnas import lib as hitachi_hnas
 from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,

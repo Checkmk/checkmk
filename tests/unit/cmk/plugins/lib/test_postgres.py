@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.lib import postgres
+from cmk.plugins.postgres import lib as postgres
 
 
 def test_parse_function_for_stats_section() -> None:

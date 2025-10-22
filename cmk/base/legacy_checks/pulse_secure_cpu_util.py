@@ -14,7 +14,7 @@ from collections.abc import Iterable, Mapping
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.plugins.lib import pulse_secure
+from cmk.plugins.pulse_secure import lib as pulse_secure
 
 check_info = {}
 

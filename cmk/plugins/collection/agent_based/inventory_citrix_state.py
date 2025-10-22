@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import AgentSection, Attributes, InventoryPlugin, InventoryResult
-from cmk.plugins.lib.citrix_state import parse_citrix_state, Section
+from cmk.plugins.citrix.lib_state import parse_citrix_state, Section
 
 agent_section_citrix_state = AgentSection(
     name="citrix_state",

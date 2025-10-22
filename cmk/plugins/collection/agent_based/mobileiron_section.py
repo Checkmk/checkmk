@@ -6,7 +6,7 @@ import json
 
 from cmk.agent_based.v2 import AgentSection, HostLabel, HostLabelGenerator, StringTable
 from cmk.plugins.lib.df import BlocksSubsection, DfBlock, InodesSubsection
-from cmk.plugins.lib.mobileiron import Section, SourceHostSection
+from cmk.plugins.mobileiron.lib import Section, SourceHostSection
 
 
 def parse_mobileiron(string_table: StringTable) -> Section:

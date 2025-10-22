@@ -9,7 +9,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.plugins.lib.avaya import DETECT_AVAYA
+from cmk.plugins.avaya.lib import DETECT_AVAYA
 
 check_info = {}
 

@@ -10,7 +10,7 @@ from cmk.plugins.collection.agent_based.inventory_docker_container_network impor
     inventory_docker_container_network,
     parse_docker_container_network,
 )
-from cmk.plugins.lib import docker
+from cmk.plugins.docker import lib as docker
 
 AGENT_OUTPUT = [
     [

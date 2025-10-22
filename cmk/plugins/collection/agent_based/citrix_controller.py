@@ -7,7 +7,7 @@ import typing
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
-from cmk.plugins.lib.citrix_controller import Error, Section, Session
+from cmk.plugins.citrix.lib_controller import Error, Section, Session
 
 
 def discovery_citrix_controller(section: Section) -> DiscoveryResult:

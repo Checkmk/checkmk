@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cmctc import DETECT_CMCTC
+from cmk.plugins.cmctc.lib import DETECT_CMCTC
 
 # Table columns:
 # 0: index

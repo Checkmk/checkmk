@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult, TableRow
-from cmk.plugins.lib.mobileiron import Section
+from cmk.plugins.mobileiron.lib import Section
 
 
 def inventory_mobileiron(section: Section | None) -> InventoryResult:

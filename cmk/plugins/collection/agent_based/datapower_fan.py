@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.datapower import DETECT
+from cmk.plugins.datapower.lib import DETECT
 
 
 @dataclass(frozen=True)

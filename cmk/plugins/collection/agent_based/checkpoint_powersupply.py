@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.checkpoint import DETECT
+from cmk.plugins.checkpoint.lib import DETECT
 
 
 def inventory_checkpoint_powersupply(section: StringTable) -> DiscoveryResult:

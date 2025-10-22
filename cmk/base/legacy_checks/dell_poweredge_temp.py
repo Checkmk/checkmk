@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.dell_poweredge import (
     check_dell_poweredge_temp,
     dell_poweredge_temp_makeitem,
 )
-from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 
 check_info = {}
 

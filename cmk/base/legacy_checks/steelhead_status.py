@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.steelhead import DETECT_STEELHEAD
+from cmk.plugins.steelhead.lib import DETECT_STEELHEAD
 
 check_info = {}
 

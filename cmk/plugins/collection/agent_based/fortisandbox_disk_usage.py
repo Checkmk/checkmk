@@ -17,8 +17,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+from cmk.plugins.fortinet.lib import DETECT_FORTISANDBOX
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
 
 
 @dataclass(frozen=True)

@@ -5,8 +5,8 @@
 
 
 from cmk.agent_based.v2 import CheckPlugin, SimpleSNMPSection, SNMPTree
-from cmk.plugins.lib.akcp import DETEC_AKCP_SP2PLUS, DETECT_AKCP_EXP
-from cmk.plugins.lib.akcp_sensor import (
+from cmk.plugins.akcp.lib import DETEC_AKCP_SP2PLUS, DETECT_AKCP_EXP
+from cmk.plugins.akcp.lib_sensor import (
     check_akcp_sensor_relay,
     inventory_akcp_sensor_no_params,
     parse_akcp_sensor,

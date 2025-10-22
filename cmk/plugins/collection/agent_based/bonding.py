@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any, TypedDict
 
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
-from cmk.plugins.lib import bonding
+from cmk.plugins.bonding import lib as bonding
 
 DEFAULT_PARAMS = {
     "ieee_302_3ad_agg_id_missmatch_state": 1,

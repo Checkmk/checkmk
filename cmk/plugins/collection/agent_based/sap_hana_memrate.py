@@ -15,8 +15,8 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.lib import sap_hana
 from cmk.plugins.lib.memory import check_element
+from cmk.plugins.sap_hana import lib as sap_hana
 
 
 def parse_sap_hana_memrate(string_table: StringTable) -> sap_hana.ParsedSection:

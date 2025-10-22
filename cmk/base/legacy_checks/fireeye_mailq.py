@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
-from cmk.plugins.lib.fireeye import DETECT
+from cmk.plugins.fireeye.lib import DETECT
 
 check_info = {}
 

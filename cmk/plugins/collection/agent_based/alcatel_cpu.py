@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.alcatel import DETECT_ALCATEL, DETECT_ALCATEL_AOS7
+from cmk.plugins.alcatel.lib import DETECT_ALCATEL, DETECT_ALCATEL_AOS7
 
 
 def parse_alcatel_cpu(string_table: StringTable) -> float | None:

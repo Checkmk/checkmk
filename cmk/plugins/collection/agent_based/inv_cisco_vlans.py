@@ -43,7 +43,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.cisco import DETECT_CISCO
+from cmk.plugins.cisco.lib import DETECT_CISCO
 
 
 class _IfInfo(NamedTuple):

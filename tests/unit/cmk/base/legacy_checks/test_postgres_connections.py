@@ -16,7 +16,7 @@ from cmk.base.legacy_checks.postgres_connections import (
     check_postgres_connections,
     inventory_postgres_connections,
 )
-from cmk.plugins.lib.postgres import parse_dbs
+from cmk.plugins.postgres.lib import parse_dbs
 
 
 @pytest.mark.parametrize(

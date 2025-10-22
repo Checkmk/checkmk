@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import sap_hana
+from cmk.plugins.sap_hana import lib as sap_hana
 
 # Black magic alert: could return None in some cases, but the offset seems to be
 # magically calculated based on local systemtime...

@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.fan import check_fan
-from cmk.plugins.lib.primekey import DETECT_PRIMEKEY
+from cmk.plugins.primekey.lib import DETECT_PRIMEKEY
 
 
 @dataclass(frozen=True)

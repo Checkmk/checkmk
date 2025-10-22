@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.bluecat import DETECT_BLUECAT
+from cmk.plugins.bluecat.lib import DETECT_BLUECAT
 
 
 def inventory_bluecat_dns_queries(section: StringTable) -> DiscoveryResult:

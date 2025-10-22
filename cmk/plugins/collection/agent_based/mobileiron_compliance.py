@@ -7,7 +7,7 @@ from typing import Any
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
-from cmk.plugins.lib.mobileiron import Section
+from cmk.plugins.mobileiron.lib import Section
 
 
 def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> CheckResult:

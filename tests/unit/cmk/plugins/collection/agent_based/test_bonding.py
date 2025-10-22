@@ -12,8 +12,8 @@ import pytest
 
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.plugins.bonding.lib import Bond, Interface
 from cmk.plugins.collection.agent_based.bonding import _check_ieee_302_3ad_specific, check_bonding
-from cmk.plugins.lib.bonding import Bond, Interface
 
 
 @pytest.mark.parametrize(

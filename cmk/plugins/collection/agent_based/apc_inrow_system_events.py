@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.apc import DETECT
+from cmk.plugins.apc.lib_ats import DETECT
 
 # .1.3.6.1.4.1.318.1.1.13.3.1.2.1.3.1 Power Source B Failure
 # .1.3.6.1.4.1.318.1.1.13.3.1.2.1.3.2 Fan Power Supply Right Fault

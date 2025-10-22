@@ -11,7 +11,7 @@ import collections
 from collections.abc import Iterable
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.plugins.lib import ucs_bladecenter
+from cmk.plugins.ucs_bladecenter import lib as ucs_bladecenter
 
 check_info = {}
 

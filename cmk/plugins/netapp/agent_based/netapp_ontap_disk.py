@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.filerdisks import (
+from cmk.plugins.filerdisks.lib import (
     check_filer_disks,
     FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
     FilerDisk,

@@ -11,7 +11,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.plugins.lib.cisco import DETECT_CISCO
+from cmk.plugins.cisco.lib import DETECT_CISCO
 
 check_info = {}
 

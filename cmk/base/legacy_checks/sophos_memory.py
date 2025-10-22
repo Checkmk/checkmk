@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
-from cmk.plugins.lib.sophos import DETECT_SOPHOS
+from cmk.plugins.sophos.lib import DETECT_SOPHOS
 
 check_info = {}
 

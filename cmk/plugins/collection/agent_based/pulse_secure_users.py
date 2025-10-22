@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib import pulse_secure
+from cmk.plugins.pulse_secure import lib as pulse_secure
 
 Section = Mapping[str, int]
 CheckOutput = Generator[Result | Metric, None, None]

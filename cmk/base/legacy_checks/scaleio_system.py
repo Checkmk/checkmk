@@ -9,7 +9,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.scaleio import parse_scaleio, ScaleioSection
+from cmk.plugins.scaleio.lib import parse_scaleio, ScaleioSection
 
 check_info = {}
 

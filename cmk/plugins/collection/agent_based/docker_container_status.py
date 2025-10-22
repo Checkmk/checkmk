@@ -22,7 +22,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import docker, uptime
+from cmk.plugins.docker import lib as docker
+from cmk.plugins.lib import uptime
 
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 

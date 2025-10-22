@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.cisco_meraki import check_last_reported_ts, load_json, MerakiAPIData
+from cmk.plugins.cisco_meraki.lib import check_last_reported_ts, load_json, MerakiAPIData
 
 
 class RawPowerOverEthernet(TypedDict):

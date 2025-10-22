@@ -10,7 +10,7 @@ import time
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
-from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
+from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD
 
 check_info = {}
 

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
+from cmk.plugins.emc.lib import DETECT_ISILON
 from cmk.plugins.lib.df import FSBlock
-from cmk.plugins.lib.emc import DETECT_ISILON
 
 MIBI = 1024**2
 

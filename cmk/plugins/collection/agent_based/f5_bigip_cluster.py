@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
+from cmk.plugins.f5_bigip.lib import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
 
 
 class NodeState(NamedTuple):

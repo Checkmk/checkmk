@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.palo_alto import DETECT_PALO_ALTO
+from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
 
 
 @dataclass(frozen=True)

@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.avaya import DETECT_AVAYA
+from cmk.plugins.avaya.lib import DETECT_AVAYA
 
 avaya_chassis_ps_status_codes = {
     1: (State.UNKNOWN, "unknown", "Status cannot be determined"),

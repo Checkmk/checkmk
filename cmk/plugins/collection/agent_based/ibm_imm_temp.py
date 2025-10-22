@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.ibm import DETECT_IBM_IMM
+from cmk.plugins.ibm.lib import DETECT_IBM_IMM
 from cmk.plugins.lib.temperature import check_temperature
 from cmk.plugins.lib.temperature import TempParamType as TempParamType
 

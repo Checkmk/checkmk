@@ -11,12 +11,12 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.brocade.lib import DISCOVERY_DEFAULT_PARAMETERS
 from cmk.plugins.collection.agent_based.brocade_sfp import (
     check_brocade_sfp,
     discover_brocade_sfp,
     parse_brocade_sfp,
 )
-from cmk.plugins.lib.brocade import DISCOVERY_DEFAULT_PARAMETERS
 
 _STRING_TABLE = [
     [

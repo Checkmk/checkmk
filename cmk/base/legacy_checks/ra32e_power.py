@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
-from cmk.plugins.lib.ra32e import DETECT_RA32E
+from cmk.plugins.ra32e.lib import DETECT_RA32E
 
 check_info = {}
 

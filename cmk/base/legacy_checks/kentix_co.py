@@ -14,7 +14,7 @@ from collections.abc import Iterable
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.kentix import DETECT_KENTIX
+from cmk.plugins.kentix.lib import DETECT_KENTIX
 
 check_info = {}
 

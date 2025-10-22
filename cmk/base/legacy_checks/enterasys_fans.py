@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
-from cmk.plugins.lib.enterasys import DETECT_ENTERASYS
+from cmk.plugins.enterasys.lib import DETECT_ENTERASYS
 
 check_info = {}
 

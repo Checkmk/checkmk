@@ -15,8 +15,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
+from cmk.plugins.netextreme.lib import DETECT_NETEXTREME
 
 
 @dataclass

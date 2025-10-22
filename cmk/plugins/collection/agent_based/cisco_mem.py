@@ -43,8 +43,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.cisco import DETECT_CISCO
-from cmk.plugins.lib.cisco_mem import check_cisco_mem_sub
+from cmk.plugins.cisco.lib import DETECT_CISCO
+from cmk.plugins.cisco.lib_mem import check_cisco_mem_sub
 
 
 @dataclass(frozen=True)

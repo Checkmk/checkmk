@@ -10,7 +10,7 @@
 from collections.abc import Iterable
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
+from cmk.plugins.couchbase.lib import parse_couchbase_lines, Section
 
 check_info = {}
 

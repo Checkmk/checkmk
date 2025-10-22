@@ -7,7 +7,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+from cmk.plugins.infoblox.lib import DETECT_INFOBLOX
 
 check_info = {}
 

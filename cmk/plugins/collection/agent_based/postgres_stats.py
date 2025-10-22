@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib import postgres
+from cmk.plugins.postgres import lib as postgres
 
 # <<<postgres_stats>>>
 # [databases_start]

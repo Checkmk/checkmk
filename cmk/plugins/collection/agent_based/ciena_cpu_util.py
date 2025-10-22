@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
+from cmk.plugins.ciena_ces.lib import DETECT_CIENA_5142, DETECT_CIENA_5171
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
 Section5142 = int

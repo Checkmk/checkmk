@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.emc import DETECT_ISILON
+from cmk.plugins.emc.lib import DETECT_ISILON
 
 Section = Mapping[str, int]
 

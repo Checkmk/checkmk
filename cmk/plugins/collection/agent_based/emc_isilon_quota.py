@@ -16,8 +16,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+from cmk.plugins.emc.lib import DETECT_ISILON
 from cmk.plugins.lib.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.emc import DETECT_ISILON
 
 
 class IsilonQuota(NamedTuple):

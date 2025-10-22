@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import synology
+from cmk.plugins.synology import lib as synology
 
 
 @dataclass(frozen=True)

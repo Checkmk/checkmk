@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, RuleSetType, State
-from cmk.plugins.lib.cmciii import (
+from cmk.plugins.cmciii.lib import (
     CheckParams,
     discover_cmciii_sensors,
     discovery_default_parameters,

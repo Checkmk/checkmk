@@ -22,7 +22,7 @@ from cmk.plugins.collection.agent_based.sap_hana_events import (
     agent_section_sap_hana_events,
     check_plugin_sap_hana_events,
 )
-from cmk.plugins.lib.sap_hana import ParsedSection
+from cmk.plugins.sap_hana.lib import ParsedSection
 
 
 @pytest.mark.parametrize(

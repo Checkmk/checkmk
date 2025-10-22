@@ -7,7 +7,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
-from cmk.plugins.lib import docker
+from cmk.plugins.docker import lib as docker
 
 SectionStandard = dict[str, Any]
 

@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
-from cmk.plugins.lib.stulz import DETECT_STULZ
+from cmk.plugins.stulz.lib import DETECT_STULZ
 
 check_info = {}
 

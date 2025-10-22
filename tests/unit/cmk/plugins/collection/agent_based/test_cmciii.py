@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
+from cmk.plugins.cmciii.lib import SensorType, Variable
 from cmk.plugins.collection.agent_based import (
     cmciii,
     cmciii_access,
@@ -33,7 +34,6 @@ from cmk.plugins.collection.agent_based import (
     cmciii_temp,
     cmciii_temp_in_out,
 )
-from cmk.plugins.lib.cmciii import SensorType, Variable
 
 
 @pytest.mark.parametrize(

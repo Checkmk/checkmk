@@ -9,7 +9,7 @@ from collections.abc import Iterable, Mapping
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.hitachi_hnas import DETECT
+from cmk.plugins.hitachi_hnas.lib import DETECT
 
 check_info = {}
 

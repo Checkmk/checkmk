@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.cisco_ucs import DETECT
+from cmk.plugins.cisco.lib_ucs import DETECT
 from cmk.plugins.lib.temperature import check_temperature
 from cmk.plugins.lib.temperature import TempParamType as TempParamType
 

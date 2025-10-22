@@ -26,7 +26,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.mongodb import parse_date
+from cmk.plugins.mongodb.lib import parse_date
 
 type Section = Mapping[str, Any]
 

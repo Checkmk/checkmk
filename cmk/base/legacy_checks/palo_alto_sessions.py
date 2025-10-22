@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.palo_alto import DETECT_PALO_ALTO
+from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
 
 check_info = {}
 

@@ -9,7 +9,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
-from cmk.plugins.lib import postgres
+from cmk.plugins.postgres import lib as postgres
 
 check_info = {}
 

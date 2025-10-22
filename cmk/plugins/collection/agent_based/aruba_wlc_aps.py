@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.aruba import DETECT_WLC
+from cmk.plugins.aruba.lib import DETECT_WLC
 
 
 class WLCAp(NamedTuple):

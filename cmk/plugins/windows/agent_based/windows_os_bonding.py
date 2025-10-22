@@ -8,7 +8,7 @@
 from collections import defaultdict
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib import bonding
+from cmk.plugins.bonding import lib as bonding
 
 
 def parse_windows_os_bonding(string_table: StringTable) -> bonding.Section:

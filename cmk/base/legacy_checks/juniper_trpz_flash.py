@@ -10,7 +10,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
-from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
+from cmk.plugins.juniper.lib import DETECT_JUNIPER_TRPZ
 
 check_info = {}
 

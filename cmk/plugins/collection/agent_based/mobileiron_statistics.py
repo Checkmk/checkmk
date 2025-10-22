@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.mobileiron import SourceHostSection
+from cmk.plugins.mobileiron.lib import SourceHostSection
 
 
 def check_mobileiron_sourcehost(

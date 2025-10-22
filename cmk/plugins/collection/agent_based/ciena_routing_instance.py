@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.ciena_ces import DETECT_CIENA_5171
+from cmk.plugins.ciena_ces.lib import DETECT_CIENA_5171
 
 
 class ByteTransfer(NamedTuple):

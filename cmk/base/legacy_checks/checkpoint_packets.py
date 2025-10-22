@@ -10,7 +10,7 @@ import time
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree
-from cmk.plugins.lib.checkpoint import DETECT
+from cmk.plugins.checkpoint.lib import DETECT
 
 check_info = {}
 

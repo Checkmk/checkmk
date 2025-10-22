@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.f5_bigip import F5_BIGIP
+from cmk.plugins.f5_bigip.lib import F5_BIGIP
 
 
 @dataclass(frozen=True)

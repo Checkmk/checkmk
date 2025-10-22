@@ -11,8 +11,8 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
+from cmk.plugins.cisco.lib_ucs import check_cisco_fault
 from cmk.plugins.collection.agent_based.cisco_ucs_fault_section import Section
-from cmk.plugins.lib.cisco_ucs import check_cisco_fault
 
 
 def discover_cisco_ucs_faults(section: Section) -> DiscoveryResult:

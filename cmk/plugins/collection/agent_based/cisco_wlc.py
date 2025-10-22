@@ -50,7 +50,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cisco_wlc import CISCO_WLC_OIDS
+from cmk.plugins.cisco.lib_wlc import CISCO_WLC_OIDS
 
 Section = dict[str, str]
 

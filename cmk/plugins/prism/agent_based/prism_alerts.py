@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.prism import load_json
+from cmk.plugins.prism.lib import load_json
 
 Section = Sequence[Mapping[Any, Any]]
 StringMap = Mapping[str, str]

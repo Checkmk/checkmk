@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.primekey import DETECT_PRIMEKEY
+from cmk.plugins.primekey.lib import DETECT_PRIMEKEY
 
 
 class _Section(NamedTuple):

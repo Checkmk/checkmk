@@ -11,12 +11,12 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
-from cmk.plugins.lib.rabbitmq import Section
 from cmk.plugins.rabbitmq.agent_based.nodes_sockets import (
     check_rabbitmq_nodes_sockets,
     discover_rabbitmq_nodes_sockets,
     Params,
 )
+from cmk.plugins.rabbitmq.lib import Section
 
 
 @pytest.mark.parametrize(

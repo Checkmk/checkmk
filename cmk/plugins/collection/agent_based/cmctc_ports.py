@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cmctc import DETECT_CMCTC
+from cmk.plugins.cmctc.lib import DETECT_CMCTC
 
 # .1.3.6.1.4.1.2606.4.2.3.1.0 2
 # .1.3.6.1.4.1.2606.4.2.3.2.0 CMC-TC-IOU

@@ -16,8 +16,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cisco import DETECT_CISCO
-from cmk.plugins.lib.cisco_sensor_item import cisco_sensor_item
+from cmk.plugins.cisco.lib import DETECT_CISCO
+from cmk.plugins.cisco.lib_sensor_item import cisco_sensor_item
 
 cisco_fan_state_mapping = {
     "1": (State.OK, "normal"),

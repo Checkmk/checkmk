@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import CheckPlugin, SimpleSNMPSection, SNMPTree
-from cmk.plugins.lib.akcp import DETECT_AKCP_EXP
-from cmk.plugins.lib.akcp_sensor import (
+from cmk.plugins.akcp.lib import DETECT_AKCP_EXP
+from cmk.plugins.akcp.lib_sensor import (
     AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
     check_akcp_humidity,
     inventory_akcp_humidity,

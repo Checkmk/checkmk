@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
-from cmk.plugins.lib.ibm_mq import parse_ibm_mq
+from cmk.plugins.ibm.lib_mq import parse_ibm_mq
 
 Section = Mapping[str, Any]
 

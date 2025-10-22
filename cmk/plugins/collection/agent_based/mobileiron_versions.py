@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.mobileiron import Section
+from cmk.plugins.mobileiron.lib import Section
 
 
 class Params(TypedDict):

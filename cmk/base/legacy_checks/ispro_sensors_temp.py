@@ -11,7 +11,7 @@ from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.ispro import ispro_sensors_alarm_states
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.plugins.lib.ispro import DETECT_ISPRO_SENSORS
+from cmk.plugins.ispro.lib import DETECT_ISPRO_SENSORS
 
 check_info = {}
 

@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
+from cmk.plugins.fortinet.lib import DETECT_FORTISANDBOX
 
 Section = Sequence[str]
 

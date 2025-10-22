@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.dell import DETECT_OPENMANAGE
+from cmk.plugins.dell.lib import DETECT_OPENMANAGE
 
 # example output
 # .1.3.6.1.4.1.674.10892.1.600.10.1.2.1.1 1

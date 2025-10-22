@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
+from cmk.plugins.fortinet.lib import DETECT_FORTISANDBOX
 
 Section = Mapping[str, int]
 

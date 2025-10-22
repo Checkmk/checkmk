@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     State,
 )
-from cmk.plugins.lib.enviromux import (
+from cmk.plugins.enviromux.lib import (
     DETECT_ENVIROMUX,
     DETECT_ENVIROMUX5,
     EnviromuxDigitalSection,

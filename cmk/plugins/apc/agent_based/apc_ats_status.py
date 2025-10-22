@@ -32,7 +32,7 @@ from cmk.plugins.apc.lib.apc_ats import (
     Source,
     Status,
 )
-from cmk.plugins.lib.apc import DETECT_ATS
+from cmk.plugins.apc.lib_ats import DETECT_ATS
 
 
 def parse_apc_ats_status(info: StringTable) -> Status | None:

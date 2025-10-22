@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import CheckPlugin, SNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib.printer import (
+from cmk.plugins.printer.lib import (
     check_printer_pages_types,
     DETECT_PRINTER_PAGES,
     discovery_printer_pages,

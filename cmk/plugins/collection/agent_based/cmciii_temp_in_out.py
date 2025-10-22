@@ -10,7 +10,7 @@ from cmk.agent_based.v2 import (
     get_value_store,
     RuleSetType,
 )
-from cmk.plugins.lib.cmciii import (
+from cmk.plugins.cmciii.lib import (
     discover_cmciii_sensors,
     discovery_default_parameters,
     DiscoveryParams,

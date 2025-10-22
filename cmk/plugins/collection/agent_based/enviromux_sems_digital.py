@@ -8,7 +8,7 @@ from cmk.agent_based.v2 import (
     SimpleSNMPSection,
     SNMPTree,
 )
-from cmk.plugins.lib.enviromux import (
+from cmk.plugins.enviromux.lib import (
     check_enviromux_sems_digital,
     DETECT_ENVIROMUX_SEMS,
     discover_enviromux_sems_digital,

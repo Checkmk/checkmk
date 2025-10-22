@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
-from cmk.plugins.lib.citrix_state import Section
+from cmk.plugins.citrix.lib_state import Section
 
 Params = Mapping[str, Mapping[str, int]]
 DEFAULT_PARAMS = {

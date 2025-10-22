@@ -141,7 +141,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.version",  # edition detection
         "cmk.ccc.hostaddress",  # FormSpec validation
         "cmk.plugins.lib",  # ?
-        "cmk.plugins.lib.azure",  # FIXME
+        "cmk.plugins.azure.lib",  # FIXME
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
@@ -172,7 +172,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     "cisco_meraki": (
         "cmk.agent_based.v1",  # FIXME
         "cmk.utils.paths",
-        "cmk.plugins.lib.cisco_meraki",  # FIXME
+        "cmk.plugins.cisco.lib_meraki",  # FIXME
         "cmk.plugins.lib.humidity",
         "cmk.plugins.lib.temperature",
     ),
@@ -231,8 +231,8 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     "mqtt": ("cmk.ccc.hostaddress",),
     "prometheus": (
         "cmk.ccc.hostaddress",
-        "cmk.plugins.lib.prometheus_form_elements",  # FIXME
-        "cmk.plugins.lib.prometheus",  # FIXME
+        "cmk.plugins.prometheus.lib_form_elements",  # FIXME
+        "cmk.plugins.prometheus.lib",  # FIXME
         "cmk.plugins.lib.node_exporter",
     ),
     "proxmox_ve": (

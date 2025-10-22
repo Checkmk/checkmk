@@ -9,7 +9,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
+from cmk.plugins.huawei.lib import DETECT_HUAWEI_OSN
 
 check_info = {}
 

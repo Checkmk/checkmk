@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.tplink import DETECT_TPLINK
+from cmk.plugins.tplink.lib import DETECT_TPLINK
 
 check_info = {}
 

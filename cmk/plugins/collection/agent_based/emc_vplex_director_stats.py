@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import OIDEnd, SimpleSNMPSection, SNMPTree, StringTable
+from cmk.plugins.emc.lib import DETECT_VPLEX
 from cmk.plugins.lib.diskstat import Section
-from cmk.plugins.lib.emc import DETECT_VPLEX
 
 
 def parse_emc_director_stats(string_table: StringTable) -> Section:

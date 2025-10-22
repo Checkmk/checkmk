@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
+from cmk.plugins.stormshield.lib import DETECT_STORMSHIELD
 
 _SERVICE_STATE_MAP = {"0": "down", "1": "up"}
 

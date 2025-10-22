@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.datapower import DETECT
+from cmk.plugins.datapower.lib import DETECT
 
 
 def inventory_datapower_ldrive(section: StringTable) -> DiscoveryResult:

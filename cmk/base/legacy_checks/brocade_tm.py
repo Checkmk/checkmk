@@ -16,7 +16,7 @@ import time
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
-from cmk.plugins.lib.brocade import DETECT_MLX
+from cmk.plugins.brocade.lib import DETECT_MLX
 
 LEVELS = {
     "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),

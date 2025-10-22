@@ -8,7 +8,7 @@
 
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib import docker
+from cmk.plugins.docker import lib as docker
 from cmk.plugins.lib.cpu_utilization_os import SectionCpuUtilizationOs
 
 

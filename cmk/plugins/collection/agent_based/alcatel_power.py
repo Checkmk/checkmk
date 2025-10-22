@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.alcatel import DETECT_ALCATEL
+from cmk.plugins.alcatel.lib import DETECT_ALCATEL
 
 alcatel_power_operstate_map = {
     "1": "up",

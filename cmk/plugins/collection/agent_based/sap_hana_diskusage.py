@@ -18,7 +18,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import df, sap_hana
+from cmk.plugins.lib import df
+from cmk.plugins.sap_hana import lib as sap_hana
 
 
 def parse_sap_hana_diskusage(string_table: StringTable) -> sap_hana.ParsedSection:

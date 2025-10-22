@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.decru import DETECT_DECRU
+from cmk.plugins.decru.lib import DETECT_DECRU
 
 
 def inventory_decru_cpu(section: StringTable) -> DiscoveryResult:

@@ -16,7 +16,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib import domino, memory, ps
+from cmk.plugins.domino import lib as domino
+from cmk.plugins.lib import memory, ps
 
 # Example SNMP walk:
 #

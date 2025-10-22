@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.checkpoint import DETECT
+from cmk.plugins.checkpoint.lib import DETECT
 
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
 # .1.3.6.1.4.1.2620.1.16.22.1.1.2.1.0 0

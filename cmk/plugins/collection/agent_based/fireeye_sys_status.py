@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import fireeye
+from cmk.plugins.fireeye import lib as fireeye
 
 
 class Section(NamedTuple):

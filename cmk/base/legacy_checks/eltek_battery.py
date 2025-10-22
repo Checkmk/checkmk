@@ -10,7 +10,7 @@ from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.plugins.lib.eltek import DETECT_ELTEK
+from cmk.plugins.eltek.lib import DETECT_ELTEK
 
 check_info = {}
 

@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.brocade import DETECT_MLX
+from cmk.plugins.brocade.lib import DETECT_MLX
 
 Section = Mapping[str, Mapping[str, str]]
 

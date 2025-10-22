@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
-from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
+from cmk.plugins.sni_octopuse.lib import DETECT_SNI_OCTOPUSE
 
 check_info = {}
 

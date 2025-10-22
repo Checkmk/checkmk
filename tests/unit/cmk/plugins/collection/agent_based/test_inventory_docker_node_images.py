@@ -10,7 +10,7 @@ from cmk.plugins.collection.agent_based.inventory_docker_node_images import (
     inventory_docker_node_images,
     parse_docker_node_images,
 )
-from cmk.plugins.lib import docker
+from cmk.plugins.docker import lib as docker
 
 from .utils_inventory import sort_inventory_result
 

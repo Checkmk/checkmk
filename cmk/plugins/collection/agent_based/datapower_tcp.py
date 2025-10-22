@@ -18,7 +18,8 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import OIDEnd, SNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib import datapower, tcp_connections
+from cmk.plugins.datapower import lib as datapower
+from cmk.plugins.lib import tcp_connections
 
 
 def parse_datapower_tcp(string_table: Sequence[StringTable]) -> tcp_connections.TCPConnections:

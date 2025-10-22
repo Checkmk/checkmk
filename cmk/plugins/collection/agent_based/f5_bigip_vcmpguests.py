@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.f5_bigip import F5_BIGIP, VERSION_V11_2_PLUS
+from cmk.plugins.f5_bigip.lib import F5_BIGIP, VERSION_V11_2_PLUS
 
 Section = Mapping[str, str]
 

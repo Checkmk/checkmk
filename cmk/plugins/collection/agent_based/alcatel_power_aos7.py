@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.alcatel import DETECT_ALCATEL_AOS7
+from cmk.plugins.alcatel.lib import DETECT_ALCATEL_AOS7
 
 alcatel_power_aos7_operability_to_status_mapping = {
     "1": "up",

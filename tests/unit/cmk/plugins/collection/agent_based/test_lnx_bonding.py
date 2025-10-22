@@ -9,9 +9,9 @@ from typing import TypedDict
 import pytest
 
 from cmk.agent_based.v2 import Result, State
+from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.collection.agent_based import lnx_bonding
 from cmk.plugins.collection.agent_based.bonding import check_bonding
-from cmk.plugins.lib import bonding
 
 DATA_FAILOVER = [
     ["==> ./bond0 <=="],

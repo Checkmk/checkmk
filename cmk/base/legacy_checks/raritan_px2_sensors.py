@@ -19,7 +19,7 @@ from cmk.base.check_legacy_includes.raritan import (
     inventory_raritan_sensors_temp,
     parse_raritan_sensors,
 )
-from cmk.plugins.lib.raritan import DETECT_RARITAN
+from cmk.plugins.raritan.lib import DETECT_RARITAN
 
 check_info = {}
 

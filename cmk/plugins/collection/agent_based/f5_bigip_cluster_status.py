@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.f5_bigip import (
+from cmk.plugins.f5_bigip.lib import (
     F5_BIGIP,
     F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     F5BigipClusterStatusVSResult,

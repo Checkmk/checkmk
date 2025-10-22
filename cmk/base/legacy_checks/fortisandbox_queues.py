@@ -23,7 +23,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
-from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
+from cmk.plugins.fortinet.lib import DETECT_FORTISANDBOX
 
 check_info = {}
 

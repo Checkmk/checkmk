@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import SNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib.apc import DETECT
+from cmk.plugins.apc.lib_ats import DETECT
 
 
 def parse_apc_symmetra_power(

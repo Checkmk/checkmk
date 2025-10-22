@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import AgentSection, Attributes, InventoryPlugin, InventoryResult
-from cmk.plugins.lib import couchbase
+from cmk.plugins.couchbase import lib as couchbase
 
 agent_section_couchbase_nodes_ports = AgentSection(
     name="couchbase_nodes_ports",

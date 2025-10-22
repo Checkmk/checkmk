@@ -17,8 +17,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import storeonce
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.storeonce import lib as storeonce
 
 # If have no idea what exactly this is...
 Appliance = Mapping[str, Any]

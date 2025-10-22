@@ -9,7 +9,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.tplink import DETECT_TPLINK
+from cmk.plugins.tplink.lib import DETECT_TPLINK
 
 
 def _parse_memory_percentage_used(string_table: StringTable) -> float | None:

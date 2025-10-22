@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.lib import docker, memory
+from cmk.plugins.docker import lib as docker
+from cmk.plugins.lib import memory
 
 # mypy: disable-error-code="comparison-overlap"
 

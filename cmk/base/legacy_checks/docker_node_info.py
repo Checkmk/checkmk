@@ -11,7 +11,7 @@ from collections.abc import Iterable
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
-from cmk.plugins.lib.docker import NodeInfoSection
+from cmk.plugins.docker.lib import NodeInfoSection
 
 check_info = {}
 

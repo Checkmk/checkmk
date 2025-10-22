@@ -11,7 +11,7 @@ from collections.abc import Iterable
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
-from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
+from cmk.plugins.graylog.lib import deserialize_and_merge_json, GraylogSection
 
 check_info = {}
 

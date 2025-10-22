@@ -13,7 +13,7 @@ import pytest
 
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.base.legacy_checks.graylog_jvm import check_graylog_jvm, discover_graylog_jvm
-from cmk.plugins.lib.graylog import deserialize_and_merge_json
+from cmk.plugins.graylog.lib import deserialize_and_merge_json
 
 
 @pytest.mark.parametrize(

@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.graylog import deserialize_and_merge_json
+from cmk.plugins.graylog.lib import deserialize_and_merge_json
 
 
 class FailureMessage(BaseModel):

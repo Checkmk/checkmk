@@ -18,8 +18,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.kemp_loadmaster import DETECT_KEMP_LOADMASTER, VirtualService
-from cmk.plugins.lib.kemp_loadmaster import VSSection as Section
+from cmk.plugins.kemp_loadmaster.lib import DETECT_KEMP_LOADMASTER, VirtualService
+from cmk.plugins.kemp_loadmaster.lib import VSSection as Section
 
 _VS_STATE_MAP: Final = {
     "1": (State.OK, "in service"),

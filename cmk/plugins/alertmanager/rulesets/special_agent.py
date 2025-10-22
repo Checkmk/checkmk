@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.lib.prometheus_form_elements import api_request_authentication, connection
+from cmk.plugins.prometheus.lib_form_elements import api_request_authentication, connection
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,

@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib import checkpoint
+from cmk.plugins.checkpoint import lib as checkpoint
 
 
 class VPNTunnel(NamedTuple):

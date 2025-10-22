@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.printer import DETECT_PRINTER
+from cmk.plugins.printer.lib import DETECT_PRINTER
 
 printer_io_units = {
     "-1": "unknown",

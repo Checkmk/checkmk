@@ -19,7 +19,7 @@ from typing import Any, NotRequired, TypedDict
 
 import requests
 
-from cmk.plugins.lib.prometheus import (
+from cmk.plugins.prometheus.lib import (
     add_authentication_args,
     authentication_from_args,
     generate_api_session,

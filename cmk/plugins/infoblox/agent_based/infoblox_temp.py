@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+from cmk.plugins.infoblox.lib import DETECT_INFOBLOX
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.39 1 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.cpu1-temp

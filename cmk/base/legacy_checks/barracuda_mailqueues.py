@@ -14,7 +14,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
+from cmk.plugins.barracuda.lib import DETECT_BARRACUDA
 
 check_info = {}
 

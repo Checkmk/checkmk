@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, render, Service, SNMPTree, StringTable
-from cmk.plugins.lib.viprinet import DETECT_VIPRINET
+from cmk.plugins.viprinet.lib import DETECT_VIPRINET
 
 check_info = {}
 

@@ -12,7 +12,7 @@ import datetime
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
-from cmk.plugins.lib import sap_hana
+from cmk.plugins.sap_hana import lib as sap_hana
 
 check_info = {}
 

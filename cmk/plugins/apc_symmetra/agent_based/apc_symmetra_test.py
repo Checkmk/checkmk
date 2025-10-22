@@ -48,7 +48,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.apc import DETECT
+from cmk.plugins.apc.lib_ats import DETECT
 
 
 def _days_difference(date: str, today: datetime.date) -> int:

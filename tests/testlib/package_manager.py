@@ -281,6 +281,8 @@ def _get_omd_distro_name() -> str:
     rh = Path("/etc/redhat-release")
     if rh.exists():
         content = rh.read_text()
+        if content.startswith("AlmaLinux release 10"):
+            return "el10"
         if content.startswith("AlmaLinux release 9"):
             return "el9"
         if content.startswith("AlmaLinux release 8"):

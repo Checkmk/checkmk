@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-10-16 20:39+0000\n"
+"PO-Revision-Date: 2025-10-21 18:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -3891,13 +3891,12 @@ msgstr "NGNIX-Instanz hinzufügen"
 msgid "Add OID descriptions"
 msgstr "OID-Beschreibung hinzufügen"
 
-#, fuzzy
 msgid "Add OpenTelemetry collector prometheus scraping configuration"
-msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+msgstr ""
+"Prometheus-Scraping-Konfiguration des OpenTelemetry Collectors hinzufügen"
 
-#, fuzzy
 msgid "Add OpenTelemetry collector receiver configuration"
-msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+msgstr "Empfänger-Konfiguration des OpenTelemetry Collectors hinzufügen"
 
 msgid "Add Prefix"
 msgstr "Präfix hinzufügen"
@@ -5866,21 +5865,19 @@ msgstr "Alle Protokolle"
 msgid "All queues listed here will be skipped."
 msgstr "Alle hier aufgelisteten Warteschlangen werden übersprungen."
 
-#, fuzzy
 msgid ""
 "All related configuration of the integrated OpenTelemetry collector "
 "Prometheus scraping."
 msgstr ""
-"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
-"Collectors."
+"Alle damit verbundenen Prometheus-Scraping-Konfigurationen des integrierten "
+"OpenTelemetry Collectors."
 
-#, fuzzy
 msgid ""
 "All related configuration of the integrated OpenTelemetry collector "
 "receivers."
 msgstr ""
-"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
-"Collectors."
+"Alle damit verbundenen Empfänger-Konfigurationen des integrierten "
+"OpenTelemetry Collectors."
 
 msgid "All related information or settings of licensing of Checkmk sites."
 msgstr ""
@@ -21810,7 +21807,7 @@ msgid "Elasticsearch"
 msgstr "Elasticsearch"
 
 msgid "Elasticsearch Cluster Health"
-msgstr "Elasticsearch Cluster Health"
+msgstr "Gesundheit des Elasticsearch Clusters"
 
 msgid "Elasticsearch Cluster Shards"
 msgstr "Elasticsearch Cluster Shards"
@@ -27290,12 +27287,11 @@ msgid ""
 msgstr ""
 "Hier können Sie das Cluster-Verhalten auswählen. Der beste Zustand aller "
 "Knoten ist der Standard. Das heißt, wenn Sie mindestens einen Knoten im "
-"Status UP haben, gibt die Prüfung OK zurück. Das Gesundheitslevels sollte "
-"auf jedem Knoten gleich sein. Wenn Sie <i>schlechtester</i> wählen, gibt die "
-"Prüfung CRIT zurück, wenn sich mindestens ein Knoten in einem anderen "
-"Zustand als OK befindet. Die Gesundheitslevels sollten auf jedem Knoten "
-"gleich sein, so dass nur der erste Knoten die Gesundheitslevels überprüft "
-"werden."
+"Status UP haben, gibt der Check OK zurück. Die Gesundheitslevels sollten auf "
+"allen Knoten gleich sein. Wenn Sie <i>schlechtester</i> wählen, gibt der "
+"Check CRIT zurück, wenn sich mindestens ein Knoten in einem anderen Zustand "
+"als OK befindet. Die Gesundheitslevels sollten auf allen Knoten gleich sein, "
+"so dass nur für den ersten Knoten die Gesundheitslevels überprüft werden."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
@@ -45112,21 +45108,17 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry (experimentell)"
 
-#, fuzzy
 msgid "OpenTelemetry collector prometheus scraping configurations"
-msgstr "Konfigurationen des OpenTelemetry Collectors"
+msgstr "Prometheus-Scraping-Konfigurationen des OpenTelemetry Collectors"
 
-#, fuzzy
 msgid "OpenTelemetry collector receiver configurations"
-msgstr "Konfigurationen des OpenTelemetry Collectors"
+msgstr "Empfänger-Konfigurationen des OpenTelemetry Collectors"
 
-#, fuzzy
 msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
-msgstr "OpenTelemetry Collector (experimentell)"
+msgstr "OpenTelemetry Collector: Prometheus-Scraping (experimentell)"
 
-#, fuzzy
 msgid "OpenTelemetry collector: Receiver (experimental)"
-msgstr "OpenTelemetry Collector (experimentell)"
+msgstr "OpenTelemetry Collector: Empfänger (experimentell)"
 
 msgid "OpenTelemetry metric name"
 msgstr "Name der OpenTelemetry Metrik"

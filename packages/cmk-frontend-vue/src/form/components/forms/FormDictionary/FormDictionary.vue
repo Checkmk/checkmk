@@ -11,6 +11,7 @@ import { computed, ref } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import FormIndent from '@/components/CmkIndent.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -136,7 +137,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                       v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
                       :spec="dict_element.dict_config.parameter_form"
                       :space="'before'"
-                    />
+                    /><template v-if="dict_element.dict_config.parameter_form.help"
+                      >&nbsp;<CmkHelpText
+                        :help="untranslated(dict_element.dict_config.parameter_form.help)"
+                    /></template>
                   </span>
                   <CmkCheckbox
                     v-else

@@ -129,7 +129,6 @@ class PageAutomation(AjaxPage):
     login secret that has previously been exchanged during "site login" (see above).
     """
 
-    @override
     def _handle_http_request(self) -> None:
         self._authenticate()
         _set_version_headers()

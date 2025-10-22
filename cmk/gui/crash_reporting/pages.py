@@ -83,7 +83,6 @@ class ReportSubmitDetails(TypedDict):
 
 
 class ABCCrashReportPage(Page, abc.ABC):
-    @override
     def _handle_http_request(self) -> None:
         self._crash_id = request.get_str_input_mandatory("crash_id")
         self._site_id = request.get_str_input_mandatory("site")
@@ -125,6 +124,8 @@ class ABCCrashReportPage(Page, abc.ABC):
 class PageCrash(ABCCrashReportPage):
     @override
     def page(self, config: Config) -> None:
+        self._handle_http_request()
+
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 
@@ -721,6 +722,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
     @override
     def page(self, config: Config) -> None:
         user.need_permission("general.see_crash_reports")
+        self._handle_http_request()
 
         filename = "Checkmk_Crash_{}_{}_{}.tar.gz".format(
             urlencode(self._site_id),

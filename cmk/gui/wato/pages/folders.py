@@ -1336,7 +1336,6 @@ class ModeFolder(WatoMode):
 class PageAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
-    @override
     def _handle_http_request(self) -> None:
         self._what = request.var("what")
         if self._what not in ["host", "folder"]:

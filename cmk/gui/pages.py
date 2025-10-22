@@ -52,16 +52,7 @@ class Page(abc.ABC):
     part of the base class.
     """
 
-    def _handle_http_request(self) -> None:
-        """Handles everything to do with processing an HTTP request.
-
-        This can include extracting variables from the request/session or checking user permissions.
-        This method is optional and doesn't need to be defined if you are not accessing global HTTP
-        variables in the page method.
-        """
-
     def handle_page(self, config: Config) -> None:
-        self._handle_http_request()
         self.page(config)
 
     @abc.abstractmethod
@@ -98,8 +89,6 @@ class AjaxPage(Page, abc.ABC):
     @override
     def handle_page(self, config: Config) -> None:
         """The page handler, called by the page registry"""
-        self._handle_http_request()
-
         response.set_content_type("application/json")
         try:
             action_response = self.page(config)

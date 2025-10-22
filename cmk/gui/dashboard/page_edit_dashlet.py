@@ -59,7 +59,6 @@ DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], Das
 
 
 class EditDashletPage(Page):
-    @override
     def _handle_http_request(self) -> None:
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -75,6 +74,8 @@ class EditDashletPage(Page):
 
     @override
     def page(self, config: Config) -> PageResult:
+        self._handle_http_request()
+
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")
             mode = "add"

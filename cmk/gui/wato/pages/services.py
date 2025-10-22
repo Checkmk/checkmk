@@ -1923,7 +1923,6 @@ class DiscoveryPageRenderer:
 
 
 class ModeAjaxExecuteCheck(AjaxPage):
-    @override
     def _handle_http_request(self) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site not in active_config.sites:
@@ -1944,6 +1943,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
 
     @override
     def page(self, config: Config) -> PageResult:
+        self._handle_http_request()
         check_csrf_token()
         try:
             active_check_result = active_check(

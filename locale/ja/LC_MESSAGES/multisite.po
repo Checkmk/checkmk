@@ -15312,6 +15312,9 @@ msgstr "スプール内の破損したファイル"
 msgid "Cosmic"
 msgstr "コズミック"
 
+msgid "CosmosDb"
+msgstr ""
+
 msgid "Cost per month"
 msgstr "1ヶ月あたりのコスト"
 
@@ -26485,10 +26488,6 @@ msgstr ""
 msgid "Graph template"
 msgstr "グラフテンプレート"
 
-#, python-format
-msgid "Graph template %s is missing a title"
-msgstr "グラフテンプレート %s にタイトルがありません"
-
 msgid "Graph time range"
 msgstr "グラフの時間範囲"
 
@@ -26503,6 +26502,10 @@ msgstr "グラフの調整"
 
 msgid "Graph visibility"
 msgstr "グラフの可視性"
+
+#, fuzzy, python-format
+msgid "Graph with ID %s is missing a title"
+msgstr "グラフテンプレート %s にタイトルがありません"
 
 msgid "Graphic card name"
 msgstr "グラフィックカード名"
@@ -50039,6 +50042,10 @@ msgid "Proxmox VE CPU Utilization"
 msgstr "Proxmox VE CPU 使用率"
 
 #, fuzzy
+msgid "Proxmox VE HA Manager Watcher"
+msgstr "Proxmox VE ネットワークスループット"
+
+#, fuzzy
 msgid "Proxmox VE Node CPU Allocation"
 msgstr "Proxmox VE CPU 使用率"
 
@@ -55872,6 +55879,14 @@ msgstr "サービス状態"
 
 msgid "Service state age"
 msgstr "サービス状態経過日数"
+
+#, fuzzy
+msgid "Service state for Ignored VMs"
+msgstr "サービス状態経過日数"
+
+#, fuzzy
+msgid "Service state for Stopped VMs"
+msgstr "サービス状態タイプ"
 
 msgid "Service state if no map rule matches"
 msgstr "一致するマップルールがない場合のサービス状態"
@@ -86448,6 +86463,24 @@ msgstr "サービスメトリクス"
 msgid "Filter by service"
 msgstr "サービスによるフィルター選択:"
 
+msgid "Name is required."
+msgstr "名前は必須です。"
+
+msgid "Unique ID is required."
+msgstr "ユニークIDですが必須。"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファベッ"
+"ト、または数字で始まる必要があります。"
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "このIDはすでに使用されています。別のものを選択してください。"
+
 #, fuzzy
 msgid "Dashboard layout"
 msgstr "ダッシュボード要素"
@@ -86781,24 +86814,6 @@ msgstr "特定のサイト"
 msgid "Custom"
 msgstr "カスタム"
 
-msgid "Name is required."
-msgstr "名前は必須です。"
-
-msgid "Unique ID is required."
-msgstr "ユニークIDですが必須。"
-
-#, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファベッ"
-"ト、または数字で始まる必要があります。"
-
-#, fuzzy
-msgid "This Unique ID is already in use. Please choose another one."
-msgstr "このIDはすでに使用されています。別のものを選択してください。"
-
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
@@ -86824,6 +86839,14 @@ msgstr ""
 #, fuzzy
 msgid "Dashboard scope"
 msgstr "ダッシュボード"
+
+#, fuzzy
+msgid "Clone & review dashboard filters"
+msgstr "関連ダッシュボード"
+
+#, fuzzy
+msgid "Clone & view list"
+msgstr "保存してフォルダを確認"
 
 msgid "Only me (private)"
 msgstr ""
@@ -86986,10 +87009,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Must select an option"
-msgstr "オプション選択"
-
-#, fuzzy
 msgid "Metric (single)"
 msgstr "メトリック名"
 
@@ -87004,6 +87023,10 @@ msgstr "サービスメトリクス"
 #, fuzzy
 msgid "Service graph"
 msgstr "サービスグラフ"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "オプション選択"
 
 #, fuzzy
 msgid "Service selection"
@@ -87531,6 +87554,24 @@ msgid ""
 "The name you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Register the Relay to authorize it for communication with your Checkmk site."
+msgstr "Checkmkサイトの状態を表示する\n"
+
+msgid ""
+"This code snippet includes a one-time token. If you plan to use it multiple "
+"times in larger environments, you can check "
+msgstr ""
+
+#, fuzzy
+msgid "this article"
+msgstr "このルール"
+
+#, fuzzy
+msgid " for more details."
+msgstr "詳細はこちらをクリックしてください。"
 
 msgid "Deploy the relay to your environment"
 msgstr ""

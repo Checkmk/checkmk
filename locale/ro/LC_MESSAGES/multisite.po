@@ -16287,6 +16287,9 @@ msgstr "Fișiere corupte în Spool"
 msgid "Cosmic"
 msgstr "Cosmic"
 
+msgid "CosmosDb"
+msgstr ""
+
 #, fuzzy
 msgid "Cost per month"
 msgstr "Blocaje MSSQL pe lot"
@@ -28120,10 +28123,6 @@ msgstr ""
 msgid "Graph template"
 msgstr "Șablon grafic"
 
-#, python-format
-msgid "Graph template %s is missing a title"
-msgstr "Șablonul grafic %s nu are un titlu"
-
 msgid "Graph time range"
 msgstr "Intervalul de timp al graficului"
 
@@ -28138,6 +28137,10 @@ msgstr "Acorduri grafice"
 
 msgid "Graph visibility"
 msgstr "Vizibilitatea graficului"
+
+#, fuzzy, python-format
+msgid "Graph with ID %s is missing a title"
+msgstr "Șablonul grafic %s nu are un titlu"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -53547,6 +53550,10 @@ msgid "Proxmox VE CPU Utilization"
 msgstr "Utilizare CPU"
 
 #, fuzzy
+msgid "Proxmox VE HA Manager Watcher"
+msgstr "Viteza de scriere"
+
+#, fuzzy
 msgid "Proxmox VE Node CPU Allocation"
 msgstr "Utilizare CPU"
 
@@ -59746,6 +59753,14 @@ msgstr "Starea serviciului"
 
 msgid "Service state age"
 msgstr "Vârsta statului de serviciu"
+
+#, fuzzy
+msgid "Service state for Ignored VMs"
+msgstr "Vârsta statului de serviciu"
+
+#, fuzzy
+msgid "Service state for Stopped VMs"
+msgstr "Tipul de stare a serviciului"
 
 msgid "Service state if no map rule matches"
 msgstr ""
@@ -92482,6 +92497,26 @@ msgid "Filter by service"
 msgstr "Filtrați selecția %s în funcție de serviciu: "
 
 #, fuzzy
+msgid "Name is required."
+msgstr "este necesară"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "este necesară"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Denumirile metrice trebuie să fie formate numai din litere, cifre și "
+"caractere de subliniere și trebuie să înceapă cu o literă."
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "Acest ID este deja utilizat. Vă rugăm să alegeți altul."
+
+#, fuzzy
 msgid "Dashboard layout"
 msgstr "Element de tablou de bord"
 
@@ -92819,26 +92854,6 @@ msgid "Custom"
 msgstr "Client"
 
 #, fuzzy
-msgid "Name is required."
-msgstr "este necesară"
-
-#, fuzzy
-msgid "Unique ID is required."
-msgstr "este necesară"
-
-#, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"Denumirile metrice trebuie să fie formate numai din litere, cifre și "
-"caractere de subliniere și trebuie să înceapă cu o literă."
-
-#, fuzzy
-msgid "This Unique ID is already in use. Please choose another one."
-msgstr "Acest ID este deja utilizat. Vă rugăm să alegeți altul."
-
-#, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Starea când lipsește fișierul"
 
@@ -92863,6 +92878,14 @@ msgstr ""
 #, fuzzy
 msgid "Dashboard scope"
 msgstr "Tablouri de bord"
+
+#, fuzzy
+msgid "Clone & review dashboard filters"
+msgstr "Tablouri de bord conexe"
+
+#, fuzzy
+msgid "Clone & view list"
+msgstr "Salvați & vizualizați folderul"
 
 msgid "Only me (private)"
 msgstr ""
@@ -93027,10 +93050,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Must select an option"
-msgstr "Conexiuni respinse"
-
-#, fuzzy
 msgid "Metric (single)"
 msgstr "Etichetă metrică"
 
@@ -93047,6 +93066,10 @@ msgstr "Metrici de servicii"
 #, fuzzy
 msgid "Service graph"
 msgstr "Grafice de servicii"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "Conexiuni respinse"
 
 #, fuzzy
 msgid "Service selection"
@@ -93600,6 +93623,24 @@ msgid ""
 "The name you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Register the Relay to authorize it for communication with your Checkmk site."
+msgstr "Afișarea stării site-urilor Checkmk\n"
+
+msgid ""
+"This code snippet includes a one-time token. If you plan to use it multiple "
+"times in larger environments, you can check "
+msgstr ""
+
+#, fuzzy
+msgid "this article"
+msgstr "Această regulă"
+
+#, fuzzy
+msgid " for more details."
+msgstr "Click aici pentru detalii."
 
 msgid "Deploy the relay to your environment"
 msgstr ""

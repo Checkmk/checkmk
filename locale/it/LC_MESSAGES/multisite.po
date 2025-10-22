@@ -16127,6 +16127,9 @@ msgstr "File corrotti nello spool"
 msgid "Cosmic"
 msgstr "Cosmico"
 
+msgid "CosmosDb"
+msgstr ""
+
 #, fuzzy
 msgid "Cost per month"
 msgstr "Chiusure MSSQL per lotto"
@@ -27825,10 +27828,6 @@ msgstr ""
 msgid "Graph template"
 msgstr "Modello di grafico"
 
-#, python-format
-msgid "Graph template %s is missing a title"
-msgstr "Il modello di grafico %s manca di un titolo"
-
 msgid "Graph time range"
 msgstr "Intervallo di tempo del grafico"
 
@@ -27843,6 +27842,10 @@ msgstr "Accordi grafici"
 
 msgid "Graph visibility"
 msgstr "Visibilità del grafico"
+
+#, fuzzy, python-format
+msgid "Graph with ID %s is missing a title"
+msgstr "Il modello di grafico %s manca di un titolo"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -53028,6 +53031,10 @@ msgid "Proxmox VE CPU Utilization"
 msgstr "Utilizzo della CPU"
 
 #, fuzzy
+msgid "Proxmox VE HA Manager Watcher"
+msgstr "Velocità di scrittura"
+
+#, fuzzy
 msgid "Proxmox VE Node CPU Allocation"
 msgstr "Utilizzo della CPU"
 
@@ -59141,6 +59148,14 @@ msgstr "Stato del servizio"
 
 msgid "Service state age"
 msgstr "Età dello stato di servizio"
+
+#, fuzzy
+msgid "Service state for Ignored VMs"
+msgstr "Età dello stato di servizio"
+
+#, fuzzy
+msgid "Service state for Stopped VMs"
+msgstr "Tipo di stato del servizio"
 
 msgid "Service state if no map rule matches"
 msgstr "Stato del servizio se nessuna regola della mappa corrisponde"
@@ -91487,6 +91502,26 @@ msgid "Filter by service"
 msgstr "Filtrare la selezione %s per servizio: "
 
 #, fuzzy
+msgid "Name is required."
+msgstr "è necessario"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "è necessario"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"I nomi delle metriche devono essere composti solo da lettere, cifre e "
+"sottolineature e devono iniziare con una lettera."
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "Questo ID è già in uso. Per favore, sceglietene un altro."
+
+#, fuzzy
 msgid "Dashboard layout"
 msgstr "Elemento del cruscotto"
 
@@ -91823,26 +91858,6 @@ msgid "Custom"
 msgstr "Cliente"
 
 #, fuzzy
-msgid "Name is required."
-msgstr "è necessario"
-
-#, fuzzy
-msgid "Unique ID is required."
-msgstr "è necessario"
-
-#, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"I nomi delle metriche devono essere composti solo da lettere, cifre e "
-"sottolineature e devono iniziare con una lettera."
-
-#, fuzzy
-msgid "This Unique ID is already in use. Please choose another one."
-msgstr "Questo ID è già in uso. Per favore, sceglietene un altro."
-
-#, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Stato quando il file manca"
 
@@ -91867,6 +91882,14 @@ msgstr ""
 #, fuzzy
 msgid "Dashboard scope"
 msgstr "Cruscotti"
+
+#, fuzzy
+msgid "Clone & review dashboard filters"
+msgstr "Cruscotti correlati"
+
+#, fuzzy
+msgid "Clone & view list"
+msgstr "Salvare e visualizzare la cartella"
 
 msgid "Only me (private)"
 msgstr ""
@@ -92029,10 +92052,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Must select an option"
-msgstr "Connessioni rifiutate"
-
-#, fuzzy
 msgid "Metric (single)"
 msgstr "Etichetta metrica"
 
@@ -92047,6 +92066,10 @@ msgstr "Metriche di servizio"
 #, fuzzy
 msgid "Service graph"
 msgstr "Grafici di servizio"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "Connessioni rifiutate"
 
 #, fuzzy
 msgid "Service selection"
@@ -92598,6 +92621,24 @@ msgid ""
 "The name you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Register the Relay to authorize it for communication with your Checkmk site."
+msgstr "Visualizzazione dello stato dei siti Checkmk\n"
+
+msgid ""
+"This code snippet includes a one-time token. If you plan to use it multiple "
+"times in larger environments, you can check "
+msgstr ""
+
+#, fuzzy
+msgid "this article"
+msgstr "Questa regola"
+
+#, fuzzy
+msgid " for more details."
+msgstr "Fare clic qui per i dettagli."
 
 msgid "Deploy the relay to your environment"
 msgstr ""

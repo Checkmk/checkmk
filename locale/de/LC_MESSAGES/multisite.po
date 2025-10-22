@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-10-16 20:39+0000\n"
+"PO-Revision-Date: 2025-10-21 18:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3904,13 +3904,12 @@ msgstr "OID-Beschreibung hinzufügen"
 msgid "Add OpenTelemetry collector configuration"
 msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
 
-#, fuzzy
 msgid "Add OpenTelemetry collector prometheus scraping configuration"
-msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+msgstr ""
+"Prometheus-Scraping-Konfiguration des OpenTelemetry Collectors hinzufügen"
 
-#, fuzzy
 msgid "Add OpenTelemetry collector receiver configuration"
-msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+msgstr "Empfänger-Konfiguration des OpenTelemetry Collectors hinzufügen"
 
 msgid "Add OpenTelemetry configuration"
 msgstr "OpenTelemetry-Konfiguration hinzufügen"
@@ -5927,21 +5926,19 @@ msgstr "Alle Protokolle"
 msgid "All queues listed here will be skipped."
 msgstr "Alle hier aufgelisteten Warteschlangen werden übersprungen."
 
-#, fuzzy
 msgid ""
 "All related configuration of the integrated OpenTelemetry collector "
 "Prometheus scraping."
 msgstr ""
-"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
-"Collectors."
+"Alle damit verbundenen Prometheus-Scraping-Konfigurationen des integrierten "
+"OpenTelemetry Collectors."
 
-#, fuzzy
 msgid ""
 "All related configuration of the integrated OpenTelemetry collector "
 "receivers."
 msgstr ""
-"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
-"Collectors."
+"Alle damit verbundenen Empfänger-Konfigurationen des integrierten "
+"OpenTelemetry Collectors."
 
 msgid "All related configuration of the integrated OpenTelemetry collector."
 msgstr ""
@@ -7610,9 +7607,8 @@ msgstr "Authentifizierungsfehler (letzte 5 Minuten)"
 msgid "Authentication failures within the last 5 minutes"
 msgstr "Authentifizierungsfehler in den letzten 5 Minuten"
 
-#, fuzzy
 msgid "Authentication for proxy required"
-msgstr "Authentifizierungsfehler"
+msgstr "Authentifizierung für den Proxy benötigt"
 
 msgid "Authentication mechanism"
 msgstr "Authentifizierungsmechanismus"
@@ -8130,16 +8126,14 @@ msgstr "Untergrenzen für die durchschnittliche Anzahl an Meldungen"
 msgid "Average message count upper levels"
 msgstr "Obergrenzen für die durchschnittliche Anzahl an Meldungen"
 
-#, fuzzy
 msgid "Average metric value over a period of time"
-msgstr "Levels über eine längere Zeitperiode"
+msgstr "Durchschnittlicher Metrikwert über eine Zeitperiode"
 
 msgid "Average number of messages"
 msgstr "Durchschnittliche Anzahl an Meldungen"
 
-#, fuzzy
 msgid "Average over..."
-msgstr "Durchschnitt über"
+msgstr "Durchschnitt über..."
 
 msgid "Average pending tasks delta"
 msgstr "Durchschnittliches Delta anstehender Aufgaben"
@@ -8685,9 +8679,8 @@ msgstr "Azure Load Balancer Gesundheit"
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Azure Load Balancer Gesundheit (veraltet)"
 
-#, fuzzy
 msgid "Azure NAT Gateways datapath availability"
-msgstr "Verfügbarkeit ansehen"
+msgstr "Verfügbarkeit des Azure NAT Gateways Datapath"
 
 msgid "Azure Redis CPU utilization"
 msgstr "Azure Redis CPU-Auslastung"
@@ -15682,6 +15675,9 @@ msgstr "Beschädigte Dateien im Spooler"
 msgid "Cosmic"
 msgstr "Kosmisch"
 
+msgid "CosmosDb"
+msgstr ""
+
 msgid "Cost per month"
 msgstr "Kosten pro Monat"
 
@@ -16706,9 +16702,8 @@ msgstr "Aktueller DCD-Zustand."
 msgid "Current O2 percentage"
 msgstr "Aktueller O2-Prozentsatz"
 
-#, fuzzy
 msgid "Current RAM"
-msgstr "Stromstärke"
+msgstr "Aktueller RAM"
 
 msgid "Current agent update status of all registered hosts."
 msgstr "Aktueller Status des Agenten-Updates von allen registrierten Hosts."
@@ -17776,17 +17771,14 @@ msgstr "Größen der Datendatei"
 msgid "Dataguard statistics"
 msgstr "Dataguard-Statistiken"
 
-#, fuzzy
 msgid "Datapath availability"
-msgstr "Untergrenzen für Datenpfadverfügbarkeit"
+msgstr "Datapath-Verfügbarkeit"
 
-#, fuzzy
 msgid "Datapath availability %"
-msgstr "Untergrenzen für Datenpfadverfügbarkeit"
+msgstr "Datapath-Verfügbarkeit %"
 
-#, fuzzy
 msgid "Datapath availability (average)"
-msgstr "Untergrenzen für Datenpfadverfügbarkeit"
+msgstr "Datapath-Verfügbarkeit (Durchschnitt)"
 
 msgid "Datasource"
 msgstr "Datenquelle"
@@ -18944,7 +18936,6 @@ msgstr "Zugestellte Meldungen"
 msgid "Delivered notifications"
 msgstr "Zugestellte Benachrichtigungen"
 
-#, fuzzy
 msgid "Demand"
 msgstr "Bedarf"
 
@@ -19751,9 +19742,8 @@ msgstr ""
 "Automatische Benutzersynchronisation ausschalten (nutze Benutzer der "
 "Zentralinstanz)"
 
-#, fuzzy
 msgid "Disable averaging"
-msgstr "Meldungen mitteln"
+msgstr "Durchschnittsbildung deaktivieren"
 
 msgid "Disable bulkwalks"
 msgstr "Bulk-Walks deaktivieren"
@@ -22336,7 +22326,7 @@ msgid "Elasticsearch"
 msgstr "Elasticsearch"
 
 msgid "Elasticsearch Cluster Health"
-msgstr "Elasticsearch Cluster Health"
+msgstr "Gesundheit des Elasticsearch Clusters"
 
 msgid "Elasticsearch Cluster Shards"
 msgstr "Elasticsearch Cluster Shards"
@@ -27066,10 +27056,6 @@ msgstr ""
 msgid "Graph template"
 msgstr "Graphschablone"
 
-#, python-format
-msgid "Graph template %s is missing a title"
-msgstr "Der Graphschablone %s fehlt ein Titel"
-
 msgid "Graph time range"
 msgstr "Graphzeitraum"
 
@@ -27084,6 +27070,10 @@ msgstr "Graph-Tunings"
 
 msgid "Graph visibility"
 msgstr "Graph-Sichtbarkeit"
+
+#, fuzzy, python-format
+msgid "Graph with ID %s is missing a title"
+msgstr "Der Graphschablone %s fehlt ein Titel"
 
 msgid "Graphic card name"
 msgstr "Grafikkartenname"
@@ -27910,12 +27900,11 @@ msgid ""
 msgstr ""
 "Hier können Sie das Cluster-Verhalten auswählen. Der beste Zustand aller "
 "Knoten ist der Standard. Das heißt, wenn Sie mindestens einen Knoten im "
-"Status UP haben, gibt die Prüfung OK zurück. Das Gesundheitslevels sollte "
-"auf jedem Knoten gleich sein. Wenn Sie <i>schlechtester</i> wählen, gibt die "
-"Prüfung CRIT zurück, wenn sich mindestens ein Knoten in einem anderen "
-"Zustand als OK befindet. Die Gesundheitslevels sollten auf jedem Knoten "
-"gleich sein, so dass nur der erste Knoten die Gesundheitslevels überprüft "
-"werden."
+"Status UP haben, gibt der Check OK zurück. Die Gesundheitslevels sollten auf "
+"allen Knoten gleich sein. Wenn Sie <i>schlechtester</i> wählen, gibt der "
+"Check CRIT zurück, wenn sich mindestens ein Knoten in einem anderen Zustand "
+"als OK befindet. Die Gesundheitslevels sollten auf allen Knoten gleich sein, "
+"so dass nur für den ersten Knoten die Gesundheitslevels überprüft werden."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and last hour "
@@ -30699,9 +30688,8 @@ msgstr "Hyper-V VM Gastinformationen (Windows)"
 msgid "Hyper-V VM Network Adapter"
 msgstr "Hyper-V VM Netzwerkadapter"
 
-#, fuzzy
 msgid "Hyper-V VM RAM"
-msgstr "Hyper-V VM Zusammenfassung"
+msgstr "Hyper-V VM RAM"
 
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V VM Integrationsdienste"
@@ -39820,9 +39808,8 @@ msgstr "Maximale Dateideskriptoren"
 msgid "Max length"
 msgstr "maximale Länge"
 
-#, fuzzy
 msgid "Max levels for ram"
-msgstr "Obergrenzen für die Leistung"
+msgstr "Maximale Levels für RAM"
 
 msgid "Max time for last reported"
 msgstr "Maximale Zeit für die letzte Meldung"
@@ -39957,9 +39944,8 @@ msgstr "Maximale PGA verwendet für Auto-Workareas"
 msgid "Maximum PGA used for manual workareas"
 msgstr "Maximal verwendete PGA für manuelle Arbeitsbereiche"
 
-#, fuzzy
 msgid "Maximum RAM"
-msgstr "Maximum"
+msgstr "Maximum RAM"
 
 msgid "Maximum Rate of Accepted Packets"
 msgstr "Maximale Rate für akzeptierte Pakete"
@@ -40925,9 +40911,8 @@ msgstr "%d %s auf Connector '%s': %s migriert"
 msgid "Migrating"
 msgstr "Migration"
 
-#, fuzzy
 msgid "Min levels for ram"
-msgstr "WARN-Levels für das Stratum"
+msgstr "Minimale Levels für RAM"
 
 msgid "Min.&nbsp;Version:"
 msgstr "Min.&nbsp;Version:"
@@ -40980,9 +40965,8 @@ msgstr "Minimales Zertifikatsalter"
 msgid "Minimum Page Life Expectancy"
 msgstr "Minimale Page Life Expectancy (PLE)"
 
-#, fuzzy
 msgid "Minimum RAM"
-msgstr "Minimum"
+msgstr "Minimum RAM"
 
 msgid "Minimum allowed age"
 msgstr "Mindestalter"
@@ -42089,9 +42073,8 @@ msgstr "NAS DB-Pfad"
 msgid "NAS DB user name"
 msgstr "NAS DB Benutzername"
 
-#, fuzzy
 msgid "NAT Gateways"
-msgstr "vNet Gateway"
+msgstr "NAT Gateways"
 
 msgid "NFS"
 msgstr "NFS"
@@ -46218,21 +46201,17 @@ msgstr "OpenTelemetry Collector (experimentell)"
 msgid "OpenTelemetry collector configurations"
 msgstr "Konfigurationen des OpenTelemetry Collectors"
 
-#, fuzzy
 msgid "OpenTelemetry collector prometheus scraping configurations"
-msgstr "Konfigurationen des OpenTelemetry Collectors"
+msgstr "Prometheus-Scraping-Konfigurationen des OpenTelemetry Collectors"
 
-#, fuzzy
 msgid "OpenTelemetry collector receiver configurations"
-msgstr "Konfigurationen des OpenTelemetry Collectors"
+msgstr "Empfänger-Konfigurationen des OpenTelemetry Collectors"
 
-#, fuzzy
 msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
-msgstr "OpenTelemetry Collector (experimentell)"
+msgstr "OpenTelemetry Collector: Prometheus-Scraping (experimentell)"
 
-#, fuzzy
 msgid "OpenTelemetry collector: Receiver (experimental)"
-msgstr "OpenTelemetry Collector (experimentell)"
+msgstr "OpenTelemetry Collector: Empfänger (experimentell)"
 
 msgid "OpenTelemetry data - Metric backend"
 msgstr "OpenTelemetry-Daten - Metrik-Backend"
@@ -46426,7 +46405,6 @@ msgstr ""
 "diese bereits existiert.<br><i>Keine Benutzererstellung</i>: Überprüfen Sie, "
 "ob der Benutzer Mitglied der Gruppe des GID ist."
 
-#, fuzzy
 msgid ""
 "Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
@@ -51089,6 +51067,10 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "CPU-Auslastung für Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE HA Manager Watcher"
+msgstr "Proxmox VE Netzwerkdurchsatz"
+
 msgid "Proxmox VE Node CPU Allocation"
 msgstr "Proxmox VE Knoten CPU-Zuweisung"
 
@@ -51140,9 +51122,8 @@ msgstr "Proxy-Server"
 msgid "Proxy server details"
 msgstr "Details zum Proxyserver"
 
-#, fuzzy
 msgid "Proxy server name or IP address"
-msgstr "DNS Host-Name oder IP-Adresse"
+msgstr "Proxy Server-Name oder IP-Adresse"
 
 msgid "Proxy settings"
 msgstr "Proxy-Einstellungen"
@@ -51494,9 +51475,8 @@ msgstr "RAM + Swap Übersicht"
 msgid "RAM + swap used"
 msgstr "RAM + Swap genutzt"
 
-#, fuzzy
 msgid "RAM Metrics"
-msgstr "Metriken"
+msgstr "RAM-Metriken"
 
 msgid "RAM free"
 msgstr "RAM frei"
@@ -55382,9 +55362,8 @@ msgstr "Name des Scheduler-Jobs"
 msgid "Scheduling report in background failed: %s"
 msgstr "Planung von Report in Hintergrund fehlgeschlagen: %s"
 
-#, fuzzy
 msgid "Scheme"
-msgstr "Planer"
+msgstr "Schema"
 
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
@@ -56966,6 +56945,14 @@ msgstr "Service-Zustand"
 
 msgid "Service state age"
 msgstr "Alter des Service-Zustands"
+
+#, fuzzy
+msgid "Service state for Ignored VMs"
+msgstr "Alter des Service-Zustands"
+
+#, fuzzy
+msgid "Service state for Stopped VMs"
+msgstr "Service Zustandstyp"
 
 msgid "Service state if no map rule matches"
 msgstr "Service-Zustand, wenn keine Map-Regel greift"
@@ -60498,9 +60485,8 @@ msgstr "Sterne"
 msgid "Start"
 msgstr "Beginn"
 
-#, fuzzy
 msgid "Start RAM"
-msgstr "Beginn"
+msgstr "RAM starten"
 
 msgid "Start URL to display in main frame"
 msgstr "Start-URL für den Haupt-Frame"
@@ -72303,13 +72289,12 @@ msgstr ""
 "Sie den Checkmk Micro Core mit Smart Ping verwenden und trotzdem die "
 "Metriken des Ping zu einigen Hosts verfolgen wollen."
 
-#, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der Azure "
-"Redis Latenz zu konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Gesundheitsmonitoring "
+"der Azure NAT Gateways zu konfigurieren"
 
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
@@ -88501,9 +88486,8 @@ msgstr "Auf das Dashboard anwenden"
 msgid "Edit required runtime filters"
 msgstr "Erforderliche Laufzeitfilter bearbeiten"
 
-#, fuzzy
 msgid "Override dashboard filters"
-msgstr "Erstelle & setze Dashboard-Filter"
+msgstr "Dashboard-Filter überschreiben"
 
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
@@ -88690,6 +88674,23 @@ msgstr "Service-Metrik auswählen"
 
 msgid "Filter by service"
 msgstr "Nach Service filtern"
+
+msgid "Name is required."
+msgstr "Name ist erforderlich."
+
+msgid "Unique ID is required."
+msgstr "Eindeutige ID ist erforderlich."
+
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Die eindeutige ID darf nur Kleinbuchstaben, Zahlen und Unterstriche "
+"enthalten und muss mit einem Buchstaben beginnen."
+
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr ""
+"Diese eindeutige ID wird bereits verwendet. Bitte wählen Sie eine andere."
 
 msgid "Dashboard layout"
 msgstr "Dashboard-Layout"
@@ -88991,23 +88992,6 @@ msgstr "Spezifischer Host"
 msgid "Custom"
 msgstr "Benutzerdefiniert"
 
-msgid "Name is required."
-msgstr "Name ist erforderlich."
-
-msgid "Unique ID is required."
-msgstr "Eindeutige ID ist erforderlich."
-
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"Die eindeutige ID darf nur Kleinbuchstaben, Zahlen und Unterstriche "
-"enthalten und muss mit einem Buchstaben beginnen."
-
-msgid "This Unique ID is already in use. Please choose another one."
-msgstr ""
-"Diese eindeutige ID wird bereits verwendet. Bitte wählen Sie eine andere."
-
 msgid "At least one scope must be selected."
 msgstr "Mindestens ein Ziel muss ausgewählt werden."
 
@@ -89028,6 +89012,14 @@ msgstr ""
 
 msgid "Dashboard scope"
 msgstr "Dashboard-Ziel"
+
+#, fuzzy
+msgid "Clone & review dashboard filters"
+msgstr "Erstelle & setze Dashboard-Filter"
+
+#, fuzzy
+msgid "Clone & view list"
+msgstr "Erstelle & betrachte die Liste"
 
 msgid "Only me (private)"
 msgstr ""
@@ -89156,9 +89148,6 @@ msgid ""
 "Do not follow timerange changes of other graphs on the current dashboard"
 msgstr ""
 
-msgid "Must select an option"
-msgstr "Sie müssen eine Option auswählen"
-
 msgid "Metric (single)"
 msgstr "Metrik (einfach)"
 
@@ -89170,6 +89159,9 @@ msgstr "Service-Metrik"
 
 msgid "Service graph"
 msgstr "Service-Graph"
+
+msgid "Must select an option"
+msgstr "Sie müssen eine Option auswählen"
 
 msgid "Service selection"
 msgstr "Service-Auswahl"
@@ -89642,14 +89634,31 @@ msgid ""
 "the setup."
 msgstr ""
 
-#, fuzzy
 msgid "Provide a display name for your Relay."
-msgstr "Alternativer Anzeigename für Services"
+msgstr "Geben Sie einen Anzeigenamen für Ihre Relais an."
 
 msgid ""
 "The name you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Register the Relay to authorize it for communication with your Checkmk site."
+msgstr "Registrieren Sie das Relais für Ihre Checkmk-Instanz"
+
+msgid ""
+"This code snippet includes a one-time token. If you plan to use it multiple "
+"times in larger environments, you can check "
+msgstr ""
+
+#, fuzzy
+msgid "this article"
+msgstr "Diese Regel"
+
+#, fuzzy
+msgid " for more details."
+msgstr "Klicken Sie hier für Details."
 
 msgid "Deploy the relay to your environment"
 msgstr ""
@@ -89762,46 +89771,39 @@ msgstr "Fügen Sie Ihren ersten Host hinzu"
 msgid "View your newly added host"
 msgstr ""
 
-#, fuzzy
 msgid "View hosts"
-msgstr "Vhosts"
+msgstr "Hosts ansehen"
 
-#, fuzzy
 msgid "Trigger download of the Checkmk agent package"
-msgstr "Checkmk-Agent Vanilla herunterladen"
+msgstr "Download des Checkmk-Agentpakets anstoßen"
 
-#, fuzzy
 msgid "Install the Checkmk agent package"
-msgstr "Checkmk-Agent installieren"
+msgstr "Checkmk-Agentpaket installieren"
 
-#, fuzzy
 msgid "Note: The above command contains the credentials for a site user with "
-msgstr "Hier können Sie die zu verwendenden Anmeldedaten konfigurieren."
+msgstr ""
+"Hinweis: Das Kommando oben enthält die Anmeldedaten eines Instanzbenutzers "
+"mit "
 
-#, fuzzy
 msgid "DEB"
-msgstr "DB2"
+msgstr "DEB"
 
-#, fuzzy
 msgid "Download the Checkmk agent package for your system."
-msgstr "Lädt Checkmk-Agenten für andere Betriebssysteme herunter"
+msgstr "Das Checkmk-Agentpaket für Ihr System herunterladen."
 
-#, fuzzy
 msgid "Run this command to install the Checkmk agent on your workstation."
 msgstr ""
-"Diesen Befehl ausführen, um den Checkmk-Agent herunterzuladen und zu "
+"Diesen Befehl ausführen, um den Checkmk-Agent auf Ihrem Arbeitsplatz zu "
 "installieren."
 
-#, fuzzy
 msgid "RPM"
-msgstr "RAM"
+msgstr "RPM"
 
-#, fuzzy
 msgid ""
 "Run this command to trigger the download of the Checkmk agent onto your "
 msgstr ""
-"Diesen Befehl ausführen, um den Checkmk-Agent herunterzuladen und zu "
-"installieren."
+"Diesen Befehl ausführen, um den Download des Checkmk-Agent anzustoßen auf "
+"Ihrem "
 
 msgid ""
 "Run this command in PowerShell as an administrator to trigger the "

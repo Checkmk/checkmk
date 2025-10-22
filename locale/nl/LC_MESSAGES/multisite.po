@@ -16272,6 +16272,9 @@ msgstr "Corrupte bestanden in Spool"
 msgid "Cosmic"
 msgstr "Kosmisch"
 
+msgid "CosmosDb"
+msgstr ""
+
 #, fuzzy
 msgid "Cost per month"
 msgstr "MSSQL Sloten per Batch"
@@ -28037,10 +28040,6 @@ msgstr ""
 msgid "Graph template"
 msgstr "Grafieksjabloon"
 
-#, python-format
-msgid "Graph template %s is missing a title"
-msgstr "Grafieksjabloon %s mist een titel"
-
 msgid "Graph time range"
 msgstr "Grafiek tijd bereik"
 
@@ -28055,6 +28054,10 @@ msgstr "Grafiek afstemmingen"
 
 msgid "Graph visibility"
 msgstr "Grafiek zichtbaarheid"
+
+#, fuzzy, python-format
+msgid "Graph with ID %s is missing a title"
+msgstr "Grafieksjabloon %s mist een titel"
 
 #, fuzzy
 msgid "Graphic card name"
@@ -53444,6 +53447,10 @@ msgid "Proxmox VE CPU Utilization"
 msgstr "CPU-gebruik"
 
 #, fuzzy
+msgid "Proxmox VE HA Manager Watcher"
+msgstr "Schrijf doorvoer"
+
+#, fuzzy
 msgid "Proxmox VE Node CPU Allocation"
 msgstr "CPU-gebruik"
 
@@ -59605,6 +59612,14 @@ msgstr "Dienststaat"
 
 msgid "Service state age"
 msgstr "Leeftijd dienststaat"
+
+#, fuzzy
+msgid "Service state for Ignored VMs"
+msgstr "Leeftijd dienststaat"
+
+#, fuzzy
+msgid "Service state for Stopped VMs"
+msgstr "Type dienststaat"
 
 msgid "Service state if no map rule matches"
 msgstr "Dienst status als er geen kaart regel overeenkomt"
@@ -92235,6 +92250,26 @@ msgid "Filter by service"
 msgstr "Filter %s selectie op dienst: "
 
 #, fuzzy
+msgid "Name is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
+"moeten met een letter beginnen."
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "Deze ID is al in gebruik. Gelieve een andere te kiezen."
+
+#, fuzzy
 msgid "Dashboard layout"
 msgstr "Dashboard-element"
 
@@ -92572,26 +92607,6 @@ msgid "Custom"
 msgstr "Klant"
 
 #, fuzzy
-msgid "Name is required."
-msgstr "is vereist"
-
-#, fuzzy
-msgid "Unique ID is required."
-msgstr "is vereist"
-
-#, fuzzy
-msgid ""
-"Unique ID must only contain lowercase letters, numbers, and underscores, and "
-"must start with a letter."
-msgstr ""
-"Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
-"moeten met een letter beginnen."
-
-#, fuzzy
-msgid "This Unique ID is already in use. Please choose another one."
-msgstr "Deze ID is al in gebruik. Gelieve een andere te kiezen."
-
-#, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Staat wanneer bestand ontbreekt"
 
@@ -92616,6 +92631,14 @@ msgstr ""
 #, fuzzy
 msgid "Dashboard scope"
 msgstr "Dashboards"
+
+#, fuzzy
+msgid "Clone & review dashboard filters"
+msgstr "Gerelateerde dashboards"
+
+#, fuzzy
+msgid "Clone & view list"
+msgstr "Map opslaan en bekijken"
 
 msgid "Only me (private)"
 msgstr ""
@@ -92778,10 +92801,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Must select an option"
-msgstr "Afgewezen verbindingen"
-
-#, fuzzy
 msgid "Metric (single)"
 msgstr "Metrisch etiket"
 
@@ -92796,6 +92815,10 @@ msgstr "Dienst Metriek"
 #, fuzzy
 msgid "Service graph"
 msgstr "Dienstgrafieken"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "Afgewezen verbindingen"
 
 #, fuzzy
 msgid "Service selection"
@@ -93347,6 +93370,24 @@ msgid ""
 "The name you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Register the Relay to authorize it for communication with your Checkmk site."
+msgstr "De status van Checkmk-sites weergeven\n"
+
+msgid ""
+"This code snippet includes a one-time token. If you plan to use it multiple "
+"times in larger environments, you can check "
+msgstr ""
+
+#, fuzzy
+msgid "this article"
+msgstr "Deze regel"
+
+#, fuzzy
+msgid " for more details."
+msgstr "Klik hier voor details."
 
 msgid "Deploy the relay to your environment"
 msgstr ""

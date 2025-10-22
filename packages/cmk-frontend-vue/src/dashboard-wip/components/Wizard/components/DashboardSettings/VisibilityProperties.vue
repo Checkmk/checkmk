@@ -6,21 +6,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown'
 import CmkHelpText from '@/components/CmkHelpText.vue'
-import CmkIndent from '@/components/CmkIndent.vue'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FieldComponent from '../TableForm/FieldComponent.vue'
 import FieldDescription from '../TableForm/FieldDescription.vue'
 import TableForm from '../TableForm/TableForm.vue'
 import TableFormRow from '../TableForm/TableFormRow.vue'
+import MonitorMenuTopicSelector from './MonitorMenuTopicSelector.vue'
 
 const { _t } = usei18n()
 
 const showInMonitorMenu = defineModel<boolean>('showInMonitorMenu', { required: true })
-const monitorMenu = defineModel<string>('monitorMenu', { default: '' })
+const monitorMenuTopic = defineModel<string>('monitorMenuTopic', { default: '' })
 const sortIndex = defineModel<number>('sortIndex', { required: true })
 </script>
 
@@ -30,21 +28,10 @@ const sortIndex = defineModel<number>('sortIndex', { required: true })
       <TableFormRow>
         <FieldDescription>{{ _t('Dashboard visibility') }}</FieldDescription>
         <FieldComponent>
-          <CmkCheckbox v-model="showInMonitorMenu" :label="_t('Show in monitor menu')" />
-          <CmkIndent v-if="showInMonitorMenu">
-            <CmkDropdown
-              :selected-option="monitorMenu"
-              :label="_t('Select option')"
-              :options="{
-                type: 'fixed',
-                suggestions: [
-                  { name: 'dashboards', title: _t('Dashboards') },
-                  { name: 'TBD', title: _t('To be defined') }
-                ]
-              }"
-              @update:selected-option="(value) => (monitorMenu = value || monitorMenu)"
-            />
-          </CmkIndent>
+          <MonitorMenuTopicSelector
+            v-model:show-in-monitor-menu="showInMonitorMenu"
+            v-model:selected-topic="monitorMenuTopic"
+          />
           <div>
             <slot name="extra-visibility-settings" />
           </div>

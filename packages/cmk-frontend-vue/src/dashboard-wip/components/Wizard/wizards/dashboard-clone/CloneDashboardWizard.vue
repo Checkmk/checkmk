@@ -78,7 +78,7 @@ const {
   dashboardIcon,
   dashboardEmblem,
   showInMonitorMenu,
-  monitorMenu,
+  monitorMenuTopic,
   sortIndex,
   validateGeneralSettings,
   buildSettings
@@ -196,7 +196,7 @@ const cancel = () => {
         </template>
         <template #content>
           <VisibilityProperties
-            v-model:monitor-menu="monitorMenu"
+            v-model:monitor-menu-topic="monitorMenuTopic"
             v-model:show-in-monitor-menu="showInMonitorMenu"
             v-model:sort-index="sortIndex"
           />

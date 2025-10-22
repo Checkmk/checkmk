@@ -29,7 +29,7 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
   const dashboardEmblem = ref<string | null>(s?.menu.icon?.emblem ?? null)
 
   const showInMonitorMenu = ref<boolean>(s ? !s.visibility.hide_in_monitor_menu : false)
-  const monitorMenu = ref<string>(s?.menu.topic ?? 'overview')
+  const monitorMenuTopic = ref<string>(s?.menu.topic ?? '')
   const sortIndex = ref<number>(99)
 
   const validateName = () => {
@@ -76,7 +76,7 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
     }
 
     const menu: DashboardGeneralSettings['menu'] = {
-      topic: showInMonitorMenu.value ? monitorMenu.value : 'other',
+      topic: monitorMenuTopic.value || 'other',
       sort_index: sortIndex.value,
       is_show_more: false,
       search_terms: []
@@ -110,7 +110,7 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
     dashboardIcon,
     dashboardEmblem,
     showInMonitorMenu,
-    monitorMenu,
+    monitorMenuTopic,
     sortIndex,
 
     // api

@@ -42,7 +42,6 @@ const borderStyle = computed(() => {
   flex-direction: column;
   border: 1px solid transparent;
   border-radius: 4px;
-  overflow: hidden;
   margin-bottom: 8px;
   padding: 10px;
 

@@ -12,6 +12,7 @@ import type {
   CreateResponsiveDashboardBody,
   DashboardConstants,
   DashboardGeneralSettings,
+  DashboardMainMenuTopic,
   DashboardMetadata,
   EditRelativeDashboardBody,
   EditResponsiveDashboardBody,
@@ -171,6 +172,15 @@ export const dashboardAPI = {
   },
   listAvailableInventory: async (): Promise<WidgetAvailableInventory> => {
     return unwrap(await client.GET('/objects/constant/widget_available_inventory/collections/all'))
+  },
+  listMainMenuTopics: async (): Promise<DashboardMainMenuTopic[]> => {
+    const response = unwrap(await client.GET('/domain-types/pagetype_topic/collections/all'))
+    return response.value.flatMap((item) => ({
+      id: item.id,
+      title: item.title,
+      sortIndex: item.extensions.sort_index,
+      isDefault: item.extensions.is_default
+    }))
   },
   computeWidgetAttributes: async (
     widgetContent: WidgetContent

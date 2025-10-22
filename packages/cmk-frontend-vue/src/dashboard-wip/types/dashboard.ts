@@ -60,3 +60,10 @@ export type CreateResponsiveDashboardBody = components['schemas']['CreateRespons
 export type CreateRelativeDashboardBody = components['schemas']['CreateDashboardV1']
 
 export type BadRequestBody = components['schemas']['Api400DefaultError']
+
+export type DashboardMainMenuTopic = {
+  id: string
+  title: string
+  sortIndex: number
+  isDefault: boolean
+}

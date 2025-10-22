@@ -165,7 +165,7 @@ const save = async () => {
           </CmkTabContent>
           <CmkTabContent id="visibility" class="db-settings-wizard__box">
             <VisibilitySettings
-              v-model:monitor-menu="generalSettings.menu.topic"
+              v-model:monitor-menu-topic="generalSettings.menu.topic"
               v-model:hide-in-monitor-menu="generalSettings.visibility.hide_in_monitor_menu"
               v-model:sort-index="generalSettings.menu.sort_index"
               v-model:hide-in-dropdowns-menu="generalSettings.visibility.hide_in_drop_down_menus"

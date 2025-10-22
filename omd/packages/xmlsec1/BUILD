@@ -12,15 +12,15 @@ make_deployable_file(
 )
 
 libs = [
-    "libxmlsec1-openssl.so.1.3.0",
-    "libxmlsec1.so.1.3.0",
+    "libxmlsec1-openssl.so.1.3.8",
+    "libxmlsec1.so.1.3.8",
 ]
 
 lib_symlinks = {
-    "libxmlsec1-openssl.so": "libxmlsec1-openssl.so.1.3.0",
-    "libxmlsec1-openssl.so.1": "libxmlsec1-openssl.so.1.3.0",
-    "libxmlsec1.so": "libxmlsec1.so.1.3.0",
-    "libxmlsec1.so.1": "libxmlsec1.so.1.3.0",
+    "libxmlsec1-openssl.so": "libxmlsec1-openssl.so.1.3.8",
+    "libxmlsec1-openssl.so.1": "libxmlsec1-openssl.so.1.3.8",
+    "libxmlsec1.so": "libxmlsec1.so.1.3.8",
+    "libxmlsec1.so.1": "libxmlsec1.so.1.3.8",
 }
 
 [pkg_mklink(
@@ -41,7 +41,7 @@ lib_symlinks = {
 make_deployable_file(
     name = "xmlsec1_deployable_lib_gnutls",
     src = "@xmlsec1//:gen_dir",
-    out = "lib/libxmlsec1-gnutls.so.1.3.0",
+    out = "lib/libxmlsec1-gnutls.so.1.3.8",
     rpath = "\\$ORIGIN/../lib",
     tags = ["manual"],
 )
@@ -49,7 +49,7 @@ make_deployable_file(
 make_deployable_file(
     name = "xmlsec1_deployable_lib_nss",
     src = "@xmlsec1//:gen_dir",
-    out = "lib/libxmlsec1-nss.so.1.3.0",
+    out = "lib/libxmlsec1-nss.so.1.3.8",
     rpath = "\\$ORIGIN/../lib",
     tags = ["manual"],
 )
@@ -57,7 +57,7 @@ make_deployable_file(
 make_deployable_file(
     name = "xmlsec1_deployable_lib_gcrypt",
     src = "@xmlsec1//:gen_dir",
-    out = "lib/libxmlsec1-gcrypt.so.1.3.0",
+    out = "lib/libxmlsec1-gcrypt.so.1.3.8",
     rpath = "\\$ORIGIN/../lib",
     tags = ["manual"],
 )
@@ -66,35 +66,35 @@ pkg_mklink(
     name = "lib_symlink_gnutls",
     link_name = "lib/libxmlsec1-gnutls.so",
     tags = ["manual"],
-    target = "lib/libxmlsec1-gnutls.so.1.3.0",
+    target = "lib/libxmlsec1-gnutls.so.1.3.8",
 )
 
 pkg_mklink(
     name = "lib_symlink_nss",
     link_name = "lib/libxmlsec1-nss.so",
     tags = ["manual"],
-    target = "lib/libxmlsec1-nss.so.1.3.0",
+    target = "lib/libxmlsec1-nss.so.1.3.8",
 )
 
 pkg_mklink(
     name = "lib_symlink_nss1",
     link_name = "lib/libxmlsec1-nss.so.1",
     tags = ["manual"],
-    target = "lib/libxmlsec1-nss.so.1.3.0",
+    target = "lib/libxmlsec1-nss.so.1.3.8",
 )
 
 pkg_mklink(
     name = "lib_symlink_gcrypt",
     link_name = "lib/libxmlsec1-gcrypt.so",
     tags = ["manual"],
-    target = "lib/libxmlsec1-gcrypt.so.1.3.0",
+    target = "lib/libxmlsec1-gcrypt.so.1.3.8",
 )
 
 pkg_mklink(
     name = "lib_symlink_gcrypt1",
     link_name = "lib/libxmlsec1-gcrypt.so.1",
     tags = ["manual"],
-    target = "lib/libxmlsec1-gcrypt.so.1.3.0",
+    target = "lib/libxmlsec1-gcrypt.so.1.3.8",
 )
 
 filter_directory(
@@ -113,10 +113,10 @@ filter_directory(
             "@cmk//distro:almalinux-8",
             "@cmk//distro:sles-15sp5",
             "@cmk//distro:sles-15sp6",
-        ): ["lib/libxmlsec1-gcrypt.so.1.3.0"],
+        ): ["lib/libxmlsec1-gcrypt.so.1.3.8"],
         "//conditions:default": [
-            "lib/libxmlsec1-gnutls.so.1.3.0",
-            "lib/libxmlsec1-nss.so.1.3.0",
+            "lib/libxmlsec1-gnutls.so.1.3.8",
+            "lib/libxmlsec1-nss.so.1.3.8",
         ],
     }),
     tags = ["manual"],

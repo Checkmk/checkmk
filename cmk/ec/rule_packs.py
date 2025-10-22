@@ -108,19 +108,23 @@ def remove_exported_rule_pack(id_: str) -> None:
 
 def _bind_to_rule_pack_proxies(
     rule_packs: Iterable[ECRulePack], mkp_rule_packs: Mapping[str, ECRulePackSpec]
-) -> None:
+) -> Iterable[ECRulePack]:
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.
     """
+    filtered_rule_packs = list[ECRulePack]()
     for rule_pack in rule_packs:
-        if isinstance(rule_pack, MkpRulePackProxy):
+        if not isinstance(rule_pack, MkpRulePackProxy):
+            filtered_rule_packs.append(rule_pack)
+        else:
             if mkp_rule_pack := mkp_rule_packs.get(rule_pack.id_):
                 rule_pack.bind_to(mkp_rule_pack)
+                filtered_rule_packs.append(rule_pack)
             else:
-                raise MkpRulePackBindingError(
-                    f"Exported rule pack with ID '{rule_pack.id_}' not found."
-                )
+                # we have deleted that file. That's ok, we can drop the proxy.
+                logging.getLogger("cmk.mkeventd").info("Dropped obsolete proxy: %s", rule_pack.id_)
+    return filtered_rule_packs
 
 
 # Used by ourselves *and* the GUI!
@@ -137,7 +141,9 @@ def _load_config(  # pylint: disable=too-many-branches
             exec(compile(file_object.read(), path, "exec"), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
     assert isinstance(global_context["mkp_rule_packs"], Mapping)
-    _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
+    global_context["rule_packs"] = _bind_to_rule_pack_proxies(
+        global_context["rule_packs"], global_context["mkp_rule_packs"]
+    )
     global_context.pop("mkp_rule_packs", None)
     global_context.pop("MkpRulePackProxy", None)
     config = cast(ConfigFromWATO, global_context)
@@ -382,10 +388,5 @@ def release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
 
 
 def uninstall_packaged_rule_packs(file_names: Iterable[Path]) -> None:
-    """
-    This function synchronizes the rule packs in rules.mk and the packaged rule packs
-    of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
-    deleted the exported rule pack and the rule pack in rules.mk are both deleted.
-    """
-    affected_ids = {fn.stem for fn in file_names}
-    save_rule_packs(rp for rp in load_rule_packs() if rp["id"] not in affected_ids)
+    # obsolete. Kept in place to keep the changes in 2.3 minimal.
+    pass

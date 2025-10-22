@@ -9,7 +9,7 @@ from typing import Literal
 
 import pytest
 
-from cmk.bakery.v2_alpha import OS, Plugin, PluginConfig, Secret, SystemBinary, SystemConfig
+from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig, Secret, SystemBinary, SystemConfig
 from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     bakery_plugin_oracle,
     GuiAdditionalOptionsConf,

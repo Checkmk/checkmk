@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.inventory_ui.v1_alpha import (
+from cmk.inventory_ui.v1_unstable import (
     BoolField,
     ChoiceField,
     Label,

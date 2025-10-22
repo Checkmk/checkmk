@@ -11,7 +11,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
-from cmk.password_store.v1_alpha import Secret
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.checkmk.special_agents.agent_bi import (
     AgentBiAutomationUserAuthentication,
     AgentBiConfig,

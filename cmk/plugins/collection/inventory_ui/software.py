@@ -7,7 +7,7 @@ import re
 import time
 from collections.abc import Iterable
 
-from cmk.inventory_ui.v1_alpha import (
+from cmk.inventory_ui.v1_unstable import (
     AgeNotation,
     Alignment,
     BackgroundColor,

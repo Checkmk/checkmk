@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.password_store.v1_alpha import Secret
+from cmk.password_store.v1_unstable import Secret
 from cmk.utils import password_store
 from cmk.utils.local_secrets import PasswordStoreSecret
 from cmk.utils.password_store import PasswordId

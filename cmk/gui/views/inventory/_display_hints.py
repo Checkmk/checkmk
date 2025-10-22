@@ -61,31 +61,31 @@ from cmk.gui.unit_formatter import (
 from cmk.gui.unit_formatter import StrictPrecision as StrictPrecisionFormatter
 from cmk.gui.utils.html import HTML
 from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath, SDValue
-from cmk.inventory_ui.v1_alpha import AgeNotation as AgeNotationFromAPI
-from cmk.inventory_ui.v1_alpha import Alignment as AlignmentFromAPI
-from cmk.inventory_ui.v1_alpha import AutoPrecision as AutoPrecisionFromAPI
-from cmk.inventory_ui.v1_alpha import BackgroundColor as BackgroundColorFromAPI
-from cmk.inventory_ui.v1_alpha import BoolField as BoolFieldFromAPI
-from cmk.inventory_ui.v1_alpha import ChoiceField as ChoiceFieldFromAPI
-from cmk.inventory_ui.v1_alpha import DecimalNotation as DecimalNotationFromAPI
-from cmk.inventory_ui.v1_alpha import (
+from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1_unstable import AutoPrecision as AutoPrecisionFromAPI
+from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
+from cmk.inventory_ui.v1_unstable import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1_unstable import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1_unstable import (
     EngineeringScientificNotation as EngineeringScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_alpha import entry_point_prefixes
-from cmk.inventory_ui.v1_alpha import IECNotation as IECNotationFromAPI
-from cmk.inventory_ui.v1_alpha import Label as LabelFromAPI
-from cmk.inventory_ui.v1_alpha import LabelColor as LabelColorFromAPI
-from cmk.inventory_ui.v1_alpha import Node as NodeFromAPI
-from cmk.inventory_ui.v1_alpha import NumberField as NumberFieldFromAPI
-from cmk.inventory_ui.v1_alpha import SINotation as SINotationFromAPI
-from cmk.inventory_ui.v1_alpha import (
+from cmk.inventory_ui.v1_unstable import entry_point_prefixes
+from cmk.inventory_ui.v1_unstable import IECNotation as IECNotationFromAPI
+from cmk.inventory_ui.v1_unstable import Label as LabelFromAPI
+from cmk.inventory_ui.v1_unstable import LabelColor as LabelColorFromAPI
+from cmk.inventory_ui.v1_unstable import Node as NodeFromAPI
+from cmk.inventory_ui.v1_unstable import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1_unstable import (
     StandardScientificNotation as StandardScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_alpha import StrictPrecision as StrictPrecisionFromAPI
-from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
-from cmk.inventory_ui.v1_alpha import TimeNotation as TimeNotationFromAPI
-from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
-from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
+from cmk.inventory_ui.v1_unstable import StrictPrecision as StrictPrecisionFromAPI
+from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
+from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
+from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
 
 from ._paint_functions import inv_paint_generic
 from .registry import (

@@ -5,7 +5,7 @@
 
 from ast import literal_eval
 
-from cmk.bakery.v2_alpha import Secret
+from cmk.bakery.v2_unstable import Secret
 
 _SECRET_VALUE = "t0ps3cr3t%$%!"
 

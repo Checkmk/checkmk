@@ -47,23 +47,23 @@ from cmk.gui.views.inventory._paint_functions import (
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath
-from cmk.inventory_ui.v1_alpha import AgeNotation as AgeNotationFromAPI
-from cmk.inventory_ui.v1_alpha import Alignment as AlignmentFromAPI
-from cmk.inventory_ui.v1_alpha import BoolField as BoolFieldFromAPI
-from cmk.inventory_ui.v1_alpha import ChoiceField as ChoiceFieldFromAPI
-from cmk.inventory_ui.v1_alpha import DecimalNotation as DecimalNotationFromAPI
-from cmk.inventory_ui.v1_alpha import IECNotation as IECNotationFromAPI
-from cmk.inventory_ui.v1_alpha import Label as LabelFromAPI
-from cmk.inventory_ui.v1_alpha import LabelColor as LabelColorFromAPI
-from cmk.inventory_ui.v1_alpha import NumberField as NumberFieldFromAPI
-from cmk.inventory_ui.v1_alpha import SINotation as SINotationFromAPI
-from cmk.inventory_ui.v1_alpha import (
+from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1_unstable import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1_unstable import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1_unstable import IECNotation as IECNotationFromAPI
+from cmk.inventory_ui.v1_unstable import Label as LabelFromAPI
+from cmk.inventory_ui.v1_unstable import LabelColor as LabelColorFromAPI
+from cmk.inventory_ui.v1_unstable import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1_unstable import (
     StandardScientificNotation as StandardScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
-from cmk.inventory_ui.v1_alpha import TimeNotation as TimeNotationFromAPI
-from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
-from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
+from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
+from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
+from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
 
 
 def test_display_hint_titles() -> None:

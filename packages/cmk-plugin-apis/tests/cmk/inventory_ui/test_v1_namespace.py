@@ -15,7 +15,7 @@
 
 import pytest
 
-from cmk.inventory_ui import v1_alpha
+from cmk.inventory_ui import v1_unstable
 
 
 @pytest.mark.parametrize(
@@ -54,6 +54,6 @@ from cmk.inventory_ui import v1_alpha
 )
 def test_v1(filename: str | None, expected_result: set[str]) -> None:
     if not filename:
-        assert set(v1_alpha.__all__) == expected_result
+        assert set(v1_unstable.__all__) == expected_result
         return
-    assert set(getattr(v1_alpha, filename).__all__) == expected_result
+    assert set(getattr(v1_unstable, filename).__all__) == expected_result

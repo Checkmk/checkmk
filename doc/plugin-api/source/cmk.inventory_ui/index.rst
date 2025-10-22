@@ -10,4 +10,4 @@ Version 1
 
 .. toctree::
 
-   v1_alpha
+   v1_unstable

@@ -12,7 +12,7 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.password_store.v1_alpha import PasswordStore, Secret
+from cmk.password_store.v1_unstable import PasswordStore, Secret
 from cmk.utils.global_ident_type import GlobalIdent
 
 PasswordLookupType = Literal["password", "store"]

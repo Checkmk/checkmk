@@ -12,7 +12,7 @@ from typing import Literal, NamedTuple, NotRequired, TypedDict
 import yaml
 from pydantic import BaseModel
 
-from cmk.bakery.v2_alpha import (
+from cmk.bakery.v2_unstable import (
     BakeryPlugin,
     FileGenerator,
     OS,

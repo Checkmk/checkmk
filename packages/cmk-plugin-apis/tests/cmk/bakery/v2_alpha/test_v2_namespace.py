@@ -13,7 +13,7 @@
 +---------------------------------------------------------+
 """
 
-from cmk.bakery import v2_alpha as v2
+from cmk.bakery import v2_unstable as v2
 
 
 def test_v1_namespace() -> None:

@@ -2,6 +2,6 @@
 cmk.bakery.v2
 =============
 
-.. automodule:: cmk.bakery.v2_alpha
+.. automodule:: cmk.bakery.v2_unstable
    :members:
    :show-inheritance:

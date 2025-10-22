@@ -1,4 +1,4 @@
-.. Check API documentation master file, created by
+.. Plugin API documentation master file, created by
    sphinx-quickstart on Mon May 11 13:59:50 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -60,15 +60,15 @@ Each plugin expects a different prefix in the variable name:
    - graphs the ``graph_`` prefix
    - nodes (inventory UI) the ``node_`` prefix
 
-Internal and "alpha" APIs
-=========================
+"Internal" and "unstable" APIs
+==============================
 
-Along with the regular versioned plugin APIs you might find "internal" and "alpha" APIs.
+Along with the regular versioned plugin APIs you might find "internal" and "unstable" APIs.
 These APIs adhere to the same architectural principles.
 **However: They do not provide a stable interface!**
 They might change without prior notice.
 
-"Alpha" APIs are still in an experimental state, but they are built with the intention of becoming the next version of a regular API in the future.
+"Unstable" APIs are still in an experimental state, but they are built with the intention of becoming the next version of a regular API in the future.
 Third party developers are encouraged to try them out and provide feedback.
 
 The "internal" APIs are used by plugins maintained by Checkmk, but they are not intended for use by third party developers.

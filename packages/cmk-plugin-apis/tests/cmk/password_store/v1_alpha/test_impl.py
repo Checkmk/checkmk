@@ -9,7 +9,7 @@ import binascii
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from cmk.password_store.v1_alpha import PasswordStore, Secret
+from cmk.password_store.v1_unstable import PasswordStore, Secret
 
 
 class TestPasswordStore:

@@ -31,7 +31,7 @@ import urllib3
 
 import cmk.special_agents.v0_unstable.misc as utils
 import cmk.utils.paths
-from cmk.password_store.v1_alpha import dereference_secret, Secret
+from cmk.password_store.v1_unstable import dereference_secret, Secret
 from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 #   .--defines-------------------------------------------------------------.

@@ -169,7 +169,7 @@ def _unix_temp_file_dir(logger: Logger) -> Path | None:
                 and stat.S_ISDIR(os.stat(path_candidate).st_mode)
                 and os.access(path_candidate, os.W_OK | os.X_OK)
             ):
-                logger.log(VERBOSE, f"assuming {path_candidate} for SQLite's temporary directory")
+                logger.info(f"assuming {path_candidate} for SQLite's temporary directory")
                 return Path(path_candidate)
         except OSError:
             pass
@@ -349,9 +349,9 @@ class SQLiteHistory(History):
                 return
             self._logger.log(VERBOSE, f"{disk_free_msg}, which is sufficient")
 
-        self._logger.log(VERBOSE, "running VACUUM")
+        self._logger.info(f"running VACUUM on {self._settings.database}")
         self.conn.execute("VACUUM;")
-        self._logger.log(VERBOSE, f"VACUUM on {self._settings.database} done")
+        self._logger.info(f"VACUUM on {self._settings.database} done")
 
     def close(self) -> None:
         """Explicitly close the connection to the sqlite database.

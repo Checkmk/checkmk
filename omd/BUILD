@@ -107,9 +107,17 @@ pkg_files(
     prefix = "share/doc/check_mk/documentation",
 )
 
+pkg_files(
+    name = "diskspace_cleanup_plugin",
+    srcs = ["//omd/packages/check_mk:diskspace"],
+    prefix = "share/diskspace",
+    renames = {"//omd/packages/check_mk:diskspace": "check_mk"},
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
+        ":diskspace_cleanup_plugin",
         ":rest_api_spec",
         ":share_doc_check-mk",
         ":share_doc_check-mk_agents",

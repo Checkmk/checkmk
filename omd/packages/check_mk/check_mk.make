@@ -152,11 +152,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) agent_plugins_py2
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/dashboard
 
-
-	# Install the diskspace cleanup plugin
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/diskspace
-	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(CHECK_MK_INSTALL_DIR)/share/diskspace/check_mk
-
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/nagios/plugins
 

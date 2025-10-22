@@ -34,6 +34,11 @@ def main() {
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def publish_images = PUBLISH_IMAGES=='true';  // FIXME should be case sensitive
+    def publish_special_images = params.PUBLISH_SPECIAL_IMAGES_WITH_CUSTOM_GIT_REF;
+    if ("${params.CUSTOM_GIT_REF}" == "") {
+        // if the build is started without a specific CUSTOM_GIT_REF (default case) publish the special images
+        publish_special_images = true;
+    }
 
     print(
         """
@@ -41,6 +46,7 @@ def main() {
         |all_distros:....................(local)  │${all_distros}│
         |distros:........................(local)  │${distros}│
         |publish_images:.................(local)  │${publish_images}│
+        |publish_special_images:.........(local)  │${publish_special_images}│
         |vers_tag:.......................(local)  │${vers_tag}│
         |safe_branch_name:...............(local)  │${safe_branch_name}│
         |branch_version:.................(local)  │${branch_version}│
@@ -167,6 +173,7 @@ def main() {
 
                 smart_stage(
                     name: "Build ${image_name}",
+                    condition: publish_special_images,
                     raiseOnError: true,
                 ) {
                     def image_base = resolve_docker_image_alias(details.image_alias_name);

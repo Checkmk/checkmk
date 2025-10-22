@@ -31,20 +31,6 @@ def _install_packaged_rule_packs(paths: Paths, file_names: Iterable[Path]) -> No
     save_rule_packs(rule_packs, pretty_print=False, path=paths.rule_pack_dir.value)
 
 
-def _uninstall_packaged_rule_packs(paths: Paths, file_names: Iterable[Path]) -> None:
-    """
-    This function synchronizes the rule packs in rules.mk and the packaged rule packs
-    of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
-    deleted the exported rule pack and the rule pack in rules.mk are both deleted.
-    """
-    affected_ids = {fn.stem for fn in file_names}
-    save_rule_packs(
-        (rp for rp in load_rule_packs(paths) if rp["id"] not in affected_ids),
-        pretty_print=False,
-        path=paths.rule_pack_dir.value,
-    )
-
-
 def _release_packaged_rule_packs(paths: Paths, file_names: Iterable[Path]) -> None:
     """
     This function synchronizes the rule packs in rules.mk and the rule packs
@@ -78,7 +64,6 @@ def mkp_callbacks(omd_root: Path) -> Mapping[PackagePart, PackageOperationCallba
     return {
         PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
             install=lambda file_names: _install_packaged_rule_packs(paths, file_names),
-            uninstall=lambda file_names: _uninstall_packaged_rule_packs(paths, file_names),
             release=lambda file_names: _release_packaged_rule_packs(paths, file_names),
         ),
     }

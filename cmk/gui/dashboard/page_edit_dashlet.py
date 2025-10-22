@@ -59,7 +59,8 @@ DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], Das
 
 
 class EditDashletPage(Page):
-    def _handle_http_request(self) -> None:
+    @override
+    def page(self, config: Config) -> PageResult:
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
 
@@ -71,10 +72,6 @@ class EditDashletPage(Page):
             self._dashboard = get_permitted_dashboards_by_owners()[self._board][UserId(self._owner)]
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
-
-    @override
-    def page(self, config: Config) -> PageResult:
-        self._handle_http_request()
 
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")

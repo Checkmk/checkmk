@@ -194,13 +194,11 @@ def _may_see_failed_notifications() -> bool:
 
 
 class ClearFailedNotificationPage(Page):
-    def _handle_http_request(self) -> None:
+    @override
+    def page(self, config: Config) -> None:
         if not _may_see_failed_notifications():
             raise MKAuthException(_("You are not allowed to view the failed notifications."))
 
-    @override
-    def page(self, config: Config) -> None:
-        self._handle_http_request()
         acktime = request.get_float_input_mandatory("acktime", time.time())
         if request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())

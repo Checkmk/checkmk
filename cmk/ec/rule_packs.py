@@ -84,19 +84,22 @@ def remove_exported_rule_pack(rule_pack: ECRulePack, path: Path) -> None:
 
 def _bind_to_rule_pack_proxies(
     rule_packs: Iterable[ECRulePack], mkp_rule_packs: Mapping[str, ECRulePackSpec]
-) -> None:
+) -> Iterable[ECRulePack]:
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.
     """
+    filtered_rule_packs = list[ECRulePack]()
     for rule_pack in rule_packs:
-        if isinstance(rule_pack, MkpRulePackProxy):
-            if mkp_rule_pack := mkp_rule_packs.get(rule_pack.id_):
-                rule_pack.bind_to(mkp_rule_pack)
-            else:
-                raise MkpRulePackBindingError(
-                    f"Exported rule pack with ID '{rule_pack.id_}' not found."
-                )
+        if not isinstance(rule_pack, MkpRulePackProxy):
+            filtered_rule_packs.append(rule_pack)
+        elif mkp_rule_pack := mkp_rule_packs.get(rule_pack.id_):
+            rule_pack.bind_to(mkp_rule_pack)
+            filtered_rule_packs.append(rule_pack)
+        else:
+            # we have deleted that file. That's ok, we can drop the proxy.
+            logging.getLogger("cmk.mkeventd").info("Dropped obsolete proxy: %s", rule_pack.id_)
+    return filtered_rule_packs
 
 
 # Used by ourselves *and* the GUI!
@@ -113,7 +116,9 @@ def _load_config(  # pylint: disable=too-many-branches
             exec(compile(file_object.read(), path, "exec"), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
     assert isinstance(global_context["mkp_rule_packs"], Mapping)
-    _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
+    global_context["rule_packs"] = _bind_to_rule_pack_proxies(
+        global_context["rule_packs"], global_context["mkp_rule_packs"]
+    )
     global_context.pop("mkp_rule_packs", None)
     global_context.pop("MkpRulePackProxy", None)
     config = cast(ConfigFromWATO, global_context)

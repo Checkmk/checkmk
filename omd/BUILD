@@ -86,10 +86,34 @@ pkg_files(
     prefix = "share/doc/check_mk/rest-api/spec",
 )
 
+pkg_files(
+    name = "share_doc_check-mk",
+    srcs = [
+        "//:AUTHORS",
+        "//:COPYING",
+    ],
+    prefix = "share/doc/check_mk",
+)
+
+pkg_files(
+    name = "share_doc_check-mk_agents",
+    srcs = ["//doc/agents:readme_files"],
+    prefix = "share/doc/check_mk/agents",
+)
+
+pkg_files(
+    name = "share_doc_check-mk_documentation",
+    srcs = ["//doc/documentation:srcs"],
+    prefix = "share/doc/check_mk/documentation",
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
         ":rest_api_spec",
+        ":share_doc_check-mk",
+        ":share_doc_check-mk_agents",
+        ":share_doc_check-mk_documentation",
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",

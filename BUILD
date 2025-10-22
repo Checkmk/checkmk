@@ -20,6 +20,8 @@ exports_files(
         ".clang-tidy",
         ".npmrc",
         ".prettierignore",
+        "AUTHORS",
+        "COPYING",
     ],
 )
 

@@ -97,12 +97,33 @@ export function useDashboardWidgets(
     }
   }
 
-  // TODO: edit method should be added
+  function updateWidget(
+    id: string,
+    content: WidgetContent,
+    generalSettings: WidgetGeneralSettings,
+    filterContext: WidgetFilterContext
+  ) {
+    const widgets = widgetsRef.value
+    if (!widgets) {
+      throw new Error('Cannot add widget: widgetsRef is undefined')
+    }
+    if (!widgets[id]) {
+      throw new Error(`Widget with ID '${id}' does not exist. This should not happen`)
+    }
+
+    widgets[id] = {
+      general_settings: generalSettings,
+      content,
+      filter_context: filterContext,
+      layout: widgets[id]!.layout
+    } as AnyWidget
+  }
 
   return {
     widgetCores,
     getWidget,
     addWidget,
+    updateWidget,
     cloneWidget,
     deleteWidget
   }

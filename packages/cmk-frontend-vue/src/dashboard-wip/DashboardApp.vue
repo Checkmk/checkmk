@@ -193,9 +193,7 @@ function executeEditWidget(
   generalSettings: WidgetGeneralSettings,
   filterContext: WidgetFilterContext
 ) {
-  // @TODO edit function
-  // #dashboardWidgets.updateWidget(widgetId, content, generalSettings, filterContext)
-  console.log('Edit widget', widgetId, content, generalSettings, filterContext)
+  dashboardWidgets.updateWidget(widgetId, content, generalSettings, filterContext)
 
   widgetToEdit.value = null
   openWizard.value = false

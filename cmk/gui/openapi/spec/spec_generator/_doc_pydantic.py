@@ -204,7 +204,7 @@ def _to_operation_dict(
     if spec_endpoint.etag in ("input", "both"):
         header_parameters.append(ETAG_IF_MATCH_HEADER)
 
-    if schema_definitions.model.has_response_schema:
+    if schema_definitions.model.has_request_schema:
         header_parameters.append(CONTENT_TYPE)
 
     try:

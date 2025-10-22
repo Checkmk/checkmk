@@ -297,9 +297,6 @@ def merge_if_sections(  # pylint: disable=too-many-branches
                 mac_list = if_mac_list[values["mac-address"]]
                 if len(mac_list) > 1:  # check if this interface is grouped
                     extra_info.setdefault(nic_name, {})
-                    extra_info[nic_name]["grouped_if"] = [
-                        x for x in mac_list if x[0] not in virtual_interfaces
-                    ]
 
                     max_speed = 0
                     min_speed = 1024**5
@@ -388,7 +385,6 @@ def check_netapp_interfaces(  # pylint: disable=too-many-branches
     )
 
     for iface in interfaces.matching_interfaces_for_item(item, nics):
-        first_member = True
         vif = extra_info.get(iface.attributes.descr)
         if vif is None:
             continue
@@ -438,32 +434,6 @@ def check_netapp_interfaces(  # pylint: disable=too-many-branches
                 ),
                 notice=f"Failover Group: [{failover_group_str}]",
             )
-
-        if "grouped_if" in vif:
-            for member_name, member_state in sorted(vif.get("grouped_if", [])):
-                if member_state is None or member_name == iface.attributes.descr:
-                    continue  # Not a real member or the grouped interface itself
-
-                if member_state == "2":
-                    mon_state = 1
-                else:
-                    mon_state = 0
-
-                if first_member:
-                    yield Result(
-                        state=State(mon_state),
-                        summary="Physical interfaces: %s(%s)"
-                        % (
-                            member_name,
-                            interfaces.get_if_state_name(member_state),
-                        ),
-                    )
-                    first_member = False
-                else:
-                    yield Result(
-                        state=State(mon_state),
-                        summary=f"{member_name}({interfaces.get_if_state_name(member_state)})",
-                    )
 
         if "speed_differs" in vif and speed_info_included:
             yield Result(

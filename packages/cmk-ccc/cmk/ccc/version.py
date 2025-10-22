@@ -90,7 +90,7 @@ def is_cma() -> bool:
 
 
 def edition_has_enforced_licensing(ed: Edition, /) -> bool:
-    return ed in (Edition.CME, Edition.CCE)
+    return ed in (Edition.CME, Edition.CCE, Edition.CEE)
 
 
 def edition_has_license_scheduler(ed: Edition, /) -> bool:

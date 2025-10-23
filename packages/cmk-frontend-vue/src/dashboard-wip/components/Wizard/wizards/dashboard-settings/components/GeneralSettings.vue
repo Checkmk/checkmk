@@ -73,6 +73,7 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
           :placeholder="_t('Enter description')"
           :aria-label="_t('Enter description')"
           type="text"
+          field-size="LARGE"
           :external-errors="nameValidationErrors"
           required
           @update:model-value="(name) => (description = name || '')"

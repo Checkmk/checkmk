@@ -46,7 +46,6 @@ import requests
 from cmk import trace
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
-from cmk.relay_protocols.relays import RelayRegistrationRequest
 from cmk.relay_protocols.tasks import TaskListResponse, TaskResponse
 from tests.testlib.version import CMKVersion
 
@@ -1726,10 +1725,9 @@ class MetricBackendAPI(BaseAPI):
 
 class AgentReceiverRelayAPI(ARBaseAPI):
     def register(self, alias: str, csr: str) -> str:
-        body = RelayRegistrationRequest(relay_name=alias, csr=csr)
         response = self.session.post(
             url=urllib.parse.urljoin(self.session.base_url, "relays/"),
-            json=body.model_dump(),
+            json={"relay_name": alias, "csr": csr},
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -1745,8 +1743,7 @@ class AgentReceiverRelayAPI(ARBaseAPI):
 
     def get_tasks(self, relay_id: str) -> list[TaskResponse]:
         response = self.session.get(
-            url=urllib.parse.urljoin(self.session.base_url, f"relays/{relay_id}/tasks"),
-            headers={"x-cmk-serial": "test"},
+            url=urllib.parse.urljoin(self.session.base_url, f"relays/{relay_id}/tasks")
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

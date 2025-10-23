@@ -62,6 +62,18 @@ def main() {
             }
         }]
     }
+
+    stages["build-relay-image"] = {
+        smart_stage(
+            name: "Trigger Relay Image Build",
+            raiseOnError: true,
+        ) {
+            smart_build(
+                job: "${branch_base_folder}/builders/build-cmk-relay-image",
+                parameters: job_parameters,
+            );
+        }
+    }
     currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
 }
 

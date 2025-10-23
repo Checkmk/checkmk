@@ -21,15 +21,15 @@ class AzureMetric:
     name: str
     interval: Intervals
     aggregation: Aggregations
-    dimension_filter: DimensionFilter | None = None
+    dimension_filters: tuple[DimensionFilter, ...] | None = None
     # The metric alias serves different purposes: allowing the creation of unique names for metrics
     # that are the same metric but have different dimension filters, providing more readable names for developers,
     # and enabling the creation of metric cache files with shorter names.
     explicit_metric_alias: str | None = None
 
     def __post_init__(self) -> None:
-        if self.dimension_filter is not None and self.explicit_metric_alias is None:
-            raise ValueError("explicit_metric_alias must be set if dimension_filter is provided")
+        if self.dimension_filters is not None and self.explicit_metric_alias is None:
+            raise ValueError("explicit_metric_alias must be set if dimension_filters is provided")
 
     @property
     def cmk_metric_alias(self) -> str:
@@ -64,9 +64,11 @@ database_accounts_metrics = [
         name="TotalRequests",
         interval="PT1M",
         aggregation="count",
-        dimension_filter=DimensionFilter(
-            name="StatusCode",
-            value="429",
+        dimension_filters=(
+            DimensionFilter(
+                name="StatusCode",
+                value="429",
+            ),
         ),
         explicit_metric_alias="count_TotalRequests429",
     ),
@@ -74,9 +76,11 @@ database_accounts_metrics = [
         name="TotalRequests",
         interval="PT1M",
         aggregation="count",
-        dimension_filter=DimensionFilter(
-            name="StatusCode",
-            value="404",
+        dimension_filters=(
+            DimensionFilter(
+                name="StatusCode",
+                value="404",
+            ),
         ),
         explicit_metric_alias="count_TotalRequests404",
     ),

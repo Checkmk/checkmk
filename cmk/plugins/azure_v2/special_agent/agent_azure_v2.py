@@ -562,7 +562,6 @@ def create_metric_dict(
     aggregation: Aggregations,
     interval_id: Intervals,
     cmk_metric_alias: str,
-    dimension_filter: DimensionFilter | None,
 ) -> Mapping[str, Any] | None:
     name = metric["name"]["value"]
     metric_dict = {
@@ -573,7 +572,6 @@ def create_metric_dict(
         "timestamp": None,
         "interval_id": interval_id,
         "interval": None,
-        "dimension_filter": dimension_filter,
         "cmk_metric_alias": cmk_metric_alias,
     }
 
@@ -1231,7 +1229,7 @@ class UsageDetailsCache(AzureAsyncCache):
 class CacheMetricsGroupDefinition:
     interval: Intervals
     aggregation: Aggregations
-    dimension_filter: DimensionFilter | None
+    dimension_filters: tuple[DimensionFilter, ...] | None
     metrics: Sequence[AzureMetric]
     resource_type: str
     region: str
@@ -1353,10 +1351,12 @@ class MetricCache(AzureAsyncCache):
             "aggregation": self.metrics_definitions.aggregation,
         }
 
-        if self.metrics_definitions.dimension_filter:
-            params["filter"] = (
-                f"{self.metrics_definitions.dimension_filter.name} eq '{self.metrics_definitions.dimension_filter.value}'"
+        if self.metrics_definitions.dimension_filters:
+            # build the filter for the azure getBatch api
+            filter = " and ".join(
+                f"{df.name} eq '{df.value}'" for df in self.metrics_definitions.dimension_filters
             )
+            params["filter"] = filter
 
         raw_metrics = []
         for chunk in _chunks(resource_ids):
@@ -1381,7 +1381,6 @@ class MetricCache(AzureAsyncCache):
                     self.metrics_definitions.aggregation,
                     self.metrics_definitions.interval,
                     cmk_metric_alias,
-                    self.metrics_definitions.dimension_filter,
                 )
                 if parsed_metric is not None:
                     metrics[resource_id].append(parsed_metric)
@@ -1390,7 +1389,7 @@ class MetricCache(AzureAsyncCache):
                     if metric_name in OPTIONAL_METRICS.get(resource_type, []):
                         continue
 
-                    msg = f"metric not found: {metric_name} ({self.metrics_definitions.aggregation}), ({self.metrics_definitions.dimension_filter})"
+                    msg = f"metric not found: {metric_name} ({self.metrics_definitions.aggregation}), ({self.metrics_definitions.dimension_filters})"
                     err.add("info", resource_id, msg)
                     LOGGER.info(msg)
 
@@ -1473,17 +1472,19 @@ async def _gather_metrics(
     for (resource_type, resource_location), resource_ids in grouped_resource_ids.items():
         metric_definitions = ALL_METRICS.get(resource_type, [])
 
-        grouped_metrics = defaultdict(list)
+        grouped_metrics: defaultdict[
+            tuple[Intervals, Aggregations, tuple[DimensionFilter, ...] | None], list[AzureMetric]
+        ] = defaultdict(list)
         for metric_definition in metric_definitions:
             grouped_metrics[
                 (
                     metric_definition.interval,
                     metric_definition.aggregation,
-                    metric_definition.dimension_filter,
+                    metric_definition.dimension_filters,
                 )
             ].append(metric_definition)
 
-        for (interval, aggregation, dimension_filter), definitions in grouped_metrics.items():
+        for (interval, aggregation, dimension_filters), definitions in grouped_metrics.items():
             # chunk of 4 because the list of metrics will be _part_ of the cache-file-name
             # we don't want something too long here
             for definitions_chunk in _chunks(definitions, 4):
@@ -1491,7 +1492,7 @@ async def _gather_metrics(
                     metrics_definition=CacheMetricsGroupDefinition(
                         interval=interval,
                         aggregation=aggregation,
-                        dimension_filter=dimension_filter,
+                        dimension_filters=dimension_filters,
                         metrics=definitions_chunk,
                         resource_type=resource_type,
                         region=resource_location,

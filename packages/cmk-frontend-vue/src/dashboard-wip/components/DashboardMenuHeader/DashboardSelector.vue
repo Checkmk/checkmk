@@ -10,6 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+import ArrowDown from '@/components/graphics/ArrowDown.vue'
 
 import type { DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
@@ -135,16 +136,21 @@ onUnmounted(() => {
     class="dashboard-dropdown"
     :class="{ 'dropdown-open': showDashboardDropdown }"
   >
-    <input
-      ref="inputRef"
-      v-model="inputValue"
-      class="dashboard-selector"
-      type="text"
-      :placeholder="props.selectedDashboard?.title || _t('Select dashboard')"
-      @focus="handleInputFocus"
-      @blur="handleInputBlur"
-    />
-
+    <div>
+      <input
+        ref="inputRef"
+        v-model="inputValue"
+        class="dashboard-selector"
+        type="text"
+        :placeholder="props.selectedDashboard?.title || _t('Select dashboard')"
+        @focus="handleInputFocus"
+        @blur="handleInputBlur"
+      />
+      <ArrowDown
+        class="db-selector--arrow"
+        :class="{ 'db-selector--rotated': showDashboardDropdown }"
+      />
+    </div>
     <div v-if="showDashboardDropdown" class="dropdown-menu">
       <CmkScrollContainer max-height="300px">
         <div v-if="isLoading" class="dropdown-loading">{{ _t('Loading Dashboards') }}...</div>
@@ -190,6 +196,18 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.db-selector--arrow {
+  width: 0.7em;
+  height: 0.7em;
+  position: absolute;
+  top: var(--dimension-5);
+  right: var(--dimension-4);
+
+  &.db-selector--rotated {
+    transform: rotate(180deg);
+  }
+}
+
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .dashboard-dropdown {
   position: relative;

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
+import { computed, useAttrs, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -53,14 +53,16 @@ const _generateUniqueId = async (base: string) => {
 }
 const _debouncedGenerateUniqueId = useDebounceFn(_generateUniqueId, 300)
 
-const _updateDashboardName = (newName?: string) => {
-  if (newName) {
-    name.value = newName
-    if (createUniqueId.value) {
-      _debouncedGenerateUniqueId(toSnakeCase(newName.trim()))
+watch(
+  [name, createUniqueId],
+  ([newName, newCreateUniqueId]) => {
+    if (!newCreateUniqueId) {
+      return
     }
-  }
-}
+    _debouncedGenerateUniqueId(toSnakeCase(newName.trim()))
+  },
+  { deep: true }
+)
 
 const attrs = useAttrs()
 const displaySuffixInput = computed(() => 'addFilterSuffix' in attrs)
@@ -78,13 +80,12 @@ const displaySuffixInput = computed(() => 'addFilterSuffix' in attrs)
         <FieldComponent>
           <div class="db-general-properties__item">
             <CmkInput
-              :model-value="name"
+              v-model:model-value="name as string"
               :placeholder="_t('Enter name')"
               :aria-label="_t('Enter name')"
               type="text"
               :external-errors="nameValidationErrors"
               required
-              @update:model-value="_updateDashboardName"
             />
           </div>
           <div v-if="displaySuffixInput" class="db-general-properties__item">

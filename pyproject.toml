@@ -1,5 +1,5 @@
 [tool.ruff]
-extend-exclude = ["agents/plugins/mk_sap_2.py", "doc/**/*.py"]
+extend-exclude = ["doc/**/*.py"]
 target-version = "py312"
 line-length = 100
 

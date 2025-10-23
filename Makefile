@@ -57,7 +57,6 @@ endif
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
 dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
-	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	git rev-parse HEAD > COMMIT ; \
 	for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
@@ -148,9 +147,7 @@ EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 HOST_PACKAGES_TARGET_PATH=packages/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
 	    --exclude=".cargo" \
-	    --exclude=$(HOST_PACKAGES_TARGET_PATH) \
-	    --exclude="agents/plugins/*_2.py" \
-	    --exclude="agents/plugins/*.py.checksum"
+	    --exclude=$(HOST_PACKAGES_TARGET_PATH)
 
 mrproper:
 	git clean -d --force -x $(EXCLUDE_PROPER)

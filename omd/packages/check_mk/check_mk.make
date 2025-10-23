@@ -32,10 +32,6 @@ ifneq ($(CI),)
 endif
 	$(MAKE) -C $(REPO_PATH) $@
 
-.PHONY: agent_plugins_py2
-agent_plugins_py2:
-	$(MAKE) -C $(REPO_PATH)/agents/plugins/
-
 ADDITIONAL_EXCLUDE=--exclude "BUILD.*" --exclude "BUILD" --exclude "OWNERS"
 
 EDITION_EXCLUDE=
@@ -64,7 +60,7 @@ ifeq ($(filter $(EDITION),saas),)
 	    --exclude "cse.py"
 endif
 
-$(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) agent_plugins_py2
+$(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 	rm $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks/__init__.py

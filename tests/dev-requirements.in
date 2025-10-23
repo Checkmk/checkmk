@@ -1,4 +1,3 @@
-3to2  # used for converting agent plugins from py3 to 2
 astroid  # used by testlib.pylint_checker_localization
 azure-mgmt-resource  # used by the release process to publish the azure image to the marketplace
 azure-mgmt-compute  # used by the release process to add a new image version

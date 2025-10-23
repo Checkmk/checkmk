@@ -11,7 +11,6 @@ PYTEST := $(UVENV) pytest $(PYTEST_ARGS)
 CYCLES := $(UVENV) py_import_cycles
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
-THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
 SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
@@ -89,7 +88,6 @@ PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-chec
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
 # agents/plugins/Makefile)
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
-AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
 .PHONY: clean help prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
@@ -110,7 +108,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-semgrep test-semgrep-docker
 
 clean:
-	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
+	$(RM) -r .mypy_cache
 
 help:
 	@echo "container-debug                     - Run container for manual test debugging"
@@ -142,28 +140,13 @@ bandit.ini:
 	  echo ) > bandit.ini
 	( echo exclude: /tests >> bandit.ini )
 
-agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
-	mkdir -p "$(dir $@)"
-	cat "$<" | gawk -v text="# Do not test generated 2.x files\n# fmt: off\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
-	$(THREE_TO_TWO) --nofix=str --nofix=next --nobackups --write "$@" >/dev/null
-
-$(foreach VERS,$(filter 2.%,$(AGENT_PLUGIN_PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
-
 $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	@if [ -z ${DOCKER_REGISTRY_NO_HTTPS} ]; then \
 	   echo "DOCKER_REGISTRY_NO_HTTPS is not set, please export this environment variable during make target call."; \
 	   echo "Hint: export DOCKER_REGISTRY_NO_HTTPS=artifacts.lan.tribe29.com:4000"; \
 	   exit 1; \
 	fi
-	: # Clean up auto-generated files, which do not have a corresponding source file anymore
-	flock ./agent-plugin-unit scripts/remove-stale-autogen-files
-	: # Recursive Makefiles suck big time...
-	flock ../agents/plugins $(MAKE) -C ../agents/plugins
 	PYTHON_VERSION="$(patsubst test-agent-plugin-unit-py%-docker,%,$@)" ; \
-	case $$PYTHON_VERSION in \
-	    2.*) SUFFIX="/py2" ;; \
-	    *) SUFFIX="" ;; \
-	esac ; \
 	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
 	IMAGE_HASH="$$(docker build --build-arg DOCKER_REGISTRY="${DOCKER_REGISTRY_NO_HTTPS}" --build-arg PYTHON_VERSION_MAJ_MIN="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
 	echo "Docker image: $$IMAGE_HASH" && \
@@ -178,7 +161,7 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 	    -v "$(realpath agent-plugin-unit)/datasets:/tests/datasets" \
 	    -v "$(realpath ../agents):/agents" \
 	    $$IMAGE_HASH \
-	    python$$PYTHON_VERSION -m pytest --ignore=tests/py2/ "/tests"
+	    python$$PYTHON_VERSION -m pytest "/tests"
 
 test-semgrep:
 	$(SEMGREP) scan \

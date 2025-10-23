@@ -560,11 +560,10 @@ def test_python_agent_plugins(package_path: str, cmk_version: str) -> None:
         )
 
     for prefix in AGENT_PLUGINS_PREFIX:
-        for suffix in (".py", "_2.py"):
-            filename = f"{prefix}{suffix}"
-            assert _file_exists_in_package(
-                package_path, cmk_version, f"share/check_mk/agents/plugins/{filename}"
-            ), f"File {filename} is missing in {package_path}"
+        filename = f"{prefix}.py"
+        assert _file_exists_in_package(
+            package_path, cmk_version, f"share/check_mk/agents/plugins/{filename}"
+        ), f"File {filename} is missing in {package_path}"
 
 
 class UnwantedDependency(NamedTuple):

@@ -36,7 +36,7 @@ _PERMISSIONS = (
         "agents/plugins/*",
         is_executable,
         ("BUILD", "README", "Makefile", "__init__.py"),
-        ("*.checksum", "*.pyc", "*_2.py"),
+        ("*.pyc",),
     ),
     ("notifications/*", is_executable, ("README", "debug"), ()),
     ("bin/*", is_executable, ("BUILD", "mkevent.cc", "mkeventd_open514.cc"), ()),

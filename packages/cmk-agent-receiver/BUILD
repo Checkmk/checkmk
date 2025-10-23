@@ -120,6 +120,7 @@ py_test(
         ":__test__",
         ":cmk-agent-receiver",
         ":testlib",
+        ":unit_testlib",
         requirement("cryptography"),
         requirement("fastapi"),
         requirement("pytest"),

@@ -28,6 +28,14 @@ def test_detect_spec_dedup(
      b) You accidently changed a detect specification where you should have changed all of them,
         or you can share a spec with another plugin. -> please turn this situation into a)!
     """
+    # Do not force common dependencies for simple specs
+    skipped_specs = {
+        # "has system description"
+        (((".1.3.6.1.2.1.1.1.0", ".*", True),),),
+        # "never"
+        (((".1.3.6.1.2.1.1.1.0", ".*", False),),),
+    }
+
     plugins_by_detect_spec: dict[Hashable, dict[int, list[str]]] = {}
     for snmp_section in agent_based_plugins.snmp_sections.values():
         plugins_by_detect_spec.setdefault(
@@ -36,9 +44,10 @@ def test_detect_spec_dedup(
 
     offenders: set[tuple[str, ...]] = {
         tuple(sorted([s for sections in values.values() for s in sections]))
-        for values in plugins_by_detect_spec.values()
-        if len(values) > 1
+        for spec, values in plugins_by_detect_spec.items()
+        if len(values) > 1 and spec not in skipped_specs
     }
+
     assert offenders == {
         ("alcatel_timetra_chassis", "alcatel_timetra_cpu"),
         ("apc_netbotz_fluid", "apc_netbotz_smoke"),

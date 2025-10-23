@@ -9,6 +9,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     Metric,
+    not_matches,
     Result,
     Service,
     SimpleSNMPSection,
@@ -16,7 +17,6 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.detection import DETECT_NEVER
 
 # snmp_scan_function
 # .1.3.6.1.2.1.1.4.0 = STRING: x.name@green-cooling.de < green-cooling match
@@ -28,6 +28,8 @@ from cmk.plugins.lib.detection import DETECT_NEVER
 # .1.3.6.1.4.1.9839.2.1.1.51.0 = INTEGER: 1   < Global
 # .1.3.6.1.4.1.9839.2.1.1.67.0 = INTEGER: 0   < Unit in Emergeny operation
 # .1.3.6.1.4.1.9839.2.1.2.6.0 = INTEGER:  246 < Humidifier: Relative Humidity
+
+DETECT_NEVER = not_matches(".1.3.6.1.2.1.1.1.0", ".*")
 
 
 def inventory_carel_uniflair_cooling(section: StringTable) -> DiscoveryResult:

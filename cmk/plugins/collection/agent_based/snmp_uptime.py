@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import SimpleSNMPSection
-from cmk.plugins.lib import detection
+from cmk.agent_based.v2 import exists, SimpleSNMPSection
 from cmk.plugins.lib.uptime import parse_snmp_uptime, UPTIME_TREE
+
+HAS_SYSDESC = exists(".1.3.6.1.2.1.1.1.0")
 
 snmp_section_snmp_uptime = SimpleSNMPSection(
     name="snmp_uptime",
     parsed_section_name="uptime",
     parse_function=parse_snmp_uptime,
     fetch=UPTIME_TREE,
-    detect=detection.HAS_SYSDESC,
+    detect=HAS_SYSDESC,
 )

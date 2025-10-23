@@ -11,6 +11,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    exists,
     InventoryPlugin,
     InventoryResult,
     Result,
@@ -20,8 +21,9 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.detection import HAS_SYSDESC
 from cmk.plugins.lib.device_types import get_device_type_label
+
+HAS_SYSDESC = exists(".1.3.6.1.2.1.1.1.0")
 
 
 class SNMPInfo(NamedTuple):

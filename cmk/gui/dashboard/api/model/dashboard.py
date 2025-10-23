@@ -353,6 +353,9 @@ class BaseDashboardResponse(_BaseDashboard):
     last_modified_at: dt.datetime = api_field(
         description="The last modification time of the dashboard."
     )
+    is_built_in: bool = api_field(
+        description="Whether the dashboard is a built-in (system) dashboard."
+    )
     filter_context: DashboardFilterContextResponse = api_field(
         description="Filter context for the dashboard."
     )
@@ -409,6 +412,7 @@ class RelativeGridDashboardResponse(BaseDashboardResponse):
         api_dashboard = cls(
             owner=dashboard["owner"],
             last_modified_at=dt.datetime.fromtimestamp(dashboard["mtime"], tz=dt.UTC),
+            is_built_in=dashboard["owner"] == UserId.builtin(),
             general_settings=DashboardGeneralSettings.from_internal(dashboard),
             filter_context=DashboardFilterContextResponse.from_internal(dashboard),
             widgets={

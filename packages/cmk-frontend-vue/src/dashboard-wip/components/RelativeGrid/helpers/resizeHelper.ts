@@ -43,6 +43,84 @@ export interface ResizeDimensions {
   height: number
 }
 
+type Edges = 'left' | 'right' | 'top' | 'bottom'
+
+function clampResizeDeltas(
+  direction: ResizeDirection,
+  dx: number,
+  dy: number,
+  initialLeft: number,
+  initialTop: number,
+  initialWidth: number,
+  initialHeight: number,
+  dashboardWidth: number,
+  dashboardHeight: number,
+  layoutMinSize: [number, number]
+): { dx: number; dy: number } {
+  const minW = layoutMinSize[0] * GRID_SIZE
+  const minH = layoutMinSize[1] * GRID_SIZE
+
+  const L = initialLeft
+  const T = initialTop
+  const W = initialWidth
+  const H = initialHeight
+  const R = L + W
+  const B = T + H
+  const DW = dashboardWidth
+  const DH = dashboardHeight
+
+  let clampedDx = dx
+  let clampedDy = dy
+
+  const has = (edge: Edges): boolean => {
+    if (direction === edge) {
+      return true
+    } else {
+      // also need to handle compound directions e.g. top-left
+      if (direction.includes('-')) {
+        const [a, b] = direction.split('-') as Edges[]
+        return a === edge || b === edge
+      } else {
+        return false
+      }
+    }
+  }
+
+  if (has('left')) {
+    const minLeft = 0
+    const maxLeft = Math.max(0, R - minW)
+    const proposedLeft = L + clampedDx
+    const newLeft = Math.min(Math.max(proposedLeft, minLeft), maxLeft)
+    clampedDx = newLeft - L
+  }
+
+  if (has('right')) {
+    const minWidth = minW
+    const maxWidth = Math.max(0, DW - L)
+    const proposedWidth = W + clampedDx
+    const newWidth = Math.min(Math.max(proposedWidth, minWidth), maxWidth)
+    clampedDx = newWidth - W
+  }
+
+  if (has('top')) {
+    const minTop = 0
+    const maxTop = Math.max(0, B - minH)
+    const proposedTop = T + clampedDy
+    const newTop = Math.min(Math.max(proposedTop, minTop), maxTop)
+    clampedDy = newTop - T
+  }
+
+  if (has('bottom')) {
+    const minHeight = minH
+    const maxHeight = Math.max(0, DH - T)
+    const proposedHeight = H + clampedDy
+    const newHeight = Math.min(Math.max(proposedHeight, minHeight), maxHeight)
+    clampedDy = newHeight - H
+  }
+
+  return { dx: clampedDx, dy: clampedDy }
+}
+
 /**
  * Creates a resize helper for handling dashlet resize functionality.
  * Uses closure to manage resize state without classes or reactive dependencies.
@@ -129,6 +207,7 @@ export function createResizeHelper(
     dimensions: ResizeDimensions,
     dashboardDimensions: AbsoluteDimensions
   ): ResizeDimensions => {
+    // should already be handled by clampResizeDeltas, but double-check here (TODO: consider removing)
     const minWidth = layoutMinSize[0] * GRID_SIZE
     const minHeight = layoutMinSize[1] * GRID_SIZE
     const dashboardWidth = dashboardDimensions.width
@@ -173,11 +252,23 @@ export function createResizeHelper(
     const alignedDeltaX = alignToGrid(deltaX)
     const alignedDeltaY = alignToGrid(deltaY)
 
-    const newDimensions = calculateNewDimensions(state, alignedDeltaX, alignedDeltaY)
+    const { dx, dy } = clampResizeDeltas(
+      state.direction,
+      alignedDeltaX,
+      alignedDeltaY,
+      state.initialLeft,
+      state.initialTop,
+      state.initialWidth,
+      state.initialHeight,
+      state.dashboardDimensions.width,
+      state.dashboardDimensions.height,
+      layoutMinSize
+    )
+
+    const potentialDimensions = calculateNewDimensions(state, dx, dy)
 
     // TODO: minimum size handling
-    const _constrainedDimensions = applyConstraints(newDimensions, state.dashboardDimensions)
-    console.debug('Constrained dimensions', _constrainedDimensions)
+    const newDimensions = applyConstraints(potentialDimensions, state.dashboardDimensions)
 
     // Convert pixel position to normalized position using anchor logic
     const normalizedPosition = convertAbsoluteToRelativePosition(

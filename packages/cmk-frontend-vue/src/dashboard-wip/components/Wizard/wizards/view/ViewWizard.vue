@@ -153,6 +153,7 @@ const wizardStages: QuickSetupStageSpec[] = [
 ]
 
 function stage1GoNext(selectedView: ViewSelection) {
+  widgetFilterManager.closeSelectionMenu() // ensure filter menu is closed
   // TODO: this and stage 1 needs to handle edit mode
   if (selectedView.type === 'link') {
     wizardStages[0]!.recapContent = h(

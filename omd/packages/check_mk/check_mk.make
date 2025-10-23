@@ -151,22 +151,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/nagios/plugins
 
-	# Install hooks
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER_PORT $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AUTOMATION_HELPER $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG_TCP $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/PIGGYBACK_HUB $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/TRACE_SEND $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/TRACE_SEND_TARGET $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/TRACE_SERVICE_NAMESPACE $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
-
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/

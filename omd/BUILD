@@ -2,7 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
@@ -114,10 +114,19 @@ pkg_files(
     renames = {"//omd/packages/check_mk:diskspace": "check_mk"},
 )
 
+pkg_files(
+    # See also `//omd/packages/omd:hooks`.
+    name = "omd_hooks",
+    srcs = ["//omd/packages/check_mk:hooks"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "lib/omd/hooks",
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
         ":diskspace_cleanup_plugin",
+        ":omd_hooks",
         ":rest_api_spec",
         ":share_doc_check-mk",
         ":share_doc_check-mk_agents",

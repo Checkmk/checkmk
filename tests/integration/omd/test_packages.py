@@ -202,5 +202,5 @@ def test_nrpe(site: Site) -> None:
     version = "3.2.1"
     process = site.run([tool := "lib/nagios/plugins/check_nrpe", "-V"], check=False)
     help_text = process.stdout if process.stdout else "<EXPECTED OUTPUT; OBSERVED NO OUTPUT>"
-    # TODO: Sync this with a global version for navicli (like we do it for python)
+    # TODO: Sync this with a global version for nrpe (like we do it for python)
     assert f"Version: {version}" in help_text, f"Expected '{tool}' to have version: {version}!"

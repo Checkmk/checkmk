@@ -49,7 +49,6 @@ RUN yum -y makecache \
     libiscsi-devel \
     libjpeg-devel \
     libmpc-devel \
-    libnsl \
     libpcap-devel \
     libstdc++-devel \
     libstdc++-static \

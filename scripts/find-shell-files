@@ -154,7 +154,6 @@ get_files_from_filesystem() {
             --exclude-dir="maintenance" \
             --exclude-dir="nagios" \
             --exclude-dir="nagvis" \
-            --exclude-dir="navicli" \
             --exclude-dir="perl-modules" \
             --exclude-dir="enterprise" \
             --exclude-dir="omd" \

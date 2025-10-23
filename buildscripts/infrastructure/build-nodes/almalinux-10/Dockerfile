@@ -50,7 +50,6 @@ RUN yum -y makecache \
     libgsf-devel \
     libjpeg-devel \
     libmpc-devel \
-    libnsl \
     libpcap-devel \
     libstdc++-devel \
     libstdc++-static \

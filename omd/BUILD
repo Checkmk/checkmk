@@ -119,7 +119,6 @@ pkg_files(
                "//omd/packages/monitoring-plugins",
                "//omd/packages/msitools",
                "//omd/packages/nagios",
-               "//omd/packages/navicli",
                "//omd/packages/net-snmp:net-snmp_tar",
                "//omd/packages/nrpe",
                "//omd/packages/omd",

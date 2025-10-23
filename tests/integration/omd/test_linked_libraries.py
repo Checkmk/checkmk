@@ -169,16 +169,6 @@ def test_linked_libraries(site: Site) -> None:
                 assert lib.name not in forbidden, f"{file} links to forbidden libraries"
 
             if lib.path is None:
-                # seccli brings it's own libs next to the binary
-                if str(file.parent).endswith("lib/seccli"):
-                    if lib.name in list(p.name for p in file.parent.iterdir()):
-                        # libs found in the seccli directory
-                        continue
-                    if lib.name == "libnsl.so.1":
-                        # This link is also broken. To be investigated.
-                        continue
-                    assert False, f"seccli file {file} linked to a non-existing library"
-
                 # guess we don't care about treasures
                 if str(file).endswith(
                     "share/doc/check_mk/treasures/modbus/agents/special/agent_modbus"

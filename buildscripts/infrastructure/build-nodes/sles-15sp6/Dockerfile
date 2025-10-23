@@ -50,7 +50,6 @@ RUN zypper ref -s \
     libjpeg62-devel \
     libltdl7 \
     libmariadb-devel \
-    libnsl1 \
     libopenssl-devel \
     libpcap-devel \
     libpng16-devel \

@@ -24,6 +24,7 @@ interface Props {
   selectedDashboard: SelectedDashboard | null
   linkUserGuide: string
   linkNavigationEmbeddingPage: string
+  isEditMode: boolean
 }
 
 const { _t } = usei18n()
@@ -42,7 +43,6 @@ const emit = defineEmits<{
 }>()
 
 const showDashboardDropdown = ref(false)
-const isEditMode = ref(false)
 
 const handleDashboardChange = (dashboard: DashboardMetadata) => {
   emit('set-dashboard', dashboard)
@@ -50,18 +50,15 @@ const handleDashboardChange = (dashboard: DashboardMetadata) => {
 }
 
 const enterEditMode = () => {
-  isEditMode.value = true
   emit('enter-edit')
 }
 
 const handleSave = () => {
   emit('save')
-  isEditMode.value = false
 }
 
 const handleCancel = () => {
   emit('cancel-edit')
-  isEditMode.value = false
 }
 
 const handleAddWidget = () => {

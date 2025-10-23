@@ -121,10 +121,6 @@ const handleAddWidget = (widgetIdent: string) => {
   openAddWidgetDialog.value = false
   selectedWizard.value = widgetIdent
   openWizard.value = true
-
-  // TODO: should be enabled for handling
-  // Logic to add the new widget to the dashboard goes here
-  // The structure and composables already exist for this in useWidgets
   // TODO: better handling for cancelling
 }
 
@@ -175,6 +171,7 @@ function addWidget(
   }
   dashboardWidgets.addWidget(widgetId, content, generalSettings, filterContext, layout)
   openWizard.value = false
+  isDashboardEditingMode.value = true
 }
 
 function editWidget(widgetId: string) {
@@ -330,6 +327,7 @@ function deepClone<T>(obj: T): T {
   <CmkErrorBoundary>
     <div>
       <DashboardMenuHeader
+        v-model:is-edit-mode="isDashboardEditingMode"
         :selected-dashboard="selectedDashboard"
         :link-user-guide="props.links.user_guide"
         :link-navigation-embedding-page="props.links.navigation_embedding_page"

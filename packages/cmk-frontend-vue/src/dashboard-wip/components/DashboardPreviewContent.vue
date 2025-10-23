@@ -25,5 +25,6 @@ defineProps<ContentProps>()
   margin: 0;
   padding: var(--dimension-3);
   box-sizing: border-box;
+  pointer-events: none;
 }
 </style>

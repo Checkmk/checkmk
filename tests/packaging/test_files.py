@@ -530,7 +530,40 @@ def test_python_agent_plugins(package_path: str, cmk_version: str) -> None:
             ), f"File {filename} is missing in {package_path}"
 
 
-def _verify_signature(file_path: Path) -> None | str:
+# files that are not signed (and where it's OK, because we don't build them ourselves)
+FILES_UNSIGNED = [
+    # -- treasures --
+    # ...is explicitly not maintained (provided as-is)
+    re.compile(r".*/share/doc/check_mk/treasures/.*\.(exe|dll)$"),
+    # -- exe files --
+    # python files not built by us
+    re.compile(r".*/lib/python3\.\d+/site-packages/.*\.exe$"),
+    # todo: add code signing and verification for robotmk, then remove from this list CMK-26814
+    re.compile(r".*/share/check_mk/agents/windows/plugins/robotmk_agent_plugin.exe$"),
+    re.compile(r".*/share/check_mk/agents/windows/robotmk_ext.exe$"),
+    re.compile(r".*/share/check_mk/agents/robotmk/windows/rcc.exe$"),
+    re.compile(r".*/share/check_mk/agents/robotmk/windows/robotmk_scheduler.exe$"),
+    # -- dll files --
+]
+FILE_PATTERNS_SIGNABLE = [
+    re.compile(r".*\.exe$"),
+    re.compile(r".*\.dll$"),
+    re.compile(r".*\.msi$"),
+]
+
+
+def _should_be_signed(path: str) -> bool:
+    if not any(pattern.match(path) for pattern in FILE_PATTERNS_SIGNABLE):
+        return False
+    if any(pattern.match(path) for pattern in FILES_UNSIGNED):
+        return False
+    return True
+
+
+def _verify_signature(file_path: Path, file_name: str) -> None | str:
+    # requires to build osslsigncode via bazel (or install locally) beforehand:
+    #   export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path)
+    # (see tests/Makefile -> tests-packaging)
     result = subprocess.run(
         [
             "osslsigncode",
@@ -541,36 +574,81 @@ def _verify_signature(file_path: Path) -> None | str:
         capture_output=True,
         text=True,
     )
+    LOGGER.info(
+        "Signature verification of '%s': %s - %s",
+        file_name,
+        "PASS" if result.returncode == 0 else "FAIL",
+        result.stderr.strip(),
+    )
     if result.returncode != 0:
-        return f"{file_path.name}: " + result.stderr
+        return f"{file_name}: " + result.stderr
     return None
 
 
-def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> None:
+@pytest.mark.parametrize(
+    "is_no_tar,path_prefix_agents,non_msi_files",
+    [
+        (
+            True,
+            "share/check_mk/agents/windows",
+            [
+                "share/check_mk/agents/windows/mk-sql.exe",
+            ],
+        ),
+        (
+            False,
+            "agents/windows",
+            [
+                "agents/windows/mk-sql.exe",
+                # todo: check why mk-oracle.exe is missing in source tar.gz CMK-26785
+            ],
+        ),
+    ],
+    ids=["deb_rpm_cma", "tar_gz_source"],
+)
+def test_windows_artifacts_are_signed(
+    package_path: str,
+    cmk_version: str,
+    is_no_tar: bool,
+    path_prefix_agents: str,
+    non_msi_files: list[str],
+) -> None:
+    # Skip mismatched package types
+    actual_is_no_tar = not package_path.endswith(".tar.gz")
+    if actual_is_no_tar != is_no_tar:
+        expected_ext = ".deb/.rpm/.cma" if is_no_tar else ".tar.gz"
+        actual_ext = os.path.splitext(package_path)[1]
+        pytest.skip(f"Package type mismatch: expected '{expected_ext}' but got '{actual_ext}'")
+
+    if package_path.endswith(".tar.gz") and "-docker-" in package_path:
+        # todo: implement test for docker images, e.g. in tests/docker/test_docker.py - CMK-26808
+        pytest.skip("Can't verify signatures in docker OCI images")
+
     signing_failures = []
+    paths_checked = []
 
-    mk_sql = "mk-sql.exe"
-    path_prefix = (
-        "agents/windows" if package_path.endswith(".tar.gz") else "share/check_mk/agents/windows"
-    )
+    # Check non-msi files first (exe, dll)
+    for non_msi_file in non_msi_files:
+        with NamedTemporaryFile() as non_msi_file_temp:
+            non_msi_file_temp.flush()
+            non_msi_file_temp.write(_get_file_from_package(package_path, cmk_version, non_msi_file))
+            signing_failures.append(_verify_signature(Path(non_msi_file_temp.name), non_msi_file))
+            paths_checked.append(non_msi_file)
 
-    with NamedTemporaryFile() as mk_sql_temp:
-        mk_sql_temp.write(
-            _get_file_from_package(package_path, cmk_version, f"{path_prefix}/{mk_sql}")
-        )
-        mk_sql_temp.flush()
-        signing_failures.append(_verify_signature(Path(mk_sql_temp.name)))
-
+    # check msi and files inside msi
     # TODO: Clarify why the msi is missing in the source.tar.gz CMK-26785
-    if not package_path.endswith(".tar.gz"):
+    if is_no_tar:
         with NamedTemporaryFile() as msi_file:
             msi_file.write(
                 _get_file_from_package(
-                    package_path, cmk_version, f"{path_prefix}/check_mk_agent.msi"
+                    package_path, cmk_version, f"{path_prefix_agents}/check_mk_agent.msi"
                 )
             )
             msi_file.flush()
-            signing_failures.append(_verify_signature(Path(msi_file.name)))
+            signing_failures.append(
+                _verify_signature(Path(msi_file.name), f"{path_prefix_agents}/check_mk_agent.msi")
+            )
+            paths_checked.append(f"{path_prefix_agents}/check_mk_agent.msi")
             with TemporaryDirectory() as msi_content:
                 subprocess.run(
                     ["msiextract", "-C", msi_content, msi_file.name],
@@ -580,8 +658,33 @@ def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> No
                 for file in ("check_mk_agent.exe", "cmk-agent-ctl.exe"):
                     signing_failures.append(
                         _verify_signature(
-                            Path(msi_content + "/Program Files/checkmk/service/" + file)
+                            Path(msi_content + "/Program Files/checkmk/service/" + file),
+                            f"check_mk_agent.msi/Program Files/checkmk/service/{file}",
                         )
                     )
+
+    # check for additional files in the package
+    # (so we don't forget to add them to the signing process)
+    if is_no_tar:
+        paths = _get_paths_from_package(package_path)
+        omd_version = _get_omd_version(cmk_version, package_path)
+        paths_signable = [
+            path.removeprefix(f"/opt/omd/versions/{omd_version}/")
+            for path in paths
+            if _should_be_signed(path)
+        ]
+        LOGGER.debug("Found %d signable files: %s", len(paths_signable), paths_signable)
+        LOGGER.debug("Checked %d files: %s", len(paths_checked), paths_checked)
+
+        paths_unchecked = sorted(set(paths_signable) - set(paths_checked))
+        if paths_unchecked:
+            LOGGER.warning("Found %d unchecked files:", len(paths_unchecked))
+            for p in paths_unchecked:
+                LOGGER.warning("  - %s", p)
+            # note: we're not checking whether those files are actually signed or not,
+            #       just whether we forgot to include them in this test
+            raise AssertionError(f"Found {len(paths_unchecked)} unchecked files: {paths_unchecked}")
+        else:
+            LOGGER.info("PASS: No further signable files* found (excluding ignored).")
 
     assert not any(signing_failures)

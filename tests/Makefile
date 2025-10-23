@@ -384,7 +384,7 @@ test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 test-packaging:
-	$(PYTEST) packaging
+	$(PYTEST) --log-cli-level=INFO packaging
 
 test-pylint: prepare-protobuf-files
 	cd ..; $(UVENV) pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))

@@ -61,14 +61,30 @@ extract_version() {
         # RPM: check-mk-enterprise-2.4.0p13-1.el8.x86_64.rpm -> get part before -1.el8
         # Match: edition-version-release, capture version only
         if [[ "$basename" =~ check-mk-(raw|enterprise|managed|cloud|saas|free)-([0-9][^-]*)-[0-9]+\. ]]; then
-            echo "${BASH_REMATCH[2]}"
+            local version="${BASH_REMATCH[2]}"
+            # Remove edition suffix (cre, cee, cce, cme, cse, cfe) if present
+            version="${version%.cre}"
+            version="${version%.cee}"
+            version="${version%.cce}"
+            version="${version%.cme}"
+            version="${version%.cse}"
+            version="${version%.cfe}"
+            echo "$version"
             return 0
         fi
     else
         # DEB/CMA/TGZ: version can contain dashes, stops at underscore or end of string
         if [[ "$basename" =~ check-mk-(raw|enterprise|managed|cloud|saas|free)-([^_]+)$ ]] ||
             [[ "$basename" =~ check-mk-(raw|enterprise|managed|cloud|saas|free)-([^_]+)_ ]]; then
-            echo "${BASH_REMATCH[2]}"
+            local version="${BASH_REMATCH[2]}"
+            # Remove edition suffix (cre, cee, cce, cme, cse, cfe) if present
+            version="${version%.cre}"
+            version="${version%.cee}"
+            version="${version%.cce}"
+            version="${version%.cme}"
+            version="${version%.cse}"
+            version="${version%.cfe}"
+            echo "$version"
             return 0
         fi
     fi

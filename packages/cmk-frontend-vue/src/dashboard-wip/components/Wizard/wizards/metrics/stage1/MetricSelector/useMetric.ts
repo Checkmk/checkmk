@@ -25,14 +25,30 @@ export const useMetric = (
   const metric = ref<string | null>(selectedMetric || null)
   const metricValidationError = ref<boolean>(false)
 
-  watch([host.value], () => {
-    service.value = null
-    metric.value = null
-  })
+  watch(
+    [host],
+    () => {
+      service.value = null
+      metric.value = null
+    },
+    { deep: true }
+  )
 
-  watch([service.value], () => {
-    metric.value = null
-  })
+  watch(
+    [service],
+    () => {
+      metric.value = null
+    },
+    { deep: true }
+  )
+
+  watch(
+    [metric],
+    (newMetric) => {
+      metricValidationError.value = !newMetric
+    },
+    { deep: true }
+  )
 
   const validate = (): boolean => {
     metricValidationError.value = !metric.value

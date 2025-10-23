@@ -1,0 +1,21 @@
+title: NTI Enviromux 16D: All External Sensor Temperature
+agents: snmp
+catalog: hw/environment/nti
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the temperature of all external sensors attached to
+ NTI Enviromux 16D devices.
+ It uses the allExternalSensorTable from the NTI Enviromux MIB (.1.3.6.1.4.1.3699.1.1.11.1.21.1).
+ This service turns CRIT when a sensor temperature exceeds the device provided critical thresholds (from the allExternalSensorTable).
+ If threshold levels are defined via the corresponding rule, the state is determined by those user settings instead -
+ WARN at/above the warn level, CRIT at/above the crit level. If no rule thresholds are set, only the device thresholds apply.
+
+item:
+ The item is composed from the description and the sensor index.
+
+perfdata:
+ One graph for the Temperature.
+
+discovery:
+ One service is created for each available external temperature sensor.

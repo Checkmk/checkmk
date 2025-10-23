@@ -6,33 +6,35 @@
 from pathlib import Path
 from uuid import UUID
 
-from omdlib.instance_id import get_instance_id_file_path, save_instance_id
+from omdlib.instance_id import create_instance_id
 
-from cmk.utils.licensing.helper import load_instance_id
+from cmk.utils.licensing.helper import get_instance_id_file_path, load_instance_id
 
 
-def test_save_instance_id(tmp_path: Path) -> None:
+def test_create_instance_id(tmp_path: Path) -> None:
     instance_id = UUID("bb28ec27-4f77-409f-982e-92df861b25be")
 
     instance_id_file_path = get_instance_id_file_path(tmp_path)
+    instance_id_file_path.parent.mkdir(parents=True, exist_ok=True)
     assert not instance_id_file_path.exists()
 
-    save_instance_id(file_path=instance_id_file_path, instance_id=instance_id)
+    create_instance_id(site_home=tmp_path, instance_id=instance_id)
     assert instance_id_file_path.exists()
     assert load_instance_id(instance_id_file_path) == instance_id
 
 
-def test_save_instance_id_twice(tmp_path: Path) -> None:
+def test_create_instance_id_twice(tmp_path: Path) -> None:
     instance_id_1 = UUID("bb28ec27-4f77-409f-982e-92df861b25be")
     instance_id_2 = UUID("e65f2f7b-abcb-400c-9859-b5571b3d2679")
 
     instance_id_file_path = get_instance_id_file_path(tmp_path)
+    instance_id_file_path.parent.mkdir(parents=True, exist_ok=True)
     assert not instance_id_file_path.exists()
 
-    save_instance_id(file_path=instance_id_file_path, instance_id=instance_id_1)
+    create_instance_id(site_home=tmp_path, instance_id=instance_id_1)
     assert instance_id_file_path.exists()
     assert load_instance_id(instance_id_file_path) == instance_id_1
 
-    save_instance_id(file_path=instance_id_file_path, instance_id=instance_id_2)
+    create_instance_id(site_home=tmp_path, instance_id=instance_id_2)
     assert instance_id_file_path.exists()
     assert load_instance_id(instance_id_file_path) == instance_id_2

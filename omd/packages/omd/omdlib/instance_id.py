@@ -7,11 +7,6 @@ from pathlib import Path
 from uuid import UUID
 
 
-def get_instance_id_file_path(omd_root: Path) -> Path:
-    return omd_root / "etc/omd/instance_id"
-
-
-def save_instance_id(*, file_path: Path, instance_id: UUID) -> None:
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    with file_path.open("w", encoding="utf-8") as fp:
-        fp.write(str(instance_id))
+def create_instance_id(*, site_home: Path, instance_id: UUID) -> None:
+    instance_id_file_path = site_home / "etc/omd/instance_id"
+    instance_id_file_path.write_text(str(instance_id))

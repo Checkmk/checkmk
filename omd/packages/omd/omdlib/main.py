@@ -69,7 +69,7 @@ from omdlib.dialog import (
 )
 from omdlib.global_options import GlobalOptions
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.instance_id import get_instance_id_file_path, save_instance_id
+from omdlib.instance_id import create_instance_id
 from omdlib.options import (
     Arguments,
     Command,
@@ -2298,7 +2298,7 @@ def finalize_site_as_user(
     _update_cmk_core_config(config)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
-        save_instance_id(file_path=get_instance_id_file_path(Path(site_home)), instance_id=uuid4())
+        create_instance_id(site_home=Path(site_home), instance_id=uuid4())
 
     call_scripts(site, "post-" + command_type.short, open_pty=sys.stdout.isatty())
     if not _crontab_access():

@@ -165,6 +165,7 @@ watch(
           "
           :filter-definitions="filterDefinitions"
           :allow-remove="!mandatoryFilters.has(filterId)"
+          :show-required-label="mandatoryFilters.has(filterId)"
           @update-filter-values="handleUpdateFilterValues"
           @remove-filter="handleRemoveFilter"
         />

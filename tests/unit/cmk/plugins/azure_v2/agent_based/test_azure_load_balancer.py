@@ -264,19 +264,19 @@ SECTION_NO_METRICS = LoadBalancer(
                 ],
                 ["metrics following", "5"],
                 [
-                    '{"name": "ByteCount", "aggregation": "total", "value": 15000.0, "unit": "bytes", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter": null}'
+                    '{"name": "ByteCount", "aggregation": "total", "value": 15000.0, "unit": "bytes", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter": null, "cmk_metric_alias": "total_ByteCount"}'
                 ],
                 [
-                    '{"name": "AllocatedSnatPorts", "aggregation": "average", "value": 15.5, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null}'
+                    '{"name": "AllocatedSnatPorts", "aggregation": "average", "value": 15.5, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null, "cmk_metric_alias": "average_AllocatedSnatPorts"}'
                 ],
                 [
-                    '{"name": "UsedSnatPorts", "aggregation": "average", "value": 2.8, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null}'
+                    '{"name": "UsedSnatPorts", "aggregation": "average", "value": 2.8, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null, "cmk_metric_alias": "average_UsedSnatPorts"}'
                 ],
                 [
-                    '{"name": "VipAvailability", "aggregation": "average", "value": 100.0, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null}'
+                    '{"name": "VipAvailability", "aggregation": "average", "value": 100.0, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null, "cmk_metric_alias": "average_VipAvailability"}'
                 ],
                 [
-                    '{"name": "DipAvailability", "aggregation": "average", "value": 50.0, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null}'
+                    '{"name": "DipAvailability", "aggregation": "average", "value": 50.0, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null, "cmk_metric_alias": "average_DipAvailability"}'
                 ],
             ],
             SECTION,

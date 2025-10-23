@@ -28,76 +28,76 @@ STRING_TABLE_1 = [
     ],
     ["metrics following", "24"],
     [
-        '{"name": "TotalAppDomainsUnloaded", "timestamp": "1536073080", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "TotalAppDomainsUnloaded", "timestamp": "1536073080", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "average_TotalAppDomainsUnloaded"}'
     ],
     [
-        '{"name": "Gen0Collections", "timestamp": "1536073080", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Gen0Collections", "timestamp": "1536073080", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "average_Gen0Collections"}'
     ],
     [
-        '{"name": "Gen1Collections", "timestamp": "1536073080", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Gen1Collections", "timestamp": "1536073080", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "average_Gen1Collections"}'
     ],
     [
-        '{"name": "Gen2Collections", "timestamp": "1536073080", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Gen2Collections", "timestamp": "1536073080", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "average_Gen2Collections"}'
     ],
     [
-        '{"name": "BytesReceived", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "BytesReceived", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_BytesReceived"}'
     ],
     [
-        '{"name": "BytesSent", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "BytesSent", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_BytesSent"}'
     ],
     [
-        '{"name": "Http5xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http5xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http5xx"}'
     ],
     [
-        '{"name": "MemoryWorkingSet", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "MemoryWorkingSet", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_MemoryWorkingSet"}'
     ],
     [
-        '{"name": "AverageMemoryWorkingSet", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "AverageMemoryWorkingSet", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_AverageMemoryWorkingSet"}'
     ],
     [
-        '{"name": "FunctionExecutionUnits", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "FunctionExecutionUnits", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_FunctionExecutionUnits"}'
     ],
     [
-        '{"name": "FunctionExecutionCount", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "FunctionExecutionCount", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_FunctionExecutionCount"}'
     ],
     [
-        '{"name": "AppConnections", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "AppConnections", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_AppConnections"}'
     ],
     [
-        '{"name": "Handles", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Handles", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Handles"}'
     ],
     [
-        '{"name": "Threads", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Threads", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Threads"}'
     ],
     [
-        '{"name": "PrivateBytes", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "PrivateBytes", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_PrivateBytes"}'
     ],
     [
-        '{"name": "IoReadBytesPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second"}'
+        '{"name": "IoReadBytesPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second", "cmk_metric_alias": "total_IoReadBytesPerSecond"}'
     ],
     [
-        '{"name": "IoWriteBytesPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second"}'
+        '{"name": "IoWriteBytesPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second", "cmk_metric_alias": "total_IoWriteBytesPerSecond"}'
     ],
     [
-        '{"name": "IoOtherBytesPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second"}'
+        '{"name": "IoOtherBytesPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second", "cmk_metric_alias": "total_IoOtherBytesPerSecond"}'
     ],
     [
-        '{"name": "IoReadOperationsPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second"}'
+        '{"name": "IoReadOperationsPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second", "cmk_metric_alias": "total_IoReadOperationsPerSecond"}'
     ],
     [
-        '{"name": "IoWriteOperationsPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second"}'
+        '{"name": "IoWriteOperationsPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second", "cmk_metric_alias": "total_IoWriteOperationsPerSecond"}'
     ],
     [
-        '{"name": "IoOtherOperationsPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second"}'
+        '{"name": "IoOtherOperationsPerSecond", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes_per_second", "cmk_metric_alias": "total_IoOtherOperationsPerSecond"}'
     ],
     [
-        '{"name": "RequestsInApplicationQueue", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "RequestsInApplicationQueue", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_RequestsInApplicationQueue"}'
     ],
     [
-        '{"name": "CurrentAssemblies", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "CurrentAssemblies", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_CurrentAssemblies"}'
     ],
     [
-        '{"name": "TotalAppDomains", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "TotalAppDomains", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_TotalAppDomains"}'
     ],
 ]
 STRING_TABLE_2 = [
@@ -107,64 +107,64 @@ STRING_TABLE_2 = [
     ],
     ["metrics following", "17"],
     [
-        '{"name": "CpuTime", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "seconds"}'
+        '{"name": "CpuTime", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "seconds", "cmk_metric_alias": "total_CpuTime"}'
     ],
     [
-        '{"name": "Requests", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Requests", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Requests"}'
     ],
     [
-        '{"name": "BytesReceived", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "BytesReceived", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_BytesReceived"}'
     ],
     [
-        '{"name": "BytesSent", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "BytesSent", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_BytesSent"}'
     ],
     [
-        '{"name": "Http101", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http101", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http101"}'
     ],
     [
-        '{"name": "Http2xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http2xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http2xx"}'
     ],
     [
-        '{"name": "Http3xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http3xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http3xx"}'
     ],
     [
-        '{"name": "Http401", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http401", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http401"}'
     ],
     [
-        '{"name": "Http403", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http403", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http403"}'
     ],
     [
-        '{"name": "Http404", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http404", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http404"}'
     ],
     [
-        '{"name": "Http406", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http406", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http406"}'
     ],
     [
-        '{"name": "Http4xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http4xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http4xx"}'
     ],
     [
-        '{"name": "Http5xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Http5xx", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Http5xx"}'
     ],
     [
-        '{"name": "MemoryWorkingSet", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "MemoryWorkingSet", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_MemoryWorkingSet"}'
     ],
     [
-        '{"name": "AverageMemoryWorkingSet", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "AverageMemoryWorkingSet", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_AverageMemoryWorkingSet"}'
     ],
     [
-        '{"name": "AverageResponseTime", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "seconds"}'
+        '{"name": "AverageResponseTime", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "seconds", "cmk_metric_alias": "total_AverageResponseTime"}'
     ],
     [
-        '{"name": "AppConnections", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "AppConnections", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_AppConnections"}'
     ],
     [
-        '{"name": "Handles", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Handles", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Handles"}'
     ],
     [
-        '{"name": "Threads", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count"}'
+        '{"name": "Threads", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count", "cmk_metric_alias": "total_Threads"}'
     ],
     [
-        '{"name": "PrivateBytes", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'
+        '{"name": "PrivateBytes", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes", "cmk_metric_alias": "total_PrivateBytes"}'
     ],
 ]
 

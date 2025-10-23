@@ -561,6 +561,7 @@ def create_metric_dict(
     metric: Mapping[str, Any],
     aggregation: Aggregations,
     interval_id: Intervals,
+    cmk_metric_alias: str,
     dimension_filter: DimensionFilter | None,
 ) -> Mapping[str, Any] | None:
     name = metric["name"]["value"]
@@ -573,6 +574,7 @@ def create_metric_dict(
         "interval_id": interval_id,
         "interval": None,
         "dimension_filter": dimension_filter,
+        "cmk_metric_alias": cmk_metric_alias,
     }
 
     timeseries = metric.get("timeseries")
@@ -1246,7 +1248,9 @@ class MetricCache(AzureAsyncCache):
         debug: bool = False,
     ) -> None:
         self.metrics_definitions = metrics_definition
-        self.metric_names = ",".join([metric.name for metric in metrics_definition.metrics])
+        self.metric_aliases = {  # metric_name: metric_alias
+            metric.name: metric.cmk_metric_alias for metric in metrics_definition.metrics
+        }
 
         self._cache_path = self.get_cache_path(
             cache_id,
@@ -1255,10 +1259,10 @@ class MetricCache(AzureAsyncCache):
             subscription,
         )
 
-        cache_file_name = self.metric_names.replace("/", "_")  # do not create random directories
-        if metrics_definition.dimension_filter:
-            cache_file_name += f"_{metrics_definition.dimension_filter.name}{metrics_definition.dimension_filter.value}"
-
+        # 'replace' to not create random directories
+        cache_file_name = ",".join(
+            [alias.replace("/", "_") for alias in self.metric_aliases.values()]
+        )
         super().__init__(
             self._cache_path,
             cache_file_name,
@@ -1344,7 +1348,7 @@ class MetricCache(AzureAsyncCache):
             "endtime": self.end_time,
             "interval": self.metrics_definitions.interval,
             # NB: Azure API won't have requests with more than 20 metric names at once
-            "metricnames": self.metric_names,
+            "metricnames": ",".join(self.metric_aliases),
             "metricnamespace": resource_type,
             "aggregation": self.metrics_definitions.aggregation,
         }
@@ -1364,10 +1368,19 @@ class MetricCache(AzureAsyncCache):
             resource_id = resource_metrics["resourceid"]
 
             for raw_metric in resource_metrics["value"]:
+                if not (cmk_metric_alias := self.metric_aliases.get(raw_metric["name"]["value"])):
+                    LOGGER.error(
+                        "Skipping unexpected metric %s for resource %s",
+                        raw_metric["name"]["value"],
+                        resource_id,
+                    )
+                    continue
+
                 parsed_metric = create_metric_dict(
                     raw_metric,
                     self.metrics_definitions.aggregation,
                     self.metrics_definitions.interval,
+                    cmk_metric_alias,
                     self.metrics_definitions.dimension_filter,
                 )
                 if parsed_metric is not None:

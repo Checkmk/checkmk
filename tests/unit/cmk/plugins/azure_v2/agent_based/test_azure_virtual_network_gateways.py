@@ -432,25 +432,25 @@ SECTION_WITHOUT_PEER_ADDRESSES = VNetGateway(
                 ],
                 ["metrics following", "7"],
                 [
-                    '{"filter": null, "unit": "bytes_per_second", "name": "AverageBandwidth", "interval_id": "PT1M", "timestamp": "1545049860", "interval": "0:01:00", "aggregation": "average", "value": 13729.0}'
+                    '{"filter": null, "unit": "bytes_per_second", "name": "AverageBandwidth", "interval_id": "PT1M", "timestamp": "1545049860", "interval": "0:01:00", "aggregation": "average", "value": 13729.0, "cmk_metric_alias": "average_AverageBandwidth"}'
                 ],
                 [
-                    '{"name": "P2SBandwidth", "aggregation": "average", "value": 0.0, "unit": "bytes_per_second", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter": null}'
+                    '{"name": "P2SBandwidth", "aggregation": "average", "value": 0.0, "unit": "bytes_per_second", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter": null, "cmk_metric_alias": "average_P2SBandwidth"}'
                 ],
                 [
-                    '{"name": "P2SConnectionCount", "aggregation": "maximum", "value": 1.0, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null}'
+                    '{"name": "P2SConnectionCount", "aggregation": "maximum", "value": 1.0, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null, "cmk_metric_alias": "maximum_P2SConnectionCount"}'
                 ],
                 [
-                    '{"name": "TunnelIngressBytes", "aggregation": "count", "value": 4.0, "unit": "bytes", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
+                    '{"name": "TunnelIngressBytes", "aggregation": "count", "value": 4.0, "unit": "bytes", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00", "cmk_metric_alias": "count_TunnelIngressBytes"}'
                 ],
                 [
-                    '{"name": "TunnelEgressBytes", "aggregation": "count", "value": 4.0, "unit": "bytes", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
+                    '{"name": "TunnelEgressBytes", "aggregation": "count", "value": 4.0, "unit": "bytes", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00", "cmk_metric_alias": "count_TunnelEgressBytes"}'
                 ],
                 [
-                    '{"name": "TunnelIngressPacketDropCount", "aggregation": "count", "value": 4.0, "unit": "count", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
+                    '{"name": "TunnelIngressPacketDropCount", "aggregation": "count", "value": 4.0, "unit": "count", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00", "cmk_metric_alias": "count_TunnelIngressPacketDropCount"}'
                 ],
                 [
-                    '{"name": "TunnelEgressPacketDropCount", "aggregation": "count", "value": 4.0, "unit": "count", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00"}'
+                    '{"name": "TunnelEgressPacketDropCount", "aggregation": "count", "value": 4.0, "unit": "count", "timestamp": "2022-06-30T12:05:00Z", "filter": null, "interval_id": "PT5M", "interval": "0:05:00", "cmk_metric_alias": "count_TunnelEgressPacketDropCount"}'
                 ],
             ],
             SECTION,

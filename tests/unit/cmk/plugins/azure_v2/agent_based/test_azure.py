@@ -63,31 +63,31 @@ RESOURCES = [
     ],
     ["metrics following", "9"],
     [
-        '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "average_cpu_percent"}'
     ],
     [
-        '{"name": "memory_percent", "aggregation": "average", "value": 24.36, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "memory_percent", "aggregation": "average", "value": 24.36, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "average_memory_percent"}'
     ],
     [
-        '{"name": "serverlog_storage_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "serverlog_storage_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "average_serverlog_storage_percent"}'
     ],
     [
-        '{"name": "storage_percent", "aggregation": "average", "value": 2.95, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "storage_percent", "aggregation": "average", "value": 2.95, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "average_storage_percent"}'
     ],
     [
-        '{"name": "io_consumption_percent", "aggregation": "average", "value": 88.5, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "io_consumption_percent", "aggregation": "average", "value": 88.5, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "average_io_consumption_percent"}'
     ],
     [
-        '{"name": "active_connections", "aggregation": "average", "value": 6.0, "unit": "count", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "active_connections", "aggregation": "average", "value": 6.0, "unit": "count", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "average_active_connections"}'
     ],
     [
-        '{"name": "connections_failed", "aggregation": "total", "value": 2.0, "unit": "count", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "connections_failed", "aggregation": "total", "value": 2.0, "unit": "count", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "total_connections_failed"}'
     ],
     [
-        '{"name": "network_bytes_ingress", "aggregation": "total", "value": 1000.0, "unit": "bytes", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "network_bytes_ingress", "aggregation": "total", "value": 1000.0, "unit": "bytes", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "total_network_bytes_ingress"}'
     ],
     [
-        '{"name": "network_bytes_egress", "aggregation": "total", "value": 1500.0, "unit": "bytes", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "network_bytes_egress", "aggregation": "total", "value": 1500.0, "unit": "bytes", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00", "cmk_metric_alias": "total_network_bytes_egress"}'
     ],
 ]
 
@@ -149,7 +149,9 @@ def test__get_metrics_number(row: Sequence[str], expected_result: int) -> None:
 
 def test__get_metrics() -> None:
     metrics_data = [
-        ['{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent"}']
+        [
+            '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "cmk_metric_alias": "average_cpu_percent"}'
+        ]
     ]
     assert list(_get_metrics(metrics_data)) == [
         (
@@ -169,7 +171,7 @@ def test__get_metrics() -> None:
                 ],
                 ["metrics following", "5"],
                 [
-                    '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent"}'
+                    '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "cmk_metric_alias": "average_cpu_percent" }'
                 ],
             ],
             Resource(
@@ -207,7 +209,7 @@ def test__get_metrics() -> None:
                 ],
                 ["metrics following", "0"],
                 [
-                    '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent"}'
+                    '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "cmk_metric_alias": "average_cpu_percent"}'
                 ],
             ],
             Resource(
@@ -225,7 +227,7 @@ def test__get_metrics() -> None:
                 ],
                 ["metrics following", "0"],
                 [
-                    '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent"}'
+                    '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "cmk_metric_alias": "average_cpupercent"}'
                 ],
             ],
             None,

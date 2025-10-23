@@ -22,6 +22,21 @@ class AzureMetric:
     interval: Intervals
     aggregation: Aggregations
     dimension_filter: DimensionFilter | None = None
+    # The metric alias serves different purposes: allowing the creation of unique names for metrics
+    # that are the same metric but have different dimension filters, providing more readable names for developers,
+    # and enabling the creation of metric cache files with shorter names.
+    explicit_metric_alias: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.dimension_filter is not None and self.explicit_metric_alias is None:
+            raise ValueError("explicit_metric_alias must be set if dimension_filter is provided")
+
+    @property
+    def cmk_metric_alias(self) -> str:
+        if self.explicit_metric_alias is not None:
+            return self.explicit_metric_alias
+
+        return f"{self.aggregation}_{self.name.replace(' ', '_')}"
 
 
 storage_percent = AzureMetric(name="storage_percent", interval="PT1M", aggregation="average")
@@ -53,6 +68,7 @@ database_accounts_metrics = [
             name="StatusCode",
             value="429",
         ),
+        explicit_metric_alias="count_TotalRequests429",
     ),
     AzureMetric(
         name="TotalRequests",
@@ -62,6 +78,7 @@ database_accounts_metrics = [
             name="StatusCode",
             value="404",
         ),
+        explicit_metric_alias="count_TotalRequests404",
     ),
     AzureMetric(name="TotalRequestUnitsPreview", interval="PT1M", aggregation="total"),
     AzureMetric(name="NormalizedRUConsumption", interval="PT1M", aggregation="maximum"),

@@ -44,6 +44,8 @@ class AzureMetric(NamedTuple):
     aggregation: str
     value: float
     unit: str
+    # here we don't care about dimension filters because
+    # this is intended to be used for parsing from the agent
 
 
 class Resource(NamedTuple):
@@ -161,12 +163,8 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
     for metric_line in metrics_data:
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
-        key = f"{metric_dict['aggregation']}_{metric_dict['name'].replace(' ', '_')}"
-        if (dimension_filter := metric_dict.get("dimension_filter")) is not None:
-            key = f"{key}_{''.join(dimension_filter)}"
-
         yield (
-            key,
+            metric_dict["cmk_metric_alias"],
             AzureMetric(
                 metric_dict["name"],
                 metric_dict["aggregation"],

@@ -102,7 +102,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs,
 )
 from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements
-from omdlib.update import ManageUpdate
+from omdlib.update import get_conflict_mode_update, ManageUpdate
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
 from omdlib.users_and_groups import (
@@ -2495,8 +2495,8 @@ def _is_apache_enabled(config: Config) -> bool:
 def _get_conflict_mode(options: CommandOptions) -> str:
     conflict_mode = cast(str, options.get("conflict", "ask"))
 
-    if conflict_mode not in ["ask", "install", "keepold", "abort", "ignore"]:
-        sys.exit("Argument to --conflict must be one of ask, install, keepold, ignore and abort.")
+    if conflict_mode not in ["ask", "install", "keepold", "abort"]:
+        sys.exit("Argument to --conflict must be one of ask, install, keepold and abort.")
 
     return conflict_mode
 
@@ -2794,7 +2794,7 @@ def main_update(
     options: CommandOptions,
     versions_path: Path = Path("/omd/versions/"),
 ) -> None:
-    conflict_mode = _get_conflict_mode(options)
+    conflict_mode = get_conflict_mode_update(options)
 
     if not site.is_stopped(global_opts.verbose):
         sys.exit("Please completely stop '%s' before updating it." % site.name)

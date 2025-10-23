@@ -325,7 +325,7 @@ CHECK_MK_AGENTS: Final = {
 
 
 def _is_valid_basename(name: str) -> bool:
-    return not name.startswith(".") and not name.endswith("~")
+    return not name.startswith(".") and not name.endswith("~") and not name == "OWNERS"
 
 
 def make_man_page_path_map(

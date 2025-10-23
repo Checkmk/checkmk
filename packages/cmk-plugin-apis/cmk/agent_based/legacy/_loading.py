@@ -28,7 +28,9 @@ def _plugin_pathnames_in_directory(path: Path) -> Iterable[str]:
             [
                 f"{path}/{f}"
                 for f in os.listdir(path)
-                if not f.startswith(".") and not f.endswith(".include") and not f == "__pycache__"
+                if not f.startswith(".")
+                and not f.endswith(".include")
+                and f not in {"__pycache__", "OWNERS"}
             ]
         )
     except FileNotFoundError:

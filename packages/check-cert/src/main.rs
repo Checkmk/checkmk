@@ -8,7 +8,8 @@ use check_cert::checker::certificate::{self, Config as CertChecks};
 use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
 use check_cert::checker::info::{self, Config as InfoConfig};
 use check_cert::checker::verification::{self, Config as VerifChecks};
-use check_cert::fetcher::{self, Config as FetcherConfig};
+use check_cert::fetcher::{self, Config as FetcherConfig, ProxyAuth, ProxyConfig};
+use check_cert::pwstore::password_from_store;
 use check_cert::truststore;
 use clap::{Parser, ValueEnum};
 use std::mem;
@@ -73,6 +74,17 @@ where
 }
 
 #[derive(Parser, Debug)]
+pub struct ProxyPassword {
+    /// Plain password for proxy server Basic Auth
+    #[arg(long, requires = "proxy_user")]
+    pub proxy_pw_plain: Option<String>,
+
+    /// Password for proxy server Basic Auth, provided as ID for password store lookup
+    #[arg(long, requires = "proxy_user", value_parser=password_from_store)]
+    pub proxy_pw_pwstore: Option<String>,
+}
+
+#[derive(Parser, Debug)]
 #[command(about = "check_cert", version = version::VERSION)]
 struct Args {
     /// DNS resolvable hostname or IP address to be checked
@@ -83,7 +95,7 @@ struct Args {
     #[arg(short, long, default_value_t = 443)]
     port: u16,
 
-    /// Connection type: tls, smtp_starttls, postgres_starttls
+    /// Connection type: tls, proxy_tls, smtp_starttls, postgres_starttls
     #[arg(long, default_value = "tls")]
     connection_type: fetcher::ConnectionType,
 
@@ -166,6 +178,21 @@ struct Args {
     /// Allow self-signed certificates
     #[arg(long, default_value_t = false, action = clap::ArgAction::SetTrue)]
     allow_self_signed: bool,
+
+    /// Proxy server URL.
+    #[arg(long, requires_if("proxy_tls", "connection_type"))]
+    pub proxy_url: Option<String>,
+
+    /// Proxy server port.
+    #[arg(long, requires_if("proxy_tls", "connection_type"))]
+    pub proxy_port: Option<u16>,
+
+    /// Username for proxy server basic auth.
+    #[arg(long, requires = "ProxyPassword")]
+    pub proxy_user: Option<String>,
+
+    #[command(flatten)]
+    pub proxy_pw: ProxyPassword,
 }
 
 fn verbose(verbosity: u8, level: u8, header: &str, text: &str) {
@@ -220,6 +247,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         FetcherConfig::builder()
             .timeout((args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)))
             .connection_type(connection_type)
+            .proxy(match (args.proxy_url, args.proxy_port) {
+                (Some(proxy_url), Some(proxy_port)) => Some(
+                    ProxyConfig::builder()
+                        .url(proxy_url)
+                        .port(proxy_port)
+                        .auth(
+                            match (
+                                args.proxy_user,
+                                args.proxy_pw.proxy_pw_plain,
+                                args.proxy_pw.proxy_pw_pwstore,
+                            ) {
+                                (Some(proxy_user), Some(proxy_pw_plain), None) => Some(
+                                    ProxyAuth::builder()
+                                        .username(proxy_user)
+                                        .password(proxy_pw_plain)
+                                        .build(),
+                                ),
+                                (Some(proxy_user), None, Some(proxy_pw_pwstore)) => Some(
+                                    ProxyAuth::builder()
+                                        .username(proxy_user)
+                                        .password(proxy_pw_pwstore)
+                                        .build(),
+                                ),
+                                (_, _, _) => None,
+                            },
+                        )
+                        .build(),
+                ),
+                (_, _) => None,
+            })
             .build(),
     ) {
         Ok(chain) => chain,

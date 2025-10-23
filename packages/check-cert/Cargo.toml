@@ -17,6 +17,8 @@ openssl-probe.workspace = true
 time.workspace = true
 typed-builder.workspace = true
 x509-parser.workspace = true
+aes-gcm = { workspace = true, features = ["aes", "std"] }
+scrypt = { workspace = true, features = ["std"] }
 
 [dev-dependencies]
 assertor.workspace = true

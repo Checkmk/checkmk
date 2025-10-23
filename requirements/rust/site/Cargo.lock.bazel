@@ -1,5 +1,5 @@
 {
-  "checksum": "88ed6c02ebb4d2f9dfdaef6b9cc72c253cb84fcf40a8f81c2105b174c94c9056",
+  "checksum": "fd757cc3284509a49df8aa2799de1dc5dfef3662a935fbba801ff0258b86fd1b",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1601,6 +1601,10 @@
         "deps": {
           "common": [
             {
+              "id": "aes-gcm 0.10.3",
+              "target": "aes_gcm"
+            },
+            {
               "id": "anyhow 1.0.95",
               "target": "anyhow"
             },
@@ -1615,6 +1619,10 @@
             {
               "id": "openssl-probe 0.1.6",
               "target": "openssl_probe"
+            },
+            {
+              "id": "scrypt 0.11.0",
+              "target": "scrypt"
             },
             {
               "id": "time 0.3.37",

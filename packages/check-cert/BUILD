@@ -20,6 +20,7 @@ rust_library(
         "src/checker/verification.rs",
         "src/fetcher.rs",
         "src/lib.rs",
+        "src/pwstore.rs",
         "src/starttls/postgres.rs",
         "src/starttls/smtp.rs",
         "src/starttls/stream_io.rs",

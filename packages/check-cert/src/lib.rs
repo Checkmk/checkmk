@@ -16,3 +16,5 @@ pub mod starttls {
     pub mod stream_io;
 }
 pub mod truststore;
+
+pub mod pwstore;

@@ -6,7 +6,9 @@
 from pathlib import Path
 from uuid import UUID
 
-from cmk.utils.licensing.helper import get_instance_id_file_path, load_instance_id, save_instance_id
+from omdlib.instance_id import get_instance_id_file_path, save_instance_id
+
+from cmk.utils.licensing.helper import load_instance_id
 
 
 def test_save_instance_id(tmp_path: Path) -> None:

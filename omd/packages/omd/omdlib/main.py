@@ -69,6 +69,7 @@ from omdlib.dialog import (
 )
 from omdlib.global_options import GlobalOptions
 from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.instance_id import get_instance_id_file_path, save_instance_id
 from omdlib.options import (
     Arguments,
     Command,
@@ -148,7 +149,6 @@ from cmk.ccc.version import (
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import hash_password
 from cmk.utils.certs import agent_root_ca_path, cert_dir, RootCA, SiteCA
-from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 
 ConfigChangeCommands = list[tuple[str, str]]
 

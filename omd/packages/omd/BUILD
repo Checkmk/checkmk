@@ -167,6 +167,7 @@ pkg_files(
         ":omdlib/dialog.py",
         ":omdlib/global_options.py",
         ":omdlib/init_scripts.py",
+        ":omdlib/instance_id.py",
         ":omdlib/main.py",
         ":omdlib/options.py",
         ":omdlib/package_manager.py",

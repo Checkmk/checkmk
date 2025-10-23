@@ -37,12 +37,6 @@ def get_instance_id_file_path(omd_root: Path) -> Path:
     return omd_root / "etc/omd/instance_id"
 
 
-def save_instance_id(*, file_path: Path, instance_id: UUID) -> None:
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    with file_path.open("w", encoding="utf-8") as fp:
-        fp.write(str(instance_id))
-
-
 def load_instance_id(file_path: Path) -> UUID | None:
     try:
         with file_path.open("r", encoding="utf-8") as fp:

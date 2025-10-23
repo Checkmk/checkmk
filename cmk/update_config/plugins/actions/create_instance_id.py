@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
+from cmk.utils.licensing.helper import get_instance_id_file_path
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import omd_root
 
@@ -25,7 +25,8 @@ class UpdateInstanceID(UpdateAction):
     def __call__(self, logger: Logger, omd_root: Path = Path(omd_root)) -> None:
         if not (instance_id_file_path := get_instance_id_file_path(omd_root)).exists():
             logger.log(VERBOSE, "Creating instance ID.")
-            save_instance_id(file_path=instance_id_file_path, instance_id=uuid4())
+            instance_id_file_path.parent.mkdir(parents=True, exist_ok=True)
+            instance_id_file_path.write_text(str(uuid4()))
 
 
 UPDATE_INSTANCE_ID = UpdateInstanceID(

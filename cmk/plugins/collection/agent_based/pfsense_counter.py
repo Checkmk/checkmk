@@ -83,7 +83,7 @@ def check_pfsense_counter(params: Mapping[str, Any], section: Section) -> CheckR
             rate,
             metric_name=f"fw{'_avg' if backlog_minutes else ''}_packets_{what}",
             levels_upper=levels,
-            render_func=lambda x: "%.2f pkts",
+            render_func=lambda x: "%.2f pkts" % x,
             label=namestoinfo[what],
         )
 

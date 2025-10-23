@@ -32,7 +32,7 @@ ConfigVariableSiteTraceSend = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainOMD,
     ident="site_trace_send",
-    valuespec=lambda: CascadingDropdown(
+    valuespec=lambda context: CascadingDropdown(
         title=_("Send traces from Checkmk"),
         help=_(
             "Select where to send OpenTelemetry traces of Checkmk services to. "
@@ -72,7 +72,7 @@ ConfigVariableSiteTraceReceive = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainOMD,
     ident="site_trace_receive",
-    valuespec=lambda: Optional(
+    valuespec=lambda context: Optional(
         title=_("Receive traces"),
         valuespec=Dictionary(
             elements=[

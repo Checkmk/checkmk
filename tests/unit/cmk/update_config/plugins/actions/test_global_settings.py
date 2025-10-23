@@ -32,7 +32,9 @@ def test_update_global_config_transform_values(
         group=ConfigVariableGroupUserInterface,
         primary_domain=ConfigDomainGUI,
         ident="key",
-        valuespec=lambda: Transform(TextInput(), forth=lambda x: "new" if x == "old" else x),
+        valuespec=lambda context: Transform(
+            TextInput(), forth=lambda x: "new" if x == "old" else x
+        ),
     )
 
     registry = ConfigVariableRegistry()

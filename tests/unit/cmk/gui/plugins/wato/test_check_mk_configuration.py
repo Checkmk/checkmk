@@ -8,7 +8,7 @@ from unittest.mock import patch
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.watolib.config_domain_name import config_variable_registry
+from cmk.gui.watolib.config_domain_name import config_variable_registry, GlobalSettingsContext
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 
@@ -17,7 +17,7 @@ def test_ui_theme_registration() -> None:
     assert isinstance(var.primary_domain(), ConfigDomainGUI)
     assert var.group() == ConfigVariableGroupUserInterface
 
-    valuespec = var.valuespec()
+    valuespec = var.valuespec(GlobalSettingsContext())
     assert isinstance(valuespec, DropdownChoice)
     assert valuespec.choices() == theme_choices()
 
@@ -32,4 +32,4 @@ def test_ui_theme_default_value() -> None:
         "cmk.gui.wato._check_mk_configuration.theme_choices",
         return_value=[("modern-dark", "Dark")],
     ):
-        assert var.valuespec().value_to_html(default_setting) == "Dark"
+        assert var.valuespec(GlobalSettingsContext()).value_to_html(default_setting) == "Dark"

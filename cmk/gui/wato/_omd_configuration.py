@@ -93,7 +93,7 @@ ConfigVariableSiteAutostart = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_autostart",
-    valuespec=lambda: Checkbox(
+    valuespec=lambda context: Checkbox(
         title=_("Start during system boot"),
         help=_("Whether or not this site should be started during startup of the Checkmk server."),
     ),
@@ -103,7 +103,7 @@ ConfigVariableSiteCore = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_core",
-    valuespec=lambda: DropdownChoice(
+    valuespec=lambda context: DropdownChoice(
         title=_("Monitoring core"),
         help=_(
             "Choose the monitoring core to run for monitoring. You can also "
@@ -188,7 +188,7 @@ ConfigVariableSiteLivestatusTCP = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_livestatus_tcp",
-    valuespec=lambda: Optional(
+    valuespec=lambda context: Optional(
         valuespec=Migrate(
             _livestatus_via_tcp(),
             migrate=_migrate_tcp_only_from,
@@ -243,7 +243,7 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainDiskspace,
     ident="diskspace_cleanup",
-    valuespec=lambda: Dictionary(
+    valuespec=lambda context: Dictionary(
         title=_("Automatic disk space cleanup"),
         help=_(
             "You can configure your monitoring site to free disk space based on the ages "
@@ -427,7 +427,7 @@ ConfigVariableSiteApacheProcessTuning = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainApache,
     ident="apache_process_tuning",
-    valuespec=lambda: Dictionary(
+    valuespec=lambda context: Dictionary(
         title=_("Apache process tuning"),
         elements=[
             (
@@ -546,7 +546,7 @@ ConfigVariableSiteRRDCachedTuning = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainRRDCached,
     ident="rrdcached_tuning",
-    valuespec=lambda: Dictionary(
+    valuespec=lambda context: Dictionary(
         title=_("RRDCached tuning"),
         elements=[
             (

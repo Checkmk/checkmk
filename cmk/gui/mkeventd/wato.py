@@ -146,6 +146,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
+    GlobalSettingsContext,
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
@@ -3204,7 +3205,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         except KeyError:
             raise MKUserError("_varname", _("The requested global setting does not exist."))
 
-        def_value = config_variable.valuespec().default_value()
+        def_value = config_variable.valuespec(GlobalSettingsContext()).default_value()
 
         if not transactions.check_transaction():
             return None
@@ -3871,7 +3872,7 @@ ConfigVariableEventConsole = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_mkeventd",
-    valuespec=lambda: Optional(
+    valuespec=lambda context: Optional(
         valuespec=ListChoice(
             choices=[
                 ("SNMPTRAP", _("Receive SNMP traps (UDP/162)")),
@@ -3899,7 +3900,7 @@ ConfigVariableEventConsoleRemoteStatus = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="remote_status",
-    valuespec=lambda: Optional(
+    valuespec=lambda context: Optional(
         valuespec=Tuple(
             elements=[
                 Integer(
@@ -3956,7 +3957,7 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="replication",
-    valuespec=lambda: Optional(
+    valuespec=lambda context: Optional(
         valuespec=Dictionary(
             optional_keys=["takeover", "fallback", "disabled", "logging"],
             elements=[
@@ -4072,7 +4073,7 @@ ConfigVariableEventConsoleRetentionInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="retention_interval",
-    valuespec=lambda: Age(
+    valuespec=lambda context: Age(
         title=_("State retention interval"),
         help=_(
             "In this interval the event daemon will save its state "
@@ -4086,7 +4087,7 @@ ConfigVariableEventConsoleHousekeepingInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="housekeeping_interval",
-    valuespec=lambda: Age(
+    valuespec=lambda context: Age(
         title=_("Housekeeping interval"),
         help=_(
             "From time to time the eventd checks for messages that are expected to "
@@ -4101,7 +4102,7 @@ ConfigVariableEventConsoleSqliteHousekeepingInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="sqlite_housekeeping_interval",
-    valuespec=lambda: Age(
+    valuespec=lambda context: Age(
         title=_("Event Console housekeeping interval"),
         help=_(
             "From time to time the Event Console history requires maintenance. "
@@ -4116,7 +4117,7 @@ ConfigVariableEventConsoleSqliteFreelistSize = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="sqlite_freelist_size",
-    valuespec=lambda: Filesize(
+    valuespec=lambda context: Filesize(
         title=_("Event Console history fragmentation limit size"),
         help=_(
             "Event Console History can become fragmented over time. So if the total "
@@ -4131,7 +4132,7 @@ ConfigVariableEventConsoleStatisticsInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="statistics_interval",
-    valuespec=lambda: Age(
+    valuespec=lambda context: Age(
         title=_("Statistics interval"),
         help=_(
             "The event daemon keeps statistics about the rate of messages, events "
@@ -4146,7 +4147,7 @@ ConfigVariableEventConsoleLogMessages = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="log_messages",
-    valuespec=lambda: Checkbox(
+    valuespec=lambda context: Checkbox(
         title=_("Syslog-like message logging"),
         label=_("Log all messages into syslog-like logfiles"),
         help=_(
@@ -4163,7 +4164,7 @@ ConfigVariableEventConsoleRuleOptimizer = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="rule_optimizer",
-    valuespec=lambda: Checkbox(
+    valuespec=lambda context: Checkbox(
         title=_("Optimize rule execution"),
         label=_("enable optimized rule execution"),
         help=_("This option turns on a faster algorithm for matching events to rules. "),
@@ -4174,7 +4175,7 @@ ConfigVariableEventConsoleActions = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="actions",
-    valuespec=lambda: ActionList(
+    valuespec=lambda context: ActionList(
         Foldable(
             valuespec=Dictionary(
                 title=_("Action"),
@@ -4303,7 +4304,7 @@ ConfigVariableEventConsoleArchiveOrphans = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="archive_orphans",
-    valuespec=lambda: Checkbox(
+    valuespec=lambda context: Checkbox(
         title=_("Force message archiving"),
         label=_("Archive messages that do not match any rule"),
         help=_(
@@ -4319,7 +4320,7 @@ ConfigVariableHostnameTranslation = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="hostname_translation",
-    valuespec=lambda: HostnameTranslation(
+    valuespec=lambda context: HostnameTranslation(
         title=_("Host name translation for incoming messages"),
         help_txt=_(
             "When the Event Console receives a message than the host name "
@@ -4413,7 +4414,7 @@ ConfigVariableEventConsoleEventLimit = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="event_limit",
-    valuespec=lambda: Dictionary(
+    valuespec=lambda context: Dictionary(
         title=_("Limit amount of current events"),
         help=_(
             "This option helps you to protect the Event Console from resource "
@@ -4460,7 +4461,7 @@ ConfigVariableEventConsoleHistoryRotation = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="history_rotation",
-    valuespec=lambda: DropdownChoice(
+    valuespec=lambda context: DropdownChoice(
         title=_("Event history logfile rotation"),
         help=_("Specify at which time period a new file for the event history will be created."),
         choices=[("daily", _("daily")), ("weekly", _("weekly"))],
@@ -4471,7 +4472,7 @@ ConfigVariableEventConsoleHistoryLifetime = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="history_lifetime",
-    valuespec=lambda: Integer(
+    valuespec=lambda context: Integer(
         title=_("Event history lifetime"),
         help=_("After this number of days old logfile of event history will be deleted."),
         unit=_("days"),
@@ -4483,7 +4484,7 @@ ConfigVariableEventConsoleSocketQueueLength = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="socket_queue_len",
-    valuespec=lambda: Integer(
+    valuespec=lambda context: Integer(
         title=_("Max. number of pending connections to the status socket"),
         help=_(
             "When the Multisite GUI or the active check check_mkevents connects "
@@ -4502,7 +4503,7 @@ ConfigVariableEventConsoleEventSocketQueueLength = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="eventsocket_queue_len",
-    valuespec=lambda: Integer(
+    valuespec=lambda context: Integer(
         title=_("Max. number of pending connections to the event socket"),
         help=_(
             "The event socket is an alternative way for sending events "
@@ -4521,7 +4522,7 @@ ConfigVariableEventConsoleTranslateSNMPTraps = ConfigVariable(
     group=ConfigVariableGroupEventConsoleSNMP,
     primary_domain=ConfigDomainEventConsole,
     ident="translate_snmptraps",
-    valuespec=lambda: CascadingDropdown(
+    valuespec=lambda context: CascadingDropdown(
         title=_("Translate SNMP traps"),
         help=_(
             "When this option is enabled all available SNMP MIB files will be used "
@@ -4555,7 +4556,7 @@ ConfigVariableEventConsoleSNMPCredentials = ConfigVariable(
     group=ConfigVariableGroupEventConsoleSNMP,
     primary_domain=ConfigDomainEventConsole,
     ident="snmp_credentials",
-    valuespec=lambda: ListOf(
+    valuespec=lambda context: ListOf(
         valuespec=Dictionary(
             elements=[
                 (
@@ -4608,7 +4609,7 @@ ConfigVariableEventConsoleDebugRules = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="debug_rules",
-    valuespec=lambda: Checkbox(
+    valuespec=lambda context: Checkbox(
         title=_("Debug rule execution"),
         label=_("enable extensive rule logging"),
         help=_(
@@ -4624,7 +4625,7 @@ ConfigVariableEventConsoleLogLevel = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="log_level",
-    valuespec=lambda: Dictionary(
+    valuespec=lambda context: Dictionary(
         title=_("Log level"),
         help=_(
             "You can configure the Event Console to log more details about it's actions. "
@@ -4694,7 +4695,7 @@ ConfigVariableEventLogRuleHits = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="log_rulehits",
-    valuespec=lambda: Checkbox(
+    valuespec=lambda context: Checkbox(
         title=_("Log rule hits"),
         label=_("Log hits for rules in log of Event Console"),
         help=_(
@@ -4711,7 +4712,7 @@ ConfigVariableEventConsoleConnectTimeout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_connect_timeout",
-    valuespec=lambda: Integer(
+    valuespec=lambda context: Integer(
         title=_("Connect timeout to status socket of Event Console"),
         help=_(
             "When the Multisite GUI connects the socket of the event daemon "
@@ -4728,7 +4729,7 @@ ConfigVariableEventConsolePrettyPrintRules = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_pprint_rules",
-    valuespec=lambda: Checkbox(
+    valuespec=lambda context: Checkbox(
         title=_("Pretty-Print rules in config file of Event Console"),
         label=_("enable pretty-printing of rules"),
         help=_(
@@ -4746,7 +4747,7 @@ ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_contactgroup",
-    valuespec=lambda: ContactGroupSelection(
+    valuespec=lambda context: ContactGroupSelection(
         title=_("Send notifications to Event Console"),
         no_selection=_("(don't send notifications to Event Console)"),
         label=_("send notifications of contactgroup:"),
@@ -4766,7 +4767,7 @@ ConfigVariableEventConsoleNotifyRemoteHost = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_remotehost",
-    valuespec=lambda: Optional(
+    valuespec=lambda context: Optional(
         valuespec=TextInput(
             title=_("Host running Event Console"),
         ),
@@ -4790,7 +4791,7 @@ ConfigVariableEventConsoleNotifyFacility = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_facility",
-    valuespec=lambda: DropdownChoice(
+    valuespec=lambda context: DropdownChoice(
         title=_("Syslog facility for Event Console notifications"),
         help=_(
             "When sending notifications from the monitoring system to the event console "
@@ -4806,7 +4807,7 @@ ConfigVariableEventConsoleServiceLevels = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_service_levels",
-    valuespec=lambda: ListOf(
+    valuespec=lambda context: ListOf(
         valuespec=Tuple(
             elements=[
                 Integer(

@@ -29,7 +29,7 @@ def test_match_item_generator_settings(
         group=group,
         primary_domain=ConfigDomainCore,
         ident="ident",
-        valuespec=lambda: TextInput(title="title"),
+        valuespec=lambda context: TextInput(title="title"),
     )
 
     class SomeSettingsMode(DefaultModeEditGlobals):

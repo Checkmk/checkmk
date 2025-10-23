@@ -11,7 +11,7 @@ import cmk.utils.paths
 from cmk.gui.groups import GroupName
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.config_domain_name import config_variable_registry
+from cmk.gui.watolib.config_domain_name import config_variable_registry, GlobalSettingsContext
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
@@ -28,7 +28,7 @@ def find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
         if (configured and name == configured) or name == default_value:
             used_in.append(
                 (
-                    "%s" % (config_variable.valuespec().title()),
+                    "%s" % (config_variable.valuespec(GlobalSettingsContext()).title()),
                     folder_preserving_link(
                         [("mode", "edit_configvar"), ("varname", "mkeventd_notify_contactgroup")]
                     ),

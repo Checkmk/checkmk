@@ -18,7 +18,7 @@ def test_config_variable_add_domain() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        valuespec=lambda: FixedValue(None),
+        valuespec=lambda context: FixedValue(None),
     )
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
     test_var.add_config_domain_affected_by_change(ConfigDomainOMD)
@@ -34,7 +34,7 @@ def test_config_variable_add_domain_unique() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        valuespec=lambda: FixedValue(None),
+        valuespec=lambda context: FixedValue(None),
     )
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)

@@ -44,7 +44,7 @@ ConfigVariableNotificationFallbackEmail = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_fallback_email",
-    valuespec=lambda: EmailAddress(
+    valuespec=lambda context: EmailAddress(
         title=_("Fallback email address for notifications"),
         help=_(
             "In case none of your notification rules handles a certain event a notification "
@@ -72,7 +72,7 @@ ConfigVariableNotificationFallbackFormat = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_fallback_format",
-    valuespec=lambda: CascadingDropdown(
+    valuespec=lambda context: CascadingDropdown(
         title=_("Fallback notification email format"),
         choices=[
             (
@@ -93,7 +93,7 @@ ConfigVariableNotificationBacklog = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_backlog",
-    valuespec=lambda: Integer(
+    valuespec=lambda context: Integer(
         title=_("Store notifications for rule analysis"),
         help=_(
             "If this option is set to a non-zero number, then Checkmk "
@@ -111,7 +111,7 @@ ConfigVariableNotificationBulkInterval = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_bulk_interval",
-    valuespec=lambda: Age(
+    valuespec=lambda context: Age(
         title=_("Interval for checking for ripe bulk notifications"),
         help=_(
             "If you are using rule based notifications with and <i>Bulk Notifications</i> "
@@ -128,7 +128,7 @@ ConfigVariableNotificationPluginTimeout = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_plugin_timeout",
-    valuespec=lambda: Age(
+    valuespec=lambda context: Age(
         title=_("Notification plug-in timeout"),
         help=_("After the configured time notification plug-ins are being interrupted."),
         minvalue=1,
@@ -139,7 +139,7 @@ ConfigVariableNotificationLogging = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainCore,
     ident="notification_logging",
-    valuespec=lambda: DropdownChoice(
+    valuespec=lambda context: DropdownChoice(
         title=_("Notification log level"),
         help=_(
             "You can configure the notification mechanism to log more details about "
@@ -159,7 +159,7 @@ ConfigVariableFailedNotificationHorizon = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="failed_notification_horizon",
-    valuespec=lambda: Age(
+    valuespec=lambda context: Age(
         title=_("Failed notification horizon"),
         help=_(
             "The tactical overview snap-in is reporting about notifications that could not be sent "

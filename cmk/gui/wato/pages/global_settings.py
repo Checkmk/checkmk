@@ -65,6 +65,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
+    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
@@ -212,7 +213,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
             for config_variable in config_variables:
                 varname = config_variable.ident()
-                valuespec = config_variable.valuespec()
+                valuespec = config_variable.valuespec(GlobalSettingsContext())
 
                 if not global_config.global_settings.is_activated(varname):
                     continue
@@ -318,7 +319,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         self._varname = request.get_ascii_input_mandatory("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]
-            self._valuespec = self._config_variable.valuespec()
+            self._valuespec = self._config_variable.valuespec(GlobalSettingsContext())
         except KeyError:
             raise MKUserError(
                 "varname", _('The global setting "%s" does not exist.') % self._varname
@@ -686,7 +687,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         config_variable: ConfigVariable,
         edit_mode_name: str,
     ) -> MatchItem:
-        title = config_variable.valuespec().title() or _("Untitled setting")
+        title = config_variable.valuespec(GlobalSettingsContext()).title() or _("Untitled setting")
         ident = config_variable.ident()
         return MatchItem(
             title=title,

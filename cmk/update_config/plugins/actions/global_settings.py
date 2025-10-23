@@ -13,6 +13,7 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     filter_unknown_settings,
+    GlobalSettingsContext,
     UNREGISTERED_SETTINGS,
 )
 from cmk.gui.watolib.global_settings import (
@@ -147,7 +148,7 @@ def _transform_global_config_value(config_var: str, config_val: object) -> objec
         config_variable = config_variable_registry[config_var]
     except KeyError:
         return config_val
-    return config_variable.valuespec().transform_value(config_val)
+    return config_variable.valuespec(GlobalSettingsContext()).transform_value(config_val)
 
 
 def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSettings:

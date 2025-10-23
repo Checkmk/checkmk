@@ -109,7 +109,7 @@ ConfigVariableInventoryCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainGUI,
     ident="inventory_cleanup",
-    valuespec=lambda: Dictionary(
+    valuespec=lambda context: Dictionary(
         title=_("HW/SW Inventory cleanup"),
         elements=[
             (

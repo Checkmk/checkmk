@@ -299,6 +299,10 @@ class ConfigVariableGroupRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariabl
 config_variable_group_registry = ConfigVariableGroupRegistry()
 
 
+@dataclass(frozen=True)
+class GlobalSettingsContext: ...
+
+
 class ConfigVariable:
     def __init__(
         self,
@@ -306,7 +310,7 @@ class ConfigVariable:
         group: ConfigVariableGroup,
         primary_domain: type[ABCConfigDomain],
         ident: str,
-        valuespec: Callable[[], ValueSpec],
+        valuespec: Callable[[GlobalSettingsContext], ValueSpec],
         need_restart: bool | None = None,
         need_apache_reload: bool = False,
         allow_reset: bool = True,
@@ -334,9 +338,9 @@ class ConfigVariable:
         """Returns the internal identifier of this configuration variable"""
         return self._ident
 
-    def valuespec(self) -> ValueSpec:
+    def valuespec(self, context: GlobalSettingsContext) -> ValueSpec:
         """Returns the valuespec object of this configuration variable"""
-        return self._valuespec_func()
+        return self._valuespec_func(context)
 
     def primary_domain(self) -> ABCConfigDomain:
         """Returns the config domain this configuration variable belongs to"""

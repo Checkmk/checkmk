@@ -21,7 +21,6 @@ const props = defineProps<Props>()
 const filterDefinitions = useFilterDefinitions()
 const filterDefinition = filterDefinitions[props.filterId]
 if (!filterDefinition) {
-  console.error(`Filter definition for ${props.filterId} not found`)
   throw new Error(`Filter definition for ${props.filterId} not found`)
 }
 

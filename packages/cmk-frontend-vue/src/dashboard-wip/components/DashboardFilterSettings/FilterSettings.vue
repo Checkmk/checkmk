@@ -47,7 +47,6 @@ const closeWindow = () => {
 }
 
 const saveDashboardFilters = () => {
-  console.debug('Sending dashboard filters from menu', dashboardFilters.getFilters())
   emit('save-dashboard-filters', dashboardFilters.getFilters())
   showSavedDashboardAlert.value = true
 }
@@ -57,7 +56,6 @@ const resetDashboardFilters = () => {
 }
 
 const applyRuntimeFilters = () => {
-  console.debug('Sending runtime filters from menu')
   emit('apply-runtime-filters', runtimeFilters.getFilters(), runtimeFiltersMode.value)
 }
 
@@ -117,12 +115,10 @@ const setRuntimeFilterConfigurationTarget = (target: 'runtime-filter' | 'require
 }
 
 const handleUpdateRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
-  console.log('Handle: ', mode)
   runtimeFiltersMode.value = mode
 }
 
 const handleSaveRequiredFilters = () => {
-  console.log('Saving runtime filters:', mandatoryRuntimeFilters.getSelectedFilters())
   mandatoryRuntimeFiltersBackup.value = [...mandatoryRuntimeFilters.getSelectedFilters()]
 
   const currentRuntimeFilters = new Set(runtimeFilters.getSelectedFilters())
@@ -132,7 +128,6 @@ const handleSaveRequiredFilters = () => {
   runtimeFilters.resetThroughSelectedFilters([...allRequiredFilters])
 
   runtimeFilterConfigurationTarget.value = 'runtime-filter'
-  console.log('Emit save mandatory runtime filters')
   emit('save-mandatory-runtime-filters', mandatoryRuntimeFilters.getSelectedFilters())
 }
 

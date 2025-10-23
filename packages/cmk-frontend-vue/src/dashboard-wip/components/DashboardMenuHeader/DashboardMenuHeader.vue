@@ -71,7 +71,6 @@ const setStartUrl = async (): Promise<void> => {
     console.error('No dashboard selected to set as start URL')
     return
   }
-  console.log('Setting start URL to dashboard:', dashboardName)
   try {
     const url = 'ajax_set_dashboard_start_url.py'
     const response = await axios.post(url, null, {

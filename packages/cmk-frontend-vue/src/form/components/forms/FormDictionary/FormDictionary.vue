@@ -11,9 +11,9 @@ import { computed, ref } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import FormIndent from '@/components/CmkIndent.vue'
+import CmkLabel from '@/components/CmkLabel.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
@@ -120,11 +120,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                 role="group"
                 :aria-label="dict_element.dict_config.parameter_form.title"
               >
-                <span
-                  v-if="titleRequired(dict_element.dict_config)"
-                  class="form-dictionary__group-elem__title"
-                >
-                  <span
+                <template v-if="titleRequired(dict_element.dict_config)">
+                  <CmkLabel
                     v-if="dict_element.dict_config.required"
                     :class="{
                       'form-dictionary__required-without-indent': !indentRequired(
@@ -132,16 +129,14 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                         group.layout
                       )
                     }"
+                    :help="untranslated(dict_element.dict_config.parameter_form.help)"
                   >
                     <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
                       v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
                       :spec="dict_element.dict_config.parameter_form"
                       :space="'before'"
-                    /><template v-if="dict_element.dict_config.parameter_form.help"
-                      >&nbsp;<CmkHelpText
-                        :help="untranslated(dict_element.dict_config.parameter_form.help)"
-                    /></template>
-                  </span>
+                    />
+                  </CmkLabel>
                   <CmkCheckbox
                     v-else
                     v-model="dict_element.is_active"
@@ -157,7 +152,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                       toggleElement(data, spec.elements, dict_element.dict_config.name)
                     "
                   />
-                </span>
+                </template>
                 <FormIndent
                   v-if="dict_element.is_active"
                   :indent="indentRequired(dict_element.dict_config, group.layout)"

@@ -10,35 +10,23 @@ EDITION            := raw
 EDITION_SHORT      := cre
 
 ifneq (,$(wildcard $(REPO_PATH)/omd/packages/enterprise))
-ENTERPRISE         := yes
 EDITION            := enterprise
 EDITION_SHORT      := cee
-else
-ENTERPRISE         := no
 endif
 
 ifneq (,$(wildcard $(REPO_PATH)/omd/packages/cloud))
-CLOUD              := yes
 EDITION            := cloud
 EDITION_SHORT      := cce
-else
-CLOUD              := no
 endif
 
 ifneq (,$(wildcard $(REPO_PATH)/omd/packages/managed))
-MANAGED            := yes
 EDITION            := managed
 EDITION_SHORT      := cme
-else
-MANAGED            := no
 endif
 
 ifneq (,$(wildcard $(REPO_PATH)/omd/packages/saas))
-SAAS               := yes
 EDITION            := saas
 EDITION_SHORT      := cse
-else
-SAAS              := no
 endif
 
 VERSION            := 2.5.0b1

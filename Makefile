@@ -42,19 +42,13 @@ cma:
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
 
-ifeq ($(ENTERPRISE),yes)
+ifneq ($(EDITION),raw)
 $(SOURCE_BUILT_AGENT_UPDATER):
 	@echo "ERROR: Should have already been built by artifact providing jobs"
 	@echo "If you don't need the artifacts, you can use "
 	@echo "'scripts/fake-artifacts' to continue with stub files"
 	@exit 1
 endif
-
-$(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
-	@echo "ERROR: Should have already been built by Windows node jobs"
-	@echo "If you don't need the windows artifacts, you can use "
-	@echo "'scripts/fake-artifacts' to continue with stub files"
-	@exit 1
 
 # Is executed by our build environment from a "git archive" snapshot and during
 # RPM building to create the source tar.gz for the RPM build process.
@@ -119,7 +113,7 @@ setversion:
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' packages/cmk-ccc/cmk/ccc/version.py bin/livedump
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
-ifeq ($(ENTERPRISE),yes)
+ifneq ($(EDITION),raw)
 	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' non-free/packages/cmk-update-agent/cmk_update_agent.py
 endif
 

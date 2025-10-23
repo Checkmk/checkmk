@@ -81,6 +81,15 @@ const metricHandler = useMetric(null, null, null)
 // TODO: Fill with saved values if available --^--
 // /////////////////////////////////////////////////////////
 
+watch([hostFilterType, serviceFilterType], ([newHostFilterType, newServiceFilterType]) => {
+  if (newHostFilterType === ElementSelection.MULTIPLE) {
+    metricHandler.host.value = null
+  }
+  if (newServiceFilterType === ElementSelection.MULTIPLE) {
+    metricHandler.service.value = null
+  }
+})
+
 watch(
   [widgetFilterManager.filterHandler.configuredFilters],
   (newConfiguredFilters) => {

@@ -115,7 +115,6 @@ const pageNavigation = parsePageNavigation()
     <div class="left-section">
       <div class="dashboard-title">
         <CmkLabel class="dashboard-label">{{ _t('Dashboard') }}</CmkLabel>
-        <CmkIcon name="info" size="small" class="info-icon" />
       </div>
 
       <div class="selection-section">

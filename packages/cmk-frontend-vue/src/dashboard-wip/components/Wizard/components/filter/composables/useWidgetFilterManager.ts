@@ -45,13 +45,16 @@ export const useWidgetFilterManager = (
   }
 
   const selectionMenuOpen = computed(() => menuHandler.isOpen.value)
+  const selectionMenuCurrentTarget = computed(() => {
+    return menuHandler.target.value
+  })
 
   return {
     openSelectionMenu: menuHandler.open,
     closeSelectionMenu: menuHandler.close,
     objectTypeIsInFocus: menuHandler.inFocus,
     selectionMenuOpen: selectionMenuOpen,
-    selectionMenuCurrentTarget: menuHandler.target,
+    selectionMenuCurrentTarget,
 
     filterHandler: filters,
     getSelectedFilters: filters.getSelectedFilters,

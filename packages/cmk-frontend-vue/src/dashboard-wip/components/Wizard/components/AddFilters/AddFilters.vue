@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import FilterSelection from '@/dashboard-wip/components/filter/FilterSelection/FilterSelection.vue'
@@ -27,11 +29,13 @@ const filters = defineModel<Filters>('filters', { required: true })
 
 const filterDefinitions = useFilterDefinitions()
 
-const selectedCategory = props.filterSelectionTarget
-const filterCategories = parseFilterTypes(
-  filterDefinitions,
-  new Set([selectedCategory as unknown as string])
-)
+const filterCategory = computed(() => {
+  const categories = parseFilterTypes(
+    filterDefinitions,
+    new Set([props.filterSelectionTarget as unknown as string])
+  )
+  return categories.get(props.filterSelectionTarget)
+})
 </script>
 
 <template>
@@ -39,7 +43,8 @@ const filterCategories = parseFilterTypes(
   <ContentSpacer />
 
   <FilterSelection
-    :category-filter="filterCategories.get(selectedCategory) || []"
+    :key="`${filterSelectionTarget}`"
+    :category-filter="filterCategory || []"
     :category-definition="CATEGORY_DEFINITIONS.host!"
     :filters="filters"
     class="filter-selection__item"

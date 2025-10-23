@@ -38,7 +38,6 @@ from omdlib.type_defs import Config, ConfigChoiceHasError
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
-from cmk.utils import paths
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -266,7 +265,7 @@ def load_config(site: "SiteContext", verbose: bool) -> Config:
         for hook_name in sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
                 config[hook_name] = call_hook(
-                    site, hook_name, ["default", edition(paths.omd_root).short], verbose
+                    site, hook_name, ["default", edition(site_home).short], verbose
                 )[1]
     return config
 

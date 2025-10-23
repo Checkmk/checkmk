@@ -27,8 +27,9 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.constants import OID_SYS_OBJ
 from cmk.plugins.printer.lib import DETECT_PRINTER
+
+OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 MAP_UNIT: Final = {
     "3": "ten thousandths of inches",

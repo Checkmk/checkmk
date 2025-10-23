@@ -133,6 +133,9 @@ export const useTopList = async (
     }, 300),
     { deep: true }
   )
+
+  await _updateWidgetProps()
+
   return {
     dataRangeType,
     dataRangeSymbol,

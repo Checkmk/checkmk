@@ -421,8 +421,13 @@ function deepClone<T>(obj: T): T {
       />
     </div>
     <template v-if="dashboardsManager.isInitialized.value">
+      <AddWidgetPage
+        v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
+        :workflow-items="dashboardWidgetWorkflows"
+        @select="handleAddWidget"
+      />
       <DashboardComponent
-        v-if="dashboardsManager.isInitialized.value"
+        v-else-if="dashboardsManager.isInitialized.value"
         :key="`${dashboardsManager.activeDashboardName.value}`"
         v-model:dashboard="dashboardsManager.activeDashboard.value!"
         :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
@@ -433,11 +438,6 @@ function deepClone<T>(obj: T): T {
         @widget:edit="editWidget($event)"
         @widget:delete="dashboardWidgets.deleteWidget($event)"
         @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"
-      />
-      <AddWidgetPage
-        v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
-        :workflow-items="dashboardWidgetWorkflows"
-        @select="handleAddWidget"
       />
     </template>
     <template v-else>

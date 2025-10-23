@@ -14,7 +14,7 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, SimpleSNMPSection, State
 from cmk.plugins.collection.agent_based import mcafee_webgateway_client_requests as plugin
-from cmk.plugins.lib.mcafee_gateway import MISC_DEFAULT_PARAMS, MiscParams
+from cmk.plugins.mcafee.libgateway import MISC_DEFAULT_PARAMS, MiscParams
 from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,

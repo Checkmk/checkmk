@@ -8,7 +8,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
-from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
+from cmk.plugins.intel.lib import DETECT_INTEL_TRUE_SCALE
 
 check_info = {}
 

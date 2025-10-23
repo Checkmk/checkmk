@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.mbg_lantime import (
     check_mbg_lantime_state_common,
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )
-from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+from cmk.plugins.meinberg.liblantime import DETECT_MBG_LANTIME_NG
 
 check_info = {}
 

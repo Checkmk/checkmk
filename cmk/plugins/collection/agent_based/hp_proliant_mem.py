@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.hp_proliant import DETECT, MAP_TYPES_MEMORY
+from cmk.plugins.hp_proliant.lib import DETECT, MAP_TYPES_MEMORY
 
 _STATUS_MAP: Final = {
     "1": "other",

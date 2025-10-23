@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.livestatus_status import LivestatusSection
+from cmk.plugins.collection.agent_based.livestatus_status import LivestatusSection
 
 
 @dataclass

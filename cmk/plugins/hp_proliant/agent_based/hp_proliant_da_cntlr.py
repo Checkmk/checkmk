@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.hp_proliant import DETECT
+from cmk.plugins.hp_proliant.lib import DETECT
 
 type ConditionNumber = str
 type ControllerID = str

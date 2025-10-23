@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.lib.ups import (
+from cmk.plugins.ups.lib import (
     Battery,
     CHECK_DEFAULT_PARAMETERS,
     check_ups_battery_state,

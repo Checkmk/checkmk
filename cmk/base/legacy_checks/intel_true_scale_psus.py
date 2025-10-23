@@ -12,7 +12,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
+from cmk.plugins.intel.lib import DETECT_INTEL_TRUE_SCALE
 
 check_info = {}
 

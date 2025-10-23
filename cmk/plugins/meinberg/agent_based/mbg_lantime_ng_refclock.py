@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+from cmk.plugins.meinberg.liblantime import DETECT_MBG_LANTIME_NG
 
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |

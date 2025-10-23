@@ -6,7 +6,7 @@
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
 from cmk.plugins.lib.cpu import Load, Section
-from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
+from cmk.plugins.mcafee.libgateway import DETECT_EMAIL_GATEWAY
 
 
 def parse_mcafee_emailgateway_cpuload(string_table: StringTable) -> Section | None:

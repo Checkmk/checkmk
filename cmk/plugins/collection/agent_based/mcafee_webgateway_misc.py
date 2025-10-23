@@ -10,17 +10,17 @@ The old plug-in names, value_store dict keys, and ruleset names have been kept f
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Service
-from cmk.plugins.lib import mcafee_gateway
+from cmk.plugins.mcafee import libgateway
 
 
 def discovery_webgateway_misc(
-    section: mcafee_gateway.Section,
+    section: libgateway.Section,
 ) -> DiscoveryResult:
     yield Service()
 
 
 def check_webgateway_misc(
-    params: mcafee_gateway.MiscParams, section: mcafee_gateway.Section
+    params: libgateway.MiscParams, section: libgateway.Section
 ) -> CheckResult:
     if section.client_count is not None:
         yield from check_levels_v1(
@@ -47,5 +47,5 @@ check_plugin_mcafee_webgateway_misc = CheckPlugin(
     check_ruleset_name="mcafee_web_gateway_misc",
     check_function=check_webgateway_misc,
     discovery_function=discovery_webgateway_misc,
-    check_default_parameters=mcafee_gateway.MISC_DEFAULT_PARAMS,
+    check_default_parameters=libgateway.MISC_DEFAULT_PARAMS,
 )

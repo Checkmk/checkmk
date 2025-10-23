@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import OIDEnd, SNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+from cmk.plugins.ups.lib import DETECT_UPS_GENERIC
 
 
 def _parse_value(value: str) -> int | None:

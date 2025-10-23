@@ -20,8 +20,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 from cmk.plugins.lib.uptime import parse_snmp_uptime
+from cmk.plugins.ups.lib import DETECT_UPS_GENERIC
 
 # Description of OIDs used from RFC 1628
 # OID: 1.3.6.1.2.1.33.1.7.3

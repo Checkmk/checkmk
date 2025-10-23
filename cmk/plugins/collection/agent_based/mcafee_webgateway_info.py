@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import mcafee_gateway
+from cmk.plugins.mcafee import libgateway
 
 
 def parse_webgateway_info(string_table: StringTable) -> StringTable:
@@ -29,7 +29,7 @@ def parse_webgateway_info(string_table: StringTable) -> StringTable:
 snmp_section_mcafee_webgateway_info = SimpleSNMPSection(
     name="mcafee_webgateway_info",
     parsed_section_name="webgateway_info",
-    detect=mcafee_gateway.DETECT_MCAFEE_WEBGATEWAY,
+    detect=libgateway.DETECT_MCAFEE_WEBGATEWAY,
     parse_function=parse_webgateway_info,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.7.1",
@@ -40,7 +40,7 @@ snmp_section_mcafee_webgateway_info = SimpleSNMPSection(
 snmp_section_skyhigh_security_webgateway_info = SimpleSNMPSection(
     name="skyhigh_security_webgateway_info",
     parsed_section_name="webgateway_info",
-    detect=mcafee_gateway.DETECT_SKYHIGH_WEBGATEWAY,
+    detect=libgateway.DETECT_SKYHIGH_WEBGATEWAY,
     parse_function=parse_webgateway_info,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.59732.2.7.1",

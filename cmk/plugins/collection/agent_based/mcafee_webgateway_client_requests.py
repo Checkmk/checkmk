@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.mcafee_gateway import (
+from cmk.plugins.mcafee.libgateway import (
     compute_rate,
     DETECT_MCAFEE_WEBGATEWAY,
     DETECT_SKYHIGH_WEBGATEWAY,

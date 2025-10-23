@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.hp_proliant import DETECT, sanitize_item, STATUS_MAP
+from cmk.plugins.hp_proliant.lib import DETECT, sanitize_item, STATUS_MAP
 
 hp_proliant_fans_status_map = {1: "other", 2: "ok", 3: "degraded", 4: "failed"}
 hp_proliant_speed_map = {1: "other", 2: "normal", 3: "high"}

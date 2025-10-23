@@ -10,7 +10,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.plugins.lib.hp_proliant import DETECT, STATUS_MAP
+from cmk.plugins.hp_proliant.lib import DETECT, STATUS_MAP
 
 check_info = {}
 

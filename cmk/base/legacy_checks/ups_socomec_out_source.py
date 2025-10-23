@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.ups_socomec import DETECT_SOCOMEC
+from cmk.plugins.ups_socomec.lib import DETECT_SOCOMEC
 
 check_info = {}
 

@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib import mcafee_gateway
+from cmk.plugins.mcafee import libgateway
 
 
 class Section(typing.NamedTuple):
@@ -55,7 +55,7 @@ def check_webgateway(params: Params, section: Section) -> CheckResult:
 def _check_webgateway(
     now: float, value_store: ValueStore, params: Params, section: Section
 ) -> CheckResult:
-    yield from mcafee_gateway.compute_rate(
+    yield from libgateway.compute_rate(
         now=now,
         value_store=value_store,
         value=section.infections,
@@ -64,7 +64,7 @@ def _check_webgateway(
         key="check_mcafee_webgateway.infections",
         label="Infections",
     )
-    yield from mcafee_gateway.compute_rate(
+    yield from libgateway.compute_rate(
         now=now,
         value_store=value_store,
         value=section.connections_blocked,
@@ -78,7 +78,7 @@ def _check_webgateway(
 snmp_section_mcafee_webgateway = SimpleSNMPSection(
     name="mcafee_webgateway",
     parsed_section_name="webgateway",
-    detect=mcafee_gateway.DETECT_MCAFEE_WEBGATEWAY,
+    detect=libgateway.DETECT_MCAFEE_WEBGATEWAY,
     parse_function=parse_webgateway,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.7.2.1",
@@ -92,7 +92,7 @@ snmp_section_mcafee_webgateway = SimpleSNMPSection(
 snmp_section_skyhigh_security_webgateway = SimpleSNMPSection(
     name="skyhigh_security_webgateway",
     parsed_section_name="webgateway",
-    detect=mcafee_gateway.DETECT_SKYHIGH_WEBGATEWAY,
+    detect=libgateway.DETECT_SKYHIGH_WEBGATEWAY,
     parse_function=parse_webgateway,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.59732.2.7.2.1",

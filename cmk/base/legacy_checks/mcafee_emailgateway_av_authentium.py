@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
-from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
+from cmk.plugins.mcafee.libgateway import DETECT_EMAIL_GATEWAY
 
 check_info = {}
 

@@ -11,19 +11,19 @@ The old plug-in names, value_store dict keys, and ruleset names have been kept f
 import datetime
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
-from cmk.plugins.lib import mcafee_gateway
+from cmk.plugins.mcafee import libgateway
 
 
 def parse_webgateway_misc(
     string_table: StringTable,
-) -> mcafee_gateway.Section | None:
+) -> libgateway.Section | None:
     if not string_table:
         return None
     # -- Miscellaneous (these counter are NO lifetime counter; they show the actual number)
     # .1.3.6.1.4.1.1230.2.7.2.5.2.0 16 --> MCAFEE-MWG-MIB::stClientCount.0
     # .1.3.6.1.4.1.1230.2.7.2.5.3.0 35 --> MCAFEE-MWG-MIB::stConnectedSockets.0
     clients_str, sockets_str, time_dns_str, time_engine_str = string_table[0]
-    return mcafee_gateway.Section(
+    return libgateway.Section(
         client_count=int(clients_str) if clients_str.isdigit() else None,
         socket_count=int(sockets_str) if sockets_str.isdigit() else None,
         time_to_resolve_dns=(
@@ -50,7 +50,7 @@ snmp_section_mcafee_webgateway_misc = SimpleSNMPSection(
             "7",  # MCAFEE-MWG-MIB::stTimeConsumedByRuleEngine
         ],
     ),
-    detect=mcafee_gateway.DETECT_MCAFEE_WEBGATEWAY,
+    detect=libgateway.DETECT_MCAFEE_WEBGATEWAY,
 )
 
 snmp_section_skyhigh_security_webgateway_misc = SimpleSNMPSection(
@@ -66,5 +66,5 @@ snmp_section_skyhigh_security_webgateway_misc = SimpleSNMPSection(
             "7",  # ::stTimeConsumedByRuleEngine
         ],
     ),
-    detect=mcafee_gateway.DETECT_SKYHIGH_WEBGATEWAY,
+    detect=libgateway.DETECT_SKYHIGH_WEBGATEWAY,
 )

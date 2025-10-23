@@ -17,7 +17,7 @@ from cmk.plugins.collection.agent_based import (
     mcafee_webgateway_misc_section,
     mcafee_webgateway_time_consumed_by_rule_engine,
 )
-from cmk.plugins.lib import mcafee_gateway
+from cmk.plugins.mcafee import libgateway
 from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
@@ -192,9 +192,7 @@ def test_check_results(
     as_path: Callable[[str], Path],
 ) -> None:
     # Assemble
-    params = typing.cast(
-        mcafee_gateway.MiscParams, mcafee_gateway.MISC_DEFAULT_PARAMS | params_misc
-    )
+    params = typing.cast(libgateway.MiscParams, libgateway.MISC_DEFAULT_PARAMS | params_misc)
     section = get_parsed_snmp_section(detected_section, as_path(walk))
     assert section is not None
 
@@ -235,7 +233,7 @@ def test_check_metrics(
     metrics = [
         r
         for r in mcafee_webgateway_time_consumed_by_rule_engine.check(
-            params=mcafee_gateway.MISC_DEFAULT_PARAMS, section=section
+            params=libgateway.MISC_DEFAULT_PARAMS, section=section
         )
         if isinstance(r, Metric)
     ]

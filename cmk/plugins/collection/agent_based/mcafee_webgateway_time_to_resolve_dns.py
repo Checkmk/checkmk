@@ -10,20 +10,20 @@ The old plug-in names, value_store dict keys, and ruleset names have been kept f
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render, Service
-from cmk.plugins.lib import mcafee_gateway
+from cmk.plugins.mcafee import libgateway
 
 
-def discovery(section: mcafee_gateway.Section) -> DiscoveryResult:
+def discovery(section: libgateway.Section) -> DiscoveryResult:
     if section.time_to_resolve_dns is not None:
         yield Service()
 
 
-def check(params: mcafee_gateway.MiscParams, section: mcafee_gateway.Section) -> CheckResult:
+def check(params: libgateway.MiscParams, section: libgateway.Section) -> CheckResult:
     if section.time_to_resolve_dns is not None:
         yield from check_levels_v1(
             value=section.time_to_resolve_dns.total_seconds(),
             metric_name="time_to_resolve_dns",
-            levels_upper=mcafee_gateway.get_param_in_seconds(params["time_to_resolve_dns"]),
+            levels_upper=libgateway.get_param_in_seconds(params["time_to_resolve_dns"]),
             render_func=render.timespan,
         )
 
@@ -35,5 +35,5 @@ check_plugin_mcafee_webgateway_time_to_resolve_dns = CheckPlugin(
     sections=["webgateway_misc"],
     check_function=check,
     discovery_function=discovery,
-    check_default_parameters=mcafee_gateway.MISC_DEFAULT_PARAMS,
+    check_default_parameters=libgateway.MISC_DEFAULT_PARAMS,
 )

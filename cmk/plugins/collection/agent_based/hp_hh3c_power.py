@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     startswith,
 )
-from cmk.plugins.lib.hp_hh3c import (
+from cmk.plugins.hp_hh3c.lib import (
     check_hp_hh3c_device,
     discover_hp_hh3c_device,
     OID_SysDesc,

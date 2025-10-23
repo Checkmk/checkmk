@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import CheckPlugin
-from cmk.plugins.lib.ups import check_ups_battery_state, discover_ups_battery_state
+from cmk.plugins.ups.lib import check_ups_battery_state, discover_ups_battery_state
 
 check_plugin_ups_battery_state = CheckPlugin(
     name="ups_battery_state",

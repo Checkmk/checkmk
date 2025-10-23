@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.lib import hp_hh3c
+from cmk.plugins.hp_hh3c import lib as hp_hh3c
 
 
 @pytest.mark.parametrize(

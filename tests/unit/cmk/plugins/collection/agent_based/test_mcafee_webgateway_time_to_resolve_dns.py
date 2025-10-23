@@ -18,7 +18,7 @@ from cmk.plugins.collection.agent_based.mcafee_webgateway_misc_section import (
     snmp_section_mcafee_webgateway_misc,
     snmp_section_skyhigh_security_webgateway_misc,
 )
-from cmk.plugins.lib import mcafee_gateway
+from cmk.plugins.mcafee import libgateway
 from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
@@ -181,9 +181,7 @@ def test_check_results(
     as_path: Callable[[str], Path],
 ) -> None:
     # Assemble
-    params = typing.cast(
-        mcafee_gateway.MiscParams, mcafee_gateway.MISC_DEFAULT_PARAMS | params_misc
-    )
+    params = typing.cast(libgateway.MiscParams, libgateway.MISC_DEFAULT_PARAMS | params_misc)
     # Is this right? Not "detected_section"?
     section = get_parsed_snmp_section(snmp_section_mcafee_webgateway_misc, as_path(WALK_MCAFEE))
     assert section is not None
@@ -217,7 +215,7 @@ def test_check_metrics(
     metrics = [
         r
         for r in mcafee_webgateway_time_to_resolve_dns.check(
-            params=mcafee_gateway.MISC_DEFAULT_PARAMS, section=section
+            params=libgateway.MISC_DEFAULT_PARAMS, section=section
         )
         if isinstance(r, Metric)
     ]

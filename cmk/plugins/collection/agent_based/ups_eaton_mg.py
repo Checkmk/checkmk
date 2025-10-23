@@ -10,7 +10,7 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection, SNMPTree, startswith, StringTable
-from cmk.plugins.lib.ups import Battery, optional_int, optional_yes_or_no
+from cmk.plugins.ups.lib import Battery, optional_int, optional_yes_or_no
 
 DETECT_UPS_EATON_MG = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705")
 

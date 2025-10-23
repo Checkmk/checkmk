@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib import hp_proliant
+from cmk.plugins.hp_proliant import lib as hp_proliant
 
 
 class Params(typing.TypedDict, total=True):

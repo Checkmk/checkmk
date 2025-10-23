@@ -10,7 +10,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
-from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+from cmk.plugins.meinberg.liblantime import DETECT_MBG_LANTIME_NG
 
 check_info = {}
 

@@ -8,7 +8,7 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.hp_proliant import DETECT, sanitize_item
+from cmk.plugins.hp_proliant.lib import DETECT, sanitize_item
 
 check_info = {}
 

@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+from cmk.plugins.ups.lib import DETECT_UPS_GENERIC
 
 
 class UpsPowerVoltage(NamedTuple):

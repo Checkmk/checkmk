@@ -18,7 +18,7 @@ from collections.abc import Mapping
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
-from cmk.plugins.lib.hp import DETECT_HP_BLADE
+from cmk.plugins.hp_blade.lib import DETECT_HP_BLADE
 
 check_info = {}
 

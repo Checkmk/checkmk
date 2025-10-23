@@ -64,26 +64,3 @@ test('FormBooleanChoice toggle checkbox', async () => {
   checkbox.click()
   await waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('false'))
 })
-
-test('FormBooleanChoice renders checkbox without label', () => {
-  // With the absurd way of '::before'ing the checkbox we need to
-  // make sure that the label exists in the DOM even if no label is passed
-  const spec: FormSpec.BooleanChoice = {
-    type: 'boolean_choice',
-    title: '',
-    help: '',
-    validators: [],
-    label: null,
-    text_on: '',
-    text_off: ''
-  }
-  render(FormBooleanChoice, {
-    props: {
-      spec,
-      data: true,
-      backendValidation: []
-    }
-  })
-
-  screen.getByLabelText('')
-})

@@ -42,7 +42,7 @@ const externalErrors = ref<string[]>([])
       <CmkCheckbox v-model="value1" label="some checkbox" :external-errors="externalErrors" />
     </li>
     <li>
-      <CmkCheckbox v-model="value2" label="some other checkbox" />
+      <CmkCheckbox v-model="value2" label="some other checkbox with dots" dots />
     </li>
     <li>checkbox without label: <CmkCheckbox v-model="value3" /></li>
     <li>
@@ -51,10 +51,18 @@ const externalErrors = ref<string[]>([])
         >vertical element<CmkCheckbox v-model="value5"
       /></span>
     </li>
-    <li :style="{ width: '30em' }">
+    <li :style="{ width: '372px', border: '1px solid gray' }">
       <CmkCheckbox
         v-model="value6"
-        label="Checkbox with help which wraps help icon with last word"
+        label="Label with help which wraps help icon with last word"
+        help="foo bar"
+        dots
+      />
+    </li>
+    <li :style="{ width: '200px', border: '1px solid gray' }">
+      <CmkCheckbox
+        v-model="value6"
+        label="Label with help which wraps but has no dots"
         :help="'foo bar'"
       />
     </li>
@@ -73,14 +81,14 @@ const externalErrors = ref<string[]>([])
     <li>Disabled checkboxes:</li>
     <ul>
       <li>
-        <CmkCheckbox v-model="value8" label="Disabled checked checkbox" :disabled="true" />
+        <CmkCheckbox v-model="value8" label="Disabled checked checkbox" disabled />
       </li>
       <li>
-        <CmkCheckbox v-model="value9" label="Disabled unchecked checkbox" :disabled="true" />
+        <CmkCheckbox v-model="value9" label="Disabled unchecked checkbox" disabled />
       </li>
       <li>
         Without label:
-        <CmkCheckbox v-model="value9" :disabled="true" />
+        <CmkCheckbox v-model="value9" disabled />
       </li>
     </ul>
   </ul>

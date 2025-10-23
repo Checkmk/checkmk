@@ -6,7 +6,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import { Label } from 'radix-vue'
-import { computed } from 'vue'
+import { computed, useAttrs } from 'vue'
+
+import type { TranslatedString } from '@/lib/i18nString'
+
+import CmkHelpText from '@/components/CmkHelpText.vue'
+
+defineOptions({
+  inheritAttrs: false
+})
 
 const labelVariants = cva('', {
   variants: {
@@ -23,35 +31,48 @@ const labelVariants = cva('', {
 type LabelVariants = VariantProps<typeof labelVariants>
 
 export interface LabelProps {
+  for?: string
   variant?: LabelVariants['variant']
-  onClick?: (() => void) | null
+  dots?: boolean | undefined
+  help?: TranslatedString | undefined
 }
 
 const props = defineProps<LabelProps>()
+const attrs = useAttrs()
 
 const delegatedProps = computed(() => {
-  const { variant: _, ...delegated } = props
+  const { variant: _1, help: _2, ...delegated } = attrs
+
+  if (props.for) {
+    delegated.for = props.for
+  }
 
   return delegated
 })
-
-const onClickCallback = props.onClick ? props.onClick : undefined
 </script>
 
 <template>
-  <Label
-    v-bind="delegatedProps"
-    :class="[labelVariants({ variant }), { 'cmk-label--clickable': !!props.onClick }]"
-    @click="onClickCallback"
-  >
-    <slot />
-  </Label>
+  <div class="cmk-label__container">
+    <span class="cmk-label__content">
+      <Label v-bind="delegatedProps" :class="labelVariants({ variant })"><slot /></Label
+      ><span v-if="help" class="cmk-label--nowrap">&nbsp;<CmkHelpText :help="help" /></span>
+    </span>
+    <div v-if="dots" class="cmk-label--dots" />
+  </div>
 </template>
 
 <style scoped>
-label {
-  display: block;
+.cmk-label__container {
+  display: inline-flex;
+  min-width: 0;
+}
 
+.cmk-label__content {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+label {
   &.cmk-label--title {
     height: 24px;
     align-content: center;
@@ -63,9 +84,21 @@ label {
     font-size: var(--font-size-normal);
     margin-bottom: var(--spacing);
   }
+}
 
-  &.cmk-label--clickable {
-    cursor: pointer;
-  }
+.cmk-label--nowrap {
+  white-space: nowrap;
+}
+
+.cmk-label--dots {
+  flex: 1 0 0;
+  margin-left: 5px;
+  color: var(--font-color-dimmed);
+  overflow: hidden;
+  min-width: 15px;
+}
+
+.cmk-label--dots::after {
+  content: '........................................................................................................................................................................................................';
 }
 </style>

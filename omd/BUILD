@@ -212,11 +212,11 @@ pkg_files(
     cmd = "cat $(SRCS) > $@",
     tags = ["manual"],
 ) for edition in [
-    "cre",
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "raw",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 py_binary(

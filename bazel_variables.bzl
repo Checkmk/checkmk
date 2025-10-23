@@ -120,7 +120,7 @@ edition_deps = {
 }
 
 edition_skel_permissions = {
-    "cre": [
+    "raw": [
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
@@ -131,7 +131,7 @@ edition_skel_permissions = {
         "//omd/packages/redis:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
     ],
-    "cce": [
+    "cloud": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -150,7 +150,7 @@ edition_skel_permissions = {
         "//omd/packages/redis:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
     ],
-    "cee": [
+    "enterprise": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -166,7 +166,7 @@ edition_skel_permissions = {
         "//omd/packages/redis:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
     ],
-    "cme": [
+    "managed": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -185,7 +185,7 @@ edition_skel_permissions = {
         "//omd/packages/redis:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
     ],
-    "cse": [
+    "saas": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",

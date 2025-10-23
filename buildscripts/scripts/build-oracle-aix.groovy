@@ -26,11 +26,16 @@ def main() {
                     ),
                 ]) {
                     sh("""
-                        checkout_dir=${checkout_dir} REMOTE_USER=au packages/mk-oracle/ssh-run-ci AIX -bu
+                        checkout_dir=${checkout_dir} REMOTE_USER=jenkins packages/mk-oracle/ssh-run-ci aix -bu
                     """)
-                     archiveArtifacts(allowEmptyArchive: true, artifacts: "mk-oracle-aix");
                 }
             }
+        }
+    }
+
+    stage("Archive artifacts") {
+        dir("${checkout_dir}/packages/mk-oracle") {
+            archiveArtifacts(allowEmptyArchive: true, artifacts: "mk-oracle.aix");
         }
     }
 }

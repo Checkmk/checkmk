@@ -23,14 +23,14 @@ test_for_existance ORACLEDB_USER
 test_for_existance ORACLEDB_PASSWORD
 
 case "${REMOTE_OS}" in
-    'AIX')
+    'aix')
         test_for_existance REMOTE_HOST_AIX
         REMOTE_HOST=${REMOTE_HOST_AIX}
         test_for_existance REMOTE_HOME_AIX
         REMOTE_HOME=${REMOTE_HOME_AIX}
         ADD_TO_PATH="${ADD_TO_PATH_AIX}"
         ;;
-    'Solaris')
+    'solaris')
         test_for_existance REMOTE_HOST_SOLARIS
         REMOTE_HOST=${REMOTE_HOST_SOLARIS}
         test_for_existance REMOTE_HOME_SOLARIS
@@ -40,6 +40,7 @@ case "${REMOTE_OS}" in
     *) failure "unknown remote OS: ${REMOTE_OS}" ;;
 esac
 
+# Open SSH tunnel for Oracle DB access
 ssh -N -o ExitOnForwardFailure=yes -o UserKnownHostsFile="${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" -R "${ORACLEDB_PORT}:${ORACLEDB_HOST}:${ORACLEDB_PORT}" "${REMOTE_USER}@${REMOTE_HOST}" &
 ORACLEDB_TUNNEL=$!
 
@@ -54,7 +55,7 @@ git_path="${REMOTE_HOME}/${REMOTE_USER}/git"
 # CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
 # checkmk_path="${git_path}/checkmk_ci_checkout_$(make -C ${CHECKOUT_ROOT} print-BRANCH_VERSION)"
 checkmk_path="${git_path}/checkmk_ci_checkout"
-mkdir -p checkmk_path
+ssh -o "UserKnownHostsFile=${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@${REMOTE_HOST}" mkdir -p "${checkmk_path}"
 
 # shellcheck disable=SC2154 # ${checkout_dir} is set via groovy
 rsync -avz --relative -e "ssh -o UserKnownHostsFile=\"${KNOWN_HOSTS_FILE}\" -i \"${KEYFILE}\"" "${checkout_dir}/./requirements/rust/host" "${checkout_dir}/./packages/"{cmk-agent-ctl,mk-oracle,mk-sql} "${REMOTE_USER}@${REMOTE_HOST}:${checkmk_path}"
@@ -72,4 +73,4 @@ ssh -o "UserKnownHostsFile=${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@
     "${checkmk_path}/packages/mk-oracle/run" "${RUN_CMD}"
 EOF
 
-scp "ssh -o UserKnownHostsFile=${KNOWN_HOSTS_FILE} -i ${KEYFILE}" "${REMOTE_USER}@${REMOTE_HOST}:${checkmk_path}/requirements/rust/host/target/release/mk-oracle" mk-oracle-aix
+scp -o UserKnownHostsFile="${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@${REMOTE_HOST}:${checkmk_path}/requirements/rust/host/target/release/mk-oracle" "mk-oracle.${REMOTE_OS}"

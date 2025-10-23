@@ -97,7 +97,11 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
+from cmk.gui.wato.pages.global_settings import (
+    ABCEditGlobalSettingMode,
+    ABCGlobalSettingsMode,
+    make_global_settings_context,
+)
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automation_commands import OMDStatus
@@ -112,6 +116,7 @@ from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariableGroup,
+    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import (
     ConfigDomainGUI,
@@ -1729,6 +1734,10 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
         self._show_configuration_variables(debug=config.debug)
 
+    @override
+    def make_global_settings_context(self) -> GlobalSettingsContext:
+        return make_global_settings_context()
+
 
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
@@ -1779,6 +1788,10 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _back_url(self) -> str:
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
+
+    @override
+    def make_global_settings_context(self) -> GlobalSettingsContext:
+        return make_global_settings_context()
 
 
 class ModeSiteLivestatusEncryption(WatoMode):

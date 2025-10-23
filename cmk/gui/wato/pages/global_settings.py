@@ -15,7 +15,7 @@ settings"""
 import abc
 from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from copy import deepcopy
-from typing import Any, Final
+from typing import Any, Final, override
 
 from livestatus import SiteConfigurations
 
@@ -213,7 +213,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
             for config_variable in config_variables:
                 varname = config_variable.ident()
-                valuespec = config_variable.valuespec(GlobalSettingsContext())
+                valuespec = config_variable.valuespec(self.make_global_settings_context())
 
                 if not global_config.global_settings.is_activated(varname):
                     continue
@@ -313,13 +313,16 @@ class ABCGlobalSettingsMode(WatoMode):
             html.show_message(_("Did not find any global setting matching your search."))
         html.close_div()
 
+    @abc.abstractmethod
+    def make_global_settings_context(self) -> GlobalSettingsContext: ...
+
 
 class ABCEditGlobalSettingMode(WatoMode):
     def _from_vars(self):
         self._varname = request.get_ascii_input_mandatory("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]
-            self._valuespec = self._config_variable.valuespec(GlobalSettingsContext())
+            self._valuespec = self._config_variable.valuespec(self.make_global_settings_context())
         except KeyError:
             raise MKUserError(
                 "varname", _('The global setting "%s" does not exist.') % self._varname
@@ -526,6 +529,9 @@ class ABCEditGlobalSettingMode(WatoMode):
     def _show_global_setting(self):
         pass
 
+    @abc.abstractmethod
+    def make_global_settings_context(self) -> GlobalSettingsContext: ...
+
 
 class ModeEditGlobals(ABCGlobalSettingsMode):
     @classmethod
@@ -623,6 +629,10 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def page(self, config: Config) -> None:
         self._show_configuration_variables(debug=config.debug)
 
+    @override
+    def make_global_settings_context(self) -> GlobalSettingsContext:
+        return make_global_settings_context()
+
 
 class DefaultModeEditGlobals(ModeEditGlobals):
     def __init__(self) -> None:
@@ -650,6 +660,10 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     def _back_url(self) -> str:
         return ModeEditGlobals.mode_url()
+
+    @override
+    def make_global_settings_context(self) -> GlobalSettingsContext:
+        return make_global_settings_context()
 
 
 class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
@@ -686,8 +700,9 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         self,
         config_variable: ConfigVariable,
         edit_mode_name: str,
+        global_settings_context: GlobalSettingsContext,
     ) -> MatchItem:
-        title = config_variable.valuespec(GlobalSettingsContext()).title() or _("Untitled setting")
+        title = config_variable.valuespec(global_settings_context).title() or _("Untitled setting")
         ident = config_variable.ident()
         return MatchItem(
             title=title,
@@ -703,7 +718,11 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         mode = self._mode_class()
         yield from (
-            self._config_variable_to_match_item(config_variable, mode.edit_mode_name)
+            self._config_variable_to_match_item(
+                config_variable,
+                mode.edit_mode_name,
+                mode.make_global_settings_context(),
+            )
             for _group, config_variables in mode.iter_all_configuration_variables(
                 debug=active_config.debug
             )
@@ -717,3 +736,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
     @property
     def is_localization_dependent(self) -> bool:
         return True
+
+
+def make_global_settings_context() -> GlobalSettingsContext:
+    return GlobalSettingsContext()

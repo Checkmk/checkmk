@@ -13,7 +13,8 @@ from cmk.gui.openapi.marshmallow_converter.valuespec_to_marshmallow import value
 from cmk.gui.session import _UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.config_domain_name import config_variable_registry, GlobalSettingsContext
+from cmk.gui.wato.pages.global_settings import make_global_settings_context
+from cmk.gui.watolib.config_domain_name import config_variable_registry
 from tests.unit.cmk.gui.users import create_and_destroy_user
 
 
@@ -36,5 +37,5 @@ def test_valuespec_to_marshmallow_all_global_settings(fake_user: LoggedInUser) -
         with gui_context(), _UserContext(fake_user):
             for name, config_variable in config_variable_registry.items():
                 valuespec_to_marshmallow(
-                    config_variable.valuespec(GlobalSettingsContext()), name=name
+                    config_variable.valuespec(make_global_settings_context()), name=name
                 )

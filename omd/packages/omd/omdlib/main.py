@@ -260,9 +260,6 @@ def start_site(version_info: VersionInfo, site: SiteContext, config: Config) -> 
         skelroot,
     )
     call_init_scripts(site_home, "start")
-    if not (instance_id_file_path := get_instance_id_file_path(Path(site_home))).exists():
-        # Existing sites may not have an instance ID yet. After an update we create a new one.
-        save_instance_id(file_path=instance_id_file_path, instance_id=uuid4())
 
 
 def get_file_permissions(path: str) -> int:
@@ -3031,9 +3028,6 @@ def main_init_action(
             save_tmpfs_dump(site_home, site.tmp_dir)
 
         if command == "start":
-            if not (instance_id_file_path := get_instance_id_file_path(Path(site_home))).exists():
-                # Existing sites may not have an instance ID yet. After an update we create a new one.
-                save_instance_id(file_path=instance_id_file_path, instance_id=uuid4())
             _update_license_usage(site)
 
         sys.exit(exit_status)

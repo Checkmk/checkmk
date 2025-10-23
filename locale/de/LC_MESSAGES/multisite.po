@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-10-21 18:39+0000\n"
+"PO-Revision-Date: 2025-10-22 19:56+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -27071,9 +27071,9 @@ msgstr "Graph-Tunings"
 msgid "Graph visibility"
 msgstr "Graph-Sichtbarkeit"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Graph with ID %s is missing a title"
-msgstr "Der Graphschablone %s fehlt ein Titel"
+msgstr "Beim Graph mit ID %s fehlt ein Titel"
 
 msgid "Graphic card name"
 msgstr "Grafikkartenname"
@@ -41746,7 +41746,7 @@ msgstr "Monitoring-Zustand falls der Task nicht aktiviert ist"
 
 msgid "Monitoring state if the Cluster Collector reports no Machine Metrics"
 msgstr ""
-"Monitoring-Zustand, wenn der Cluster Collector keine Maschinenmetriken meldet"
+"Monitoring-Zustand, wenn der Cluster-Kollektor keine Maschinenmetriken meldet"
 
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "Monitoring-Zustand, wenn die falsche Einheit aktiv oder im standby ist"
@@ -51067,9 +51067,8 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "CPU-Auslastung für Proxmox VE"
 
-#, fuzzy
 msgid "Proxmox VE HA Manager Watcher"
-msgstr "Proxmox VE Netzwerkdurchsatz"
+msgstr ""
 
 msgid "Proxmox VE Node CPU Allocation"
 msgstr "Proxmox VE Knoten CPU-Zuweisung"
@@ -56946,13 +56945,11 @@ msgstr "Service-Zustand"
 msgid "Service state age"
 msgstr "Alter des Service-Zustands"
 
-#, fuzzy
 msgid "Service state for Ignored VMs"
-msgstr "Alter des Service-Zustands"
+msgstr "Service-Zustand für ignorierte VMs"
 
-#, fuzzy
 msgid "Service state for Stopped VMs"
-msgstr "Service Zustandstyp"
+msgstr "Service-Zustand für gestoppte VMs"
 
 msgid "Service state if no map rule matches"
 msgstr "Service-Zustand, wenn keine Map-Regel greift"
@@ -58824,7 +58821,7 @@ msgid "Size growth per minute"
 msgstr "Größenwachstum pro Minute"
 
 msgid "Size of OTel Collector"
-msgstr "Größe des OTel Collector"
+msgstr "Größe des OTel Collectors"
 
 msgid "Size of PNP4Nagios"
 msgstr "Größe von PNP4Nagios"
@@ -61105,13 +61102,13 @@ msgid "State when build result is: running"
 msgstr "Zustand bei Build-Ergebnis: laufend"
 
 msgid "State when collector is in state failing"
-msgstr "Zustand, wenn Kollektor im Zustand failing ist"
+msgstr "Zustand, wenn Kollektor im Zustand 'failing' ist"
 
 msgid "State when collector is in state running"
-msgstr "Zustand, wenn Kollektor im Zustand running ist"
+msgstr "Zustand, wenn Kollektor im Zustand 'running' ist"
 
 msgid "State when collector is in state stopped"
-msgstr "Zustand, wenn Kollektor im Zustand stopped ist"
+msgstr "Zustand, wenn Kollektor im Zustand 'stopped' ist"
 
 msgid "State when file is missing"
 msgstr "Zustand, wenn die Datei fehlt"
@@ -65345,7 +65342,7 @@ msgid ""
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
 msgstr ""
-"Die vollständige URL des Cluster Collector-Services, einschließlich des "
+"Die vollständige URL des Cluster-Kollektor-Services, einschließlich des "
 "Protokolls (http oder https) und des Ports. Je nach der verteilten "
 "Konfiguration des Dienstes kann dies entweder der NodePort oder der Ingress-"
 "Endpunkt sein."
@@ -74807,22 +74804,22 @@ msgid "Total number of collections upper level"
 msgstr "Obergrenze für die Gesamtzahl der Kollektionen"
 
 msgid "Total number of collectors in state failing lower level"
-msgstr "Untergrenze für die Gesamtzahl der Kollektoren im Zustand failing"
+msgstr "Untergrenze für die Gesamtzahl der Kollektoren im Zustand 'failing'"
 
 msgid "Total number of collectors in state failing upper level"
-msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand failing"
+msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand 'failing'"
 
 msgid "Total number of collectors in state running lower level"
-msgstr "Untergrenze für die Gesamtzahl der Kollektoren im Zustand running"
+msgstr "Untergrenze für die Gesamtzahl der Kollektoren im Zustand 'running'"
 
 msgid "Total number of collectors in state running upper level"
-msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand running"
+msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand 'running'"
 
 msgid "Total number of collectors in state stopped lower level"
-msgstr "Untergrenze für die Gesamtzahl der Kollektoren im Zustand stopped"
+msgstr "Untergrenze für die Gesamtzahl der Kollektoren im Zustand 'stopped'"
 
 msgid "Total number of collectors in state stopped upper level"
-msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand stopped"
+msgstr "Obergrenze für die Gesamtzahl der Kollektoren im Zustand 'stopped'"
 
 msgid "Total number of data nodes lower level"
 msgstr "Untergrenze für die Gesamtzahl der Daten-Knoten"
@@ -89013,13 +89010,11 @@ msgstr ""
 msgid "Dashboard scope"
 msgstr "Dashboard-Ziel"
 
-#, fuzzy
 msgid "Clone & review dashboard filters"
-msgstr "Erstelle & setze Dashboard-Filter"
+msgstr "Schließen & Dashboard-Filter prüfen"
 
-#, fuzzy
 msgid "Clone & view list"
-msgstr "Erstelle & betrachte die Liste"
+msgstr "Klonen & Liste ansehen"
 
 msgid "Only me (private)"
 msgstr ""
@@ -89619,7 +89614,7 @@ msgid ""
 "OpenTelemetry collector will run."
 msgstr ""
 "Geben Sie einen Titel für die Konfiguration ein und wählen Sie die Instanz "
-"aus, auf welcher der OpenTelemetry Collector ausgeführt werden soll."
+"aus, auf welcher der OpenTelemetry Collector laufen soll."
 
 msgid "Select the folder your host(s) will be created in."
 msgstr "Wählen Sie den Ordner, in dem Ihre Hosts angelegt werden."
@@ -89642,23 +89637,22 @@ msgid ""
 "code in the next step."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Register the Relay to authorize it for communication with your Checkmk site."
-msgstr "Registrieren Sie das Relais für Ihre Checkmk-Instanz"
+msgstr ""
+"Registrieren Sie das Relais, um es für die Kommunikation mit Ihrer Checkmk-"
+"Instanz zu autorisieren."
 
 msgid ""
 "This code snippet includes a one-time token. If you plan to use it multiple "
 "times in larger environments, you can check "
 msgstr ""
 
-#, fuzzy
 msgid "this article"
-msgstr "Diese Regel"
+msgstr "dieser Artikel"
 
-#, fuzzy
 msgid " for more details."
-msgstr "Klicken Sie hier für Details."
+msgstr " für weitere Details."
 
 msgid "Deploy the relay to your environment"
 msgstr ""

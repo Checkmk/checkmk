@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -48,6 +48,17 @@ const dropdownOptions = computed(() => ({
     title: o.title
   }))
 }))
+
+watch(
+  () => mode.value,
+  (newMode) => {
+    if (newMode === RestrictedToSingle.HOST) {
+      restrictedIds.value = ['host']
+    } else if (newMode === RestrictedToSingle.NO) {
+      restrictedIds.value = []
+    }
+  }
+)
 </script>
 
 <template>

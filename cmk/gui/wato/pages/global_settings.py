@@ -20,6 +20,7 @@ from typing import Any, Final, override
 from livestatus import SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -631,7 +632,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     @override
     def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context()
+        return make_global_settings_context(omd_site())
 
 
 class DefaultModeEditGlobals(ModeEditGlobals):
@@ -663,7 +664,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     @override
     def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context()
+        return make_global_settings_context(omd_site())
 
 
 class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
@@ -738,5 +739,5 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         return True
 
 
-def make_global_settings_context() -> GlobalSettingsContext:
-    return GlobalSettingsContext()
+def make_global_settings_context(target_site_id: SiteId) -> GlobalSettingsContext:
+    return GlobalSettingsContext(target_site_id=target_site_id)

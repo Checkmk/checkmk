@@ -1736,7 +1736,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
     @override
     def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context()
+        return make_global_settings_context(self._site_id)
 
 
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
@@ -1791,7 +1791,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     @override
     def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context()
+        return make_global_settings_context(self._site_id)
 
 
 class ModeSiteLivestatusEncryption(WatoMode):

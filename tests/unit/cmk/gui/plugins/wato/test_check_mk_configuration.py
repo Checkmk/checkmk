@@ -5,6 +5,7 @@
 
 from unittest.mock import patch
 
+from cmk.ccc.site import omd_site
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.valuespec import DropdownChoice
@@ -18,7 +19,7 @@ def test_ui_theme_registration() -> None:
     assert isinstance(var.primary_domain(), ConfigDomainGUI)
     assert var.group() == ConfigVariableGroupUserInterface
 
-    valuespec = var.valuespec(make_global_settings_context())
+    valuespec = var.valuespec(make_global_settings_context(omd_site()))
     assert isinstance(valuespec, DropdownChoice)
     assert valuespec.choices() == theme_choices()
 
@@ -34,5 +35,6 @@ def test_ui_theme_default_value() -> None:
         return_value=[("modern-dark", "Dark")],
     ):
         assert (
-            var.valuespec(make_global_settings_context()).value_to_html(default_setting) == "Dark"
+            var.valuespec(make_global_settings_context(omd_site())).value_to_html(default_setting)
+            == "Dark"
         )

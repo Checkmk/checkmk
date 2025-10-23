@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 from logging import Logger
 from typing import override
 
+from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
@@ -148,7 +149,9 @@ def _transform_global_config_value(config_var: str, config_val: object) -> objec
         config_variable = config_variable_registry[config_var]
     except KeyError:
         return config_val
-    return config_variable.valuespec(make_global_settings_context()).transform_value(config_val)
+    return config_variable.valuespec(make_global_settings_context(omd_site())).transform_value(
+        config_val
+    )
 
 
 def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSettings:

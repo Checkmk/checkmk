@@ -3243,7 +3243,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     @override
     def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context()
+        return make_global_settings_context(omd_site())
 
 
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
@@ -3291,7 +3291,7 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEventConsoleSettings.mode_url()
 
     def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context()
+        return make_global_settings_context(omd_site())
 
 
 def _get_event_console_sync_sites() -> list[SiteId]:

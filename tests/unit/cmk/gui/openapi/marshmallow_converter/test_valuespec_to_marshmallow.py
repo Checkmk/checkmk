@@ -7,6 +7,7 @@ from collections.abc import Iterator
 import pytest
 
 import cmk.utils.paths
+from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.marshmallow_converter.valuespec_to_marshmallow import valuespec_to_marshmallow
@@ -37,5 +38,5 @@ def test_valuespec_to_marshmallow_all_global_settings(fake_user: LoggedInUser) -
         with gui_context(), _UserContext(fake_user):
             for name, config_variable in config_variable_registry.items():
                 valuespec_to_marshmallow(
-                    config_variable.valuespec(make_global_settings_context()), name=name
+                    config_variable.valuespec(make_global_settings_context(omd_site())), name=name
                 )

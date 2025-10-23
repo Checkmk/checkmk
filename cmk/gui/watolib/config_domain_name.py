@@ -22,6 +22,7 @@ import cmk.ccc.plugin_registry
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
@@ -300,7 +301,8 @@ config_variable_group_registry = ConfigVariableGroupRegistry()
 
 
 @dataclass(frozen=True)
-class GlobalSettingsContext: ...
+class GlobalSettingsContext:
+    target_site_id: SiteId
 
 
 class ConfigVariable:

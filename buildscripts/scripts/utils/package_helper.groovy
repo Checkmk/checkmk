@@ -37,6 +37,10 @@ def dependency_paths_mapping() {
             "agents",
             "non-free/packages/cmk-update-agent",
         ],
+        "build-mk-oracle-aix-solaris": [
+            "packages/mk-oracle",
+            "requirements/rust/host"
+        ],
         "winagt-build": [
             "agents",
             "packages/cmk-agent-ctl",
@@ -97,6 +101,13 @@ def provide_agent_binaries(Map args) {
                     echo "edition is ${args.edition} => copy Linux agent updaters"
                     install -m 755 -D cmk-update-agent* -t ${checkout_dir}/non-free/packages/cmk-update-agent/
                 fi
+                """.stripIndent(),
+        ],
+        "build-mk-oracle-aix-solaris": [
+            relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
+            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle-aix-solaris"],
+            install_cmd: """\
+                cp mk-oracle.{aix,solaris} ${checkout_dir}/cmk/plugins/oracle/agents/
                 """.stripIndent(),
         ],
         "winagt-build": [

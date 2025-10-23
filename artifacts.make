@@ -26,7 +26,11 @@ else
 SOURCE_BUILT_AGENT_UPDATER :=
 endif
 SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe
-SOURCE_BUILT_MK_ORACLE := $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.exe
+SOURCE_BUILT_MK_ORACLE_WINDOWS := $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.exe
+SOURCE_BUILT_MK_ORACLE_AIX := $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.aix
+SOURCE_BUILT_MK_ORACLE := \
+	$(SOURCE_BUILT_MK_ORACLE_WINDOWS) \
+	$(SOURCE_BUILT_MK_ORACLE_AIX)
 SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \

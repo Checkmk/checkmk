@@ -134,4 +134,4 @@ def _transform_user_specific_unit_for_js(
 
 
 def make_mk_missing_data_error() -> MKMissingDataError:
-    return MKMissingDataError(_("No data was found with the current parameters of this dashlet."))
+    return MKMissingDataError(_("No data was found with the current parameters of this widget."))

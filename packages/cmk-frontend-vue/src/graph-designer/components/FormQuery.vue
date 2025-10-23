@@ -11,6 +11,7 @@ import {
 } from 'cmk-shared-typing/typescript/graph_designer'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 import usei18n from '@/lib/i18n'
@@ -88,58 +89,75 @@ const scopeAttribute = ref<string | null>(null)
 const dataPointAttribute = ref<string | null>(null)
 
 // autocompleters
+export interface AutoCompleteContext {
+  metricName?: string
+  resource_attributes?: string[]
+  scope_attributes?: string[]
+  data_point_attributes?: string[]
+}
 
-const metricNameAutocompleter: Autocompleter = {
+const metricNameAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
     ident: 'monitored_metrics_backend',
-    params: { strict: true }
+    params: {
+      strict: true,
+      context: getAutoCompleterContext()
+    }
   }
-}
+}))
 
-const resourceAttributesAutocompleter: Autocompleter = {
+const resourceAttributesAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
     ident: 'monitored_resource_attributes_backend',
     params: {
       strict: true,
-      context: {
-        metric: { metric: metricName.value }
-      }
+      context: getAutoCompleterContext()
     }
   }
-}
+}))
 
-const scopeAttributesAutocompleter: Autocompleter = {
+const scopeAttributesAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
     ident: 'monitored_scope_attributes_backend',
     params: {
       strict: true,
-      context: {
-        metric: { metric: metricName.value },
-        resource_attribute: { resource_attribute: resourceAttribute.value }
-      }
+      context: getAutoCompleterContext()
     }
   }
-}
+}))
 
-const dataPointAttributesAutocompleter: Autocompleter = {
+const dataPointAttributesAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
     ident: 'monitored_data_point_attributes_backend',
     params: {
       strict: true,
-      context: {
-        metric: { metric: metricName.value },
-        resource_attribute: { resource_attribute: resourceAttribute.value },
-        scope_attribute: { scope_attribute: scopeAttribute.value }
-      }
+      context: getAutoCompleterContext()
     }
   }
-}
+}))
 
 // actions
+
+function getAutoCompleterContext() {
+  const context: AutoCompleteContext = {}
+  if (metricName.value) {
+    context.metricName = metricName.value
+  }
+  if (resourceAttributes.value.length > 0) {
+    context.resource_attributes = resourceAttributes.value
+  }
+  if (scopeAttributes.value.length > 0) {
+    context.scope_attributes = scopeAttributes.value
+  }
+  if (dataPointAttributes.value.length > 0) {
+    context.data_point_attributes = dataPointAttributes.value
+  }
+  return context
+}
 
 function addResourceAttribute() {
   if (resourceAttribute.value !== '' && resourceAttribute.value !== null) {

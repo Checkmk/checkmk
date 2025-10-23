@@ -89,7 +89,9 @@ def test_plugin_update(
                     base_data[host_name].pop(skipped_check)
 
             base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
-    test_site_update = site_factory_update.update_as_site_user(test_site_update)
+    test_site_update = site_factory_update.update_as_site_user(
+        test_site_update, skip_if_version_not_supported=False
+    )
     test_site_update.openapi.changes.activate_and_wait_for_completion()
 
     target_data = {}

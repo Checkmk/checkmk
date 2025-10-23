@@ -2080,6 +2080,7 @@ class SiteFactory:
         abort: bool = False,
         disable_extensions: bool = False,
         n_extensions: int = 0,
+        skip_if_version_not_supported: bool = True,
     ) -> Site:
         """Update the test-site with the given target-package, if supported.
 
@@ -2099,6 +2100,10 @@ class SiteFactory:
                                 corresponding dialog appears during the update process.
             n_extensions:       The expected number of extensions to be disabled during the update
                                 process.
+            skip_if_version_not_supported:
+                                If True, the test will be skipped if the base version is not
+                                supported for the update to the target version.
+
 
         Returns:
             Site:              The updated site object.
@@ -2122,6 +2127,12 @@ class SiteFactory:
 
         pexpect_dialogs = []
         version_supported = base_package.version >= min_version
+        if not version_supported and not skip_if_version_not_supported:
+            pytest.fail(
+                "Trying to update to an unsupported version.\n"
+                f"Minimum supported version: {min_version}\n"
+                f"Base version: {base_package.version}\n"
+            )
         if version_supported:
             logger.info("Updating to a supported version.")
             pexpect_dialogs.extend(
@@ -2251,15 +2262,23 @@ class SiteFactory:
         min_version: CMKVersion = get_min_version(),
         conflict_mode: str = "keepold",
         start_site_after_update: bool = True,
+        skip_if_version_not_supported: bool = True,
     ) -> Site:
         base_package = test_site.package
         self._package = target_package
 
         version_supported = base_package.version >= min_version
         if not version_supported:
-            pytest.skip(
-                f"{base_package.version} is not a supported version for {target_package.version}"
-            )
+            if skip_if_version_not_supported:
+                pytest.skip(
+                    f"{base_package.version} is not a supported version for {target_package.version}"
+                )
+            else:
+                pytest.fail(
+                    "Trying to update to an unsupported version.\n"
+                    f"Minimum supported version: {min_version}\n"
+                    f"Base version: {base_package.version}\n"
+                )
 
         # refresh site object to install the correct target version
         self._base_ident = ""

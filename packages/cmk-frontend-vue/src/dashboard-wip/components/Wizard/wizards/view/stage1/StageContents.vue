@@ -143,6 +143,23 @@ const configuredFiltersByObjectType = computed(() => {
     new Set(contextInfos.value)
   )
 })
+
+const sortedContextInfos = computed(() => {
+  // Preserve original order unless both 'host' and 'service' are present
+  // and 'service' appears before 'host'. In that case, move 'host'
+  // directly before 'service' to keep it consistent with other widget workflows
+  const infos = [...contextInfos.value]
+  const hostIndex = infos.indexOf('host')
+  const serviceIndex = infos.indexOf('service')
+
+  if (hostIndex !== -1 && serviceIndex !== -1 && hostIndex > serviceIndex) {
+    infos.splice(hostIndex, 1)
+    const newServiceIndex = infos.indexOf('service')
+    infos.splice(newServiceIndex, 0, 'host')
+  }
+
+  return infos
+})
 </script>
 
 <template>
@@ -208,7 +225,7 @@ const configuredFiltersByObjectType = computed(() => {
       />
     </div>
     <ContentSpacer />
-    <div v-for="objectType in contextInfos" :key="objectType">
+    <div v-for="objectType in sortedContextInfos" :key="objectType">
       <h2>
         {{
           getVisual(objectType)?.title || _t('Unknown object type: %{objectType}', { objectType })

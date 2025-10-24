@@ -822,21 +822,19 @@ def file_status(
     source_type = filetype(source_path)
     target_type = filetype(target_path)
 
-    if source_type == "file":
+    if source_type == "file" and target_type == "file":
         source_content = file_contents(source_path, source_replacements)
-
-    if target_type == "file":
         target_content = file_contents(target_path, target_replacements)
+        changed_content = source_type == "file" and source_content != target_content
+    else:
+        # FIXME: Was ist, wenn aus einer Datei ein Link gemacht wurde? Oder umgekehrt?
+        changed_content = (
+            source_type == "link"
+            and target_type == "link"
+            and os.readlink(source_path) != os.readlink(target_path)
+        )
 
     changed_type = source_type != target_type
-    # FIXME: Was ist, wenn aus einer Datei ein Link gemacht wurde? Oder umgekehrt?
-    changed_content = (
-        source_type == "file" and target_type == "file" and source_content != target_content
-    ) or (
-        source_type == "link"
-        and target_type == "link"
-        and os.readlink(source_path) != os.readlink(target_path)
-    )
     changed = changed_type or changed_content
 
     return (changed_type, changed_content, changed)

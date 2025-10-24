@@ -355,6 +355,11 @@ _CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
         "azure_cosmosdb_database_throttled_requests",
     },
     "Total requests": {"azure_cosmosdb_totalrequests", "azure_cosmosdb_database_total_requests"},
+    "Normalized RU consumption": {
+        "azure_cosmosdb_normalized_ru_consumption",
+        "azure_cosmosdb_database_normalized_ru_consumption",
+    },
+    "Total RUs": {"azure_cosmosdb_total_rus", "azure_cosmosdb_database_total_rus"},
 }
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {

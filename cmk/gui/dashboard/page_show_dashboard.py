@@ -232,23 +232,26 @@ def _draw_dashboard(
     owner = board["owner"]
     if mode == "edit" and (
         owner == UserId.builtin()
-        or (owner != UserId.builtin() and user.may("general.edit_foreign_dashboards"))
+        or (
+            owner != UserId.builtin()
+            and owner != user.id
+            and user.may("general.edit_foreign_dashboards")
+        )
     ):
         # Trying to edit a built-in dashboard results in doing a copy
         all_dashboards = get_all_dashboards()
-        active_user = user.id
-        assert active_user is not None
         board = copy.deepcopy(board)
         if owner == UserId.builtin():
+            active_user = user.id
+            assert active_user is not None
             board["owner"] = active_user
             board["public"] = False
-
-        all_dashboards[(active_user, name)] = board
-        permitted_dashboards[name] = board
-        if owner == UserId.builtin():
+            all_dashboards[(active_user, name)] = board
+            permitted_dashboards[name] = board
             owner = active_user
             save_all_dashboards()
         else:
+            all_dashboards[(owner, name)] = board
             save_all_dashboards(owner)
         need_replication = True
 

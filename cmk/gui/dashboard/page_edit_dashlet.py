@@ -64,11 +64,11 @@ class EditDashletPage(Page):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
 
         self._board = request.get_str_input_mandatory("name")
-        self._owner = request.get_str_input_mandatory("owner")
+        self._owner = request.get_validated_type_input_mandatory(UserId, "owner")
         self._ident = request.get_integer_input("id")
 
         try:
-            self._dashboard = get_permitted_dashboards_by_owners()[self._board][UserId(self._owner)]
+            self._dashboard = get_permitted_dashboards_by_owners()[self._board][self._owner]
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
@@ -218,7 +218,7 @@ class EditDashletPage(Page):
                 else:
                     self._dashboard["dashlets"][self._ident] = new_dashlet_spec
 
-                save_and_replicate_all_dashboards(UserId(self._owner))
+                save_and_replicate_all_dashboards(self._owner)
                 html.footer()
                 raise HTTPRedirect(request.get_url_input("next", request.get_url_input("back")))
 

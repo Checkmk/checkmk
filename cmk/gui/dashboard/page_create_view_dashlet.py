@@ -42,9 +42,9 @@ __all__ = ["page_create_link_view_dashlet", "page_create_view_dashlet"]
 def page_create_link_view_dashlet(ctx: PageContext) -> None:
     """Choose an existing view from the list of available views"""
     name = request.get_str_input_mandatory("name")
-    owner = request.get_str_input_mandatory("owner")
+    owner = request.get_validated_type_input_mandatory(UserId, "owner")
     choose_view(
-        UserId(owner),
+        owner,
         name,
         _("Embed existing view"),
         _create_linked_view_dashlet_spec,
@@ -69,7 +69,7 @@ def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedV
 def page_create_view_dashlet(ctx: PageContext) -> None:
     create = request.var("create", "1") == "1"
     name = request.get_str_input_mandatory("name")
-    owner = request.get_str_input_mandatory("owner")
+    owner = request.get_validated_type_input_mandatory(UserId, "owner")
 
     if create:
         url = makeuri(
@@ -82,7 +82,7 @@ def page_create_view_dashlet(ctx: PageContext) -> None:
     else:
         # Choose an existing view from the list of available views
         choose_view(
-            UserId(owner),
+            owner,
             name,
             _("Copy existing view"),
             _create_cloned_view_dashlet_spec,

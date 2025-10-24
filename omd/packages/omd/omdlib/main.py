@@ -751,6 +751,42 @@ def merge_update_file(
             pass
 
 
+def _read_skel_content(
+    *,
+    version: str,
+    site_home: str,
+    skel_path: Path,
+    relpath: str,
+    conflict_mode: str,
+) -> bytes:
+    while True:
+        try:
+            return skel_path.read_bytes()
+        except Exception:
+            # Do not ask the user in non-interactive mode.
+            if conflict_mode in ["abort", "install"]:
+                sys.exit(f"Skeleton file '{skel_path}' of version {version} not readable.")
+            elif conflict_mode == "keepold" or not user_confirms(
+                site_home,
+                conflict_mode,
+                "Skeleton file of version %s not readable" % version,
+                "The file '%s' is not readable for the site user. "
+                "This is most probably due a bug in release 0.42. "
+                "You can either fix that problem by making the file "
+                "readable with doing as root: chmod +r '%s' "
+                "or assume the file as empty. In that case you might "
+                "damage your configuration file "
+                "in case you have made changes to it in your site. What shall we do?"
+                % (skel_path, skel_path),
+                relpath,
+                "retry",
+                "Retry reading the file (after you've fixed it)",
+                "ignore",
+                "Assume the file to be empty",
+            ):
+                return b""
+
+
 def _try_merge(
     site: SiteContext,
     conflict_mode: str,
@@ -767,34 +803,13 @@ def _try_merge(
         (old_version, site.version_skel_dir, old_replacements),
         (new_version, "/omd/versions/%s/skel" % new_version, new_replacements),
     ]:
-        p = Path(skelroot, relpath)
-        while True:
-            try:
-                skel_content = p.read_bytes()
-                break
-            except Exception:
-                # Do not ask the user in non-interactive mode.
-                if conflict_mode in ["abort", "install"]:
-                    sys.exit(f"Skeleton file '{p}' of version {version} not readable.")
-                elif conflict_mode == "keepold" or not user_confirms(
-                    site_home,
-                    conflict_mode,
-                    "Skeleton file of version %s not readable" % version,
-                    "The file '%s' is not readable for the site user. "
-                    "This is most probably due a bug in release 0.42. "
-                    "You can either fix that problem by making the file "
-                    "readable with doing as root: chmod +r '%s' "
-                    "or assume the file as empty. In that case you might "
-                    "damage your configuration file "
-                    "in case you have made changes to it in your site. What shall we do?" % (p, p),
-                    relpath,
-                    "retry",
-                    "Retry reading the file (after you've fixed it)",
-                    "ignore",
-                    "Assume the file to be empty",
-                ):
-                    skel_content = b""
-                    break
+        skel_content = _read_skel_content(
+            version=version,
+            site_home=site_home,
+            skel_path=Path(skelroot, relpath, conflict_mode),
+            relpath=relpath,
+            conflict_mode=conflict_mode,
+        )
         Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, replacements))
     version_patch = os.popen(  # nosec B605 # BNS:2b5952
         f"diff -u {user_path}-{old_version} {user_path}-{new_version}"

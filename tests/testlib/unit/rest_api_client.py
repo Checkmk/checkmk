@@ -2423,13 +2423,6 @@ class DcdClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(self, expect_ok: bool = True) -> Response:
-        return self.request(
-            "get",
-            url=f"/domain-types/{self.domain}/collections/all",
-            expect_ok=expect_ok,
-        )
-
     def create(
         self,
         dcd_id: str,
@@ -2524,6 +2517,55 @@ class DcdClient(RestApiClient):
         return self.request(
             "delete",
             url=f"/objects/{self.domain}/{dcd_id}",
+            expect_ok=expect_ok,
+        )
+
+
+class DcdMetricBackendClient(RestApiClient):
+    domain: Literal["dcd_metric_backend"] = "dcd_metric_backend"
+    default_version = APIVersion.INTERNAL
+
+    def create(
+        self,
+        dcd_id: str,
+        site: str,
+        title: (
+            str | None
+        ) = None,  # Set as optional in order to run tests on missing fields behavior
+        comment: str | None = None,
+        documentation_url: str | None = None,
+        disabled: bool | None = None,
+        interval: int | None = None,
+        connector_type: str | None = None,
+        discover_on_creation: bool | None = None,
+        validity_period: int | None = None,
+        creation_rules: list[dict[str, Any]] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = _only_set_keys(
+            {
+                "dcd_id": dcd_id,
+                "title": title,
+                "site": site,
+                "comment": comment,
+                "documentation_url": documentation_url,
+                "disabled": disabled,
+                "connector": _only_set_keys(
+                    {
+                        "connector_type": connector_type,
+                        "interval": interval,
+                        "discover_on_creation": discover_on_creation,
+                        "validity_period": validity_period,
+                        "creation_rules": creation_rules,
+                    }
+                ),
+            }
+        )
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
             expect_ok=expect_ok,
         )
 
@@ -3736,6 +3778,7 @@ class ClientRegistry:
     Comment: CommentClient
     EventConsole: EventConsoleClient
     Dcd: DcdClient
+    DcdMetricBackend: DcdMetricBackendClient
     AuditLog: AuditLogClient
     BiPack: BiPackClient
     BiAggregation: BiAggregationClient
@@ -3790,6 +3833,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Comment=CommentClient(request_handler, url_prefix),
         EventConsole=EventConsoleClient(request_handler, url_prefix),
         Dcd=DcdClient(request_handler, url_prefix),
+        DcdMetricBackend=DcdMetricBackendClient(request_handler, url_prefix),
         AuditLog=AuditLogClient(request_handler, url_prefix),
         BiPack=BiPackClient(request_handler, url_prefix),
         BiAggregation=BiAggregationClient(request_handler, url_prefix),

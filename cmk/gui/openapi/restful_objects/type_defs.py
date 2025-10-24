@@ -31,6 +31,7 @@ DomainType = Literal[
     "dashboard_relative_grid",
     "dashboard_responsive_grid",
     "dcd",
+    "dcd_metric_backend",
     "discovery_run",
     "downtime",
     "event_console",

@@ -33,11 +33,11 @@ LIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle"),
-            target=Path("plugins", "packages", "mk-oracle", "mk-oracle"),
+            target=Path("packages", "mk-oracle", "mk-oracle"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync"),
-            target=Path("plugins", "oracle_unified_sync"),
+            target=Path("oracle_unified_sync"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_async"),
@@ -52,15 +52,15 @@ WIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle.exe"),
-            target=Path("plugins", "packages", "mk-oracle", "mk-oracle.exe"),
+            target=Path("packages", "mk-oracle", "mk-oracle.exe"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync.ps1"),
-            target=Path("plugins", "oracle_unified_sync.ps1"),
+            target=Path("oracle_unified_sync.ps1"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_async.ps1"),
-            target=Path("plugins", "oracle_unified_async.ps1"),
+            target=Path("oracle_unified_async.ps1"),
             cached=True,
         ),
     ],

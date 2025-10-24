@@ -72,17 +72,17 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/vsphere_object",
     "cmk/vsphere_vcenter",
     "cmk/systemd/unit:{name}",
-}
-
-CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
-    "cmk/rmk/node_type",
-    "cmk/otel/metrics",  # CCE, actually.
     "cmk/podman/host",
     "cmk/podman/node:{node}",
     "cmk/podman/object:container",
     "cmk/podman/object:node",
     "cmk/podman/pod:{pod}",
     "cmk/podman/user:{user}",
+}
+
+CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+    "cmk/rmk/node_type",
+    "cmk/otel/metrics",  # CCE, actually.
 }
 
 

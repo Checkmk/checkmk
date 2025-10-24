@@ -89,7 +89,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets import RuleSetName
-from tests.testlib.common.repo import is_enterprise_repo
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -1392,15 +1391,9 @@ def test__find_candidates(
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
         CheckPluginName("uptime"),
+        CheckPluginName("mgmt_podman_container_uptime"),
+        CheckPluginName("podman_container_uptime"),
     }
-
-    if is_enterprise_repo():
-        expected_plugins.update(
-            {
-                CheckPluginName("mgmt_podman_container_uptime"),
-                CheckPluginName("podman_container_uptime"),
-            }
-        )
 
     assert (
         find_plugins(

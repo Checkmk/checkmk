@@ -406,6 +406,7 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("buildscripts/scripts/lib/registry.py"),
         Path("buildscripts/scripts/build-cmk-container.py"),
     ),
+    ImportName("scripts"): {Path("scripts/gerrit_api/scrape_werks.py")},
 }
 
 

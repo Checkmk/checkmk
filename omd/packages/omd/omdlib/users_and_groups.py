@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
-
 import grp
 import os
 import pwd
@@ -206,7 +203,7 @@ def user_verify(
         )
 
     group = _group_by_id(user.pw_gid)
-    if group is None or group.gr_name != name:
+    if group.gr_name != name:
         raise MKTerminate(tty.error + ": primary group for siteuser must be %s" % name)
 
     if not _user_has_group(version_info.APACHE_USER, name):

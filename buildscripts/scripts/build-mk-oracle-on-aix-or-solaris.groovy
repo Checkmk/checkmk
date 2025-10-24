@@ -40,7 +40,7 @@ def main() {
 
     stage("Archive artifacts") {
         dir("${checkout_dir}/packages/mk-oracle") {
-            archiveArtifacts(allowEmptyArchive: true, artifacts: "mk-oracle.${distro}}");
+            archiveArtifacts(allowEmptyArchive: true, artifacts: "mk-oracle.${distro}");
         }
     }
 }

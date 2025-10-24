@@ -18,8 +18,7 @@ import sys
 import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from datetime import datetime, timedelta
-from typing import Any, TYPE_CHECKING
+from typing import Any
 from xml.dom import minidom
 
 # TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11
@@ -29,12 +28,8 @@ import dateutil.parser
 import requests
 import urllib3
 
-import cmk.utils.paths
 from cmk.password_store.v1_unstable import dereference_secret, Secret
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
-
-if TYPE_CHECKING:
-    pass
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, Storage, vcrtrace
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -47,9 +42,10 @@ if TYPE_CHECKING:
 
 __version__ = "2.5.0b1"
 
-USER_AGENT = f"checkmk-special-vsphere-{__version__}"
+AGENT_NAME = "vsphere"
 
-AGENT_TMP_PATH = cmk.utils.paths.tmp_dir / "agents/agent_vsphere"
+USER_AGENT = f"checkmk-special-{AGENT_NAME}-{__version__}"
+
 
 REQUESTED_COUNTERS_KEYS = (
     "disk.numberReadAveraged",
@@ -94,7 +90,7 @@ REQUESTED_COUNTERS_KEYS = (
     "gpu.temperature",
 )
 
-COOKIE_MAX_AGE_HOURS = 4
+COOKIE_MAX_AGE = 4 * 3600
 
 
 class SoapTemplates:
@@ -1155,10 +1151,7 @@ class ESXConnection:
     def __init__(self, address: str, port: int, opt: argparse.Namespace) -> None:
         super().__init__()
 
-        AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
-
-        self._server_cookie_path = AGENT_TMP_PATH / ("%s.cookie" % address)
-        self._perf_samples_path = AGENT_TMP_PATH / ("%s.timer" % address)
+        self._store = Storage(AGENT_NAME, address)
         self._perf_samples: None | int = None
 
         self._session = ESXSession(
@@ -1230,19 +1223,17 @@ class ESXConnection:
         if self._perf_samples is not None:
             return self._perf_samples
 
-        try:
-            delta = min(3600.0, time.time() - self._perf_samples_path.stat().st_mtime)
-        except OSError:
-            delta = 60.0
-        finally:
-            self._perf_samples_path.touch()
+        now = time.time()
+        last_time = float(self._store.read("timer", now - 60.0))
+        self._store.write("timer", str(now))
+        delta = min(3600.0, now - last_time)
 
         self._perf_samples = max(1, int(delta / 20.0))
         return self._perf_samples
 
     def login(self, user: str, password: Secret) -> None:
-        if self._is_cookie_valid():
-            self._session.headers["Cookie"] = self._server_cookie_path.read_text(encoding="utf-8")
+        if (cookie := self._get_valid_stored_cookie()) is not None:
+            self._session.headers["Cookie"] = cookie
             return
 
         auth = {"username": self._escape_xml(user), "password": self._escape_xml(password.reveal())}
@@ -1260,17 +1251,21 @@ class ESXConnection:
         if not (server_cookie := response.headers.get("set-cookie")):
             return
 
-        self._server_cookie_path.write_text(server_cookie, encoding="utf-8")
+        self._store.write("cookie.value", server_cookie)
+        self._store.write("cookie.time", str(time.time()))
         self._session.headers["Cookie"] = server_cookie
 
-    def _is_cookie_valid(self) -> bool:
-        if not self._server_cookie_path.exists():
-            return False
-        cookie_mtime = datetime.fromtimestamp(self._server_cookie_path.stat().st_mtime)
-        return datetime.now() - cookie_mtime < timedelta(hours=COOKIE_MAX_AGE_HOURS)
+    def _get_valid_stored_cookie(self) -> str | None:
+        if (cookie := self._store.read("cookie.value", None)) is None or (
+            cookie_mtime_raw := self._store.read("cookie.time", None)
+        ) is None:
+            return None
+
+        return cookie if time.time() - float(cookie_mtime_raw) < COOKIE_MAX_AGE else None
 
     def delete_server_cookie(self) -> None:
-        self._server_cookie_path.unlink(missing_ok=True)
+        self._store.unset("cookie.value")
+        self._store.unset("cookie.time")
 
 
 # .

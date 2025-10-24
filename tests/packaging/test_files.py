@@ -405,19 +405,33 @@ def _should_be_signed(path: str) -> bool:
 
 
 def _verify_signature(file_path: Path, file_name: str) -> None | str:
-    # requires to build osslsigncode via bazel (or install locally) beforehand:
-    #   export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path)
-    # (see tests/Makefile -> tests-packaging)
-    result = subprocess.run(
-        [
-            "osslsigncode",
-            "verify",
-            file_path,
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        assert file_path.exists(), f"File to verify does not exist: {file_path}"
+        # requires to build osslsigncode via bazel (or install locally) beforehand:
+        #   export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path)
+        # (see tests/Makefile -> tests-packaging)
+        result = subprocess.run(
+            [
+                "osslsigncode",
+                "verify",
+                file_path,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        # osslsigncode not found - it should be available in CI (via test-packaging Makefile target)
+        # -> should only occur in local test environments
+        logger.error("osslsigncode not found in PATH")
+        if os.environ.get("CI"):
+            logger.error("THIS SHOULD NOT HAPPEN in CI! PLEASE REPORT!")
+        else:
+            logger.warning("Please build it locally via bazel (and add it to your PATH), e.g.:")
+            logger.warning(
+                "  bazel: export PATH=$PATH:$(bazel run //bazel/tools:bazel_env print-path)"
+            )
+        raise
     logger.info(
         "Signature verification of '%s': %s - %s",
         file_name,
@@ -494,11 +508,18 @@ def test_windows_artifacts_are_signed(
             )
             paths_checked.append(f"{path_prefix_agents}/check_mk_agent.msi")
             with TemporaryDirectory() as msi_content:
-                subprocess.run(
-                    ["msiextract", "-C", msi_content, msi_file.name],
-                    check=False,
-                    stdout=subprocess.DEVNULL,
-                )
+                try:
+                    subprocess.run(
+                        ["msiextract", "-C", msi_content, msi_file.name],
+                        check=False,
+                        stdout=subprocess.DEVNULL,
+                    )
+                except FileNotFoundError:
+                    logger.error("msiextract not found in PATH")
+                    logger.error("IF IN CI - THIS SHOULD NOT HAPPEN! PLEASE REPORT!")
+                    logger.warning("can be installed locally")
+                    logger.warning("  ubuntu: sudo apt install msitools")
+                    raise
                 for file in ("check_mk_agent.exe", "cmk-agent-ctl.exe"):
                     signing_failures.append(
                         _verify_signature(

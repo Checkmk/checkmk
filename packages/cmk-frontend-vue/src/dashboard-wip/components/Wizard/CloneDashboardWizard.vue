@@ -7,7 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from '@/components/CmkIcon'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
-import type { DashboardGeneralSettings, DashboardLayout } from '@/dashboard-wip/types/dashboard'
+import type {
+  DashboardGeneralSettings,
+  DashboardLayout,
+  DashboardOwnerType
+} from '@/dashboard-wip/types/dashboard'
 
 import CloneDashboardWizard from './wizards/dashboard-clone/CloneDashboardWizard.vue'
 
@@ -16,6 +20,7 @@ interface CreateDashboardWizardProps {
   referenceDashboardGeneralSettings: DashboardGeneralSettings
   referenceDashboardRestrictedToSingle: string[]
   referenceDashboardLayoutType: DashboardLayout
+  referenceDashboardType: DashboardOwnerType
   availableLayouts: DashboardLayout[]
 }
 
@@ -50,10 +55,12 @@ const cancel = () => {
   <CmkSlideIn :open="open">
     <Suspense>
       <CloneDashboardWizard
+        :reference-dashboard-id="activeDashboardId"
         :available-layouts="availableLayouts"
         :reference-dashboard-general-settings="referenceDashboardGeneralSettings"
         :reference-dashboard-restricted-to-single="referenceDashboardRestrictedToSingle"
         :reference-dashboard-layout-type="referenceDashboardLayoutType"
+        :reference-dashboard-type="referenceDashboardType"
         @clone-dashboard="(...args) => emit('clone-dashboard', ...args)"
         @cancel-clone="cancel"
       />

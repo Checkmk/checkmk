@@ -13,6 +13,7 @@ import {
   type DashboardGeneralSettings,
   DashboardLayout,
   type DashboardModel,
+  DashboardOwnerType,
   type EditRelativeDashboardBody,
   type EditResponsiveDashboardBody
 } from '@/dashboard-wip/types/dashboard'
@@ -67,6 +68,7 @@ export function useDashboardsManager() {
       owner: dashboardResp.owner,
       general_settings: dashboardResp.general_settings,
       filter_context: dashboardResp.filter_context,
+      type: dashboardResp.is_built_in ? DashboardOwnerType.BUILT_IN : DashboardOwnerType.CUSTOM,
       content
     }
 
@@ -131,7 +133,8 @@ export function useDashboardsManager() {
       owner: dashboardResp.owner,
       general_settings: dashboardResp.general_settings,
       filter_context: dashboardResp.filter_context,
-      content
+      content,
+      type: DashboardOwnerType.CUSTOM
     }
 
     if (postCreateMode === 'setDashboardAsActive') {

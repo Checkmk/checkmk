@@ -38,10 +38,16 @@ export type ContentResponsiveGrid = {
   widgets: components['schemas']['ResponsiveGridDashboardResponse']['widgets']
 }
 
+export enum DashboardOwnerType {
+  BUILT_IN = 'built_in',
+  CUSTOM = 'custom'
+}
+
 export type DashboardModel<T = ContentResponsiveGrid | ContentRelativeGrid> = {
   owner: string
   general_settings: DashboardGeneralSettings
   filter_context: DashboardFilterContextWithSingleInfos
+  type: DashboardOwnerType
   content: T
 }
 

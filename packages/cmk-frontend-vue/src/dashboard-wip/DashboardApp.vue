@@ -364,6 +364,7 @@ function deepClone<T>(obj: T): T {
         :reference-dashboard-layout-type="
           dashboardsManager.activeDashboard.value!.content.layout.type as DashboardLayout
         "
+        :reference-dashboard-type="dashboardsManager.activeDashboard.value!.type"
         @clone-dashboard="(...args) => cloneDashboard(...args)"
         @cancel-clone="openDashboardCloneDialog = false"
       />

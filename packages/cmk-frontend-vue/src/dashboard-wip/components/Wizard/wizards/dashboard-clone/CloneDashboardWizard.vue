@@ -15,7 +15,11 @@ import FieldComponent from '@/dashboard-wip/components/Wizard/components/TableFo
 import FieldDescription from '@/dashboard-wip/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard-wip/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard-wip/components/Wizard/components/TableForm/TableFormRow.vue'
-import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard-wip/types/dashboard'
+import {
+  type DashboardGeneralSettings,
+  DashboardLayout,
+  DashboardOwnerType
+} from '@/dashboard-wip/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
@@ -30,9 +34,11 @@ import StepsHeader from '../../components/StepsHeader.vue'
 const { _t } = usei18n()
 
 interface CreateDashboardWizardProps {
+  referenceDashboardId: string
   referenceDashboardGeneralSettings: DashboardGeneralSettings
   referenceDashboardRestrictedToSingle: string[]
   referenceDashboardLayoutType: DashboardLayout
+  referenceDashboardType: DashboardOwnerType
   availableLayouts: DashboardLayout[]
 }
 
@@ -83,6 +89,12 @@ const {
   validateGeneralSettings,
   buildSettings
 } = useDashboardGeneralSettings(props.referenceDashboardGeneralSettings)
+
+if (props.referenceDashboardType === DashboardOwnerType.BUILT_IN) {
+  name.value = props.referenceDashboardId
+} else {
+  name.value = `${props.referenceDashboardId}_clone`
+}
 
 const dashboardLayout = ref<DashboardLayout>(props.referenceDashboardLayoutType)
 

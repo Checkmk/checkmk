@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="mutable-override"
-
-# mypy: disable-error-code="possibly-undefined"
 
 """Site configuration and config hooks
 
@@ -113,12 +108,9 @@ class NetworkPortHasError(ConfigChoiceHasError):
 class ApacheTCPAddrHasError(ConfigChoiceHasError):
     @override
     def __call__(self, value: str) -> result.Result[None, str]:
-        class _Parser(pydantic.RootModel[object]):
-            root: pydantic.HttpUrl
-
         url = f"http://{value}:80"
         try:
-            _Parser.model_validate(url)
+            pydantic.TypeAdapter(pydantic.HttpUrl).validate_python(url)
             return result.OK(None)
         except pydantic.ValidationError as e:
             message = f"""OMD uses APACHE_TCP_ADDR and APACHE_TCP_PORT to construct an Apache
@@ -158,9 +150,7 @@ def load_config_hooks(site: "SiteContext", verbose: bool) -> ConfigHooks:
         try:
             if hook_name[0] != ".":
                 hook = _config_load_hook(site, hook_name, verbose)
-                # only load configuration hooks
-                if hook.choices is not None:
-                    config_hooks[hook_name] = hook
+                config_hooks[hook_name] = hook
         except MKTerminate:
             raise
         except Exception:
@@ -180,6 +170,7 @@ def _config_load_hook(
         # IMHO this should be unreachable...
         raise MKTerminate("Site has no version and therefore no hooks")
 
+    alias = None
     description = ""
     menu = "Other"
     description_active = False
@@ -199,6 +190,7 @@ def _config_load_hook(
                 description_active = False
 
     hook_info = call_hook(site, hook_name, ["choices"], verbose)[1]
+    assert alias is not None, "Implementation error, please contact support"
     return ConfigHook(
         choices=_parse_hook_choices(hook_info),
         name=hook_name,

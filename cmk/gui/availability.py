@@ -186,7 +186,7 @@ AVBITimelineState = tuple[int, str, bool, bool]  # state, output, in_downtime, i
 AVBITimelineStates = dict[tuple[SiteId, HostName, ServiceName], AVBITimelineState]
 AVLevels = tuple[float, float]
 
-ColumnSpec = tuple[str, str, str, str | None]
+_ColumnSpec = tuple[str, str, str, str | None]
 
 SiteHostSvc = tuple[SiteId, HostName, ServiceName | None]
 
@@ -207,10 +207,11 @@ class AvailabilityColumns:
         self.service = self._service_availability_columns()
         self.bi = self._bi_availability_columns()
 
-    def __getitem__(self, key: str) -> list[ColumnSpec]:
+    # TODO: Nuke this abomination!
+    def __getitem__(self, key: AVObjectType) -> Sequence[_ColumnSpec]:
         return getattr(self, key)
 
-    def _host_availability_columns(self) -> list[ColumnSpec]:
+    def _host_availability_columns(self) -> Sequence[_ColumnSpec]:
         return [
             ("up", "state0", _("UP"), None),
             ("down", "state2", _("DOWN"), None),
@@ -227,7 +228,7 @@ class AvailabilityColumns:
             ),
         ]
 
-    def _service_availability_columns(self) -> list[ColumnSpec]:
+    def _service_availability_columns(self) -> Sequence[_ColumnSpec]:
         return [
             ("ok", "state0", _("OK"), None),
             ("warn", "state1", _("WARN"), None),
@@ -251,7 +252,7 @@ class AvailabilityColumns:
             ),
         ]
 
-    def _bi_availability_columns(self) -> list[ColumnSpec]:
+    def _bi_availability_columns(self) -> Sequence[_ColumnSpec]:
         return [
             ("ok", "state0", _("OK"), None),
             ("warn", "state1", _("WARN"), None),

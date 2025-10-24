@@ -45,14 +45,14 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
     Number.isFinite(data?.vertical_axis_width) ? (data?.vertical_axis_width as number) : 8
   )
 
-  const fontSize = ref<number>(data?.font_size_pt ?? 12)
+  const fontSize = ref<number>(data?.font_size_pt ?? 8)
   const color = ref<DefaultOrColor>('default')
-  const timestamp = ref<boolean>(data?.show_graph_time ?? true)
-  const roundMargin = ref<boolean>(data?.show_margin ?? true)
-  const graphLegend = ref<boolean>(data?.show_legend ?? true)
+  const timestamp = ref<boolean>(data?.show_graph_time ?? false)
+  const roundMargin = ref<boolean>(data?.show_margin ?? false)
+  const graphLegend = ref<boolean>(data?.show_legend ?? false)
 
   const clickToPlacePin = ref<boolean>(data?.show_pin ?? true)
-  const showBurgerMenu = ref<boolean>(data?.show_controls ?? true)
+  const showBurgerMenu = ref<boolean>(data?.show_controls ?? false)
 
   const dontFollowTimerange = ref<boolean>(data?.fixed_timerange ? !data.fixed_timerange : false)
 

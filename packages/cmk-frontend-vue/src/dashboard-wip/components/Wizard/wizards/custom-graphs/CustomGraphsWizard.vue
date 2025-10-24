@@ -51,11 +51,6 @@ const emit = defineEmits<{
     generalSettings: WidgetGeneralSettings,
     filterContext: WidgetFilterContext
   ]
-  updateWidget: [
-    content: WidgetContent,
-    generalSettings: WidgetGeneralSettings,
-    filterContext: WidgetFilterContext
-  ]
 }>()
 
 const wizardHandler = useWizard(1)
@@ -101,14 +96,10 @@ const contextConfiguredFilters = computed((): ConfiguredFilters => {
           :dashboard-name="props.dashboardName"
           :filters="contextConfiguredFilters"
           :dashboard-constants="props.dashboardConstants"
-          :edit-widget-spec="props.editWidgetSpec"
+          :edit-widget-spec="props.editWidgetSpec || null"
           @add-widget="
             (content, generalSettings, filterContext) =>
               emit('addWidget', content, generalSettings, filterContext)
-          "
-          @update-widget="
-            (content, generalSettings, filterContext) =>
-              emit('updateWidget', content, generalSettings, filterContext)
           "
         />
         <template #fallback>

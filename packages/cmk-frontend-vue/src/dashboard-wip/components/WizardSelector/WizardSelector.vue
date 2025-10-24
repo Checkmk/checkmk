@@ -143,7 +143,6 @@ const handleAddEditWidget = (
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
-        @update-widget="() => {}"
       />
 
       <!-- Other wizards can be added here similarly -->

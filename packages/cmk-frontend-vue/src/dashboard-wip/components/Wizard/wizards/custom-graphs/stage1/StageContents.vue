@@ -48,11 +48,6 @@ const emit = defineEmits<{
     generalSettings: WidgetGeneralSettings,
     filterContext: WidgetFilterContext
   ]
-  updateWidget: [
-    content: WidgetContent,
-    generalSettings: WidgetGeneralSettings,
-    filterContext: WidgetFilterContext
-  ]
 }>()
 
 const addWidget = () => {
@@ -67,19 +62,7 @@ const addWidget = () => {
   }
 }
 
-const updateWidget = () => {
-  const isValid = handler.validate()
-  if (isValid) {
-    emit(
-      'updateWidget',
-      toValue(handler.widgetProps.value!.content),
-      toValue(handler.widgetProps.value!.general_settings),
-      toValue(handler.widgetProps.value!.effective_filter_context)
-    )
-  }
-}
-
-const isUpdate = computed(() => !props.editWidgetSpec)
+const isUpdate = computed(() => props.editWidgetSpec !== null)
 </script>
 
 <template>
@@ -91,12 +74,10 @@ const isUpdate = computed(() => !props.editWidgetSpec)
 
   <ActionBar align-items="left">
     <ActionButton
-      v-if="isUpdate"
-      :label="_t('Add & place widget')"
+      :label="isUpdate ? _t('Save widget') : _t('Add & place widget')"
       :action="addWidget"
       variant="primary"
     />
-    <ActionButton v-else :label="_t('Save widget')" :action="updateWidget" variant="primary" />
   </ActionBar>
 
   <ContentSpacer />

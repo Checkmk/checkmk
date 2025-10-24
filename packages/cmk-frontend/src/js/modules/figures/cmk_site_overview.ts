@@ -233,7 +233,9 @@ export class SiteOverview extends FigureBase<SiteData> {
           this._last_zoom = zoom_enabled ? event.transform : zoomIdentity
           // @ts-ignore
           this.plot.attr('transform', this._last_zoom)
-          this._render_hexagon_content(this._hexagon_content!)
+          if (this._hexagon_content !== null) {
+            this._render_hexagon_content(this._hexagon_content)
+          }
           //@ts-ignore
           this.tooltip_generator.update_position(event)
         })
@@ -310,8 +312,9 @@ export class SiteOverview extends FigureBase<SiteData> {
     return {
       top: top,
       left: canvas_h_padding,
-      width: plot_size.width - 2 * canvas_h_padding,
-      height: plot_size.height - top - canvas_v_padding
+      // ensure these are not negative
+      width: Math.max(plot_size.width - 2 * canvas_h_padding, 0),
+      height: Math.max(plot_size.height - top - canvas_v_padding, 0)
     }
   }
 
@@ -562,6 +565,12 @@ export class SiteOverview extends FigureBase<SiteData> {
 
   _render_sites(hexagon_content: HexagonContent<SiteGeometry, SiteElement>) {
     const geometry = hexagon_content.geometry
+    if (!geometry) {
+      // skip rendering to avoid errors down the line
+      // this can happen on the initial rendering because the data has not yet
+      // been loaded, thus making the plot_size (and box_area) too small
+      return
+    }
 
     const element_boxes = this.plot
       .selectAll('g.element_box')

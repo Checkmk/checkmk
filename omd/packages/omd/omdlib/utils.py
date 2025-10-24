@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 import contextlib
 import enum
 import os
@@ -55,7 +53,7 @@ class SiteDistributedSetup(str, enum.Enum):
 
 
 def get_site_distributed_setup() -> SiteDistributedSetup:
-    file_vars: dict = {}
+    file_vars: dict[str, object] = {}
     if (distr_wato_filepath := Path("~/etc/omd/distributed.mk").expanduser()).exists():
         exec(  # nosec B102 # BNS:aee528
             distr_wato_filepath.read_text(),

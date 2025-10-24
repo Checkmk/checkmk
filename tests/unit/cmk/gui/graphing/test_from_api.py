@@ -342,6 +342,19 @@ _CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
     "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
     "Data usage": {"azure_cosmosdb_data_usage", "data_usage"},
+    "Failed requests (404)": {
+        "azure_cosmosdb_database_failed_requests",
+        "azure_cosmosdb_failed_requests",
+    },
+    "Throttled requests ratio": {
+        "azure_cosmosdb_throttled_ratio",
+        "azure_cosmosdb_database_throttled_ratio",
+    },
+    "Throttled requests (429)": {
+        "azure_cosmosdb_throttled_requests",
+        "azure_cosmosdb_database_throttled_requests",
+    },
+    "Total requests": {"azure_cosmosdb_totalrequests", "azure_cosmosdb_database_total_requests"},
 }
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
@@ -474,6 +487,7 @@ _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Throughput": {"azure_redis_throughput"},
     "Memory utilization": {"azure_redis_memory_utilization"},
     "Memory": {"azure_redis_used_memory"},
+    "Requests": {"azure_cosmosdb_database_requests"},
 }
 
 _ALLOWED_DUPLICATE_GRAPH_TITLES = {

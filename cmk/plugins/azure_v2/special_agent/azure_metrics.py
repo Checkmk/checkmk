@@ -92,6 +92,50 @@ cosmos_accounts_metrics = [
 ]
 
 COSMOS_DATABASE_METRICS = [
+    AzureMetric(
+        name="TotalRequests",
+        interval="PT1M",
+        aggregation="count",
+        dimension_filters=(
+            DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="count_TotalRequestsdb",
+    ),
+    AzureMetric(
+        name="TotalRequests",
+        interval="PT1M",
+        aggregation="count",
+        dimension_filters=(
+            DimensionFilter(
+                name="StatusCode",
+                value="429",
+            ),
+            DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="count_TotalRequests429db",
+    ),
+    AzureMetric(
+        name="TotalRequests",
+        interval="PT1M",
+        aggregation="count",
+        dimension_filters=(
+            DimensionFilter(
+                name="StatusCode",
+                value="404",
+            ),
+            DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="count_TotalRequests404db",
+    ),
     # this metric is needed to always discover the DBs
     # since some other metrics are only available when there is activity
     AzureMetric(

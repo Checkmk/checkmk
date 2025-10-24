@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-10-22 19:56+0000\n"
+"PO-Revision-Date: 2025-10-23 05:01+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -8663,6 +8663,14 @@ msgstr "Azure Application Gateway (veraltet)"
 
 msgid "Azure Blob Storage"
 msgstr "Azure Blob Speicher"
+
+#, fuzzy
+msgid "Azure Cosmos DB Availability"
+msgstr "BI Verfügbarkeit"
+
+#, fuzzy
+msgid "Azure Cosmos DB Requests"
+msgstr "Web ACL Anfragen"
 
 msgid "Azure DB Storage"
 msgstr "Azure DB Speicher"
@@ -24592,6 +24600,10 @@ msgid "Failed provisionings"
 msgstr "Fehlgeschlagene Bereitstellungen"
 
 msgid "Failed requests"
+msgstr "Fehlgeschlagene Anfragen"
+
+#, fuzzy
+msgid "Failed requests (404)"
 msgstr "Fehlgeschlagene Anfragen"
 
 msgid "Failed requests to adress book files"
@@ -72286,6 +72298,14 @@ msgstr ""
 "Sie den Checkmk Micro Core mit Smart Ping verwenden und trotzdem die "
 "Metriken des Ping zu einigen Hosts verfolgen wollen."
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB service "
+"availability"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für die Speicherlatenz und "
+"-verfügbarkeit zu konfigurieren"
+
 msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
@@ -72399,6 +72419,14 @@ msgid ""
 msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für den genutzten Speicherplatz "
 "in Prozent zu konfigurieren"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"throttled requests ratio"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
+"Redis Durchsatzes zu konfigurieren"
 
 msgid ""
 "This ruleset allows you to install executable scripts on your target "
@@ -73581,6 +73609,14 @@ msgid "Throttled Server Connections"
 msgstr "gedrosselte Serververbindungen"
 
 msgid "Throttled requests"
+msgstr "gedrosselte Anfragen"
+
+#, fuzzy
+msgid "Throttled requests (429)"
+msgstr "gedrosselte Anfragen"
+
+#, fuzzy
+msgid "Throttled requests ratio"
 msgstr "gedrosselte Anfragen"
 
 msgid "Throttles"
@@ -74975,6 +75011,10 @@ msgstr "Gesamtgröße der wiederverwendbaren Podman Volumes"
 
 msgid "Total reclaimable size upper levels"
 msgstr "Obergrenzen für die wiederverwendbare Größe"
+
+#, fuzzy
+msgid "Total requests"
+msgstr "nur Anfragen"
 
 msgid "Total reservation utilization"
 msgstr "Gesamte Reservierungsauslastung"
@@ -88453,7 +88493,8 @@ msgstr "Suche leeren"
 msgid "Filters included by dashboard owner"
 msgstr ""
 
-msgid "You can override these by adding a quick filter"
+#, fuzzy
+msgid "You can override these by adding a runtime filter"
 msgstr "Sie können diese durch Hinzufügen eines Schnellfilters überschreiben"
 
 msgid "Host filter"
@@ -88563,6 +88604,10 @@ msgstr "Gruppe auswählen..."
 
 msgid "Select value..."
 msgstr "Wert auswählen..."
+
+#, fuzzy
+msgid "(required)"
+msgstr " (erforderlich)"
 
 msgid "Search Filter"
 msgstr "Suchfilter"
@@ -88959,6 +89004,40 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
+msgid "Axis"
+msgstr ""
+
+msgid "Horizontal axis"
+msgstr "Horizontale Achse"
+
+msgid "Vertical axis"
+msgstr "Vertikale Achse"
+
+msgid "Graph styling"
+msgstr "Graph-Styling"
+
+msgid "Date and time stamp (right upper corner)"
+msgstr ""
+
+msgid "Margin round the graph"
+msgstr "Rand um den Graphen"
+
+msgid "Graph legend"
+msgstr "Graph-Legende"
+
+msgid "Interaction"
+msgstr "Interaktion"
+
+msgid "Click on graph to place pin"
+msgstr "Klicken Sie auf den Graph, um eine Pinnadel zu platzieren"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+msgid ""
+"Do not follow timerange changes of other graphs on the current dashboard"
+msgstr ""
+
 msgid "Failed to load sidebar elements."
 msgstr "Laden der Seitenleistenelement ist fehlgeschlagen."
 
@@ -89055,6 +89134,16 @@ msgstr ""
 msgid "Host selection"
 msgstr "Host-Auswahl"
 
+#, fuzzy
+msgid "Event selection"
+msgstr "Metrik-Auswahl"
+
+msgid "Add & place widget"
+msgstr "Widget hinzufügen & platzieren"
+
+msgid "Widget visualization"
+msgstr "Widget-Visualisierung"
+
 msgid "Available visualization types"
 msgstr "Verfügbare Visualisierungstypen"
 
@@ -89073,9 +89162,6 @@ msgstr "Nicht-UP-Zustände einfärben"
 msgid "Show summary for not UP states"
 msgstr "Zusammenfassung für Nicht-UP-Zustände anzeigen"
 
-msgid "Widget visualization"
-msgstr "Widget-Visualisierung"
-
 msgid "Host or sites, depending on context"
 msgstr "Host oder Instanzen, kontextabhängig"
 
@@ -89084,9 +89170,6 @@ msgstr "Sechseckgröße"
 
 msgid "Small"
 msgstr ""
-
-msgid "Add & place widget"
-msgstr "Widget hinzufügen & platzieren"
 
 msgid "Metric selection"
 msgstr "Metrik-Auswahl"
@@ -89107,40 +89190,6 @@ msgid "Barplot"
 msgstr "Balkendiagramm"
 
 msgid "Scatterplot"
-msgstr ""
-
-msgid "Axis"
-msgstr ""
-
-msgid "Horizontal axis"
-msgstr "Horizontale Achse"
-
-msgid "Vertical axis"
-msgstr "Vertikale Achse"
-
-msgid "Graph styling"
-msgstr "Graph-Styling"
-
-msgid "Date and time stamp (right upper corner)"
-msgstr ""
-
-msgid "Margin round the graph"
-msgstr "Rand um den Graphen"
-
-msgid "Graph legend"
-msgstr "Graph-Legende"
-
-msgid "Interaction"
-msgstr "Interaktion"
-
-msgid "Click on graph to place pin"
-msgstr "Klicken Sie auf den Graph, um eine Pinnadel zu platzieren"
-
-msgid "Show burger menu for graph options"
-msgstr ""
-
-msgid ""
-"Do not follow timerange changes of other graphs on the current dashboard"
 msgstr ""
 
 msgid "Metric (single)"

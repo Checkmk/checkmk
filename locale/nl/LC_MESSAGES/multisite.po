@@ -9039,6 +9039,14 @@ msgstr "Azure Application Gateway"
 msgid "Azure Blob Storage"
 msgstr "Azure Blob Storage"
 
+#, fuzzy
+msgid "Azure Cosmos DB Availability"
+msgstr "BI-beschikbaarheid"
+
+#, fuzzy
+msgid "Azure Cosmos DB Requests"
+msgstr "Web ACL Verzoeken"
+
 msgid "Azure DB Storage"
 msgstr "Azure DB opslag"
 
@@ -25522,6 +25530,10 @@ msgid "Failed provisionings"
 msgstr "Mislukte bevoorradingen"
 
 msgid "Failed requests"
+msgstr "Mislukte verzoeken"
+
+#, fuzzy
+msgid "Failed requests (404)"
 msgstr "Mislukte verzoeken"
 
 #, fuzzy
@@ -74882,6 +74894,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB service "
+"availability"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
@@ -75006,6 +75026,14 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"throttled requests ratio"
 msgstr ""
 "Deze regel staat je toe om bloat levels te configureren voor een databases "
 "tablespace en indexspace."
@@ -76199,6 +76227,14 @@ msgid "Throttled Server Connections"
 msgstr "Beperkte serververbindingen"
 
 msgid "Throttled requests"
+msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+msgid "Throttled requests (429)"
+msgstr "Afgedwongen verzoeken"
+
+#, fuzzy
+msgid "Throttled requests ratio"
 msgstr "Afgedwongen verzoeken"
 
 msgid "Throttles"
@@ -77633,6 +77669,10 @@ msgstr "Hostnaam gebruikt voor containers"
 #, fuzzy
 msgid "Total reclaimable size upper levels"
 msgstr "Totale grootte logbestand: Absolute bovenste niveaus"
+
+#, fuzzy
+msgid "Total requests"
+msgstr "alleen verzoeken"
 
 #, fuzzy
 msgid "Total reservation utilization"
@@ -91969,7 +92009,7 @@ msgid "Filters included by dashboard owner"
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a quick filter"
+msgid "You can override these by adding a runtime filter"
 msgstr "U kunt de ingebouwde tag groep \"%s\" niet overschrijven."
 
 #, fuzzy
@@ -92111,6 +92151,10 @@ msgstr "Afgewezen verbindingen"
 #, fuzzy
 msgid "Select value..."
 msgstr "Weergave kiezen"
+
+#, fuzzy
+msgid "(required)"
+msgstr "is vereist"
 
 #, fuzzy
 msgid "Search Filter"
@@ -92566,6 +92610,47 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
+msgid "Axis"
+msgstr ""
+
+#, fuzzy
+msgid "Horizontal axis"
+msgstr "Horizontale opvulling"
+
+#, fuzzy
+msgid "Vertical axis"
+msgstr "Verticale as breedte"
+
+#, fuzzy
+msgid "Graph styling"
+msgstr "Grafiek afstemming"
+
+msgid "Date and time stamp (right upper corner)"
+msgstr ""
+
+#, fuzzy
+msgid "Margin round the graph"
+msgstr "Toon marge rond de grafiek"
+
+#, fuzzy
+msgid "Graph legend"
+msgstr "Toon legende"
+
+#, fuzzy
+msgid "Interaction"
+msgstr "Pauze"
+
+#, fuzzy
+msgid "Click on graph to place pin"
+msgstr "Kloon grafiek collectie"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+msgid ""
+"Do not follow timerange changes of other graphs on the current dashboard"
+msgstr ""
+
 #, fuzzy
 msgid "Failed to load sidebar elements."
 msgstr "Zijbalk element toevoegen"
@@ -92691,6 +92776,18 @@ msgid "Host selection"
 msgstr "Map Selectie"
 
 #, fuzzy
+msgid "Event selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "BI-visualisatie"
+
+#, fuzzy
 msgid "Available visualization types"
 msgstr "Beschikbare opties"
 
@@ -92714,10 +92811,6 @@ msgstr "niet %s staten"
 msgid "Show summary for not UP states"
 msgstr "Toon samenvatting voor niet %s staten"
 
-#, fuzzy
-msgid "Widget visualization"
-msgstr "BI-visualisatie"
-
 msgid "Host or sites, depending on context"
 msgstr ""
 
@@ -92727,10 +92820,6 @@ msgstr "Maximale grootte"
 
 msgid "Small"
 msgstr ""
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Doel toevoegen"
 
 #, fuzzy
 msgid "Metric selection"
@@ -92758,47 +92847,6 @@ msgstr "Barplot"
 #, fuzzy
 msgid "Scatterplot"
 msgstr "Gemiddelde scatterplot"
-
-msgid "Axis"
-msgstr ""
-
-#, fuzzy
-msgid "Horizontal axis"
-msgstr "Horizontale opvulling"
-
-#, fuzzy
-msgid "Vertical axis"
-msgstr "Verticale as breedte"
-
-#, fuzzy
-msgid "Graph styling"
-msgstr "Grafiek afstemming"
-
-msgid "Date and time stamp (right upper corner)"
-msgstr ""
-
-#, fuzzy
-msgid "Margin round the graph"
-msgstr "Toon marge rond de grafiek"
-
-#, fuzzy
-msgid "Graph legend"
-msgstr "Toon legende"
-
-#, fuzzy
-msgid "Interaction"
-msgstr "Pauze"
-
-#, fuzzy
-msgid "Click on graph to place pin"
-msgstr "Kloon grafiek collectie"
-
-msgid "Show burger menu for graph options"
-msgstr ""
-
-msgid ""
-"Do not follow timerange changes of other graphs on the current dashboard"
-msgstr ""
 
 #, fuzzy
 msgid "Metric (single)"

@@ -8438,6 +8438,14 @@ msgstr "Azureアプリケーションゲートウェイ"
 msgid "Azure Blob Storage"
 msgstr "Azure Blobストレージ"
 
+#, fuzzy
+msgid "Azure Cosmos DB Availability"
+msgstr "BI の可用性"
+
+#, fuzzy
+msgid "Azure Cosmos DB Requests"
+msgstr "Web ACLリクエスト"
+
 msgid "Azure DB Storage"
 msgstr "Azure DB ストレージ"
 
@@ -24075,6 +24083,10 @@ msgid "Failed provisionings"
 msgstr "プロビジョニングの失敗"
 
 msgid "Failed requests"
+msgstr "失敗したリクエスト"
+
+#, fuzzy
+msgid "Failed requests (404)"
 msgstr "失敗したリクエスト"
 
 msgid "Failed requests to adress book files"
@@ -70494,6 +70506,13 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB service "
+"availability"
+msgstr ""
+"このルールセットを使用すると、ストレージの遅延と可用性のレベルを設定できます"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
@@ -70605,6 +70624,14 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"throttled requests ratio"
 msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
 "きます"
@@ -71727,6 +71754,14 @@ msgid "Throttled Server Connections"
 msgstr "スロットルされたサーバー接続"
 
 msgid "Throttled requests"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Throttled requests (429)"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Throttled requests ratio"
 msgstr "スロットルされたリクエスト"
 
 msgid "Throttles"
@@ -73086,6 +73121,10 @@ msgstr "Podman ボリュームの総再利用可能なサイズ"
 
 msgid "Total reclaimable size upper levels"
 msgstr "総再利用可能な容量 上位ベル"
+
+#, fuzzy
+msgid "Total requests"
+msgstr "リクエストのみ"
 
 msgid "Total reservation utilization"
 msgstr "合計メモリ使用率"
@@ -86193,7 +86232,8 @@ msgstr "ルール検索"
 msgid "Filters included by dashboard owner"
 msgstr ""
 
-msgid "You can override these by adding a quick filter"
+#, fuzzy
+msgid "You can override these by adding a runtime filter"
 msgstr "クイックフィルターを追加することでこれらを上書きできます"
 
 #, fuzzy
@@ -86329,6 +86369,10 @@ msgstr "グループを選択..."
 
 msgid "Select value..."
 msgstr "ビューを選択..."
+
+#, fuzzy
+msgid "(required)"
+msgstr " (必須)"
 
 #, fuzzy
 msgid "Search Filter"
@@ -86775,6 +86819,47 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
+msgid "Axis"
+msgstr ""
+
+#, fuzzy
+msgid "Horizontal axis"
+msgstr "水平方向のパディング"
+
+#, fuzzy
+msgid "Vertical axis"
+msgstr "縦軸幅"
+
+#, fuzzy
+msgid "Graph styling"
+msgstr "グラフの調整"
+
+msgid "Date and time stamp (right upper corner)"
+msgstr ""
+
+#, fuzzy
+msgid "Margin round the graph"
+msgstr "グラフの周りにマージンを表示する"
+
+#, fuzzy
+msgid "Graph legend"
+msgstr "凡例を表示"
+
+#, fuzzy
+msgid "Interaction"
+msgstr "終了"
+
+#, fuzzy
+msgid "Click on graph to place pin"
+msgstr "クローン グラフ コレクション"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+msgid ""
+"Do not follow timerange changes of other graphs on the current dashboard"
+msgstr ""
+
 #, fuzzy
 msgid "Failed to load sidebar elements."
 msgstr "サイドバー要素を追加する"
@@ -86898,6 +86983,18 @@ msgid "Host selection"
 msgstr "サイト選択"
 
 #, fuzzy
+msgid "Event selection"
+msgstr "ファイル選択"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "BIの視覚化"
+
+#, fuzzy
 msgid "Available visualization types"
 msgstr "利用可能なオプション"
 
@@ -86922,10 +87019,6 @@ msgid "Show summary for not UP states"
 msgstr "%s状態以外の概要の表示"
 
 #, fuzzy
-msgid "Widget visualization"
-msgstr "BIの視覚化"
-
-#, fuzzy
 msgid "Host or sites, depending on context"
 msgstr "ホストかサイトか、文脈によって異なる"
 
@@ -86935,10 +87028,6 @@ msgstr "最大hexagonサイズ"
 
 msgid "Small"
 msgstr ""
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "ターゲットを追加"
 
 #, fuzzy
 msgid "Metric selection"
@@ -86966,47 +87055,6 @@ msgstr "棒グラフ"
 #, fuzzy
 msgid "Scatterplot"
 msgstr "平均散布図"
-
-msgid "Axis"
-msgstr ""
-
-#, fuzzy
-msgid "Horizontal axis"
-msgstr "水平方向のパディング"
-
-#, fuzzy
-msgid "Vertical axis"
-msgstr "縦軸幅"
-
-#, fuzzy
-msgid "Graph styling"
-msgstr "グラフの調整"
-
-msgid "Date and time stamp (right upper corner)"
-msgstr ""
-
-#, fuzzy
-msgid "Margin round the graph"
-msgstr "グラフの周りにマージンを表示する"
-
-#, fuzzy
-msgid "Graph legend"
-msgstr "凡例を表示"
-
-#, fuzzy
-msgid "Interaction"
-msgstr "終了"
-
-#, fuzzy
-msgid "Click on graph to place pin"
-msgstr "クローン グラフ コレクション"
-
-msgid "Show burger menu for graph options"
-msgstr ""
-
-msgid ""
-"Do not follow timerange changes of other graphs on the current dashboard"
-msgstr ""
 
 #, fuzzy
 msgid "Metric (single)"

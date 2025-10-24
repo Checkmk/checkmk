@@ -9040,6 +9040,14 @@ msgstr "Azure Application Gateway"
 msgid "Azure Blob Storage"
 msgstr "Azure Blob Storage"
 
+#, fuzzy
+msgid "Azure Cosmos DB Availability"
+msgstr "Disponibilitatea BI"
+
+#, fuzzy
+msgid "Azure Cosmos DB Requests"
+msgstr "Cereri ACL Web"
+
 msgid "Azure DB Storage"
 msgstr "Azure DB Storage"
 
@@ -25605,6 +25613,10 @@ msgid "Failed provisionings"
 msgstr "Provizioane eșuate"
 
 msgid "Failed requests"
+msgstr "Solicitări eșuate"
+
+#, fuzzy
+msgid "Failed requests (404)"
 msgstr "Solicitări eșuate"
 
 #, fuzzy
@@ -75168,6 +75180,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB service "
+"availability"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
@@ -75293,6 +75313,14 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"throttled requests ratio"
 msgstr ""
 "Această regulă vă permite să configurați nivelurile de bloat pentru un "
 "tablespace și un indexspace al bazei de date."
@@ -76496,6 +76524,14 @@ msgid "Throttled Server Connections"
 msgstr "Conexiuni de server restricționate"
 
 msgid "Throttled requests"
+msgstr "Cereri restricționate"
+
+#, fuzzy
+msgid "Throttled requests (429)"
+msgstr "Cereri restricționate"
+
+#, fuzzy
+msgid "Throttled requests ratio"
 msgstr "Cereri restricționate"
 
 msgid "Throttles"
@@ -77930,6 +77966,10 @@ msgstr "Numele de gazdă utilizat pentru containere"
 #, fuzzy
 msgid "Total reclaimable size upper levels"
 msgstr "Dimensiunea totală a fișierului jurnal: Niveluri superioare absolute"
+
+#, fuzzy
+msgid "Total requests"
+msgstr "numai cereri"
 
 msgid "Total reservation utilization"
 msgstr "Utilizarea totală a rezervărilor"
@@ -92213,7 +92253,7 @@ msgid "Filters included by dashboard owner"
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a quick filter"
+msgid "You can override these by adding a runtime filter"
 msgstr "Nu puteți suprascrie grupul de etichete încorporat \"%s\"."
 
 #, fuzzy
@@ -92356,6 +92396,10 @@ msgstr "Conexiuni respinse"
 #, fuzzy
 msgid "Select value..."
 msgstr "Selectați vizualizarea"
+
+#, fuzzy
+msgid "(required)"
+msgstr " (obligatoriu)"
 
 #, fuzzy
 msgid "Search Filter"
@@ -92813,6 +92857,47 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
+msgid "Axis"
+msgstr ""
+
+#, fuzzy
+msgid "Horizontal axis"
+msgstr "Căptușeală orizontală"
+
+#, fuzzy
+msgid "Vertical axis"
+msgstr "Lățimea axei verticale"
+
+#, fuzzy
+msgid "Graph styling"
+msgstr "Acordarea graficului"
+
+msgid "Date and time stamp (right upper corner)"
+msgstr ""
+
+#, fuzzy
+msgid "Margin round the graph"
+msgstr "Afișați marja în jurul graficului"
+
+#, fuzzy
+msgid "Graph legend"
+msgstr "Arată legenda"
+
+#, fuzzy
+msgid "Interaction"
+msgstr "Pauză"
+
+#, fuzzy
+msgid "Click on graph to place pin"
+msgstr "Clonarea colecției de grafice"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+msgid ""
+"Do not follow timerange changes of other graphs on the current dashboard"
+msgstr ""
+
 #, fuzzy
 msgid "Failed to load sidebar elements."
 msgstr "Adăugați elementul sidebar"
@@ -92939,6 +93024,18 @@ msgid "Host selection"
 msgstr "Selecția fișierelor"
 
 #, fuzzy
+msgid "Event selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "Vizualizare BI"
+
+#, fuzzy
 msgid "Available visualization types"
 msgstr "Opțiuni disponibile"
 
@@ -92963,10 +93060,6 @@ msgid "Show summary for not UP states"
 msgstr "Afișați rezumatul pentru statele care nu sunt %s"
 
 #, fuzzy
-msgid "Widget visualization"
-msgstr "Vizualizare BI"
-
-#, fuzzy
 msgid "Host or sites, depending on context"
 msgstr "Gazde sau site-uri, în funcție de context"
 
@@ -92976,10 +93069,6 @@ msgstr "Dimensiunea maximă"
 
 msgid "Small"
 msgstr ""
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Adăugați o țintă"
 
 #, fuzzy
 msgid "Metric selection"
@@ -93007,47 +93096,6 @@ msgstr "Barplot"
 #, fuzzy
 msgid "Scatterplot"
 msgstr "Graficul de dispersie mediu"
-
-msgid "Axis"
-msgstr ""
-
-#, fuzzy
-msgid "Horizontal axis"
-msgstr "Căptușeală orizontală"
-
-#, fuzzy
-msgid "Vertical axis"
-msgstr "Lățimea axei verticale"
-
-#, fuzzy
-msgid "Graph styling"
-msgstr "Acordarea graficului"
-
-msgid "Date and time stamp (right upper corner)"
-msgstr ""
-
-#, fuzzy
-msgid "Margin round the graph"
-msgstr "Afișați marja în jurul graficului"
-
-#, fuzzy
-msgid "Graph legend"
-msgstr "Arată legenda"
-
-#, fuzzy
-msgid "Interaction"
-msgstr "Pauză"
-
-#, fuzzy
-msgid "Click on graph to place pin"
-msgstr "Clonarea colecției de grafice"
-
-msgid "Show burger menu for graph options"
-msgstr ""
-
-msgid ""
-"Do not follow timerange changes of other graphs on the current dashboard"
-msgstr ""
 
 #, fuzzy
 msgid "Metric (single)"

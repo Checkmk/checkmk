@@ -9113,6 +9113,14 @@ msgstr "Puerta de enlace de aplicaciones Azure"
 msgid "Azure Blob Storage"
 msgstr "Almacenamiento Azure Blob"
 
+#, fuzzy
+msgid "Azure Cosmos DB Availability"
+msgstr "Disponibilidad de BI"
+
+#, fuzzy
+msgid "Azure Cosmos DB Requests"
+msgstr "Solicitudes de ACL en la web"
+
 msgid "Azure DB Storage"
 msgstr "Almacenamiento Azure DB"
 
@@ -25723,6 +25731,10 @@ msgid "Failed provisionings"
 msgstr "Aprovisionamientos fallidos"
 
 msgid "Failed requests"
+msgstr "Solicitudes fallidas"
+
+#, fuzzy
+msgid "Failed requests (404)"
 msgstr "Solicitudes fallidas"
 
 #, fuzzy
@@ -75518,6 +75530,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB service "
+"availability"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
@@ -75642,6 +75662,14 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"throttled requests ratio"
 msgstr ""
 "Esta regla permite configurar los niveles de bloat para el tablespace y el "
 "indexspace de una base de datos."
@@ -76842,6 +76870,14 @@ msgid "Throttled Server Connections"
 msgstr "Conexiones de servidor restringidas"
 
 msgid "Throttled requests"
+msgstr "Solicitudes aceleradas"
+
+#, fuzzy
+msgid "Throttled requests (429)"
+msgstr "Solicitudes aceleradas"
+
+#, fuzzy
+msgid "Throttled requests ratio"
 msgstr "Solicitudes aceleradas"
 
 msgid "Throttles"
@@ -78275,6 +78311,10 @@ msgstr "Nombre de host utilizado para los contenedores"
 #, fuzzy
 msgid "Total reclaimable size upper levels"
 msgstr "Tamaño total del archivo de registro: Niveles superiores absolutos"
+
+#, fuzzy
+msgid "Total requests"
+msgstr "sólo solicita"
 
 #, fuzzy
 msgid "Total reservation utilization"
@@ -92702,7 +92742,7 @@ msgid "Filters included by dashboard owner"
 msgstr ""
 
 #, fuzzy
-msgid "You can override these by adding a quick filter"
+msgid "You can override these by adding a runtime filter"
 msgstr "No se puede anular el grupo de etiquetas incorporado \"%s\"."
 
 #, fuzzy
@@ -92844,6 +92884,10 @@ msgstr "Conexiones rechazadas"
 #, fuzzy
 msgid "Select value..."
 msgstr "Seleccione la vista"
+
+#, fuzzy
+msgid "(required)"
+msgstr " (es necesario)"
 
 #, fuzzy
 msgid "Search Filter"
@@ -93298,6 +93342,47 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
+msgid "Axis"
+msgstr ""
+
+#, fuzzy
+msgid "Horizontal axis"
+msgstr "Relleno horizontal"
+
+#, fuzzy
+msgid "Vertical axis"
+msgstr "Anchura del eje vertical"
+
+#, fuzzy
+msgid "Graph styling"
+msgstr "Ajuste de gráficos"
+
+msgid "Date and time stamp (right upper corner)"
+msgstr ""
+
+#, fuzzy
+msgid "Margin round the graph"
+msgstr "Mostrar el margen alrededor del gráfico"
+
+#, fuzzy
+msgid "Graph legend"
+msgstr "Mostrar leyenda"
+
+#, fuzzy
+msgid "Interaction"
+msgstr "Intermedio"
+
+#, fuzzy
+msgid "Click on graph to place pin"
+msgstr "Colección de gráficos clonados"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+msgid ""
+"Do not follow timerange changes of other graphs on the current dashboard"
+msgstr ""
+
 #, fuzzy
 msgid "Failed to load sidebar elements."
 msgstr "Añadir elemento de la barra lateral"
@@ -93423,6 +93508,18 @@ msgid "Host selection"
 msgstr "Selección de carpetas"
 
 #, fuzzy
+msgid "Event selection"
+msgstr "Selección de carpetas"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Añadir objetivo"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "Visualización de BI"
+
+#, fuzzy
 msgid "Available visualization types"
 msgstr "Opciones disponibles"
 
@@ -93447,10 +93544,6 @@ msgid "Show summary for not UP states"
 msgstr "Mostrar resumen para estados no %s"
 
 #, fuzzy
-msgid "Widget visualization"
-msgstr "Visualización de BI"
-
-#, fuzzy
 msgid "Host or sites, depending on context"
 msgstr "Hosts o sites, según el contexto"
 
@@ -93460,10 +93553,6 @@ msgstr "Tamaño máximo"
 
 msgid "Small"
 msgstr ""
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Añadir objetivo"
 
 #, fuzzy
 msgid "Metric selection"
@@ -93491,47 +93580,6 @@ msgstr "Barplot"
 #, fuzzy
 msgid "Scatterplot"
 msgstr "Gráfico de dispersión media"
-
-msgid "Axis"
-msgstr ""
-
-#, fuzzy
-msgid "Horizontal axis"
-msgstr "Relleno horizontal"
-
-#, fuzzy
-msgid "Vertical axis"
-msgstr "Anchura del eje vertical"
-
-#, fuzzy
-msgid "Graph styling"
-msgstr "Ajuste de gráficos"
-
-msgid "Date and time stamp (right upper corner)"
-msgstr ""
-
-#, fuzzy
-msgid "Margin round the graph"
-msgstr "Mostrar el margen alrededor del gráfico"
-
-#, fuzzy
-msgid "Graph legend"
-msgstr "Mostrar leyenda"
-
-#, fuzzy
-msgid "Interaction"
-msgstr "Intermedio"
-
-#, fuzzy
-msgid "Click on graph to place pin"
-msgstr "Colección de gráficos clonados"
-
-msgid "Show burger menu for graph options"
-msgstr ""
-
-msgid ""
-"Do not follow timerange changes of other graphs on the current dashboard"
-msgstr ""
 
 #, fuzzy
 msgid "Metric (single)"

@@ -38,8 +38,13 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.form_specs import (
+    DEFAULT_VALUE,
+    DefaultValue,
     DisplayMode,
+    IncomingData,
     parse_data_from_field_id,
+    RawDiskData,
+    RawFrontendData,
     render_form_spec,
 )
 from cmk.gui.form_specs.unstable import LegacyValueSpec
@@ -187,13 +192,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 
-from ...form_specs import (
-    DEFAULT_VALUE,
-    DefaultValue,
-    IncomingData,
-    RawDiskData,
-    RawFrontendData,
-)
 from ._rule_conditions import DictHostTagCondition
 
 _DEPRECATION_WARNING = "<b>This feature will be deprecated in a future version of Checkmk.</b>"

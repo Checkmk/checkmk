@@ -23,7 +23,14 @@ from cmk.ccc.user import UserId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
-from cmk.gui.dashboard.type_defs import DashletId, DashletSize
+from cmk.gui.dashboard.title_macros import macro_mapping_from_context
+from cmk.gui.dashboard.type_defs import (
+    ABCGraphDashletConfig,
+    DashboardConfig,
+    DashboardName,
+    DashletId,
+    DashletSize,
+)
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
     get_graph_plugin_and_single_metric_choices,
@@ -74,8 +81,6 @@ from cmk.gui.visuals import (
 )
 from cmk.utils.servicename import ServiceName
 
-from ...title_macros import macro_mapping_from_context
-from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
 from ..base import Dashlet
 from .status_helpers import make_mk_missing_data_error
 

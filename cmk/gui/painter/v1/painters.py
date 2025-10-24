@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
 
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import Rows
 from cmk.gui.view_utils import CellSpec
 
-from ...config import active_config
 from .helpers import (
     get_perfdata_nth_value,
     get_single_int_column,

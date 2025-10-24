@@ -10,7 +10,13 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from cmk.ccc.i18n import _
-from cmk.gui.form_specs import process_validation_messages, VisitorOptions
+from cmk.gui.form_specs import (
+    get_visitor,
+    process_validation_messages,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
 from cmk.utils.notify_types import (
@@ -20,7 +26,6 @@ from cmk.utils.notify_types import (
     NotificationParameterMethod,
 )
 
-from ...form_specs import get_visitor, RawDiskData, RawFrontendData
 from ._registry import NotificationParameterRegistry
 
 INTERNAL_TRANSFORM_ERROR = _("FormSpec and internal data structure mismatch")

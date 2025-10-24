@@ -45,6 +45,7 @@ class AzureMetric(NamedTuple):
     aggregation: str
     value: float
     unit: str
+    metadata_mapping: Mapping[str, str] | None = None
     # here we don't care about dimension filters because
     # this is intended to be used for parsing from the agent
 
@@ -177,6 +178,7 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[AzureResourc
                 metric_dict["aggregation"],
                 metric_dict["value"],
                 metric_dict["unit"],
+                metric_dict.get("metadata_mapping"),
             ),
         )
 

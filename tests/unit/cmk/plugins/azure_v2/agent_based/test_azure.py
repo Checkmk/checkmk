@@ -206,6 +206,46 @@ def test__get_metrics() -> None:
             [],
             id="resource_with_zero_metrics",
         ),
+        pytest.param(
+            [
+                ['{"id": "test", "name": "test"}'],
+                ["metrics following", "3"],
+                [
+                    '{"name": "cpu_percent", "aggregation": "average", "value": 5.0, "unit": "percent", "cmk_metric_alias": "average_cpu_percent"}'
+                ],
+                [
+                    '{"name": "memory_percent", "aggregation": "maximum", "value": 80.0, "unit": "percent", "cmk_metric_alias": "maximum_memory_percent"}'
+                ],
+                [
+                    '{"name": "storage_percent", "aggregation": "total", "value": 100.0, "unit": "percent", "cmk_metric_alias": "user_defined_alias", "metadata_mapping": {"key": "value"}}'
+                ],
+            ],
+            [
+                AzureResourceMetric(
+                    cmk_metric_alias="average_cpu_percent",
+                    metric=AzureMetric(
+                        name="cpu_percent", aggregation="average", value=5.0, unit="percent"
+                    ),
+                ),
+                AzureResourceMetric(
+                    cmk_metric_alias="maximum_memory_percent",
+                    metric=AzureMetric(
+                        name="memory_percent", aggregation="maximum", value=80.0, unit="percent"
+                    ),
+                ),
+                AzureResourceMetric(
+                    cmk_metric_alias="user_defined_alias",
+                    metric=AzureMetric(
+                        name="storage_percent",
+                        aggregation="total",
+                        value=100.0,
+                        unit="percent",
+                        metadata_mapping={"key": "value"},
+                    ),
+                ),
+            ],
+            id="resource_with_multiple_metrics_and_metadata",
+        ),
     ],
 )
 def test_get_metrics(

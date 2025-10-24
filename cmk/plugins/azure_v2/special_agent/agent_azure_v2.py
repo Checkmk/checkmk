@@ -1201,7 +1201,7 @@ async def process_cosmosdb(
             continue
 
         # resource id is always the cosmos account
-        # metrics contain the database name in the metadata mapping
+        # metrics contain the database name (and other information) in the metadata mapping
         for resource_id, metrics in result.items():
             for metric in metrics:
                 if not (metadata := metric.get("metadata_mapping")):
@@ -1222,10 +1222,16 @@ async def process_cosmosdb(
                     continue
 
                 if (db_resource := cosmosdb_databases.get(database_name)) is not None:
+                    LOGGER.info(
+                        "\n\n\nFound metric for existing database: %s, metric: %s",
+                        database_name,
+                        metric,
+                    )
                     # db already present, just append the metric
                     db_resource.metrics.append(metric)
                     continue
 
+                # create a new resource for the database
                 db_resource_info = {
                     "id": database_name,  # id = name of the database
                     "name": database_name,

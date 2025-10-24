@@ -110,6 +110,22 @@ COSMOS_DATABASE_METRICS = [
         aggregation="count",
         dimension_filters=(
             DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+            DimensionFilter(
+                name="CollectionName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="count_TotalRequestsdbContainer",
+    ),
+    AzureMetric(
+        name="TotalRequests",
+        interval="PT1M",
+        aggregation="count",
+        dimension_filters=(
+            DimensionFilter(
                 name="StatusCode",
                 value="429",
             ),
@@ -137,6 +153,46 @@ COSMOS_DATABASE_METRICS = [
         explicit_metric_alias="count_TotalRequests404db",
     ),
     AzureMetric(
+        name="TotalRequests",
+        interval="PT1M",
+        aggregation="count",
+        dimension_filters=(
+            DimensionFilter(
+                name="StatusCode",
+                value="429",
+            ),
+            DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+            DimensionFilter(
+                name="CollectionName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="count_TotalRequests429dbContainer",
+    ),
+    AzureMetric(
+        name="TotalRequests",
+        interval="PT1M",
+        aggregation="count",
+        dimension_filters=(
+            DimensionFilter(
+                name="StatusCode",
+                value="200",
+            ),
+            DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+            DimensionFilter(
+                name="CollectionName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="count_TotalRequests404dbContainer",
+    ),
+    AzureMetric(
         name="TotalRequestUnitsPreview",
         interval="PT1M",
         aggregation="total",
@@ -160,8 +216,9 @@ COSMOS_DATABASE_METRICS = [
         ),
         explicit_metric_alias="maximum_NormalizedRUConsumptiondb",
     ),
-    # this metric is needed to always discover the DBs
-    # since some other metrics are only available when there is activity
+    # this metric is needed to always discover the DBs and their containers,
+    # since some other metrics are only available when there is activity, this one
+    # *should be* always present
     AzureMetric(
         name="DataUsage",
         interval="PT5M",

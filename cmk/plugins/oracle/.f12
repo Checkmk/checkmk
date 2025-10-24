@@ -1,0 +1,34 @@
+#!/bin/bash
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+test -d "${ROOT}" || exit 1
+
+GIT_ROOT=$(git rev-parse --show-toplevel)
+PLUGIN_DIR=cmk/plugins/oracle
+
+rsync \
+    --exclude="*.pyc" \
+    --exclude="flycheck*" \
+    --exclude="__pycache__" \
+    --exclude ".mypy_cache" \
+    --exclude "OWNERS" \
+    --exclude "mk-oracle" \
+    --exclude "mk-oracle.exe" \
+    --delete-after \
+    -rlDR \
+    "$GIT_ROOT"/"$PLUGIN_DIR"/./ \
+    "$ROOT"/lib/python3/"$PLUGIN_DIR"/
+
+if [ -z "${ONLY_COPY}" ]; then
+    sudo --login -u "${SITE}" -- bash -c "omd restart apache"
+fi

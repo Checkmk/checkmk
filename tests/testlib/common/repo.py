@@ -32,20 +32,24 @@ def repo_path() -> Path:
     return Path(__file__).resolve().parent.parent.parent.parent
 
 
+def is_non_free_repo() -> bool:
+    return (repo_path() / "non-free").exists()
+
+
 def is_enterprise_repo() -> bool:
-    return (repo_path() / "omd" / "packages" / "enterprise").exists()
+    return is_non_free_repo()
 
 
 def is_managed_repo() -> bool:
-    return (repo_path() / "omd" / "packages" / "managed").exists()
+    return is_non_free_repo()
 
 
 def is_cloud_repo() -> bool:
-    return (repo_path() / "omd" / "packages" / "cloud").exists()
+    return is_non_free_repo()
 
 
 def is_saas_repo() -> bool:
-    return (repo_path() / "omd" / "packages" / "saas").exists()
+    return is_non_free_repo()
 
 
 def add_python_paths() -> None:

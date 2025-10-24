@@ -55,10 +55,7 @@ pytest.register_assert_rewrite(
 
 from tests.testlib.common.repo import (  # noqa: E402
     add_python_paths,
-    is_cloud_repo,
-    is_enterprise_repo,
-    is_managed_repo,
-    is_saas_repo,
+    is_non_free_repo,
     repo_path,
 )
 
@@ -82,14 +79,8 @@ def _fake_version_and_paths() -> None:
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
     def guess_from_repo() -> str:
-        if is_managed_repo():
+        if is_non_free_repo():
             return "cme"
-        if is_cloud_repo():
-            return "cce"
-        if is_saas_repo():
-            return "cse"
-        if is_enterprise_repo():
-            return "cee"
         return "cre"
 
     edition_short = os.getenv("EDITION") or guess_from_repo()
@@ -235,16 +226,7 @@ def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.Captur
 def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edition]:
     # The param seems to be an optional attribute which mypy can not understand
     edition_short = request.param
-    if edition_short == "cse" and not is_saas_repo():
-        pytest.skip("Needed files are not available")
-
-    if edition_short == "cce" and not is_cloud_repo():
-        pytest.skip("Needed files are not available")
-
-    if edition_short == "cme" and not is_managed_repo():
-        pytest.skip("Needed files are not available")
-
-    if edition_short == "cee" and not is_enterprise_repo():
+    if edition_short in ("cse", "cce", "cme", "cee") and not is_non_free_repo():
         pytest.skip("Needed files are not available")
 
     yield cmk_version.Edition[edition_short.upper()]

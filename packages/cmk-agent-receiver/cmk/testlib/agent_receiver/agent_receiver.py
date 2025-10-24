@@ -34,7 +34,10 @@ class AgentReceiverClient:
         if serial:
             self.client.headers[HEADERS.SERIAL] = serial
         else:
-            del self.client.headers[HEADERS.SERIAL]
+            try:
+                del self.client.headers[HEADERS.SERIAL]
+            except KeyError:
+                pass
 
     def register_relay(self, name: str) -> httpx.Response:
         return self.client.post(

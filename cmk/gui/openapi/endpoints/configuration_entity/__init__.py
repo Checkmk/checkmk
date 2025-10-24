@@ -21,6 +21,9 @@ from cmk.gui.openapi.endpoints.configuration_entity import folder as folder_endp
 from cmk.gui.openapi.endpoints.configuration_entity import (
     notification_parameter as notification_parameter_endpoints,
 )
+from cmk.gui.openapi.endpoints.configuration_entity import (
+    passwordstore_password as passwordstore_password_endpoints,
+)
 from cmk.gui.openapi.endpoints.configuration_entity._common import ENTITY_TYPE_SPECIFIER_FIELD
 from cmk.gui.openapi.endpoints.configuration_entity.request_schemas import (
     CreateConfigurationEntity,
@@ -186,3 +189,6 @@ def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) ->
         endpoint_registry, ignore_duplicates=ignore_duplicates
     )
     folder_endpoints.register(endpoint_registry, ignore_duplicates=ignore_duplicates)
+    passwordstore_password_endpoints.register(
+        endpoint_registry, ignore_duplicates=ignore_duplicates
+    )

@@ -60,6 +60,7 @@ DomainType = Literal[
     "otel_collector_config_prom_scrape",
     "pagetype_topic",
     "password",
+    "passwordstore_password",
     "parent_scan",
     "relay",
     "rule",

@@ -20,6 +20,7 @@ from cmk.gui.watolib.configuration_entity._folder import (
 )
 from cmk.gui.watolib.configuration_entity._password import (
     get_password_slidein_schema,
+    list_passwords,
     save_password_from_slidein_schema,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -29,7 +30,6 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     save_notification_parameter,
 )
-from cmk.gui.watolib.password_store import passwordstore_choices
 from cmk.gui.watolib.users import notification_script_title
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -78,7 +78,7 @@ def save_configuration_entity(
             return ConfigurationEntityDescription(
                 ident=EntityId(folder.path), description=folder.title
             )
-        case ConfigEntityType.password:
+        case ConfigEntityType.passwordstore_password:
             password = save_password_from_slidein_schema(
                 RawFrontendData(data), user=user, pprint_value=pprint_value, use_git=use_git
             )
@@ -99,7 +99,7 @@ def _get_configuration_fs(
             return notification_parameter_registry.form_spec(entity_type_specifier)
         case ConfigEntityType.folder:
             return get_folder_slidein_schema()
-        case ConfigEntityType.password:
+        case ConfigEntityType.passwordstore_password:
             return get_password_slidein_schema(user)
         case other:
             assert_never(other)
@@ -127,7 +127,7 @@ def get_readable_entity_selection(entity_type: ConfigEntityType, entity_type_spe
             return _("%s parameter") % notification_script_title(entity_type_specifier)
         case ConfigEntityType.folder:
             return _("folder")
-        case ConfigEntityType.password:
+        case ConfigEntityType.passwordstore_password:
             return _("password")
         case other:
             assert_never(other)
@@ -156,7 +156,7 @@ def get_configuration_entity(
             return ConfigurationEntity(description=entity.description, data=entity.data)
         case ConfigEntityType.folder:
             raise NotImplementedError("Editing folders via config entity API is not yet supported.")
-        case ConfigEntityType.password:
+        case ConfigEntityType.passwordstore_password:
             raise NotImplementedError(
                 "Editing passwords via config entity API is not yet supported."
             )
@@ -167,6 +167,8 @@ def get_configuration_entity(
 def get_list_of_configuration_entities(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
+    *,
+    user: LoggedInUser,
 ) -> Sequence[ConfigurationEntityDescription]:
     match entity_type:
         case ConfigEntityType.notification_parameter:
@@ -183,11 +185,10 @@ def get_list_of_configuration_entities(
                 ConfigurationEntityDescription(ident=EntityId(ident), description=description)
                 for ident, description in folder_tree().folder_choices_fulltitle()
             ]
-        case ConfigEntityType.password:
+        case ConfigEntityType.passwordstore_password:
             return [
-                ConfigurationEntityDescription(ident=EntityId(ident), description=title)
-                for ident, title in passwordstore_choices()
-                if ident is not None
+                ConfigurationEntityDescription(ident=EntityId(obj.id), description=obj.title)
+                for obj in list_passwords(user)
             ]
         case other:
             assert_never(other)

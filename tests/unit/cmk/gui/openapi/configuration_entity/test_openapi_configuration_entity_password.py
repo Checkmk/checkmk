@@ -48,7 +48,9 @@ def test_list_passwords_without_permissions(clients: ClientRegistry) -> None:
 
     # WHEN
     resp = clients.ConfigurationEntity.list_configuration_entities(
-        entity_type=ConfigEntityType.password, entity_type_specifier="all", expect_ok=False
+        entity_type=ConfigEntityType.passwordstore_password,
+        entity_type_specifier="all",
+        expect_ok=False,
     )
 
     # THEN
@@ -89,7 +91,9 @@ def test_list_passwords_with_permissions(clients: ClientRegistry) -> None:
 
     # WHEN
     resp = clients.ConfigurationEntity.list_configuration_entities(
-        entity_type=ConfigEntityType.password, entity_type_specifier="all", expect_ok=False
+        entity_type=ConfigEntityType.passwordstore_password,
+        entity_type_specifier="all",
+        expect_ok=False,
     )
 
     # THEN
@@ -116,7 +120,7 @@ def test_list_passwords_as_admin(clients: ClientRegistry, with_admin: tuple[str,
 
     # WHEN
     resp = clients.ConfigurationEntity.list_configuration_entities(
-        entity_type=ConfigEntityType.password,
+        entity_type=ConfigEntityType.passwordstore_password,
         entity_type_specifier="all",
     )
     # THEN
@@ -138,7 +142,7 @@ def test_create_password_without_permissions(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
-            "entity_type": ConfigEntityType.password.value,
+            "entity_type": ConfigEntityType.passwordstore_password.value,
             "entity_type_specifier": "xyz",
             "data": {
                 "general_props": {
@@ -178,7 +182,7 @@ def test_create_password_with_permissions(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
-            "entity_type": ConfigEntityType.password.value,
+            "entity_type": ConfigEntityType.passwordstore_password.value,
             "entity_type_specifier": "xyz",
             "data": {
                 "general_props": {
@@ -213,7 +217,7 @@ def test_create_password_as_admin(clients: ClientRegistry, with_admin: tuple[str
     # WHEN
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
-            "entity_type": ConfigEntityType.password.value,
+            "entity_type": ConfigEntityType.passwordstore_password.value,
             "entity_type_specifier": "xyz",
             "data": {
                 "general_props": {

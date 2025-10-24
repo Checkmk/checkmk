@@ -8147,6 +8147,7 @@ paths:
           enum:
           - notification_parameter
           - folder
+          - passwordstore_password
           example: notification_parameter
         required: true
       responses:
@@ -8598,6 +8599,101 @@ paths:
           automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
           n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
           \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/folder/collections/mail\""
+  /domain-types/passwordstore_password/collections/{entity_type_specifier}:
+    get:
+      tags:
+      - Configuration entities / Folder
+      description: ''
+      summary: List existing passwordstore passwords
+      operationId: cmk.gui.openapi.endpoints.configuration_entity.passwordstore_password._list_passwordstore_passwords
+      parameters:
+      - in: path
+        name: entity_type_specifier
+        description: Entity type specifier of the configuration entity
+        schema:
+          type: string
+          example: mail
+        required: true
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultError'
+        '404':
+          description: 'Not Found: The requested object has not be found.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api404DefaultError'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordStorePasswordResponseCollection'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: cre
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/passwordstore_password/collections/mail\"\
+          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
+          \    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/passwordstore_password/collections/mail\"\
+          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \        \n    },\n)\n# Will raise an HTTPError if status code is >= 400\n\
+          resp = urllib.request.urlopen(request)\nif resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/domain-types/passwordstore_password/collections/mail\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
+          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
+          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/passwordstore_password/collections/mail\""
   /domain-types/notification_parameter/collections/{entity_type_specifier}:
     get:
       tags:
@@ -9847,7 +9943,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -9928,7 +10024,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10021,7 +10117,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10132,13 +10228,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10267,26 +10363,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10423,13 +10519,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10571,26 +10667,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10704,20 +10800,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10839,20 +10935,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10974,20 +11070,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -11083,20 +11179,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -11220,20 +11316,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -11342,20 +11438,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -11489,19 +11585,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -11559,7 +11655,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -15073,7 +15169,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -15168,13 +15264,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -15278,13 +15374,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -17677,19 +17773,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -17813,26 +17909,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -17954,19 +18050,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18098,45 +18194,45 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError5AAAB769ED6D6288'
+                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultError26717584F8AADF09'
+                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18349,13 +18445,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
@@ -18368,7 +18464,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18711,45 +18807,45 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError5AAAB769ED6D6288'
+                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultError26717584F8AADF09'
+                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18887,13 +18983,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
@@ -18906,7 +19002,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -19154,26 +19250,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -21459,8 +21555,8 @@ paths:
           \ A header specifying which type of content is in the request/response body.\n\
           \    },\n    # This schema has multiple variations. Please refer to\n  \
           \  # the 'Payload' section for details.\n    json={\n        \"time_range\"\
-          : {\n            \"start\": \"2025-10-22 18:03:02.018091\",\n          \
-          \  \"end\": \"2025-10-22 18:18:02.018093\",\n        },\n        \"reduce\"\
+          : {\n            \"start\": \"2025-10-24 12:14:18.902715\",\n          \
+          \  \"end\": \"2025-10-24 12:29:18.902718\",\n        },\n        \"reduce\"\
           : \"max\",\n        \"filter\": {\n            \"siteopt\": {\n        \
           \        \"site\": \"site_name\",\n            },\n            \"host\"\
           : {\n                \"host\": \"host_name\",\n            },\n        \
@@ -21497,8 +21593,8 @@ paths:
           \ which type of content is in the request/response body.\n    },\n    #\
           \ This schema has multiple variations. Please refer to\n    # the 'Payload'\
           \ section for details.\n    data=json.dumps({\n        \"time_range\": {\n\
-          \            \"start\": \"2025-10-22 18:03:02.018091\",\n            \"\
-          end\": \"2025-10-22 18:18:02.018093\",\n        },\n        \"reduce\":\
+          \            \"start\": \"2025-10-24 12:14:18.902715\",\n            \"\
+          end\": \"2025-10-24 12:29:18.902718\",\n        },\n        \"reduce\":\
           \ \"max\",\n        \"filter\": {\n            \"siteopt\": {\n        \
           \        \"site\": \"site_name\",\n            },\n            \"host\"\
           : {\n                \"host\": \"host_name\",\n            },\n        \
@@ -21532,8 +21628,8 @@ paths:
           \ 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/metric/actions/filter/invoke\"\
           \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
           \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json'\
-          \ \\\n    time_range[start]='2025-10-22 18:03:02.018091'\\\n    time_range[end]='2025-10-22\
-          \ 18:18:02.018093'\\\n    reduce='max'\\\n    filter[siteopt][site]='site_name'\\\
+          \ \\\n    time_range[start]='2025-10-24 12:14:18.902715'\\\n    time_range[end]='2025-10-24\
+          \ 12:29:18.902718'\\\n    reduce='max'\\\n    filter[siteopt][site]='site_name'\\\
           \n    filter[host][host]='host_name'\\\n    filter[hostregex][host_regex]='windows.*'\\\
           \n    filter[hostregex][neg_host_regex]='on'\\\n    filter[service][service]='Check_MK'\\\
           \n    filter[serviceregex][service_regex]='.+'\\\n    filter[host_labels][host_labels_count]='1'\\\
@@ -21576,8 +21672,8 @@ paths:
           : \".+\"\n            },\n            \"siteopt\": {\n              \"site\"\
           : \"site_name\"\n            }\n          },\n          \"graph_id\": \"\
           cmk_cpu_time_by_phase\",\n          \"reduce\": \"max\",\n          \"time_range\"\
-          : {\n            \"end\": \"2025-10-22 18:18:02.018093\",\n            \"\
-          start\": \"2025-10-22 18:03:02.018091\"\n          },\n          \"type\"\
+          : {\n            \"end\": \"2025-10-24 12:29:18.902718\",\n            \"\
+          start\": \"2025-10-24 12:14:18.902715\"\n          },\n          \"type\"\
           : \"single_metric\"\n        }' \\\n  \"$API_URL/domain-types/metric/actions/filter/invoke\""
   /domain-types/metric_backend/actions/update/invoke:
     put:
@@ -21618,20 +21714,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -21781,8 +21877,8 @@ paths:
           \ A header specifying which type of content is in the request/response body.\n\
           \    },\n    # This schema has multiple variations. Please refer to\n  \
           \  # the 'Payload' section for details.\n    json={\n        \"time_range\"\
-          : {\n            \"start\": \"2025-10-22 18:03:02.018091\",\n          \
-          \  \"end\": \"2025-10-22 18:18:02.018093\",\n        },\n        \"reduce\"\
+          : {\n            \"start\": \"2025-10-24 12:14:18.902715\",\n          \
+          \  \"end\": \"2025-10-24 12:29:18.902718\",\n        },\n        \"reduce\"\
           : \"max\",\n        \"site\": \"heute\",\n        \"host_name\": \"my.cool.host\"\
           ,\n        \"service_description\": \"Check_MK\",\n        \"type\": \"\
           single_metric\",\n        \"graph_id\": \"cmk_cpu_time_by_phase\",\n   \
@@ -21801,8 +21897,8 @@ paths:
           \ which type of content is in the request/response body.\n    },\n    #\
           \ This schema has multiple variations. Please refer to\n    # the 'Payload'\
           \ section for details.\n    data=json.dumps({\n        \"time_range\": {\n\
-          \            \"start\": \"2025-10-22 18:03:02.018091\",\n            \"\
-          end\": \"2025-10-22 18:18:02.018093\",\n        },\n        \"reduce\":\
+          \            \"start\": \"2025-10-24 12:14:18.902715\",\n            \"\
+          end\": \"2025-10-24 12:29:18.902718\",\n        },\n        \"reduce\":\
           \ \"max\",\n        \"site\": \"heute\",\n        \"host_name\": \"my.cool.host\"\
           ,\n        \"service_description\": \"Check_MK\",\n        \"type\": \"\
           single_metric\",\n        \"graph_id\": \"cmk_cpu_time_by_phase\",\n   \
@@ -21819,8 +21915,8 @@ paths:
           \ 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/metric/actions/get/invoke\"\
           \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
           \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json'\
-          \ \\\n    time_range[start]='2025-10-22 18:03:02.018091'\\\n    time_range[end]='2025-10-22\
-          \ 18:18:02.018093'\\\n    reduce='max'\\\n    site='heute'\\\n    host_name='my.cool.host'\\\
+          \ \\\n    time_range[start]='2025-10-24 12:14:18.902715'\\\n    time_range[end]='2025-10-24\
+          \ 12:29:18.902718'\\\n    reduce='max'\\\n    site='heute'\\\n    host_name='my.cool.host'\\\
           \n    service_description='Check_MK'\\\n    type='single_metric'\\\n   \
           \ graph_id='cmk_cpu_time_by_phase'"
       - label: curl
@@ -21838,8 +21934,8 @@ paths:
           \ \\\n  --data '{\n          \"graph_id\": \"cmk_cpu_time_by_phase\",\n\
           \          \"host_name\": \"my.cool.host\",\n          \"reduce\": \"max\"\
           ,\n          \"service_description\": \"Check_MK\",\n          \"site\"\
-          : \"heute\",\n          \"time_range\": {\n            \"end\": \"2025-10-22\
-          \ 18:18:02.018093\",\n            \"start\": \"2025-10-22 18:03:02.018091\"\
+          : \"heute\",\n          \"time_range\": {\n            \"end\": \"2025-10-24\
+          \ 12:29:18.902718\",\n            \"start\": \"2025-10-24 12:14:18.902715\"\
           \n          },\n          \"type\": \"single_metric\"\n        }' \\\n \
           \ \"$API_URL/domain-types/metric/actions/get/invoke\""
   /version:
@@ -23234,7 +23330,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -23473,13 +23569,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -23577,26 +23673,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -23717,19 +23813,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -23859,45 +23955,45 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError5AAAB769ED6D6288'
+                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultError26717584F8AADF09'
+                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -24032,32 +24128,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError5AAAB769ED6D6288'
+                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultError26717584F8AADF09'
+                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -25047,7 +25143,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -25137,20 +25233,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -25265,13 +25361,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -25393,39 +25489,39 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError5AAAB769ED6D6288'
+                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultError26717584F8AADF09'
+                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -25553,26 +25649,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError5AAAB769ED6D6288'
+                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultError26717584F8AADF09'
+                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -30034,7 +30130,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30117,13 +30213,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30215,26 +30311,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30342,19 +30438,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30457,32 +30553,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30587,32 +30683,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -30694,32 +30790,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -30801,32 +30897,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -31622,26 +31718,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -31710,13 +31806,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -31772,13 +31868,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -31874,26 +31970,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -32001,19 +32097,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -32119,32 +32215,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -32252,19 +32348,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -33107,7 +33203,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33198,7 +33294,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33279,7 +33375,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33369,13 +33465,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33474,26 +33570,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33596,13 +33692,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33701,26 +33797,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33823,13 +33919,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33928,26 +34024,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34067,26 +34163,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -34182,32 +34278,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34318,19 +34414,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -34415,32 +34511,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34551,19 +34647,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -34648,32 +34744,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD03BB5FCEF54BF65'
+                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultErrorDF0CB1680D945D0C'
+                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34784,19 +34880,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError8B5D843281F47B25'
+                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError7302D605273DB63C'
+                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultError40DD4E5A06F59F4F'
+                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -34940,7 +35036,7 @@ paths:
           ,\n    headers={\n        \"Content-Type\": 'application/json',  # (required)\
           \ A header specifying which type of content is in the request/response body.\n\
           \    },\n    json={\n        \"time_range\": {\n            \"start\": \"\
-          2025-10-22 18:03:02.018091\",\n            \"end\": \"2025-10-22 18:18:02.018093\"\
+          2025-10-24 12:14:18.902715\",\n            \"end\": \"2025-10-24 12:29:18.902718\"\
           ,\n        },\n        \"reduce\": \"max\",\n        \"custom_graph_id\"\
           : \"my_cool_graph\",\n    },\n    allow_redirects=True,\n)\nif resp.status_code\
           \ == 200:\n    pprint.pprint(resp.json())\nelif resp.status_code == 201:\n\
@@ -34957,8 +35053,8 @@ paths:
           \        \n        \"Content-Type\": 'application/json',  # (required) A\
           \ header specifying which type of content is in the request/response body.\n\
           \    },\n    data=json.dumps({\n        \"time_range\": {\n            \"\
-          start\": \"2025-10-22 18:03:02.018091\",\n            \"end\": \"2025-10-22\
-          \ 18:18:02.018093\",\n        },\n        \"reduce\": \"max\",\n       \
+          start\": \"2025-10-24 12:14:18.902715\",\n            \"end\": \"2025-10-24\
+          \ 12:29:18.902718\",\n        },\n        \"reduce\": \"max\",\n       \
           \ \"custom_graph_id\": \"my_cool_graph\",\n    }).encode('utf-8'),\n)\n\
           # Will raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
           if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))\n\
@@ -34971,8 +35067,8 @@ paths:
           \ >= 3\n\nhttp POST \"$API_URL/domain-types/metric/actions/get_custom_graph/invoke\"\
           \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
           \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json'\
-          \ \\\n    time_range[start]='2025-10-22 18:03:02.018091'\\\n    time_range[end]='2025-10-22\
-          \ 18:18:02.018093'\\\n    reduce='max'\\\n    custom_graph_id='my_cool_graph'"
+          \ \\\n    time_range[start]='2025-10-24 12:14:18.902715'\\\n    time_range[end]='2025-10-24\
+          \ 12:29:18.902718'\\\n    reduce='max'\\\n    custom_graph_id='my_cool_graph'"
       - label: curl
         lang: bash
         source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
@@ -34985,8 +35081,8 @@ paths:
           \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
           \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  --data '{\n\
           \          \"custom_graph_id\": \"my_cool_graph\",\n          \"reduce\"\
-          : \"max\",\n          \"time_range\": {\n            \"end\": \"2025-10-22\
-          \ 18:18:02.018093\",\n            \"start\": \"2025-10-22 18:03:02.018091\"\
+          : \"max\",\n          \"time_range\": {\n            \"end\": \"2025-10-24\
+          \ 12:29:18.902718\",\n            \"start\": \"2025-10-24 12:14:18.902715\"\
           \n          }\n        }' \\\n  \"$API_URL/domain-types/metric/actions/get_custom_graph/invoke\""
 tags:
 - name: Business intelligence (BI)
@@ -39177,6 +39273,7 @@ components:
           enum:
           - notification_parameter
           - folder
+          - passwordstore_password
           example: notification_parameter
         entity_type_specifier:
           type: string
@@ -39290,6 +39387,7 @@ components:
           enum:
           - notification_parameter
           - folder
+          - passwordstore_password
           example: notification_parameter
         entity_type_specifier:
           type: string
@@ -39361,6 +39459,69 @@ components:
           description: A list of folder objects.
           items:
             $ref: '#/components/schemas/FolderResponse'
+        extensions:
+          type: object
+          description: Additional attributes alongside the collection.
+          additionalProperties: {}
+      required:
+      - links
+      additionalProperties: false
+    PasswordStorePasswordResponse:
+      type: object
+      properties:
+        links:
+          type: array
+          description: list of links to other resources.
+          example: null
+          items:
+            $ref: '#/components/schemas/Link'
+        domainType:
+          default: passwordstore_password
+          description: The domain type of the object.
+        id:
+          type: string
+          description: The unique identifier for this domain-object type.
+        title:
+          type: string
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+        members:
+          type: object
+          description: The container for external resources, like linked foreign objects
+            or actions.
+          additionalProperties: {}
+        extensions:
+          type: object
+          description: All the attributes of the domain object.
+          additionalProperties: {}
+      required:
+      - links
+      additionalProperties: false
+    PasswordStorePasswordResponseCollection:
+      type: object
+      properties:
+        links:
+          type: array
+          description: list of links to other resources.
+          example: null
+          items:
+            $ref: '#/components/schemas/Link'
+        id:
+          type: string
+          default: all
+          description: The name of this collection.
+        domainType:
+          default: passwordstore_password
+          description: The domain type of the objects in the collection.
+        title:
+          type: string
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+        value:
+          type: array
+          description: A list of password store passwords.
+          items:
+            $ref: '#/components/schemas/PasswordStorePasswordResponse'
         extensions:
           type: object
           description: Additional attributes alongside the collection.
@@ -39716,7 +39877,7 @@ components:
       required:
       - entries
       additionalProperties: false
-    Api406DefaultError8B5D843281F47B25:
+    Api406DefaultError77422B4E385237F0:
       properties:
         status:
           description: The HTTP status code.
@@ -39758,7 +39919,7 @@ components:
       - status
       - title
       - detail
-      title: Api406DefaultError8B5D843281F47B25
+      title: Api406DefaultError77422B4E385237F0
       type: object
     BreadcrumbItem:
       properties:
@@ -40269,7 +40430,7 @@ components:
       - value
       title: WidgetAvailableInventoryCollectionModel
       type: object
-    Api404DefaultError40DD4E5A06F59F4F:
+    Api404DefaultErrorD154FDDAC6070054:
       properties:
         status:
           description: The HTTP status code.
@@ -40311,7 +40472,7 @@ components:
       - status
       - title
       - detail
-      title: Api404DefaultError40DD4E5A06F59F4F
+      title: Api404DefaultErrorD154FDDAC6070054
       type: object
     AlertOverviewContent:
       properties:
@@ -41226,6 +41387,10 @@ components:
           format: date-time
           title: Last Modified At
           type: string
+        is_built_in:
+          description: Whether the dashboard is a built-in (system) dashboard.
+          title: Is Built In
+          type: boolean
         layout:
           $ref: '#/components/schemas/DashboardRelativeGridLayout'
           description: The layout the dashboard uses.
@@ -41240,6 +41405,7 @@ components:
       - filter_context
       - owner
       - last_modified_at
+      - is_built_in
       - layout
       - widgets
       title: RelativeGridDashboardResponse
@@ -41940,6 +42106,10 @@ components:
           format: date-time
           title: Last Modified At
           type: string
+        is_built_in:
+          description: Whether the dashboard is a built-in (system) dashboard.
+          title: Is Built In
+          type: boolean
         layout:
           $ref: '#/components/schemas/DashboardResponsiveGridLayout'
           description: The layout the dashboard uses.
@@ -41954,6 +42124,7 @@ components:
       - filter_context
       - owner
       - last_modified_at
+      - is_built_in
       - layout
       - widgets
       title: ResponsiveGridDashboardResponse
@@ -42232,7 +42403,7 @@ components:
       - widgets
       title: EditDashboardV1
       type: object
-    Api400DefaultErrorD03BB5FCEF54BF65:
+    Api400DefaultErrorD9934132B2F5DE59:
       properties:
         status:
           description: The HTTP status code.
@@ -42274,9 +42445,9 @@ components:
       - status
       - title
       - detail
-      title: Api400DefaultErrorD03BB5FCEF54BF65
+      title: Api400DefaultErrorD9934132B2F5DE59
       type: object
-    Api415DefaultErrorDF0CB1680D945D0C:
+    Api415DefaultError9990C74A5609208C:
       properties:
         status:
           description: The HTTP status code.
@@ -42318,7 +42489,7 @@ components:
       - status
       - title
       - detail
-      title: Api415DefaultErrorDF0CB1680D945D0C
+      title: Api415DefaultError9990C74A5609208C
       type: object
     ResponsiveGridWidgetRequest:
       properties:
@@ -44194,18 +44365,18 @@ components:
           type: string
           description: The IP address family of the host.
           enum: &id125
-          - ip-v6-only
-          - no-ip
           - ip-v4-only
+          - no-ip
+          - ip-v6-only
           - ip-v4v6
           example: ip-v4-only
         tag_agent:
           type: string
           description: Agent and API integrations
           enum: &id126
+          - all-agents
           - special-agents
           - cmk-agent
-          - all-agents
           - no-agent
           example: cmk-agent
         tag_snmp_ds:
@@ -44220,9 +44391,9 @@ components:
           type: string
           description: Use piggyback data for this host.
           enum: &id128
-          - auto-piggyback
-          - piggyback
           - no-piggyback
+          - piggyback
+          - auto-piggyback
           example: piggyback
         alias:
           type: string
@@ -46890,7 +47061,7 @@ components:
           description: Additional information about the error.
           additionalProperties: {}
       additionalProperties: false
-    Api403DefaultError7302D605273DB63C:
+    Api403DefaultError4EA03C34EEC509A8:
       properties:
         status:
           description: The HTTP status code.
@@ -46932,7 +47103,7 @@ components:
       - status
       - title
       - detail
-      title: Api403DefaultError7302D605273DB63C
+      title: Api403DefaultError4EA03C34EEC509A8
       type: object
     AnnotatedFolder:
       type: string
@@ -48538,7 +48709,7 @@ components:
           type: array
       title: UpdateHost
       type: object
-    Api412DefaultError5AAAB769ED6D6288:
+    Api412DefaultError03721B4301D0EBDF:
       properties:
         status:
           description: The HTTP status code.
@@ -48580,9 +48751,9 @@ components:
       - status
       - title
       - detail
-      title: Api412DefaultError5AAAB769ED6D6288
+      title: Api412DefaultError03721B4301D0EBDF
       type: object
-    Api428DefaultError26717584F8AADF09:
+    Api428DefaultErrorA384FBBBDAB9624F:
       properties:
         status:
           description: The HTTP status code.
@@ -48624,7 +48795,7 @@ components:
       - status
       - title
       - detail
-      title: Api428DefaultError26717584F8AADF09
+      title: Api428DefaultErrorA384FBBBDAB9624F
       type: object
     RenameHost:
       type: object
@@ -51772,12 +51943,12 @@ components:
           type: string
           format: date-time
           description: The approximate time of the first sample.
-          example: '2025-10-22 18:03:02.017953'
+          example: '2025-10-24 12:14:18.902565'
         end:
           type: string
           format: date-time
           description: The approximate time of the last sample.
-          example: '2025-10-22 18:18:02.017970'
+          example: '2025-10-24 12:29:18.902584'
       required:
       - end
       - start
@@ -51788,8 +51959,8 @@ components:
         time_range:
           description: The time range from which to source the metrics.
           example: &id162
-            start: '2025-10-22 18:03:02.018091'
-            end: '2025-10-22 18:18:02.018093'
+            start: '2025-10-24 12:14:18.902715'
+            end: '2025-10-24 12:29:18.902718'
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -60066,12 +60237,12 @@ components:
           type: string
           format: date-time
           description: The start time of the period
-          example: '2025-10-22 18:17:03.595838'
+          example: '2025-10-24 12:28:21.087058'
         end:
           type: string
           format: date-time
           description: The end time of the period
-          example: '2025-10-22 18:18:03.595855'
+          example: '2025-10-24 12:29:21.087077'
       required:
       - end
       - start

@@ -17,6 +17,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword
 from cmk.gui.form_specs.unstable.validators import not_empty
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.watolib.passwords import (
+    load_passwords,
     password_exists,
     save_password,
     sorted_contact_group_choices,
@@ -253,3 +254,11 @@ def save_password_from_slidein_schema(
     return PasswordDescription(
         id=parsed_data.general_props.id, title=parsed_data.general_props.title
     )
+
+
+def list_passwords(user: LoggedInUser) -> list[PasswordDescription]:
+    """List passwords visible to the given user."""
+    user.need_permission("wato.passwords")
+    return [
+        PasswordDescription(id=ident, title=pw["title"]) for ident, pw in load_passwords().items()
+    ]

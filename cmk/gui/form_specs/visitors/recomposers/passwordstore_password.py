@@ -42,7 +42,7 @@ def recompose(form_spec: FormSpec[Any]) -> TransformDataForLegacyFormatOrRecompo
         wrapped_form_spec=SingleChoiceEditable(
             title=form_spec.title,
             help_text=form_spec.help_text,
-            entity_type=ConfigEntityType.password,
+            entity_type=ConfigEntityType.passwordstore_password,
             entity_type_specifier="all",
             allow_editing_existing_elements=False,
         ),

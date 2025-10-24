@@ -7,6 +7,7 @@ from typing import Any, assert_never
 
 from cmk import fields
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas, type_defs
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
@@ -39,8 +40,8 @@ def to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
             return ConfigEntityType.notification_parameter.value
         case ConfigEntityType.folder:
             return ConfigEntityType.folder.value
-        case ConfigEntityType.password:
-            return ConfigEntityType.password.value
+        case ConfigEntityType.passwordstore_password:
+            return ConfigEntityType.passwordstore_password.value
         case other:
             assert_never(other)
 
@@ -63,7 +64,9 @@ def serve_configuration_entity_list(
 ) -> Response:
     entity_type_specifier = params["entity_type_specifier"]
 
-    entity_descriptions = get_list_of_configuration_entities(entity_type, entity_type_specifier)
+    entity_descriptions = get_list_of_configuration_entities(
+        entity_type, entity_type_specifier, user=user
+    )
 
     return serve_json(
         constructors.collection_object(

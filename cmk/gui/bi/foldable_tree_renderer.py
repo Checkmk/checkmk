@@ -388,10 +388,12 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
                 html.close_span()
 
+            # self._row is not a real livestatus row...
+            # According to my printf debugging this seems to come from cmk/bi/trees.py:convert_result_to_legacy_format
             output: HTML = cmk.gui.view_utils.format_plugin_output(
                 effective_state["output"],
                 request=request,
-                must_escape=not active_config.sites[self._row["site"]].get("is_trusted", False),
+                must_escape=True,
                 shall_escape=active_config.escape_plugin_output,
             )
 

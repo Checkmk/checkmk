@@ -1,22 +1,27 @@
 #!groovy
 
-// file: build-oracle-aix.groovy
+// file: build-mk-oracle-on-aix-or-solaris.groovy
 
 def main() {
     check_job_parameters([
         "VERSION",
+        "SPECIAL_DISTRO"
     ])
 
-    stage("Build AIX") {
+    def distro = SPECIAL_DISTRO;
+    assert distro in ["aix", "solaris"] : ("Unsupported DISTRO: ${distro}");
+
+    stage("Build mk-oracle for ${distro}") {
         inside_container() {
             dir("${checkout_dir}") {
                 withCredentials([
+                    // We use the same SSH key as for the aix and solaris machine
                     sshUserPrivateKey(
                         credentialsId: "jenkins-aix-build-ssh-key",
                         keyFileVariable: 'KEYFILE'
                     ),
                     file(
-                        credentialsId: 'know_hosts_ssh_aix',
+                        credentialsId: "know_hosts_ssh_${distro}",
                         variable: 'KNOWN_HOSTS_FILE'
                     ),
                     usernamePassword(
@@ -26,7 +31,7 @@ def main() {
                     ),
                 ]) {
                     sh("""
-                        checkout_dir=${checkout_dir} REMOTE_USER=jenkins packages/mk-oracle/ssh-run-ci aix -bu
+                        checkout_dir=${checkout_dir} REMOTE_USER=jenkins packages/mk-oracle/ssh-run-ci ${distro} -bu
                     """)
                 }
             }
@@ -35,7 +40,7 @@ def main() {
 
     stage("Archive artifacts") {
         dir("${checkout_dir}/packages/mk-oracle") {
-            archiveArtifacts(allowEmptyArchive: true, artifacts: "mk-oracle.aix");
+            archiveArtifacts(allowEmptyArchive: true, artifacts: "mk-oracle.${distro}}");
         }
     }
 }

@@ -575,7 +575,7 @@ def test_version(execute: Execute) -> None:
     p = execute(["cmk", "--version"])
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
-    assert "This is Check_MK" in p.stdout
+    assert "This is Checkmk" in p.stdout
 
 
 # .

@@ -3552,8 +3552,8 @@ modes.register(
 
 def mode_version() -> None:
     print_(
-        """This is Check_MK version %s %s
-Copyright (C) 2009 Mathias Kettner
+        """This is %s version %s
+Copyright (C) 2009 Checkmk GmbH
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -3572,8 +3572,8 @@ Copyright (C) 2009 Mathias Kettner
 
 """
         % (
+            cmk_version.edition(cmk.utils.paths.omd_root).title,
             cmk_version.__version__,
-            cmk_version.edition(cmk.utils.paths.omd_root).short.upper(),
         )
     )
 
@@ -3583,7 +3583,7 @@ modes.register(
         long_option="version",
         short_option="V",
         handler_function=mode_version,
-        short_help="Print the version of Check_MK",
+        short_help="Print the version of Checkmk",
     )
 )
 

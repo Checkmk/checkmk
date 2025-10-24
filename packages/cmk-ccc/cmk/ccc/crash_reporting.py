@@ -349,4 +349,7 @@ def format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 
         case str():
             val = _truncate_str(val, maxsize)
 
+        case _:
+            pass
+
     return val

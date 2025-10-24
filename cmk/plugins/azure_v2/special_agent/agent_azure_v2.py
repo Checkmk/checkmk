@@ -54,6 +54,7 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     Aggregations,
     ALL_METRICS,
     AzureMetric,
+    COSMOS_DATABASE_METRICS,
     DimensionFilter,
     Intervals,
     OPTIONAL_METRICS,
@@ -95,6 +96,7 @@ class FetchedResource(Enum):
         "virtualnetworkgateways",
     )
     redis = ("Microsoft.Cache/Redis", "redis")
+    cosmosdb = ("Microsoft.DocumentDB/databaseAccounts", "databaseaccounts")
 
     def __init__(self, resource_type, section_name):
         self.resource_type = resource_type
@@ -1165,6 +1167,87 @@ def _collect_async_metrics_tasks(
     return tasks
 
 
+async def process_cosmosdb(
+    api_client: BaseAsyncApiClient,
+    resource: AzureResource,
+    subscription: AzureSubscription,
+    args: Args,
+) -> list[AzureResource]:
+    resources = [resource]  # always include the main cosmosdb account resource
+
+    # to collect cosmos databases (will become piggybacked hosts)
+    # we query a cosmos db account metrics with a dimension filter 'DatabaseName = *'
+    # so that we obtain *every* database inside the account (together with their metrics)
+
+    tasks = _collect_async_metrics_tasks(
+        COSMOS_DATABASE_METRICS,
+        subscription,
+        resource.info["location"],
+        [resource.info["id"]],
+        resource.info["type"],
+        api_client,
+        args,
+        err := IssueCollector(),
+    )
+
+    cosmosdb_databases: dict[str, AzureResource] = {}  # db_name : resource
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for result in results:
+        if isinstance(result, BaseException):
+            if args.debug:
+                raise result
+            err.add("exception", "metric collection", str(result))
+            LOGGER.exception(result)
+            continue
+
+        # resource id is always the cosmos account
+        # metrics contain the database name in the metadata mapping
+        for resource_id, metrics in result.items():
+            for metric in metrics:
+                if not (metadata := metric.get("metadata_mapping")):
+                    # this should never happen because of the dimension filter we use 'DatabaseName = *'
+                    LOGGER.error("Skipping metric without database name in metadata: %s", metric)
+                    continue
+
+                if (database_name := metadata.get("databasename", "<empty>")) == "<empty>":
+                    # this is the "general" metric for the cosmos account itself, we don't need it here
+                    # cosmos account metrics will be collected in the standard way as for other resources
+                    continue
+
+                if (db_resource := cosmosdb_databases.get(database_name)) is not None:
+                    # db already present, just append the metric
+                    db_resource.metrics.append(metric)
+                    continue
+
+                db_resource_info = {
+                    "id": database_name,  # id = name of the database
+                    "name": database_name,
+                    "type": "Microsoft.DocumentDB/databaseAccounts/cosmosdb_databases",  # fake type to fake the section (last part after /)
+                    # data from cosmos account:
+                    "location": resource.info.get("location"),
+                    "tags": resource.tags,
+                    "group": resource.info.get("group"),
+                }
+
+                db_resource = AzureResource(
+                    db_resource_info, TagsImportPatternOption.import_all, resource.subscription
+                )
+                # piggyback target to the database name
+                db_resource.piggytargets = [database_name]
+                db_resource.metrics.append(metric)
+
+                cosmosdb_databases[database_name] = db_resource
+                resources.append(db_resource)
+
+    if err:
+        LOGGER.error("Errors occurred during cosmosdb metrics collection.")  # TODO: remove
+        agent_info_section = AzureSection("agent_info")
+        agent_info_section.add(err.dumpinfo())
+        agent_info_section.write()
+
+    return resources
+
+
 class AzureAsyncCache(DataCache):
     # Semaphore introduced to not reach the maximum number of open files error.
     # A sempahore should be enough, no need for locks here
@@ -2166,7 +2249,10 @@ async def process_single_resources(
     monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureSection]:
     processed_resources: list[AzureResource] = []
-    tasks = set()
+    tasks: set[Coroutine[Any, Any, AzureResource] | Coroutine[Any, Any, list[AzureResource]]] = (
+        set()
+    )
+
     for _resource_id, resource in monitored_resources.items():
         resource_type = resource.info["type"]
         if resource_type in BULK_QUERIED_RESOURCES:
@@ -2178,6 +2264,8 @@ async def process_single_resources(
             tasks.add(process_virtual_net_gw(mgmt_client, resource))
         elif resource_type == FetchedResource.redis.type:
             tasks.add(process_redis(resource))
+        elif resource_type.lower() == FetchedResource.cosmosdb.type.lower():
+            tasks.add(process_cosmosdb(mgmt_client, resource, subscription, args))
         else:
             # simple resource without further processing
             if resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
@@ -2194,7 +2282,12 @@ async def process_single_resources(
             )
             continue
 
-        processed_resources.append(resource_async)
+        # All functions return either a single resource or a list of resources (process_cosmosdb)
+        if isinstance(resource_async, AzureResource):
+            processed_resources.append(resource_async)
+        else:
+            assert isinstance(resource_async, list)
+            processed_resources.extend(resource_async)
 
     return _gather_sections_from_resources(processed_resources, group_labels)
 

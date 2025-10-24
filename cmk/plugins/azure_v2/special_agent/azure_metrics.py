@@ -91,6 +91,23 @@ cosmos_accounts_metrics = [
     AzureMetric(name="DocumentCount", interval="PT5M", aggregation="average"),
 ]
 
+COSMOS_DATABASE_METRICS = [
+    # this metric is needed to always discover the DBs
+    # since some other metrics are only available when there is activity
+    AzureMetric(
+        name="DocumentCount",
+        interval="PT5M",
+        aggregation="average",
+        dimension_filters=(
+            DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="average_DocumentCountdb",
+    ),
+]
+
 ALL_METRICS: dict[str, list[AzureMetric]] = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!

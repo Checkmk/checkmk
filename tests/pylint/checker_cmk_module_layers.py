@@ -1169,12 +1169,9 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("omd/packages/appliance/webconf_snapin.py"): Component("cmk.gui"),
     ModulePath("omd/non-free/packages/cmk-dcd/cmk-dcd.py"): Component("cmk.cee.dcd"),
     ModulePath("omd/non-free/packages/cmk-dcd/dcd.py"): Component("cmk.cee.dcd"),
-    ModulePath("omd/packages/enterprise/bin/fetch-ad-hoc"): Component("cmk.fetcher_helper"),
-    ModulePath("omd/packages/enterprise/bin/fetcher"): Component("cmk.fetcher_helper"),
     ModulePath("omd/non-free/packages/cmk-liveproxyd/liveproxyd.py"): Component(
         "cmk.cee.liveproxy"
     ),
-    ModulePath("omd/packages/enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("omd/packages/maintenance/diskspace.py"): Component("cmk.diskspace"),
     ModulePath("web/app/index.wsgi"): Component("cmk.gui"),
     # Notification plugins

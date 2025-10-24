@@ -15,10 +15,12 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pydantic import ValidationError
 
 from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     _collect_resources,
     _get_resource_health_sections,
+    _parse_metrics_metadata,
     AzureResource,
     AzureSubscription,
     filter_tags,
@@ -1054,3 +1056,73 @@ Resource
 <<<<>>>>
 """
     )
+
+
+@pytest.mark.parametrize(
+    "metadata, expected_result",
+    [
+        pytest.param(
+            [
+                {
+                    "name": {
+                        "value": "databasename",
+                        "localizedValue": "databasename",
+                        "something": "else",
+                    },
+                    "value": "SampleDB",
+                },
+                {
+                    "name": {
+                        "value": "servername",
+                        "localizedValue": "servername",
+                        "something": "else",
+                    },
+                    "value": "my-server",
+                },
+            ],
+            {
+                "databasename": "SampleDB",
+                "servername": "my-server",
+            },
+            id="Valid metadata with multiple items and data",
+        ),
+        pytest.param(
+            [],
+            {},
+            id="Empty metadata list",
+        ),
+        pytest.param(
+            [
+                {
+                    "name": {
+                        "value": "key1",
+                    },
+                    "value": "value1",
+                },
+            ],
+            {
+                "key1": "value1",
+            },
+            id="Metadata with only value field in name",
+        ),
+    ],
+)
+def test_parse_metrics_metadata(
+    metadata: Sequence[Mapping[str, str | object]], expected_result: Mapping[str, str]
+) -> None:
+    assert _parse_metrics_metadata(metadata) == expected_result
+
+
+def test_parse_metrics_invalid_metadata() -> None:
+    invalid_metadata: Sequence[Mapping[str, str | object]] = [
+        {
+            "invalid_field": "invalid_value",
+        },
+        {
+            "name": {
+                "localizedValue": "missing_value_field",
+            },
+        },
+    ]
+    with pytest.raises(ValidationError):
+        assert _parse_metrics_metadata(invalid_metadata) == {}

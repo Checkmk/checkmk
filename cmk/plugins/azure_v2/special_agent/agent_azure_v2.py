@@ -35,6 +35,7 @@ from pathlib import Path
 from typing import Any, Final, Literal, Required, TypedDict, TypeVar
 
 import requests
+from pydantic import BaseModel, RootModel
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.plugins.azure_v2.special_agent.azure_api_client import (
@@ -557,32 +558,71 @@ class IssueCollector:
         return len(self._list)
 
 
+class _MetadataItem(BaseModel):
+    class _Name(BaseModel):
+        value: str
+
+    name: _Name
+    value: str
+
+
+class _MetadataList(RootModel[Sequence[_MetadataItem]]):
+    pass
+
+
+def _parse_metrics_metadata(
+    metadata: Sequence[Mapping[str, str | object]],
+) -> Mapping[str, str]:
+    """
+    Metadata are in the form:
+    [
+        {
+            "name": {
+                "value": "databasename",
+                "localizedValue": "databasename"
+            },
+            "value": "SampleDB"
+        },
+        ...
+    ]
+    """
+
+    validated_metadata = _MetadataList.model_validate(metadata)
+    return {item.name.value: item.value for item in validated_metadata.root}
+
+
 def create_metric_dict(
     metric: Mapping[str, Any],
     aggregation: Aggregations,
     interval_id: Intervals,
     cmk_metric_alias: str,
-) -> Mapping[str, Any] | None:
+) -> Sequence[Mapping[str, Any]]:
     name = metric["name"]["value"]
-    metric_dict = {
-        "name": name,
-        "aggregation": aggregation,
-        "value": None,
-        "unit": metric["unit"].lower(),
-        "timestamp": None,
-        "interval_id": interval_id,
-        "interval": None,
-        "cmk_metric_alias": cmk_metric_alias,
-    }
+    metriclist: list[Mapping[str, Any]] = []
 
     timeseries = metric.get("timeseries")
     if not timeseries:
-        return None
+        return metriclist
 
     for measurement in reversed(timeseries):
         dataset = measurement.get("data", ())
         if not dataset:
             continue
+
+        metric_dict = {
+            "name": name,
+            "aggregation": aggregation,
+            "value": None,
+            "unit": metric["unit"].lower(),
+            "timestamp": None,
+            "interval_id": interval_id,
+            "interval": None,
+            "cmk_metric_alias": cmk_metric_alias,
+            "metadata_mapping": None,
+        }
+
+        if metadata := measurement.get("metadatavalues"):
+            metric_dict["metadata_mapping"] = _parse_metrics_metadata(metadata)
 
         try:
             metric_dict["interval"] = str(
@@ -597,9 +637,16 @@ def create_metric_dict(
             metric_dict["value"] = data.get(aggregation)
             if metric_dict["value"] is not None:
                 metric_dict["timestamp"] = data["timeStamp"]
-                return metric_dict
+                metriclist.append(metric_dict)
+                break
 
-    return None
+        if not metadata:
+            # no need to loop over other timeseries. With no metadata
+            # there should be only one timeseries, and in this way we also stick
+            # with the previous behavior
+            break
+
+    return metriclist
 
 
 def get_attrs_from_uri(uri: str) -> Mapping[str, str]:
@@ -1419,7 +1466,7 @@ class MetricCache(AzureAsyncCache):
         for chunk in _chunks(resource_ids):
             raw_metrics += await self._get_metrics(mgmt_client, region, chunk, params)
 
-        metrics = defaultdict(list)
+        metrics: defaultdict[str, list] = defaultdict(list)
 
         for resource_metrics in raw_metrics:
             resource_id = resource_metrics["resourceid"]
@@ -1439,8 +1486,8 @@ class MetricCache(AzureAsyncCache):
                     self.metrics_definitions.interval,
                     cmk_metric_alias,
                 )
-                if parsed_metric is not None:
-                    metrics[resource_id].append(parsed_metric)
+                if parsed_metric:
+                    metrics[resource_id].extend(parsed_metric)
                 else:
                     metric_name = raw_metric["name"]["value"]
                     if metric_name in OPTIONAL_METRICS.get(resource_type, []):

@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, HttpUrl
 
 # The name of the folder in the tar archive that contains the relay config files
 CONFIG_ARCHIVE_ROOT_FOLDER_NAME: str = "config"
+CONFIG_ARCHIVE_RELATIVE_PATH_ENGINE_CONFIG: str = "engine/config.json"
 
 Timestamp = NewType("Timestamp", float)
 Seconds = NewType("Seconds", float)

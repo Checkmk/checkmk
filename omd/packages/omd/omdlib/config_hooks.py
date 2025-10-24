@@ -265,7 +265,7 @@ def load_config(site: "SiteContext", verbose: bool) -> Config:
         for hook_name in sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
                 config[hook_name] = call_hook(
-                    site, hook_name, ["default", edition(site_home).short], verbose
+                    site, hook_name, ["default", edition(site_home).long], verbose
                 )[1]
     return config
 

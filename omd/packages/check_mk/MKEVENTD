@@ -10,7 +10,7 @@
 
 case "$1" in
     default)
-        if [ "$2" = cse ]; then
+        if [ "$2" = saas ]; then
             echo "off"
         else
             echo "on"

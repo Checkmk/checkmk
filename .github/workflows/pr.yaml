@@ -17,6 +17,8 @@ jobs:
             PYTHONWARNINGS: ignore:DeprecationWarning
             # Avoid falling back to our internal bazel remote cache on github actions
             BAZEL_CACHE_URL: ""
+            # Needed by "make .venv" to compute PYTHON_REQUIREMENTS_TEST
+            EDITION: raw
         strategy:
             matrix:
                 include:

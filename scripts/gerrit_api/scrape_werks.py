@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Final
 
 from scripts.gerrit_api.client import GerritClient, TChangeStatus
+from scripts.gerrit_api.werks import werk_details
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
@@ -167,7 +168,13 @@ def main() -> None:
             # ignore changes which are WIP.
             and not change.work_in_progress
         ):
-            print(change)
+            try:
+                werk = werk_details(client, change)
+            except FileNotFoundError as exc:
+                exc.add_note("Skip change...")
+                print(exc)
+                continue
+            print(change.id, werk.IMPACT, werk.ID, werk.SUMMARY)
 
 
 if __name__ == "__main__":

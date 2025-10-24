@@ -401,10 +401,8 @@ class Server:
             self._cookie = cookie
 
     @staticmethod
-    def filter_credentials(request):
-        if b"inPassword=" in request.body:
-            request.body = b"login request filtered out"
-        return request
+    def filter_credentials(body: bytes) -> bytes:
+        return b"login request filtered out" if b"inPassword=" in body else body
 
     def logout(self) -> None:
         logging.debug("Server.logout: Logout")
@@ -571,7 +569,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--vcrtrace",
-        action=vcrtrace(before_record_request=Server.filter_credentials),
+        action=vcrtrace(filter_body=Server.filter_credentials),
     )
     cert_args = parser.add_mutually_exclusive_group()
     cert_args.add_argument(

@@ -22,8 +22,6 @@ from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import Any
 
-from requests import Request
-
 from cmk.ccc import store
 
 
@@ -149,7 +147,7 @@ def _check_path(filename: str) -> None:
 
 
 def vcrtrace(
-    before_record_request: Callable[[Request], Request] | None = None,
+    filter_body: Callable[[bytes], bytes] = lambda b: b,
     filter_query_parameters: Sequence[tuple[str, str | None]] = (),
     filter_headers: Sequence[tuple[str, str | None]] = (),
     filter_post_data_parameters: Sequence[tuple[str, str | None]] = (),
@@ -220,6 +218,11 @@ def vcrtrace(
                 raise argparse.ArgumentError(self, str(exc)) from exc
 
             import vcr
+            from vcr.request import Request
+
+            def before_record_request(request: Request) -> Request:
+                request.body = filter_body(request.body)
+                return request
 
             setattr(namespace, self.dest, True)
             use_cassette = vcr.VCR(  # type: ignore[attr-defined]

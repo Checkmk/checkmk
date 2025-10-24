@@ -956,7 +956,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--vcrtrace",
         "--tracefile",
-        action=utils.vcrtrace(before_record_request=ESXConnection.filter_request),
+        action=utils.vcrtrace(filter_body=ESXConnection.filter_request_body),
     )
     parser.add_argument(
         "-t",
@@ -1137,11 +1137,9 @@ class ESXConnection:
     ESCAPED_CHARS = {"&": "&amp;", ">": "&gt;", "<": "&lt;", "'": "&apos;", '"': "&quot;"}
 
     @staticmethod
-    def filter_request(request):
+    def filter_request_body(body: bytes) -> bytes:
         """Used for VCR. Filter password"""
-        if b"<ns1:password>" in request.body:
-            request.body = b"login request filtered out"
-        return request
+        return b"login request filtered out" if b"<ns1:password>" in body else body
 
     @staticmethod
     def _escape_xml(text: str) -> str:

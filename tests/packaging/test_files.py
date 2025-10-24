@@ -762,7 +762,10 @@ def test_windows_artifacts_are_signed(
         paths = _get_paths_from_package(package_path)
         omd_version = _get_omd_version(cmk_version, package_path)
         paths_signable = [
-            path.removeprefix(f"/opt/omd/versions/{omd_version}/")
+            # remove prefixes of paths to make it comparable
+            #   * /opt/omd/versions/{omd_version}/...
+            #   * {omd_version}/...  (for cma)
+            path.removeprefix(f"/opt/omd/versions/{omd_version}/").removeprefix(f"{omd_version}/")
             for path in paths
             if _should_be_signed(path)
         ]

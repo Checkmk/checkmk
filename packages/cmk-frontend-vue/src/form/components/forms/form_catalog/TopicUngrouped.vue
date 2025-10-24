@@ -7,8 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { TopicElement } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { onMounted, ref, watch } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
+import CmkLabel from '@/components/CmkLabel.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import { type ValidationMessages, groupNestedValidations } from '@/form/components/utils/validation'
@@ -79,21 +81,22 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   >
     <td class="form-topic-ungrouped__title">
       <span class="form-topic-ungrouped__fixed-content-width">
-        <label :class="{ 'form-topic-ungrouped__show-pointer': !element.required }">
-          <CmkCheckbox
-            v-if="!element.required"
-            v-model="checkedElements[element.name]!"
-            @update:model-value="toggleElement(element.name)"
-          />
-          <span v-else class="form-topic-ungrouped__hidden-checkbox-size" />
+        <CmkCheckbox
+          v-if="!element.required"
+          v-model="checkedElements[element.name]!"
+          :help="untranslated(element.parameter_form.help)"
+          :label="untranslated(element.parameter_form.title)"
+          dots
+          @update:model-value="toggleElement(element.name)"
+        />
+        <CmkLabel v-else :help="untranslated(element.parameter_form.help)" dots>
           {{ element.parameter_form.title
           }}<FormRequired
             v-if="!rendersRequiredLabelItself(element.parameter_form)"
             :spec="element.parameter_form"
             :space="'before'"
           />
-        </label>
-        <span class="form-topic-ungrouped__dots">{{ Array(200).join('.') }}</span>
+        </CmkLabel>
       </span>
     </td>
     <td class="form-topic-ungrouped__value">
@@ -113,7 +116,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   vertical-align: top;
   font-weight: 400;
   empty-cells: show;
-  white-space: nowrap;
 }
 
 .form-topic-ungrouped__title {
@@ -126,30 +128,15 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   letter-spacing: 1px;
 }
 
-.form-topic-ungrouped__dots {
-  margin-left: 5px;
-  overflow: hidden;
-  color: var(--grey-4-dimmed);
-}
-
-.form-topic-ungrouped__hidden-checkbox-size {
-  width: 13px;
-  display: inline-block;
-}
-
-.form-topic-ungrouped__show-pointer {
-  cursor: pointer;
-}
-
 .form-topic-ungrouped__value {
   width: 100%;
   padding: 5px 0 4px;
+  white-space: nowrap;
 }
 
 .form-topic-ungrouped__fixed-content-width {
   width: 230px;
   display: inline-block;
-  white-space: nowrap;
   overflow: hidden;
 }
 

@@ -56,6 +56,12 @@ function getHelp(name: string) {
   }
   return ''
 }
+function getVeryLongHelp(name: string) {
+  if (showHelp.value) {
+    return `Very long help text for ${name} with many many characters to test the layout, which seems to never end because it is very very long.`
+  }
+  return ''
+}
 function getTitle(name: string) {
   return `${name} title`
 }
@@ -93,6 +99,19 @@ function getInteger(name: string, options?: Partial<Omit<Integer, 'type'>>): Int
   }
 }
 
+function getLongTitleInteger(name: string, options?: Partial<Omit<Integer, 'type'>>): Integer {
+  return {
+    type: 'integer',
+    title: 'Very long title with many many characters to test the layout',
+    help: getVeryLongHelp(name),
+    validators: [],
+    label: getLabel(name),
+    input_hint: '1234',
+    unit: 'unit',
+    ...(options || {})
+  }
+}
+
 function getFloat(name: string, options?: Partial<Omit<Float, 'type'>>): Float {
   return {
     type: 'float',
@@ -112,15 +131,22 @@ function getCatalog(name: string, options?: Partial<Omit<Catalog, 'type'>>): Cat
     validators: [],
     elements: [
       {
-        name: 'something',
+        name: 'something_ungrouped',
         title: `Host filters ${name} (ungrouped)`,
         elements: [
           {
             type: 'topic_element',
             name: 'topic_element name',
-            required: false,
+            required: true,
             parameter_form: getString('something'),
             default_value: 'default_value'
+          },
+          {
+            type: 'topic_element',
+            name: 'topic_element 2 name',
+            required: false,
+            parameter_form: getLongTitleInteger('some integer'),
+            default_value: 123
           }
         ]
       },
@@ -137,6 +163,13 @@ function getCatalog(name: string, options?: Partial<Omit<Catalog, 'type'>>): Cat
                 name: 'topic_grouped_element_name',
                 required: true,
                 parameter_form: getString('something'),
+                default_value: 'default_value'
+              },
+              {
+                type: 'topic_element',
+                name: 'topic_grouped_element_2_name',
+                required: false,
+                parameter_form: getString('another thing'),
                 default_value: 'default_value'
               }
             ]
@@ -655,10 +688,14 @@ const forms: Array<[string, (name: string) => Components, unknown]> = [
     'Catalog',
     getCatalog,
     {
-      something: {
-        'topic_element name': 'asd'
+      something_ungrouped: {
+        'topic_element name': 'asd',
+        'topic_element 2 name': 42
       },
-      something_grouped: { topic_grouped_element_name: 'aaaaaa' }
+      something_grouped: {
+        topic_grouped_element_name: 'aaaaaa',
+        topic_grouped_element_2_name: 'bbbbb'
+      }
     }
   ],
   ['CascadingSingleChoice', getCascadingSingleChoice, ['one', undefined]],

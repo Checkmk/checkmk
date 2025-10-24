@@ -21,14 +21,20 @@ class AgentReceiverClient:
     It gives still direct access to the APIs and generally returns the raw api responses
     """
 
-    def __init__(self, client: TestClient, site_name: str, user: User, serial: str) -> None:
+    def __init__(
+        self, client: TestClient, site_name: str, user: User, serial: str | None = None
+    ) -> None:
         self.client = client
         self.site_name = site_name
         self.client.headers["Authorization"] = user.bearer
-        self.client.headers["x-cmk-serial"] = serial
+        if serial:
+            self.client.headers["x-cmk-serial"] = serial
 
-    def set_serial(self, serial: str) -> None:
-        self.client.headers["x-cmk-serial"] = serial
+    def set_serial(self, serial: str | None) -> None:
+        if serial:
+            self.client.headers["x-cmk-serial"] = serial
+        else:
+            del self.client.headers["x-cmk-serial"]
 
     def register_relay(self, name: str) -> httpx.Response:
         return self.client.post(

@@ -5,7 +5,7 @@ Release:        SET BY MAKEFILE
 License:        GPL
 URL:            https://checkmk.com
 Group:          Application/System
-Source:         check-mk-%{edition}-%{version}.tar.gz
+Source:         check-mk-%{edition}-%{pkg_version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 AutoReq:        off
 AutoProv:       off

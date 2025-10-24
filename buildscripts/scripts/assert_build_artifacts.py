@@ -46,10 +46,7 @@ def hash_file(artifact_name: str) -> str:
 
 def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        file_name = (
-            f"check-mk-{edition}-{args.version}.{CMKEdition.from_long_edition(edition).short}"
-            ".tar.gz"
-        )
+        file_name = f"check-mk-{edition}-{args.version}.tar.gz"
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield file_name, internal_only
         yield hash_file(file_name), internal_only

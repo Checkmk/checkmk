@@ -116,9 +116,9 @@ def main() {
                         sh("make dist");
                     }
                 }
-                cmd_output("ls check-mk-${edition}-${cmk_version}.c?e*.tar.gz")
+                cmd_output("ls check-mk-${edition}-${cmk_version}.tar.gz")
                 ?:
-                error("Found no source package path matching ${checkout_dir}/check-mk-${edition}-${cmk_version}.c?e*.tar.gz");
+                error("Found no source package path matching ${checkout_dir}/check-mk-${edition}-${cmk_version}.tar.gz");
             }
         }();
 

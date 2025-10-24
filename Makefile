@@ -6,7 +6,6 @@
 include defines.make
 include artifacts.make
 
-DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
@@ -57,18 +56,21 @@ endif
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
 dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
+	if [ -z "$(EDITION)" ]; then \
+	    echo "EDITION is not set!" ; exit 1 ; \
+	fi ; \
 	set -e -o pipefail ; EXCLUDES= ; \
 	git rev-parse HEAD > COMMIT ; \
 	for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
 		EXCLUDES+=" --exclude $${X%*/}" ; \
 	done ; \
-	if [ -d check-mk-$(EDITION)-$(OMD_VERSION) ]; then \
-	    rm -rf check-mk-$(EDITION)-$(OMD_VERSION) ; \
+	if [ -d check-mk-$(EDITION)-$(VERSION) ]; then \
+	    rm -rf check-mk-$(EDITION)-$(VERSION) ; \
 	fi ; \
-	mkdir check-mk-$(EDITION)-$(OMD_VERSION) ; \
+	mkdir check-mk-$(EDITION)-$(VERSION) ; \
 	tar -c --wildcards \
 	    $(TAROPTS) \
-	    --exclude check-mk-$(EDITION)-$(OMD_VERSION) \
+	    --exclude check-mk-$(EDITION)-$(VERSION) \
 	    --exclude .git \
 	    --exclude .gitignore \
 	    --exclude .gitmodules \
@@ -76,15 +78,15 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	    --exclude non-free \
 	    --exclude tests/qa-test-data \
 	    $$EXCLUDES \
-	    * .werks | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
+	    * .werks | tar x -C check-mk-$(EDITION)-$(VERSION)
 	if [ -f COMMIT ]; then \
 	    rm COMMIT ; \
 	fi
-	bazel build //omd:license_info && tar xf "$$(bazel cquery --output=files //omd:license_info)" --strip 2 --touch -C check-mk-$(EDITION)-$(OMD_VERSION)/omd/
-	tar -cz --wildcards -f $(DIST_ARCHIVE) \
+	bazel build //omd:license_info && tar xf "$$(bazel cquery --output=files //omd:license_info)" --strip 2 --touch -C check-mk-$(EDITION)-$(VERSION)/omd/
+	tar -cz --wildcards -f check-mk-$(EDITION)-$(VERSION).tar.gz \
 	    $(TAROPTS) \
-	    check-mk-$(EDITION)-$(OMD_VERSION)
-	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
+	    check-mk-$(EDITION)-$(VERSION)
+	rm -rf check-mk-$(EDITION)-$(VERSION)
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)

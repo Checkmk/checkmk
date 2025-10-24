@@ -43,6 +43,9 @@ INTERMEDIATE_INSTALL_BASE := $(BUILD_BASE_DIR)/intermediate_install
 XDG_CACHE_HOME     ?= $(HOME)/.cache
 PACKAGE_CACHE_BASE := $(XDG_CACHE_HOME)/checkmk/packages
 
+OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
+# Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
+PKG_VERSION        := $(VERSION)
 CMK_VERSION        := $(VERSION)
 OMD_SERIAL         := 38
 

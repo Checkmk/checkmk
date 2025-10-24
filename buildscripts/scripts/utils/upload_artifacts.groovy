@@ -20,7 +20,7 @@ def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DIS
 
 def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION) {
     CMK_VERSION_RC_LESS = versioning.strip_rc_number_from_version(CMK_VERSION);
-    def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION_RC_LESS}.*.tar.gz";
+    def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION_RC_LESS}.tar.gz";
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'source tar');
 }
 

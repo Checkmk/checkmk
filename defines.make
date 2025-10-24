@@ -30,9 +30,6 @@ EDITION_SHORT      := cse
 endif
 
 VERSION            := 2.5.0b1
-OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
-# Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
-PKG_VERSION        := $(VERSION)
 
 # Currently only used for the OMD package build cache. We did not want to use
 # the branch name, because we want to re-use a single cache also for derived sandbox

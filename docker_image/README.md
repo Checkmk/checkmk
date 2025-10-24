@@ -9,7 +9,7 @@ See also `check_mk/buildscripts/scripts/build-cmk-image.groovy`
 ```bash
 mkdir -p download/2024.02.19
 
-cp ~/Downloads/check-mk-enterprise-2.5.0-2025.02.19.cee.tar.gz download/2024.02.19/
+cp ~/Downloads/check-mk-enterprise-2.5.0-2025.02.19.tar.gz download/2024.02.19/
 cp ~/Downloads/check-mk-enterprise-2.5.0-2025.02.19_0.jammy_amd64.deb download/2024.02.19/
 
 scripts/run-uvenv python \

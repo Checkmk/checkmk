@@ -3244,6 +3244,73 @@ def main_su(
         sys.exit("Cannot open a shell for user %s" % site.name)
 
 
+def _process_backup_tar_and_setup_env(
+    tar: tarfile.TarFile,
+    verbose: bool,
+    options: CommandOptions,
+    old_site_name: str,
+    new_site: SiteContext,
+) -> Config:
+    site_home = str(SitePaths.from_site_name(new_site.name).home)
+
+    # Now extract all files
+    for tarinfo in tar:
+        # The files in the tar archive start with the siteid as first element.
+        # Remove this first element from the file paths and also care for hard link
+        # targets.
+
+        # Remove leading site name from paths
+        tarinfo.name = "/".join(tarinfo.name.split("/")[1:])
+        if verbose:
+            sys.stdout.write("Restoring %s...\n" % tarinfo.name)
+
+        if tarinfo.islnk():
+            parts = tarinfo.linkname.split("/")
+
+            if parts[0] == old_site_name:
+                new_linkname = "/".join(parts[1:])
+
+                if verbose:
+                    sys.stdout.write(
+                        f"  Rewriting link target from {tarinfo.linkname} to {new_linkname}\n"
+                    )
+                tarinfo.linkname = new_linkname
+
+        tar.extract(tarinfo, path=site_home)
+
+    # give new user all files
+    chown_tree(site_home, new_site.name)
+
+    # Change config files from old to new site (see rename_site())
+    if old_site_name != new_site.name:
+        old_site = SiteContext(old_site_name)
+        old_site_home = SitePaths.from_site_name(old_site_name).home
+        site_replacements = new_site.replacements()
+        old_replacements = {
+            "###SITE###": old_site_name,
+            "###ROOT###": old_site_home,
+            "###EDITION###": site_replacements["###EDITION###"],
+        }
+        patch_skeleton_files(
+            _get_conflict_mode(options),
+            old_site.name,
+            new_site,
+            old_replacements,
+            site_replacements,
+        )
+
+    # Now switch over to the new site as currently active site
+    os.chdir(site_home)
+
+    new_config = load_config(new_site, verbose)
+
+    set_environment(new_site.name, new_config)
+
+    # Needed by the post-rename-site script
+    putenv("OLD_OMD_SITE", old_site_name)
+    return new_config
+
+
 def _restore_backup_from_tar(
     *,
     tar: tarfile.TarFile,
@@ -3291,67 +3358,15 @@ def _restore_backup_from_tar(
 
         prepare_restore_as_site_user(site, options, global_opts.verbose)
 
-    site_home = str(SitePaths.from_site_name(site.name).home)
-    # Now extract all files
-    for tarinfo in tar:
-        # The files in the tar archive start with the siteid as first element.
-        # Remove this first element from the file paths and also care for hard link
-        # targets.
-
-        # Remove leading site name from paths
-        tarinfo.name = "/".join(tarinfo.name.split("/")[1:])
-        if global_opts.verbose:
-            sys.stdout.write("Restoring %s...\n" % tarinfo.name)
-
-        if tarinfo.islnk():
-            parts = tarinfo.linkname.split("/")
-
-            if parts[0] == sitename:
-                new_linkname = "/".join(parts[1:])
-
-                if global_opts.verbose:
-                    sys.stdout.write(
-                        f"  Rewriting link target from {tarinfo.linkname} to {new_linkname}\n"
-                    )
-                tarinfo.linkname = new_linkname
-
-        tar.extract(tarinfo, path=site_home)
-
-    config = load_config(site, global_opts.verbose)
-
-    # give new user all files
-    chown_tree(site_home, site.name)
-
-    # Change config files from old to new site (see rename_site())
-    if sitename != site.name:
-        old_site = SiteContext(sitename)
-        old_site_home = SitePaths.from_site_name(sitename).home
-        site_replacements = site.replacements()
-        old_replacements = {
-            "###SITE###": sitename,
-            "###ROOT###": old_site_home,
-            "###EDITION###": site_replacements["###EDITION###"],
-        }
-        patch_skeleton_files(
-            _get_conflict_mode(options),
-            old_site.name,
-            site,
-            old_replacements,
-            site_replacements,
-        )
-
-    # Now switch over to the new site as currently active site
-    os.chdir(site_home)
-    set_environment(site.name, config)
-
-    # Needed by the post-rename-site script
-    putenv("OLD_OMD_SITE", sitename)
+    new_config = _process_backup_tar_and_setup_env(
+        tar, global_opts.verbose, options, sitename, site
+    )
 
     if is_root():
-        postprocess_restore_as_root(version_info, site, config, options, global_opts.verbose)
+        postprocess_restore_as_root(version_info, site, new_config, options, global_opts.verbose)
     else:
         postprocess_restore_as_site_user(
-            version_info, site, config, options, orig_apache_port, global_opts.verbose
+            version_info, site, new_config, options, orig_apache_port, global_opts.verbose
         )
 
     return site

@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
+import argparse
 import logging
 import sys
 from collections.abc import Collection, Iterable, Sequence
@@ -18,9 +19,9 @@ from netapp_ontap.host_connection import HostConnection
 from pydantic import BaseModel
 
 from cmk.plugins.netapp import models
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import CannotRecover, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 __version__ = "2.5.0b1"
 
@@ -966,7 +967,24 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
-    parser = create_default_argument_parser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.formatter_class = argparse.RawTextHelpFormatter
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug mode (keep some exceptions unhandled)",
+    )
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument(
+        "--vcrtrace",
+        "--tracefile",
+        default=False,
+        action=vcrtrace(
+            # filter_headers is a refactoring artefact. Not sure if it makes sense here.
+            filter_headers=[("authorization", "****")],
+        ),
+    )
     parser.add_argument("--hostname", help="Hostname or IP-address of NetApp Filer.", required=True)
     parser.add_argument("--username", help="Username for NetApp login", required=True)
     parser.add_argument("--password", help="Secret/Password for NetApp login", required=True)
@@ -1053,7 +1071,8 @@ def agent_netapp_main(args: Args) -> int:
             write_sections(connection, logger, args)
         except NetAppRestError as exc:
             if exc.status_code == 401:
-                raise CannotRecover("Authentication failed. Please check the credentials.")
+                sys.stderr.write("Authentication failed. Please check the credentials.\n")
+                return 1
             raise exc
         logger.debug("All sections have been written")
 

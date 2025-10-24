@@ -20,7 +20,7 @@ def main() {
         targets.each({target ->
             test_jenkins_helper.execute_test([
                 name: target,
-                cmd: "make -C tests ${target}",
+                cmd: "EDITION=raw make -C tests ${target}",
                 container_name: "ubuntu-2404-${safe_branch_name}-latest",
             ]);
         })

@@ -23,7 +23,8 @@ def host_label_function(section: SectionNodeAttributes) -> HostLabelGenerator:
             The cluster of the Proxmox VE node.
     """
     yield HostLabel("cmk/pve/entity", "node")
-    yield HostLabel("cmk/pve/cluster", section.cluster)
+    if section.cluster:
+        yield HostLabel("cmk/pve/cluster", section.cluster)
 
 
 agent_section_proxmox_ve_node_attributes = AgentSection(

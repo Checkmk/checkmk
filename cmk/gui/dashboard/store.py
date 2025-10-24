@@ -51,7 +51,7 @@ class DashboardStore:
         """Loads all definitions from disk and returns them"""
         return visuals.load(
             "dashboards",
-            builtin_dashboard_extender_registry[cmk_version.edition(paths.omd_root).short].callable(
+            builtin_dashboard_extender_registry[str(cmk_version.edition(paths.omd_root))].callable(
                 builtin_dashboards, active_config
             ),
             _internal_dashboard_to_runtime_dashboard,

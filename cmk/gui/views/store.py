@@ -75,7 +75,7 @@ class ViewStore:
             k: v
             for k, v in visuals.load(
                 "views",
-                builtin_view_extender_registry[cmk_version.edition(paths.omd_root).short].callable(
+                builtin_view_extender_registry[str(cmk_version.edition(paths.omd_root))].callable(
                     multisite_builtin_views, data_source_registry, active_config
                 ),
                 internal_view_to_runtime_view,

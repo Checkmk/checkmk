@@ -314,10 +314,10 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
     )
     _openapi_registration(ignore_duplicates=ignore_duplicate_endpoints)
     builtin_dashboard_extender_registry.register(
-        BuiltinDashboardExtender(edition.short, noop_builtin_dashboard_extender)
+        BuiltinDashboardExtender(str(edition), noop_builtin_dashboard_extender)
     )
     builtin_view_extender_registry.register(
-        BuiltinViewExtender(edition.short, noop_builtin_view_extender)
+        BuiltinViewExtender(str(edition), noop_builtin_view_extender)
     )
     agent_commands.register(agent_commands_registry)
     graphing_registration.register(

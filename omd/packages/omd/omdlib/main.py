@@ -1455,9 +1455,9 @@ def config_change(
 ) -> list[str]:
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
+    site_home = SitePaths.from_site_name(site.name).home
     if not site.is_stopped(verbose):
         site_was_stopped = True
-        site_home = SitePaths.from_site_name(site.name).home
         call_init_scripts(site_home, "stop")
 
     try:

@@ -55,7 +55,12 @@ impl OracleConfig {
                     });
                 output.extend(configs_data);
             }
-            Ok(output.join("\n"))
+            // on Linux we must supply CR
+            let mut x = output.join("\n");
+            if !x.ends_with('\n') {
+                x.push('\n');
+            }
+            Ok(x)
         } else {
             log::error!("No config");
             anyhow::bail!("No Config")

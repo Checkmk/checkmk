@@ -117,6 +117,40 @@
         }
       ]
     },
+    "regex": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "regex",
+              "default": "regex"
+            },
+            "label": {
+              "type": ["string"]
+            },
+            "input_type": {
+              "type": ["string"]
+            },
+            "no_results_hint": {
+              "type": ["string"]
+            },
+            "autocompleter": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/autocompleter"
+                }
+              ]
+            }
+          },
+          "required": ["type", "label", "input_type", "no_results_hint", "autocompleter"]
+        }
+      ]
+    },
     "legacy_valuespec": {
       "type": "object",
       "allOf": [
@@ -1372,6 +1406,9 @@
                 },
                 "context": {
                   "type": "object"
+                },
+                "input_hint": {
+                  "type": "string"
                 }
               }
             }
@@ -1627,6 +1664,9 @@
         },
         {
           "$ref": "#/$defs/float"
+        },
+        {
+          "$ref": "#/$defs/regex"
         },
         {
           "$ref": "#/$defs/string"

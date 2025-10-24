@@ -87,6 +87,7 @@ function renderForm(
     case 'float':
       return renderFloatUnit(formSpec as Float, value as number)
     case 'metric':
+    case 'regex':
     case 'date_picker':
     case 'time_picker':
       return renderSimpleValue(formSpec, value as string, backendValidation)

@@ -10,7 +10,6 @@ exports_files([
 ])
 
 bin_paths = [
-    "bin/2to3-%s" % PYTHON_MAJOR_DOT_MINOR,
     "bin/idle%s" % PYTHON_MAJOR_DOT_MINOR,
     "bin/pip%s" % PYTHON_MAJOR_DOT_MINOR,
     "bin/pydoc%s" % PYTHON_MAJOR_DOT_MINOR,
@@ -31,10 +30,6 @@ bin_symlinks = [
     (
         "pip%s" % PYTHON_VERSION_MAJOR,
         "pip%s" % PYTHON_MAJOR_DOT_MINOR,
-    ),
-    (
-        "2to3",
-        "2to3-%s" % PYTHON_MAJOR_DOT_MINOR,
     ),
     (
         "idle%s" % PYTHON_VERSION_MAJOR,

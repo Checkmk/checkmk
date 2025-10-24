@@ -21,8 +21,6 @@ out_binaries = [
     "pip%s" % PYTHON_VERSION_MAJOR,
     "pip%s" % PYTHON_VERSION_MAJOR,
     "pip%s" % PYTHON_MAJOR_DOT_MINOR,
-    "2to3",
-    "2to3-%s" % PYTHON_MAJOR_DOT_MINOR,
     "idle%s" % PYTHON_VERSION_MAJOR,
     "idle%s" % PYTHON_MAJOR_DOT_MINOR,
     "pydoc%s" % PYTHON_VERSION_MAJOR,
@@ -91,10 +89,7 @@ configure_make(
         # This one is not really helpful... but we don't want to have bazel paths in _sysconfig
         sed -i "s|$$BUILD_TMPDIR|$$omd_prefix|g" $$sysconfig_path;
 
-        # Fix shebang of scripts
-        cd $$bin_dir && \
-            ln -s python{pyMaj} python && \
-            sed -i 's|^#!'$$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
+        cd $$bin_dir && ln -s python{pyMaj} python
 
         # Fix pip3 configuration by using own wrapper script
         # * PIP_TARGET currently has an issue when installing non-wheel packages, see https://github.com/pypa/pip/issues/8438

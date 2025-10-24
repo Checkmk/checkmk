@@ -20,6 +20,7 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema, CoreSchema
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import active_config
 from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
 from cmk.gui.openapi.framework import QueryParam
@@ -32,7 +33,10 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
 def _validate_regex(value: str) -> str:
     """Check if the value is a valid regex."""
-    re.compile(value)
+    try:
+        re.compile(value)
+    except re.error as e:
+        raise ValueError(str(e)) from e
     return value
 
 
@@ -159,7 +163,10 @@ class _FolderValidation:
         if cls._is_hex(value):
             return tree._by_id(value)
 
-        return tree.folder(value)
+        try:
+            return tree.folder(value)
+        except MKGeneralException as e:
+            raise ValueError(str(e)) from e
 
     @staticmethod
     def serialize(value: Folder) -> str:

@@ -66,27 +66,6 @@ WIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     ],
 )
 
-LIN_ORACLE_CLIENT: tuple[OS, Sequence[OraclePluginFile]] = (
-    OS.LINUX,
-    [
-        OraclePluginFile(
-            source=Path("oci_light_lin_x64.zip"),
-            target=Path("packages", "mk-oracle", "runtime.zip"),
-        ),
-    ],
-)
-
-WIN_ORACLE_CLIENT: tuple[OS, Sequence[OraclePluginFile]] = (
-    OS.WINDOWS,
-    [
-        OraclePluginFile(
-            source=Path("oci_light_win_x64.zip"),
-            target=Path("packages", "mk-oracle", "runtime.zip"),
-        ),
-    ],
-)
-
-
 GuiSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
 
 
@@ -140,14 +119,6 @@ class GuiMainConf(BaseModel):
     def get_active_cache_age(self) -> int:
         """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
         return self.cache_age or 600
-
-    def deploy_lib(self) -> bool:
-        """Return whether the Oracle client library should be deployed."""
-        if not self.options:
-            return False
-        if not self.options.oracle_client_library:
-            return False
-        return self.options.oracle_client_library.deploy_lib
 
 
 class GuiInstanceConf(BaseModel):
@@ -228,16 +199,6 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
 
     config_lines = list(_get_oracle_yaml_lines(confm))
 
-    # code below is conditional - it's important!
-    if confm.main.deploy_lib():
-        for base_os, files in (LIN_ORACLE_CLIENT, WIN_ORACLE_CLIENT):
-            for file in files:
-                yield Plugin(
-                    base_os=base_os,
-                    target=file.target,
-                    source=file.source,
-                )
-
     for base_os, files in (LIN_ORACLE_FILES, WIN_ORACLE_FILES):
         for file in files:
             yield Plugin(
@@ -317,8 +278,8 @@ def _get_oracle_additional_options(options: GuiAdditionalOptionsConf) -> OracleA
         match options.oracle_client_library.use_host_client:
             case (("auto" | "never" | "always") as predefined, None):
                 result["use_host_client"] = predefined
-            case ("custom", str(custom_path)):
-                result["use_host_client"] = custom_path
+            case ("custom", custom_path):
+                result["use_host_client"] = str(custom_path)
             case None:
                 pass
     return result

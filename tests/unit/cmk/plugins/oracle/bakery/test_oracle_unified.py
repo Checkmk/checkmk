@@ -83,24 +83,7 @@ windows_files: list[Plugin] = [
     ),
 ]
 
-linux_zip_files = [
-    Plugin(
-        base_os=OS.LINUX,
-        source=Path("oci_light_lin_x64.zip"),
-        target=Path("packages", "mk-oracle", "runtime.zip"),
-    )
-]
-windows_zip_files = [
-    Plugin(
-        base_os=OS.WINDOWS,
-        source=Path("oci_light_win_x64.zip"),
-        target=Path("packages", "mk-oracle", "runtime.zip"),
-    )
-]
-
-
 files_base: list[Plugin] = linux_files + windows_files
-files_with_runtime: list[Plugin] = linux_zip_files + linux_files + windows_zip_files + windows_files
 
 
 def _combine(files: Sequence[Plugin], yaml_lines: Sequence[str]) -> Sequence[Plugin | PluginConfig]:
@@ -647,16 +630,3 @@ def _process(config: GuiConfig) -> Sequence[Plugin | PluginConfig | SystemBinary
 )
 def test_oracle_min(config: GuiConfig, expected: Sequence[str]) -> None:
     assert _process(config) == _combine(files_base, expected), "name"
-
-
-def test_oracle_deploy_oracle_lib() -> None:
-    assert sorted(
-        list(
-            bakery_plugin_oracle.files_function(
-                bakery_plugin_oracle.parameter_parser(
-                    oracle_config_deploy_oracle_binaries.model_dump()
-                )
-            )
-        ),
-        key=lambda x: str(x.base_os),
-    ) == _combine(files_with_runtime, expected_yaml_lines_deploy_oracle_binaries)

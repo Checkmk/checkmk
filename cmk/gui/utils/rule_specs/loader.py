@@ -88,7 +88,7 @@ def load_api_v1_rule_specs(
             not_yet_moved_plugins.append(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
 
     try:
-        import cmk.gui.cce.plugins.wato.check_parameters  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cce.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cce_check_parameters_path = Path(
             list(cmk.gui.cce.plugins.wato.check_parameters.__path__)[0]

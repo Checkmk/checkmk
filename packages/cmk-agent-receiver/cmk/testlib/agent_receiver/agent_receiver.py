@@ -9,7 +9,7 @@ from typing import final
 import httpx
 from fastapi.testclient import TestClient
 
-from cmk.relay_protocols.tasks import TaskCreateRequest, TaskCreateRequestSpec
+from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequestSpec
 
 from .site_mock import User
 
@@ -28,13 +28,13 @@ class AgentReceiverClient:
         self.site_name = site_name
         self.client.headers["Authorization"] = user.bearer
         if serial:
-            self.client.headers["x-cmk-serial"] = serial
+            self.client.headers[HEADERS.SERIAL] = serial
 
     def set_serial(self, serial: str | None) -> None:
         if serial:
-            self.client.headers["x-cmk-serial"] = serial
+            self.client.headers[HEADERS.SERIAL] = serial
         else:
-            del self.client.headers["x-cmk-serial"]
+            del self.client.headers[HEADERS.SERIAL]
 
     def register_relay(self, name: str) -> httpx.Response:
         return self.client.post(

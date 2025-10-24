@@ -11,6 +11,10 @@ from typing import Literal
 from pydantic import Base64Bytes, BaseModel, Field
 
 
+class HEADERS(StrEnum):
+    SERIAL = "X-CMK-SERIAL"
+
+
 class _TaskType(StrEnum):
     RELAY_CONFIG = "RELAY_CONFIG"
     FETCH_AD_HOC = "FETCH_AD_HOC"

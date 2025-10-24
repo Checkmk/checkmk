@@ -36,8 +36,6 @@ from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial, TaskID
 from cmk.relay_protocols import tasks as tasks_protocol
 
-SERIAL_HEADER = "X-CMK-SERIAL"
-
 router = fastapi.APIRouter()
 
 
@@ -150,7 +148,7 @@ async def update_task(
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
-    relay_serial: Annotated[str | None, fastapi.Header(alias=SERIAL_HEADER)] = None,
+    relay_serial: Annotated[str | None, fastapi.Header(alias=tasks_protocol.HEADERS.SERIAL)] = None,
     status: Annotated[
         tasks_protocol.TaskStatus | None, fastapi.Query(description="Filter tasks by status")
     ] = None,

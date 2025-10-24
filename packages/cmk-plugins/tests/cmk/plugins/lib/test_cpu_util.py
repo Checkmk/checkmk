@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+# TODO: test the interface, not the private members
+# ruff: noqa: SLF001
+
 from typing import Any
 
 import pytest

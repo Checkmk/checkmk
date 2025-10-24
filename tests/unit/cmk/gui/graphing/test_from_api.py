@@ -131,7 +131,10 @@ class _MetricNamesInModule:
         bundles: set[tuple[str, ...]] = set()
         for left_ident, left_metric_names in self._from_perfometer_or_graph.items():
             bundle_ = left_metric_names
-            for right_ident, right_metric_names in self._from_perfometer_or_graph.items():
+            for (
+                right_ident,
+                right_metric_names,
+            ) in self._from_perfometer_or_graph.items():
                 if left_ident == right_ident:
                     continue
                 if left_metric_names.intersection(right_metric_names):
@@ -348,10 +351,17 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
         "aws_active_connections",
         "fw_connections_active",
     },
-    "Allocatable": {"kube_memory_allocatable", "kube_pod_allocatable", "kube_cpu_allocatable"},
+    "Allocatable": {
+        "kube_memory_allocatable",
+        "kube_pod_allocatable",
+        "kube_cpu_allocatable",
+    },
     "Allocated space": {"mem_lnx_vmalloc_used", "allocated_size"},
     "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
-    "Average usage": {"aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"},
+    "Average usage": {
+        "aws_dynamodb_consumed_rcu_perc",
+        "aws_dynamodb_consumed_wcu_perc",
+    },
     "Cluster utilization": {
         "kube_cpu_cluster_allocatable_utilization",
         "kube_memory_cluster_allocatable_utilization",
@@ -365,7 +375,10 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
         "harddrive_uncorrectable_errors",
     },
     "Limits": {"kube_cpu_limit", "kube_memory_limit"},
-    "Limits utilization": {"kube_cpu_limit_utilization", "kube_memory_limit_utilization"},
+    "Limits utilization": {
+        "kube_cpu_limit_utilization",
+        "kube_memory_limit_utilization",
+    },
     "Maximum single-request consumption": {
         "aws_dynamodb_maximum_consumed_wcu",
         "aws_dynamodb_maximum_consumed_rcu",
@@ -381,7 +394,10 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
         "kube_memory_node_allocatable_utilization",
     },
     "Nodes": {"number_of_nodes", "aws_elasticache_nodes"},
-    "Non-compliant devices": {"mobileiron_non_compliant", "mobileiron_non_compliant_summary"},
+    "Non-compliant devices": {
+        "mobileiron_non_compliant",
+        "mobileiron_non_compliant_summary",
+    },
     "Power Usage": {"power_usage", "power_usage_percentage"},
     "Pressure": {"pressure_pa", "pressure"},
     "Queue length": {"queue", "queue_length"},
@@ -389,9 +405,15 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Read operations": {"disk_read_ios", "read_ops"},
     "Requests": {"kube_memory_request", "kube_cpu_request", "aws_cloudfront_requests"},
     "Requests per second": {"requests", "requests_per_sec", "requests_per_second"},
-    "Requests utilization": {"kube_memory_request_utilization", "kube_cpu_request_utilization"},
+    "Requests utilization": {
+        "kube_memory_request_utilization",
+        "kube_cpu_request_utilization",
+    },
     "Reserved space": {"reserved_size", "reserved"},
-    "Running containers": {"docker_running_containers", "kube_node_container_count_running"},
+    "Running containers": {
+        "docker_running_containers",
+        "kube_node_container_count_running",
+    },
     "Shared memory": {"mem_esx_shared", "mem_lnx_shmem"},
     "Smoke": {"smoke_perc", "smoke_ppm"},
     "Storage space used": {"storage_used", "storage_percent"},
@@ -404,7 +426,10 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Usage": {"kube_cpu_usage", "pd_exclusivesnapshot", "kube_memory_usage"},
     "Used licenses": {"licenses", "license_percentage"},
     "Used virtual memory": {"pagefile_used_percent", "pagefile_used"},
-    "Used virtual memory (averaged)": {"pagefile_used_percent_avg", "pagefile_used_avg"},
+    "Used virtual memory (averaged)": {
+        "pagefile_used_percent_avg",
+        "pagefile_used_avg",
+    },
     "User": {"user", "num_user"},
     "Utilization": {"cisco_sma_queue_utilization", "generic_util"},
     "Write latency": {"write_latency", "db_write_latency_s"},
@@ -485,15 +510,12 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
     "Capacity usage": {"capacity_usage_2", "capacity_usage"},
     "Size and used space": {"fs_used", "fs_used_2"},
-    "Throughput": {"throughput"},
-    "Memory utilization": {"azure_redis_memory_utilization"},
     "Licenses": {"licenses_max", "licenses_total"},
     "Amount of mails in queues": {
         "amount_of_mails_in_queues",
         "amount_of_mails_in_secondary_queues",
     },
     "Packets": {"packets_1", "packets_2", "packets_3"},
-    "Memory": {"kube_memory_usage"},
     "Commit charge": {"pagefile_absolute", "pagefile_percent"},
     "RAM": {"mem_absolute", "mem_absolute_2"},
     "Disk Usage": {

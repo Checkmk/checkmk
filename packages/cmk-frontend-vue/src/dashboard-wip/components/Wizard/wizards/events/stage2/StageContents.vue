@@ -119,7 +119,11 @@ const widgetProps = computed(() => configuredWidgetProps)
       :action="() => emit('goPrev')"
       variant="secondary"
     />
-    <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="secondary" />
+    <ActionButton
+      :label="editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
+      :action="gotoNextStage"
+      variant="primary"
+    />
   </ActionBar>
 
   <ContentSpacer />

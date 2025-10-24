@@ -43,9 +43,11 @@ export const useWidgetVisualizationProps = (
   const title = ref<string>(currentSettings?.title?.text ?? initialTitle)
   const showTitle = ref<boolean>(currentSettings?.title?.render_mode !== 'hidden')
   const showTitleBackground = ref<boolean>(
-    currentSettings?.title?.render_mode === 'with_background'
+    currentSettings?.title?.render_mode
+      ? currentSettings.title.render_mode === 'with_background'
+      : true
   )
-  const showWidgetBackground = ref<boolean>(!!currentSettings?.render_background)
+  const showWidgetBackground = ref<boolean>(currentSettings?.render_background ?? true)
   const titleUrlEnabled = ref<boolean>(currentSettings?.title?.url ? true : false)
   const titleUrl = ref<string>(currentSettings?.title?.url ?? '')
   const titleUrlValidationErrors = ref<string[]>([])

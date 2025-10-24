@@ -121,6 +121,7 @@ const appliedFilters = computed((): ConfiguredFilters => {
       <StepsHeader
         :title="_t('Event statistics')"
         :subtitle="_t('Define widget')"
+        :hide-back-button="!!editWidgetSpec"
         @back="() => emit('goBack')"
       />
 

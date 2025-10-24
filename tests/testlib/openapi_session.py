@@ -38,7 +38,6 @@ import time
 import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from functools import cached_property
 from typing import Any, NamedTuple
 
 import requests
@@ -46,6 +45,7 @@ import requests
 from cmk import trace
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
+from cmk.relay_protocols.relays import RelayRegistrationRequest
 from cmk.relay_protocols.tasks import TaskListResponse, TaskResponse
 from tests.testlib.version import CMKVersion
 
@@ -1580,13 +1580,6 @@ class RelayAPI(BaseAPI):
     def _object_url(relay_id: str) -> str:
         return f"/objects/relay/{relay_id}"
 
-    @cached_property
-    def agent_receiver_base_url(self) -> str:
-        response = self.session.get("/domain-types/internal/actions/discover-receiver/invoke")
-        port = int(response.text)
-
-        return f"https://{self.session.host}:{port}/{self.session.site}/relays/"
-
     def create(
         self,
         alias: str,
@@ -1645,6 +1638,7 @@ class RelayAPI(BaseAPI):
                 "num_fetchers": relay.num_fetchers,
                 "log_level": relay.log_level,
             },
+            headers={"If-Match": "*"},
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -1724,10 +1718,15 @@ class MetricBackendAPI(BaseAPI):
 
 
 class AgentReceiverRelayAPI(ARBaseAPI):
+    @property
+    def base_url(self) -> str:
+        return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"
+
     def register(self, alias: str, csr: str) -> str:
+        body = RelayRegistrationRequest(relay_name=alias, csr=csr)
         response = self.session.post(
-            url=urllib.parse.urljoin(self.session.base_url, "relays/"),
-            json={"relay_name": alias, "csr": csr},
+            url=urllib.parse.urljoin(self.base_url, "relays/"),
+            json=body.model_dump(),
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -1736,14 +1735,14 @@ class AgentReceiverRelayAPI(ARBaseAPI):
 
     def unregister(self, relay_id: str) -> None:
         response = self.session.delete(
-            url=urllib.parse.urljoin(self.session.base_url, f"relays/{relay_id}")
+            url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}")
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
     def get_tasks(self, relay_id: str) -> list[TaskResponse]:
         response = self.session.get(
-            url=urllib.parse.urljoin(self.session.base_url, f"relays/{relay_id}/tasks")
+            url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/tasks"),
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

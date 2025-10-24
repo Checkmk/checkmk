@@ -297,9 +297,10 @@ def diskstat_extract_name_info(
                         name = f"VxVM {group}-{disk}"
                         name_info[major, minor] = name
                     case "device_wwn":
-                        disk = line[1].split("/")[-1]
-                        wwn = line[0].replace("wwn-", "").replace("nvme-eui.", "").lstrip("0")
-                        wwn_info[disk] = wwn
+                        if len(line) >= 2:
+                            disk = line[1].split("/")[-1]
+                            wwn = line[0].replace("wwn-", "").replace("nvme-eui.", "").lstrip("0")
+                            wwn_info[disk] = wwn
     return timestamp, info_plain, name_info, wwn_info
 
 

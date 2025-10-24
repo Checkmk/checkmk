@@ -43,6 +43,20 @@ INTERMEDIATE_INSTALL_BASE := $(BUILD_BASE_DIR)/intermediate_install
 XDG_CACHE_HOME     ?= $(HOME)/.cache
 PACKAGE_CACHE_BASE := $(XDG_CACHE_HOME)/checkmk/packages
 
+ifeq ($(EDITION),raw)
+EDITION_SHORT     := cre
+else ifeq ($(EDITION),enterprise)
+EDITION_SHORT     := cee
+else ifeq ($(EDITION),cloud)
+EDITION_SHORT     := cce
+else ifeq ($(EDITION),managed)
+EDITION_SHORT     := cme
+else ifeq ($(EDITION),saas)
+EDITION_SHORT     := cse
+else
+$(error Unknown edition EDITION="$(EDITION)")
+endif
+
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)

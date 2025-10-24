@@ -6,29 +6,6 @@
 
 REPO_PATH          := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
-EDITION            := raw
-EDITION_SHORT      := cre
-
-ifneq (,$(wildcard $(REPO_PATH)/omd/packages/enterprise))
-EDITION            := enterprise
-EDITION_SHORT      := cee
-endif
-
-ifneq (,$(wildcard $(REPO_PATH)/omd/packages/cloud))
-EDITION            := cloud
-EDITION_SHORT      := cce
-endif
-
-ifneq (,$(wildcard $(REPO_PATH)/omd/packages/managed))
-EDITION            := managed
-EDITION_SHORT      := cme
-endif
-
-ifneq (,$(wildcard $(REPO_PATH)/omd/packages/saas))
-EDITION            := saas
-EDITION_SHORT      := cse
-endif
-
 VERSION            := 2.5.0b1
 
 # Currently only used for the OMD package build cache. We did not want to use

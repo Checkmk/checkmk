@@ -231,6 +231,45 @@ def test_parse_diskstat_simple() -> None:
     }
 
 
+def test_parse_diskstat_empty_wwn() -> None:
+    assert diskstat.parse_diskstat(
+        [
+            ["1439297971"],
+            [
+                "8",
+                "0",
+                "sda",
+                "83421",
+                "32310",
+                "3426701",
+                "108964",
+                "24516",
+                "35933",
+                "639474",
+                "32372",
+                "0",
+                "18532",
+                "141496",
+            ],
+            ["[dmsetup_info]"],
+            ["No", "devices", "found"],
+            ["[device_wwn]"],
+        ]
+    ) == {
+        "sda": {
+            "timestamp": 1439297971,
+            "read_ticks": 108.964,
+            "write_ticks": 32.372,
+            "read_ios": 83421,
+            "write_ios": 24516,
+            "read_throughput": 1754470912,
+            "write_throughput": 327410688,
+            "utilization": 18.532,
+            "queue_length": 0,
+        },
+    }
+
+
 def test_parse_diskstat_dmsetup() -> None:
     assert diskstat.parse_diskstat(
         [

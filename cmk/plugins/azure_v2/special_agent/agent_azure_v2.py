@@ -27,7 +27,7 @@ import re
 import string
 import sys
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Coroutine, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum, StrEnum
 from multiprocessing import Lock
@@ -1061,6 +1061,63 @@ async def process_redis(resource: AzureResource) -> AzureResource:
     return resource
 
 
+def _collect_async_metrics_tasks(
+    metrics_definitions: Sequence[AzureMetric],
+    subscription: AzureSubscription,
+    location: str,
+    resource_ids: Sequence[str],
+    resource_type: str,
+    api_client: BaseAsyncApiClient,
+    args: Args,
+    err: IssueCollector,
+) -> set[Coroutine]:
+    grouped_metrics: defaultdict[
+        tuple[Intervals, Aggregations, tuple[DimensionFilter, ...] | None], list[AzureMetric]
+    ] = defaultdict(list)
+    for metric_definition in metrics_definitions:
+        # LOGGER.error("Processing metric definition: %s", metric_definition)
+        grouped_metrics[
+            (
+                metric_definition.interval,
+                metric_definition.aggregation,
+                metric_definition.dimension_filters,
+            )
+        ].append(metric_definition)
+
+    tasks = set()
+    for (interval, aggregation, dimension_filters), definitions in grouped_metrics.items():
+        # chunk of 4 because the list of metrics will be _part_ of the cache-file-name
+        # we don't want something too long here
+        for definitions_chunk in _chunks(definitions, 4):
+            cache = MetricCache(
+                metrics_definition=CacheMetricsGroupDefinition(
+                    interval=interval,
+                    aggregation=aggregation,
+                    dimension_filters=dimension_filters,
+                    metrics=definitions_chunk,
+                    resource_type=resource_type,
+                    region=location,
+                ),
+                subscription=subscription.id,
+                cache_id=args.cache_id,
+                ref_time=NOW,
+                debug=args.debug,
+            )
+
+            tasks.add(
+                cache.get_data(
+                    api_client,
+                    location,
+                    resource_ids,
+                    resource_type,
+                    err,
+                    use_cache=cache.cache_interval > 60,
+                )
+            )
+
+    return tasks
+
+
 class AzureAsyncCache(DataCache):
     # Semaphore introduced to not reach the maximum number of open files error.
     # A sempahore should be enough, no need for locks here
@@ -1472,47 +1529,17 @@ async def _gather_metrics(
     for (resource_type, resource_location), resource_ids in grouped_resource_ids.items():
         metric_definitions = ALL_METRICS.get(resource_type, [])
 
-        grouped_metrics: defaultdict[
-            tuple[Intervals, Aggregations, tuple[DimensionFilter, ...] | None], list[AzureMetric]
-        ] = defaultdict(list)
-        for metric_definition in metric_definitions:
-            grouped_metrics[
-                (
-                    metric_definition.interval,
-                    metric_definition.aggregation,
-                    metric_definition.dimension_filters,
-                )
-            ].append(metric_definition)
-
-        for (interval, aggregation, dimension_filters), definitions in grouped_metrics.items():
-            # chunk of 4 because the list of metrics will be _part_ of the cache-file-name
-            # we don't want something too long here
-            for definitions_chunk in _chunks(definitions, 4):
-                cache = MetricCache(
-                    metrics_definition=CacheMetricsGroupDefinition(
-                        interval=interval,
-                        aggregation=aggregation,
-                        dimension_filters=dimension_filters,
-                        metrics=definitions_chunk,
-                        resource_type=resource_type,
-                        region=resource_location,
-                    ),
-                    subscription=subscription.id,
-                    cache_id=args.cache_id,
-                    ref_time=NOW,
-                    debug=args.debug,
-                )
-
-                tasks.add(
-                    cache.get_data(
-                        mgmt_client,
-                        resource_location,
-                        resource_ids,
-                        resource_type,
-                        err,
-                        use_cache=cache.cache_interval > 60,
-                    )
-                )
+        new_tasks = _collect_async_metrics_tasks(
+            metric_definitions,
+            subscription,
+            resource_location,
+            resource_ids,
+            resource_type,
+            mgmt_client,
+            args,
+            err,
+        )
+        tasks.update(new_tasks)
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
     for result in results:

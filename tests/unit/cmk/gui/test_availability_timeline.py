@@ -271,6 +271,7 @@ def test_layout_timeline_spans(
                     "until_text": "2024-05-06 13:00:54",
                     "duration_text": "97.57%",
                     "log_output": "No information about that period of time available",
+                    "site": "stable",
                 },
                 {
                     "state": "crit",
@@ -282,6 +283,7 @@ def test_layout_timeline_spans(
                     "until_text": "2024-05-06 13:01:10",
                     "duration_text": "0.00%",
                     "log_output": "Manually set to Critical by cmkadmin",
+                    "site": "stable",
                 },
                 {
                     "state": "ok",
@@ -294,6 +296,7 @@ def test_layout_timeline_spans(
                     "duration_text": "2.43%",
                     "log_output": "Processes: 7, Virtual memory: 13.0 MiB, Resident memory: 50.0 MiB, CPU: 0%, Process handles: 1054, Youngest running for: 11 days 12 hours, Oldest running for: 11 days 12 hours",
                     "long_log_output": "Processes: 7\nVirtual memory: 13.0 MiB\nResident memory: 50.0 MiB\nCPU: 0%\nProcess handles: 1054\nYoungest running for: 11 days 12 hours\nOldest running for: 11 days 12 hours\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>cpu usage (user space)</th><th>cpu usage (kernel space)</th><th>pid</th><th>cpu usage</th><th>pagefile usage</th><th>handle count</th></tr><tr><td>D:\\nginx-1.21.5\\nginx.exe</td><td>\\\\NT AUTHORITY\\SYSTEM</td><td>1.47 MiB</td><td>6.88 MiB</td><td>Apr 25 2024 00:22:34</td><td>0.0%</td><td>0.0%</td><td>3444</td><td>0.0%</td><td>1</td><td>166</td></tr><tr><td>D:\\nginx-1.21.5\\nginx.exe</td><td>\\\\NT AUTHORITY\\SYSTEM</td><td>1.93 MiB</td><td>7.19 MiB</td><td>Apr 25 2024 00:22:36</td><td>0.0%</td><td>0.0%</td><td>6656</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:\\nginx-1.21.5\\nginx.exe</td><td>\\\\NT AUTHORITY\\SYSTEM</td><td>1.90 MiB</td><td>7.17 MiB</td><td>Apr 25 2024 00:22:37</td><td>0.0%</td><td>0.0%</td><td>6852</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:\\nginx-1.21.5\\nginx.exe</td><td>\\\\NT AUTHORITY\\SYSTEM</td><td>1.94 MiB</td><td>7.21 MiB</td><td>Apr 25 2024 00:22:37</td><td>0.0%</td><td>0.0%</td><td>6924</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:\\nginx-1.21.5\\nginx.exe</td><td>\\\\NT AUTHORITY\\SYSTEM</td><td>1.89 MiB</td><td>7.16 MiB</td><td>Apr 25 2024 00:22:37</td><td>0.0%</td><td>0.0%</td><td>6976</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:\\nginx-1.21.5\\nginx.exe</td><td>\\\\NT AUTHORITY\\SYSTEM</td><td>1.93 MiB</td><td>7.19 MiB</td><td>Apr 25 2024 00:22:37</td><td>0.0%</td><td>0.0%</td><td>7132</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:\\nginx-1.21.5\\nginx.exe</td><td>\\\\NT AUTHORITY\\SYSTEM</td><td>1.89 MiB</td><td>7.17 MiB</td><td>Apr 25 2024 00:22:38</td><td>0.0%</td",
+                    "site": "stable",
                 },
             ],
             id="Escaped long output",
@@ -405,6 +408,7 @@ def test_layout_timeline_spans(
                     "until_text": "2024-05-06 13:00:54",
                     "duration_text": "97.57%",
                     "log_output": "No information about that period of time available",
+                    "site": "stable",
                 },
                 {
                     "state": "crit",
@@ -416,6 +420,7 @@ def test_layout_timeline_spans(
                     "until_text": "2024-05-06 13:01:10",
                     "duration_text": "0.00%",
                     "log_output": "Manually set to Critical by cmkadmin",
+                    "site": "stable",
                 },
                 {
                     "state": "ok",
@@ -428,6 +433,7 @@ def test_layout_timeline_spans(
                     "duration_text": "2.43%",
                     "log_output": "Processes: 7, Virtual memory: 13.0 MiB, Resident memory: 50.0 MiB, CPU: 0%, Process handles: 1054, Youngest running for: 11 days 12 hours, Oldest running for: 11 days 12 hours",
                     "long_log_output": "Processes: 7\nVirtual memory: 13.0 MiB\nResident memory: 50.0 MiB\nCPU: 0%\nProcess handles: 1054\nYoungest running for: 11 days 12 hours\nOldest running for: 11 days 12 hours\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>cpu usage (user space)</th><th>cpu usage (kernel space)</th><th>pid</th><th>cpu usage</th><th>pagefile usage</th><th>handle count</th></tr><tr><td>D:&bsol%3Bnginx-1.21.5&bsol%3Bnginx.exe</td><td>&bsol%3B&bsol%3BNT AUTHORITY&bsol%3BSYSTEM</td><td>1.47 MiB</td><td>6.88 MiB</td><td>Apr 25 2024 00:22:34</td><td>0.0%</td><td>0.0%</td><td>3444</td><td>0.0%</td><td>1</td><td>166</td></tr><tr><td>D:&bsol%3Bnginx-1.21.5&bsol%3Bnginx.exe</td><td>&bsol%3B&bsol%3BNT AUTHORITY&bsol%3BSYSTEM</td><td>1.93 MiB</td><td>7.19 MiB</td><td>Apr 25 2024 00:22:36</td><td>0.0%</td><td>0.0%</td><td>6656</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:&bsol%3Bnginx-1.21.5&bsol%3Bnginx.exe</td><td>&bsol%3B&bsol%3BNT AUTHORITY&bsol%3BSYSTEM</td><td>1.90 MiB</td><td>7.17 MiB</td><td>Apr 25 2024 00:22:37</td><td>0.0%</td><td>0.0%</td><td>6852</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:&bsol%3Bnginx-1.21.5&bsol%3Bnginx.exe</td><td>&bsol%3B&bsol%3BNT AUTHORITY&bsol%3BSYSTEM</td><td>1.94 MiB</td><td>7.21 MiB</td><td>Apr 25 2024 00:22:37</td><td>0.0%</td><td>0.0%</td><td>6924</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:&bsol%3Bnginx-1.21.5&bsol%3Bnginx.exe</td><td>&bsol%3B&bsol%3BNT AUTHORITY&bsol%3BSYSTEM</td><td>1.89 MiB</td><td>7.16 MiB</td><td>Apr 25 2024 00:22:37</td><td>0.0%</td><td>0.0%</td><td>6976</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:&bsol%3Bnginx-1.21.5&bsol%3Bnginx.exe</td><td>&bsol%3B&bsol%3BNT AUTHORITY&bsol%3BSYSTEM</td><td>1.93 MiB</td><td>7.19 MiB</td><td>Apr 25 2024 00:22:37</td><td>0.0%</td><td>0.0%</td><td>7132</td><td>0.0%</td><td>1</td><td>148</td></tr><tr><td>D:&bsol%3Bnginx-1.21.5&bsol%3Bnginx.exe</td><td>&bsol%3B&bsol%3BNT AUTHORITY&bsol%3BSYSTEM</td><td>1.89 MiB</td><td>7.17 MiB</td><td>Apr 25 2024 00:22:38</td><td>0.0%</td",
+                    "site": "stable",
                 },
             ],
             id="Unescaped long output",

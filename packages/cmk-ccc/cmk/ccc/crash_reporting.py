@@ -259,7 +259,8 @@ def _get_generic_crash_info[TDetails](
     modified_details: Any = details
     if isinstance(details, Mapping) and "vars" in details:
         modified_details = {
-            k: _sanitize_variables(v) if k == "vars" else v for k, v in details.items()
+            k: format_var_for_export(v, maxdepth=5) if k == "vars" else v
+            for k, v in details.items()
         }
 
     return CrashInfo(
@@ -282,7 +283,7 @@ def _get_generic_crash_info[TDetails](
 
 def _get_local_vars_of_last_exception() -> str:
     try:
-        local_vars = _sanitize_variables(inspect.trace()[-1][0].f_locals)
+        local_vars = format_var_for_export(inspect.trace()[-1][0].f_locals, maxdepth=5)
     except IndexError:
         # Suppressing to handle case where sys.exc_info has no crash information
         # (https://docs.python.org/2/library/sys.html#sys.exc_info)
@@ -293,13 +294,6 @@ def _get_local_vars_of_last_exception() -> str:
     return base64.b64encode(
         _truncate_str(pprint.pformat(local_vars), max_size=5 * 1024 * 1024).encode("utf-8")
     ).decode()
-
-
-def _sanitize_variables(unsanitized_variables: dict[str, object]) -> dict[str, object]:
-    return {
-        key: REDACTED_STRING if _key_indicates_sensitivity(key) else format_var_for_export(value)
-        for key, value in unsanitized_variables.items()
-    }
 
 
 def _truncate_str(value: str, max_size: int) -> str:

@@ -1063,6 +1063,8 @@ def _setup_logging(verbose: int) -> logging.Logger:
     logging.basicConfig(
         level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
     )
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
     return logging.getLogger(__name__)
 
 
@@ -1073,23 +1075,6 @@ def _special_agent_main_core(
 ) -> int:
     """Main logic special agents"""
     args = parse_arguments(argv)
-    logging.basicConfig(
-        format="%(levelname)s %(asctime)s %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG),
-    )
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
-    logging.getLogger("vcr").setLevel(logging.WARN)
-    logging.info("running file %s", __file__)
-    logging.info(
-        "using Python interpreter v%s at %s",
-        ".".join(map(str, sys.version_info)),
-        sys.executable,
-    )
-
-    # Don't log args here, it may contain secrets.
-    # logging.debug("args: %r", args.__dict__)
 
     try:
         return main_fn(args)

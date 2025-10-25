@@ -143,6 +143,7 @@ py_library(
     srcs = [
         "cmk/server_side_programs/__init__.py",
         "cmk/server_side_programs/v1_unstable/__init__.py",
+        "cmk/server_side_programs/v1_unstable/_crash_reporting.py",
         "cmk/server_side_programs/v1_unstable/_host_name_validation.py",
         "cmk/server_side_programs/v1_unstable/_storage.py",
         "cmk/server_side_programs/v1_unstable/_vcrtrace.py",

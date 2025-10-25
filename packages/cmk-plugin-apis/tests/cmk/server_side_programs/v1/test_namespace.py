@@ -18,6 +18,7 @@ from cmk.server_side_programs import v1_unstable as api
 
 def test_api_names() -> None:
     assert set(api.__all__) == {
+        "report_agent_crashes",
         "vcrtrace",
         "HostnameValidationAdapter",
         "Storage",

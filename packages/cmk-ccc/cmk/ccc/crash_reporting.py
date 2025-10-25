@@ -258,11 +258,9 @@ def _get_generic_crash_info[TDetails](
     # TODO: The typing gets *really* chaotic here, hence the Any a.k.a implicit cast. :-P
     modified_details: Any = details
     if isinstance(details, Mapping) and "vars" in details:
-        modified_details = (
-            {k: _sanitize_variables(v) if k == "vars" else v for k, v in details.items()}
-            if details
-            else {}
-        )
+        modified_details = {
+            k: _sanitize_variables(v) if k == "vars" else v for k, v in details.items()
+        }
 
     return CrashInfo(
         id=str(uuid.uuid1()),

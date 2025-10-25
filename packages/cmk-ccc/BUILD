@@ -361,6 +361,21 @@ py_test(
 )
 
 py_test(
+    name = "crash-reporting-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_crash_reporting.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "crash-reporting",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
     name = "user-tests",
     size = "small",
     srcs = [

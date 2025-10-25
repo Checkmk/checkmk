@@ -9121,6 +9121,10 @@ msgstr "Disponibilidad de BI"
 msgid "Azure Cosmos DB Requests"
 msgstr "Solicitudes de ACL en la web"
 
+#, fuzzy
+msgid "Azure Cosmos DB Throughput"
+msgstr "Solicitudes de ACL en la web"
+
 msgid "Azure DB Storage"
 msgstr "Almacenamiento Azure DB"
 
@@ -18660,6 +18664,10 @@ msgstr "Tarifa diaria"
 msgid "Days"
 msgstr ""
 
+#, fuzzy
+msgid "Days until Subscription Expiration"
+msgstr "Caducidad de la autenticación"
+
 msgid "Deactivated"
 msgstr "Desactivado"
 
@@ -25263,6 +25271,10 @@ msgstr "Expira"
 
 msgid "Expire time"
 msgstr "Tiempo de caducidad"
+
+#, fuzzy
+msgid "Expired"
+msgstr "Expira"
 
 #, fuzzy
 msgid "Expired keys"
@@ -36289,6 +36301,10 @@ msgstr "Intervalo:"
 msgid "Introduction"
 msgstr "Introducción a la API REST"
 
+#, fuzzy
+msgid "Invalid"
+msgstr "inválido:"
+
 msgid "Invalid (Not loaded)"
 msgstr "Inválido (no cargado)"
 
@@ -45477,7 +45493,8 @@ msgstr "No hay datos de ningún sitio"
 msgid "No data from time provider"
 msgstr "No hay datos de ningún sitio"
 
-msgid "No data was found with the current parameters of this dashlet."
+#, fuzzy
+msgid "No data was found with the current parameters of this widget."
 msgstr ""
 "No se han encontrado datos con los parámetros actuales de este dashlet."
 
@@ -45905,9 +45922,8 @@ msgstr "Match de rutas de nodos"
 msgid "Node Stats"
 msgstr "Estadísticas de los nodos"
 
-#, fuzzy
-msgid "Node Status (off: ignore node status)"
-msgstr "Activar comprobación (desactivado: ignorar el estado del nodo)"
+msgid "Node Status"
+msgstr "Estado del nodo"
 
 #, fuzzy
 msgid "Node index"
@@ -46066,6 +46082,10 @@ msgstr "Intervalo de comprobación normal/reintento"
 msgid "Normal: Regular push notification (default)"
 msgstr "Normal: Notificación push normal (por defecto)"
 
+#, fuzzy
+msgid "Normalized RU consumption"
+msgstr "Consumo de E/S de almacenamiento"
+
 msgid ""
 "Normally a user can login to the GUI from unlimited number of clients at the "
 "same time. If you want to enforce your users to be able to login only once  "
@@ -46218,6 +46238,10 @@ msgstr "No"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Not Found"
+msgstr "No se ha encontrado"
 
 #, fuzzy
 msgid "Not Present"
@@ -51095,6 +51119,10 @@ msgstr "Contraseña del usuario"
 
 msgid "Password policy for local accounts"
 msgstr "Política de contraseñas para las cuentas locales"
+
+#, fuzzy
+msgid "Password properties"
+msgstr "Propiedades del cuadro de mandos"
 
 msgid "Password:"
 msgstr "Contraseña:"
@@ -65159,8 +65187,8 @@ msgid "Subscription ID"
 msgstr "Identificación de la suscripción"
 
 #, fuzzy
-msgid "Subscription Status (off: ignore subscription status)"
-msgstr "Activar comprobación (desactivado: ignora el estado de la suscripción)"
+msgid "Subscription Status"
+msgstr "Suscripción"
 
 #, fuzzy
 msgid "Subscriptions matching tag based criteria"
@@ -75538,6 +75566,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB throughput "
+"metrics"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
@@ -77943,6 +77979,10 @@ msgstr "Total de RAM utilizable"
 
 msgid "Total RAM + Swap installed"
 msgstr "Total de RAM + Swap instalado"
+
+#, fuzzy
+msgid "Total RUs"
+msgstr "Total de RAM utilizable"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "Total de instancias bajo demanda en ejecución (obsoleto por AWS)"
@@ -85693,9 +85733,6 @@ msgstr "Avisa si el valor del estado de la VM no es"
 msgid "Warn if list of forwarded logfiles changes"
 msgstr "Avisa si la lista de archivos de registro reenviados cambia"
 
-msgid "Warn if node status value is not"
-msgstr "Avisa si el valor del estado del nodo no es"
-
 msgid "Warn if protocol doesn't match expected protocol version (ex: 2.0)"
 msgstr ""
 "Avisa si el protocolo no coincide con la versión de protocolo esperada (por "
@@ -85709,9 +85746,6 @@ msgid ""
 msgstr ""
 "Avisa si la cadena no coincide con la versión esperada del servidor (por "
 "ejemplo: OpenSSH_3.9p1)"
-
-msgid "Warn if subscription status value is not"
-msgstr "Avisa si el valor del estado de la suscripción no es"
 
 msgid "Warn on missing Residual current"
 msgstr ""
@@ -93015,6 +93049,10 @@ msgid "Select graph"
 msgstr "Conexiones rechazadas"
 
 #, fuzzy
+msgid "Select custom graph"
+msgstr "Clonar gráfico personalizado"
+
+#, fuzzy
 msgid "Filter by host name"
 msgstr "Filtrar la selección de %s por nombre de host: "
 
@@ -93060,8 +93098,8 @@ msgid "Responsive"
 msgstr "Tiempo de respuesta"
 
 #, fuzzy
-msgid "Legacy"
-msgstr "carrera heredada"
+msgid "Relative (Legacy)"
+msgstr "Relativo"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""
@@ -93103,10 +93141,6 @@ msgstr ""
 "icono (el de color) o un icono complementado con un símbolo adicional."
 
 #, fuzzy
-msgid "Dashboard visibility"
-msgstr "Visibilidad del gráfico"
-
-#, fuzzy
 msgid "Show in monitor menu"
 msgstr "Tema en el menú 'Monitor'"
 
@@ -93115,8 +93149,8 @@ msgid "Select option"
 msgstr "Conexiones rechazadas"
 
 #, fuzzy
-msgid "To be defined"
-msgstr "No hay conexiones definidas"
+msgid "Dashboard visibility"
+msgstr "Visibilidad del gráfico"
 
 #, fuzzy
 msgid ""
@@ -93450,6 +93484,42 @@ msgid "Dashboard scope"
 msgstr "Cuadros de mando"
 
 #, fuzzy
+msgid "Data & visualization"
+msgstr "Visualización de BI"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Añadir objetivo"
+
+#, fuzzy
+msgid "Must select a custom graph"
+msgstr "Clonar gráfico personalizado"
+
+#, fuzzy
+msgid "Select a custom graph"
+msgstr "Clonar gráfico personalizado"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Propiedades del cuadro de mandos"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "Visualización de BI"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Opciones adicionales"
+
+#, fuzzy
+msgid "Save widget"
+msgstr "Añadir objetivo"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Añadir objetivo"
+
+#, fuzzy
 msgid "Clone & review dashboard filters"
 msgstr "Cuadros de mando relacionados"
 
@@ -93485,10 +93555,6 @@ msgid "Data selection"
 msgstr "Selección de carpetas"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "Añadir objetivo"
-
-#, fuzzy
 msgid "Widget data"
 msgstr "Añadir filtro"
 
@@ -93512,20 +93578,8 @@ msgid "Event selection"
 msgstr "Selección de carpetas"
 
 #, fuzzy
-msgid "Add & place widget"
-msgstr "Añadir objetivo"
-
-#, fuzzy
-msgid "Widget visualization"
-msgstr "Visualización de BI"
-
-#, fuzzy
 msgid "Available visualization types"
 msgstr "Opciones disponibles"
-
-#, fuzzy
-msgid "Data settings"
-msgstr "Propiedades del cuadro de mandos"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -93604,10 +93658,6 @@ msgstr "Conexiones rechazadas"
 #, fuzzy
 msgid "Service selection"
 msgstr "Selección de carpetas"
-
-#, fuzzy
-msgid "Additional graph options"
-msgstr "Opciones adicionales"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -94137,11 +94187,6 @@ msgstr ""
 "historial de eventos."
 
 msgid ""
-"This is a placeholder for the relay setup wizard. The actual implementation "
-"is pending."
-msgstr ""
-
-msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
 msgstr ""
@@ -94173,6 +94218,22 @@ msgstr "Esta norma"
 msgid " for more details."
 msgstr "Haga clic aquí para ver los detalles."
 
+msgid ""
+"After the registration is triggered, verify the registration between the "
+"Relay and Checkmk site."
+msgstr ""
+
+#, fuzzy
+msgid "Verifying the registration..."
+msgstr "Registro de agentes"
+
+#, fuzzy
+msgid "Relay registered and saved successfully!"
+msgstr "Registro realizado con éxito"
+
+msgid "Registration failed and Relay couldn't be saved."
+msgstr ""
+
 msgid "Deploy the relay to your environment"
 msgstr ""
 
@@ -94185,8 +94246,8 @@ msgid "Register the relay with your Checkmk site"
 msgstr "Visualización del estado de los sitios Checkmk\n"
 
 #, fuzzy
-msgid "Connection check"
-msgstr "Nombre de la conexión"
+msgid "Verify registration"
+msgstr "Hora de inscripción"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -94663,6 +94724,33 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Node Status (off: ignore node status)"
+#~ msgstr "Activar comprobación (desactivado: ignorar el estado del nodo)"
+
+#, fuzzy
+#~ msgid "Subscription Status (off: ignore subscription status)"
+#~ msgstr ""
+#~ "Activar comprobación (desactivado: ignora el estado de la suscripción)"
+
+#~ msgid "Warn if node status value is not"
+#~ msgstr "Avisa si el valor del estado del nodo no es"
+
+#~ msgid "Warn if subscription status value is not"
+#~ msgstr "Avisa si el valor del estado de la suscripción no es"
+
+#, fuzzy
+#~ msgid "Legacy"
+#~ msgstr "carrera heredada"
+
+#, fuzzy
+#~ msgid "To be defined"
+#~ msgstr "No hay conexiones definidas"
+
+#, fuzzy
+#~ msgid "Connection check"
+#~ msgstr "Nombre de la conexión"
 
 #, fuzzy, python-format
 #~ msgid "Transformed the user tag group \"%s\" to built-in."
@@ -95836,9 +95924,6 @@ msgstr ""
 
 #~ msgid "No Conditions"
 #~ msgstr "Sin condiciones"
-
-#~ msgid "Node Status"
-#~ msgstr "Estado del nodo"
 
 #~ msgid "Other components"
 #~ msgstr "Otros componentes"

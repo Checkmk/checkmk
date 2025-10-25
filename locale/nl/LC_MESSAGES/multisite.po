@@ -9047,6 +9047,10 @@ msgstr "BI-beschikbaarheid"
 msgid "Azure Cosmos DB Requests"
 msgstr "Web ACL Verzoeken"
 
+#, fuzzy
+msgid "Azure Cosmos DB Throughput"
+msgstr "Web ACL Verzoeken"
+
 msgid "Azure DB Storage"
 msgstr "Azure DB opslag"
 
@@ -18533,6 +18537,10 @@ msgstr "Dagtarief"
 msgid "Days"
 msgstr ""
 
+#, fuzzy
+msgid "Days until Subscription Expiration"
+msgstr "Authenticatie Verval"
+
 msgid "Deactivated"
 msgstr "Gedeactiveerd"
 
@@ -25067,6 +25075,10 @@ msgstr "Verloopt op"
 
 msgid "Expire time"
 msgstr "Verlooptijd"
+
+#, fuzzy
+msgid "Expired"
+msgstr "Verloopt op"
 
 #, fuzzy
 msgid "Expired keys"
@@ -36011,6 +36023,10 @@ msgstr "Interval:"
 msgid "Introduction"
 msgstr "REST API inleiding"
 
+#, fuzzy
+msgid "Invalid"
+msgstr "ongeldig:"
+
 msgid "Invalid (Not loaded)"
 msgstr "Ongeldig (niet geladen)"
 
@@ -45124,7 +45140,8 @@ msgstr "Geen gegevens van een site"
 msgid "No data from time provider"
 msgstr "Geen gegevens van een site"
 
-msgid "No data was found with the current parameters of this dashlet."
+#, fuzzy
+msgid "No data was found with the current parameters of this widget."
 msgstr ""
 "Er zijn geen gegevens gevonden met de huidige parameters van dit streepje."
 
@@ -45547,9 +45564,8 @@ msgstr "Node pad aanpassing"
 msgid "Node Stats"
 msgstr "Node Stats"
 
-#, fuzzy
-msgid "Node Status (off: ignore node status)"
-msgstr "Activeer Controle (uit: knooppuntstatus negeren)"
+msgid "Node Status"
+msgstr "Knooppuntstatus"
 
 #, fuzzy
 msgid "Node index"
@@ -45706,6 +45722,10 @@ msgstr "Normaal/herhaling controle-interval"
 msgid "Normal: Regular push notification (default)"
 msgstr "Normaal: Normale pushmelding (standaard)"
 
+#, fuzzy
+msgid "Normalized RU consumption"
+msgstr "Opslag IO verbruik"
+
 msgid ""
 "Normally a user can login to the GUI from unlimited number of clients at the "
 "same time. If you want to enforce your users to be able to login only once  "
@@ -45857,6 +45877,10 @@ msgstr "Niet"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Not Found"
+msgstr "Niet gevonden"
 
 #, fuzzy
 msgid "Not Present"
@@ -50707,6 +50731,10 @@ msgstr "Wachtwoord van de gebruiker"
 
 msgid "Password policy for local accounts"
 msgstr "Wachtwoordbeleid voor lokale accounts"
+
+#, fuzzy
+msgid "Password properties"
+msgstr "Eigenschappen van het dashboard"
 
 msgid "Password:"
 msgstr "Wachtwoord:"
@@ -64602,8 +64630,8 @@ msgid "Subscription ID"
 msgstr "Abonnement ID"
 
 #, fuzzy
-msgid "Subscription Status (off: ignore subscription status)"
-msgstr "Activeer Controle (uit: abonnementsstatus negeren)"
+msgid "Subscription Status"
+msgstr "Abonnement"
 
 #, fuzzy
 msgid "Subscriptions matching tag based criteria"
@@ -74902,6 +74930,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB throughput "
+"metrics"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
@@ -77303,6 +77339,10 @@ msgstr "Totaal bruikbare RAM"
 
 msgid "Total RAM + Swap installed"
 msgstr "Totaal RAM + Swap geïnstalleerd"
+
+#, fuzzy
+msgid "Total RUs"
+msgstr "Totaal bruikbare RAM"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "Totaal aantal lopende On-Demand Instances(Afgeschaft door AWS)"
@@ -84998,9 +85038,6 @@ msgstr "Waarschuwen als VM statuswaarde niet"
 msgid "Warn if list of forwarded logfiles changes"
 msgstr "Waarschuwen als lijst van doorgestuurde logfiles verandert"
 
-msgid "Warn if node status value is not"
-msgstr "Waarschuwen als knooppuntstatuswaarde niet"
-
 msgid "Warn if protocol doesn't match expected protocol version (ex: 2.0)"
 msgstr ""
 "Waarschuwen als protocol niet overeenkomt met verwachte protocolversie (ex: "
@@ -85014,9 +85051,6 @@ msgid ""
 msgstr ""
 "Waarschuw als string niet overeenkomt met de verwachte server versie (ex: "
 "OpenSSH_3.9p1)"
-
-msgid "Warn if subscription status value is not"
-msgstr "Waarschuwen als de waarde van de abonnementsstatus niet"
 
 msgid "Warn on missing Residual current"
 msgstr ""
@@ -92282,6 +92316,10 @@ msgid "Select graph"
 msgstr "Afgewezen verbindingen"
 
 #, fuzzy
+msgid "Select custom graph"
+msgstr "Kloon aangepaste grafiek"
+
+#, fuzzy
 msgid "Filter by host name"
 msgstr "Filter %s selectie op hostnaam: "
 
@@ -92327,8 +92365,8 @@ msgid "Responsive"
 msgstr "Responstijd"
 
 #, fuzzy
-msgid "Legacy"
-msgstr "erfenis run"
+msgid "Relative (Legacy)"
+msgstr "Relatief"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""
@@ -92371,10 +92409,6 @@ msgstr ""
 "symbool."
 
 #, fuzzy
-msgid "Dashboard visibility"
-msgstr "Grafiek zichtbaarheid"
-
-#, fuzzy
 msgid "Show in monitor menu"
 msgstr "Onderwerp in menu 'Monitor"
 
@@ -92383,8 +92417,8 @@ msgid "Select option"
 msgstr "Afgewezen verbindingen"
 
 #, fuzzy
-msgid "To be defined"
-msgstr "Geen verbindingen gedefinieerd"
+msgid "Dashboard visibility"
+msgstr "Grafiek zichtbaarheid"
 
 #, fuzzy
 msgid ""
@@ -92718,6 +92752,42 @@ msgid "Dashboard scope"
 msgstr "Dashboards"
 
 #, fuzzy
+msgid "Data & visualization"
+msgstr "BI-visualisatie"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Must select a custom graph"
+msgstr "Kloon aangepaste grafiek"
+
+#, fuzzy
+msgid "Select a custom graph"
+msgstr "Kloon aangepaste grafiek"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Eigenschappen van het dashboard"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "BI-visualisatie"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Extra opties"
+
+#, fuzzy
+msgid "Save widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
 msgid "Clone & review dashboard filters"
 msgstr "Gerelateerde dashboards"
 
@@ -92753,10 +92823,6 @@ msgid "Data selection"
 msgstr "Map Selectie"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "Doel toevoegen"
-
-#, fuzzy
 msgid "Widget data"
 msgstr "Filter toevoegen"
 
@@ -92780,20 +92846,8 @@ msgid "Event selection"
 msgstr "Map Selectie"
 
 #, fuzzy
-msgid "Add & place widget"
-msgstr "Doel toevoegen"
-
-#, fuzzy
-msgid "Widget visualization"
-msgstr "BI-visualisatie"
-
-#, fuzzy
 msgid "Available visualization types"
 msgstr "Beschikbare opties"
-
-#, fuzzy
-msgid "Data settings"
-msgstr "Eigenschappen van het dashboard"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -92871,10 +92925,6 @@ msgstr "Afgewezen verbindingen"
 #, fuzzy
 msgid "Service selection"
 msgstr "Map Selectie"
-
-#, fuzzy
-msgid "Additional graph options"
-msgstr "Extra opties"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -93401,11 +93451,6 @@ msgstr ""
 "wordt aangemaakt."
 
 msgid ""
-"This is a placeholder for the relay setup wizard. The actual implementation "
-"is pending."
-msgstr ""
-
-msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
 msgstr ""
@@ -93437,6 +93482,22 @@ msgstr "Deze regel"
 msgid " for more details."
 msgstr "Klik hier voor details."
 
+msgid ""
+"After the registration is triggered, verify the registration between the "
+"Relay and Checkmk site."
+msgstr ""
+
+#, fuzzy
+msgid "Verifying the registration..."
+msgstr "Agent registratie"
+
+#, fuzzy
+msgid "Relay registered and saved successfully!"
+msgstr "Registratie succesvol"
+
+msgid "Registration failed and Relay couldn't be saved."
+msgstr ""
+
 msgid "Deploy the relay to your environment"
 msgstr ""
 
@@ -93449,8 +93510,8 @@ msgid "Register the relay with your Checkmk site"
 msgstr "De status van Checkmk-sites weergeven\n"
 
 #, fuzzy
-msgid "Connection check"
-msgstr "Naam verbinding"
+msgid "Verify registration"
+msgstr "Tijdstip van registratie"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -93926,6 +93987,32 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Node Status (off: ignore node status)"
+#~ msgstr "Activeer Controle (uit: knooppuntstatus negeren)"
+
+#, fuzzy
+#~ msgid "Subscription Status (off: ignore subscription status)"
+#~ msgstr "Activeer Controle (uit: abonnementsstatus negeren)"
+
+#~ msgid "Warn if node status value is not"
+#~ msgstr "Waarschuwen als knooppuntstatuswaarde niet"
+
+#~ msgid "Warn if subscription status value is not"
+#~ msgstr "Waarschuwen als de waarde van de abonnementsstatus niet"
+
+#, fuzzy
+#~ msgid "Legacy"
+#~ msgstr "erfenis run"
+
+#, fuzzy
+#~ msgid "To be defined"
+#~ msgstr "Geen verbindingen gedefinieerd"
+
+#, fuzzy
+#~ msgid "Connection check"
+#~ msgstr "Naam verbinding"
 
 #, fuzzy, python-format
 #~ msgid "Transformed the user tag group \"%s\" to built-in."
@@ -95077,9 +95164,6 @@ msgstr ""
 
 #~ msgid "No Conditions"
 #~ msgstr "Geen voorwaarden"
-
-#~ msgid "Node Status"
-#~ msgstr "Knooppuntstatus"
 
 #~ msgid "Other components"
 #~ msgstr "Andere componenten"

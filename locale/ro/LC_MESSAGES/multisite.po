@@ -9048,6 +9048,10 @@ msgstr "Disponibilitatea BI"
 msgid "Azure Cosmos DB Requests"
 msgstr "Cereri ACL Web"
 
+#, fuzzy
+msgid "Azure Cosmos DB Throughput"
+msgstr "Cereri ACL Web"
+
 msgid "Azure DB Storage"
 msgstr "Azure DB Storage"
 
@@ -18553,6 +18557,10 @@ msgstr "Tarif pe zi"
 msgid "Days"
 msgstr ""
 
+#, fuzzy
+msgid "Days until Subscription Expiration"
+msgstr "Expirarea autentificării"
+
 msgid "Deactivated"
 msgstr "Dezactivat"
 
@@ -25148,6 +25156,10 @@ msgstr "Expiră la"
 
 msgid "Expire time"
 msgstr "Timp de expirare"
+
+#, fuzzy
+msgid "Expired"
+msgstr "Expiră"
 
 #, fuzzy
 msgid "Expired keys"
@@ -36134,6 +36146,10 @@ msgstr "Interval:"
 msgid "Introduction"
 msgstr "Introducere REST API"
 
+#, fuzzy
+msgid "Invalid"
+msgstr "invalidă:"
+
 msgid "Invalid (Not loaded)"
 msgstr "Invalid (Neîncărcat)"
 
@@ -45231,7 +45247,8 @@ msgstr "Nu există date din niciun site"
 msgid "No data from time provider"
 msgstr "Nu există date din niciun site"
 
-msgid "No data was found with the current parameters of this dashlet."
+#, fuzzy
+msgid "No data was found with the current parameters of this widget."
 msgstr ""
 "Nu au fost găsite date cu parametrii actuali ai acestui tablou de bord."
 
@@ -45649,9 +45666,8 @@ msgstr "Potrivirea căii nodurilor"
 msgid "Node Stats"
 msgstr "Statisticile nodurilor"
 
-#, fuzzy
-msgid "Node Status (off: ignore node status)"
-msgstr "Activate Check (dezactivat: ignoră starea nodului)"
+msgid "Node Status"
+msgstr "Starea nodului"
 
 #, fuzzy
 msgid "Node index"
@@ -45811,6 +45827,10 @@ msgstr "Intervalul de verificare normală/retry"
 msgid "Normal: Regular push notification (default)"
 msgstr "Normal: Notificare push obișnuită (implicit)"
 
+#, fuzzy
+msgid "Normalized RU consumption"
+msgstr "Consumul de stocare IO"
+
 msgid ""
 "Normally a user can login to the GUI from unlimited number of clients at the "
 "same time. If you want to enforce your users to be able to login only once  "
@@ -45963,6 +45983,10 @@ msgstr "Nu"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Not Found"
+msgstr "Nu a fost găsit"
 
 #, fuzzy
 msgid "Not Present"
@@ -50806,6 +50830,10 @@ msgstr "Parola utilizatorului"
 
 msgid "Password policy for local accounts"
 msgstr "Politica de parole pentru conturile locale"
+
+#, fuzzy
+msgid "Password properties"
+msgstr "Proprietățile tabloului de bord"
 
 msgid "Password:"
 msgstr "Parola:"
@@ -64808,8 +64836,8 @@ msgid "Subscription ID"
 msgstr "ID-ul abonamentului"
 
 #, fuzzy
-msgid "Subscription Status (off: ignore subscription status)"
-msgstr "Activare verificare (dezactivat: ignoră starea abonamentului)"
+msgid "Subscription Status"
+msgstr "Abonament"
 
 #, fuzzy
 msgid "Subscriptions matching tag based criteria"
@@ -75188,6 +75216,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB throughput "
+"metrics"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
@@ -77599,6 +77635,10 @@ msgstr "Total RAM"
 
 msgid "Total RAM + Swap installed"
 msgstr "Total RAM + Swap instalat"
+
+#, fuzzy
+msgid "Total RUs"
+msgstr "Total RAM"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "Totalul instanțelor On-Demand care rulează (Depreciat de AWS)"
@@ -85220,9 +85260,6 @@ msgstr "Avertizează în cazul în care valoarea stării VM nu este"
 msgid "Warn if list of forwarded logfiles changes"
 msgstr "Avertizează dacă se modifică lista fișierelor de jurnal redirecționate"
 
-msgid "Warn if node status value is not"
-msgstr "Avertizează în cazul în care valoarea stării nodului nu este"
-
 msgid "Warn if protocol doesn't match expected protocol version (ex: 2.0)"
 msgstr ""
 "Avertizează dacă protocolul nu se potrivește cu versiunea de protocol "
@@ -85236,9 +85273,6 @@ msgid ""
 msgstr ""
 "Avertizează dacă șirul de caractere nu se potrivește cu versiunea așteptată "
 "a serverului (ex: OpenSSH_3.9p1)"
-
-msgid "Warn if subscription status value is not"
-msgstr "Avertizează în cazul în care valoarea statutului de abonament nu este"
 
 msgid "Warn on missing Residual current"
 msgstr ""
@@ -92528,6 +92562,10 @@ msgid "Select graph"
 msgstr "Conexiuni respinse"
 
 #, fuzzy
+msgid "Select custom graph"
+msgstr "Clonarea graficului personalizat"
+
+#, fuzzy
 msgid "Filter by host name"
 msgstr "Filtrați selecția %s după numele de gazdă: "
 
@@ -92574,8 +92612,8 @@ msgid "Responsive"
 msgstr "Timp de răspuns"
 
 #, fuzzy
-msgid "Legacy"
-msgstr "execuție moștenită"
+msgid "Relative (Legacy)"
+msgstr "Relativ"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""
@@ -92618,10 +92656,6 @@ msgstr ""
 "simbol suplimentar."
 
 #, fuzzy
-msgid "Dashboard visibility"
-msgstr "Vizibilitatea graficului"
-
-#, fuzzy
 msgid "Show in monitor menu"
 msgstr "Subiect în 'Monitor' meniu"
 
@@ -92630,8 +92664,8 @@ msgid "Select option"
 msgstr "Conexiuni respinse"
 
 #, fuzzy
-msgid "To be defined"
-msgstr "Nu sunt definite conexiuni"
+msgid "Dashboard visibility"
+msgstr "Vizibilitatea graficului"
 
 #, fuzzy
 msgid ""
@@ -92965,6 +92999,42 @@ msgid "Dashboard scope"
 msgstr "Tablouri de bord"
 
 #, fuzzy
+msgid "Data & visualization"
+msgstr "Vizualizare BI"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Must select a custom graph"
+msgstr "Clonarea graficului personalizat"
+
+#, fuzzy
+msgid "Select a custom graph"
+msgstr "Clonarea graficului personalizat"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Proprietățile tabloului de bord"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "Vizualizare BI"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Save widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
 msgid "Clone & review dashboard filters"
 msgstr "Tablouri de bord conexe"
 
@@ -93001,10 +93071,6 @@ msgid "Data selection"
 msgstr "Selecția fișierelor"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "Adăugați o țintă"
-
-#, fuzzy
 msgid "Widget data"
 msgstr "Adaugă filtre"
 
@@ -93028,20 +93094,8 @@ msgid "Event selection"
 msgstr "Selecția fișierelor"
 
 #, fuzzy
-msgid "Add & place widget"
-msgstr "Adăugați o țintă"
-
-#, fuzzy
-msgid "Widget visualization"
-msgstr "Vizualizare BI"
-
-#, fuzzy
 msgid "Available visualization types"
 msgstr "Opțiuni disponibile"
-
-#, fuzzy
-msgid "Data settings"
-msgstr "Proprietățile tabloului de bord"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -93122,10 +93176,6 @@ msgstr "Conexiuni respinse"
 #, fuzzy
 msgid "Service selection"
 msgstr "Selecția fișierelor"
-
-#, fuzzy
-msgid "Additional graph options"
-msgstr "Opțiuni adiționale"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -93654,11 +93704,6 @@ msgstr ""
 "istoricul evenimentelor."
 
 msgid ""
-"This is a placeholder for the relay setup wizard. The actual implementation "
-"is pending."
-msgstr ""
-
-msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
 msgstr ""
@@ -93690,6 +93735,22 @@ msgstr "Această regulă"
 msgid " for more details."
 msgstr "Click aici pentru detalii."
 
+msgid ""
+"After the registration is triggered, verify the registration between the "
+"Relay and Checkmk site."
+msgstr ""
+
+#, fuzzy
+msgid "Verifying the registration..."
+msgstr "Înregistrarea agentului"
+
+#, fuzzy
+msgid "Relay registered and saved successfully!"
+msgstr "Înregistrare reușită"
+
+msgid "Registration failed and Relay couldn't be saved."
+msgstr ""
+
 msgid "Deploy the relay to your environment"
 msgstr ""
 
@@ -93702,8 +93763,8 @@ msgid "Register the relay with your Checkmk site"
 msgstr "Afișarea stării site-urilor Checkmk\n"
 
 #, fuzzy
-msgid "Connection check"
-msgstr "Numele conexiunii"
+msgid "Verify registration"
+msgstr "Ora de înregistrare"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -94182,6 +94243,33 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Node Status (off: ignore node status)"
+#~ msgstr "Activate Check (dezactivat: ignoră starea nodului)"
+
+#, fuzzy
+#~ msgid "Subscription Status (off: ignore subscription status)"
+#~ msgstr "Activare verificare (dezactivat: ignoră starea abonamentului)"
+
+#~ msgid "Warn if node status value is not"
+#~ msgstr "Avertizează în cazul în care valoarea stării nodului nu este"
+
+#~ msgid "Warn if subscription status value is not"
+#~ msgstr ""
+#~ "Avertizează în cazul în care valoarea statutului de abonament nu este"
+
+#, fuzzy
+#~ msgid "Legacy"
+#~ msgstr "execuție moștenită"
+
+#, fuzzy
+#~ msgid "To be defined"
+#~ msgstr "Nu sunt definite conexiuni"
+
+#, fuzzy
+#~ msgid "Connection check"
+#~ msgstr "Numele conexiunii"
 
 #, python-format
 #~ msgid "Transformed the user tag group \"%s\" to built-in."
@@ -95354,9 +95442,6 @@ msgstr ""
 
 #~ msgid "No Conditions"
 #~ msgstr "Fără condiții"
-
-#~ msgid "Node Status"
-#~ msgstr "Starea nodului"
 
 #~ msgid "Other components"
 #~ msgstr "Alte componente"

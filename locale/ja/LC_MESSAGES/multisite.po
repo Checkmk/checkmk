@@ -8446,6 +8446,10 @@ msgstr "BI の可用性"
 msgid "Azure Cosmos DB Requests"
 msgstr "Web ACLリクエスト"
 
+#, fuzzy
+msgid "Azure Cosmos DB Throughput"
+msgstr "Web ACLリクエスト"
+
 msgid "Azure DB Storage"
 msgstr "Azure DB ストレージ"
 
@@ -17481,6 +17485,10 @@ msgstr "日割り"
 msgid "Days"
 msgstr "日"
 
+#, fuzzy
+msgid "Days until Subscription Expiration"
+msgstr "認証の有効期限"
+
 msgid "Deactivated"
 msgstr "非アクティブ化"
 
@@ -23663,6 +23671,10 @@ msgstr "有効期限"
 
 msgid "Expire time"
 msgstr "有効期限"
+
+#, fuzzy
+msgid "Expired"
+msgstr "有効期限が切れます"
 
 #, fuzzy
 msgid "Expired keys"
@@ -33826,6 +33838,10 @@ msgstr "間隔:"
 msgid "Introduction"
 msgstr "紹介"
 
+#, fuzzy
+msgid "Invalid"
+msgstr "無効:"
+
 msgid "Invalid (Not loaded)"
 msgstr "無効(ロードされていません)"
 
@@ -42412,7 +42428,8 @@ msgstr "どのサイトからのデータもありません"
 msgid "No data from time provider"
 msgstr "どのサイトからのデータもありません"
 
-msgid "No data was found with the current parameters of this dashlet."
+#, fuzzy
+msgid "No data was found with the current parameters of this widget."
 msgstr "このダッシュレットの現在のパラメーターのデータは見つかりませんでした。"
 
 msgid "No data."
@@ -42796,8 +42813,8 @@ msgstr "ノードパスマッチング"
 msgid "Node Stats"
 msgstr "ノード統計"
 
-msgid "Node Status (off: ignore node status)"
-msgstr "ノードの状態(オフ:ノードの状態を無視する)"
+msgid "Node Status"
+msgstr "ノードステータス"
 
 msgid "Node index"
 msgstr "ノードインデックス"
@@ -42943,6 +42960,10 @@ msgstr "通常/再試行のチェック間隔"
 msgid "Normal: Regular push notification (default)"
 msgstr "通常:定期的なプッシュ通知(デフォルト)"
 
+#, fuzzy
+msgid "Normalized RU consumption"
+msgstr "ストレージIO消費量"
+
 msgid ""
 "Normally a user can login to the GUI from unlimited number of clients at the "
 "same time. If you want to enforce your users to be able to login only once  "
@@ -43086,6 +43107,10 @@ msgstr "ない"
 #, python-format
 msgid "Not Before: %s - Not After: %s"
 msgstr "開始日: %s - 終了日: %s"
+
+#, fuzzy
+msgid "Not Found"
+msgstr "見つかりません"
 
 msgid "Not Present"
 msgstr "現在ではない"
@@ -47507,6 +47532,10 @@ msgstr "ユーザーのパスワード"
 
 msgid "Password policy for local accounts"
 msgstr "ローカルアカウントのパスワードポリシー"
+
+#, fuzzy
+msgid "Password properties"
+msgstr "ダッシュボードのプロパティ"
 
 msgid "Password:"
 msgstr "パスワード:"
@@ -60607,9 +60636,9 @@ msgstr "サブスクリプション"
 msgid "Subscription ID"
 msgstr "サブスクリプションID"
 
-msgid "Subscription Status (off: ignore subscription status)"
-msgstr ""
-"サブスクリプションステータス（オフ：サブスクリプションステータスを無視）"
+#, fuzzy
+msgid "Subscription Status"
+msgstr "サブスクリプション"
 
 #, fuzzy
 msgid "Subscriptions matching tag based criteria"
@@ -70513,6 +70542,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB throughput "
+"metrics"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure NAT Gateways health "
 "monitoring"
 msgstr ""
@@ -72772,6 +72809,10 @@ msgstr "合計RAM"
 
 msgid "Total RAM + Swap installed"
 msgstr "合計RAM +インストールされたスワップ"
+
+#, fuzzy
+msgid "Total RUs"
+msgstr "合計RAM"
 
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "稼動中のオンデマンドインスタンスの総数(AWSで非推奨)"
@@ -79537,9 +79578,6 @@ msgstr "VMステータス値がそうでない場合に警告する"
 msgid "Warn if list of forwarded logfiles changes"
 msgstr "転送されたログファイルのリストが変更された場合に警告する"
 
-msgid "Warn if node status value is not"
-msgstr "ノードステータス値がそうでない場合に警告する"
-
 msgid "Warn if protocol doesn't match expected protocol version (ex: 2.0)"
 msgstr ""
 "プロトコルが予想されるプロトコルバージョンと一致しない場合に警告する(例:2.0)"
@@ -79552,9 +79590,6 @@ msgid ""
 msgstr ""
 "文字列が予想されるサーバーバージョンと一致しない場合に警告します"
 "(例:OpenSSH_3.9p1)"
-
-msgid "Warn if subscription status value is not"
-msgstr "サブスクリプションステータス値がそうでない場合に警告"
 
 msgid "Warn on missing Residual current"
 msgstr "残留電流の欠落を警告する"
@@ -86496,6 +86531,10 @@ msgid "Select graph"
 msgstr "オプション選択"
 
 #, fuzzy
+msgid "Select custom graph"
+msgstr "カスタムグラフのクローンを作成する"
+
+#, fuzzy
 msgid "Filter by host name"
 msgstr "ホスト名でによるフィルター選択:"
 
@@ -86539,8 +86578,8 @@ msgid "Responsive"
 msgstr "反応時間"
 
 #, fuzzy
-msgid "Legacy"
-msgstr "レガシー"
+msgid "Relative (Legacy)"
+msgstr "相対的"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""
@@ -86582,10 +86621,6 @@ msgstr ""
 "のみを選択できます。"
 
 #, fuzzy
-msgid "Dashboard visibility"
-msgstr "グラフの可視性"
-
-#, fuzzy
 msgid "Show in monitor menu"
 msgstr "\"モニター\" メニューのトピック"
 
@@ -86594,8 +86629,8 @@ msgid "Select option"
 msgstr "オプション選択"
 
 #, fuzzy
-msgid "To be defined"
-msgstr "名前が定義されていません"
+msgid "Dashboard visibility"
+msgstr "グラフの可視性"
 
 #, fuzzy
 msgid ""
@@ -86926,6 +86961,42 @@ msgid "Dashboard scope"
 msgstr "ダッシュボード"
 
 #, fuzzy
+msgid "Data & visualization"
+msgstr "BIの視覚化"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Must select a custom graph"
+msgstr "カスタムグラフのクローンを作成する"
+
+#, fuzzy
+msgid "Select a custom graph"
+msgstr "カスタムグラフのクローンを作成する"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "ダッシュボードのプロパティ"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "BIの視覚化"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "追加オプション"
+
+#, fuzzy
+msgid "Save widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
 msgid "Clone & review dashboard filters"
 msgstr "関連ダッシュボード"
 
@@ -86961,10 +87032,6 @@ msgid "Data selection"
 msgstr "サイト選択"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "ターゲットを追加"
-
-#, fuzzy
 msgid "Widget data"
 msgstr "フィルタを追加"
 
@@ -86987,20 +87054,8 @@ msgid "Event selection"
 msgstr "ファイル選択"
 
 #, fuzzy
-msgid "Add & place widget"
-msgstr "ターゲットを追加"
-
-#, fuzzy
-msgid "Widget visualization"
-msgstr "BIの視覚化"
-
-#, fuzzy
 msgid "Available visualization types"
 msgstr "利用可能なオプション"
-
-#, fuzzy
-msgid "Data settings"
-msgstr "ダッシュボードのプロパティ"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -87079,10 +87134,6 @@ msgstr "オプション選択"
 #, fuzzy
 msgid "Service selection"
 msgstr "サイト選択"
-
-#, fuzzy
-msgid "Additional graph options"
-msgstr "追加オプション"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -87585,11 +87636,6 @@ msgid "Select the folder your host(s) will be created in."
 msgstr "ホストが作成される場所を指定してください。"
 
 msgid ""
-"This is a placeholder for the relay setup wizard. The actual implementation "
-"is pending."
-msgstr ""
-
-msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
 msgstr ""
@@ -87621,6 +87667,22 @@ msgstr "このルール"
 msgid " for more details."
 msgstr "詳細はこちらをクリックしてください。"
 
+msgid ""
+"After the registration is triggered, verify the registration between the "
+"Relay and Checkmk site."
+msgstr ""
+
+#, fuzzy
+msgid "Verifying the registration..."
+msgstr "エージェント登録"
+
+#, fuzzy
+msgid "Relay registered and saved successfully!"
+msgstr "登録完了"
+
+msgid "Registration failed and Relay couldn't be saved."
+msgstr ""
+
 msgid "Deploy the relay to your environment"
 msgstr ""
 
@@ -87633,8 +87695,8 @@ msgid "Register the relay with your Checkmk site"
 msgstr "Checkmkサイトの状態を表示する\n"
 
 #, fuzzy
-msgid "Connection check"
-msgstr "接続名"
+msgid "Verify registration"
+msgstr "登録時刻"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -88102,6 +88164,31 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Node Status (off: ignore node status)"
+#~ msgstr "ノードの状態(オフ:ノードの状態を無視する)"
+
+#~ msgid "Subscription Status (off: ignore subscription status)"
+#~ msgstr ""
+#~ "サブスクリプションステータス（オフ：サブスクリプションステータスを無視）"
+
+#~ msgid "Warn if node status value is not"
+#~ msgstr "ノードステータス値がそうでない場合に警告する"
+
+#~ msgid "Warn if subscription status value is not"
+#~ msgstr "サブスクリプションステータス値がそうでない場合に警告"
+
+#, fuzzy
+#~ msgid "Legacy"
+#~ msgstr "レガシー"
+
+#, fuzzy
+#~ msgid "To be defined"
+#~ msgstr "名前が定義されていません"
+
+#, fuzzy
+#~ msgid "Connection check"
+#~ msgstr "接続名"
 
 #, python-format
 #~ msgid "Transformed the user tag group \"%s\" to built-in."
@@ -89271,9 +89358,6 @@ msgstr ""
 
 #~ msgid "No Conditions"
 #~ msgstr "条件なし"
-
-#~ msgid "Node Status"
-#~ msgstr "ノードステータス"
 
 #~ msgid "Other components"
 #~ msgstr "その他のコンポーネント"

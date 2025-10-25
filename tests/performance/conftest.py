@@ -70,6 +70,7 @@ def _track_resources(request: pytest.FixtureRequest) -> Iterator[None]:
 @contextmanager
 def _site(description: str, distributed: bool) -> Iterator[Site]:
     """Provide a default monitoring site."""
+    site_name = "central" if distributed else "single"
     setup_stop_event = threading.Event()
     cleanup_start_event = threading.Event()
     global_settings_updates = [
@@ -92,31 +93,33 @@ def _site(description: str, distributed: bool) -> Iterator[Site]:
             )
         )
     with (
-        track_resources("setup_central_site", stop_event=setup_stop_event),
+        track_resources(
+            f"setup_{site_name}_site" if distributed else "setup_", stop_event=setup_stop_event
+        ),
         site_factory.get_test_site_ctx(
-            "central",
+            site_name,
             description=description,
             auto_restart_httpd=True,
             tracing_config=tracing_config_from_env(os.environ),
             global_settings_updates=global_settings_updates,
-        ) as central_site,
-        track_resources("teardown_central_site", start_event=cleanup_start_event),
+        ) as site,
+        track_resources(f"teardown_{site_name}_site", start_event=cleanup_start_event),
     ):
         setup_stop_event.set()
-        with track_resources("stop_central_site"):
-            central_site.stop()
-        with track_resources("start_central_site"):
-            central_site.start()
+        with track_resources(f"stop_{site_name}_site"):
+            site.stop()
+        with track_resources(f"start_{site_name}_site"):
+            site.start()
 
         # DCD setup
-        central_site.write_file(
+        site.write_file(
             "etc/check_mk/dcd.d/wato/global.mk",
             "dcd_activate_changes_timeout = 3600\n"
             "dcd_bulk_discovery_timeout = 3600\n"
             "dcd_site_update_interval = 3600\n",
         )
-        central_site.openapi.changes.activate_and_wait_for_completion()
-        yield central_site
+        site.openapi.changes.activate_and_wait_for_completion()
+        yield site
         cleanup_start_event.set()
 
 

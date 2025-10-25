@@ -21,7 +21,6 @@ from pydantic import BaseModel
 from cmk.plugins.netapp import models
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import CannotRecover, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 __version__ = "2.5.0b1"
 
@@ -50,7 +49,7 @@ class FetchedResource(Enum):
     snapvault = "snapvault"
     fc_interfaces = "fc_interfaces"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
 
@@ -310,7 +309,7 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
         )
 
 
-def _aggregates_ids(connection: HostConnection, args: Args) -> Collection:
+def _aggregates_ids(connection: HostConnection, args: argparse.Namespace) -> Collection:
     # wee need to retrieve the uuid of the aggregates via the CLI passthrough
     # because the REST API does not return, per design, the uuid of the root aggregates
     response = connection.session.get(
@@ -322,7 +321,9 @@ def _aggregates_ids(connection: HostConnection, args: Args) -> Collection:
     return {record["uuid"] for record in records}
 
 
-def fetch_aggr(connection: HostConnection, args: Args) -> Iterable[models.AggregateModel]:
+def fetch_aggr(
+    connection: HostConnection, args: argparse.Namespace
+) -> Iterable[models.AggregateModel]:
     field_query = (
         "name",
         "space.block_storage.available",
@@ -600,7 +601,9 @@ def fetch_temperatures(
             )
 
 
-def fetch_alerts(connection: HostConnection, args: Args) -> Iterable[models.AlertModel]:
+def fetch_alerts(
+    connection: HostConnection, args: argparse.Namespace
+) -> Iterable[models.AlertModel]:
     response = connection.session.get(
         url=f"{connection.origin}/api/private/support/alerts",
         timeout=args.timeout,
@@ -735,7 +738,7 @@ def fetch_fc_interfaces_counters(
             )
 
 
-def fetch_environment(connection):
+def fetch_environment(connection: HostConnection) -> Iterable[models.EnvironmentSensorModel]:
     field_query = (
         "name",
         "node.name",
@@ -889,7 +892,9 @@ def _pick_oldest_node_version(nodes: Iterable[models.NodeModel]) -> models.Versi
     return min(node.version for node in nodes)
 
 
-def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
+def write_sections(
+    connection: HostConnection, logger: logging.Logger, args: argparse.Namespace
+) -> None:
     """Write monitoring sections based on selected resources"""
     fetched_resources = {obj.value for obj in args.fetched_resources}
 
@@ -966,7 +971,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
         raise CannotRecover("Fetch ports failed. Cluster could be in a degraded state.")
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(
@@ -1046,7 +1051,7 @@ def _setup_logging(verbose: int) -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def agent_netapp_main(args: Args) -> int:
+def agent_netapp_main(args: argparse.Namespace) -> int:
     """
     For NetApp responses HTTP status codes:
     https://docs.netapp.com/us-en/ontap-restapi-9141//ontap/getting_started_with_the_ontap_rest_api.html#HTTP_status_codes

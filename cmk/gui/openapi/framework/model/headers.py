@@ -23,11 +23,11 @@ ETAG_HEADER: OpenAPIParameter = {
 ETAG_IF_MATCH_HEADER: OpenAPIParameter = {
     "name": "If-Match",
     "description": (
-        "The value of the, to be modified, object's ETag header. You can get this value "
-        "by displaying the object it individually. When ETag validation is enabled in the "
-        "REST API, update operations require that the ETag value you provide matches the "
-        "object's current server-side ETag. The content of the ETag can "
-        "potentially be anything and should be treated as semantically opaque."
+        "The value of the, to be modified, object's ETag header. You can get this value by "
+        "displaying the object individually. When ETag validation is enabled in the REST API, "
+        "update operations require that the ETag value you provide matches the object's current "
+        "server-side ETag. The content of the ETag can potentially be anything and should be "
+        "treated as semantically opaque."
     ),
     "in": "header",
     "required": True,

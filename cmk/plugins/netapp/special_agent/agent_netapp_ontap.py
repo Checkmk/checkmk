@@ -11,7 +11,7 @@ import argparse
 import logging
 import sys
 import traceback
-from collections.abc import Callable, Collection, Iterable, Sequence
+from collections.abc import Collection, Iterable, Sequence
 from enum import Enum
 
 import urllib3
@@ -1068,51 +1068,6 @@ def _setup_logging(verbose: int) -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def _special_agent_main_core(
-    parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
-    main_fn: Callable[[argparse.Namespace], int],
-    argv: Sequence[str],
-) -> int:
-    """Main logic special agents"""
-    args = parse_arguments(argv)
-
-    try:
-        return main_fn(args)
-    except CannotRecover as exc:
-        sys.stderr.write(f"{exc}\n")
-    except Exception:
-        if args.debug:
-            raise
-        crash_dump = create_agent_crash_dump()
-        sys.stderr.write(crash_dump)
-        sys.stderr.write(f"\n\n{traceback.format_exc()}")
-    return 1
-
-
-def special_agent_main(
-    parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
-    main_fn: Callable[[argparse.Namespace], int],
-    argv: Sequence[str] | None = None,
-    *,
-    apply_password_store_hack: bool = True,
-) -> int:
-    """
-    Because it modifies sys.argv and part of the functionality is terminating the process with
-    the correct return code it's hard to test in unit tests.
-    Therefore _active_check_main_core and _output_check_result should be used for unit tests since
-    they are not meant to modify the system environment or terminate the process.
-
-    Watch out!
-    This will crash unless `parse_arguments` implements the `--debug` and `--verbose` options.
-    """
-    argv = sys.argv[1:] if argv is None else argv
-    return _special_agent_main_core(
-        parse_arguments,
-        main_fn,
-        resolve_password_hack(argv, lookup_stored_passwords) if apply_password_store_hack else argv,
-    )
-
-
 def agent_netapp_main(args: argparse.Namespace) -> int:
     """
     For NetApp responses HTTP status codes:
@@ -1148,7 +1103,19 @@ def agent_netapp_main(args: argparse.Namespace) -> int:
 
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_netapp_main)
+    args = parse_arguments(resolve_password_hack(sys.argv[1:], lookup_stored_passwords))
+
+    try:
+        return agent_netapp_main(args)
+    except CannotRecover as exc:
+        sys.stderr.write(f"{exc}\n")
+    except Exception:
+        if args.debug:
+            raise
+        crash_dump = create_agent_crash_dump()
+        sys.stderr.write(crash_dump)
+        sys.stderr.write(f"\n\n{traceback.format_exc()}")
+    return 1
 
 
 if __name__ == "__main__":

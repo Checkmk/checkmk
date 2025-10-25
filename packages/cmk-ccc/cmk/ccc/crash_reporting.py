@@ -299,9 +299,7 @@ def _get_local_vars_of_last_exception() -> str:
 
 def _sanitize_variables(unsanitized_variables: dict[str, object]) -> dict[str, object]:
     return {
-        key: REDACTED_STRING
-        if any(sensitive_keyword in key.lower() for sensitive_keyword in SENSITIVE_KEYWORDS)
-        else format_var_for_export(value)
+        key: REDACTED_STRING if _key_indicates_sensitivity(key) else format_var_for_export(value)
         for key, value in unsanitized_variables.items()
     }
 
@@ -325,34 +323,28 @@ def format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 
 
     match val:
         case dict():
-            val = val.copy()
-            item_key: object  # mypy says Any
-            item_val: object
-            for item_key, item_val in val.items():
-                if isinstance(item_key, str) and any(
-                    sensitive_keyword in item_key.lower()
-                    for sensitive_keyword in SENSITIVE_KEYWORDS
-                ):
-                    val[item_key] = REDACTED_STRING
-                else:
-                    val[item_key] = format_var_for_export(item_val, maxdepth - 1)
+            return {
+                k: REDACTED_STRING
+                if _key_indicates_sensitivity(k)
+                else format_var_for_export(v, maxdepth - 1)
+                for k, v in val.items()
+            }
 
         case list():
-            val = val[:]
-            for index, item in enumerate(val):
-                val[index] = format_var_for_export(item, maxdepth - 1)
+            return [format_var_for_export(item, maxdepth - 1) for item in val]
 
         case tuple():
-            new_val: tuple[object, ...] = ()
-            for item in val:
-                new_val += (format_var_for_export(item, maxdepth - 1),)
-            val = new_val
+            return tuple(format_var_for_export(item, maxdepth - 1) for item in val)
 
         # Check and limit size
         case str():
-            val = _truncate_str(val, maxsize)
+            return _truncate_str(val, maxsize)
 
         case _:
-            pass
+            return val
 
-    return val
+
+def _key_indicates_sensitivity(key: object) -> bool:
+    return isinstance(key, str) and any(
+        indicator in key.lower() for indicator in SENSITIVE_KEYWORDS
+    )

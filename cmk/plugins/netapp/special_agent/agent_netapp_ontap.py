@@ -10,9 +10,11 @@
 import argparse
 import logging
 import sys
-from collections.abc import Collection, Iterable, Sequence
+import traceback
+from collections.abc import Callable, Collection, Iterable, Sequence
 from enum import Enum
 
+import urllib3
 from netapp_ontap import resources as NetAppResource
 from netapp_ontap.error import NetAppRestError
 from netapp_ontap.host_connection import HostConnection
@@ -20,11 +22,24 @@ from pydantic import BaseModel
 
 from cmk.plugins.netapp import models
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import CannotRecover, special_agent_main
+from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_dump
+from cmk.utils.password_store import lookup as lookup_stored_passwords
+from cmk.utils.password_store.hack import resolve_password_hack
 
 __version__ = "2.5.0b1"
 
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
+
+
+class CannotRecover(RuntimeError):
+    """Make the special agent fail gracefully
+    Raise this when there is no way to successfully proceed,
+    e.g. the server does not respond or credentials are not valid.
+    This will make the Check_MK service go critical
+    and display the passed message in the GUI.
+    In contrast to any other raised exception,
+    this will not create a crash report.
+    """
 
 
 class FetchedResource(Enum):
@@ -1049,6 +1064,68 @@ def _setup_logging(verbose: int) -> logging.Logger:
         level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
     )
     return logging.getLogger(__name__)
+
+
+def _special_agent_main_core(
+    parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
+    main_fn: Callable[[argparse.Namespace], int],
+    argv: Sequence[str],
+) -> int:
+    """Main logic special agents"""
+    args = parse_arguments(argv)
+    logging.basicConfig(
+        format="%(levelname)s %(asctime)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG),
+    )
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+    logging.getLogger("vcr").setLevel(logging.WARN)
+    logging.info("running file %s", __file__)
+    logging.info(
+        "using Python interpreter v%s at %s",
+        ".".join(map(str, sys.version_info)),
+        sys.executable,
+    )
+
+    # Don't log args here, it may contain secrets.
+    # logging.debug("args: %r", args.__dict__)
+
+    try:
+        return main_fn(args)
+    except CannotRecover as exc:
+        sys.stderr.write(f"{exc}\n")
+    except Exception:
+        if args.debug:
+            raise
+        crash_dump = create_agent_crash_dump()
+        sys.stderr.write(crash_dump)
+        sys.stderr.write(f"\n\n{traceback.format_exc()}")
+    return 1
+
+
+def special_agent_main(
+    parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
+    main_fn: Callable[[argparse.Namespace], int],
+    argv: Sequence[str] | None = None,
+    *,
+    apply_password_store_hack: bool = True,
+) -> int:
+    """
+    Because it modifies sys.argv and part of the functionality is terminating the process with
+    the correct return code it's hard to test in unit tests.
+    Therefore _active_check_main_core and _output_check_result should be used for unit tests since
+    they are not meant to modify the system environment or terminate the process.
+
+    Watch out!
+    This will crash unless `parse_arguments` implements the `--debug` and `--verbose` options.
+    """
+    argv = sys.argv[1:] if argv is None else argv
+    return _special_agent_main_core(
+        parse_arguments,
+        main_fn,
+        resolve_password_hack(argv, lookup_stored_passwords) if apply_password_store_hack else argv,
+    )
 
 
 def agent_netapp_main(args: argparse.Namespace) -> int:

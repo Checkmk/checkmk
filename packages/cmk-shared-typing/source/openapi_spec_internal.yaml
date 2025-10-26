@@ -1443,6 +1443,7 @@ x-tagGroups:
   - Configuration entities
   - Configuration entities / Notification Parameter
   - Configuration entities / Folder
+  - Configuration entities / Passwordstore Password
   - Hosts (internal)
   - Quick setup
   - Broker Connection
@@ -2224,7 +2225,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -5040,7 +5041,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -8599,101 +8600,6 @@ paths:
           automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
           n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
           \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/folder/collections/mail\""
-  /domain-types/passwordstore_password/collections/{entity_type_specifier}:
-    get:
-      tags:
-      - Configuration entities / Folder
-      description: ''
-      summary: List existing passwordstore passwords
-      operationId: cmk.gui.openapi.endpoints.configuration_entity.passwordstore_password._list_passwordstore_passwords
-      parameters:
-      - in: path
-        name: entity_type_specifier
-        description: Entity type specifier of the configuration entity
-        schema:
-          type: string
-          example: mail
-        required: true
-      responses:
-        '406':
-          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Api406DefaultError'
-        '404':
-          description: 'Not Found: The requested object has not be found.'
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Api404DefaultError'
-        '200':
-          description: 'OK: The operation was done successfully.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PasswordStorePasswordResponseCollection'
-          headers:
-            Content-Type:
-              description: A header specifying which type of content is in the request/response
-                body. This is required when sending encoded data in a POST/PUT body.
-                When the request body is empty, this header should not be sent.
-              required: true
-              schema:
-                type: string
-              example: application/json
-            X-Checkmk-Edition:
-              description: The checkmk edition.
-              required: true
-              schema:
-                type: string
-              example: cre
-            X-Checkmk-Version:
-              description: The checkmk version.
-              required: true
-              schema:
-                type: string
-              example: 2.2.0p10
-      x-codeSamples:
-      - label: requests
-        lang: python
-        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
-          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
-          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
-          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
-          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
-          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/passwordstore_password/collections/mail\"\
-          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
-          \    raise RuntimeError(pprint.pformat(resp.json()))"
-      - label: urllib
-        lang: python
-        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
-          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
-          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
-          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
-          \    f\"{API_URL}/domain-types/passwordstore_password/collections/mail\"\
-          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
-          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
-          \        \n    },\n)\n# Will raise an HTTPError if status code is >= 400\n\
-          resp = urllib.request.urlopen(request)\nif resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
-      - label: httpie
-        lang: bash
-        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
-          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
-          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
-          \ >= 3\n\nhttp GET \"$API_URL/domain-types/passwordstore_password/collections/mail\"\
-          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
-          \ application/json\" "
-      - label: curl
-        lang: bash
-        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
-          httpie\" examples instead.\n#       `curl` should not be used for writing\
-          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
-          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
-          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
-          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
-          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
-          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/passwordstore_password/collections/mail\""
   /domain-types/notification_parameter/collections/{entity_type_specifier}:
     get:
       tags:
@@ -8884,6 +8790,101 @@ paths:
           automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
           n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
           \ \"Accept: application/json\" \\\n  \n  \"$API_URL/objects/notification_parameter/b43b060b-3b8c-41cf-8405-dddc6dd02575\""
+  /domain-types/passwordstore_password/collections/{entity_type_specifier}:
+    get:
+      tags:
+      - Configuration entities / Passwordstore Password
+      description: ''
+      summary: List existing passwordstore passwords
+      operationId: cmk.gui.openapi.endpoints.configuration_entity.passwordstore_password._list_passwordstore_passwords
+      parameters:
+      - in: path
+        name: entity_type_specifier
+        description: Entity type specifier of the configuration entity
+        schema:
+          type: string
+          example: mail
+        required: true
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultError'
+        '404':
+          description: 'Not Found: The requested object has not be found.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api404DefaultError'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordStorePasswordResponseCollection'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema:
+                type: string
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: cre
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\n\nresp = session.get(\n    f\"{API_URL}/domain-types/passwordstore_password/collections/mail\"\
+          ,\n)\nif resp.status_code == 200:\n    pprint.pprint(resp.json())\nelse:\n\
+          \    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/passwordstore_password/collections/mail\"\
+          ,\n    method=\"GET\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \        \n    },\n)\n# Will raise an HTTPError if status code is >= 400\n\
+          resp = urllib.request.urlopen(request)\nif resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp GET \"$API_URL/domain-types/passwordstore_password/collections/mail\"\
+          \ \\\n    \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n    \"Accept:\
+          \ application/json\" "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --write-out \"\\nxxx-status_code=%{http_code}\\\
+          n\" \\\n  --header \"Authorization: Bearer $USERNAME $PASSWORD\" \\\n  --header\
+          \ \"Accept: application/json\" \\\n  \n  \"$API_URL/domain-types/passwordstore_password/collections/mail\""
   /domain-types/contact_group_config/collections/all:
     get:
       tags:
@@ -9249,7 +9250,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -9943,7 +9944,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10024,7 +10025,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10117,7 +10118,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10228,13 +10229,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10363,26 +10364,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10519,13 +10520,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10667,26 +10668,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10800,20 +10801,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -10935,20 +10936,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -11070,20 +11071,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -11179,20 +11180,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -11316,20 +11317,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -11438,20 +11439,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -11585,19 +11586,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -11655,7 +11656,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -14379,7 +14380,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -14980,7 +14981,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -15169,7 +15170,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -15264,13 +15265,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -15374,13 +15375,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -15811,7 +15812,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -17257,7 +17258,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -17773,19 +17774,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -17909,26 +17910,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18050,19 +18051,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18158,7 +18159,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -18194,45 +18195,45 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
+                $ref: '#/components/schemas/Api412DefaultError503AC946C2F53BB7'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
+                $ref: '#/components/schemas/Api428DefaultError5ADDC6B86D2885E1'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18445,13 +18446,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
@@ -18464,7 +18465,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18564,7 +18565,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -18771,7 +18772,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -18807,45 +18808,45 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
+                $ref: '#/components/schemas/Api412DefaultError503AC946C2F53BB7'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
+                $ref: '#/components/schemas/Api428DefaultError5ADDC6B86D2885E1'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -18983,13 +18984,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
@@ -19002,7 +19003,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -19250,26 +19251,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -19391,7 +19392,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -20460,7 +20461,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -20787,7 +20788,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -21555,8 +21556,8 @@ paths:
           \ A header specifying which type of content is in the request/response body.\n\
           \    },\n    # This schema has multiple variations. Please refer to\n  \
           \  # the 'Payload' section for details.\n    json={\n        \"time_range\"\
-          : {\n            \"start\": \"2025-10-24 12:14:18.902715\",\n          \
-          \  \"end\": \"2025-10-24 12:29:18.902718\",\n        },\n        \"reduce\"\
+          : {\n            \"start\": \"2026-06-16 07:00:00+00:00\",\n           \
+          \ \"end\": \"2026-06-16 07:15:00+00:00\",\n        },\n        \"reduce\"\
           : \"max\",\n        \"filter\": {\n            \"siteopt\": {\n        \
           \        \"site\": \"site_name\",\n            },\n            \"host\"\
           : {\n                \"host\": \"host_name\",\n            },\n        \
@@ -21593,32 +21594,32 @@ paths:
           \ which type of content is in the request/response body.\n    },\n    #\
           \ This schema has multiple variations. Please refer to\n    # the 'Payload'\
           \ section for details.\n    data=json.dumps({\n        \"time_range\": {\n\
-          \            \"start\": \"2025-10-24 12:14:18.902715\",\n            \"\
-          end\": \"2025-10-24 12:29:18.902718\",\n        },\n        \"reduce\":\
-          \ \"max\",\n        \"filter\": {\n            \"siteopt\": {\n        \
-          \        \"site\": \"site_name\",\n            },\n            \"host\"\
-          : {\n                \"host\": \"host_name\",\n            },\n        \
-          \    \"hostregex\": {\n                \"host_regex\": \"windows.*\",\n\
-          \                \"neg_host_regex\": \"on\",\n            },\n         \
-          \   \"service\": {\n                \"service\": \"Check_MK\",\n       \
-          \     },\n            \"serviceregex\": {\n                \"service_regex\"\
-          : \".+\",\n            },\n            \"host_labels\": {\n            \
-          \    \"host_labels_count\": \"1\",\n                \"host_labels_1_vs_count\"\
-          : \"1\",\n                \"host_labels_1_bool\": \"and\",\n           \
-          \     \"host_labels_indexof_1\": \"1\",\n                \"host_labels_1_vs_1_bool\"\
-          : \"and\",\n                \"host_labels_1_vs_1_vs\": \"cmk/os_family:linux\"\
-          ,\n                \"host_labels_1_vs_indexof_1\": \"1\",\n            },\n\
-          \            \"opthostgroup\": {\n                \"opthost_group\": \"\
-          check_mk\",\n            },\n            \"optservicegroup\": {\n      \
-          \          \"optservice_group\": \"APT_Updates\",\n            },\n    \
-          \        \"host_tags\": {\n                \"host_tag_0_op\": \"is\",\n\
-          \                \"host_tag_0_grp\": \"criticality\",\n                \"\
-          host_tag_0_val\": \"test\",\n            },\n        },\n        \"aggregation\"\
-          : \"maximum\",\n        \"type\": \"single_metric\",\n        \"graph_id\"\
-          : \"cmk_cpu_time_by_phase\",\n    }).encode('utf-8'),\n)\n# Will raise an\
-          \ HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
-          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))\n\
-          elif resp.status == 201:"
+          \            \"start\": \"2026-06-16 07:00:00+00:00\",\n            \"end\"\
+          : \"2026-06-16 07:15:00+00:00\",\n        },\n        \"reduce\": \"max\"\
+          ,\n        \"filter\": {\n            \"siteopt\": {\n                \"\
+          site\": \"site_name\",\n            },\n            \"host\": {\n      \
+          \          \"host\": \"host_name\",\n            },\n            \"hostregex\"\
+          : {\n                \"host_regex\": \"windows.*\",\n                \"\
+          neg_host_regex\": \"on\",\n            },\n            \"service\": {\n\
+          \                \"service\": \"Check_MK\",\n            },\n          \
+          \  \"serviceregex\": {\n                \"service_regex\": \".+\",\n   \
+          \         },\n            \"host_labels\": {\n                \"host_labels_count\"\
+          : \"1\",\n                \"host_labels_1_vs_count\": \"1\",\n         \
+          \       \"host_labels_1_bool\": \"and\",\n                \"host_labels_indexof_1\"\
+          : \"1\",\n                \"host_labels_1_vs_1_bool\": \"and\",\n      \
+          \          \"host_labels_1_vs_1_vs\": \"cmk/os_family:linux\",\n       \
+          \         \"host_labels_1_vs_indexof_1\": \"1\",\n            },\n     \
+          \       \"opthostgroup\": {\n                \"opthost_group\": \"check_mk\"\
+          ,\n            },\n            \"optservicegroup\": {\n                \"\
+          optservice_group\": \"APT_Updates\",\n            },\n            \"host_tags\"\
+          : {\n                \"host_tag_0_op\": \"is\",\n                \"host_tag_0_grp\"\
+          : \"criticality\",\n                \"host_tag_0_val\": \"test\",\n    \
+          \        },\n        },\n        \"aggregation\": \"maximum\",\n       \
+          \ \"type\": \"single_metric\",\n        \"graph_id\": \"cmk_cpu_time_by_phase\"\
+          ,\n    }).encode('utf-8'),\n)\n# Will raise an HTTPError if status code\
+          \ is >= 400\nresp = urllib.request.urlopen(request)\nif resp.status == 200:\n\
+          \    pprint.pprint(json.loads(resp.read().decode()))\nelif resp.status ==\
+          \ 201:"
       - label: httpie
         lang: bash
         source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
@@ -21628,8 +21629,8 @@ paths:
           \ 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/metric/actions/filter/invoke\"\
           \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
           \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json'\
-          \ \\\n    time_range[start]='2025-10-24 12:14:18.902715'\\\n    time_range[end]='2025-10-24\
-          \ 12:29:18.902718'\\\n    reduce='max'\\\n    filter[siteopt][site]='site_name'\\\
+          \ \\\n    time_range[start]='2026-06-16 07:00:00+00:00'\\\n    time_range[end]='2026-06-16\
+          \ 07:15:00+00:00'\\\n    reduce='max'\\\n    filter[siteopt][site]='site_name'\\\
           \n    filter[host][host]='host_name'\\\n    filter[hostregex][host_regex]='windows.*'\\\
           \n    filter[hostregex][neg_host_regex]='on'\\\n    filter[service][service]='Check_MK'\\\
           \n    filter[serviceregex][service_regex]='.+'\\\n    filter[host_labels][host_labels_count]='1'\\\
@@ -21672,8 +21673,8 @@ paths:
           : \".+\"\n            },\n            \"siteopt\": {\n              \"site\"\
           : \"site_name\"\n            }\n          },\n          \"graph_id\": \"\
           cmk_cpu_time_by_phase\",\n          \"reduce\": \"max\",\n          \"time_range\"\
-          : {\n            \"end\": \"2025-10-24 12:29:18.902718\",\n            \"\
-          start\": \"2025-10-24 12:14:18.902715\"\n          },\n          \"type\"\
+          : {\n            \"end\": \"2026-06-16 07:15:00+00:00\",\n            \"\
+          start\": \"2026-06-16 07:00:00+00:00\"\n          },\n          \"type\"\
           : \"single_metric\"\n        }' \\\n  \"$API_URL/domain-types/metric/actions/filter/invoke\""
   /domain-types/metric_backend/actions/update/invoke:
     put:
@@ -21714,20 +21715,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -21877,8 +21878,8 @@ paths:
           \ A header specifying which type of content is in the request/response body.\n\
           \    },\n    # This schema has multiple variations. Please refer to\n  \
           \  # the 'Payload' section for details.\n    json={\n        \"time_range\"\
-          : {\n            \"start\": \"2025-10-24 12:14:18.902715\",\n          \
-          \  \"end\": \"2025-10-24 12:29:18.902718\",\n        },\n        \"reduce\"\
+          : {\n            \"start\": \"2026-06-16 07:00:00+00:00\",\n           \
+          \ \"end\": \"2026-06-16 07:15:00+00:00\",\n        },\n        \"reduce\"\
           : \"max\",\n        \"site\": \"heute\",\n        \"host_name\": \"my.cool.host\"\
           ,\n        \"service_description\": \"Check_MK\",\n        \"type\": \"\
           single_metric\",\n        \"graph_id\": \"cmk_cpu_time_by_phase\",\n   \
@@ -21897,9 +21898,9 @@ paths:
           \ which type of content is in the request/response body.\n    },\n    #\
           \ This schema has multiple variations. Please refer to\n    # the 'Payload'\
           \ section for details.\n    data=json.dumps({\n        \"time_range\": {\n\
-          \            \"start\": \"2025-10-24 12:14:18.902715\",\n            \"\
-          end\": \"2025-10-24 12:29:18.902718\",\n        },\n        \"reduce\":\
-          \ \"max\",\n        \"site\": \"heute\",\n        \"host_name\": \"my.cool.host\"\
+          \            \"start\": \"2026-06-16 07:00:00+00:00\",\n            \"end\"\
+          : \"2026-06-16 07:15:00+00:00\",\n        },\n        \"reduce\": \"max\"\
+          ,\n        \"site\": \"heute\",\n        \"host_name\": \"my.cool.host\"\
           ,\n        \"service_description\": \"Check_MK\",\n        \"type\": \"\
           single_metric\",\n        \"graph_id\": \"cmk_cpu_time_by_phase\",\n   \
           \ }).encode('utf-8'),\n)\n# Will raise an HTTPError if status code is >=\
@@ -21915,8 +21916,8 @@ paths:
           \ 'Payload' section for details.\nhttp POST \"$API_URL/domain-types/metric/actions/get/invoke\"\
           \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
           \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json'\
-          \ \\\n    time_range[start]='2025-10-24 12:14:18.902715'\\\n    time_range[end]='2025-10-24\
-          \ 12:29:18.902718'\\\n    reduce='max'\\\n    site='heute'\\\n    host_name='my.cool.host'\\\
+          \ \\\n    time_range[start]='2026-06-16 07:00:00+00:00'\\\n    time_range[end]='2026-06-16\
+          \ 07:15:00+00:00'\\\n    reduce='max'\\\n    site='heute'\\\n    host_name='my.cool.host'\\\
           \n    service_description='Check_MK'\\\n    type='single_metric'\\\n   \
           \ graph_id='cmk_cpu_time_by_phase'"
       - label: curl
@@ -21934,8 +21935,8 @@ paths:
           \ \\\n  --data '{\n          \"graph_id\": \"cmk_cpu_time_by_phase\",\n\
           \          \"host_name\": \"my.cool.host\",\n          \"reduce\": \"max\"\
           ,\n          \"service_description\": \"Check_MK\",\n          \"site\"\
-          : \"heute\",\n          \"time_range\": {\n            \"end\": \"2025-10-24\
-          \ 12:29:18.902718\",\n            \"start\": \"2025-10-24 12:14:18.902715\"\
+          : \"heute\",\n          \"time_range\": {\n            \"end\": \"2026-06-16\
+          \ 07:15:00+00:00\",\n            \"start\": \"2026-06-16 07:00:00+00:00\"\
           \n          },\n          \"type\": \"single_metric\"\n        }' \\\n \
           \ \"$API_URL/domain-types/metric/actions/get/invoke\""
   /version:
@@ -23330,7 +23331,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -23569,13 +23570,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -23673,26 +23674,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -23813,19 +23814,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -23918,7 +23919,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -23955,45 +23956,45 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
+                $ref: '#/components/schemas/Api412DefaultError503AC946C2F53BB7'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
+                $ref: '#/components/schemas/Api428DefaultError5ADDC6B86D2885E1'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -24100,7 +24101,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -24128,32 +24129,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
+                $ref: '#/components/schemas/Api412DefaultError503AC946C2F53BB7'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
+                $ref: '#/components/schemas/Api428DefaultError5ADDC6B86D2885E1'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -25143,7 +25144,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -25233,20 +25234,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -25361,13 +25362,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -25453,7 +25454,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -25489,39 +25490,39 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
+                $ref: '#/components/schemas/Api412DefaultError503AC946C2F53BB7'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
+                $ref: '#/components/schemas/Api428DefaultError5ADDC6B86D2885E1'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -25622,7 +25623,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -25649,26 +25650,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '412':
           description: 'Precondition Failed: The value of the If-Match header doesn''t
             match the object''s ETag.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api412DefaultError03721B4301D0EBDF'
+                $ref: '#/components/schemas/Api412DefaultError503AC946C2F53BB7'
         '428':
           description: 'Precondition Required: The required If-Match header is missing.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api428DefaultErrorA384FBBBDAB9624F'
+                $ref: '#/components/schemas/Api428DefaultError5ADDC6B86D2885E1'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -26186,7 +26187,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -26548,7 +26549,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -27411,7 +27412,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -28726,7 +28727,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -30130,7 +30131,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30213,13 +30214,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30311,26 +30312,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30438,19 +30439,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30553,32 +30554,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -30683,32 +30684,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -30790,32 +30791,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -30897,32 +30898,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -31360,7 +31361,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -31582,7 +31583,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -31718,26 +31719,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -31806,13 +31807,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -31868,13 +31869,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -31970,26 +31971,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -32097,19 +32098,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -32215,32 +32216,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -32348,19 +32349,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -32802,7 +32803,7 @@ paths:
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
-          get this value by displaying the object it individually. When ETag validation
+          get this value by displaying the object individually. When ETag validation
           is enabled in the REST API, update operations require that the ETag value
           you provide matches the object's current server-side ETag. The content of
           the ETag can potentially be anything and should be treated as semantically
@@ -33203,7 +33204,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33294,7 +33295,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33375,7 +33376,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33465,13 +33466,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33570,26 +33571,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33692,13 +33693,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33797,26 +33798,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -33919,13 +33920,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34024,26 +34025,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34163,26 +34164,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -34278,32 +34279,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34414,19 +34415,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -34511,32 +34512,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34647,19 +34648,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -34744,32 +34745,32 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '400':
           description: 'Bad Request: Parameter or validation failure.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api400DefaultErrorD9934132B2F5DE59'
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
         '415':
           description: 'Unsupported Media Type: The submitted content-type is not
             supported.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api415DefaultError9990C74A5609208C'
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
         '200':
           description: 'OK: The operation was done successfully.'
           content:
@@ -34880,19 +34881,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api406DefaultError77422B4E385237F0'
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
         '403':
           description: 'Forbidden: Configuration via Setup is disabled.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api403DefaultError4EA03C34EEC509A8'
+                $ref: '#/components/schemas/Api403DefaultError204133A3D11A4DB0'
         '404':
           description: 'Not Found: The requested object has not be found.'
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Api404DefaultErrorD154FDDAC6070054'
+                $ref: '#/components/schemas/Api404DefaultErrorBFBB02DDEB1EED3A'
         '204':
           description: 'No Content: Operation done successfully. No further output.'
           content: {}
@@ -35036,7 +35037,7 @@ paths:
           ,\n    headers={\n        \"Content-Type\": 'application/json',  # (required)\
           \ A header specifying which type of content is in the request/response body.\n\
           \    },\n    json={\n        \"time_range\": {\n            \"start\": \"\
-          2025-10-24 12:14:18.902715\",\n            \"end\": \"2025-10-24 12:29:18.902718\"\
+          2026-06-16 07:00:00+00:00\",\n            \"end\": \"2026-06-16 07:15:00+00:00\"\
           ,\n        },\n        \"reduce\": \"max\",\n        \"custom_graph_id\"\
           : \"my_cool_graph\",\n    },\n    allow_redirects=True,\n)\nif resp.status_code\
           \ == 200:\n    pprint.pprint(resp.json())\nelif resp.status_code == 201:\n\
@@ -35053,10 +35054,10 @@ paths:
           \        \n        \"Content-Type\": 'application/json',  # (required) A\
           \ header specifying which type of content is in the request/response body.\n\
           \    },\n    data=json.dumps({\n        \"time_range\": {\n            \"\
-          start\": \"2025-10-24 12:14:18.902715\",\n            \"end\": \"2025-10-24\
-          \ 12:29:18.902718\",\n        },\n        \"reduce\": \"max\",\n       \
-          \ \"custom_graph_id\": \"my_cool_graph\",\n    }).encode('utf-8'),\n)\n\
-          # Will raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          start\": \"2026-06-16 07:00:00+00:00\",\n            \"end\": \"2026-06-16\
+          \ 07:15:00+00:00\",\n        },\n        \"reduce\": \"max\",\n        \"\
+          custom_graph_id\": \"my_cool_graph\",\n    }).encode('utf-8'),\n)\n# Will\
+          \ raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
           if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))\n\
           elif resp.status == 201:"
       - label: httpie
@@ -35067,8 +35068,8 @@ paths:
           \ >= 3\n\nhttp POST \"$API_URL/domain-types/metric/actions/get_custom_graph/invoke\"\
           \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
           \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json'\
-          \ \\\n    time_range[start]='2025-10-24 12:14:18.902715'\\\n    time_range[end]='2025-10-24\
-          \ 12:29:18.902718'\\\n    reduce='max'\\\n    custom_graph_id='my_cool_graph'"
+          \ \\\n    time_range[start]='2026-06-16 07:00:00+00:00'\\\n    time_range[end]='2026-06-16\
+          \ 07:15:00+00:00'\\\n    reduce='max'\\\n    custom_graph_id='my_cool_graph'"
       - label: curl
         lang: bash
         source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
@@ -35081,8 +35082,8 @@ paths:
           \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
           \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  --data '{\n\
           \          \"custom_graph_id\": \"my_cool_graph\",\n          \"reduce\"\
-          : \"max\",\n          \"time_range\": {\n            \"end\": \"2025-10-24\
-          \ 12:29:18.902718\",\n            \"start\": \"2025-10-24 12:14:18.902715\"\
+          : \"max\",\n          \"time_range\": {\n            \"end\": \"2026-06-16\
+          \ 07:15:00+00:00\",\n            \"start\": \"2026-06-16 07:00:00+00:00\"\
           \n          }\n        }' \\\n  \"$API_URL/domain-types/metric/actions/get_custom_graph/invoke\""
 tags:
 - name: Business intelligence (BI)
@@ -35278,6 +35279,16 @@ tags:
     API,
 
     for more information see "Configuration entities" endpoints.'
+- name: Configuration entities / Passwordstore Password
+  x-displayName: Configuration entities / Passwordstore Password
+  description: '# mypy: disable-error-code="mutable-override"
+
+
+    These endpoints can be used to manipulate passwordstore passwords via the
+
+    configuration entity API, for more information see "Configuration entities"
+
+    endpoints.'
 - name: Host status
   x-displayName: Host status
   description: "# mypy: disable-error-code=\"type-arg\"\n\nThe host status provides\
@@ -36458,10 +36469,10 @@ components:
           description: The HTTP method to use to traverse the link (get, post, put
             or delete)
           enum:
-          - GET
-          - PUT
-          - POST
           - DELETE
+          - GET
+          - POST
+          - PUT
           example: GET
         type:
           type: string
@@ -36562,13 +36573,13 @@ components:
           - 'null'
           description: The phase
           enum:
+          - activate
+          - done
+          - finishing
           - initialized
           - queued
           - started
           - sync
-          - activate
-          - finishing
-          - done
           example: done
         state:
           type:
@@ -36576,8 +36587,8 @@ components:
           - 'null'
           description: The state
           enum:
-          - success
           - error
+          - success
           - warning
           example: success
         status_text:
@@ -37934,8 +37945,8 @@ components:
           description: Condition operator.
           enum:
           - and
-          - or
           - not
+          - or
         label:
           type: string
           description: Label name and value.
@@ -37952,8 +37963,8 @@ components:
           description: Condition operator.
           enum:
           - and
-          - or
           - not
+          - or
         label_group:
           type: array
           description: Label conditions.
@@ -39046,8 +39057,8 @@ components:
           description: How you would like to delete comments.
           enum: &id114
           - by_id
-          - query
           - params
+          - query
           example: delete_by_query
         comment_id:
           type: integer
@@ -39271,8 +39282,8 @@ components:
           type: string
           description: Type of configuration entity
           enum:
-          - notification_parameter
           - folder
+          - notification_parameter
           - passwordstore_password
           example: notification_parameter
         entity_type_specifier:
@@ -39385,8 +39396,8 @@ components:
           type: string
           description: Type of configuration entity
           enum:
-          - notification_parameter
           - folder
+          - notification_parameter
           - passwordstore_password
           example: notification_parameter
         entity_type_specifier:
@@ -39466,69 +39477,6 @@ components:
       required:
       - links
       additionalProperties: false
-    PasswordStorePasswordResponse:
-      type: object
-      properties:
-        links:
-          type: array
-          description: list of links to other resources.
-          example: null
-          items:
-            $ref: '#/components/schemas/Link'
-        domainType:
-          default: passwordstore_password
-          description: The domain type of the object.
-        id:
-          type: string
-          description: The unique identifier for this domain-object type.
-        title:
-          type: string
-          description: A human readable title of this object. Can be used for user
-            interfaces.
-        members:
-          type: object
-          description: The container for external resources, like linked foreign objects
-            or actions.
-          additionalProperties: {}
-        extensions:
-          type: object
-          description: All the attributes of the domain object.
-          additionalProperties: {}
-      required:
-      - links
-      additionalProperties: false
-    PasswordStorePasswordResponseCollection:
-      type: object
-      properties:
-        links:
-          type: array
-          description: list of links to other resources.
-          example: null
-          items:
-            $ref: '#/components/schemas/Link'
-        id:
-          type: string
-          default: all
-          description: The name of this collection.
-        domainType:
-          default: passwordstore_password
-          description: The domain type of the objects in the collection.
-        title:
-          type: string
-          description: A human readable title of this object. Can be used for user
-            interfaces.
-        value:
-          type: array
-          description: A list of password store passwords.
-          items:
-            $ref: '#/components/schemas/PasswordStorePasswordResponse'
-        extensions:
-          type: object
-          description: Additional attributes alongside the collection.
-          additionalProperties: {}
-      required:
-      - links
-      additionalProperties: false
     NotificationParamResponse:
       type: object
       properties:
@@ -39585,6 +39533,69 @@ components:
           description: A list of notification parameter objects.
           items:
             $ref: '#/components/schemas/NotificationParamResponse'
+        extensions:
+          type: object
+          description: Additional attributes alongside the collection.
+          additionalProperties: {}
+      required:
+      - links
+      additionalProperties: false
+    PasswordStorePasswordResponse:
+      type: object
+      properties:
+        links:
+          type: array
+          description: list of links to other resources.
+          example: null
+          items:
+            $ref: '#/components/schemas/Link'
+        domainType:
+          default: passwordstore_password
+          description: The domain type of the object.
+        id:
+          type: string
+          description: The unique identifier for this domain-object type.
+        title:
+          type: string
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+        members:
+          type: object
+          description: The container for external resources, like linked foreign objects
+            or actions.
+          additionalProperties: {}
+        extensions:
+          type: object
+          description: All the attributes of the domain object.
+          additionalProperties: {}
+      required:
+      - links
+      additionalProperties: false
+    PasswordStorePasswordResponseCollection:
+      type: object
+      properties:
+        links:
+          type: array
+          description: list of links to other resources.
+          example: null
+          items:
+            $ref: '#/components/schemas/Link'
+        id:
+          type: string
+          default: all
+          description: The name of this collection.
+        domainType:
+          default: passwordstore_password
+          description: The domain type of the objects in the collection.
+        title:
+          type: string
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+        value:
+          type: array
+          description: A list of password store passwords.
+          items:
+            $ref: '#/components/schemas/PasswordStorePasswordResponse'
         extensions:
           type: object
           description: Additional attributes alongside the collection.
@@ -39877,7 +39888,7 @@ components:
       required:
       - entries
       additionalProperties: false
-    Api406DefaultError77422B4E385237F0:
+    Api406DefaultErrorA94076090B8FA3C0:
       properties:
         status:
           description: The HTTP status code.
@@ -39919,7 +39930,7 @@ components:
       - status
       - title
       - detail
-      title: Api406DefaultError77422B4E385237F0
+      title: Api406DefaultErrorA94076090B8FA3C0
       type: object
     BreadcrumbItem:
       properties:
@@ -40063,10 +40074,10 @@ components:
           description: The HTTP method to use to traverse the link (get, post, put
             or delete)
           enum:
+          - DELETE
           - GET
           - POST
           - PUT
-          - DELETE
           examples:
           - GET
           title: Method
@@ -40232,11 +40243,11 @@ components:
       type: object
     ResponsiveGridBreakpoint:
       enum:
-      - XS
-      - S
-      - M
       - L
+      - M
+      - S
       - XL
+      - XS
       type: string
     ResponsiveGridBreakpointConfig:
       properties:
@@ -40430,7 +40441,7 @@ components:
       - value
       title: WidgetAvailableInventoryCollectionModel
       type: object
-    Api404DefaultErrorD154FDDAC6070054:
+    Api404DefaultErrorBFBB02DDEB1EED3A:
       properties:
         status:
           description: The HTTP status code.
@@ -40472,7 +40483,7 @@ components:
       - status
       - title
       - detail
-      title: Api404DefaultErrorD154FDDAC6070054
+      title: Api404DefaultErrorBFBB02DDEB1EED3A
       type: object
     AlertOverviewContent:
       properties:
@@ -40523,8 +40534,8 @@ components:
           description: The type of the link, e.g. 'views' for a link to another view.
           enum:
           - dashboards
-          - views
           - reports
+          - views
           title: Type
           type: string
         name:
@@ -40632,12 +40643,12 @@ components:
         presentation:
           description: The format of the combined graph.
           enum:
+          - average
           - lines
+          - max
+          - min
           - stacked
           - sum
-          - average
-          - min
-          - max
           title: Presentation
           type: string
       required:
@@ -40982,10 +40993,10 @@ components:
           description: Format of the graph title.
           items:
             enum:
-            - plain
-            - add_host_name
             - add_host_alias
+            - add_host_name
             - add_service_description
+            - plain
             type: string
           title: Title Format
           type: array
@@ -41049,9 +41060,9 @@ components:
       type: object
     HostState:
       enum:
-      - UP
       - DOWN
       - UNREACHABLE
+      - UP
       type: string
     HostStateContent:
       properties:
@@ -41230,8 +41241,8 @@ components:
           description: How to consolidate the values over the time range.
           enum:
           - average
-          - minimum
           - maximum
+          - minimum
           title: Consolidation
           type: string
       required:
@@ -41242,10 +41253,10 @@ components:
       type: object
     MonitoringState:
       enum:
-      - OK
-      - WARNING
       - CRITICAL
+      - OK
       - UNKNOWN
+      - WARNING
       type: string
     NotSupportedContent:
       properties:
@@ -41590,8 +41601,8 @@ components:
         color:
           anyOf:
           - enum:
-            - default_theme
             - default_metric
+            - default_theme
             type: string
           - $ref: '#/components/schemas/ColorHex'
           description: Color of the timeseries line.
@@ -41615,9 +41626,9 @@ components:
             hosts and their states. If 'via_context', the dataset is determined by
             the active filters and site setup.
           enum:
-          - via_context
-          - sites
           - hosts
+          - sites
+          - via_context
           title: Dataset
           type: string
         hexagon_size:
@@ -41670,8 +41681,8 @@ components:
       type: object
     TimeResolution:
       enum:
-      - hour
       - day
+      - hour
       type: string
     TimerangeModel:
       discriminator:
@@ -41914,22 +41925,22 @@ components:
       type: object
     _Predefined:
       enum:
-      - last_4_hours
-      - last_25_hours
-      - last_8_days
-      - last_35_days
-      - last_400_days
-      - today
-      - yesterday
+      - 2_weeks_ago
       - 7_days_ago
       - 8_days_ago
-      - this_week
-      - last_week
-      - 2_weeks_ago
-      - this_month
+      - last_25_hours
+      - last_35_days
+      - last_400_days
+      - last_4_hours
+      - last_8_days
       - last_month
-      - this_year
+      - last_week
       - last_year
+      - this_month
+      - this_week
+      - this_year
+      - today
+      - yesterday
       type: string
     _ShareOptions:
       discriminator:
@@ -42403,7 +42414,7 @@ components:
       - widgets
       title: EditDashboardV1
       type: object
-    Api400DefaultErrorD9934132B2F5DE59:
+    Api400DefaultErrorE40947496A3FF3F8:
       properties:
         status:
           description: The HTTP status code.
@@ -42445,9 +42456,9 @@ components:
       - status
       - title
       - detail
-      title: Api400DefaultErrorD9934132B2F5DE59
+      title: Api400DefaultErrorE40947496A3FF3F8
       type: object
-    Api415DefaultError9990C74A5609208C:
+    Api415DefaultError3A6CC372948DF091:
       properties:
         status:
           description: The HTTP status code.
@@ -42489,7 +42500,7 @@ components:
       - status
       - title
       - detail
-      title: Api415DefaultError9990C74A5609208C
+      title: Api415DefaultError3A6CC372948DF091
       type: object
     ResponsiveGridWidgetRequest:
       properties:
@@ -43235,10 +43246,10 @@ components:
           description: The option of how to select the downtimes to be targeted by
             the modification.
           enum: &id119
-          - params
-          - query
           - by_id
           - hostgroup
+          - params
+          - query
           - servicegroup
           example: params
         end_time:
@@ -43430,10 +43441,10 @@ components:
           type: string
           description: The option how to delete a downtime.
           enum: &id121
-          - params
-          - query
           - by_id
           - hostgroup
+          - params
+          - query
           - servicegroup
           example: params
         site_id:
@@ -43570,15 +43581,15 @@ components:
             weekday_start     * weekday_end     * day_of_month  This only works when
             using the Enterprise Editions. Defaults to ''fixed''.'
           enum: &id122
-          - fixed
-          - hour
           - day
-          - week
-          - second_week
-          - fourth_week
-          - weekday_start
-          - weekday_end
           - day_of_month
+          - fixed
+          - fourth_week
+          - hour
+          - second_week
+          - week
+          - weekday_end
+          - weekday_start
           example: hour
         duration:
           type: integer
@@ -43600,8 +43611,8 @@ components:
             \ for all host matching the query\n"
           enum: &id123
           - host
-          - hostgroup
           - host_by_query
+          - hostgroup
           example: host
         host_name:
           type: string
@@ -43785,8 +43796,8 @@ components:
             \ downtimes for services matching the query\n"
           enum: &id124
           - service
-          - servicegroup
           - service_by_query
+          - servicegroup
           example: service
         host_name:
           type: string
@@ -44050,13 +44061,13 @@ components:
             Edition are CBC-DES and AES-128. If selected, privacy_password needs to
             be supplied as well.
           enum:
-          - CBC-DES
-          - AES-128
           - 3DES-EDE
+          - AES-128
           - AES-192
-          - AES-256
           - AES-192-Blumenthal
+          - AES-256
           - AES-256-Blumenthal
+          - CBC-DES
         privacy_password:
           type: string
           description: Privacy pass phrase. If filled, privacy_protocol needs to be
@@ -44209,8 +44220,8 @@ components:
             \n * `nop` - Do not convert anything\n * `lower` - Convert all host names\
             \ to lowercase.\n * `upper` - Convert all host names to uppercase."
           enum:
-          - nop
           - lower
+          - nop
           - upper
         drop_domain:
           type: boolean
@@ -44330,9 +44341,9 @@ components:
           type: string
           description: Last scan result
           enum:
+          - failed
           - running
           - succeeded
-          - failed
         output:
           type: string
           description: Short human readable description of what is happening.
@@ -44366,34 +44377,34 @@ components:
           description: The IP address family of the host.
           enum: &id125
           - ip-v4-only
-          - no-ip
-          - ip-v6-only
           - ip-v4v6
+          - ip-v6-only
+          - no-ip
           example: ip-v4-only
         tag_agent:
           type: string
           description: Agent and API integrations
           enum: &id126
           - all-agents
-          - special-agents
           - cmk-agent
           - no-agent
+          - special-agents
           example: cmk-agent
         tag_snmp_ds:
           type: string
           description: The SNMP data source of the host.
           enum: &id127
-          - snmp-v2
           - no-snmp
           - snmp-v1
+          - snmp-v2
           example: snmp-v2
         tag_piggyback:
           type: string
           description: Use piggyback data for this host.
           enum: &id128
+          - auto-piggyback
           - no-piggyback
           - piggyback
-          - auto-piggyback
           example: piggyback
         alias:
           type: string
@@ -44484,9 +44495,9 @@ components:
             Valid options are:\n\n * `none` - No management board\n * `snmp` - Connect\
             \ using SNMP\n * `ipmi` - Connect using IPMI\n"
           enum: &id130
+          - ipmi
           - none
           - snmp
-          - ipmi
         management_address:
           type: string
           description: Address (IPv4, IPv6 or host name) under which the management
@@ -45071,19 +45082,19 @@ components:
           type: string
           description: The state
           enum:
-          - ok
-          - warning
           - critical
+          - ok
           - unknown
+          - warning
           example: ok
         service_level:
           type: string
           description: The service level for this event.
           enum:
-          - no_service_level
-          - silver
           - gold
+          - no_service_level
           - platinum
+          - silver
           example: gold
         host:
           type: string
@@ -45115,22 +45126,13 @@ components:
           type: string
           description: The syslog facility.
           enum:
-          - kern
-          - user
-          - mail
-          - daemon
           - auth
-          - syslog
-          - lpr
-          - news
-          - uucp
-          - cron
           - authpriv
-          - ftp
-          - ntp
-          - logaudit
-          - logalert
           - clock
+          - cron
+          - daemon
+          - ftp
+          - kern
           - local0
           - local1
           - local2
@@ -45139,28 +45141,37 @@ components:
           - local5
           - local6
           - local7
+          - logalert
+          - logaudit
           - logfile
+          - lpr
+          - mail
+          - news
+          - ntp
           - snmptrap
+          - syslog
+          - user
+          - uucp
           example: kern
         priority:
           type: string
           description: The syslog priority.
           enum:
-          - emerg
           - alert
           - crit
-          - err
-          - warning
-          - notice
-          - info
           - debug
+          - emerg
+          - err
+          - info
+          - notice
+          - warning
           example: warning
         phase:
           type: string
           description: The event phase, open or ack
           enum:
-          - open
           - ack
+          - open
           example: open
         last:
           type: string
@@ -45303,8 +45314,8 @@ components:
           type: string
           description: The way you would like to filter events.
           enum: &id131
-          - query
           - params
+          - query
           example: params
         site_id:
           type: string
@@ -45314,10 +45325,10 @@ components:
           type: string
           description: The state
           enum: &id132
-          - ok
-          - warning
           - critical
+          - ok
           - unknown
+          - warning
           example: ok
         query:
           description: An query expression of the Livestatus 'eventconsoleevents'
@@ -45338,10 +45349,10 @@ components:
           type: string
           description: The state
           enum:
-          - ok
-          - warning
           - critical
+          - ok
           - unknown
+          - warning
           example: ok
         host:
           type: string
@@ -45353,8 +45364,8 @@ components:
           type: string
           description: The event phase, open or ack
           enum:
-          - open
           - ack
+          - open
           example: open
         application:
           type: string
@@ -45405,8 +45416,8 @@ components:
           description: The way you would like to filter events.
           enum: &id133
           - by_id
-          - query
           - params
+          - query
           example: by_id
         site_id:
           type: string
@@ -45491,9 +45502,9 @@ components:
           type: string
           description: The way you would like to filter events.
           enum: &id135
-          - query
-          - params
           - all
+          - params
+          - query
           example: all
         site_id:
           type: string
@@ -45517,10 +45528,10 @@ components:
           type: string
           description: The state
           enum:
-          - ok
-          - warning
           - critical
+          - ok
           - unknown
+          - warning
           example: ok
         host:
           type: string
@@ -45619,10 +45630,10 @@ components:
           type: string
           description: The state
           enum:
-          - ok
-          - warning
           - critical
+          - ok
           - unknown
+          - warning
           example: ok
       required:
       - new_state
@@ -45833,9 +45844,9 @@ components:
             Valid options are:\n\n * `none` - No management board\n * `snmp` - Connect\
             \ using SNMP\n * `ipmi` - Connect using IPMI\n"
           enum: &id136
+          - ipmi
           - none
           - snmp
-          - ipmi
         management_snmp_community:
           description: SNMP credentials
           anyOf:
@@ -47061,7 +47072,7 @@ components:
           description: Additional information about the error.
           additionalProperties: {}
       additionalProperties: false
-    Api403DefaultError4EA03C34EEC509A8:
+    Api403DefaultError204133A3D11A4DB0:
       properties:
         status:
           description: The HTTP status code.
@@ -47103,7 +47114,7 @@ components:
       - status
       - title
       - detail
-      title: Api403DefaultError4EA03C34EEC509A8
+      title: Api403DefaultError204133A3D11A4DB0
       type: object
     AnnotatedFolder:
       type: string
@@ -47203,8 +47214,8 @@ components:
           description: The IP address family of the host.
           enum:
           - ip-v4-only
-          - ip-v6-only
           - ip-v4v6
+          - ip-v6-only
           - no-ip
           examples:
           - ip-v4-only
@@ -47213,10 +47224,10 @@ components:
         tag_agent:
           description: Agent and API integrations
           enum:
-          - cmk-agent
           - all-agents
-          - special-agents
+          - cmk-agent
           - no-agent
+          - special-agents
           examples:
           - cmk-agent
           title: Tag Agent
@@ -47225,8 +47236,8 @@ components:
           description: The SNMP data source of the host.
           enum:
           - no-snmp
-          - snmp-v2
           - snmp-v1
+          - snmp-v2
           examples:
           - snmp-v2
           title: Tag Snmp Ds
@@ -47235,8 +47246,8 @@ components:
           description: Use piggyback data for this host.
           enum:
           - auto-piggyback
-          - piggyback
           - no-piggyback
+          - piggyback
           examples:
           - piggyback
           title: Tag Piggyback
@@ -47296,9 +47307,9 @@ components:
             Valid options are:\n\n * `none` - No management board\n * `snmp` - Connect\
             \ using SNMP\n * `ipmi` - Connect using IPMI"
           enum:
+          - ipmi
           - none
           - snmp
-          - ipmi
           title: Management Protocol
           type: string
         management_snmp_community:
@@ -47503,8 +47514,8 @@ components:
           description: The IP address family of the host.
           enum:
           - ip-v4-only
-          - ip-v6-only
           - ip-v4v6
+          - ip-v6-only
           - no-ip
           examples:
           - ip-v4-only
@@ -47513,10 +47524,10 @@ components:
         tag_agent:
           description: Agent and API integrations
           enum:
-          - cmk-agent
           - all-agents
-          - special-agents
+          - cmk-agent
           - no-agent
+          - special-agents
           examples:
           - cmk-agent
           title: Tag Agent
@@ -47525,8 +47536,8 @@ components:
           description: The SNMP data source of the host.
           enum:
           - no-snmp
-          - snmp-v2
           - snmp-v1
+          - snmp-v2
           examples:
           - snmp-v2
           title: Tag Snmp Ds
@@ -47535,8 +47546,8 @@ components:
           description: Use piggyback data for this host.
           enum:
           - auto-piggyback
-          - piggyback
           - no-piggyback
+          - piggyback
           examples:
           - piggyback
           title: Tag Piggyback
@@ -47594,8 +47605,8 @@ components:
             \ by initializing a TCP connection\n * `push-agent` - the host is expected\
             \ to send the data to the monitoring server without being triggered\n"
           enum:
-          - push-agent
           - pull-agent
+          - push-agent
           title: Cmk Agent Connection
           type: string
         snmp_community:
@@ -47646,9 +47657,9 @@ components:
             options are: ''none'' - No management board, ''snmp'' - Connect using
             SNMP, ''ipmi'' - Connect using IPMI'
           enum:
+          - ipmi
           - none
           - snmp
-          - ipmi
           title: Management Protocol
           type: string
         management_address:
@@ -47852,9 +47863,9 @@ components:
           description: Type of the target attribute to filter on (resource, scope
             or data point).
           enum:
+          - data_point
           - resource
           - scope
-          - data_point
           title: Attribute Type
           type: string
         attribute_key:
@@ -47955,9 +47966,9 @@ components:
         state:
           description: Last scan result
           enum:
+          - failed
           - running
           - succeeded
-          - failed
           title: State
           type: string
         output:
@@ -48228,13 +48239,13 @@ components:
             Edition are CBC-DES and AES-128. If selected, privacy_password needs to
             be supplied as well.
           enum:
-          - CBC-DES
-          - AES-128
           - 3DES-EDE
+          - AES-128
           - AES-192
-          - AES-256
           - AES-192-Blumenthal
+          - AES-256
           - AES-256-Blumenthal
+          - CBC-DES
           title: Privacy Protocol
           type: string
         privacy_password:
@@ -48294,8 +48305,8 @@ components:
             \n * `nop` - Do not convert anything\n * `lower` - Convert all host names\
             \ to lowercase.\n * `upper` - Convert all host names to uppercase."
           enum:
-          - nop
           - lower
+          - nop
           - upper
           title: Convert Case
           type: string
@@ -48384,8 +48395,8 @@ components:
           description: The IP address family of the host.
           enum:
           - ip-v4-only
-          - ip-v6-only
           - ip-v4v6
+          - ip-v6-only
           - no-ip
           examples:
           - ip-v4-only
@@ -48394,10 +48405,10 @@ components:
         tag_agent:
           description: Agent and API integrations
           enum:
-          - cmk-agent
           - all-agents
-          - special-agents
+          - cmk-agent
           - no-agent
+          - special-agents
           examples:
           - cmk-agent
           title: Tag Agent
@@ -48406,8 +48417,8 @@ components:
           description: The SNMP data source of the host.
           enum:
           - no-snmp
-          - snmp-v2
           - snmp-v1
+          - snmp-v2
           examples:
           - snmp-v2
           title: Tag Snmp Ds
@@ -48416,8 +48427,8 @@ components:
           description: Use piggyback data for this host.
           enum:
           - auto-piggyback
-          - piggyback
           - no-piggyback
+          - piggyback
           examples:
           - piggyback
           title: Tag Piggyback
@@ -48475,8 +48486,8 @@ components:
             \ by initializing a TCP connection\n * `push-agent` - the host is expected\
             \ to send the data to the monitoring server without being triggered\n"
           enum:
-          - push-agent
           - pull-agent
+          - push-agent
           title: Cmk Agent Connection
           type: string
         snmp_community:
@@ -48527,9 +48538,9 @@ components:
             options are: ''none'' - No management board, ''snmp'' - Connect using
             SNMP, ''ipmi'' - Connect using IPMI'
           enum:
+          - ipmi
           - none
           - snmp
-          - ipmi
           title: Management Protocol
           type: string
         management_address:
@@ -48709,7 +48720,7 @@ components:
           type: array
       title: UpdateHost
       type: object
-    Api412DefaultError03721B4301D0EBDF:
+    Api412DefaultError503AC946C2F53BB7:
       properties:
         status:
           description: The HTTP status code.
@@ -48751,9 +48762,9 @@ components:
       - status
       - title
       - detail
-      title: Api412DefaultError03721B4301D0EBDF
+      title: Api412DefaultError503AC946C2F53BB7
       type: object
-    Api428DefaultErrorA384FBBBDAB9624F:
+    Api428DefaultError5ADDC6B86D2885E1:
       properties:
         status:
           description: The HTTP status code.
@@ -48795,7 +48806,7 @@ components:
       - status
       - title
       - detail
-      title: Api428DefaultErrorA384FBBBDAB9624F
+      title: Api428DefaultError5ADDC6B86D2885E1
       type: object
     RenameHost:
       type: object
@@ -49195,10 +49206,10 @@ components:
           type: string
           description: ''
           enum:
-          - active_directory_manual
-          - active_directory_automatic
-          - open_ldap
           - 389_directory_server
+          - active_directory_automatic
+          - active_directory_manual
+          - open_ldap
           example: active_directory_manual
         ldap_server:
           type: string
@@ -49235,8 +49246,8 @@ components:
           type: string
           description: ''
           enum: &id142
-          - enabled
           - disabled
+          - enabled
           example: enabled
         type:
           type: string
@@ -49386,8 +49397,8 @@ components:
             The trusted certificates authorities configured in Checkmk will be used
             to validate the certificate provided by the LDAP server.
           enum:
-          - enable_ssl
           - disable_ssl
+          - enable_ssl
           example: enable_ssl
         connect_timeout:
           description: If the connection timeout is set and its value.
@@ -49478,9 +49489,9 @@ components:
             subtree below the base DN is the best choice. It searches for matching
             objects recursively.
           enum:
-          - search_whole_subtree
-          - search_only_base_dn_entry
           - search_all_one_level_below_base_dn
+          - search_only_base_dn_entry
+          - search_whole_subtree
           example: search_whole_subtree
         search_filter:
           description: Enable and define an optional LDAP filter.
@@ -49506,8 +49517,8 @@ components:
           description: Convert imported User-IDs to lower case during synchronization
             or leave as is.
           enum:
-          - dont_convert_to_lowercase
           - convert_to_lowercase
+          - dont_convert_to_lowercase
           example: convert_to_lowercase
         umlauts_in_user_ids:
           type: string
@@ -49570,9 +49581,9 @@ components:
             Search whole subtree below the base DN is the best choice. It searches
             for matching objects in the given base recursively.
           enum:
-          - search_whole_subtree
-          - search_only_base_dn_entry
           - search_all_one_level_below_base_dn
+          - search_only_base_dn_entry
+          - search_whole_subtree
           example: ''
         search_filter:
           description: Enable and define an optional LDAP filter.
@@ -50360,9 +50371,9 @@ components:
             subtree below the base DN is the best choice. It searches for matching
             objects recursively.
           enum:
-          - search_whole_subtree
-          - search_only_base_dn_entry
           - search_all_one_level_below_base_dn
+          - search_only_base_dn_entry
+          - search_whole_subtree
           example: search_whole_subtree
         search_filter:
           default:
@@ -50395,8 +50406,8 @@ components:
           description: Convert imported User-IDs to lower case during synchronization
             or leave as is.
           enum:
-          - dont_convert_to_lowercase
           - convert_to_lowercase
+          - dont_convert_to_lowercase
           example: convert_to_lowercase
         umlauts_in_user_ids:
           type: string
@@ -50491,9 +50502,9 @@ components:
             Search whole subtree below the base DN is the best choice. It searches
             for matching objects in the given base recursively.
           enum:
-          - search_whole_subtree
-          - search_only_base_dn_entry
           - search_all_one_level_below_base_dn
+          - search_only_base_dn_entry
+          - search_whole_subtree
           example: search_whole_subtree
         search_filter:
           default:
@@ -51015,10 +51026,10 @@ components:
           type: string
           description: Select the software the LDAP directory is based on.
           enum: &id145
-          - active_directory_manual
-          - active_directory_automatic
-          - open_ldap
           - 389_directory_server
+          - active_directory_automatic
+          - active_directory_manual
+          - open_ldap
           example: active_directory_manual
         ldap_server:
           type: string
@@ -51369,8 +51380,8 @@ components:
             The trusted certificates authorities configured in Checkmk will be used
             to validate the certificate provided by the LDAP server.
           enum: &id150
-          - enable_ssl
           - disable_ssl
+          - enable_ssl
           example: enable_ssl
         connect_timeout:
           default:
@@ -51943,12 +51954,12 @@ components:
           type: string
           format: date-time
           description: The approximate time of the first sample.
-          example: '2025-10-24 12:14:18.902565'
+          example: '2026-06-16 07:00:00+00:00'
         end:
           type: string
           format: date-time
           description: The approximate time of the last sample.
-          example: '2025-10-24 12:29:18.902584'
+          example: '2026-06-16 07:15:00+00:00'
       required:
       - end
       - start
@@ -51959,8 +51970,8 @@ components:
         time_range:
           description: The time range from which to source the metrics.
           example: &id162
-            start: '2025-10-24 12:14:18.902715'
-            end: '2025-10-24 12:29:18.902718'
+            start: '2026-06-16 07:00:00+00:00'
+            end: '2026-06-16 07:15:00+00:00'
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -51969,9 +51980,9 @@ components:
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
           enum: &id163
-          - min
-          - max
           - average
+          - max
+          - min
           example: max
         filter:
           type: object
@@ -52015,11 +52026,11 @@ components:
           description: A result that contains multiple metrics of the same type can
             be aggregated together. Aggregation is disabled by default.
           enum: &id165
+          - average
+          - maximum
+          - minimum
           - 'off'
           - sum
-          - average
-          - minimum
-          - maximum
           example: maximum
         type:
           type: string
@@ -52436,8 +52447,8 @@ components:
           type: string
           description: To enable or disable this field
           enum: &id167
-          - enabled
           - disabled
+          - enabled
           example: enabled
       additionalProperties: false
     RulePropertiesAttributes:
@@ -52476,8 +52487,8 @@ components:
           type: string
           enum:
           - cancel_previous_notifications
-          - create_notification_with_the_following_parameters
           - create_notification_with_custom_parameters
+          - create_notification_with_the_following_parameters
           example: cancel_previous_notifications
         plugin_params:
           type: object
@@ -52519,14 +52530,14 @@ components:
           items:
             type: string
             enum: &id168
+            - check_type
+            - ec_comment
+            - ec_contact
             - folder
             - host
             - service
             - sl
-            - check_type
             - state
-            - ec_contact
-            - ec_comment
         notification_bulks_based_on_custom_macros:
           type: array
           description: 'If you enter the names of host/service-custom macros here
@@ -52756,8 +52767,8 @@ components:
         operator:
           type: string
           enum:
-          - one_of
           - none_of
+          - one_of
         tag_ids:
           type: array
           example:
@@ -52877,8 +52888,8 @@ components:
         match_type:
           type: string
           enum:
-          - match_id
           - match_alias
+          - match_id
           example: match_alias
         regex_list:
           type: array
@@ -53141,27 +53152,27 @@ components:
           type: string
           description: ''
           enum:
-          - emerg
           - alert
           - crit
-          - err
-          - warning
-          - notice
-          - info
           - debug
+          - emerg
+          - err
+          - info
+          - notice
+          - warning
           example: warning
         to_priority:
           type: string
           description: ''
           enum:
-          - emerg
           - alert
           - crit
-          - err
-          - warning
-          - notice
-          - info
           - debug
+          - emerg
+          - err
+          - info
+          - notice
+          - warning
           example: warning
       additionalProperties: false
     CheckboxWithSysLogPriorityOutput:
@@ -53199,8 +53210,8 @@ components:
           type: string
           description: ''
           enum:
-          - match_only_event_console_alerts
           - do_not_match_event_console_alerts
+          - match_only_event_console_alerts
           example: match_only_event_console_events
         values:
           $ref: '#/components/schemas/EventConsoleAlertAttrsResponse'
@@ -53585,8 +53596,8 @@ components:
           type: string
           description: To enable or disable this field
           enum: &id170
-          - enabled
           - disabled
+          - enabled
           example: enabled
       required:
       - state
@@ -53787,8 +53798,8 @@ components:
             or the newest notification should get shown at the top of the notification
             mail
           enum:
-          - oldest_first
           - newest_first
+          - oldest_first
           example: oldest_first
       required:
       - state
@@ -53839,21 +53850,21 @@ components:
           type: string
           description: The plug-in name.
           enum: &id172
-          - cisco_webex_teams
-          - mkeventd
           - asciimail
-          - mail
-          - msteams
+          - cisco_webex_teams
           - ilert
           - jira_issues
+          - mail
+          - mkeventd
+          - msteams
           - opsgenie_issues
           - pagerduty
           - pushover
           - servicenow
           - signl4
           - slack
-          - sms_api
           - sms
+          - sms_api
           - spectrum
           - victorops
           example: mail
@@ -53905,20 +53916,20 @@ components:
           items:
             type: string
             enum:
-            - omdsite
-            - hosttags
-            - address
             - abstime
-            - reltime
-            - longoutput
             - ack_author
             - ack_comment
+            - address
+            - context
+            - graph
+            - hosttags
+            - longoutput
+            - notesurl
             - notification_author
             - notification_comment
+            - omdsite
             - perfdata
-            - graph
-            - notesurl
-            - context
+            - reltime
       required:
       - state
       - value
@@ -53968,8 +53979,8 @@ components:
         option:
           type: string
           enum: &id171
-          - manual
           - automatic
+          - manual
           example: automatic
         schema:
           type: string
@@ -54251,8 +54262,8 @@ components:
         option:
           type: string
           enum: &id173
-          - store
           - explicit
+          - store
           example: store
         url:
           type: string
@@ -54295,10 +54306,10 @@ components:
         option:
           type: string
           enum: &id174
-          - no_proxy
           - environment
-          - url
           - global
+          - no_proxy
+          - url
           example: ''
       required:
       - option
@@ -54417,22 +54428,13 @@ components:
           type: string
           description: ''
           enum:
-          - kern
-          - user
-          - mail
-          - daemon
           - auth
-          - syslog
-          - lpr
-          - news
-          - uucp
-          - cron
           - authpriv
-          - ftp
-          - ntp
-          - logaudit
-          - logalert
           - clock
+          - cron
+          - daemon
+          - ftp
+          - kern
           - local0
           - local1
           - local2
@@ -54441,8 +54443,17 @@ components:
           - local5
           - local6
           - local7
+          - logalert
+          - logaudit
           - logfile
+          - lpr
+          - mail
+          - news
+          - ntp
           - snmptrap
+          - syslog
+          - user
+          - uucp
           example: ''
       required:
       - state
@@ -54597,10 +54608,10 @@ components:
         option:
           type: string
           enum: &id175
-          - explicit_token
-          - token_store_id
           - explicit_password
+          - explicit_token
           - password_store_id
+          - token_store_id
           example: password_store_id
         username:
           type: string
@@ -54829,9 +54840,9 @@ components:
           enum:
           - critical
           - high
-          - moderate
-          - low
           - informational
+          - low
+          - moderate
           example: moderate
       required:
       - state
@@ -54895,19 +54906,19 @@ components:
           items:
             type: string
             enum:
-            - omd_site
-            - hosttags
-            - address
             - abstime
-            - reltime
-            - longoutput
             - ack_author
             - ack_comment
+            - address
+            - context
+            - hosttags
+            - longoutput
+            - notesurl
             - notification_author
             - notification_comment
+            - omd_site
             - perfdata
-            - notesurl
-            - context
+            - reltime
       required:
       - state
       additionalProperties: false
@@ -55096,10 +55107,10 @@ components:
           type: string
           description: The pushover priority level
           enum:
-          - lowest
-          - low
-          - normal
           - high
+          - low
+          - lowest
+          - normal
           example: normal
       required:
       - level
@@ -55193,7 +55204,6 @@ components:
           description: See https://pushover.net/api#sounds for more information and
             trying out available sounds.
           enum:
-          - none
           - alien
           - bike
           - bugle
@@ -55201,6 +55211,7 @@ components:
           - classical
           - climb
           - cosmic
+          - disabled
           - echo
           - falling
           - gamelan
@@ -55208,6 +55219,7 @@ components:
           - intermission
           - magic
           - mechanical
+          - none
           - persistent
           - pianobar
           - pushover
@@ -55216,7 +55228,6 @@ components:
           - tugboat
           - updown
           - vibrate
-          - disabled
           example: none
       required:
       - state
@@ -55288,8 +55299,8 @@ components:
           type: string
           description: ''
           enum:
-          - use_site_id
           - deactivated
+          - use_site_id
           example: use_site_id
       required:
       - state
@@ -55318,10 +55329,10 @@ components:
         value:
           type: string
           enum:
+          - critical
+          - high
           - low
           - moderate
-          - high
-          - critical
       required:
       - state
       - value
@@ -55344,12 +55355,12 @@ components:
         start_predefined:
           type: string
           enum:
-          - none
-          - new
-          - closed
-          - resolved
-          - open
           - awaiting_info
+          - closed
+          - new
+          - none
+          - open
+          - resolved
           example: new
         start_integer:
           type: integer
@@ -55422,9 +55433,9 @@ components:
         value:
           type: string
           enum:
+          - high
           - low
           - medium
-          - high
       required:
       - state
       - value
@@ -55447,13 +55458,13 @@ components:
         start_predefined:
           type: string
           enum:
-          - none
-          - new
-          - progress
-          - closed
-          - resolved
-          - hold
           - canceled
+          - closed
+          - hold
+          - new
+          - none
+          - progress
+          - resolved
           example: hold
         start_integer:
           type: integer
@@ -55462,13 +55473,13 @@ components:
         end_predefined:
           type: string
           enum:
-          - none
-          - new
-          - progress
-          - closed
-          - resolved
-          - hold
           - canceled
+          - closed
+          - hold
+          - new
+          - none
+          - progress
+          - resolved
           example: resolved
         end_integer:
           type: integer
@@ -56143,14 +56154,14 @@ components:
           items:
             type: string
             enum: &id177
+            - check_type
+            - ec_comment
+            - ec_contact
             - folder
             - host
             - service
             - sl
-            - check_type
             - state
-            - ec_contact
-            - ec_comment
         notification_bulks_based_on_custom_macros:
           type: array
           items:
@@ -56560,8 +56571,8 @@ components:
           type: string
           description: ''
           enum:
-          - is_set
           - is_not_set
+          - is_set
           example: is_set
         tag_id:
           type:
@@ -56590,8 +56601,8 @@ components:
         operator:
           type: string
           enum:
-          - one_of
           - none_of
+          - one_of
         tag_ids:
           type: array
           example:
@@ -56846,8 +56857,8 @@ components:
         match_type:
           type: string
           enum:
-          - match_id
           - match_alias
+          - match_id
           example: match_alias
         regex_list:
           type: array
@@ -57379,27 +57390,27 @@ components:
           type: string
           description: ''
           enum:
-          - emerg
           - alert
           - crit
-          - err
-          - warning
-          - notice
-          - info
           - debug
+          - emerg
+          - err
+          - info
+          - notice
+          - warning
           example: warning
         to_priority:
           type: string
           description: ''
           enum:
-          - emerg
           - alert
           - crit
-          - err
-          - warning
-          - notice
-          - info
           - debug
+          - emerg
+          - err
+          - info
+          - notice
+          - warning
           example: warning
       required:
       - from_priority
@@ -57442,22 +57453,13 @@ components:
           type: string
           description: ''
           enum:
-          - kern
-          - user
-          - mail
-          - daemon
           - auth
-          - syslog
-          - lpr
-          - news
-          - uucp
-          - cron
           - authpriv
-          - ftp
-          - ntp
-          - logaudit
-          - logalert
           - clock
+          - cron
+          - daemon
+          - ftp
+          - kern
           - local0
           - local1
           - local2
@@ -57466,8 +57468,17 @@ components:
           - local5
           - local6
           - local7
+          - logalert
+          - logaudit
           - logfile
+          - lpr
+          - mail
+          - news
+          - ntp
           - snmptrap
+          - syslog
+          - user
+          - uucp
           example: kern
       required:
       - state
@@ -57503,8 +57514,8 @@ components:
           type: string
           description: ''
           enum: &id180
-          - match_only_event_console_alerts
           - do_not_match_event_console_alerts
+          - match_only_event_console_alerts
           example: match_only_event_console_events
         values:
           $ref: '#/components/schemas/EventConsoleAlertAttrsCreate'
@@ -57939,9 +57950,9 @@ components:
           type: string
           description: Creation of gateway hosts option
           enum: &id181
-          - no_gateway_hosts
           - create_in_folder
           - create_in_host_location
+          - no_gateway_hosts
           example: no_gateway_hosts
       required:
       - option
@@ -58065,11 +58076,11 @@ components:
           type: string
           description: This field indicates the current state of the background job.
           enum:
+          - exception
+          - finished
           - initialized
           - running
-          - finished
           - stopped
-          - exception
           example: initialized
         logs:
           description: Logs related to the background job.
@@ -58756,11 +58767,11 @@ components:
         log_level:
           description: The log level to use in the relay engine.
           enum:
+          - CRITICAL
           - DEBUG
+          - ERROR
           - INFO
           - WARNING
-          - ERROR
-          - CRITICAL
           title: Log Level
           type: string
       required:
@@ -58895,8 +58906,8 @@ components:
             \ will match if none of the hosts are matched. In other words: will match\
             \ all hosts or services which are not specified.\n"
           enum:
-          - one_of
           - none_of
+          - one_of
       required:
       - match_on
       - operator
@@ -58932,8 +58943,8 @@ components:
           type: string
           description: If the matched tag should be one of the given values, or not.
           enum:
-          - one_of
           - none_of
+          - one_of
         value:
           type: array
           description: A list of values for the tag.
@@ -58970,8 +58981,8 @@ components:
             the same label group condition
           enum:
           - and
-          - or
           - not
+          - or
         label:
           type: string
           description: A label of format "{key}:{value}"
@@ -58989,8 +59000,8 @@ components:
             groups
           enum:
           - and
-          - or
           - not
+          - or
         label_group:
           type: array
           description: A list of label conditions that form a label group
@@ -60077,21 +60088,21 @@ components:
           type: string
           description: The type of the time range.
           enum: &id193
-          - pre_defined
           - custom
+          - pre_defined
           example: pre_defined
         range:
           type: string
           description: The pre-defined time range.
           enum:
+          - last_month
+          - last_week
+          - last_year
+          - this_month
+          - this_week
+          - this_year
           - today
           - yesterday
-          - this_week
-          - last_week
-          - this_month
-          - last_month
-          - this_year
-          - last_year
           example: today
       required:
       - range
@@ -60237,12 +60248,12 @@ components:
           type: string
           format: date-time
           description: The start time of the period
-          example: '2025-10-24 12:28:21.087058'
+          example: '2026-06-16 07:00:00+00:00'
         end:
           type: string
           format: date-time
           description: The end time of the period
-          example: '2025-10-24 12:29:21.087077'
+          example: '2026-06-16 07:01:00+00:00'
       required:
       - end
       - start
@@ -60286,9 +60297,9 @@ components:
             is respective to the configured warn and crit levels and the determined
             deviation value.
           enum:
+          - crit
           - ok
           - warn
-          - crit
           example: ok
         sla_agreement:
           type: string
@@ -60309,18 +60320,18 @@ components:
           type: string
           description: The configured state for which the SLA agreement is checked.
           enum:
-          - ok
-          - warn
           - crit
+          - ok
           - unknown
+          - warn
           example: ok
         condition:
           type: string
           description: The reference condition for which the observed state is compared
             to.
           enum:
-          - more_than
           - less_than
+          - more_than
           example: more_than
         observed_percentage:
           type: number
@@ -60422,8 +60433,8 @@ components:
           type: string
           description: The id of the plugin.
           enum:
-          - service_state_percentage
           - service_outage_count
+          - service_state_percentage
           example: service_state_percentage
         time_range_sla_duration:
           type: number
@@ -60471,9 +60482,9 @@ components:
           type: string
           description: The configured SLA period.
           enum:
+          - daily
           - monthly
           - weekly
-          - daily
           example: monthly
         results:
           type: array
@@ -60651,11 +60662,11 @@ components:
           type: string
           description: Current state of the service discovery run
           enum:
+          - exception
+          - finished
           - initialized
           - running
-          - finished
           - stopped
-          - exception
         logs:
           description: The logs of the service discovery run
           $ref: '#/components/schemas/ServiceDiscoveryRunLogs'
@@ -60885,12 +60896,12 @@ components:
             \ find new\n * `refresh` - Rescan\n * `only_host_labels` - Update host\
             \ labels\n * `only_service_labels` - Update service labels\n    "
           enum:
-          - new
-          - remove
           - fix_all
-          - refresh
+          - new
           - only_host_labels
           - only_service_labels
+          - refresh
+          - remove
           - tabula_rasa
           example: refresh
       required:
@@ -62244,13 +62255,13 @@ components:
           type: string
           description: The day for which the time ranges are specified
           enum:
-          - monday
-          - tuesday
-          - wednesday
-          - thursday
           - friday
+          - monday
           - saturday
           - sunday
+          - thursday
+          - tuesday
+          - wednesday
         time_ranges:
           type: array
           items:
@@ -62420,13 +62431,13 @@ components:
             option allows to specify time ranges for all days.
           enum:
           - all
-          - monday
-          - tuesday
-          - wednesday
-          - thursday
           - friday
+          - monday
           - saturday
           - sunday
+          - thursday
+          - tuesday
+          - wednesday
         time_ranges:
           type: array
           default:
@@ -62755,8 +62766,8 @@ components:
           description: This field indicates if the idle timeout uses the global configuration,
             is disabled or uses an individual duration
           enum:
-          - global
           - disable
+          - global
           - individual
         duration:
           type: integer
@@ -62800,10 +62811,10 @@ components:
         auth_type:
           type: string
           enum:
-          - password
           - automation
-          - saml2
           - ldap
+          - password
+          - saml2
           example: password
         store_automation_secret:
           type: boolean
@@ -62822,8 +62833,8 @@ components:
           type: string
           description: The theme of the interface
           enum:
-          - default
           - dark
+          - default
           - light
           example: default
         sidebar_position:
@@ -62846,16 +62857,16 @@ components:
           deprecated: true
           description: Deprecated - use `main_menu_icons` instead.
           enum:
-          - topic
           - entry
+          - topic
           example: topic
         main_menu_icons:
           type: string
           description: This option decides if colored icon should be shown foe every
             entry in the main menus or alternatively only for the headlines (the 'topics')
           enum:
-          - topic
           - entry
+          - topic
           example: topic
         show_mode:
           type: string
@@ -62874,8 +62885,8 @@ components:
           description: Whether or not to show the contextual icon in the UI for this
             user.
           enum:
-          - show_icon
           - hide_icon
+          - show_icon
           example: show_icon
       additionalProperties: false
     BaseUserAttributes:
@@ -63115,8 +63126,8 @@ components:
           description: Specify if the idle timeout should use the global configuration,
             be disabled or use an individual duration
           enum:
-          - global
           - disable
+          - global
           - individual
           example: false
         duration:
@@ -63168,8 +63179,8 @@ components:
           type: string
           description: The theme of the interface
           enum:
-          - default
           - dark
+          - default
           - light
         sidebar_position:
           type: string
@@ -63189,15 +63200,15 @@ components:
           deprecated: true
           description: Deprecated - use `main_menu_icons` instead.
           enum:
-          - topic
           - entry
+          - topic
         main_menu_icons:
           type: string
           description: This option decides if colored icon should be shown foe every
             entry in the main menus or alternatively only for the headlines (the 'topics')
           enum:
-          - topic
           - entry
+          - topic
         show_mode:
           type: string
           description: This option decides what show mode should be used for unvisited
@@ -63214,8 +63225,8 @@ components:
           description: Whether or not to show the contextual icon in the UI for this
             user.
           enum:
-          - show_icon
           - hide_icon
+          - show_icon
           example: show_icon
       additionalProperties: false
     UpdateUser:
@@ -63300,8 +63311,8 @@ components:
           type: string
           description: Configure the temperature unit used for graphs and perfometers.
           enum:
-          - default
           - celsius
+          - default
           - fahrenheit
           example: celsius
         interface_options:
@@ -63323,9 +63334,9 @@ components:
           type: string
           description: The warning to be dismissed.
           enum:
-          - notification_fallback
-          - immediate_slideout_change
           - changes-info
+          - immediate_slideout_change
+          - notification_fallback
           example: notification_fallback
       required:
       - warning
@@ -63392,8 +63403,8 @@ components:
           default: default
           description: The theme of the interface
           enum:
-          - default
           - dark
+          - default
           - light
         sidebar_position:
           type: string
@@ -63416,16 +63427,16 @@ components:
           deprecated: true
           description: Deprecated - use `main_menu_icons` instead.
           enum:
-          - topic
           - entry
+          - topic
         main_menu_icons:
           type: string
           default: topic
           description: This option decides if colored icon should be shown foe every
             entry in the main menus or alternatively only for the headlines (the 'topics')
           enum:
-          - topic
           - entry
+          - topic
         show_mode:
           type: string
           default: default
@@ -63443,8 +63454,8 @@ components:
           description: Whether or not to show the contextual icon in the UI for this
             user.
           enum:
-          - show_icon
           - hide_icon
+          - show_icon
           example: show_icon
       additionalProperties: false
     CreateUser:
@@ -63539,8 +63550,8 @@ components:
           description: Configure the temperature unit used for graphs and perfometers.
             Omitting this field will configure the default temperature unit.
           enum:
-          - default
           - celsius
+          - default
           - fahrenheit
           example: celsius
         interface_options:
@@ -63683,12 +63694,12 @@ components:
         dynamic_params_callback_name:
           description: Name of the callback for dynamic parameters.
           enum:
-          - nop
-          - tag_group_options_autocompleter
+          - check_types_autocompleter
           - host_and_service_hinted_autocompleter
           - host_hinted_autocompleter
           - label_autocompleter
-          - check_types_autocompleter
+          - nop
+          - tag_group_options_autocompleter
           title: Dynamic Params Callback Name
           type: string
       required:
@@ -64926,8 +64937,8 @@ components:
         mode:
           description: Whether the OTel collector is enabled or disabled
           enum:
-          - enabled
           - disabled
+          - enabled
           examples:
           - enabled
           title: Mode

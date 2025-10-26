@@ -12,6 +12,8 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Literal
 
+import yaml
+
 from cmk.ccc import store
 from cmk.ccc.version import Edition
 from cmk.gui import main_modules
@@ -31,18 +33,47 @@ def build_spec(
     spec = _make_spec(version)
     populate_spec(version, spec, doc_target, set(), "checkmk")
 
+    spec_dict = spec.to_dict()
+    _sort_enums(spec_dict)
+
     if format == "yaml":
-        Path(output_file).write_text(spec.to_yaml())
+        Path(output_file).write_text(yaml.dump(spec_dict, sort_keys=False))
 
     elif format == "dict":
         store.save_object_to_file(
             Path(output_file),
-            spec.to_dict(),
+            spec_dict,
             pprint_value=False,
         )
 
     else:
         raise ValueError(f"`{format}` format not supported")
+
+
+def _sort_enums(spec: dict[str, object]) -> None:
+    """Sort enum values in the spec for consistency.
+
+    Marshmallow enums are not stable in order, which leads to unnecessary diffs in the generated
+    OpenAPI specs. As such, this can likely be removed once we remove marshmallow schemas."""
+    components = spec.get("components", {})
+    assert isinstance(components, dict)
+    schemas = components.get("schemas", {})
+    assert isinstance(schemas, dict)
+    for schema in schemas.values():
+        _sort_enums_in_schema(schema)
+
+
+def _sort_enums_in_schema(schema: object) -> None:
+    """Recursively sort enum values in the spec."""
+    if isinstance(schema, dict):
+        for key, value in schema.items():
+            if key == "enum" and isinstance(value, list):
+                value.sort()
+            else:
+                _sort_enums_in_schema(value)
+    elif isinstance(schema, list):
+        for item in schema:
+            _sort_enums_in_schema(item)
 
 
 def list_versions(args: argparse.Namespace) -> None:

@@ -10,6 +10,7 @@
 import json
 import time
 from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, Enum
 from typing import Any, NamedTuple
@@ -46,6 +47,12 @@ class AzureMetric(NamedTuple):
     unit: str
     # here we don't care about dimension filters because
     # this is intended to be used for parsing from the agent
+
+
+@dataclass(frozen=True, kw_only=True)
+class AzureResourceMetric:
+    cmk_metric_alias: str
+    metric: AzureMetric
 
 
 class Resource(NamedTuple):
@@ -159,13 +166,13 @@ def _get_metrics_number(row: Sequence[str]) -> int:
         return 0
 
 
-def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, AzureMetric]]:
+def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[AzureResourceMetric]:
     for metric_line in metrics_data:
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
-        yield (
-            metric_dict["cmk_metric_alias"],
-            AzureMetric(
+        yield AzureResourceMetric(
+            cmk_metric_alias=metric_dict["cmk_metric_alias"],
+            metric=AzureMetric(
                 metric_dict["name"],
                 metric_dict["aggregation"],
                 metric_dict["value"],
@@ -194,6 +201,14 @@ def _get_resource(
     )
 
 
+def get_metrics(resource_data: Sequence[Sequence[str]]) -> Iterable[AzureResourceMetric]:
+    metrics_num = _get_metrics_number(resource_data[1])
+    if metrics_num == 0:
+        return None
+
+    yield from _get_metrics(resource_data[2 : 2 + metrics_num])
+
+
 def _parse_resource(resource_data: Sequence[Sequence[str]]) -> Resource | None:
     """read resource json and parse metric lines
 
@@ -211,12 +226,10 @@ def _parse_resource(resource_data: Sequence[Sequence[str]]) -> Resource | None:
     if len(resource_data) < 3:
         return _get_resource(resource)
 
-    metrics_num = _get_metrics_number(resource_data[1])
-    if metrics_num == 0:
+    if not (metrics := list(get_metrics(resource_data))):
         return _get_resource(resource)
 
-    metrics = dict(_get_metrics(resource_data[2 : 2 + metrics_num]))
-    return _get_resource(resource, metrics=metrics)
+    return _get_resource(resource, metrics={m.cmk_metric_alias: m.metric for m in metrics})
 
 
 def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:

@@ -35,6 +35,7 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     _parse_resource,
     _threshold_hit_for_time,
     AzureMetric,
+    AzureResourceMetric,
     check_connections,
     check_cpu,
     check_memory,
@@ -45,6 +46,7 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
     create_inventory_function,
+    get_metrics,
     iter_resource_attributes,
     MetricData,
     parse_resources,
@@ -154,11 +156,63 @@ def test__get_metrics() -> None:
         ]
     ]
     assert list(_get_metrics(metrics_data)) == [
-        (
-            "average_cpu_percent",
-            AzureMetric(name="cpu_percent", aggregation="average", value=0.0, unit="percent"),
+        AzureResourceMetric(
+            cmk_metric_alias="average_cpu_percent",
+            metric=AzureMetric(
+                name="cpu_percent", aggregation="average", value=0.0, unit="percent"
+            ),
         )
     ]
+
+
+@pytest.mark.parametrize(
+    "resource_data, expected_result",
+    [
+        pytest.param(
+            [
+                ['{"id": "test", "name": "test"}'],
+                ["metrics following", "2"],
+                [
+                    '{"name": "cpu_percent", "aggregation": "average", "value": 10.5, "unit": "percent", "cmk_metric_alias": "user_defined_alias"}'
+                ],
+                [
+                    '{"name": "memory_percent", "aggregation": "average", "value": 24.36, "unit": "percent", "cmk_metric_alias": "average_memory_percent"}'
+                ],
+            ],
+            [
+                AzureResourceMetric(
+                    cmk_metric_alias="user_defined_alias",
+                    metric=AzureMetric(
+                        name="cpu_percent", aggregation="average", value=10.5, unit="percent"
+                    ),
+                ),
+                AzureResourceMetric(
+                    cmk_metric_alias="average_memory_percent",
+                    metric=AzureMetric(
+                        name="memory_percent", aggregation="average", value=24.36, unit="percent"
+                    ),
+                ),
+            ],
+            id="resource_with_metrics",
+        ),
+        pytest.param(
+            [
+                ['{"id": "test", "name": "test"}'],
+                ["metrics following", "0"],
+                [
+                    '{"name": "cpu_percent", "aggregation": "average", "value": 0.0, "unit": "percent", "cmk_metric_alias": "average_cpu_percent"}'
+                ],
+            ],
+            [],
+            id="resource_with_zero_metrics",
+        ),
+    ],
+)
+def test_get_metrics(
+    resource_data: Sequence[Sequence[str]], expected_result: Sequence[AzureResourceMetric]
+) -> None:
+    result = get_metrics(resource_data)
+    assert list(result) == expected_result
 
 
 @pytest.mark.parametrize(

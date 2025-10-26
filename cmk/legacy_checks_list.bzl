@@ -386,7 +386,6 @@ LEGACY_CHECKS = [
     "informix_sessions",
     "informix_status",
     "informix_tabextents",
-    "__init__",
     "innovaphone_channels",
     "innovaphone_cpu",
     "innovaphone_licenses",

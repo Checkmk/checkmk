@@ -1251,6 +1251,7 @@ node_software_applications_proxmox_ve_metadata = Node(
         "object": TextField(Title("Object")),
         "provider": TextField(Title("Provider")),
         "name": TextField(Title("Name")),
+        "node": TextField(Title("Node")),
     },
 )
 

@@ -17,6 +17,7 @@ def inventory_proxmox_ve_vm(
             "object": "VM" if section.type == "qemu" else "LXC",
             "provider": "Proxmox VE",
             "name": section.name,
+            "node": section.node,
         },
     )
 

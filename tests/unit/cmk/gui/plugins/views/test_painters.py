@@ -471,6 +471,7 @@ def test_registered_painters() -> None:
         "inv_software_applications_proxmox_ve_cluster_cluster",
         "inv_software_applications_proxmox_ve_metadata",
         "inv_software_applications_proxmox_ve_metadata_name",
+        "inv_software_applications_proxmox_ve_metadata_node",
         "inv_software_applications_proxmox_ve_metadata_object",
         "inv_software_applications_proxmox_ve_metadata_provider",
         "inv_software_applications_synthetic_monitoring",

@@ -387,7 +387,7 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "gateway",
         "mac_address",
     ],
-    ("software", "applications", "proxmox_ve", "metadata"): ["object", "provider", "name"],
+    ("software", "applications", "proxmox_ve", "metadata"): ["object", "provider", "name", "node"],
     ("software", "applications", "proxmox_ve", "cluster"): ["cluster"],
     ("software", "applications", "mobileiron"): ["partition_name", "registration_state"],
     ("software", "applications", "citrix", "controller"): ["controller_version"],

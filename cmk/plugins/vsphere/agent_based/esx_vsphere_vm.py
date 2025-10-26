@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
+# my py: disable-error-code="no-any-return"
+# my py: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
 
@@ -49,14 +49,14 @@ def _parse_vm_status(vm_values: Mapping[str, Sequence[str]]) -> ESXStatus | None
     return ESXStatus(vm_values["guest.toolsVersionStatus"][0])
 
 
-def _parse_esx_vm_name(vm_values: Mapping[str, Sequence]) -> str | None:
+def _parse_esx_vm_name(vm_values: Mapping[str, Sequence[str]]) -> str | None:
     if "name" not in vm_values:
         return None
 
     return " ".join(vm_values["name"])
 
 
-def _parse_esx_systime(vm_values: Mapping[str, Sequence]) -> str | None:
+def _parse_esx_systime(vm_values: Mapping[str, Sequence[str]]) -> str | None:
     if "systime" not in vm_values:
         return None
 

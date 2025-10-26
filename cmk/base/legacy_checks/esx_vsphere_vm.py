@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 # .
 #   .--VM devices----------------------------------------------------------.
@@ -17,12 +15,20 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
+from cmk.plugins.vsphere.lib.esx_vsphere import SectionESXVm
 
 
-def parse_esx_vsphere_vm_mounted_devices(section):
+def parse_esx_vsphere_vm_mounted_devices(section: SectionESXVm) -> Mapping[str, Mapping[str, str]]:
     data = section.mounted_devices
     parsed: dict[str, dict[str, str]] = {}
     for device_data in " ".join(data).split("@@"):
@@ -38,13 +44,12 @@ def parse_esx_vsphere_vm_mounted_devices(section):
     return parsed
 
 
-def inventory_esx_vsphere_vm_mounted_devices(section):
+def inventory_esx_vsphere_vm_mounted_devices(section: SectionESXVm) -> DiscoveryResult:
     if parse_esx_vsphere_vm_mounted_devices(section):
-        return [(None, None)]
-    return []
+        yield Service()
 
 
-def check_esx_vsphere_vm_mounted_devices(item, params, section):
+def check_esx_vsphere_vm_mounted_devices(section: SectionESXVm) -> CheckResult:
     device_types = ["VirtualCdrom", "VirtualFloppy"]
     mounted_devices = []
     for device_name, attrs in parse_esx_vsphere_vm_mounted_devices(section).items():
@@ -52,13 +57,17 @@ def check_esx_vsphere_vm_mounted_devices(item, params, section):
             mounted_devices.append(device_name)
 
     if mounted_devices:
-        return 1, "HA functionality not guaranteed, Mounted devices: %s" % ", ".join(
-            mounted_devices
+        yield Result(
+            state=State.WARN,
+            summary="HA functionality not guaranteed, Mounted devices: %s"
+            % ", ".join(mounted_devices),
         )
-    return 0, "HA functionality guaranteed"
+        return
+    yield Result(state=State.OK, summary="HA functionality guaranteed")
+    return
 
 
-check_info["esx_vsphere_vm.mounted_devices"] = LegacyCheckDefinition(
+check_plugin_esx_vsphere_vm_mounted_devices = CheckPlugin(
     name="esx_vsphere_vm_mounted_devices",
     service_name="ESX Mounted Devices",
     sections=["esx_vsphere_vm"],

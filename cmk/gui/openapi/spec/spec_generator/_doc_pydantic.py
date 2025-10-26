@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 import dataclasses
+import hashlib
 import http.client
 from collections.abc import Mapping, Sequence
 from typing import cast, Literal
@@ -468,7 +469,7 @@ def _api_error_schema(
     description: str,
 ) -> type[ApiErrorDataclass]:
     # the type must have a unique name, so we need to include the description somehow
-    desc_hash = hash(description).to_bytes(length=8, signed=True).hex().upper()
+    desc_hash = hashlib.blake2b(description.encode(), digest_size=8).hexdigest().upper()
     return cast(
         type[ApiErrorDataclass],
         dataclasses.make_dataclass(

@@ -14,6 +14,11 @@ import pytest
 
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
+
+# We need an active check plugin that exists.
+# The ExecutableFinder demands a location that exits :-/
+# We're importing it here, so that this fails the linters if that is removed.
+import cmk.plugins.collection.server_side_calls.ftp
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 from cmk.base import config
@@ -28,6 +33,11 @@ from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
+
+_TEST_LOCATION = PluginLocation(
+    cmk.plugins.collection.server_side_calls.ftp.__name__,
+    "yolo",
+)
 
 
 class _MockFetcherTrigger(PlainFetcherTrigger):
@@ -140,7 +150,7 @@ class AutomationActiveCheckTestable(check_mk.AutomationActiveCheck):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN,
+                _TEST_LOCATION: MOCK_PLUGIN,
             },
             {
                 "alias": "my_host_alias",
@@ -162,7 +172,7 @@ class AutomationActiveCheckTestable(check_mk.AutomationActiveCheck):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN,
+                _TEST_LOCATION: MOCK_PLUGIN,
             },
             {
                 "alias": "my_host_alias",
@@ -183,7 +193,7 @@ class AutomationActiveCheckTestable(check_mk.AutomationActiveCheck):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                _TEST_LOCATION: ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
                     commands_function=lambda params, host_config: (

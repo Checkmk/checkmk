@@ -23,6 +23,11 @@ from pytest import MonkeyPatch
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+
+# We need an active check plugin that exists.
+# The ExecutableFinder demands a location that exits :-/
+# We're importing it here, so that this fails the linters if that is removed.
+import cmk.plugins.collection.server_side_calls.ftp
 from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.nagios._create_config import (
@@ -48,6 +53,11 @@ from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.utils.servicename import ServiceName
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
+
+_TEST_LOCATION = PluginLocation(
+    cmk.plugins.collection.server_side_calls.ftp.__name__,
+    "yolo",
+)
 
 
 def ip_address_of_never_called(
@@ -514,7 +524,7 @@ class FakeLabelConfig(ABCLabelConfig):
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
-            {PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN},
+            {_TEST_LOCATION: MOCK_PLUGIN},
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "127.0.0.1",
@@ -543,7 +553,7 @@ class FakeLabelConfig(ABCLabelConfig):
             [
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
-            {PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN},
+            {_TEST_LOCATION: MOCK_PLUGIN},
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "0.0.0.0",
@@ -573,7 +583,7 @@ class FakeLabelConfig(ABCLabelConfig):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
-            {PluginLocation("cmk.plugins", "some_name"): MOCK_PLUGIN},
+            {_TEST_LOCATION: MOCK_PLUGIN},
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "127.0.0.1",
@@ -700,7 +710,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
                 ("my_active_check2", [{"description": "My active check", "param2": "param2"}]),
             ],
             {
-                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                _TEST_LOCATION: ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
                     commands_function=lambda params, host_config: (
@@ -710,7 +720,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
                         ),
                     ),
                 ),
-                PluginLocation("cmk.plugins", "some_other_name"): ActiveCheckConfig(
+                PluginLocation(_TEST_LOCATION.module, "some_other_name"): ActiveCheckConfig(
                     name="my_active_check2",
                     parameter_parser=lambda x: x,
                     commands_function=lambda params, host_config: (
@@ -752,7 +762,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                _TEST_LOCATION: ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
                     commands_function=lambda params, host_config: (
@@ -833,7 +843,7 @@ def test_create_nagios_servicedefs_with_warnings(
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {
-                PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+                _TEST_LOCATION: ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda x: x,
                     commands_function=lambda params, host_config: (
@@ -1017,7 +1027,7 @@ def test_create_nagios_config_commands(
     _patch_plugin_loading(
         monkeypatch,
         {
-            PluginLocation("cmk.plugins", "some_name"): ActiveCheckConfig(
+            _TEST_LOCATION: ActiveCheckConfig(
                 name="my_active_check",
                 parameter_parser=lambda x: x,
                 commands_function=lambda params, host_config: (

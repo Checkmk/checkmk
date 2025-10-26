@@ -64,7 +64,8 @@ def check_azure_sites(params: Mapping[str, FixedLevelsT[float]], section: Resour
             continue
 
         yield from check_resource_metrics(
-            section,
+            section.id,
+            section.metrics,
             params,
             [
                 MetricData(

@@ -325,13 +325,14 @@ def iter_resource_attributes(
 
 
 def check_resource_metrics(
-    resource: Resource,
+    resource_id: str,
+    resource_metrics: Mapping[str, AzureMetric],
     params: Mapping[str, Any],
     metrics_data: Sequence[MetricData],
     suppress_error: bool = False,
     check_levels: Callable[..., Iterable[Result | Metric]] = check_levels_v1,
 ) -> CheckResult:
-    metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
+    metrics = [resource_metrics.get(m.azure_metric_name) for m in metrics_data]
     if not any(metrics) and not suppress_error:
         raise IgnoreResultsError("Data not present at the moment")
 
@@ -382,7 +383,7 @@ def check_resource_metrics(
             )
         elif metric_data.is_rate:
             metric_name = metric_data.metric_name
-            countername = f"{resource.id}.{metric_data.azure_metric_name}"
+            countername = f"{resource_id}.{metric_data.azure_metric_name}"
             metric_value = get_rate(
                 get_value_store(), countername, time.time(), metric.value, raise_overflow=True
             )
@@ -415,7 +416,7 @@ def create_check_metrics_function(
             raise IgnoreResultsError("Data not present at the moment")
 
         yield from check_resource_metrics(
-            resource, params, metrics_data, suppress_error, check_levels
+            resource.id, resource.metrics, params, metrics_data, suppress_error, check_levels
         )
 
     return check_metric
@@ -428,7 +429,7 @@ def create_check_metrics_function_single(
 ) -> CheckFunctionWithoutItem:
     def check_metric(params: Mapping[str, Any], section: Resource) -> CheckResult:
         yield from check_resource_metrics(
-            section, params, metrics_data, suppress_error, check_levels
+            section.id, section.metrics, params, metrics_data, suppress_error, check_levels
         )
 
     return check_metric

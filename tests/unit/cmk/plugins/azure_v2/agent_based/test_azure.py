@@ -589,7 +589,8 @@ def test_check_resource_metric_map_func() -> None:
     )
 
     check_result = check_resource_metrics(
-        PARSED_RESOURCE,
+        PARSED_RESOURCE.id,
+        PARSED_RESOURCE.metrics,
         {},
         [metric_data, metric_data_with_map_fn],
     )
@@ -621,7 +622,8 @@ def test_check_resource_metric_notice_only() -> None:
     )
 
     check_result = check_resource_metrics(
-        PARSED_RESOURCE,
+        PARSED_RESOURCE.id,
+        PARSED_RESOURCE.metrics,
         {},
         [metric_data, metric_data_with_notice_only],
     )
@@ -648,7 +650,8 @@ def test_check_resource_metric_average(get_value_store: Mock) -> None:
     )
 
     check_result = check_resource_metrics(
-        PARSED_RESOURCE,
+        PARSED_RESOURCE.id,
+        PARSED_RESOURCE.metrics,
         {
             "average": ("seconds", 60 * 5),
         },
@@ -683,7 +686,8 @@ def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:
     )
 
     check_result = check_resource_metrics(
-        PARSED_RESOURCE,
+        PARSED_RESOURCE.id,
+        PARSED_RESOURCE.metrics,
         {
             "threshold": 1.5,
             "threshold_levels": ("fixed", (30.0, 60.0)),
@@ -726,7 +730,8 @@ def test_check_resource_sustained_threshold_map_func(get_value_store: Mock) -> N
     )
 
     check_result = check_resource_metrics(
-        PARSED_RESOURCE,
+        PARSED_RESOURCE.id,
+        PARSED_RESOURCE.metrics,
         {
             "threshold": 199,
             "threshold_levels": ("fixed", (30.0, 60.0)),

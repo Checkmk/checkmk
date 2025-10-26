@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, UTC
 from typing import Any
 
 import marshmallow
@@ -66,12 +66,12 @@ class MetricIdField(String):
 class TimeRange(BaseSchema):
     start = Timestamp(
         description="The approximate time of the first sample.",
-        example=str(datetime.now() - timedelta(minutes=15)),
+        example=str(datetime(2026, 6, 16, 7, 0, 0, tzinfo=UTC)),
         required=True,
     )
     end = Timestamp(
         description="The approximate time of the last sample.",
-        example=str(datetime.now()),
+        example=str(datetime(2026, 6, 16, 7, 15, 0, tzinfo=UTC)),
         required=True,
     )
 
@@ -80,7 +80,10 @@ class BaseRequestSchema(BaseSchema):
     time_range = Nested(
         TimeRange,
         description="The time range from which to source the metrics.",
-        example={"start": str(datetime.now() - timedelta(minutes=15)), "end": str(datetime.now())},
+        example={
+            "start": str(datetime(2026, 6, 16, 7, 0, 0, tzinfo=UTC)),
+            "end": str(datetime(2026, 6, 16, 7, 15, 0, tzinfo=UTC)),
+        },
         required=True,
     )
 

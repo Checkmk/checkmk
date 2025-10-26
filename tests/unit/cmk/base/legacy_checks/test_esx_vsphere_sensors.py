@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.base.legacy_checks.esx_vsphere_sensors import (
     check_esx_vsphere_sensors,
     inventory_esx_vsphere_sensors,
@@ -59,12 +59,12 @@ from cmk.base.legacy_checks.esx_vsphere_sensors import (
                 ],
                 ["Dummy sensor", "", "", "", "", "", "green", "all is good", "the sun is shining"],
             ],
-            [(None, {})],
+            [Service()],
         ),
     ],
 )
 def test_inventory_esx_vsphere_sensors(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for esx_vsphere_sensors check."""
     parsed = parse_esx_vsphere_sensors(string_table)
@@ -73,10 +73,9 @@ def test_inventory_esx_vsphere_sensors(
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "params, string_table, expected_results",
     [
         (
-            None,
             {"rules": []},
             [
                 [
@@ -115,30 +114,32 @@ def test_inventory_esx_vsphere_sensors(
                 ["Dummy sensor", "", "", "", "", "", "green", "all is good", "the sun is shining"],
             ],
             [
-                (
-                    2,
-                    "VMware Rollup Health State: Red (Sensor is operating under critical conditions)",
+                Result(
+                    state=State.CRIT,
+                    summary="VMware Rollup Health State: Red (Sensor is operating under critical conditions)",
                 ),
-                (
-                    1,
-                    "Power Domain 1 Power Unit 0 - Redundancy lost: Yellow (Sensor is operating under conditions that are non-critical)",
+                Result(
+                    state=State.WARN,
+                    summary="Power Domain 1 Power Unit 0 - Redundancy lost: Yellow (Sensor is operating under conditions that are non-critical)",
                 ),
-                (
-                    2,
-                    "Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert: Red (Sensor is operating under critical conditions)",
+                Result(
+                    state=State.CRIT,
+                    summary="Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert: Red (Sensor is operating under critical conditions)",
                 ),
-                (
-                    0,
-                    "\nAt least one sensor reported. Sensors readings are:\nVMware Rollup Health State: Red (Sensor is operating under critical conditions)\nPower Domain 1 Power Unit 0 - Redundancy lost: Yellow (Sensor is operating under conditions that are non-critical)\nPower Supply 2 Power Supply 2 0: Power Supply AC lost - Assert: Red (Sensor is operating under critical conditions)\nDummy sensor: all is good (the sun is shining)",
+                Result(
+                    state=State.OK,
+                    notice="At least one sensor reported. Sensors readings are:\nVMware Rollup Health State: Red (Sensor is operating under critical conditions)\nPower Domain 1 Power Unit 0 - Redundancy lost: Yellow (Sensor is operating under conditions that are non-critical)\nPower Supply 2 Power Supply 2 0: Power Supply AC lost - Assert: Red (Sensor is operating under critical conditions)\nDummy sensor: all is good (the sun is shining)",
                 ),
             ],
         ),
     ],
 )
 def test_check_esx_vsphere_sensors(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_results: Sequence[Result],
 ) -> None:
     """Test check function for esx_vsphere_sensors check."""
     parsed = parse_esx_vsphere_sensors(string_table)
-    result = list(check_esx_vsphere_sensors(item, params, parsed))
+    result = list(check_esx_vsphere_sensors(params, parsed))
     assert result == expected_results

@@ -54,7 +54,7 @@ def load_all_plugins(
             # This way we can separate migration and moving.
             # For example:
             # "cmk.base.legacy_checks.oracle_locks",
-            "cmk.base.legacy_checks.esx_vsphere_vm",
+            "cmk.base.legacy_checks.esx_vsphere_sensors",
         ):
             more_discovered_plugins = discover_plugins_from_modules(
                 v2.entry_point_prefixes(),

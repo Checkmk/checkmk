@@ -16,17 +16,36 @@
 # Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert;;0;power;0;;red;Red;Sensor is operating under critical conditions
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from collections.abc import Mapping
+from typing import Any, Final
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
+type _Section = StringTable
 
 
-def inventory_esx_vsphere_sensors(info):
-    yield None, {}
+_SENSOR_STATES: Final = {
+    "green": State.OK,
+    "yellow": State.WARN,
+    "red": State.CRIT,
+    "unknown": State.UNKNOWN,
+}
 
 
-def check_esx_vsphere_sensors(_no_item, params, info):
+def inventory_esx_vsphere_sensors(section: _Section) -> DiscoveryResult:
+    yield Service()
+
+
+def check_esx_vsphere_sensors(params: Mapping[str, Any], section: _Section) -> CheckResult:
     mulitline = ["All sensors are in normal state", "Sensors operating normal are:"]
     mod_msg = " (Alert state has been modified by Check_MK rule)"
 
@@ -40,32 +59,41 @@ def check_esx_vsphere_sensors(_no_item, params, info):
         health_key,
         health_label,
         health_summary,
-    ) in info:
-        sensor_state = {"green": 0, "yellow": 1, "red": 2, "unknown": 3}.get(health_key.lower(), 2)
+    ) in section:
+        sensor_state = _SENSOR_STATES.get(health_key.lower(), State.UNKNOWN)
         txt = f"{name}: {health_label} ({health_summary})"
 
         for entry in params["rules"]:
             if name.startswith(entry.get("name", "")):
-                new_state = entry.get("states", {}).get(str(sensor_state))
+                new_state = entry.get("states", {}).get(str(int(sensor_state)))  # str or int?
                 if new_state is not None:
-                    sensor_state = new_state
+                    sensor_state = State(int(new_state))
                     txt += mod_msg
                     break
-        if sensor_state > 0 or txt.endswith(mod_msg):
-            yield sensor_state, txt
+        if sensor_state is not State.OK or txt.endswith(mod_msg):
+            yield Result(state=sensor_state, summary=txt)
             mulitline[:2] = "", "At least one sensor reported. Sensors readings are:"
         mulitline.append(txt)
 
-    yield 0, "\n".join(mulitline)
+    first, *remaining = mulitline
+    if first:
+        yield Result(state=State.OK, summary=first)
+    if remaining:
+        yield Result(state=State.OK, notice="\n".join(remaining))
 
 
-def parse_esx_vsphere_sensors(string_table: StringTable) -> StringTable:
+def parse_esx_vsphere_sensors(string_table: StringTable) -> _Section:
     return string_table
 
 
-check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
+agent_section_esx_vsphere_sensors = AgentSection(
     name="esx_vsphere_sensors",
     parse_function=parse_esx_vsphere_sensors,
+)
+
+
+check_plugin_esx_vsphere_sensors = CheckPlugin(
+    name="esx_vsphere_sensors",
     service_name="Hardware Sensors",
     discovery_function=inventory_esx_vsphere_sensors,
     check_function=check_esx_vsphere_sensors,

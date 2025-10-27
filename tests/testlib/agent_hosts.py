@@ -186,24 +186,23 @@ def piggyback_host_from_dummy_generator(
         PiggybackInfo NamedTuple containing the datasource rule ID, DCD ID, and a list of piggybacked hosts.
     """
     piggybacked_hosts = [f"{host_name}-pb-{_}" for _ in range(1, pb_host_count + 1)]
-    with dummy_agent_dump_generator(
+    with dcd_connector(
         site,
-        service_count=0,
-        payload_lines=0,
-        pb_host_count=pb_host_count,
-        pb_service_count=pb_service_count,
-        rule_folder=folder_name,
+        interval=dcd_interval,
+        no_deletion_time_after_init=60,
+        max_cache_age=60,
+        validity_period=60,
+        change_activation_timeout=change_activation_timeout,
         cleanup=cleanup,
-    ) as datasource_id:
-        with dcd_connector(
+    ) as dcd_id:
+        with dummy_agent_dump_generator(
             site,
-            interval=dcd_interval,
-            no_deletion_time_after_init=60,
-            max_cache_age=60,
-            validity_period=60,
-            change_activation_timeout=change_activation_timeout,
-            cleanup=cleanup,
-        ) as dcd_id:
+            service_count=0,
+            payload_lines=0,
+            pb_host_count=pb_host_count,
+            pb_service_count=pb_service_count,
+            rule_folder=folder_name,
+        ) as datasource_id:
             with _discover_services_of_piggybacked_hosts(
                 site=site,
                 host_name=host_name,

@@ -9,9 +9,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from collections.abc import Sequence
+from typing import Literal
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import check_levels, LevelsT
 
 check_info = {}
 
@@ -39,38 +40,23 @@ def inventory_esx_vsphere_licenses(parsed):
     return [(key, {}) for key in parsed]
 
 
-def license_check_levels(
-    total: int, in_use: int, params: bool | Sequence[int | float] | None
-) -> tuple[int, str, list[tuple[str, int, float | None, float | None, int, int]]]:
-    if params is False:
-        warn: float | None = None
-        crit: float | None = None
-    elif not params:
-        warn = total
-        crit = total
-    elif isinstance(params, Sequence) and isinstance(params[0], int):
-        warn = max(0, total - params[0])
-        crit = max(0, total - params[1])
-    elif isinstance(params, Sequence):
-        warn = total * (1 - params[0] / 100.0)
-        crit = total * (1 - params[1] / 100.0)
-    else:
-        warn = None
-        crit = None
-
-    perfdata = [("licenses", in_use, warn, crit, 0, total)]
-    infotext = "Used: %d " % in_use
-
-    status = 0
-    if warn is not None and crit is not None:
-        if in_use >= crit:
-            status = 2
-        elif in_use >= warn:
-            status = 1
-        if status:
-            infotext += f" (warn/crit at {int(warn)}/{int(crit)})"
-
-    return status, infotext, perfdata
+def _make_levels(
+    total: int, params: Literal[False] | tuple[int, int] | tuple[float, float] | None
+) -> LevelsT[float]:
+    match params:
+        case False:
+            return ("no_levels", None)
+        case None:
+            return "fixed", (total, total)
+        case int(w), int(c):
+            return "fixed", (max(0, total - w), max(0, total - c))
+        case float(w), float(c):
+            return "fixed", (
+                total * (1 - w / 100.0),
+                total * (1 - c / 100.0),
+            )
+        case _:
+            return ("no_levels", None)
 
 
 def check_esx_vsphere_licenses(item, params, parsed):
@@ -79,7 +65,14 @@ def check_esx_vsphere_licenses(item, params, parsed):
 
     yield 0, "%s Key(s)" % license_["keys"]
     yield 0, f"Total licenses: {license_['total']}"
-    yield license_check_levels(license_["total"], license_["used"], params["levels"][1])
+    # we're about to migrate this anyway, but the legacy backend _can_ handle the new classes.
+    yield from check_levels(
+        license_["used"],
+        metric_name="licenses",
+        levels_upper=_make_levels(license_["total"], params["levels"]),
+        label="Used",
+        render_func=str,
+    )
 
 
 check_info["esx_vsphere_licenses"] = LegacyCheckDefinition(

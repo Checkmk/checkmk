@@ -202,7 +202,7 @@ endif
 
 check_python_requirements:
 	@set -e; \
-	if ! bazel test $(PYTHON_REQUIREMENTS_TEST) > /dev/null; then \
+	if ! bazel test $(PYTHON_REQUIREMENTS_TEST); then \
 		if [ "${CI}" == "true" ]; then \
 			echo "A locking of python requirements is needed, but we're executed in the CI, where this should not be done."; \
 			echo "It seems you forgot to commit the new lock file. Regenerate with: make relock_venv"; \

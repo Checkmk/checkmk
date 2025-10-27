@@ -156,48 +156,56 @@ def _processed_config_value(
                 found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
                 surrogates={k: v for res in results for k, v in res.surrogates.items()},
             )
-        case tuple():
-            match params:
-                case ("cmk_postprocessed", "stored_password", value):
-                    return _replace_password(value[0], None, is_internal=is_internal)
-                case ("cmk_postprocessed", "explicit_password", value):
-                    return _replace_password(value[0], value[1], is_internal=is_internal)
-                case ("cmk_postprocessed", "no_proxy", str()):
+        case tuple(
+            (
+                "cmk_postprocessed",
+                "stored_password" | "explicit_password" as secret_type,
+                (secret_id, secret_value),
+            )
+        ):
+            return _replace_password(
+                secret_id,
+                secret_value if secret_type == "explicit_password" else None,
+                is_internal=is_internal,
+            )
+
+        case tuple(("cmk_postprocessed", str() as special_type, value)):
+            match special_type, value, is_internal:
+                case ("no_proxy", str(), bool()):
                     return ReplacementResult(
                         internal.NoProxy() if is_internal else v1.NoProxy(), {}, {}
                     )
-                case ("cmk_postprocessed", "environment_proxy", str()):
+                case ("environment_proxy", str(), bool()):
                     return ReplacementResult(
                         internal.EnvProxy() if is_internal else v1.EnvProxy(), {}, {}
                     )
-                case (
-                    "cmk_postprocessed",
-                    "stored_proxy" | "explicit_proxy" as proxy_type,
-                    str(proxy_spec),
-                ):
-                    return (
-                        _replace_alpha_url_proxies(
-                            proxy_type, proxy_spec, global_proxies_with_lookup, usage_hint
-                        )
-                        if is_internal
-                        else _replace_v1_url_proxies(
-                            proxy_type, proxy_spec, global_proxies_with_lookup, usage_hint
-                        )
+                case ("stored_proxy", str(proxy_name), True):
+                    return _replace_internal_stored_proxy(
+                        proxy_name, global_proxies_with_lookup, usage_hint
                     )
+                case ("stored_proxy", str(proxy_name), False):
+                    return _replace_v1_stored_proxy(
+                        proxy_name, global_proxies_with_lookup, usage_hint
+                    )
+                case ("explicit_proxy", str() as proxy_spec, True):
+                    return _replace_internal_explicit_proxy(proxy_spec)
+                case ("explicit_proxy", str() as proxy_spec, False):
+                    return _replace_v1_explicit_proxy(proxy_spec)
                 case _:
-                    results = [
-                        _processed_config_value(
-                            v, global_proxies_with_lookup, usage_hint, is_internal
-                        )
-                        for v in params
-                    ]
-                    return ReplacementResult(
-                        value=tuple(res.value for res in results),
-                        found_secrets={
-                            k: v for res in results for k, v in res.found_secrets.items()
-                        },
-                        surrogates={k: v for res in results for k, v in res.surrogates.items()},
+                    raise ValueError(
+                        f"Unknown special config processing type: {special_type} with value {value}"
                     )
+
+        case tuple():
+            results = [
+                _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_internal)
+                for v in params
+            ]
+            return ReplacementResult(
+                value=tuple(res.value for res in results),
+                found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
+                surrogates={k: v for res in results for k, v in res.surrogates.items()},
+            )
         case dict():
             return process_configuration_to_parameters(
                 params, global_proxies_with_lookup, usage_hint, is_internal
@@ -220,15 +228,11 @@ def _replace_password(
     )
 
 
-def _replace_v1_url_proxies(
-    proxy_type: Literal["stored_proxy", "explicit_proxy"],
+def _replace_v1_stored_proxy(
     proxy_spec: str,
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     usage_hint: str,
 ) -> ReplacementResult[v1.EnvProxy | v1.URLProxy]:
-    if proxy_type == "explicit_proxy":
-        return ReplacementResult(v1.URLProxy(url=proxy_spec), {}, {})
-
     try:
         global_proxy = global_proxies_with_lookup.global_proxies[proxy_spec]
     except KeyError:
@@ -242,15 +246,17 @@ def _replace_v1_url_proxies(
     )
 
 
-def _replace_alpha_url_proxies(
-    proxy_type: Literal["stored_proxy", "explicit_proxy"],
+def _replace_v1_explicit_proxy(
+    proxy_spec: str,
+) -> ReplacementResult[v1.EnvProxy | v1.URLProxy]:
+    return ReplacementResult(v1.URLProxy(url=proxy_spec), {}, {})
+
+
+def _replace_internal_stored_proxy(
     proxy_spec: str,
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     usage_hint: str,
 ) -> ReplacementResult[internal.EnvProxy | internal.URLProxy]:
-    if proxy_type == "explicit_proxy":
-        return ReplacementResult(internal.URLProxy(url=proxy_spec), {}, {})
-
     try:
         global_proxy = global_proxies_with_lookup.global_proxies[proxy_spec]
     except KeyError:
@@ -264,3 +270,9 @@ def _replace_alpha_url_proxies(
         {},
         {},
     )
+
+
+def _replace_internal_explicit_proxy(
+    proxy_spec: str,
+) -> ReplacementResult[internal.EnvProxy | internal.URLProxy]:
+    return ReplacementResult(internal.URLProxy(url=proxy_spec), {}, {})

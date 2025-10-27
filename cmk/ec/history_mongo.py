@@ -49,7 +49,7 @@ class MongoDBHistory(History):
     ) -> None:
         self._settings = settings
         self._config = config
-        self._logger = logger
+        self._logger = logger.getChild("mongodb")
         self._event_columns = event_columns
         self._mongodb = MongoDB()
         self._reload_configuration_mongodb()

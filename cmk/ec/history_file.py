@@ -33,7 +33,7 @@ class FileHistory(History):
     ) -> None:
         self._settings = settings
         self._config = config
-        self._logger = logger
+        self._logger = logger.getChild("file")
         self._event_columns = event_columns
         self._history_columns = history_columns
         self._lock = threading.Lock()

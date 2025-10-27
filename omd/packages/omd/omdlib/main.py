@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-# mypy: disable-error-code="possibly-undefined"
-
 """The command line tool specific implementations of the omd command and main entry point"""
 
 from __future__ import annotations
@@ -3348,6 +3346,10 @@ def _restore_backup_from_tar(
         sys.stdout.flush()
 
         prepare_restore_as_root(version_info, site, options, global_opts.verbose)
+        new_config = _process_backup_tar_and_setup_env(
+            tar, global_opts.verbose, options, sitename, site
+        )
+        postprocess_restore_as_root(version_info, site, new_config, options, global_opts.verbose)
 
     else:
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
@@ -3355,16 +3357,11 @@ def _restore_backup_from_tar(
 
         config = load_config(site, global_opts.verbose)
         orig_apache_port = config["APACHE_TCP_PORT"]
-
         prepare_restore_as_site_user(site, options, global_opts.verbose)
+        new_config = _process_backup_tar_and_setup_env(
+            tar, global_opts.verbose, options, sitename, site
+        )
 
-    new_config = _process_backup_tar_and_setup_env(
-        tar, global_opts.verbose, options, sitename, site
-    )
-
-    if is_root():
-        postprocess_restore_as_root(version_info, site, new_config, options, global_opts.verbose)
-    else:
         postprocess_restore_as_site_user(
             version_info, site, new_config, options, orig_apache_port, global_opts.verbose
         )

@@ -399,7 +399,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "epson_beamer_lamp",
         "esx_vsphere_counters_uptime",
         "esx_vsphere_counters_swap",
-        "esx_vsphere_datastores",
         "etherbox2_temp",
         "f5_bigip_apm",
         "f5_bigip_chassis_temp",

@@ -7,83 +7,73 @@
 # mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
+from datetime import datetime
 from typing import Any
 
 import pytest
+import time_machine
 
-from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.esx_vsphere_datastores import (
-    check_esx_vsphere_datastores,
-    discover_esx_vsphere_datastores,
-    parse_esx_vsphere_datastores,
-)
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.base.legacy_checks import esx_vsphere_datastores as esxds
+
+_STRING_TABLE = [
+    ["[backup_day_esx_blade_nfs_nfs32]"],
+    ["accessible", "true"],
+    ["capacity", "19923665018880"],
+    ["freeSpace", "15224133410816"],
+    ["type", "NFS"],
+    ["uncommitted", "0"],
+    ["url", "/vmfs/volumes/e430852e-b5e7cbe9"],
+    ["[storage_iso]"],
+    ["accessible", "true"],
+    ["capacity", "7869711945728"],
+    ["freeSpace", "1835223412736"],
+    ["type", "NFS"],
+    ["uncommitted", "0"],
+    ["url", "/vmfs/volumes/04cc2737-7d460e93"],
+    ["[vmware_files]"],
+    ["accessible", "true"],
+    ["capacity", "7869711945728"],
+    ["freeSpace", "1835223412736"],
+    ["type", "NFS"],
+    ["uncommitted", "0"],
+    ["url", "/vmfs/volumes/393e2076-21c41536"],
+    ["[datastore01]"],
+    ["accessible", "true"],
+    ["capacity", "4500588855296"],
+    ["freeSpace", "1684666318848"],
+    ["type", "VMFS"],
+    ["uncommitted", "0"],
+    ["url", "/vmfs/volumes/563b3611-f9333855-cfa1-00215e221152"],
+    ["[system01_20100701]"],
+    ["accessible", "true"],
+    ["capacity", "492042190848"],
+    ["freeSpace", "491020877824"],
+    ["type", "VMFS"],
+    ["uncommitted", "0"],
+    ["url", "/vmfs/volumes/56822303-d64ea045-c8cc-001a645a8f28"],
+]
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        (
-            [
-                ["[backup_day_esx_blade_nfs_nfs32]"],
-                ["accessible", "true"],
-                ["capacity", "19923665018880"],
-                ["freeSpace", "15224133410816"],
-                ["type", "NFS"],
-                ["uncommitted", "0"],
-                ["url", "/vmfs/volumes/e430852e-b5e7cbe9"],
-                ["[storage_iso]"],
-                ["accessible", "true"],
-                ["capacity", "7869711945728"],
-                ["freeSpace", "1835223412736"],
-                ["type", "NFS"],
-                ["uncommitted", "0"],
-                ["url", "/vmfs/volumes/04cc2737-7d460e93"],
-                ["[vmware_files]"],
-                ["accessible", "true"],
-                ["capacity", "7869711945728"],
-                ["freeSpace", "1835223412736"],
-                ["type", "NFS"],
-                ["uncommitted", "0"],
-                ["url", "/vmfs/volumes/393e2076-21c41536"],
-                ["[datastore01]"],
-                ["accessible", "true"],
-                ["capacity", "4500588855296"],
-                ["freeSpace", "1684666318848"],
-                ["type", "VMFS"],
-                ["uncommitted", "0"],
-                ["url", "/vmfs/volumes/563b3611-f9333855-cfa1-00215e221152"],
-                ["[system01_20100701]"],
-                ["accessible", "true"],
-                ["capacity", "492042190848"],
-                ["freeSpace", "491020877824"],
-                ["type", "VMFS"],
-                ["uncommitted", "0"],
-                ["url", "/vmfs/volumes/56822303-d64ea045-c8cc-001a645a8f28"],
-            ],
-            [
-                ("backup_day_esx_blade_nfs_nfs32", {}),
-                ("datastore01", {}),
-                ("storage_iso", {}),
-                ("system01_20100701", {}),
-                ("vmware_files", {}),
-            ],
-        ),
-    ],
-)
-def test_discover_esx_vsphere_datastores(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
-) -> None:
+def test_discover_esx_vsphere_datastores() -> None:
     """Test discovery function for esx_vsphere_datastores check."""
-    parsed = parse_esx_vsphere_datastores(string_table)
-    result = list(discover_esx_vsphere_datastores(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert list(
+        esxds.discover_esx_vsphere_datastores(esxds.parse_esx_vsphere_datastores(_STRING_TABLE))
+    ) == [
+        Service(item="backup_day_esx_blade_nfs_nfs32"),
+        Service(item="storage_iso"),
+        Service(item="vmware_files"),
+        Service(item="datastore01"),
+        Service(item="system01_20100701"),
+    ]
 
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "mocked_store, item, params, string_table, expected_results",
     [
         (
+            {"backup_day_esx_blade_nfs_nfs32.delta": (1672527540.0, 4481222.59375)},
             "backup_day_esx_blade_nfs_nfs32",
             {
                 "levels": (80.0, 90.0),
@@ -134,29 +124,34 @@ def test_discover_esx_vsphere_datastores(
                 ["url", "/vmfs/volumes/56822303-d64ea045-c8cc-001a645a8f28"],
             ],
             [
-                (
-                    0,
-                    "Used: 23.59% - 4.27 TiB of 18.1 TiB",
-                    [
-                        (
-                            "fs_used",
-                            4481822.59375,
-                            15200550.09375,
-                            17100618.85546875,
-                            0.0,
-                            19000687.6171875,
-                        ),
-                        ("fs_free", 14518865.0234375, None, None, 0.0, None),
-                        ("fs_used_percent", 23.587686319814374, 80.0, 90.0, 0.0, 100.0),
-                        ("fs_size", 19000687.6171875, None, None, 0.0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    4481822.59375,
+                    levels=(15200550.09375, 17100618.85546875),
+                    boundaries=(0.0, 19000687.6171875),
                 ),
-                (0, "Uncommitted: 0 B", [("uncommitted", 0.0)]),
-                (0, "Provisioning: 23.59%", []),
-                (0, "", [("overprovisioned", 4481822.59375)]),
+                Metric("fs_free", 14518865.0234375, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    23.587686319814374,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 23.59% - 4.27 TiB of 18.1 TiB"),
+                Metric("fs_size", 19000687.6171875, boundaries=(0.0, None)),
+                Metric("growth", 864000.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +844 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +4.55%"),
+                Metric("trend", 864000.0),
+                Result(state=State.OK, summary="Time left until disk full: 16 days 19 hours"),
+                Result(state=State.OK, summary="Uncommitted: 0 B"),
+                Metric("uncommitted", 0.0),
+                Result(state=State.OK, summary="Provisioning: 23.59%"),
+                Metric("overprovisioned", 4481822.59375),
             ],
         ),
         (
+            {"datastore01.delta": (1672527540.0, 2685053.0)},
             "datastore01",
             {
                 "levels": (80.0, 90.0),
@@ -207,36 +202,34 @@ def test_discover_esx_vsphere_datastores(
                 ["url", "/vmfs/volumes/56822303-d64ea045-c8cc-001a645a8f28"],
             ],
             [
-                (
-                    0,
-                    "Used: 62.57% - 2.56 TiB of 4.09 TiB",
-                    [
-                        (
-                            "fs_used",
-                            2685473.0,
-                            3433676.799999237,
-                            3862886.3999996185,
-                            0.0,
-                            4292096.0,
-                        ),
-                        ("fs_free", 1606623.0, None, None, 0.0, None),
-                        (
-                            "fs_used_percent",
-                            62.56786893862579,
-                            79.99999999998222,
-                            89.99999999999112,
-                            0.0,
-                            100.0,
-                        ),
-                        ("fs_size", 4292096.0, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    2685473.0,
+                    levels=(3433676.799999237, 3862886.3999996185),
+                    boundaries=(0.0, 4292096.0),
                 ),
-                (0, "Uncommitted: 0 B", [("uncommitted", 0.0)]),
-                (0, "Provisioning: 62.57%", []),
-                (0, "", [("overprovisioned", 2685473.0)]),
+                Metric("fs_free", 1606623.0, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    62.56786893862579,
+                    levels=(79.99999999998222, 89.99999999999112),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 62.57% - 2.56 TiB of 4.09 TiB"),
+                Metric("fs_size", 4292096.0, boundaries=(0.0, None)),
+                Metric("growth", 604800.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +591 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +14.09%"),
+                Metric("trend", 604800.0),
+                Result(state=State.OK, summary="Time left until disk full: 2 days 15 hours"),
+                Result(state=State.OK, summary="Uncommitted: 0 B"),
+                Metric("uncommitted", 0.0),
+                Result(state=State.OK, summary="Provisioning: 62.57%"),
+                Metric("overprovisioned", 2685473.0),
             ],
         ),
         (
+            {"storage_iso.delta": (1672527540.0, 5754336.7265625)},
             "storage_iso",
             {
                 "levels": (80.0, 90.0),
@@ -287,36 +280,34 @@ def test_discover_esx_vsphere_datastores(
                 ["url", "/vmfs/volumes/56822303-d64ea045-c8cc-001a645a8f28"],
             ],
             [
-                (
-                    0,
-                    "Used: 76.68% - 5.49 TiB of 7.16 TiB",
-                    [
-                        (
-                            "fs_used",
-                            5754936.7265625,
-                            6004113.7281246185,
-                            6754627.944140434,
-                            0.0,
-                            7505142.16015625,
-                        ),
-                        ("fs_free", 1750205.43359375, None, None, 0.0, None),
-                        (
-                            "fs_used_percent",
-                            76.67991629944937,
-                            79.99999999999491,
-                            89.99999999999746,
-                            0.0,
-                            100.0,
-                        ),
-                        ("fs_size", 7505142.16015625, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    5754936.7265625,
+                    levels=(6004113.7281246185, 6754627.944140434),
+                    boundaries=(0.0, 7505142.16015625),
                 ),
-                (0, "Uncommitted: 0 B", [("uncommitted", 0.0)]),
-                (0, "Provisioning: 76.68%", []),
-                (0, "", [("overprovisioned", 5754936.7265625)]),
+                Metric("fs_free", 1750205.43359375, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    76.67991629944937,
+                    levels=(79.99999999999491, 89.99999999999746),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 76.68% - 5.49 TiB of 7.16 TiB"),
+                Metric("fs_size", 7505142.16015625, boundaries=(0.0, None)),
+                Metric("growth", 864000.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +844 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +11.51%"),
+                Metric("trend", 864000.0),
+                Result(state=State.OK, summary="Time left until disk full: 2 days 0 hours"),
+                Result(state=State.OK, summary="Uncommitted: 0 B"),
+                Metric("uncommitted", 0.0),
+                Result(state=State.OK, summary="Provisioning: 76.68%"),
+                Metric("overprovisioned", 5754936.7265625),
             ],
         ),
         (
+            {"system01_20100701.delta": (1672527540.0, 374.0)},
             "system01_20100701",
             {
                 "levels": (80.0, 90.0),
@@ -367,29 +358,34 @@ def test_discover_esx_vsphere_datastores(
                 ["url", "/vmfs/volumes/56822303-d64ea045-c8cc-001a645a8f28"],
             ],
             [
-                (
-                    0,
-                    "Used: 0.21% - 974 MiB of 458 GiB",
-                    [
-                        ("fs_used", 974.0, 375398.39999961853, 422323.19999980927, 0.0, 469248.0),
-                        ("fs_free", 468274.0, None, None, 0.0, None),
-                        (
-                            "fs_used_percent",
-                            0.20756614839061646,
-                            79.9999999999187,
-                            89.99999999995936,
-                            0.0,
-                            100.0,
-                        ),
-                        ("fs_size", 469248.0, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    974.0,
+                    levels=(375398.39999961853, 422323.19999980927),
+                    boundaries=(0.0, 469248.0),
                 ),
-                (0, "Uncommitted: 0 B", [("uncommitted", 0.0)]),
-                (0, "Provisioning: 0.21%", []),
-                (0, "", [("overprovisioned", 974.0)]),
+                Metric("fs_free", 468274.0, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    0.20756614839061646,
+                    levels=(79.9999999999187, 89.99999999995936),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 0.21% - 974 MiB of 458 GiB"),
+                Metric("fs_size", 469248.0, boundaries=(0.0, None)),
+                Metric("growth", 864000.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +844 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +184.12%"),
+                Metric("trend", 864000.0),
+                Result(state=State.OK, summary="Time left until disk full: 13 hours 0 minutes"),
+                Result(state=State.OK, summary="Uncommitted: 0 B"),
+                Metric("uncommitted", 0.0),
+                Result(state=State.OK, summary="Provisioning: 0.21%"),
+                Metric("overprovisioned", 974.0),
             ],
         ),
         (
+            {"vmware_files.delta": (1672527540.0, 5754336.7265625)},
             "vmware_files",
             {
                 "levels": (80.0, 90.0),
@@ -440,41 +436,45 @@ def test_discover_esx_vsphere_datastores(
                 ["url", "/vmfs/volumes/56822303-d64ea045-c8cc-001a645a8f28"],
             ],
             [
-                (
-                    0,
-                    "Used: 76.68% - 5.49 TiB of 7.16 TiB",
-                    [
-                        (
-                            "fs_used",
-                            5754936.7265625,
-                            6004113.7281246185,
-                            6754627.944140434,
-                            0.0,
-                            7505142.16015625,
-                        ),
-                        ("fs_free", 1750205.43359375, None, None, 0.0, None),
-                        (
-                            "fs_used_percent",
-                            76.67991629944937,
-                            79.99999999999491,
-                            89.99999999999746,
-                            0.0,
-                            100.0,
-                        ),
-                        ("fs_size", 7505142.16015625, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    5754936.7265625,
+                    levels=(6004113.7281246185, 6754627.944140434),
+                    boundaries=(0.0, 7505142.16015625),
                 ),
-                (0, "Uncommitted: 0 B", [("uncommitted", 0.0)]),
-                (0, "Provisioning: 76.68%", []),
-                (0, "", [("overprovisioned", 5754936.7265625)]),
+                Metric("fs_free", 1750205.43359375, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    76.67991629944937,
+                    levels=(79.99999999999491, 89.99999999999746),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 76.68% - 5.49 TiB of 7.16 TiB"),
+                Metric("fs_size", 7505142.16015625, boundaries=(0.0, None)),
+                Metric("growth", 864000.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +844 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +11.51%"),
+                Metric("trend", 864000.0),
+                Result(state=State.OK, summary="Time left until disk full: 2 days 0 hours"),
+                Result(state=State.OK, summary="Uncommitted: 0 B"),
+                Metric("uncommitted", 0.0),
+                Result(state=State.OK, summary="Provisioning: 76.68%"),
+                Metric("overprovisioned", 5754936.7265625),
             ],
         ),
     ],
 )
 def test_check_esx_vsphere_datastores(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    monkeypatch: pytest.MonkeyPatch,
+    mocked_store: Mapping[str, Any],
+    item: str,
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_results: Sequence[Any],
 ) -> None:
     """Test check function for esx_vsphere_datastores check."""
-    parsed = parse_esx_vsphere_datastores(string_table)
-    result = list(check_esx_vsphere_datastores(item, params, parsed))
+    monkeypatch.setattr(esxds, "get_value_store", lambda: mocked_store)
+    parsed = esxds.parse_esx_vsphere_datastores(string_table)
+    with time_machine.travel(datetime.fromisoformat("2022-12-31 23:00:00Z")):
+        result = list(esxds.check_esx_vsphere_datastores(item, params, parsed))
     assert result == expected_results

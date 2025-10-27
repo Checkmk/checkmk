@@ -45,6 +45,7 @@ TABLE_2 = [
 13208	/omd/sites/local/var/check_mk/inventory_archive/
 666	/omd/sites/local/var/check_mk/crashes/
 1099	/omd/sites/local/var/check_mk/otel_collector/
+49475	/omd/sites/local/var/lib/clickhouse-server/
 """.split("\n")
 ]
 
@@ -158,6 +159,7 @@ SitesV2 = [
             expected_results=[
                 Result(state=State.OK, summary="Total: 247 MiB"),
                 Result(state=State.OK, summary="Agents: 41.2 MiB"),
+                Result(state=State.OK, summary="ClickHouse: 48.3 KiB"),
                 Result(state=State.OK, summary="Core: 726 KiB"),
                 Result(state=State.OK, summary="Crashes: 666 B"),
                 Result(state=State.OK, summary="History: 4.00 KiB"),
@@ -171,6 +173,7 @@ SitesV2 = [
             expected_metrics=[
                 Metric("omd_size", 258890373.0),
                 Metric("omd_agents_size", 43169326.0),
+                Metric("omd_clickhouse_size", 49475.0),
                 Metric("omd_core_size", 743561.0),
                 Metric("omd_crashes_size", 666.0),
                 Metric("omd_history_size", 4096.0),

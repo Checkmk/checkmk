@@ -91,6 +91,14 @@ metric_omd_otel_collector_size = metrics.Metric(
     color=metrics.Color.LIGHT_BLUE,
 )
 
+metric_omd_clickhouse_size = metrics.Metric(
+    name="omd_clickhouse_size",
+    title=Title("Size of ClickHouse"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.DARK_RED,
+)
+
+
 graph_omd_fileusage = graphs.Graph(
     name="omd_fileusage",
     title=Title("OMD filesystem usage"),
@@ -106,6 +114,7 @@ graph_omd_fileusage = graphs.Graph(
         "omd_inventory_size",
         "omd_crashes_size",
         "omd_otel_collector_size",
+        "omd_clickhouse_size",
     ],
     simple_lines=["omd_size"],
     optional=[
@@ -119,6 +128,6 @@ graph_omd_fileusage = graphs.Graph(
         "omd_core_size",
         "omd_inventory_size",
         "omd_crashes_size",
-        "omd_otel_collector_size",
+        "omd_clickhouse_size",
     ],
 )

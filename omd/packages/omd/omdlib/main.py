@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
 """The command line tool specific implementations of the omd command and main entry point"""
 
 from __future__ import annotations
@@ -2340,7 +2338,7 @@ def main_rm(
             "- Restart the system wide apache daemon\n"
             " [yes/NO]:"
         )
-        answer = None
+        answer: str | None = None
         while answer not in ["", "yes", "no"]:
             answer = input(confirm_text).strip().lower()
         if answer in ["", "no"]:

@@ -13,7 +13,7 @@ from typing import override
 
 import cmk.utils.paths
 from cmk.ccc import store
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.diskspace.config import DEFAULT_CONFIG as diskspace_DEFAULT_CONFIG
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -23,6 +23,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DropdownChoice,
+    DropdownChoiceEntry,
     Filesize,
     FixedValue,
     Integer,
@@ -38,6 +39,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariable,
     ConfigVariableRegistry,
+    GlobalSettingsContext,
     SerializedSettings,
     wato_fileheader,
 )
@@ -99,11 +101,9 @@ ConfigVariableSiteAutostart = ConfigVariable(
     ),
 )
 
-ConfigVariableSiteCore = ConfigVariable(
-    group=ConfigVariableGroupSiteManagement,
-    primary_domain=ConfigDomainOMD,
-    ident="site_core",
-    valuespec=lambda context: DropdownChoice(
+
+def _valuespec_site_core(context: GlobalSettingsContext) -> DropdownChoice[str]:
+    return DropdownChoice(
         title=_("Monitoring core"),
         help=_(
             "Choose the monitoring core to run for monitoring. You can also "
@@ -111,14 +111,21 @@ ConfigVariableSiteCore = ConfigVariable(
             "for instances running only a GUI for connecting to other monitoring "
             "sites."
         ),
-        choices=_monitoring_core_choices(),
-    ),
+        choices=_monitoring_core_choices(context.edition_of_local_site),
+    )
+
+
+ConfigVariableSiteCore = ConfigVariable(
+    group=ConfigVariableGroupSiteManagement,
+    primary_domain=ConfigDomainOMD,
+    ident="site_core",
+    valuespec=_valuespec_site_core,
 )
 
 
-def _monitoring_core_choices():
+def _monitoring_core_choices(edition: Edition) -> list[DropdownChoiceEntry[str]]:
     cores = []
-    if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
+    if edition is not Edition.CRE:
         cores.append(("cmc", _("Checkmk Micro Core")))
 
     cores += [

@@ -23,6 +23,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import Edition
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
@@ -303,6 +304,7 @@ config_variable_group_registry = ConfigVariableGroupRegistry()
 @dataclass(frozen=True)
 class GlobalSettingsContext:
     target_site_id: SiteId
+    edition_of_local_site: Edition
     site_neutral_log_dir: Path
     site_neutral_var_dir: Path
 

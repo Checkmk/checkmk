@@ -41,7 +41,7 @@ const dataRangeMax = defineModel<number>('dataRangeMax', { required: true })
         <CmkInput
           :model-value="dataRangeMin"
           type="number"
-          @update:model-value="(value) => (dataRangeMin = value || dataRangeMin)"
+          @update:model-value="(value) => (dataRangeMin = value ?? dataRangeMin)"
         />
       </FieldComponent>
     </TableFormRow>
@@ -52,7 +52,7 @@ const dataRangeMax = defineModel<number>('dataRangeMax', { required: true })
         <CmkInput
           :model-value="dataRangeMax"
           type="number"
-          @update:model-value="(value) => (dataRangeMax = value || dataRangeMax)"
+          @update:model-value="(value) => (dataRangeMax = value ?? dataRangeMax)"
         />
       </FieldComponent>
     </TableFormRow>

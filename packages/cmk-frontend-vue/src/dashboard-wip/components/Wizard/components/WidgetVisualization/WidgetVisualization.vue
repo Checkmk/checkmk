@@ -38,7 +38,7 @@ const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { requ
             :model-value="title"
             type="text"
             field-size="MEDIUM"
-            @update:model-value="(value) => (title = value || title)"
+            @update:model-value="(value) => (title = value ?? title)"
           />
         </div>
 
@@ -50,7 +50,7 @@ const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { requ
               type="text"
               field-size="MEDIUM"
               :external-errors="titleUrlValidationErrors"
-              @update:model-value="(value) => (titleUrl = value || titleUrl)"
+              @update:model-value="(value) => (titleUrl = value ?? titleUrl)"
             />
           </CmkIndent>
         </div>

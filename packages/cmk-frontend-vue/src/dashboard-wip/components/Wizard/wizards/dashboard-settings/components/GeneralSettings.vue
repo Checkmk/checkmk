@@ -76,7 +76,7 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
           field-size="LARGE"
           :external-errors="nameValidationErrors"
           required
-          @update:model-value="(name) => (description = name || '')"
+          @update:model-value="(name) => (description = name ?? '')"
         />
       </FieldComponent>
     </TableFormRow>

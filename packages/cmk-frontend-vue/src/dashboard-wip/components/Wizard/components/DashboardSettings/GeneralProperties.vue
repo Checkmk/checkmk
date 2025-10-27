@@ -120,7 +120,7 @@ const displaySuffixInput = computed(() => 'addFilterSuffix' in attrs)
                 type="text"
                 required
                 :external-errors="uniqueIdValidationErrors"
-                @update:model-value="(val: string | undefined) => (uniqueId = val || uniqueId)"
+                @update:model-value="(val: string | undefined) => (uniqueId = val ?? uniqueId)"
               />
             </CmkIndent>
           </div>

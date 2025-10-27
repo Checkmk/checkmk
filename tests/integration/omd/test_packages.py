@@ -198,6 +198,21 @@ def test_unixcat(site: Site) -> None:
 
 
 @pytest.mark.medium_test_chain
+@pytest.mark.parametrize(
+    "distro,expectation",
+    (
+        ("aix", "64-bit XCOFF executable or object modul"),
+        ("solaris", "ELF 64-bit LSB executable, x86-64, version 1 (Solaris), dynamically linked"),
+    ),
+)
+def test_mk_oracle_exotic_distros(distro: str, expectation: str, site: Site) -> None:
+    process = site.run(
+        ["file", f"lib/python3/cmk/plugins/oracle/agents/mk-oracle.{distro}"], check=False
+    )
+    assert expectation in process.stdout, process.stdout
+
+
+@pytest.mark.medium_test_chain
 def test_nrpe(site: Site) -> None:
     version = "3.2.1"
     process = site.run([tool := "lib/nagios/plugins/check_nrpe", "-V"], check=False)

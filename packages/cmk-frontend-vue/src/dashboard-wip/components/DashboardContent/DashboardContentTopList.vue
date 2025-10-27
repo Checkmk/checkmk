@@ -23,15 +23,14 @@ import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
 const { _t } = usei18n()
-const props = defineProps<ContentProps>()
-const content = props.content as TopListContent
+const props = defineProps<ContentProps<TopListContent>>()
 const isLoading = ref(false)
 const data = ref<ComputedTopList | undefined>(undefined)
 
 const fetchData = async () => {
   isLoading.value = true
   const response = await dashboardAPI.computeTopListData(
-    content,
+    props.content,
     props.effective_filter_context.filters
   )
   data.value = response.value
@@ -44,7 +43,7 @@ onBeforeMount(() => {
 
 const headers: Ref<(string | TranslatedString)[]> = computed(() => {
   const _headers: (string | TranslatedString)[] = [_t('Host')]
-  if (content.columns.show_service_description === true) {
+  if (props.content.columns.show_service_description === true) {
     _headers.push(_t('Service'))
   }
   if (data.value !== undefined) {

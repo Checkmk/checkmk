@@ -10,10 +10,10 @@ import type {
 } from '@/dashboard-wip/types/widget.ts'
 
 // General
-export interface ContentProps {
+export interface ContentProps<T = WidgetContent> {
   widget_id: string
   general_settings: WidgetGeneralSettings
-  content: WidgetContent
+  content: T
   effective_filter_context: EffectiveWidgetFilterContext
   dashboardName: string
 }

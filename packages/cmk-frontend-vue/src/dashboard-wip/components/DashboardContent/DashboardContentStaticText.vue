@@ -9,8 +9,7 @@ import type { StaticTextContent } from '@/dashboard-wip/types/widget.ts'
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
-const props = defineProps<ContentProps>()
-const content = props.content as StaticTextContent
+defineProps<ContentProps<StaticTextContent>>()
 </script>
 
 <template>

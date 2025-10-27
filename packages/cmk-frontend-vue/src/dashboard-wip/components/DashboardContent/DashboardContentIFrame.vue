@@ -9,28 +9,25 @@ import { type IFrameContent } from '@/dashboard-wip/types/widget.ts'
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
-const props = defineProps<ContentProps>()
-const content = props.content as IFrameContent
+defineProps<ContentProps<IFrameContent>>()
 </script>
 
 <template>
   <DashboardContentContainer :general_settings="general_settings">
-    <div class="db-content-iframe__div">
-      <iframe class="db-content-iframe__iframe" allowtransparency="true" :src="content.url" />
+    <div class="db-content-i-frame__div">
+      <iframe class="db-content-i-frame__iframe" allowtransparency="true" :src="content.url" />
     </div>
   </DashboardContentContainer>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.db-content-iframe__div {
+.db-content-i-frame__div {
   height: 100%;
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.db-content-iframe__iframe {
+.db-content-i-frame__iframe {
   height: 100%;
   width: 100%;
   border: none;

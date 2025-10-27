@@ -59,10 +59,7 @@ def license_check_levels(
         crit = None
 
     perfdata = [("licenses", in_use, warn, crit, 0, total)]
-    if in_use <= total:
-        infotext = "used %d out of %d licenses" % (in_use, total)
-    else:
-        infotext = "used %d licenses, but you have only %d" % (in_use, total)
+    infotext = "Used: %d " % in_use
 
     status = 0
     if warn is not None and crit is not None:
@@ -81,6 +78,7 @@ def check_esx_vsphere_licenses(item, params, parsed):
         return
 
     yield 0, "%s Key(s)" % license_["keys"]
+    yield 0, f"Total licenses: {license_['total']}"
     yield license_check_levels(license_["total"], license_["used"], params["levels"][1])
 
 

@@ -47,17 +47,21 @@ def tls_connect(host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion
 
     assert openssl_call.returncode == 1
 
-    (
-        _some_number,
-        _error,
-        _some_hex_value,
-        literal_ssl_routines,
-        error_0,
-        error_1,
-        _origin,
-        _some_other_number,
-        msg,
-    ) = openssl_call.stderr.splitlines()[-1].split(":")
+    try:
+        (
+            _some_number,
+            _error,
+            _some_hex_value,
+            literal_ssl_routines,
+            error_0,
+            error_1,
+            _origin,
+            _some_other_number,
+            msg,
+        ) = openssl_call.stderr.splitlines()[-1].split(":")
+    except ValueError as e:
+        raise ValueError(f"Cannot understand error message {openssl_call.stderr}") from e
+
     assert literal_ssl_routines == "SSL routines"
 
     if error_1 in ("unexpected eof while reading", "no protocols available"):

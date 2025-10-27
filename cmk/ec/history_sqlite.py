@@ -188,7 +188,7 @@ class SQLiteHistory(History):
     ):
         self._settings = settings
         self._config = config
-        self._logger = logger
+        self._logger = logger.getChild("sqlite")
         self._event_columns = event_columns
         self._history_columns = history_columns
         self._last_housekeeping = 0.0
@@ -198,7 +198,7 @@ class SQLiteHistory(History):
             self._settings.database.parent.mkdir(parents=True, exist_ok=True)
             self._settings.database.touch(exist_ok=True)
 
-        self._sqlite_temp_file_dir = _unix_temp_file_dir(logger)
+        self._sqlite_temp_file_dir = _unix_temp_file_dir(self._logger)
 
         configure_sqlite_types()
 

@@ -35,7 +35,7 @@ case "$1" in
     ;;
 
     purge)
-      ALTERNATIVES=`update-alternatives --list omd 2>/dev/null | egrep -v 'No alternatives'` || /bin/true
+      ALTERNATIVES=`update-alternatives --list omd 2>/dev/null | grep -E -v 'No alternatives'` || /bin/true
       if [ -z "$ALTERNATIVES" ]; then
 	  echo "Removing system group 'omd'"
 	  groupdel omd || true

@@ -56,7 +56,7 @@ fi
 section_mem()
 {
     echo '<<<mem>>>'
-    egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
+    grep -E -v '^Swap:|^Mem:|total:' < /proc/meminfo
 }
 
 section_cpu()

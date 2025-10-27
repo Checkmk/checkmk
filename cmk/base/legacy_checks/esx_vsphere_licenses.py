@@ -77,15 +77,11 @@ def license_check_levels(
 
 
 def check_esx_vsphere_licenses(item, params, parsed):
-    license_ = parsed.get(item)
-    if not license_:
-        return 3, "License not found in agent output"
+    if not (license_ := parsed.get(item)):
+        return
 
-    status, infotext, perfdata = license_check_levels(
-        license_["total"], license_["used"], params["levels"][1]
-    )
-    infotext = "%s Key(s), " % license_["keys"] + infotext
-    return status, infotext, perfdata
+    yield 0, "%s Key(s)" % license_["keys"]
+    yield license_check_levels(license_["total"], license_["used"], params["levels"][1])
 
 
 check_info["esx_vsphere_licenses"] = LegacyCheckDefinition(

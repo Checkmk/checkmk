@@ -93,7 +93,7 @@ def create_vm_generation_element() -> DictElement:
     )
 
 
-def _parameter_valuespec_hyperv_vm_general():
+def _parameter_valuespec_hyperv_vm_general() -> Dictionary:
     return Dictionary(
         elements={
             "power_state": create_power_state_element(),

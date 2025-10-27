@@ -56,7 +56,10 @@ def _check_power_state(section: Section, params: GeneralParams) -> CheckResult:
         return
 
     power_state_mapping = params["power_state"]
-    state_value = power_state_mapping.get(power_state.lower(), State.UNKNOWN.value)
+    default_mapping = hyperv_vm_general_default_params["power_state"]
+    state_value = power_state_mapping.get(
+        power_state.lower(), default_mapping.get(power_state.lower(), State.UNKNOWN.value)
+    )
     yield Result(state=State(state_value), summary=f"State: {power_state}")
 
 

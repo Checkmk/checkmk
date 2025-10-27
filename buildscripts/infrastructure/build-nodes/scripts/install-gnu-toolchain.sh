@@ -86,6 +86,13 @@ build_gcc() {
     log "Build gcc-${GCC_VERSION}"
     cd "${BUILD_DIR}"
     tar xzf "gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
+    case "$DISTRO" in
+        sles-12*)
+            (cd gcc-"${GCC_VERSION}" && patch -p1 <"$SCRIPT_DIR/gcc-14-sles12-max_align_t.patch")
+            ;;
+        *) ;;
+
+    esac
     mkdir "gcc-${GCC_VERSION}-build"
     cd "gcc-${GCC_VERSION}-build"
     "../gcc-${GCC_VERSION}/configure" \

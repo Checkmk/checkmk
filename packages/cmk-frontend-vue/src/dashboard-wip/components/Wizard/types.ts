@@ -10,6 +10,8 @@ import type { SimpleIcons } from '@/components/CmkIcon'
 
 import type {
   EffectiveWidgetFilterContext,
+  SidebarElementContent,
+  StaticTextContent,
   WidgetGeneralSettings
 } from '@/dashboard-wip/types/widget'
 import { type QuickSetupStageActionIcon } from '@/quick-setup/components/quick-setup/quick_setup_types'
@@ -87,6 +89,10 @@ export type WidgetContentType =
   | AlertTimelineContent
   | NotificationTimelineContent
   | ProblemGraphContent
+  | UserMessagesContent
+  | SidebarElementContent
+  | URLContent
+  | StaticTextContent
 
 export type InventoryContent = components['schemas']['InventoryContent']
 
@@ -114,6 +120,8 @@ export type AlertOverviewContent = components['schemas']['AlertOverviewContent']
 export type AlertTimelineContent = components['schemas']['AlertTimelineContent']
 export type NotificationTimelineContent = components['schemas']['NotificationTimelineContent']
 export type ProblemGraphContent = components['schemas']['ProblemGraphContent']
+export type UserMessagesContent = components['schemas']['UserMessagesContent']
+export type URLContent = components['schemas']['URLContent']
 
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']

@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
+import OtherWizard from '@/dashboard-wip/components/Wizard/wizards/other/OtherWizard.vue'
+
 import type { DashboardConstants } from '../../types/dashboard.ts'
 import type { ContextFilters } from '../../types/filter.ts'
 import type {
@@ -147,6 +149,15 @@ const handleAddEditWidget = (
       />
       <CustomGraphsWizard
         v-if="selectedWizard === 'custom_graphs'"
+        :dashboard-name="dashboardName"
+        :dashboard-constants="dashboardConstants"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+      />
+      <OtherWizard
+        v-if="selectedWizard === 'other'"
         :dashboard-name="dashboardName"
         :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"

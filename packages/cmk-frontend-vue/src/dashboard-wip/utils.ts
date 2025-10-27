@@ -17,7 +17,8 @@ import type {
   EditRelativeDashboardBody,
   EditResponsiveDashboardBody,
   RelativeGridDashboardDomainObject,
-  ResponsiveGridDashboardDomainObject
+  ResponsiveGridDashboardDomainObject,
+  SidebarElement
 } from '@/dashboard-wip/types/dashboard.ts'
 import type { FilterCollection } from '@/dashboard-wip/types/filter.ts'
 import type {
@@ -180,6 +181,13 @@ export const dashboardAPI = {
       title: item.title,
       sortIndex: item.extensions.sort_index,
       isDefault: item.extensions.is_default
+    }))
+  },
+  listSidebarElements: async (): Promise<SidebarElement[]> => {
+    const response = unwrap(await client.GET('/domain-types/sidebar_element/collections/all'))
+    return response.value.map((item) => ({
+      id: item.id!,
+      title: item.title || item.id!
     }))
   },
   computeWidgetAttributes: async (

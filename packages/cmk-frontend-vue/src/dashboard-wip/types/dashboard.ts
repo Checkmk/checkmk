@@ -73,3 +73,8 @@ export type DashboardMainMenuTopic = {
   sortIndex: number
   isDefault: boolean
 }
+
+export type SidebarElement = {
+  id: string
+  title: string
+}

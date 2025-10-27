@@ -37,6 +37,13 @@ export function widgetTypeToSelectorMatcher(
       return 'event_stats'
     }
 
+    case 'url':
+    case 'static_text':
+    case 'sidebar_element':
+    case 'user_messages': {
+      return 'other'
+    }
+
     default: {
       throw new Error(
         `No selector defined widget content type: ${widgetContentType}. Please add it.`

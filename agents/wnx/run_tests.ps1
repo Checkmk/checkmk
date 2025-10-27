@@ -232,7 +232,7 @@ function Invoke-RegressionTest() {
         Create_FirewallRule $firewall_rule_name $exe_path
         $env:WNX_REGRESSION_BASE_DIR = "$regression_dir"
         $env:WNX_INTEGRATION_BASE_DIR = ""
-        py -3 -m pytest tests\regression
+        python.exe -m pytest tests\regression
         if ($LASTEXITCODE -ne 0) {
             Write-Error "[-] Regression test :$_" -ErrorAction Stop
         }
@@ -310,7 +310,7 @@ function Invoke-IntegrationTest() {
         $env:WNX_REGRESSION_BASE_DIR = ""
         $env:WNX_INTEGRATION_BASE_DIR = "$integration_dir"
         Write-Host "RUN INTEGRATION in $env:WNX_INTEGRATION_BASE_DIR" -Foreground White
-        py -3 -m pytest tests\integration\
+        python.exe -m pytest tests\integration\
         if ($LASTEXITCODE -ne 0) {
             Write-Error "[-] Integration test :$_" -ErrorAction Stop
         }

@@ -367,7 +367,7 @@ test-mypy-docker:
 	../scripts/run-in-docker.sh make test-mypy
 
 test-packaging:
-	$(PYTEST) -T packaging packaging
+	$(PYTEST) --log-cli-level=INFO -T packaging packaging
 
 test-pipenv-deps:
 	$(PIPENV) check

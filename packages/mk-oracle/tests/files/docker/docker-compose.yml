@@ -1,45 +1,73 @@
 services:
     oracle-free:
-        image: gvenzl/oracle-free:${ORACLE_FREE_VERSION:-latest}
+        image: gvenzl/oracle-free:23.26.0
         ports:
         - "${ORACLE_PORT:-1521}:1521"
-        # Provide passwords and other environment variables to the container
         environment:
-            ORACLE_PASSWORD: ${ORACLE_PASSWORD:-oracle}
-        # Mount oracle data so that data is persistent between restarts
+            ORACLE_PASSWORD: oracle
         volumes:
             - oracle-free-volume:/opt/oracle/oradata
+        healthcheck:
+            test: [ "CMD", "healthcheck.sh" ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 5s
+            start_interval: 5s
 
     oracle-xe:
-        image: gvenzl/oracle-xe:${ORACLE_XE_VERSION:-latest}
+        image: gvenzl/oracle-xe:11
         ports:
             - "${ORACLE_PORT:-1521}:1521"
-        # Provide passwords and other environment variables to the container
         environment:
-            ORACLE_PASSWORD: ${ORACLE_PASSWORD:-oracle}
-            ORACLE_SID: ${ORACLE_SID:-ORCLCDB}
-        # Mount oracle data so that data is persistent between restarts
+            ORACLE_PASSWORD: oracle
         volumes:
             - oracle-xe-volume:/opt/oracle/oradata
+        healthcheck:
+            test: [ "CMD", "healthcheck.sh" ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 5s
+            start_interval: 5s
 
     oracle-12c:
         image: konnecteam/docker-oracle-12c:sequelize
         ports:
             - "${ORACLE_PORT:-1521}:1521"
-        environment:
-            ORACLE_SID: ${ORACLE_SID:-ORCLCDB}
         volumes:
             - oracle-12c:/u01/app/oracle
+        healthcheck:
+            test: [
+                "CMD-SHELL",
+                "echo 'SELECT 1 FROM DUAL; exit' | sqlplus -s -L system/oracle"
+            ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 60s
 
     oracle-19c:
         image: anvarmk/oracle-19c:latest
         ports:
             - "${ORACLE_PORT:-1521}:1521"
         environment:
-            ORACLE_PWD: ${ORACLE_PASSWORD:-oracle}
-            ORACLE_SID: ${ORACLE_SID:-ORCLCDB}
+            ORACLE_PWD: oracle
+            ORACLE_SID: ORCLCDB
+        volumes:
+            - oracle-19c-volume:/opt/oracle/oradata
+        healthcheck:
+            test: [
+                "CMD-SHELL",
+                "echo 'SELECT 1 FROM DUAL; exit' | sqlplus -s -L system/oracle"
+            ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 60s
 
 volumes:
     oracle-free-volume:
     oracle-xe-volume:
     oracle-12c:
+    oracle-19c-volume:

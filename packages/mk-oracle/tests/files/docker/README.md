@@ -15,96 +15,53 @@ Before you start, make sure you have the following installed:
 
 ## Available Database Services
 
-This `docker-compose.yml` file defines two separate Oracle database services. You should only run **one at a time** since they are both configured to use the same host port (`1521`), you can change port using `ORACLE_PORT` environment variable.
+This `docker-compose.yml` file defines several Oracle database services. You should only run **one at a time** since they are configured to use the same host port (`1521`) by default.
 
-- `oracle-free`: Runs the **Oracle Database Free** edition. This is the latest developer-focused edition from Oracle.
-- `oracle-xe`: Runs the older **Oracle Database Express Edition (XE)**.
+- `oracle-free` (Version 23): Runs the **Oracle Database Free** edition.
+- `oracle-xe` (Version 11): Runs the **Oracle Database Express Edition (XE)**.
+- `oracle-12c` (Version 12): Runs **Oracle Database 12c**.
+- `oracle-19c` (Version 19): Runs **Oracle Database 19c**.
 
 ---
 
 ## How to Run
 
-You can run a specific database service directly from your terminal.
+You can easily start any of the supported database versions using the `run-db.sh` helper script. This script handles starting the container and waiting for the database to be fully ready and healthy.
 
-#### Oracle Free
-
-To start the **Oracle Free** database, run:
+### Usage
 
 ```bash
-docker compose -f <path_to_docker_compose_file> up oracle-free
+./run-db.sh -v <version> [-P <port>]
 ```
 
-Or you can specify a version, you can find all available versions on [Docker Hub](https://hub.docker.com/r/gvenzl/oracle-free):
+### Options
+
+- `-v, --version`: **Required**. The Oracle version to run.
+  - Available versions: `23`, `11`, `12`, `19`.
+- `-P, --port`: **Optional**. The host port to bind the database listener to.
+  - Default: `1521`.
+
+### Examples
+
+Start Oracle 23 (Free) on default port 1521:
 
 ```bash
-ORACLE_FREE_VERSION=23.9 docker compose -f <path_to_docker_compose_file> up oracle-free
+./run-db.sh -v 23
 ```
 
-Available environment variables:
-
-- `ORACLE_FREE_VERSION`
-- `ORACLE_PASSWORD` - default `oracle`
-- `ORACLE_PORT` - default `1521`
-
-Default SID is `FREEPDB1` and it's not configurable.
-
-#### Oracle XE
-
-To start the **Oracle XE** database, run:
+Start Oracle 19c on port 1522:
 
 ```bash
-docker compose -f <path_to_docker_compose_file> up oracle-xe
+./run-db.sh -v 19 -P 1522
 ```
 
-Or you can specify a version, you can find all available versions on [Docker Hub](https://hub.docker.com/r/gvenzl/oracle-xe)(not all versions are working as expected, please refer to the link for more details):
+The script will output the connection details (Host, Port, SID, Password) once the database is ready to accept connections.
 
-```bash
-ORACLE_XE_VERSION=11 docker compose -f <path_to_docker_compose_file> up oracle-xe
-```
+### Default Credentials
 
-Available environment variables:
-
-- `ORACLE_XE_VERSION`
-- `ORACLE_PASSWORD` - default `oracle`
-- `ORACLE_PORT` - default `1521`
-
-Default SID is `FREEPDB1` and it's not configurable.
-
-#### Oracle 12c
-
-To start the **Oracle 12c** database, run:
-
-```bash
-docker compose -f <path_to_docker_compose_file> up oracle-12c
-```
-
-Available environment variables:
-
-- `ORACLE_PASSWORD` - default `oracle`
-- `ORACLE_PORT` - default `1521`
-
-Default SID is `XE` and it's not configurable.
-
-#### Oracle 19c
-
-To start the **Oracle 19c** database, run:
-
-```bash
-docker compose -f <path_to_docker_compose_file> up oracle-19c
-```
-
-Available environment variables:
-
-- `ORACLE_PASSWORD` - default `oracle`
-- `ORACLE_PORT` - default `1521`
-- `ORACLE_SID` - default `ORCLCDB`
-
-## Configuration
-
-You can customize the database configuration using environment variables in `docker-compose.yml` file,
-you can find the available options, for `oracle-free` [here](https://hub.docker.com/r/gvenzl/oracle-free#environment-variables)
-and `oracle-xe` [here](https://hub.docker.com/r/gvenzl/oracle-xe#environment-variables).
-
-Default values are provided for convenience, but you can override them as needed:
-
-- `ORACLE_PASSWORD`: Sets the password for the `SYS`, `SYSTEM`, and `PDBADMIN` users. Default is `admin`.
+- **Password**: `oracle` (for all versions)
+- **SIDs**:
+  - Version 23: `FREE`
+  - Version 19: `ORCLCDB`
+  - Version 12: `XE`
+  - Version 11: `XE`

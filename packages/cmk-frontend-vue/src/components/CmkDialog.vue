@@ -16,7 +16,7 @@ import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{
-  title?: TranslatedString
+  title?: TranslatedString | undefined
   message: TranslatedString
   buttons?: { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
   dismissal_button?: { title: TranslatedString; key: string }

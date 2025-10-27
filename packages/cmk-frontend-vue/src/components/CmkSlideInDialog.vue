@@ -8,7 +8,7 @@ import { DialogClose, DialogTitle } from 'radix-vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkIcon from '@/components/CmkIcon'
+import CmkIcon, { type CmkIconProps } from '@/components/CmkIcon'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
 import CmkScrollContainer from './CmkScrollContainer.vue'
@@ -20,6 +20,7 @@ export interface CmkSlideInDialogProps {
   open: boolean
   header?: {
     title: string
+    icon?: CmkIconProps | undefined
     closeButton: boolean
   }
 }
@@ -30,7 +31,10 @@ const emit = defineEmits(['close'])
 <template>
   <CmkSlideIn :open="open" @close="emit('close')">
     <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">
-      <CmkHeading type="h1">{{ header.title }}</CmkHeading>
+      <CmkHeading type="h1" class="cmk-slide-in-dialog__title-header">
+        <CmkIcon v-if="header.icon" v-bind="header.icon" />
+        {{ header.title }}
+      </CmkHeading>
       <!-- @vue-ignore @click is not a property of DialogClose -->
       <DialogClose
         v-if="header.closeButton"
@@ -53,6 +57,13 @@ const emit = defineEmits(['close'])
   justify-content: space-between;
   align-items: center;
   margin: 20px;
+
+  .cmk-slide-in-dialog__title-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--dimension-5);
+  }
 
   label {
     margin-right: 10px;

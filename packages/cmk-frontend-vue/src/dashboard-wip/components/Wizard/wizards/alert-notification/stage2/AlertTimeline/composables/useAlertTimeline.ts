@@ -32,7 +32,7 @@ export interface UseAlertTimeline extends UseWidgetHandler, UseWidgetVisualizati
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
   timeResolution: Ref<'hour' | 'day'>
-  selectedVisualizationType: Ref<VisualizationTimelineType>
+  visualizationType: Ref<VisualizationTimelineType>
   widgetProps: Ref<WidgetProps>
 }
 
@@ -59,9 +59,7 @@ export const useAlertTimeline = async (
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
   const timeResolution = ref<'hour' | 'day'>('hour')
-  const selectedVisualizationType = ref<VisualizationTimelineType>(
-    VisualizationTimelineType.BARPLOT
-  )
+  const visualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
 
   const widgetProps = ref<WidgetProps>()
 
@@ -70,20 +68,25 @@ export const useAlertTimeline = async (
   }
 
   const _generateContent = (): AlertTimelineContent => {
-    const renderModeType =
-      selectedVisualizationType.value === VisualizationTimelineType.BARPLOT
-        ? 'bar_chart'
-        : 'simple_number'
-    const content: AlertTimelineContent = {
+    if (visualizationType.value === VisualizationTimelineType.METRIC) {
+      return {
+        type: 'alert_timeline',
+        log_target: 'both',
+        render_mode: {
+          type: 'simple_number',
+          time_range: generateTimeRangeProps()
+        }
+      }
+    }
+    return {
       type: 'alert_timeline',
       log_target: 'both',
       render_mode: {
-        type: renderModeType,
+        type: 'bar_chart',
         time_range: generateTimeRangeProps(),
-        time_resolution: timeResolution.value
+        time_resolution: timeResolution.value ?? 'day'
       }
     }
-    return content
   }
 
   const _updateWidgetProps = async () => {
@@ -100,7 +103,7 @@ export const useAlertTimeline = async (
   }
 
   watch(
-    [timeRangeType, timeRange, timeResolution, selectedVisualizationType, widgetGeneralSettings],
+    [timeRangeType, timeRange, timeResolution, visualizationType, widgetGeneralSettings],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -113,7 +116,7 @@ export const useAlertTimeline = async (
     timeRangeType,
     timeRange,
     timeResolution,
-    selectedVisualizationType,
+    visualizationType,
 
     title,
     showTitle,

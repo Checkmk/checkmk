@@ -10,8 +10,8 @@ import type { WidgetItemList } from '@/dashboard-wip/components/Wizard/component
 const { _t } = usei18n()
 
 export enum VisualizationTimelineType {
-  BARPLOT = 'BARPLOT',
-  METRIC = 'METRIC'
+  BARPLOT = 'bar_chart',
+  METRIC = 'simple_number'
 }
 
 export const getVisualizationTypes = (): WidgetItemList => {

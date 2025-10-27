@@ -40,16 +40,15 @@ const displayDataSettings = ref<boolean>(true)
 const displayVisualizationSettings = ref<boolean>(true)
 const widgetProps = computed(() => handler.value.widgetProps)
 
-const selectedVisualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
 const availableVisualizationTypes = getVisualizationTypes()
 </script>
 
 <template>
   <CmkHeading type="h3">{{ _t('Choose a visualization type.') }}</CmkHeading>
   <SelectableWidgets
-    v-model:selected-widget="selectedVisualizationType"
+    v-model:selected-widget="handler.visualizationType.value"
     :available-items="availableVisualizationTypes"
-    :enabled-widgets="Object.keys(VisualizationTimelineType)"
+    :enabled-widgets="Object.values(VisualizationTimelineType)"
   />
 
   <DashboardPreviewContent

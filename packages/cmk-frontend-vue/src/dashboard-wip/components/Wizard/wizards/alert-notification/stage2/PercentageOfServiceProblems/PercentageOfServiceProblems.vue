@@ -23,11 +23,6 @@ import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/col
 import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp } from '@/dashboard-wip/components/Wizard/types'
 
-import SelectableWidgets from '../../../../components/WidgetSelection/SelectableWidgets.vue'
-import {
-  VisualizationTimelineType,
-  getVisualizationTypes
-} from '../../composables/useSelectGraphTypes.ts'
 import type { UsePercentageOfServiceProblems } from './composables/usePercentageOfServiceProblems.ts'
 
 const { _t } = usei18n()
@@ -38,19 +33,10 @@ const displayDataSettings = ref<boolean>(true)
 const displayVisualizationSettings = ref<boolean>(true)
 const displayGraphRenderOptions = ref<boolean>(false)
 const widgetProps = computed(() => handler.value.widgetProps)
-
-const selectedVisualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
-const availableVisualizationTypes = getVisualizationTypes()
 </script>
 
 <template>
   <CmkHeading type="h3">{{ _t('Choose a visualization type.') }}</CmkHeading>
-
-  <SelectableWidgets
-    v-model:selected-widget="selectedVisualizationType"
-    :available-items="availableVisualizationTypes"
-    :enabled-widgets="Object.keys(VisualizationTimelineType)"
-  />
 
   <DashboardPreviewContent
     widget_id="notification-timeline-preview"

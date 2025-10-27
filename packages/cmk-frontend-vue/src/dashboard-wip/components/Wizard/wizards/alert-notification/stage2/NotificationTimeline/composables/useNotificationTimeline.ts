@@ -36,7 +36,7 @@ export interface UseNotificationTimeline extends UseWidgetHandler, UseWidgetVisu
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
   timeResolution: Ref<'hour' | 'day'>
-  selectedVisualizationType: Ref<VisualizationTimelineType>
+  visualizationType: Ref<VisualizationTimelineType>
   logtarget: Ref<'both' | 'host' | 'service'>
   logtargetOptions: Suggestions
   widgetProps: Ref<WidgetProps>
@@ -80,11 +80,8 @@ export const useNotificationTimeline = async (
     }
   }
   const timeResolution = ref<'hour' | 'day'>(initialTimeResolution)
-  const selectedVisualizationType = ref<VisualizationTimelineType>(
-    VisualizationTimelineType.BARPLOT
-  )
+  const visualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
 
-  // Logtarget state and options
   const logtarget = ref<'both' | 'host' | 'service'>(currentContent?.log_target ?? 'both')
   const logtargetOptions: Suggestions = {
     type: 'fixed',
@@ -102,20 +99,25 @@ export const useNotificationTimeline = async (
   }
 
   const _generateContent = (): NotificationTimelineContent => {
-    const renderModeType =
-      selectedVisualizationType.value === VisualizationTimelineType.BARPLOT
-        ? 'bar_chart'
-        : 'simple_number'
-    const content: NotificationTimelineContent = {
+    if (visualizationType.value === VisualizationTimelineType.METRIC) {
+      return {
+        type: 'notification_timeline',
+        log_target: logtarget.value,
+        render_mode: {
+          type: 'simple_number',
+          time_range: generateTimeRangeProps()
+        }
+      }
+    }
+    return {
       type: 'notification_timeline',
       log_target: logtarget.value,
       render_mode: {
-        type: renderModeType,
+        type: 'bar_chart',
         time_range: generateTimeRangeProps(),
-        time_resolution: timeResolution.value
+        time_resolution: timeResolution.value ?? 'day'
       }
     }
-    return content
   }
 
   const _updateWidgetProps = async () => {
@@ -132,14 +134,7 @@ export const useNotificationTimeline = async (
   }
 
   watch(
-    [
-      timeRangeType,
-      timeRange,
-      timeResolution,
-      selectedVisualizationType,
-      logtarget,
-      widgetGeneralSettings
-    ],
+    [timeRangeType, timeRange, timeResolution, visualizationType, logtarget, widgetGeneralSettings],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -152,7 +147,7 @@ export const useNotificationTimeline = async (
     timeRangeType,
     timeRange,
     timeResolution,
-    selectedVisualizationType,
+    visualizationType,
     logtarget,
     logtargetOptions,
 

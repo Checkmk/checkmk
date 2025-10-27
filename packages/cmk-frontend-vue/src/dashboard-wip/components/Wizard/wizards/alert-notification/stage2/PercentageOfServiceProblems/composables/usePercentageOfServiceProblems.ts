@@ -38,7 +38,6 @@ export interface UsePercentageOfServiceProblems
     UseGraphRenderOptions {
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
-
   widgetProps: Ref<WidgetProps>
 }
 

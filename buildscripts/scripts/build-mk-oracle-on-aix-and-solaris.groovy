@@ -24,7 +24,7 @@ def main() {
         }
     }
 
-    ["aix", "solaris"].collectEntries { distro ->
+    parallel(["aix", "solaris"].collectEntries { distro ->
         [("Building mk-oracle on ${distro}"): {
             smart_stage(
                 name: "Building mk-oracle on ${distro}",
@@ -56,9 +56,8 @@ def main() {
                     }
                 }
             }
-        }
-        ]
-    }
+        }]
+    })
 
     stage("Archive artifacts") {
         dir("${checkout_dir}/packages/mk-oracle") {

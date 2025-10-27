@@ -216,6 +216,38 @@ COSMOS_DATABASE_METRICS = [
         ),
         explicit_metric_alias="maximum_NormalizedRUConsumptiondb",
     ),
+    AzureMetric(
+        name="TotalRequestUnitsPreview",
+        interval="PT1M",
+        aggregation="total",
+        dimension_filters=(
+            DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+            DimensionFilter(
+                name="CollectionName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="total_TotalRequestUnitsPreviewdbContainer",
+    ),
+    AzureMetric(
+        name="NormalizedRUConsumption",
+        interval="PT1M",
+        aggregation="maximum",
+        dimension_filters=(
+            DimensionFilter(
+                name="DatabaseName",
+                value="*",
+            ),
+            DimensionFilter(
+                name="CollectionName",
+                value="*",
+            ),
+        ),
+        explicit_metric_alias="maximum_NormalizedRUConsumptiondbContainer",
+    ),
     # this metric is needed to always discover the DBs and their containers,
     # since some other metrics are only available when there is activity, this one
     # *should be* always present

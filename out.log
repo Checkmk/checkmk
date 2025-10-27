@@ -1,0 +1,29 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.9, pytest-8.3.5, pluggy-1.5.0 -- /home/davidgervasoni/dev/checkmk/azure/.venv/bin/python3
+cachedir: .pytest_cache
+benchmark: 5.1.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+metadata: {'Python': '3.13.9', 'Platform': 'Linux-6.8.0-86-generic-x86_64-with-glibc2.39', 'Packages': {'pytest': '8.3.5', 'pluggy': '1.5.0'}, 'Plugins': {'check': '2.6.0', 'anyio': '4.11.0', 'socket': '0.7.0', 'base-url': '2.1.0', 'opentelemetry': '1.1.0', 'recording': '0.13.4', 'xdist': '3.8.0', 'time-machine': '2.19.0', 'mock': '3.15.1', 'typeguard': '4.4.4', 'html': '4.1.1', 'benchmark': '5.1.0', 'repeat': '0.9.4', 'subtests': '0.14.2', 'playwright': '0.7.1', 'metadata': '3.1.1', 'cov': '7.0.0', 'random-order': '1.2.0', 'asyncio': '1.1.1.dev29'}, 'Variables': '<ul><li>\nBRANCH=master</li><li>\nEDITION=cee</li><li>\nVERSION=daily</li><li>\nTZ=UTC</li><li>\nREUSE=0</li><li>\nCLEANUP=1</li></ul>', 'Base URL': ''}
+Test order randomisation NOT enabled. Enable with --random-order or --random-order-bucket=<bucket_type>
+rootdir: /home/davidgervasoni/dev/checkmk/azure
+configfile: pyproject.toml
+plugins: check-2.6.0, anyio-4.11.0, socket-0.7.0, base-url-2.1.0, opentelemetry-1.1.0, recording-0.13.4, xdist-3.8.0, time-machine-2.19.0, mock-3.15.1, typeguard-4.4.4, html-4.1.1, benchmark-5.1.0, repeat-0.9.4, subtests-0.14.2, playwright-0.7.1, metadata-3.1.1, cov-7.0.0, random-order-1.2.0, asyncio-1.1.1.dev29
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/unit/cmk/utils/test_man_pages.py::test_man_page_consistency PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/unit/cmk/utils/test_man_pages.py::test_man_page_consistency
+  /home/davidgervasoni/dev/checkmk/azure/.venv/lib/python3.13/site-packages/pysnmp/smi/compiler.py:20: DeprecationWarning: getReadersFromUrls is deprecated. Please use get_readers_from_urls instead.
+    from pysmi.reader.url import getReadersFromUrls
+
+tests/unit/cmk/utils/test_man_pages.py::test_man_page_consistency
+  /home/davidgervasoni/dev/checkmk/azure/.venv/lib/python3.13/site-packages/pysnmp/smi/compiler.py:26: DeprecationWarning: smiV1Relaxed is deprecated. Please use smi_v1_relaxed instead.
+    from pysmi.parser.dialect import smiV1Relaxed
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 20 durations =============================
+1.98s setup    tests/unit/cmk/utils/test_man_pages.py::test_man_page_consistency
+0.16s call     tests/unit/cmk/utils/test_man_pages.py::test_man_page_consistency
+0.01s teardown tests/unit/cmk/utils/test_man_pages.py::test_man_page_consistency
+======================== 1 passed, 2 warnings in 2.20s =========================

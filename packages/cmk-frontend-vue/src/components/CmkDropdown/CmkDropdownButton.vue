@@ -27,7 +27,8 @@ const buttonVariants = cva('', {
     },
     width: {
       default: '',
-      wide: 'wide'
+      wide: 'wide',
+      max: 'cmk-dropdown-button--width-max'
     }
   },
   defaultVariants: {
@@ -91,6 +92,10 @@ defineExpose({
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.wide {
     min-width: 10em;
+  }
+
+  &.cmk-dropdown-button--width-max {
+    width: 100%;
   }
 
   &:hover {

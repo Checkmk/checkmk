@@ -42,7 +42,7 @@ const {
   required?: boolean
   label: TranslatedString
   startOfGroup?: boolean
-  width?: 'wide' | 'default'
+  width?: 'max' | 'wide' | 'default'
 }>()
 
 const vClickOutside = useClickOutside()

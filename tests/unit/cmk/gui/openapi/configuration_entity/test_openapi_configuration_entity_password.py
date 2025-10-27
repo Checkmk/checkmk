@@ -98,7 +98,7 @@ def test_list_passwords_with_permissions(clients: ClientRegistry) -> None:
 
     # THEN
     assert resp.status_code == 200
-    titles = set(entry["title"] for entry in resp.json["value"])
+    titles = {entry["title"] for entry in resp.json["value"]}
     assert titles == {"Protected title"}
 
 
@@ -124,7 +124,7 @@ def test_list_passwords_as_admin(clients: ClientRegistry, with_admin: tuple[str,
         entity_type_specifier="all",
     )
     # THEN
-    titles = set(entry["title"] for entry in resp.json["value"])
+    titles = {entry["title"] for entry in resp.json["value"]}
     assert titles == {"Admin title"}
 
 

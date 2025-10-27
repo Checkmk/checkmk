@@ -192,24 +192,24 @@ def make_main_menu(
 
 def _visual_url(visual_type_name: str, name: str, visual: Visual) -> str:
     if visual_type_name == "views":
-        return "view.py?view_name=%s" % name
+        return f"view.py?view_name={name}"
 
     if visual_type_name == "dashboards":
-        return "dashboard.py?name=%s&owner=%s" % (name, visual["owner"])
+        return f"dashboard.py?name={name}&owner={visual['owner']}"
 
     # Note: This is no real visual type like the others here. This is just a hack to make top level
     # pages work with this function.
     if visual_type_name == "pages":
-        return name if name.endswith(".py") else "%s.py" % name
+        return name if name.endswith(".py") else f"{name}.py"
 
     if visual_type_name == "reports":
-        return "report.py?name=%s" % name
+        return f"report.py?name={name}"
 
     # Handle page types
     if visual_type_name in ["custom_graph", "graph_collection", "forecast_graph"]:
         return f"{visual_type_name}.py?name={name}"
 
-    raise NotImplementedError("Unknown visual type: %s" % visual_type_name)
+    raise NotImplementedError(f"Unknown visual type: {visual_type_name}")
 
 
 def show_main_menu(treename: str, menu: list[MainMenuTopic], show_item_icons: bool = False) -> None:

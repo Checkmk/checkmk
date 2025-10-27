@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, State
-from cmk.base.legacy_checks.esx_vsphere_hostsystem import (
+from cmk.plugins.vsphere.agent_based.esx_vsphere_hostsystem import (
     check_esx_vsphere_hostsystem_state,
 )
 from cmk.plugins.vsphere.lib.esx_vsphere import Section

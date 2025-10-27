@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
@@ -12,66 +10,45 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-"""Unit tests for esx_vsphere_datastores division regression scenarios - Pattern 5."""
+from typing import Final
 
-from typing import Any
-
-import pytest
-
-from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.esx_vsphere_datastores import (
     check_esx_vsphere_datastores,
     discover_esx_vsphere_datastores,
     parse_esx_vsphere_datastores,
 )
 
-
-@pytest.fixture(name="esx_vsphere_datastores_division_regression_string_table")
-def _esx_vsphere_datastores_division_regression_string_table() -> StringTable:
-    """ESX vSphere datastores data for division regression test."""
-    return [
-        ["[backup_day_esx_blade_nfs_nfs32]"],
-        ["accessible", "true"],
-        ["capacity", "19923665018880"],
-        ["freeSpace", "15224133410816"],
-        ["type", "NFS"],
-        ["uncommitted", "0"],
-        ["[datastore01]"],
-        ["accessible", "true"],
-        ["capacity", "1073741824000"],
-        ["freeSpace", "322122547200"],
-        ["type", "VMFS"],
-        ["uncommitted", "0"],
-        ["[system01_20100701]"],
-        ["accessible", "true"],
-        ["capacity", "492042190848"],
-        ["freeSpace", "491020877824"],
-        ["type", "VMFS"],
-        ["uncommitted", "0"],
-        ["[storage_iso]"],
-        ["accessible", "true"],
-        ["capacity", "7511204864"],
-        ["freeSpace", "506974208"],
-        ["type", "VMFS"],
-        ["uncommitted", "43216809984"],
-    ]
+_STRING_TABLE: Final = [
+    ["[backup_day_esx_blade_nfs_nfs32]"],
+    ["accessible", "true"],
+    ["capacity", "19923665018880"],
+    ["freeSpace", "15224133410816"],
+    ["type", "NFS"],
+    ["uncommitted", "0"],
+    ["[datastore01]"],
+    ["accessible", "true"],
+    ["capacity", "1073741824000"],
+    ["freeSpace", "322122547200"],
+    ["type", "VMFS"],
+    ["uncommitted", "0"],
+    ["[system01_20100701]"],
+    ["accessible", "true"],
+    ["capacity", "492042190848"],
+    ["freeSpace", "491020877824"],
+    ["type", "VMFS"],
+    ["uncommitted", "0"],
+    ["[storage_iso]"],
+    ["accessible", "true"],
+    ["capacity", "7511204864"],
+    ["freeSpace", "506974208"],
+    ["type", "VMFS"],
+    ["uncommitted", "43216809984"],
+]
 
 
-@pytest.fixture(name="esx_vsphere_datastores_division_regression_parsed")
-def _esx_vsphere_datastores_division_regression_parsed(
-    esx_vsphere_datastores_division_regression_string_table: StringTable,
-) -> dict[str, dict[str, Any]]:
-    """Parsed ESX vSphere datastores data."""
-    return parse_esx_vsphere_datastores(esx_vsphere_datastores_division_regression_string_table)
-
-
-def test_discover_esx_vsphere_datastores_division_regression(
-    esx_vsphere_datastores_division_regression_parsed: dict[str, dict[str, Any]],
-) -> None:
+def test_discover_esx_vsphere_datastores_division_regression() -> None:
     """Test discovery function for ESX vSphere datastores."""
-    result = list(
-        discover_esx_vsphere_datastores(esx_vsphere_datastores_division_regression_parsed)
-    )
+    result = list(discover_esx_vsphere_datastores(parse_esx_vsphere_datastores(_STRING_TABLE)))
     # Discovery should include accessible datastores (note: order may vary)
     discovered_items = sorted([item for item, _ in result])
     expected_items = [
@@ -84,7 +61,6 @@ def test_discover_esx_vsphere_datastores_division_regression(
 
 
 def test_check_esx_vsphere_datastores_division_regression_basic(
-    esx_vsphere_datastores_division_regression_parsed: dict[str, dict[str, Any]],
     initialised_item_state: None,
 ) -> None:
     """Test check function basic functionality with value store initialized."""
@@ -98,9 +74,7 @@ def test_check_esx_vsphere_datastores_division_regression_basic(
 
     result = list(
         check_esx_vsphere_datastores(
-            "system01_20100701",
-            params,
-            esx_vsphere_datastores_division_regression_parsed,
+            "system01_20100701", params, parse_esx_vsphere_datastores(_STRING_TABLE)
         )
     )
 

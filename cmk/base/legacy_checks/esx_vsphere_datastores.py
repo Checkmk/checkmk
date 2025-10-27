@@ -9,8 +9,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from collections.abc import Mapping
+
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import render, StringTable
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
 check_info = {}
@@ -25,8 +27,11 @@ check_info = {}
 # url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa
 
 
-def parse_esx_vsphere_datastores(string_table):
-    stores = {}
+type Section = Mapping[str, dict[str, bool | int | str | None]]
+
+
+def parse_esx_vsphere_datastores(string_table: StringTable) -> Section:
+    stores = dict[str, dict[str, bool | int | str | None]]()
     for line in string_table:
         if line[0].startswith("["):
             name = line[0][1:-1]
@@ -36,12 +41,12 @@ def parse_esx_vsphere_datastores(string_table):
             # Seems that the url attribute can have an empty value
             if len(line) == 1:
                 key = line[0].strip()
-                value = None
+                value: str | bool | int | None = None
             else:
                 key, value = line
 
             if key == "accessible" and value is not None:
-                value = value.lower() == "true"
+                value = str(value).lower() == "true"
             elif key in ["capacity", "freeSpace", "uncommitted"] and value is not None:
                 value = int(value)
             store[key] = value

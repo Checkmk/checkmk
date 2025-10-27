@@ -403,7 +403,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "esx_vsphere_hostsystem_state",
         "esx_vsphere_hostsystem_maintenance",
         "esx_vsphere_hostsystem_multipath",
-        "esx_vsphere_licenses",
         "etherbox2_temp",
         "f5_bigip_apm",
         "f5_bigip_chassis_temp",

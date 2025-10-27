@@ -28,8 +28,9 @@ def test_locked_host_attributes_after_site_copy(site: Site, site_factory: SiteFa
         # Delete the original DCD connector and datasource rule before copying the site
         # to ensure that piggyback hosts are copied from the original site
         # instead of discovered again in the copied site.
-        site.openapi.dcd.delete(piggyback_info.dcd_id)
         site.openapi.rules.delete(piggyback_info.datasource_id)
+        site.openapi.changes.activate_and_wait_for_completion()
+        site.openapi.dcd.delete(piggyback_info.dcd_id)
         site.openapi.rules.create(
             {
                 "api_key": (

@@ -9,8 +9,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from collections.abc import Sequence
+
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.license import license_check_levels
 
 check_info = {}
 
@@ -36,6 +37,43 @@ def parse_esx_vsphere_licenses(string_table):
 
 def inventory_esx_vsphere_licenses(parsed):
     return [(key, {}) for key in parsed]
+
+
+def license_check_levels(
+    total: int, in_use: int, params: bool | Sequence[int | float] | None
+) -> tuple[int, str, list[tuple[str, int, float | None, float | None, int, int]]]:
+    if params is False:
+        warn: float | None = None
+        crit: float | None = None
+    elif not params:
+        warn = total
+        crit = total
+    elif isinstance(params, Sequence) and isinstance(params[0], int):
+        warn = max(0, total - params[0])
+        crit = max(0, total - params[1])
+    elif isinstance(params, Sequence):
+        warn = total * (1 - params[0] / 100.0)
+        crit = total * (1 - params[1] / 100.0)
+    else:
+        warn = None
+        crit = None
+
+    perfdata = [("licenses", in_use, warn, crit, 0, total)]
+    if in_use <= total:
+        infotext = "used %d out of %d licenses" % (in_use, total)
+    else:
+        infotext = "used %d licenses, but you have only %d" % (in_use, total)
+
+    status = 0
+    if warn is not None and crit is not None:
+        if in_use >= crit:
+            status = 2
+        elif in_use >= warn:
+            status = 1
+        if status:
+            infotext += f" (warn/crit at {int(warn)}/{int(crit)})"
+
+    return status, infotext, perfdata
 
 
 def check_esx_vsphere_licenses(item, params, parsed):

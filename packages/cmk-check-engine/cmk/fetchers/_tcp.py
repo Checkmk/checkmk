@@ -65,6 +65,7 @@ def wrap_tls(sock: socket.socket, server_hostname: str, *, tls_config: TLSConfig
 
     try:
         ctx = ssl.create_default_context(cadata=cadata)
+        ctx.verify_flags &= ~ssl.VERIFY_X509_STRICT  # remove this with CMK-27031
         ctx.load_cert_chain(certfile=tls_config.site_crt)
         return ctx.wrap_socket(sock, server_hostname=server_hostname)
     except ssl.SSLError as e:

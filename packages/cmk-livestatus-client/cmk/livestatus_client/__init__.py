@@ -262,6 +262,8 @@ def create_client_socket(
         return sock
 
     context = ssl.create_default_context()
+    context.verify_flags &= ~ssl.VERIFY_X509_STRICT  # remove this with CMK-27031
+
     context.check_hostname = False
     context.verify_mode = ssl.CERT_REQUIRED if verify else ssl.CERT_NONE
     context.minimum_version = ssl.TLSVersion.TLSv1_2

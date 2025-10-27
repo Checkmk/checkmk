@@ -18,6 +18,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final, TypedDict
 
+from livestatus import SiteConfigurations
+
 import cmk.ccc.plugin_registry
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -26,7 +28,10 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.type_defs import (
+    GlobalSettings,
+    GraphTimerange,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import ValueSpec
@@ -307,6 +312,8 @@ class GlobalSettingsContext:
     edition_of_local_site: Edition
     site_neutral_log_dir: Path
     site_neutral_var_dir: Path
+    configured_sites: SiteConfigurations
+    configured_graph_timeranges: Sequence[GraphTimerange]
 
 
 class ConfigVariable:

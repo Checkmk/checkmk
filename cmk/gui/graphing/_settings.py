@@ -4,18 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Age, Dictionary, ListOf, TextInput
-from cmk.gui.watolib.config_domain_name import ConfigVariable
+from cmk.gui.watolib.config_domain_name import ConfigVariable, GlobalSettingsContext
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
 
-ConfigVariableGraphTimeranges = ConfigVariable(
-    group=ConfigVariableGroupUserInterface,
-    primary_domain=ConfigDomainGUI,
-    ident="graph_timeranges",
-    valuespec=lambda context: ListOf(
+
+def _valuespec(context: GlobalSettingsContext) -> ListOf[dict[str, object]]:
+    return ListOf(
         valuespec=Dictionary(
             optional_keys=[],
             elements=[
@@ -37,6 +34,13 @@ ConfigVariableGraphTimeranges = ConfigVariable(
         title=_("Custom graph time ranges"),
         movable=True,
         totext=_("%d time ranges"),
-        default_value=active_config.graph_timeranges,
-    ),
+        default_value=[dict(graph_range) for graph_range in context.configured_graph_timeranges],
+    )
+
+
+ConfigVariableGraphTimeranges = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    primary_domain=ConfigDomainGUI,
+    ident="graph_timeranges",
+    valuespec=_valuespec,
 )

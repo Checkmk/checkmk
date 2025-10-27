@@ -1743,11 +1743,11 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 )
                 return
 
-        self._show_configuration_variables(debug=config.debug)
+        self._show_configuration_variables(config)
 
     @override
-    def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context(self._site_id)
+    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
+        return make_global_settings_context(self._site_id, config)
 
 
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
@@ -1801,8 +1801,8 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
     @override
-    def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context(self._site_id)
+    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
+        return make_global_settings_context(self._site_id, config)
 
 
 class ModeSiteLivestatusEncryption(WatoMode):

@@ -44,7 +44,9 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(
-        cls, service_levels: Sequence[tuple[int, str]]
+        cls,
+        sites: SiteConfigurations,
+        service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry | tuple[str, ListChoice]]:
         raise NotImplementedError()
 
@@ -117,9 +119,11 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
 
     @classmethod
     def _generic_rule_match_conditions(
-        cls, service_levels: Sequence[tuple[int, str]]
+        cls,
+        sites: SiteConfigurations,
+        service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry]:
-        return _simple_host_rule_match_conditions() + [
+        return _simple_host_rule_match_conditions(sites) + [
             (
                 "match_servicelabels",
                 Labels(
@@ -370,9 +374,9 @@ class ABCEventsMode(WatoMode, abc.ABC, Generic[_T_EventSpec]):
                 )
 
 
-def _simple_host_rule_match_conditions() -> list[DictionaryEntry]:
+def _simple_host_rule_match_conditions(sites: SiteConfigurations) -> list[DictionaryEntry]:
     return [
-        site_rule_match_condition(only_sites_with_replication=False),
+        site_rule_match_condition(sites, only_sites_with_replication=False),
         _single_folder_rule_match_condition(),
     ] + common_host_rule_match_conditions()
 

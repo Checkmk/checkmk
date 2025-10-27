@@ -8,7 +8,7 @@ from logging import Logger
 from typing import override
 
 from cmk.ccc.site import omd_site
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.wato.pages.global_settings import make_global_settings_context
@@ -39,9 +39,9 @@ _REMOVED_OPTIONS: Sequence[str] = [
 class UpdateGlobalSettings(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        _update_installation_wide_global_settings(logger)
-        _update_site_specific_global_settings(logger)
-        _update_remote_site_specific_global_settings(logger)
+        _update_installation_wide_global_settings(logger, active_config)
+        _update_site_specific_global_settings(logger, active_config)
+        _update_remote_site_specific_global_settings(logger, active_config)
 
 
 update_action_registry.register(
@@ -54,30 +54,41 @@ update_action_registry.register(
 )
 
 
-def _update_installation_wide_global_settings(logger: Logger) -> None:
+def _update_installation_wide_global_settings(
+    logger: Logger,
+    ui_config: Config,
+) -> None:
     """Update the globals.mk of the local site"""
     save_global_settings(
         update_global_config(
             logger,
             # Load full config (with undefined settings)
             load_configuration_settings(full_config=True),
+            ui_config,
         ),
     )
 
 
-def _update_site_specific_global_settings(logger: Logger) -> None:
+def _update_site_specific_global_settings(
+    logger: Logger,
+    ui_config: Config,
+) -> None:
     """Update the sitespecific.mk of the local site (which is a remote site)"""
-    if not is_distributed_setup_remote_site(active_config.sites):
+    if not is_distributed_setup_remote_site(ui_config.sites):
         return
     save_site_global_settings(
         update_global_config(
             logger,
             load_site_global_settings(),
+            ui_config,
         )
     )
 
 
-def _update_remote_site_specific_global_settings(logger: Logger) -> None:
+def _update_remote_site_specific_global_settings(
+    logger: Logger,
+    ui_config: Config,
+) -> None:
     """Update the site specific global settings in the central site configuration"""
     site_mgmt = site_management_registry["site_management"]
     configured_sites = site_mgmt.load_sites()
@@ -87,44 +98,46 @@ def _update_remote_site_specific_global_settings(logger: Logger) -> None:
                 update_global_config(
                     logger,
                     site_spec.setdefault("globals", {}),
+                    ui_config,
                 )
             )
     site_mgmt.save_sites(
         configured_sites,
         activate=False,
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=ui_config.wato_pprint_config,
     )
 
 
 def update_global_config(
     logger: Logger,
-    global_config: GlobalSettings,
+    global_settings: GlobalSettings,
+    ui_config: Config,
 ) -> GlobalSettings:
-    new_config = _remove_options(logger, global_config, _REMOVED_OPTIONS)
-    new_config = _update_renamed_global_config_vars(
+    new_settings = _remove_options(logger, global_settings, _REMOVED_OPTIONS)
+    new_settings = _update_renamed_global_config_vars(
         logger,
-        new_config,
+        new_settings,
     )
-    return _transform_global_config_values(new_config)
+    return _transform_global_config_values(new_settings, ui_config)
 
 
 def _update_renamed_global_config_vars(
     logger: Logger,
-    global_config: GlobalSettings,
+    global_settings: GlobalSettings,
 ) -> GlobalSettings:
-    global_config_updated = dict(global_config)
+    global_settings_updated = dict(global_settings)
     for old_config_name, new_config_name, replacement in _RENAMED_GLOBALS:
-        if old_config_name in global_config_updated:
+        if old_config_name in global_settings_updated:
             logger.log(VERBOSE, f"Replacing {old_config_name} with {new_config_name}")
-            old_value = global_config_updated[old_config_name]
+            old_value = global_settings_updated[old_config_name]
             if replacement:
-                global_config_updated.setdefault(new_config_name, replacement[old_value])
+                global_settings_updated.setdefault(new_config_name, replacement[old_value])
             else:
-                global_config_updated.setdefault(new_config_name, old_value)
+                global_settings_updated.setdefault(new_config_name, old_value)
 
-            del global_config_updated[old_config_name]
+            del global_settings_updated[old_config_name]
 
-    return filter_unknown_settings(global_config_updated)
+    return filter_unknown_settings(global_settings_updated)
 
 
 def _remove_options(
@@ -144,22 +157,29 @@ def _remove_options(
     return config
 
 
-def _transform_global_config_value(config_var: str, config_val: object) -> object:
+def _transform_global_config_value(
+    global_settings_var: str,
+    global_settings_val: object,
+    ui_config: Config,
+) -> object:
     try:
-        config_variable = config_variable_registry[config_var]
+        config_variable = config_variable_registry[global_settings_var]
     except KeyError:
-        return config_val
-    return config_variable.valuespec(make_global_settings_context(omd_site())).transform_value(
-        config_val
-    )
+        return global_settings_val
+    return config_variable.valuespec(
+        make_global_settings_context(omd_site(), ui_config)
+    ).transform_value(global_settings_val)
 
 
-def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSettings:
+def _transform_global_config_values(
+    global_settings: GlobalSettings,
+    ui_config: Config,
+) -> GlobalSettings:
     return {
-        **global_config,
+        **global_settings,
         **{
-            config_var: _transform_global_config_value(config_var, config_val)
-            for config_var, config_val in global_config.items()
+            config_var: _transform_global_config_value(config_var, config_val, ui_config)
+            for config_var, config_val in global_settings.items()
             if config_var not in UNREGISTERED_SETTINGS
         },
     }

@@ -206,18 +206,18 @@ class ABCGlobalSettingsMode(WatoMode):
             for group in sorted(self._groups(), key=lambda g: g.sort_index())
         )
 
-    def _show_configuration_variables(self, *, debug: bool) -> None:
+    def _show_configuration_variables(self, config: Config) -> None:
         search = self._search
 
         at_least_one_painted = False
         html.open_div(class_="globalvars")
         global_config = get_global_config()
-        for group, config_variables in self.iter_all_configuration_variables(debug=debug):
+        for group, config_variables in self.iter_all_configuration_variables(debug=config.debug):
             header_is_painted = False  # needed for omitting empty groups
 
             for config_variable in config_variables:
                 varname = config_variable.ident()
-                valuespec = config_variable.valuespec(self.make_global_settings_context())
+                valuespec = config_variable.valuespec(self.make_global_settings_context(config))
 
                 if not global_config.global_settings.is_activated(varname):
                     continue
@@ -318,7 +318,7 @@ class ABCGlobalSettingsMode(WatoMode):
         html.close_div()
 
     @abc.abstractmethod
-    def make_global_settings_context(self) -> GlobalSettingsContext: ...
+    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext: ...
 
 
 class ABCEditGlobalSettingMode(WatoMode):
@@ -326,7 +326,9 @@ class ABCEditGlobalSettingMode(WatoMode):
         self._varname = request.get_ascii_input_mandatory("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]
-            self._valuespec = self._config_variable.valuespec(self.make_global_settings_context())
+            self._valuespec = self._config_variable.valuespec(
+                self.make_global_settings_context(active_config)
+            )
         except KeyError:
             raise MKUserError(
                 "varname", _('The global setting "%s" does not exist.') % self._varname
@@ -534,7 +536,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         pass
 
     @abc.abstractmethod
-    def make_global_settings_context(self) -> GlobalSettingsContext: ...
+    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext: ...
 
 
 class ModeEditGlobals(ABCGlobalSettingsMode):
@@ -631,11 +633,14 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         return redirect(mode_url("globalvars"))
 
     def page(self, config: Config) -> None:
-        self._show_configuration_variables(debug=config.debug)
+        self._show_configuration_variables(config)
 
     @override
-    def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context(omd_site())
+    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
+        return make_global_settings_context(
+            omd_site(),
+            config,
+        )
 
 
 class DefaultModeEditGlobals(ModeEditGlobals):
@@ -666,8 +671,11 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditGlobals.mode_url()
 
     @override
-    def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context(omd_site())
+    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
+        return make_global_settings_context(
+            omd_site(),
+            config,
+        )
 
 
 class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
@@ -725,7 +733,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
             self._config_variable_to_match_item(
                 config_variable,
                 mode.edit_mode_name,
-                mode.make_global_settings_context(),
+                mode.make_global_settings_context(active_config),
             )
             for _group, config_variables in mode.iter_all_configuration_variables(
                 debug=active_config.debug
@@ -742,10 +750,12 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         return True
 
 
-def make_global_settings_context(target_site_id: SiteId) -> GlobalSettingsContext:
+def make_global_settings_context(target_site_id: SiteId, config: Config) -> GlobalSettingsContext:
     return GlobalSettingsContext(
         target_site_id=target_site_id,
         edition_of_local_site=edition(omd_root),
         site_neutral_log_dir=site_neutral_path(log_dir),
         site_neutral_var_dir=site_neutral_path(var_dir),
+        configured_sites=config.sites,
+        configured_graph_timeranges=config.graph_timeranges,
     )

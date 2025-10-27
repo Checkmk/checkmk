@@ -27,7 +27,7 @@ from cmk.gui.background_job import (
     JobTarget,
 )
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, Request, request, response
@@ -69,6 +69,7 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.diagnostics import (
     CheckmkFileInfo,
     CheckmkFileSensitivity,
@@ -135,12 +136,15 @@ class ModeDiagnostics(WatoMode):
         self._checkmk_licensing_files_map = get_checkmk_licensing_files_map()
         self._checkmk_log_files_map = get_checkmk_log_files_map()
         self._collect_dump = bool(request.get_ascii_input("_collect_dump"))
-        self._diagnostics_parameters = self._get_diagnostics_parameters()
+        self._diagnostics_parameters = self._get_diagnostics_parameters(active_config.sites)
         self._job = DiagnosticsDumpBackgroundJob()
 
-    def _get_diagnostics_parameters(self) -> DiagnosticsParameters | None:
+    def _get_diagnostics_parameters(
+        self,
+        sites: SiteConfigurations,
+    ) -> DiagnosticsParameters | None:
         if self._collect_dump:
-            params = self._vs_diagnostics().from_html_vars("diagnostics")
+            params = self._vs_diagnostics(sites).from_html_vars("diagnostics")
             return {
                 "site": params["site"],
                 "timeout": params.get("timing", {}).get("timeout", timeout_default),
@@ -225,12 +229,12 @@ class ModeDiagnostics(WatoMode):
             raise HTTPRedirect(self._job.detail_url())
 
         with html.form_context("diagnostics", method="POST"):
-            vs_diagnostics = self._vs_diagnostics()
+            vs_diagnostics = self._vs_diagnostics(config.sites)
             vs_diagnostics.render_input("diagnostics", {})
 
             html.hidden_fields()
 
-    def _vs_diagnostics(self) -> Dictionary:
+    def _vs_diagnostics(self, sites: SiteConfigurations) -> Dictionary:
         return Dictionary(
             title=_("Collect diagnostic dump"),
             render="form",
@@ -241,7 +245,7 @@ class ModeDiagnostics(WatoMode):
                     "site",
                     DropdownChoice(
                         title=_("Site"),
-                        choices=get_activation_site_choices(),
+                        choices=get_activation_site_choices(sites),
                     ),
                 ),
                 # TODO: provide the possibility to chose multiple sites

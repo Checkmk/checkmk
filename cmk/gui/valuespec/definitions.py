@@ -8582,7 +8582,7 @@ class SetupSiteChoice(DropdownChoice):
         deprecated_choices: Sequence[SiteId] = (),
     ):
         super().__init__(
-            choices=user_sites.get_activation_site_choices,
+            choices=lambda: user_sites.get_activation_site_choices(active_config.sites),
             sorted=sorted,
             label=label,
             help_separator=help_separator,

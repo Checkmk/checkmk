@@ -5,13 +5,17 @@
 
 from unittest.mock import patch
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import edition
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.wato.pages.global_settings import make_global_settings_context
-from cmk.gui.watolib.config_domain_name import config_variable_registry
+from cmk.gui.watolib.config_domain_name import config_variable_registry, GlobalSettingsContext
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.utils import site_neutral_path
+from cmk.utils.paths import log_dir, omd_root, var_dir
 
 
 def test_ui_theme_registration() -> None:
@@ -19,7 +23,16 @@ def test_ui_theme_registration() -> None:
     assert isinstance(var.primary_domain(), ConfigDomainGUI)
     assert var.group() == ConfigVariableGroupUserInterface
 
-    valuespec = var.valuespec(make_global_settings_context(omd_site()))
+    valuespec = var.valuespec(
+        GlobalSettingsContext(
+            target_site_id=omd_site(),
+            edition_of_local_site=edition(omd_root),
+            site_neutral_log_dir=site_neutral_path(log_dir),
+            site_neutral_var_dir=site_neutral_path(var_dir),
+            configured_sites=SiteConfigurations({}),
+            configured_graph_timeranges=[],
+        )
+    )
     assert isinstance(valuespec, DropdownChoice)
     assert valuespec.choices() == theme_choices()
 
@@ -35,6 +48,15 @@ def test_ui_theme_default_value() -> None:
         return_value=[("modern-dark", "Dark")],
     ):
         assert (
-            var.valuespec(make_global_settings_context(omd_site())).value_to_html(default_setting)
+            var.valuespec(
+                GlobalSettingsContext(
+                    target_site_id=omd_site(),
+                    edition_of_local_site=edition(omd_root),
+                    site_neutral_log_dir=site_neutral_path(log_dir),
+                    site_neutral_var_dir=site_neutral_path(var_dir),
+                    configured_sites=SiteConfigurations({}),
+                    configured_graph_timeranges=[],
+                )
+            ).value_to_html(default_setting)
             == "Dark"
         )

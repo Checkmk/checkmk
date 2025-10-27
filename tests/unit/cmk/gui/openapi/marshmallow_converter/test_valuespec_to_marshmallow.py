@@ -38,5 +38,11 @@ def test_valuespec_to_marshmallow_all_global_settings(fake_user: LoggedInUser) -
         with gui_context(), _UserContext(fake_user):
             for name, config_variable in config_variable_registry.items():
                 valuespec_to_marshmallow(
-                    config_variable.valuespec(make_global_settings_context(omd_site())), name=name
+                    config_variable.valuespec(
+                        make_global_settings_context(
+                            omd_site(),
+                            active_config,
+                        )
+                    ),
+                    name=name,
                 )

@@ -64,8 +64,8 @@ def get_event_console_site_choices() -> list[tuple[SiteId, str]]:
     )
 
 
-def get_activation_site_choices() -> list[tuple[SiteId, str]]:
-    return site_choices(activation_sites(active_config.sites))
+def get_activation_site_choices(site_configs: SiteConfigurations) -> list[tuple[SiteId, str]]:
+    return site_choices(activation_sites(site_configs))
 
 
 def activation_sites(site_configs: SiteConfigurations) -> SiteConfigurations:

@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import logging
 
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.valuespec import TextInput, Transform
 from cmk.gui.watolib.config_domain_name import (
@@ -19,6 +19,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.update_config.plugins.actions import global_settings
 
 
+@pytest.mark.usefixtures("request_context")
 def test_update_global_config_transform_values(
     mocker: MockerFixture,
     monkeypatch: pytest.MonkeyPatch,
@@ -41,9 +42,11 @@ def test_update_global_config_transform_values(
     registry.register(ConfigVariableKey)
     monkeypatch.setattr(global_settings, "config_variable_registry", registry)
 
-    assert global_settings.update_global_config(logging.getLogger(), {"key": "old"}) == {
-        "key": "new"
-    }
+    assert global_settings.update_global_config(
+        logging.getLogger(),
+        {"key": "old"},
+        active_config,
+    ) == {"key": "new"}
 
 
 def test_update_global_config(
@@ -78,6 +81,7 @@ def test_update_global_config(
             "old_unused": "remove me",
             "unknown": "How did this get here?",
         },
+        active_config,
     ) == {
         "keep": "do not remove me",
         "unknown": "How did this get here?",

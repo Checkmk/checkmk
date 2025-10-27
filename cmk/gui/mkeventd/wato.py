@@ -3206,7 +3206,9 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         except KeyError:
             raise MKUserError("_varname", _("The requested global setting does not exist."))
 
-        def_value = config_variable.valuespec(self.make_global_settings_context()).default_value()
+        def_value = config_variable.valuespec(
+            self.make_global_settings_context(config),
+        ).default_value()
 
         if not transactions.check_transaction():
             return None
@@ -3239,11 +3241,11 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
-        self._show_configuration_variables(debug=config.debug)
+        self._show_configuration_variables(config)
 
     @override
-    def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context(omd_site())
+    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
+        return make_global_settings_context(omd_site(), config)
 
 
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
@@ -3290,8 +3292,8 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     def _back_url(self) -> str:
         return ModeEventConsoleSettings.mode_url()
 
-    def make_global_settings_context(self) -> GlobalSettingsContext:
-        return make_global_settings_context(omd_site())
+    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
+        return make_global_settings_context(omd_site(), config)
 
 
 def _get_event_console_sync_sites() -> list[SiteId]:

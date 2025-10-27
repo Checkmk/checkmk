@@ -364,7 +364,9 @@ class ABCHostMode(WatoMode, abc.ABC):
                             id_hash=DropdownChoice.option_id(site_id),
                             site_id=site_id,
                         )
-                        for site_id, _site_name in user_sites.get_activation_site_choices()
+                        for site_id, _site_name in user_sites.get_activation_site_choices(
+                            config.sites
+                        )
                     ],
                     agent_connection_modes=[
                         ModeHostAgentConnectionMode(

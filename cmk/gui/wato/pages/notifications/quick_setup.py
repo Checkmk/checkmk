@@ -1094,7 +1094,9 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 name=name,
                                                 title=Title("%s") % title,
                                             )
-                                            for name, title in get_activation_site_choices()
+                                            for name, title in get_activation_site_choices(
+                                                active_config.sites
+                                            )
                                         ],
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,

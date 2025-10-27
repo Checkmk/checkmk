@@ -9,6 +9,9 @@ THE_PID=$(cat "$PIDFILE" 2>/dev/null)
 # OPTS="--debug"
 OPTS=""
 
+# shellcheck source=../../../../omd/skel/.profile
+. "$OMD_ROOT/.profile"
+
 process_is_running() {
     [ -e "$PIDFILE" ] && kill -0 "$THE_PID" 2>/dev/null
 }

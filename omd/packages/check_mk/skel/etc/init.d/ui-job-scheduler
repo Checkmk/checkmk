@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #
-# shellcheck source=/dev/null
+# shellcheck source=../../../../omd/skel/.profile
 . "$OMD_ROOT/.profile"
-# shellcheck source=/dev/null
+# shellcheck source=../../../../omd/init_profile
 . "$OMD_ROOT/lib/omd/init_profile"
 
 unset LANG

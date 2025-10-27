@@ -72,7 +72,7 @@ from ._snapin import SnapinRegistry as SnapinRegistry
 from ._snapin import view_menu_items as view_menu_items
 from ._snapin import write_snapin_exception as write_snapin_exception
 from ._snapin._bookmarks import BookmarkList
-from ._snapin_dashlet import SnapinDashlet
+from ._snapin_dashlet import SnapinDashlet, SnapinWidgetIFramePage
 from ._snapin_dashlet import SnapinDashletConfig as SnapinDashletConfig
 from .main_menu import (
     ajax_message_read,
@@ -114,6 +114,7 @@ def register(
     page_registry.register(
         PageEndpoint("ajax_sidebar_get_sites_and_changes", PageAjaxSitesAndChanges())
     )
+    page_registry.register(PageEndpoint("widget_iframe_sidebar", SnapinWidgetIFramePage()))
     permission_section_registry.register(PERMISSION_SECTION_SIDEBAR_SNAPINS)
     _snapin.register(
         snapin_registry_,

@@ -12,6 +12,7 @@ import DashboardContentGraph from './DashboardContentGraph.vue'
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
 import DashboardContentNtop from './DashboardContentNtop.vue'
+import DashboardContentSidebarElement from './DashboardContentSidebarElement.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentTopList from './DashboardContentTopList.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
@@ -37,6 +38,8 @@ function contentTypeToComponent(contentType: string): Component {
       return DashboardContentTopList
     case contentType === 'user_messages':
       return DashboardContentUserMessages
+    case contentType === 'sidebar_element':
+      return DashboardContentSidebarElement
     case CONTENT_FIGURE_TYPES.includes(contentType):
       return DashboardContentFigure
     case GRAPH_TYPES.includes(contentType):

@@ -202,6 +202,7 @@ def piggyback_host_from_dummy_generator(
             pb_host_count=pb_host_count,
             pb_service_count=pb_service_count,
             rule_folder=folder_name,
+            cleanup=cleanup,
         ) as datasource_id:
             with _discover_services_of_piggybacked_hosts(
                 site=site,

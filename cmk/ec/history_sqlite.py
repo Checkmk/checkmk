@@ -7,6 +7,7 @@
 import itertools
 import json
 import os
+import re
 import sqlite3
 import stat
 import time
@@ -105,8 +106,6 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
     query_arguments: list[object] = []
 
     for f in filters:
-        adjusted_column_name = ""
-
         if f.column_name.startswith("event_") or f.column_name.startswith("history_"):
             adjusted_column_name = f.column_name.replace("event_", "").replace("history_", "")
         else:
@@ -115,21 +114,27 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
         if adjusted_column_name not in TABLE_COLUMNS:
             raise ValueError(f"Filter {f.column_name} not implemented for SQLite")
 
+        if f.operator_name == "in":
+            query_arguments.extend(f.argument)
+        else:
+            query_arguments.append(f.argument)
+
+        query_columns.add(adjusted_column_name)
         sqlite_filter: str = {
             "=": f"{adjusted_column_name} {f.operator_name} ?",
             ">": f"{adjusted_column_name} {f.operator_name} ?",
             "<": f"{adjusted_column_name} {f.operator_name} ?",
             ">=": f"{adjusted_column_name} {f.operator_name} ?",
             "<=": f"{adjusted_column_name} {f.operator_name} ?",
-            "~": f"{adjusted_column_name} LIKE '%?%'",
-            "=~": f"{adjusted_column_name} LIKE '%?%'",
-            "~~": f"{adjusted_column_name} LIKE '%?%'",
-            "in": f"{adjusted_column_name} in '%?%'",
+            "~": f"{adjusted_column_name} REGEXP ?",
+            "=~": f"{adjusted_column_name} = ? COLLATE NOCASE",
+            "~~": f"regexp_nocase(?, {adjusted_column_name})",
+            "in": f"{adjusted_column_name} in ({','.join(['?'] * len(f.argument))})"
+            if f.operator_name == "in"
+            else "",
         }[f.operator_name]
-
-        query_columns.add(adjusted_column_name)
         query_conditions.append(sqlite_filter)
-        query_arguments.append(f.argument)
+
     return (
         f"SELECT * FROM history {'WHERE' if query_arguments else ''} {' AND '.join(query_conditions)};",  # nosec B608 # BNS:6b6392
         query_arguments,
@@ -206,6 +211,19 @@ class SQLiteHistory(History):
         # check_same_thread=False the connection may be accessed in multiple threads.
         self.conn = sqlite3.connect(
             self._settings.database, check_same_thread=False, detect_types=sqlite3.PARSE_DECLTYPES
+        )
+
+        self.conn.create_function(
+            "regexp",
+            2,
+            lambda p, s: 1 if re.search(p, s) else 0,
+            deterministic=True,
+        )
+        self.conn.create_function(
+            "regexp_nocase",
+            2,
+            lambda p, s: 1 if re.search(p, s, re.IGNORECASE) else 0,
+            deterministic=True,
         )
 
         self.conn.row_factory = sqlite3.Row

@@ -34,7 +34,7 @@ from . import _filters, views, wato
 from ._find_usage import (
     find_timeperiod_usage_in_ec_rules,
     find_usages_of_contact_group_in_ec_rules,
-    find_usages_of_contact_group_in_mkeventd_notify_contactgroup,
+    UsagesOfContactGroupInMkeventdNotifyContactGroupFinder,
 )
 from ._openapi import register as openapi_register
 from ._sidebar_snapin import SidebarSnapinEventConsole
@@ -106,7 +106,12 @@ def register(
     snapin_registry.register(SidebarSnapinEventConsole)
     contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_ec_rules)
     contact_group_usage_finder_registry.register(
-        find_usages_of_contact_group_in_mkeventd_notify_contactgroup
+        UsagesOfContactGroupInMkeventdNotifyContactGroupFinder(
+            mkeventd_notify_contactgroup_settings_title=wato.TITLE_MKEVENTD_NOTIFY_CONTACTGROUP,
+            mkevent_notify_contactgroup_default=wato.ConfigVariableEventConsoleNotifyContactgroup.primary_domain().default_globals()[
+                wato.ConfigVariableEventConsoleNotifyContactgroup.ident()
+            ],
+        )
     )
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_ec_rules)
     openapi_register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)

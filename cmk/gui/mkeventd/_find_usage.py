@@ -11,30 +11,34 @@ import cmk.utils.paths
 from cmk.gui.groups import GroupName
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.config_domain_name import config_variable_registry, GlobalSettingsContext
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
-def find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
-    name: GroupName, global_config: GlobalSettings
-) -> list[tuple[str, str]]:
-    """Is the contactgroup used in mkeventd notify (if available)?"""
-    used_in = []
-    if "mkeventd_notify_contactgroup" in config_variable_registry:
-        config_variable = config_variable_registry["mkeventd_notify_contactgroup"]
-        domain = config_variable.primary_domain()
-        configured = global_config.get("mkeventd_notify_contactgroup")
-        default_value = domain.default_globals()["mkeventd_notify_contactgroup"]
-        if (configured and name == configured) or name == default_value:
-            used_in.append(
+class UsagesOfContactGroupInMkeventdNotifyContactGroupFinder:
+    __name__ = "find_usages_of_contact_group_in_mkeventd_notify_contactgroup"
+
+    def __init__(
+        self,
+        mkeventd_notify_contactgroup_settings_title: str,
+        mkevent_notify_contactgroup_default: GroupName,
+    ) -> None:
+        self._title = mkeventd_notify_contactgroup_settings_title
+        self._default = mkevent_notify_contactgroup_default
+
+    def __call__(self, name: GroupName, global_config: GlobalSettings) -> list[tuple[str, str]]:
+        if (name == global_config.get("mkeventd_notify_contactgroup")) or (name == self._default):
+            return [
                 (
-                    "%s" % (config_variable.valuespec(GlobalSettingsContext()).title()),
+                    self._title,
                     folder_preserving_link(
-                        [("mode", "edit_configvar"), ("varname", "mkeventd_notify_contactgroup")]
+                        [
+                            ("mode", "edit_configvar"),
+                            ("varname", "mkeventd_notify_contactgroup"),
+                        ]
                     ),
                 )
-            )
-    return used_in
+            ]
+        return []
 
 
 def find_usages_of_contact_group_in_ec_rules(

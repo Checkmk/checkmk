@@ -4743,12 +4743,13 @@ ConfigVariableEventConsolePrettyPrintRules = ConfigVariable(
     ),
 )
 
+TITLE_MKEVENTD_NOTIFY_CONTACTGROUP = _("Send notifications to Event Console")
 ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
     group=ConfigVariableGroupNotifications,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_notify_contactgroup",
     valuespec=lambda context: ContactGroupSelection(
-        title=_("Send notifications to Event Console"),
+        title=TITLE_MKEVENTD_NOTIFY_CONTACTGROUP,
         no_selection=_("(don't send notifications to Event Console)"),
         label=_("send notifications of contactgroup:"),
         help=_(

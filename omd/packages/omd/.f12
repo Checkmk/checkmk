@@ -44,5 +44,5 @@ OLD_VERSION=$(readlink "${ROOT}/version")
 OLD_VERSION=${OLD_VERSION##*/}
 
 echo "Keeping version number in 'omd' at $OLD_VERSION"
-sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" "${ROOT}/lib/python3/omdlib/__init__.py"
+sed -i "s|{CMK_VERSION}.{CMK_EDITION}|$OLD_VERSION|g" "${ROOT}/lib/python3/omdlib/__init__.py"
 sed -i 's|#!/omd/versions/.*/bin/python3|#!/omd/versions/'"${OLD_VERSION}"'/bin/python3|g' "${ROOT}/bin/omd"

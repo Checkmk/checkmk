@@ -834,9 +834,9 @@ def file_status(
     target_type = filetype(target_path)
 
     if source_type == "file" and target_type == "file":
-        source_content = file_contents(source_path, source_replacements)
-        target_content = file_contents(target_path, target_replacements)
-        changed_content = source_type == "file" and source_content != target_content
+        changed_content = file_contents(source_path, source_replacements) != file_contents(
+            target_path, target_replacements
+        )
     else:
         # FIXME: Was ist, wenn aus einer Datei ein Link gemacht wurde? Oder umgekehrt?
         changed_content = (

@@ -4143,7 +4143,7 @@ class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
                 "size of deleted entries reaches this number the Event Console history will be cleaned up."
             ),
             minvalue=1 * 1024 * 1024,
-            maxvalue=100 * 1024 * 1024,
+            maxvalue=100 * 1024 * 1024 * 1024,
         )
 
 

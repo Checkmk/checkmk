@@ -304,6 +304,7 @@ config_variable_group_registry = ConfigVariableGroupRegistry()
 class GlobalSettingsContext:
     target_site_id: SiteId
     site_neutral_log_dir: Path
+    site_neutral_var_dir: Path
 
 
 class ConfigVariable:

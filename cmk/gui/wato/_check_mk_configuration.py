@@ -534,11 +534,9 @@ ConfigVariableDebug = ConfigVariable(
     ),
 )
 
-ConfigVariableGUIProfile = ConfigVariable(
-    group=ConfigVariableGroupUserInterface,
-    primary_domain=ConfigDomainGUI,
-    ident="profile",
-    valuespec=lambda context: DropdownChoice(
+
+def _valuespec_profile(context: GlobalSettingsContext) -> DropdownChoice:
+    return DropdownChoice(
         title=_("Profile requests"),
         help=_(
             "It is possible to profile the rendering process of Multisite pages. This "
@@ -549,13 +547,20 @@ ConfigVariableGUIProfile = ConfigVariable(
             "enabled by request the profiling mode is enabled by providing the HTTP "
             "variable <tt>_profile</tt> in the query parameters."
         )
-        % site_neutral_path(cmk.utils.paths.var_dir),
+        % context.site_neutral_var_dir,
         choices=[
             (False, _("Disable profiling")),
             ("enable_by_var", _("Enable profiling by request")),
             (True, _("Enable profiling for all requests")),
         ],
-    ),
+    )
+
+
+ConfigVariableGUIProfile = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    primary_domain=ConfigDomainGUI,
+    ident="profile",
+    valuespec=_valuespec_profile,
 )
 
 ConfigVariableDebugLivestatusQueries = ConfigVariable(

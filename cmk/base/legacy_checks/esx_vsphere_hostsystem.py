@@ -3,17 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
-
-# mypy: disable-error-code="var-annotated"
-
+from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, STATE_MARKERS
-
-check_info = {}
+from cmk.agent_based.legacy.v0_unstable import STATE_MARKERS
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
+from cmk.plugins.vsphere.agent_based.esx_vsphere_hostsystem_section import HostSystemSection
 
 # .
 #   .--State---------------------------------------------------------------.
@@ -26,34 +30,33 @@ check_info = {}
 #   +----------------------------------------------------------------------+
 
 
-def inventory_esx_vsphere_hostsystem_state(parsed):
-    if "runtime.inMaintenanceMode" in parsed:
-        return [(None, None)]
-    return []
+def inventory_esx_vsphere_hostsystem_state(section: HostSystemSection) -> DiscoveryResult:
+    if "runtime.inMaintenanceMode" in section:
+        yield Service()
 
 
-def check_esx_vsphere_hostsystem_state(_no_item, _no_params, parsed):
-    state = 0
-    if "overallStatus" not in parsed:
+def check_esx_vsphere_hostsystem_state(section: HostSystemSection) -> CheckResult:
+    state = State.OK
+    if "overallStatus" not in section:
         return
 
-    overallStatus = str(parsed["overallStatus"][0])
+    overallStatus = str(section["overallStatus"][0])
     if overallStatus == "yellow":
-        state = 1
+        state = State.WARN
     elif overallStatus in ["red", "gray"]:
-        state = 2
-    yield state, "Entity state: " + overallStatus
+        state = State.CRIT
+    yield Result(state=state, summary=f"Entity state: {overallStatus}")
 
-    state = 0
-    powerState = str(parsed["runtime.powerState"][0])
+    state = State.OK
+    powerState = str(section["runtime.powerState"][0])
     if powerState in ["poweredOff", "unknown"]:
-        state = 2
+        state = State.CRIT
     elif powerState == "standBy":
-        state = 1
-    yield state, "Power state: " + powerState
+        state = State.WARN
+    yield Result(state=state, summary=f"Power state: {powerState}")
 
 
-check_info["esx_vsphere_hostsystem.state"] = LegacyCheckDefinition(
+check_plugin_esx_vsphere_hostsystem_state = CheckPlugin(
     name="esx_vsphere_hostsystem_state",
     service_name="Overall state",
     sections=["esx_vsphere_hostsystem"],
@@ -74,34 +77,38 @@ check_info["esx_vsphere_hostsystem.state"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_hostsystem_maintenance(parsed):
-    if "runtime.inMaintenanceMode" in parsed:
-        current_state = str(parsed["runtime.inMaintenanceMode"][0]).lower()
-        return [(None, {"target_state": current_state})]
-    return []
+def inventory_esx_vsphere_hostsystem_maintenance(section: HostSystemSection) -> DiscoveryResult:
+    if "runtime.inMaintenanceMode" in section:
+        current_state = str(section["runtime.inMaintenanceMode"][0]).lower()
+        yield Service(parameters={"target_state": current_state})
 
 
-def check_esx_vsphere_hostsystem_maintenance(_no_item, params, parsed):
+def check_esx_vsphere_hostsystem_maintenance(
+    params: Mapping[str, Any], section: HostSystemSection
+) -> CheckResult:
     target_state = params["target_state"]
 
-    if "runtime.inMaintenanceMode" not in parsed:
+    if "runtime.inMaintenanceMode" not in section:
         return None
 
-    current_state = str(parsed["runtime.inMaintenanceMode"][0]).lower()
-    state = 0
+    current_state = str(section["runtime.inMaintenanceMode"][0]).lower()
+    state = State.OK
     if target_state != current_state:
-        state = 2
+        state = State.CRIT
     if current_state == "true":
-        return state, "System running is in Maintenance mode"
-    return state, "System not in Maintenance mode"
+        yield Result(state=state, summary="System running is in Maintenance mode")
+        return
+    yield Result(state=state, summary="System not in Maintenance mode")
+    return
 
 
-check_info["esx_vsphere_hostsystem.maintenance"] = LegacyCheckDefinition(
+check_plugin_esx_vsphere_hostsystem_maintenance = CheckPlugin(
     name="esx_vsphere_hostsystem_maintenance",
     service_name="Maintenance Mode",
     sections=["esx_vsphere_hostsystem"],
     discovery_function=inventory_esx_vsphere_hostsystem_maintenance,
     check_function=check_esx_vsphere_hostsystem_maintenance,
+    check_default_parameters={},
     check_ruleset_name="esx_hostystem_maintenance",
 )
 
@@ -125,19 +132,19 @@ check_info["esx_vsphere_hostsystem.maintenance"] = LegacyCheckDefinition(
 # vmhba32:C0:T0:L0 active
 
 
-def esx_vsphere_multipath_convert(data):
+def esx_vsphere_multipath_convert(data: HostSystemSection) -> Mapping[str, list[tuple[str, str]]]:
     raw_path_info = data.get("config.storageDevice.multipathInfo")
     if not raw_path_info:
         return {}
 
-    paths = {}
+    paths = dict[str, list[tuple[str, str]]]()
     for lun_id, path, state in zip(raw_path_info[::3], raw_path_info[1::3], raw_path_info[2::3]):
         paths.setdefault(lun_id, []).append((state, path))
     return paths
 
 
-def inventory_esx_vsphere_hostsystem_multipath(parsed):
-    return [(x, {}) for x in esx_vsphere_multipath_convert(parsed)]
+def inventory_esx_vsphere_hostsystem_multipath(section: HostSystemSection) -> DiscoveryResult:
+    yield from [Service(item=x) for x in esx_vsphere_multipath_convert(section)]
 
 
 @dataclass
@@ -148,10 +155,10 @@ class StateInfo:
 
 
 def check_esx_vsphere_hostsystem_multipath(
-    item,
-    params,
-    parsed,
-):
+    item: str,
+    params: Mapping[str, Any],
+    section: HostSystemSection,
+) -> CheckResult:
     state_infos = {
         "active": StateInfo(0, 0, ""),
         "dead": StateInfo(2, 0, ""),
@@ -164,9 +171,8 @@ def check_esx_vsphere_hostsystem_multipath(
     message = ""
     path_names = []
 
-    states = esx_vsphere_multipath_convert(parsed).get(item)
-    if states is None:
-        return states
+    if not (states := esx_vsphere_multipath_convert(section).get(item)):
+        return
 
     levels_map = params["levels_map"]
 
@@ -222,10 +228,10 @@ def check_esx_vsphere_hostsystem_multipath(
     message += ", ".join(element_text)
     message += "\nIncluded Paths:\n" + "\n".join(path_names)
 
-    return state, message
+    yield Result(state=State(state), summary=message.split("\n")[0], details=message)
 
 
-check_info["esx_vsphere_hostsystem.multipath"] = LegacyCheckDefinition(
+check_plugin_esx_vsphere_hostsystem_multipath = CheckPlugin(
     name="esx_vsphere_hostsystem_multipath",
     service_name="Multipath %s",
     sections=["esx_vsphere_hostsystem"],

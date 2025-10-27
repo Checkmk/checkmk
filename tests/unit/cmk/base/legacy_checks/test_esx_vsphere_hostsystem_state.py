@@ -5,9 +5,10 @@
 
 import pytest
 
-from cmk.agent_based.v1 import Result, State
-from cmk.agent_based.v2 import CheckResult
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.agent_based.v2 import CheckResult, Result, State
+from cmk.base.legacy_checks.esx_vsphere_hostsystem import (
+    check_esx_vsphere_hostsystem_state,
+)
 from cmk.plugins.vsphere.lib.esx_vsphere import Section
 
 
@@ -37,13 +38,11 @@ from cmk.plugins.vsphere.lib.esx_vsphere import Section
     ],
 )
 def test_check_esx_vsphere_hostsystem_cpu_entity_state(
-    agent_based_plugins: AgentBasedPlugins, state: str, expected_check_result: CheckResult
+    state: str, expected_check_result: CheckResult
 ) -> None:
-    check = agent_based_plugins.check_plugins[CheckPluginName("esx_vsphere_hostsystem_state")]
     assert (
         list(
-            check.check_function(
-                params={},
+            check_esx_vsphere_hostsystem_state(
                 section=Section(
                     [
                         ("overallStatus", [state]),
@@ -82,13 +81,11 @@ def test_check_esx_vsphere_hostsystem_cpu_entity_state(
     ],
 )
 def test_check_esx_vsphere_hostsystem_cpu_power_state(
-    agent_based_plugins: AgentBasedPlugins, state: str, expected_check_result: CheckResult
+    state: str, expected_check_result: CheckResult
 ) -> None:
-    check = agent_based_plugins.check_plugins[CheckPluginName("esx_vsphere_hostsystem_state")]
     assert (
         list(
-            check.check_function(
-                params={},
+            check_esx_vsphere_hostsystem_state(
                 section=Section(
                     [
                         ("overallStatus", ["green"]),

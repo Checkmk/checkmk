@@ -54,7 +54,7 @@ EDITION_SHORT     := cme
 else ifeq ($(EDITION),saas)
 EDITION_SHORT     := cse
 else
-$(error Unknown edition EDITION="$(EDITION)")
+EDITION_SHORT     := unset
 endif
 
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)

@@ -2029,6 +2029,9 @@ class ModeTestNotifications(ModeNotifications):
             cssclass="hot",
             form="form_test_notifications",
         )
+        html.javascript("""
+        document.getElementById('_test_host_notifications').addEventListener('click', cmk.utils.setButtonLoadingState);
+        """)
         html.buttonlink(
             makeuri_contextless(request, [("mode", "test_notifications")], filename="wato.py"),
             _("Reset"),

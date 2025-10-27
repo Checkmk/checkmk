@@ -219,6 +219,24 @@ input.button.hot,
     background-color: $success;
     border-color: $success;
   }
+
+  &[data-loading='true'] {
+    animation: cmk-pulse-load 1.5s ease-in-out infinite;
+    cursor: wait;
+    border-color: transparent;
+  }
+}
+
+@keyframes cmk-pulse-load {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* toggle switch icon button */

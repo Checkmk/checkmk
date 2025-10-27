@@ -764,6 +764,11 @@ export function content_scrollbar(scrollable_id: string) {
   return g_content_scrollbar
 }
 
+export function setButtonLoadingState(event: Event) {
+  const target = event.target as HTMLInputElement
+  target.setAttribute('data-loading', 'true')
+}
+
 export async function fix_simplebar_scroll_to_id_in_chrome(
   container: HTMLElement,
   _options: Record<string, string>

@@ -7,6 +7,7 @@
 import logging
 import sqlite3
 from collections.abc import Iterator
+from typing import Literal
 
 import pytest
 
@@ -18,21 +19,12 @@ from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 
 
-@pytest.fixture(name="history_sqlite_raw")
-def fixture_history_sqlite_raw() -> Iterator[sqlite3.Connection]:
-    """history_sqlite_raw as an in :memory: database"""
+@pytest.fixture(name="test_conn")
+def fixture_sqlite_test_connection() -> Iterator[sqlite3.Connection]:
+    """test_conn as an in :memory: database"""
 
     con = sqlite3.connect(":memory:")
-    con.execute(
-        """CREATE TABLE IF NOT EXISTS history
-                             (time TEXT, what TEXT, who TEXT, addinfo TEXT, id INTEGER, count INTEGER, text TEXT, first FLOAT, last FLOAT,
-                             comment TEXT, sl INTEGER, host TEXT, contact TEXT, application TEXT,
-                             pid INTEGER, priority INTEGER, facility INTEGER, rule_id TEXT,
-                             state INTEGER, phase TEXT, owner TEXT, match_groups TEXT,
-                             contact_groups TEXT, ipaddress TEXT, orig_host TEXT,
-                             contact_groups_precedence TEXT, core_host TEXT, host_in_downtime BOOL,
-                             match_groups_syslog_application TEXT)"""
-    )
+    con.execute("""CREATE TABLE IF NOT EXISTS history(id INTEGER, text TEXT)""")
 
     yield con
 
@@ -40,67 +32,285 @@ def fixture_history_sqlite_raw() -> Iterator[sqlite3.Connection]:
     con.close()
 
 
+def test_equal_operator_with_matching_lower_case_argument_returns_matching_lower_case_text(
+    test_conn: sqlite3.Connection,
+) -> None:
+    con = test_conn
+    con.execute("INSERT INTO history VALUES(0, 'test text')")
+    con.execute("INSERT INTO history VALUES(1, 'wrong text')")
+    con.execute("INSERT INTO history VALUES(2, 'TEST TEXT')")
+    con.execute("INSERT INTO history VALUES(3, 'TeSt tExt')")
+    con.execute("INSERT INTO history VALUES(4, 'test text')")
+
+    (query, params) = filters_to_sqlite_query(
+        [
+            QueryFilter(
+                column_name="event_text",
+                operator_name="=",
+                predicate=lambda x: True,
+                argument="test text",
+            )
+        ]
+    )
+
+    result = con.execute(query, params)
+
+    assert result.fetchall() == [(0, "test text"), (4, "test text")]
+
+
+def test_equal_operator_with_unmatching_lower_case_argument_returns_empty_result(
+    test_conn: sqlite3.Connection,
+) -> None:
+    con = test_conn
+    (query, params) = filters_to_sqlite_query(
+        [
+            QueryFilter(
+                column_name="event_text",
+                operator_name="=",
+                predicate=lambda x: True,
+                argument="test text",
+            )
+        ]
+    )
+
+    result = con.execute(query, params)
+
+    assert result.fetchall() == []
+
+
+# fmt: off
 @pytest.mark.parametrize(
-    "filters, expected_sqlite_query",
+    "filter_value, expected_results",
     [
-        (
-            [
-                QueryFilter(
-                    column_name="event_text",
-                    operator_name="=",
-                    predicate=lambda x: True,
-                    argument="test_event",
-                ),
-            ],
-            ("SELECT * FROM history WHERE text = ?;", ["test_event"]),
-        ),
-        (
-            [
-                QueryFilter(
-                    column_name="event_time",
-                    operator_name="<",
-                    predicate=lambda x: True,
-                    argument=123456789,
-                ),
-                QueryFilter(
-                    column_name="event_time",
-                    operator_name=">",
-                    predicate=lambda x: True,
-                    argument=1234,
-                ),
-            ],
-            ("SELECT * FROM history WHERE time < ? AND time > ?;", [123456789, 1234]),
-        ),
-        (
-            [
-                QueryFilter(
-                    column_name="history_who",
-                    operator_name="~~",
-                    predicate=lambda x: True,
-                    argument="admin",
-                ),
-                QueryFilter(
-                    column_name="event_owner",
-                    operator_name="=~",
-                    predicate=lambda x: True,
-                    argument="user",
-                ),
-            ],
-            ("SELECT * FROM history WHERE who LIKE '%?%' AND owner LIKE '%?%';", ["admin", "user"]),
-        ),
-        pytest.param(
-            [],
-            ("SELECT * FROM history  ;", []),
-            id="empty argument",
-        ),
+        ("TEST TEXT", [(0, "test text")]),
+        ("test text", [(0, "test text")]),
+        ("TeSt tExt", [(0, "test text")]),
     ],
 )
-def test_filters_to_sqlite_query(
-    filters: list[QueryFilter], expected_sqlite_query: tuple[str, object]
+# fmt: on
+def test_case_insensitive_equal_operator_with_matching_data_returns_matching_text(
+    test_conn: sqlite3.Connection, filter_value: str, expected_results: list[tuple[int, str]]
 ) -> None:
-    """filters_to_sqlite_query converts to correct sql select statement."""
+    con = test_conn
+    con.execute("INSERT INTO history VALUES(0, 'test text')")
 
-    assert filters_to_sqlite_query(filters) == expected_sqlite_query
+    (query, params) = filters_to_sqlite_query(
+        [
+            QueryFilter(
+                column_name="event_text",
+                operator_name="=~",
+                predicate=lambda x: True,
+                argument=filter_value,
+            )
+        ]
+    )
+
+    result = con.execute(query, params)
+    assert result.fetchall() == expected_results
+
+
+@pytest.mark.parametrize(
+    "filter_value, expected_results",
+    [
+        ("TEST TEXT", []),
+        ("test text", []),
+        ("TeSt tExt", []),
+    ],
+)
+def test_case_insensitive_equal_operator_with_no_matching_data_returns_matching_text(
+    test_conn: sqlite3.Connection, filter_value: str, expected_results: list[tuple[int, str]]
+) -> None:
+    con = test_conn
+
+    (query, params) = filters_to_sqlite_query(
+        [
+            QueryFilter(
+                column_name="event_text",
+                operator_name="=~",
+                predicate=lambda x: True,
+                argument=filter_value,
+            )
+        ]
+    )
+
+    result = con.execute(query, params)
+    assert result.fetchall() == expected_results
+
+
+Operator = Literal[">", "<", ">=", "<="]
+# fmt: off
+@pytest.mark.parametrize(
+    "operator, filter_value, expected_results",
+    [
+        (">", 3, [(4, "value4"), (5, "value5")]),
+        ("<", 3, [(0, "value0"), (1, "value1"), (2, "value2")]),
+        (">=",3, [(3, "value3"), (4, "value4"), (5, "value5")]),
+        ("<=",3, [(0, "value0"), (1, "value1"), (2, "value2"), (3, "value3")]),
+    ],
+)
+# fmt: on
+def test_case_comparative_operator_with_matching_adjacent_data_returns_matching_text(
+        test_conn: sqlite3.Connection, operator: Operator, filter_value: int, expected_results: list[tuple[int, str]]
+) -> None:
+    con = test_conn
+    con.execute("INSERT INTO history VALUES(0, 'value0')")
+    con.execute("INSERT INTO history VALUES(1, 'value1')")
+    con.execute("INSERT INTO history VALUES(2, 'value2')")
+    con.execute("INSERT INTO history VALUES(3, 'value3')")
+    con.execute("INSERT INTO history VALUES(4, 'value4')")
+    con.execute("INSERT INTO history VALUES(5, 'value5')")
+
+    (query, params) = filters_to_sqlite_query(
+        [
+            QueryFilter(
+                column_name="event_id",
+                operator_name=operator,
+                predicate=lambda x: True,
+                argument=filter_value,
+            )
+        ]
+    )
+
+    result = con.execute(query, params)
+    assert result.fetchall() == expected_results
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "filter_value, expected_results",
+    [
+        (("hello",), [(0, "hello"), (1, "hello"), (2, "hello")]),
+        (("world",), [(3, "world")]),
+        (("hello", "world"), [(0, "hello"), (1, "hello"), (2, "hello"), (3, "world")]),
+        (("dropped",), [(5, "dropped")]),
+    ],
+)
+# fmt: on
+def test_case_in_operator_with_some_matching_data_returns_matching_text(
+    test_conn: sqlite3.Connection, filter_value: str, expected_results: list[tuple[int, str]]
+) -> None:
+    con = test_conn
+    con.execute("INSERT INTO history VALUES(0, 'hello')")
+    con.execute("INSERT INTO history VALUES(1, 'hello')")
+    con.execute("INSERT INTO history VALUES(2, 'hello')")
+    con.execute("INSERT INTO history VALUES(3, 'world')")
+    con.execute("INSERT INTO history VALUES(4, 'connection dropped')")
+    con.execute("INSERT INTO history VALUES(5, 'dropped')")
+
+    (query, params) = filters_to_sqlite_query(
+        [
+            QueryFilter(
+                column_name="event_text",
+                operator_name="in",
+                predicate=lambda x: True,
+                argument=filter_value,
+            )
+        ]
+    )
+
+    result = con.execute(query, params)
+    assert result.fetchall() == expected_results
+
+
+def test_filters_to_sqlite_query_with_simple_equality_filter_has_correct_query() -> None:
+    filters = [
+        QueryFilter(
+            column_name="event_text",
+            operator_name="=",
+            predicate=lambda x: True,
+            argument="test_event",
+        )
+    ]
+
+    assert filters_to_sqlite_query(filters) == (
+        "SELECT * FROM history WHERE text = ?;",
+        ["test_event"],
+    )
+
+
+def test_filters_to_sqlite_query_with_one_in_filter_has_one_placeholder_in_query() -> None:
+    filters = [
+        QueryFilter(
+            column_name="event_text",
+            operator_name="in",
+            predicate=lambda x: True,
+            argument=("test_event",),
+        )
+    ]
+
+    assert filters_to_sqlite_query(filters) == (
+        "SELECT * FROM history WHERE text in (?);",
+        ["test_event"],
+    )
+
+
+def test_filters_to_sqlite_query_with_multiple_in_filters_has_multiple_matching_placeholders() -> (
+    None
+):
+    filters = [
+        QueryFilter(
+            column_name="event_text",
+            operator_name="in",
+            predicate=lambda x: True,
+            argument=("test_event", "test_event", "test_event"),
+        )
+    ]
+
+    assert filters_to_sqlite_query(filters) == (
+        "SELECT * FROM history WHERE text in (?,?,?);",
+        ["test_event", "test_event", "test_event"],
+    )
+
+
+def test_filters_to_sqlite_query_with_less_than_and_greater_than_filters_have_correct_query() -> (
+    None
+):
+    filters = [
+        QueryFilter(
+            column_name="event_time",
+            operator_name="<",
+            predicate=lambda x: True,
+            argument=123456789,
+        ),
+        QueryFilter(
+            column_name="event_time",
+            operator_name=">",
+            predicate=lambda x: True,
+            argument=1234,
+        ),
+    ]
+    assert filters_to_sqlite_query(filters) == (
+        "SELECT * FROM history WHERE time < ? AND time > ?;",
+        [123456789, 1234],
+    )
+
+
+def test_filters_to_sqlite_query_with_regex_and_case_insensitive_equality_filters_have_correct_query() -> (
+    None
+):
+    filters = [
+        QueryFilter(
+            column_name="history_who",
+            operator_name="~~",
+            predicate=lambda x: True,
+            argument="admin",
+        ),
+        QueryFilter(
+            column_name="event_owner",
+            operator_name="=~",
+            predicate=lambda x: True,
+            argument="user",
+        ),
+    ]
+
+    assert filters_to_sqlite_query(filters) == (
+        "SELECT * FROM history WHERE regexp_nocase(?, who) AND owner = ? COLLATE NOCASE;",
+        ["admin", "user"],
+    )
+
+
+def test_filters_to_sqlite_query_with_no_filters_gives_a_simple_select_statement() -> None:
+    assert filters_to_sqlite_query([]) == ("SELECT * FROM history  ;", [])
 
 
 def test_filters_to_sqlite_query_raises_ValueError() -> None:

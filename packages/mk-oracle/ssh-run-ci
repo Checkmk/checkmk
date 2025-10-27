@@ -57,7 +57,7 @@ esac
 }
 
 git_path="${REMOTE_HOME}/${REMOTE_USER}/git"
-# TODO: Separate branch checkouts
+# TODO: Separate branch checkouts via branch name
 # CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
 # checkmk_path="${git_path}/checkmk_ci_checkout_$(make -C ${CHECKOUT_ROOT} print-BRANCH_VERSION)"
 checkmk_path="${git_path}/checkmk_ci_checkout"

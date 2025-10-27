@@ -41,11 +41,13 @@ from cmk.gui.form_specs import (
     DEFAULT_VALUE,
     DefaultValue,
     DisplayMode,
+    get_visitor,
     IncomingData,
     parse_data_from_field_id,
     RawDiskData,
     RawFrontendData,
     render_form_spec,
+    VisitorOptions,
 )
 from cmk.gui.form_specs.unstable import LegacyValueSpec
 from cmk.gui.hooks import call as call_hooks
@@ -2248,8 +2250,8 @@ class ABCEditRuleMode(WatoMode):
                     self._vue_field_id(),
                 )
             case RenderMode.BACKEND:
-                value = self._ruleset.valuespec().from_html_vars("ve")
-                self._ruleset.valuespec().validate_value(value, "ve")
+                value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
+                self._ruleset.rulespec.valuespec.validate_value(value, "ve")
 
         self._rule.value = value
         return None
@@ -2360,7 +2362,7 @@ class ABCEditRuleMode(WatoMode):
             )
             has_show_more: bool = False
         except FormSpecNotImplementedError:
-            valuespec = self._ruleset.valuespec()
+            valuespec = self._ruleset.rulespec.valuespec
             title = valuespec.title()
             has_show_more = valuespec.has_show_more()
 
@@ -2372,7 +2374,7 @@ class ABCEditRuleMode(WatoMode):
         try:
             match render_mode:
                 case RenderMode.BACKEND:
-                    valuespec = self._ruleset.valuespec()
+                    valuespec = self._ruleset.rulespec.valuespec
                     valuespec.validate_datatype(self._rule.value, "ve")
                     valuespec.render_input("ve", self._rule.value)
                     valuespec.set_focus("ve")
@@ -2398,7 +2400,7 @@ class ABCEditRuleMode(WatoMode):
             )
             match render_mode:
                 case RenderMode.BACKEND:
-                    valuespec = self._ruleset.valuespec()
+                    valuespec = self._ruleset.rulespec.valuespec
                     valuespec.render_input("ve", valuespec.default_value())
                     valuespec.set_focus("ve")
                 case RenderMode.FRONTEND:
@@ -3275,10 +3277,10 @@ class ModeNewRule(ABCEditRuleMode):
                 default_value = DEFAULT_VALUE
             else:
                 # Using legacy render mode
-                default_value = self._ruleset.valuespec().default_value()
+                default_value = self._ruleset.rulespec.valuespec.default_value()
         except FormSpecNotImplementedError:
             # Unconverted valuespec
-            default_value = self._ruleset.valuespec().default_value()
+            default_value = self._ruleset.rulespec.valuespec.default_value()
 
         self._rule = Rule.from_ruleset(self._folder, self._ruleset, default_value)
         self._rule.update_conditions(
@@ -3316,7 +3318,13 @@ class ModeExportRule(ABCEditRuleMode):
         pass
 
     def page(self, config: Config) -> None:
-        rule_config = self._rule.ruleset.valuespec().mask(self._rule.value)
+        try:
+            rule_config: object = get_visitor(
+                self._rule.ruleset.rulespec.form_spec,
+                VisitorOptions(migrate_values=False, mask_values=True),
+            ).to_disk(RawDiskData(self._rule.value))
+        except FormSpecNotImplementedError:
+            rule_config = self._rule.ruleset.rulespec.valuespec.mask(self._rule.value)
         content_id = "rule_representation"
         success_msg = _("Successfully copied to clipboard.")
 

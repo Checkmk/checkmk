@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-import cmk.utils.paths
 from cmk.gui.i18n import _
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.valuespec import (
@@ -20,13 +19,13 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableRegistry,
+    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupNotifications
 from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
 )
-from cmk.gui.watolib.utils import site_neutral_path
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 
 
@@ -135,24 +134,29 @@ ConfigVariableNotificationPluginTimeout = ConfigVariable(
     ),
 )
 
-ConfigVariableNotificationLogging = ConfigVariable(
-    group=ConfigVariableGroupNotifications,
-    primary_domain=ConfigDomainCore,
-    ident="notification_logging",
-    valuespec=lambda context: DropdownChoice(
+
+def _valuespec_notification_logging(context: GlobalSettingsContext) -> DropdownChoice:
+    return DropdownChoice(
         title=_("Notification log level"),
         help=_(
             "You can configure the notification mechanism to log more details about "
             "the notifications into the notification log. This information are logged "
             "into the file <tt>%s</tt>"
         )
-        % site_neutral_path(cmk.utils.paths.log_dir / "notify.log"),
+        % (context.site_neutral_log_dir / "notify.log"),
         choices=[
             (20, _("Minimal logging")),
             (15, _("Normal logging")),
             (10, _("Full dump of all variables and command")),
         ],
-    ),
+    )
+
+
+ConfigVariableNotificationLogging = ConfigVariable(
+    group=ConfigVariableGroupNotifications,
+    primary_domain=ConfigDomainCore,
+    ident="notification_logging",
+    valuespec=_valuespec_notification_logging,
 )
 
 ConfigVariableFailedNotificationHorizon = ConfigVariable(

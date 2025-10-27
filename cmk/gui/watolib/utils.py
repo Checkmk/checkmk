@@ -38,10 +38,11 @@ def mk_eval(s: bytes | str) -> Any:
         raise MKGeneralException(_("Unable to parse provided data: %s") % repr(s))
 
 
-def site_neutral_path(path: str | Path) -> str:
-    path = str(path)
-    if path.startswith("/omd"):
-        parts = path.split("/")
-        parts[3] = "[SITE_ID]"
-        return "/".join(parts)
+def site_neutral_path(path: Path) -> Path:
+    if path.is_relative_to(Path("/", "omd")):
+        return Path(
+            *path.parts[:2],
+            "[SITE_ID]",
+            *path.parts[4:],
+        )
     return path

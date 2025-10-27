@@ -75,6 +75,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
+    GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
@@ -383,22 +384,26 @@ def _add_job_scheduler_log_level(params: dict[str, int]) -> dict[str, int]:
     return params
 
 
-ConfigVariableLogLevels = ConfigVariable(
-    group=ConfigVariableGroupUserInterface,
-    primary_domain=ConfigDomainGUI,
-    ident="log_levels",
-    valuespec=lambda context: Migrate(
+def _valuespec_log_levels(context: GlobalSettingsContext) -> Migrate:
+    return Migrate(
         valuespec=Dictionary(
             title=_("Logging"),
             help=_(
                 "This setting decides which types of messages to log into the web log <tt>%s</tt>."
             )
-            % site_neutral_path(cmk.utils.paths.log_dir / "web.log"),
+            % (context.site_neutral_log_dir / "web.log"),
             elements=_web_log_level_elements(),
             optional_keys=[],
         ),
         migrate=_add_job_scheduler_log_level,
-    ),
+    )
+
+
+ConfigVariableLogLevels = ConfigVariable(
+    group=ConfigVariableGroupUserInterface,
+    primary_domain=ConfigDomainGUI,
+    ident="log_levels",
+    valuespec=_valuespec_log_levels,
 )
 
 

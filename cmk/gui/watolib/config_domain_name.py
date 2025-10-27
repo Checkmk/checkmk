@@ -303,6 +303,7 @@ config_variable_group_registry = ConfigVariableGroupRegistry()
 @dataclass(frozen=True)
 class GlobalSettingsContext:
     target_site_id: SiteId
+    site_neutral_log_dir: Path
 
 
 class ConfigVariable:

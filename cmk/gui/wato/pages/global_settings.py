@@ -82,6 +82,8 @@ from cmk.gui.watolib.global_settings import (
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
+from cmk.gui.watolib.utils import site_neutral_path
+from cmk.utils.paths import log_dir
 
 
 def register(
@@ -740,4 +742,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
 
 
 def make_global_settings_context(target_site_id: SiteId) -> GlobalSettingsContext:
-    return GlobalSettingsContext(target_site_id=target_site_id)
+    return GlobalSettingsContext(
+        target_site_id=target_site_id,
+        site_neutral_log_dir=site_neutral_path(log_dir),
+    )

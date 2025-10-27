@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "ai_button",
+  "properties": {
+    "button_text": { "type": "string" },
+    "template": { "$ref": "#/$defs/ai_template" },
+    "teleport": { "type": "string" },
+    "user_id": { "type": "string" }
+  },
+  "required": ["button_text", "template", "user_id"],
+  "$defs": {
+    "ai_template": {
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/ai_template_id" },
+        "title": { "type": "string" },
+        "data": {
+          "anyOf": [{ "$ref": "#/$templateData/explain_this_issue" }]
+        }
+      },
+      "required": ["id", "title"]
+    },
+    "ai_template_id": {
+      "enum": ["explain-this-issue"]
+    }
+  },
+  "$templateData": {
+    "explain_this_issue": {
+      "type": "object",
+      "properties": {
+        "host": { "type": "string" },
+        "service": { "type": "string" },
+        "state": { "type": "number" }
+      }
+    }
+  }
+}

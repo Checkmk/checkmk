@@ -104,13 +104,25 @@ NOT_MODIFIED = object()
             ["secret", 1, {"secret": "secret"}],
             ["secret", 1, {"secret": REDACTED_STRING}],
         ),
+        ({"secret", 1}, NOT_MODIFIED),
+        (
+            "this should need truncation because it is longer than 20 chars",
+            "this should need tru... (42 bytes stripped)",
+        ),
+        (frozenset(("secret", 1)), NOT_MODIFIED),
+        (
+            frozenset(
+                ("secret", 1, "this should need truncation because it is longer than 20 chars")
+            ),
+            frozenset(("secret", 1, "this should need tru... (42 bytes stripped)")),
+        ),
     ),
 )
 def test_format_var_for_export(input_: object, output: object) -> None:
     if output is NOT_MODIFIED:
         output = input_
 
-    assert format_var_for_export(input_) == output
+    assert format_var_for_export(input_, maxsize=20) == output
 
 
 class UnitTestDetails(TypedDict):

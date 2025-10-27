@@ -318,15 +318,23 @@ def format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 
             return {
                 k: REDACTED_STRING
                 if _key_indicates_sensitivity(k)
-                else format_var_for_export(v, maxdepth - 1)
+                else format_var_for_export(v, maxdepth - 1, maxsize=maxsize)
                 for k, v in val.items()
             }
 
         case list():
-            return [format_var_for_export(item, maxdepth - 1) for item in val]
+            return [format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val]
 
         case tuple():
-            return tuple(format_var_for_export(item, maxdepth - 1) for item in val)
+            return tuple(format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val)
+
+        case set():
+            return {format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val}
+
+        case frozenset():
+            return frozenset(
+                format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val
+            )
 
         # Check and limit size
         case str():

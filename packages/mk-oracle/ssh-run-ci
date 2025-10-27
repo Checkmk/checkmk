@@ -17,10 +17,6 @@ cd -- "${BASH_SOURCE%/*}"
 . ./ssh-run.conf
 
 test_for_existance REMOTE_USER
-test_for_existance ORACLEDB_HOST
-test_for_existance ORACLEDB_PORT
-test_for_existance ORACLEDB_USER
-test_for_existance ORACLEDB_PASSWORD
 
 case "${REMOTE_OS}" in
     'aix')
@@ -40,15 +36,25 @@ case "${REMOTE_OS}" in
     *) failure "unknown remote OS: ${REMOTE_OS}" ;;
 esac
 
-# Open SSH tunnel for Oracle DB access
-ssh -N -o ExitOnForwardFailure=yes -o UserKnownHostsFile="${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" -R "${ORACLEDB_PORT}:${ORACLEDB_HOST}:${ORACLEDB_PORT}" "${REMOTE_USER}@${REMOTE_HOST}" &
-ORACLEDB_TUNNEL=$!
+[ "${RUN_CMD}" = "-a" ] && {
+    # We only need the remote Oracle DB tunnel for full test runs
+    test_for_existance ORACLEDB_HOST
+    test_for_existance ORACLEDB_PORT
+    test_for_existance ORACLEDB_USER
+    test_for_existance ORACLEDB_PASSWORD
 
-# Ensure tunnels are cleaned up even on error / interrupt
-cleanup() {
-    ([ -n "${ORACLEDB_TUNNEL}" ] && kill "${ORACLEDB_TUNNEL}" 2>/dev/null) || true
+    REMOTE_ORACLEDB_OVERRIDE="127.0.0.1:${ORACLEDB_USER}:${ORACLEDB_PASSWORD}:${ORACLEDB_PORT}:FREE::_:_:_"
+
+    # Open SSH tunnel for Oracle DB access
+    ssh -N -o ExitOnForwardFailure=yes -o UserKnownHostsFile="${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" -R "${ORACLEDB_PORT}:${ORACLEDB_HOST}:${ORACLEDB_PORT}" "${REMOTE_USER}@${REMOTE_HOST}" &
+    ORACLEDB_TUNNEL=$!
+
+    # Ensure tunnels are cleaned up even on error / interrupt
+    cleanup() {
+        ([ -n "${ORACLEDB_TUNNEL}" ] && kill "${ORACLEDB_TUNNEL}" 2>/dev/null) || true
+    }
+    trap cleanup EXIT INT TERM HUP
 }
-trap cleanup EXIT INT TERM HUP
 
 git_path="${REMOTE_HOME}/${REMOTE_USER}/git"
 # TODO: Separate branch checkouts
@@ -69,7 +75,11 @@ ssh -o "UserKnownHostsFile=${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@
         export PATH
     }
 
-    export CI_ORA2_DB_TEST="127.0.0.1:${ORACLEDB_USER}:${ORACLEDB_PASSWORD}:${ORACLEDB_PORT}:FREE::_:_:_"
+    [ -n "${REMOTE_ORACLEDB_OVERRIDE}" ] && {
+        CI_ORA2_DB_TEST="${REMOTE_ORACLEDB_OVERRIDE}"
+        export CI_ORA2_DB_TEST
+    }
+
     "${checkmk_path}/packages/mk-oracle/run" "${RUN_CMD}"
 EOF
 

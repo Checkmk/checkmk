@@ -44,6 +44,7 @@ parse_options() {
     # Yes, all those option variables are global.
     RUN_BUILD=no
     RUN_UNIT_TESTS=no
+    RUN_COMPONENT_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_CLIPPY=no
     RUN_FORMAT=no
@@ -86,6 +87,7 @@ parse_options() {
             '-a' | '--all')
                 RUN_BUILD=yes
                 RUN_UNIT_TESTS=yes
+                RUN_COMPONENT_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_CLIPPY=yes
                 shift
@@ -115,7 +117,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_BUILD RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_BUILD RUN_UNIT_TESTS RUN_COMPONENT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 run_build() {
@@ -151,7 +153,7 @@ run_check_format() {
     esac
 }
 
-run_test_all() {
+setup_tests() {
     path_to_runtime="${PWD}/runtimes/plugins/packages/mk-oracle"
     mkdir -p "${path_to_runtime}"
     INSTANTCLIENT_ARCHIVE="${PWD}/runtimes/downloads/instantclient_19_28.tar.gz"
@@ -160,6 +162,10 @@ run_test_all() {
     export MK_CONFDIR
     MK_LIBDIR="${PWD}/runtimes"
     export MK_LIBDIR
+}
+
+run_test_component() {
+    setup_tests
 
     case "$(uname)" in
         'SunOS')
@@ -167,14 +173,14 @@ run_test_all() {
             (cd "${path_to_runtime}" && tar xzf "${INSTANTCLIENT_ARCHIVE}")
             LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
             export LD_LIBRARY_PATH
-            cargo test
+            cargo test --test "*"
             ;;
         'AIX')
             ORACLE_PLATFORM=AIX /opt/freeware/bin/make -C runtimes libs
             (cd "${path_to_runtime}" && tar xzf "${INSTANTCLIENT_ARCHIVE}")
             LIBPATH="${path_to_runtime}:${LIBPATH}"
             export LIBPATH
-            cargo test
+            cargo test --test "*"
             ;;
         *)
             # 1. obtain rebundled client
@@ -195,15 +201,31 @@ run_test_all() {
             fi
 
             export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
-            bazel test :all
+            bazel test :mk-oracle-lib-test-external
+            ;;
+    esac
+}
+
+run_test_unit() {
+    setup_tests
+
+    case "$(uname)" in
+        'SunOS' | 'AIX')
+            cargo test --lib
+            ;;
+        *)
+            bazel test :mk-oracle-lib-test-internal
             ;;
     esac
 }
 
 run_clippy() {
     case "$(uname)" in
-        'SunOS' | 'AIX')
+        'SunOS')
             cargo clippy
+            ;;
+        'AIX')
+            echo "clippy not available on AIX - skipping."
             ;;
         *)
             bazel build --config=clippy :all
@@ -229,7 +251,8 @@ main() {
     parse_options "$@"
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && run_build
-    test ${RUN_UNIT_TESTS} = yes && run_test_all
+    test ${RUN_UNIT_TESTS} = yes && run_test_unit
+    test ${RUN_COMPONENT_TESTS} = yes && run_test_component
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && run_clippy
     test ${RUN_FORMAT} = yes && run_format

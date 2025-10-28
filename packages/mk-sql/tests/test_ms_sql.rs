@@ -18,6 +18,9 @@ use mk_sql::types::{Edition, InstanceName};
 use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
 
+#[cfg(windows)]
+use yaml_rust2::YamlLoader;
+
 use mk_sql::ms_sql::{
     client::{self, UniClient},
     instance::{self, SqlInstance, SqlInstanceBuilder},
@@ -159,7 +162,6 @@ async fn test_obtain_all_instances_from_registry_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_obtain_all_instances_from_registry_local_include() {
-    use yaml_rust2::YamlLoader;
     const SOURCE: &str = r#"
     discovery:
       detect: true
@@ -185,7 +187,6 @@ async fn test_obtain_all_instances_from_registry_local_include() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_obtain_all_instances_from_registry_local_exclude() {
-    use yaml_rust2::YamlLoader;
     const SOURCE: &str = r#"
     discovery:
       detect: true
@@ -1604,6 +1605,7 @@ fn test_odbc() {
         &InstanceName::from("SQLEXPRESS_NAME"),
         Some("master"),
         None,
+        true,
     );
     let r = odbc::execute(
         &s,
@@ -1634,6 +1636,7 @@ fn test_odbc_timeout() {
         &InstanceName::from("SQLEXPRESS_XX"),
         Some("master"),
         None,
+        true,
     );
     let start = std::time::Instant::now();
     let r = odbc::execute(
@@ -1649,37 +1652,42 @@ fn test_odbc_timeout() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_odbc_high_level() {
-    use mk_sql::{
-        ms_sql::{client::ManageEdition, instance::SqlInstanceProperties},
-        types::HostName,
-    };
+    use mk_sql::config::ms_sql::Connection;
+    use mk_sql::ms_sql::{client::ManageEdition, instance::SqlInstanceProperties};
 
-    async fn create_client(name: &str) -> UniClient {
+    async fn create_client(name: &str, trust: bool) -> UniClient {
         let instance_name = InstanceName::from(name);
-        create_odbc_client(
-            &HostName::from("localhost".to_string()),
-            &instance_name,
+        let c = Connection::from_yaml(
+            &YamlLoader::load_from_str(&format!(
+                "connection:\n  hostname: localhost\n  trust_server_certificate: {}",
+                if trust { "yes" } else { "no" }
+            ))
+            .expect("fix test string!")[0]
+                .clone(),
             None,
         )
-        .await
         .unwrap()
+        .unwrap();
+        create_odbc_client(&c, &instance_name, None).await.unwrap()
     }
 
-    async fn get(name: &str) -> Option<SqlInstanceProperties> {
+    async fn get_props(name: &str, trust: bool) -> Option<SqlInstanceProperties> {
         let instance_name = InstanceName::from(name);
-        let mut client = create_client(name).await;
+        let mut client = create_client(name, trust).await;
         obtain_properties(&mut client, &instance_name).await
     }
 
-    let odbc_name = get("SQLEXPRESS_NAME").await;
-    assert!(odbc_name.is_some());
-    let odbc_wow = get("SQLEXPRESS_WOW").await;
-    assert!(odbc_wow.is_some());
-    let odbc_main = get("MSSQLSERVER").await;
-    assert!(odbc_main.is_some());
+    let sql_db_name = get_props("SQLEXPRESS_NAME", true).await;
+    assert!(sql_db_name.is_some());
+    let sql_db_wow = get_props("SQLEXPRESS_WOW", true).await;
+    assert!(sql_db_wow.is_some());
+    let sql_db_main = get_props("MSSQLSERVER", true).await;
+    assert!(sql_db_main.is_some());
+    let sql_db_missing = get_props("MSSQLSERVER", false).await;
+    assert!(sql_db_missing.is_none());
 
     assert_eq!(
-        create_client("MSSQLSERVER").await.get_edition(),
+        create_client("MSSQLSERVER", true).await.get_edition(),
         Edition::Normal
     );
 }

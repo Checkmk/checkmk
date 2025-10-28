@@ -542,6 +542,11 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     def main_menu_search_terms(cls) -> Sequence[str]:
         return ["azure"]
 
+    @property
+    @override
+    def is_show_more(self) -> bool:
+        return True
+
 
 class MainModuleQuickSetupAzureV2(ABCMainModuleQuickSetup):
     @property

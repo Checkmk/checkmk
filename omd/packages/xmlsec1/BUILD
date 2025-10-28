@@ -54,14 +54,6 @@ make_deployable_file(
     tags = ["manual"],
 )
 
-make_deployable_file(
-    name = "xmlsec1_deployable_lib_gcrypt",
-    src = "@xmlsec1//:gen_dir",
-    out = "lib/libxmlsec1-gcrypt.so.1.3.8",
-    rpath = "\\$ORIGIN/../lib",
-    tags = ["manual"],
-)
-
 pkg_mklink(
     name = "lib_symlink_gnutls",
     link_name = "lib/libxmlsec1-gnutls.so",
@@ -83,20 +75,6 @@ pkg_mklink(
     target = "lib/libxmlsec1-nss.so.1.3.8",
 )
 
-pkg_mklink(
-    name = "lib_symlink_gcrypt",
-    link_name = "lib/libxmlsec1-gcrypt.so",
-    tags = ["manual"],
-    target = "lib/libxmlsec1-gcrypt.so.1.3.8",
-)
-
-pkg_mklink(
-    name = "lib_symlink_gcrypt1",
-    link_name = "lib/libxmlsec1-gcrypt.so.1",
-    tags = ["manual"],
-    target = "lib/libxmlsec1-gcrypt.so.1.3.8",
-)
-
 filter_directory(
     name = "rest",
     src = "@xmlsec1//:gen_dir",
@@ -106,14 +84,12 @@ filter_directory(
         "share/aclocal/xmlsec1.m4",
     ] + selects.with_or({
         (
+            "@cmk//distro:sles-15sp5",
+            "@cmk//distro:sles-15sp6",
+            "@cmk//distro:almalinux-8",
             "@cmk//distro:almalinux-9",
             "@cmk//distro:almalinux-10",
         ): [],
-        (
-            "@cmk//distro:almalinux-8",
-            "@cmk//distro:sles-15sp5",
-            "@cmk//distro:sles-15sp6",
-        ): ["lib/libxmlsec1-gcrypt.so.1.3.8"],
         "//conditions:default": [
             "lib/libxmlsec1-gnutls.so.1.3.8",
             "lib/libxmlsec1-nss.so.1.3.8",
@@ -161,20 +137,13 @@ pkg_files(
     name = "xmlsec1_additional_libs",
     srcs = selects.with_or({
         (
-            "@cmk//distro:almalinux-9",
             "@cmk//distro:almalinux-10",
-        ): [],
-        (
             "@cmk//distro:almalinux-8",
+            "@cmk//distro:almalinux-9",
             "@cmk//distro:sles-15sp5",
             "@cmk//distro:sles-15sp6",
-        ): [
-            "lib_symlink_gcrypt",
-            "lib_symlink_gcrypt1",
-        ],
+        ): [],
         "//conditions:default": [
-            "lib_symlink_gcrypt",
-            "lib_symlink_gcrypt1",
             "lib_symlink_gnutls",
             "lib_symlink_nss",
             "lib_symlink_nss1",

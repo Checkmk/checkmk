@@ -6,14 +6,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type AiButton } from 'cmk-shared-typing/typescript/ai_button'
+import { ref } from 'vue'
+
+import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
-defineProps<AiButton>()
+import AiConversationSlideout from './components/conversation/AiConversationSlideout.vue'
+import type { AiConversationBaseTemplate } from './lib/conversation-templates/base-template'
+import { getAiTemplate } from './lib/templates'
+
+const props = defineProps<AiButton>()
+const aiTemplate = ref<AiConversationBaseTemplate>()
+const conversationOpen = ref(true)
 
 function explainThis() {
-  // TODO BKP: add AiConversation invokation
+  aiTemplate.value = getAiTemplate(props.template.id, props.user_id, props.template.data)
+  conversationOpen.value = true
 }
 </script>
 
@@ -26,6 +36,18 @@ function explainThis() {
       {{ button_text }}
     </CmkButton>
   </Teleport>
+
+  <AiConversationSlideout
+    v-if="aiTemplate"
+    v-model="aiTemplate"
+    :slidoeut-open="conversationOpen"
+    :title="props.template.title as TranslatedString"
+    @update:slidoeut-open="
+      (value) => {
+        conversationOpen = value
+      }
+    "
+  />
 </template>
 
 <style scoped>

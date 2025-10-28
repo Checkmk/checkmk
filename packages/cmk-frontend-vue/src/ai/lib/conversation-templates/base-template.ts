@@ -16,7 +16,7 @@ export interface IAiConversationConfig<T> {
   dataToProvideToLlm?: () => Promise<TAiConversationElementContent[]> | undefined
 }
 
-export type TBaseConversationElementContent = { (e: 'done'): void }
+export type TBaseConversationElementEmits = { (e: 'done'): void }
 
 export interface BaseConversationElementContent {
   type: string
@@ -24,7 +24,46 @@ export interface BaseConversationElementContent {
   noAnimation?: boolean | undefined
 }
 
-export type TAiConversationElementContent = BaseConversationElementContent
+export interface AlertConversationElementContent extends BaseConversationElementContent {
+  type: 'alert'
+  text: string
+  variant: 'error' | 'warning' | 'success' | 'info'
+}
+
+export interface CodeBlockConversationElementContent extends BaseConversationElementContent {
+  type: 'code'
+  code: string
+}
+
+export interface DialogConversationElementContent extends BaseConversationElementContent {
+  type: 'dialog'
+  message: string
+}
+
+export interface ImageConversationElementContent extends BaseConversationElementContent {
+  type: 'image'
+  src: string
+  altText?: string | undefined
+}
+
+export interface ListConversationElementContent extends BaseConversationElementContent {
+  type: 'list'
+  listType: 'ordered' | 'unordered'
+  items: string[]
+}
+
+export interface TextConversationElementContent extends BaseConversationElementContent {
+  type: 'text'
+  text: string
+}
+
+export type TAiConversationElementContent =
+  | AlertConversationElementContent
+  | CodeBlockConversationElementContent
+  | DialogConversationElementContent
+  | ImageConversationElementContent
+  | ListConversationElementContent
+  | TextConversationElementContent
 export interface IAiConversationElement {
   role: AiConversationElementRole
   content:

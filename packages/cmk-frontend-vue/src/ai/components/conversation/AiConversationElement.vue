@@ -14,10 +14,23 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type {
+  AlertConversationElementContent,
+  CodeBlockConversationElementContent,
+  DialogConversationElementContent,
   IAiConversationElement,
-  TAiConversationElementContent
+  ImageConversationElementContent,
+  ListConversationElementContent,
+  TAiConversationElementContent,
+  TextConversationElementContent
 } from '@/ai/lib/conversation-templates/base-template'
 import { AiRole } from '@/ai/lib/utils'
+
+import AlertContent from './content/AlertContent.vue'
+import CodeContent from './content/CodeContent.vue'
+import DialogContent from './content/DialogContent.vue'
+import ImageContent from './content/ImageContent.vue'
+import ListContent from './content/ListContent.vue'
+import TextContent from './content/TextContent.vue'
 
 const { _t } = usei18n()
 const props = defineProps<IAiConversationElement>()
@@ -99,6 +112,42 @@ onMounted(async () => {
           >
             {{ cnt.title }}
           </CmkHeading>
+          <AlertContent
+            v-if="cnt.type === 'alert'"
+            v-bind="cnt as AlertConversationElementContent"
+            :no-animation="props.noAnimation"
+            @done="onContentDone"
+          />
+          <TextContent
+            v-if="cnt.type === 'text'"
+            v-bind="cnt as TextConversationElementContent"
+            :no-animation="props.noAnimation"
+            @done="onContentDone"
+          />
+          <CodeContent
+            v-else-if="cnt.type === 'code'"
+            v-bind="cnt as CodeBlockConversationElementContent"
+            :no-animation="props.noAnimation"
+            @done="onContentDone"
+          />
+          <ListContent
+            v-else-if="cnt.type === 'list'"
+            v-bind="cnt as ListConversationElementContent"
+            :no-animation="props.noAnimation"
+            @done="onContentDone"
+          />
+          <DialogContent
+            v-else-if="cnt.type === 'dialog'"
+            v-bind="cnt as DialogConversationElementContent"
+            :no-animation="props.noAnimation"
+            @done="onContentDone"
+          />
+          <ImageContent
+            v-else-if="cnt.type === 'image'"
+            v-bind="cnt as ImageConversationElementContent"
+            :no-animation="props.noAnimation"
+            @done="onContentDone"
+          />
         </template>
         <div v-if="done && !hideControls" class="ai-conversation-element__ctrls">
           <template v-if="role === AiRole.ai">

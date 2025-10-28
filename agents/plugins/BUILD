@@ -1,6 +1,19 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
+filegroup(
+    name = "srcs",
+    srcs = glob(
+        include = ["*"],
+        exclude = [
+            "__init__.py",
+            "BUILD",
+            "Makefile",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+)
+
 py_binary(
     # Shares code with `agent_jolokia` in the site.
     name = "mk_jolokia",

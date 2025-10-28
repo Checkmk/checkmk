@@ -65,7 +65,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	    --exclude plugins/*.checksum \
 	    --exclude plugins/__init__.py \
 	    $(ADDITIONAL_EXCLUDE) \
-	    plugins \
 	    sap \
 	    scripts \
 	    z_os \

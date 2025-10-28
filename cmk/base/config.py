@@ -2351,7 +2351,7 @@ class ConfigCache:
             ),
             config_processing.GlobalProxiesWithLookup(
                 global_proxies={
-                    name: config_processing.BackendProxy.model_validate(raw)
+                    name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                     for name, raw in self._loaded_config.http_proxies.items()
                 },
                 password_lookup=make_configured_passwords_lookup(),
@@ -2474,7 +2474,7 @@ class ConfigCache:
             host_attrs,
             config_processing.GlobalProxiesWithLookup(
                 global_proxies={
-                    name: config_processing.BackendProxy.model_validate(raw)
+                    name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                     for name, raw in self._loaded_config.http_proxies.items()
                 },
                 password_lookup=make_configured_passwords_lookup(),
@@ -2506,7 +2506,7 @@ class ConfigCache:
 
         global_proxies_with_lookup = config_processing.GlobalProxiesWithLookup(
             global_proxies={
-                name: config_processing.BackendProxy.model_validate(raw)
+                name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                 for name, raw in self._loaded_config.http_proxies.items()
             },
             password_lookup=make_configured_passwords_lookup(),

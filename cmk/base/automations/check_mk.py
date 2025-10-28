@@ -527,7 +527,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.passwords,
                 config_processing.GlobalProxiesWithLookup(
                     global_proxies={
-                        name: config_processing.BackendProxy.model_validate(raw)
+                        name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                         for name, raw in run_settings.http_proxies.items()
                     },
                     password_lookup=make_staged_passwords_lookup(),
@@ -3089,7 +3089,7 @@ class AutomationDiagSpecialAgent(Automation):
                 diag_special_agent_input.passwords,
                 config_processing.GlobalProxiesWithLookup(
                     global_proxies={
-                        name: config_processing.BackendProxy.model_validate(raw)
+                        name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                         for name, raw in diag_special_agent_input.http_proxies.items()
                     },
                     password_lookup=make_staged_passwords_lookup(),

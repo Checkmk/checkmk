@@ -128,10 +128,17 @@ pkg_files(
     prefix = "share/check_mk/agents",
 )
 
+pkg_files(
+    name = "agents_cfg_examples",
+    srcs = ["//agents/cfg_examples:srcs"],
+    prefix = "share/check_mk/agents/cfg_examples",
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
         ":agents",
+        ":agents_cfg_examples",
         ":diskspace_cleanup_plugin",
         ":omd_hooks",
         ":rest_api_spec",

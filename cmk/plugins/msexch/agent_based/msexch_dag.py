@@ -113,9 +113,14 @@ from cmk.agent_based.v2 import (
 # SeedingNetwork                   :
 # ActiveCopy                       : False
 
+Section = Mapping[str, str]
 
-def parse_msexch_dag(string_table: StringTable) -> StringTable:
-    return string_table
+
+def parse_msexch_dag(string_table: StringTable) -> Section:
+    return {
+        key: val
+        for (key, val) in ((i.strip() for i in line) for line in string_table if len(line) == 2)
+    }
 
 
 agent_section_msexch_dag = AgentSection(
@@ -133,40 +138,36 @@ agent_section_msexch_dag = AgentSection(
 #   +----------------------------------------------------------------------+
 
 
-def discover_msexch_dag_dbcopy(section: StringTable) -> DiscoveryResult:
+def discover_msexch_dag_dbcopy(section: Section) -> DiscoveryResult:
     getit = False
-    key = "Status"
     dbname = None
-    for line in section:
-        if len(line) == 2:
-            if line[0].strip() == "DatabaseName":
-                dbname = line[1].strip()
-                getit = True
-            elif getit and line[0].strip() == key:
-                yield Service(item=dbname, parameters={"inv_key": key, "inv_val": line[1].strip()})
-                getit = False
+    for key, val in section.items():
+        if key == "DatabaseName":
+            dbname = val
+            getit = True
+        elif getit and key == "Status":
+            yield Service(item=dbname, parameters={"inv_key": key, "inv_val": val})
+            getit = False
 
 
 def check_msexch_dag_dbcopy(
-    item: str, params: Mapping[str, str], section: StringTable
+    item: str,
+    params: Mapping[str, str],
+    section: Section,
 ) -> CheckResult:
     getit = False
     inv_key = params["inv_key"]
     inv_val = params["inv_val"]
-    for line in section:
-        if len(line) == 2:
-            key, val = (i.strip() for i in line)
-            if key == "DatabaseName" and val == item:
-                getit = True
-            elif getit and key == inv_key:
-                if val == inv_val:
-                    state = State.OK
-                    infotxt = f"{inv_key} is {val}"
-                else:
-                    state = State.WARN
-                    infotxt = f"{inv_key} changed from {inv_val} to {val}"
-                yield Result(state=state, summary=infotxt)
-                return
+    for key, val in section.items():
+        if key == "DatabaseName" and val == item:
+            getit = True
+        elif getit and key == inv_key:
+            yield (
+                Result(state=State.OK, summary=f"{inv_key} is {val}")
+                if val == inv_val
+                else Result(state=State.WARN, summary=f"{inv_key} changed from {inv_val} to {val}")
+            )
+            return
 
 
 check_plugin_msexch_dag_dbcopy = CheckPlugin(
@@ -189,26 +190,25 @@ check_plugin_msexch_dag_dbcopy = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def discover_msexch_dag_contentindex(section: StringTable) -> DiscoveryResult:
-    for line in section:
-        if line[0].strip() == "DatabaseName":
-            yield Service(item=line[1].strip())
+def discover_msexch_dag_contentindex(section: Section) -> DiscoveryResult:
+    for key, val in section.items():
+        if key == "DatabaseName":
+            yield Service(item=val)
 
 
-def check_msexch_dag_contentindex(item: str, section: StringTable) -> CheckResult:
+def check_msexch_dag_contentindex(
+    item: str,
+    section: Section,
+) -> CheckResult:
     getit = False
-    for line in section:
-        if len(line) == 2:
-            key, val = (i.strip() for i in line)
-            if key == "DatabaseName" and val == item:
-                getit = True
-            elif getit and key == "ContentIndexState":
-                if val == "Healthy":
-                    state = State.OK
-                else:
-                    state = State.WARN
-                yield Result(state=state, summary="Status: %s" % val)
-                return
+    for key, val in section.items():
+        if key == "DatabaseName" and val == item:
+            getit = True
+        elif getit and key == "ContentIndexState":
+            yield Result(
+                state=State.OK if val == "Healthy" else State.WARN, summary="Status: %s" % val
+            )
+            return
 
 
 check_plugin_msexch_dag_contentindex = CheckPlugin(
@@ -230,31 +230,31 @@ check_plugin_msexch_dag_contentindex = CheckPlugin(
 #   +----------------------------------------------------------------------+
 
 
-def discover_msexch_dag_copyqueue(section: StringTable) -> DiscoveryResult:
-    for line in section:
-        if line[0].strip() == "DatabaseName":
-            yield Service(item=line[1].strip())
+def discover_msexch_dag_copyqueue(section: Section) -> DiscoveryResult:
+    for key, val in section.items():
+        if key == "DatabaseName":
+            yield Service(item=val)
 
 
 def check_msexch_dag_copyqueue(
-    item: str, params: Mapping[str, tuple[float, float]], section: StringTable
+    item: str,
+    params: Mapping[str, tuple[float, float]],
+    section: Section,
 ) -> CheckResult:
     getit = False
-    for line in section:
-        if len(line) == 2:
-            key, val = (i.strip() for i in line)
-            if key == "DatabaseName" and val == item:
-                getit = True
-            elif getit and key == "CopyQueueLength":
-                yield from check_levels(
-                    int(val),
-                    metric_name="length",
-                    levels_upper=("fixed", params["levels"]),
-                    render_func=str,
-                    boundaries=(0, None),
-                    label="Queue length",
-                )
-                return
+    for key, val in section.items():
+        if key == "DatabaseName" and val == item:
+            getit = True
+        elif getit and key == "CopyQueueLength":
+            yield from check_levels(
+                int(val),
+                metric_name="length",
+                levels_upper=("fixed", params["levels"]),
+                render_func=str,
+                boundaries=(0, None),
+                label="Queue length",
+            )
+            return
 
 
 check_plugin_msexch_dag_copyqueue = CheckPlugin(

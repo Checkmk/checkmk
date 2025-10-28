@@ -12,10 +12,10 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName, QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
-    _collect_passwords_from_form_data,
-    _create_diag_special_agent_input,
-    _find_id_in_form_data,
     _match_service_interest,
+    collect_passwords_from_form_data,
+    create_diag_special_agent_input,
+    find_id_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
@@ -40,16 +40,16 @@ def get_service_discovery_preview(
 ) -> SpecialAgentDiscoveryPreviewResult:
     progress_logger.log_new_progress_step("parse_config", "Parse the connection configuration data")
     params = collect_params(all_stages_form_data, parameter_form)
-    passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
-    site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
-    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
+    passwords = collect_passwords_from_form_data(all_stages_form_data, parameter_form)
+    site_id = find_id_in_form_data(all_stages_form_data, QSSiteSelection)
+    host_name = find_id_in_form_data(all_stages_form_data, QSHostName)
     progress_logger.update_progress_step_status("parse_config", StepStatus.COMPLETED)
     progress_logger.log_new_progress_step(
         "test_connection", "Use input data to test connection to datasource"
     )
     service_discovery_result = special_agent_discovery_preview(
         make_automation_config(site_configs[SiteId(site_id) if site_id else omd_site()]),
-        _create_diag_special_agent_input(
+        create_diag_special_agent_input(
             rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
         ),
         debug=debug,

@@ -60,7 +60,7 @@ from cmk.gui.quick_setup.handlers.utils import form_spec_parse, ValidationErrors
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
-from cmk.gui.quick_setup.v0_unstable.predefined._common import _find_id_in_form_data
+from cmk.gui.quick_setup.v0_unstable.predefined._common import find_id_in_form_data
 from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
@@ -286,7 +286,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
     if isinstance(stage_action, QuickSetupBackgroundStageAction):
         site_id = None
         if stage_action.target_site_formspec_key:
-            site_id = _find_id_in_form_data(
+            site_id = find_id_in_form_data(
                 form_spec_parse(stages_raw_formspecs, form_spec_map),
                 target_key=stage_action.target_site_formspec_key,
             )

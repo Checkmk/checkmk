@@ -12,13 +12,13 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_from_form_data as collect_params_from_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
-    _collect_params_with_defaults_from_form_data as collect_params_with_defaults_from_form_data,
-)
-from cmk.gui.quick_setup.v0_unstable.predefined._common import (
-    _collect_passwords_from_form_data as collect_passwords_from_form_data,
-)
-from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     build_formspec_map_from_stages as build_formspec_map_from_stages,
+)
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
+    collect_params_with_defaults_from_form_data as collect_params_with_defaults_from_form_data,
+)
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
+    collect_passwords_from_form_data as collect_passwords_from_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._common import stage_components as stage_components
 

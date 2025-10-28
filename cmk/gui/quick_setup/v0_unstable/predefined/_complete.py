@@ -24,9 +24,9 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
     UniqueBundleIDStr,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
-    _collect_params_with_defaults_from_form_data,
-    _collect_passwords_from_form_data,
-    _find_id_in_form_data,
+    collect_params_with_defaults_from_form_data,
+    collect_passwords_from_form_data,
+    find_id_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
     existing_folder_from_path,
@@ -188,7 +188,7 @@ def create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
         parameter_form=parameter_form,
         all_stages_form_data=all_stages_form_data,
-        collect_params=_collect_params_with_defaults_from_form_data,
+        collect_params=collect_params_with_defaults_from_form_data,
         progress_logger=progress_logger,
     )
 
@@ -210,7 +210,7 @@ def create_and_save_special_agent_bundle_custom_collect_params(
 
 
 def _find_bundle_id(all_stages_form_data: ParsedFormData) -> BundleId:
-    bundle_id = _find_id_in_form_data(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
+    bundle_id = find_id_in_form_data(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
     if bundle_id is None:
         raise ValueError("No bundle id found")
     return BundleId(bundle_id)
@@ -251,7 +251,7 @@ def _extract_explicit_password_entities(
     params: Mapping[str, object],
 ) -> tuple[Mapping[str, object], Sequence[CreatePassword]]:
     """Extracts the explicit passwords from the form data and creates password entities for them."""
-    collected_passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
+    collected_passwords = collect_passwords_from_form_data(all_stages_form_data, parameter_form)
 
     stored_passwords = load_passwords()
     # We need to filter out the passwords that are already stored in the password store since
@@ -278,13 +278,13 @@ def _create_and_save_special_agent_bundle(
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_bundle_id(all_stages_form_data)
 
-    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
-    host_path = _find_id_in_form_data(all_stages_form_data, QSHostPath)
+    host_name = find_id_in_form_data(all_stages_form_data, QSHostName)
+    host_path = find_id_in_form_data(all_stages_form_data, QSHostPath)
 
     if host_name is None or host_path is None:
         raise ValueError("Host name or host path not found in form data")
 
-    site_selection = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
+    site_selection = find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     site_id = SiteId(site_selection) if site_selection else omd_site()
     params = collect_params(all_stages_form_data, parameter_form)
 

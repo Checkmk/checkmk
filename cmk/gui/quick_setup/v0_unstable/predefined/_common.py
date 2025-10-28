@@ -33,7 +33,7 @@ from cmk.gui.watolib.passwords import load_passwords
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
 
 
-def _collect_params_with_defaults_from_form_data(
+def collect_params_with_defaults_from_form_data(
     all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, object]:
     return _add_defaults_to_form_data(
@@ -42,7 +42,7 @@ def _collect_params_with_defaults_from_form_data(
     )
 
 
-def _collect_passwords_from_form_data(
+def collect_passwords_from_form_data(
     all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, str]:
     possible_expected_password_keys = [
@@ -65,7 +65,7 @@ def _collect_passwords_from_form_data(
     }
 
 
-def _create_diag_special_agent_input(
+def create_diag_special_agent_input(
     rulespec_name: str,
     host_name: str | None,
     passwords: Mapping[str, str],
@@ -81,19 +81,19 @@ def _create_diag_special_agent_input(
     )
 
 
-def _find_id_in_form_data(form_data: Any, target_key: str) -> None | str:
+def find_id_in_form_data(form_data: Any, target_key: str) -> None | str:
     if isinstance(form_data, dict):
         for key, value in form_data.items():
             if key == target_key:
                 assert isinstance(value, str)
                 return value
-            result = _find_id_in_form_data(value, target_key)
+            result = find_id_in_form_data(value, target_key)
             if result is not None:
                 return result
         return None
     if isinstance(form_data, list):
         for item in form_data:
-            result = _find_id_in_form_data(item, target_key)
+            result = find_id_in_form_data(item, target_key)
             if result is not None:
                 return result
     return None

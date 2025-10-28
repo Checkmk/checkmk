@@ -18,9 +18,9 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
     UniqueBundleIDStr,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
-    _collect_passwords_from_form_data,
-    _create_diag_special_agent_input,
-    _find_id_in_form_data,
+    collect_passwords_from_form_data,
+    create_diag_special_agent_input,
+    find_id_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
     existing_folder_from_path,
@@ -110,17 +110,17 @@ def _validate_test_connection(
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
     progress_logger.log_new_progress_step("parse_config", "Parse the connection configuration data")
-    site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
-    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName) or str(uuid4())
+    site_id = find_id_in_form_data(all_stages_form_data, QSSiteSelection)
+    host_name = find_id_in_form_data(all_stages_form_data, QSHostName) or str(uuid4())
     params = collect_params(all_stages_form_data, parameter_form)
-    passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
+    passwords = collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     progress_logger.update_progress_step_status("parse_config", StepStatus.COMPLETED)
     progress_logger.log_new_progress_step(
         "test_connection", "Use input data to test connection to datasource"
     )
     output = diag_special_agent(
         make_automation_config(active_config.sites[SiteId(site_id) if site_id else omd_site()]),
-        _create_diag_special_agent_input(
+        create_diag_special_agent_input(
             rulespec_name=rulespec_name,
             host_name=host_name,
             passwords=passwords,
@@ -155,7 +155,7 @@ def validate_unique_id(
     stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
-    bundle_id = _find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
+    bundle_id = find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
         return [f"Expected the key '{UniqueBundleIDStr}' in the form data."]
 
@@ -170,7 +170,7 @@ def validate_host_name_doesnt_exists(
     stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
-    host_name = _find_id_in_form_data(stages_form_data, QSHostName)
+    host_name = find_id_in_form_data(stages_form_data, QSHostName)
     assert host_name is not None
     host = Host.host(HostName(host_name))
     if host:
@@ -190,7 +190,7 @@ def validate_host_path_permissions(
     stages_form_data: ParsedFormData,
     _progress_logger: ProgressLogger,
 ) -> GeneralStageErrors:
-    host_path = _find_id_in_form_data(stages_form_data, QSHostPath)
+    host_path = find_id_in_form_data(stages_form_data, QSHostPath)
     assert host_path is not None
 
     sanitized_folder_path = normalize_folder_path_str(host_path)

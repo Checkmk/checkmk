@@ -421,6 +421,14 @@ class HTMLWriter:
             )
         )
 
+    @staticmethod
+    def render_vue_component(component_name: str, data: dict[str, Any]) -> HTML:
+        return render_element(
+            component_name,
+            None,
+            data=_dump_standard_compliant_json(data),
+        )
+
     def legend(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("legend", content, **kwargs))
 

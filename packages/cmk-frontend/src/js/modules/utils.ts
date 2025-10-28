@@ -944,7 +944,9 @@ function getContentBody(): HTMLElement {
 }
 
 export function createSkeleton(template: string, delay: number): void {
-  getContentBody().setAttribute('data-prepare-loading-transition', 'true')
+  const contentBody = getContentBody()
+  contentBody.setAttribute('data-prepare-loading-transition', 'true')
+  contentBody.style.cursor = 'wait'
   setTimeout(() => {
     const body = getContentBody()
     if (!body.hasAttribute('data-prepare-loading-transition')) {

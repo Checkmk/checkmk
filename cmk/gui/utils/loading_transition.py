@@ -8,13 +8,16 @@ from contextlib import contextmanager
 from cmk.gui.htmllib.html import html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.shared_typing.loading_transition import LoadingTransition as _LoadingTransition
+
+LoadingTransition = _LoadingTransition
 
 
 @contextmanager
-def loading_transition(template: str = "default", delay_ms: int = 0) -> Generator[None]:
+def loading_transition(template: LoadingTransition, delay_ms: int = 1000) -> Generator[None]:
     with output_funnel.plugged():
         yield
         html.span(
             HTML(output_funnel.drain(), False),
-            onclick=f"cmk.utils.createSkeleton('{template}', {delay_ms});",
+            onclick=f"cmk.utils.createSkeleton('{template.value}', {delay_ms});",
         )

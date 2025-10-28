@@ -17,6 +17,7 @@ npm_link_all_packages(name = "node_modules")
 SOURCES_COMMON = [
     "ai_button.json",
     "configuration_entity.json",
+    "loading_transition.json",
     "main_menu.json",
     "mode_host.json",
     "notifications.json",

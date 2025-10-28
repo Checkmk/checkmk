@@ -20,6 +20,7 @@ from cmk.plugins.infoblox.agent_based.infoblox_temp import (
 )
 from cmk.plugins.lib.temperature import TempParamType
 from tests.unit.cmk.plugins.collection.agent_based.snmp import get_parsed_snmp_section
+from tests.unit.cmk.plugins.lib.test_temperature import mock_value_store
 
 WALK_NIOS_7_2_7 = """
 .1.3.6.1.4.1.7779.3.1.1.2.1.7.0 7.2.7
@@ -152,4 +153,4 @@ def test_check_infoblox_temp(
     section = get_parsed_snmp_section(snmp_section_infoblox_temp, as_path(input_walk))
     assert section is not None
 
-    assert list(check_temp(item, params, section, {})) == expected
+    assert list(check_temp(item, params, section, mock_value_store())) == expected

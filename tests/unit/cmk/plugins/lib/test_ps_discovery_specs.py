@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO: test the interface, not the private members
-# ruff: noqa: SLF001
-
 from cmk.plugins.lib import ps
 
 TEST_LABELS = {

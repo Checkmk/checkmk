@@ -17,12 +17,6 @@ from cmk.plugins.lib import interfaces
 CheckResults = Sequence[Result | Metric | IgnoreResults]
 
 
-@pytest.fixture
-def initialised_item_state(monkeypatch: MonkeyPatch) -> None:
-    value_store: dict[str, Any] = {}
-    monkeypatch.setattr(interfaces, "get_value_store", lambda: value_store)
-
-
 def _create_interfaces_with_counters(
     bandwidth_change: int,
     **attr_kwargs: Any,

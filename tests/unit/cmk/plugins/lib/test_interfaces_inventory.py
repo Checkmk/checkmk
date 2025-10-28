@@ -9,9 +9,11 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
+from pytest_mock import MockerFixture
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams
+from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_inventory_result
 
 
 @pytest.mark.parametrize(
@@ -390,6 +392,7 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
     ],
 )
 def test_inventorize_interfaces(
+    mocker: MockerFixture,
     params: InventoryParams,
     interfaces: Sequence[Interface],
     n_total: int,
@@ -397,14 +400,11 @@ def test_inventorize_interfaces(
     expected_result: InventoryResult,
 ) -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(500000, tz=ZoneInfo("UTC"))):
-        assert (
-            list(
-                inventorize_interfaces(
-                    params,
-                    interfaces,
-                    n_total,
-                    uptime_sec,
-                )
+        assert sort_inventory_result(
+            inventorize_interfaces(
+                params,
+                interfaces,
+                n_total,
+                uptime_sec,
             )
-            == expected_result
-        )
+        ) == sort_inventory_result(expected_result)

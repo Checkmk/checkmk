@@ -245,9 +245,7 @@ include(ExternalProject)
 
 # TODO(sp): Use -fdata-sections -ffunction-sections + -Wl,--gc-sections (plus
 # perhaps -Wl,--print-gc-sections)
-set(RRDTOOL_CFLAGS
-    "CFLAGS=-g -O2 -D_GNU_SOURCE -fno-strict-aliasing -std=gnu99 -fPIC -Wno-format-truncation -Wno-implicit-fallthrough -Wno-stringop-truncation"
-)
+set(RRDTOOL_CFLAGS "CFLAGS=-g -O2 -D_GNU_SOURCE -fno-strict-aliasing -std=gnu99 -fPIC -Wno-format-truncation -Wno-implicit-fallthrough -Wno-stringop-truncation -Wno-stringop-overflow")
 ExternalProject_Add(
   rrdtool
   URL ${root_repo_dir}/third_party/rrdtool/rrdtool-1.7.2-patched.tar.gz

@@ -30,11 +30,15 @@ const propsSkeleton = cva('', {
 })
 
 export type SkeletonType = VariantProps<typeof propsSkeleton>['type']
-defineProps<{ type?: SkeletonType | undefined }>()
+defineProps<{
+  type?: SkeletonType
+  /** Custom width */
+  width?: string
+}>()
 </script>
 
 <template>
-  <div class="cmk-skeleton" :class="propsSkeleton({ type })">
+  <div class="cmk-skeleton" :class="[propsSkeleton({ type }), { 'custom-width': width }]">
     <slot />
   </div>
 </template>
@@ -66,6 +70,14 @@ defineProps<{ type?: SkeletonType | undefined }>()
   &.box {
     height: 100%;
     width: 100%;
+
+    &.custom-width {
+      width: v-bind(width);
+    }
+  }
+
+  &.custom-width {
+    width: v-bind(width);
   }
 
   &.h1,

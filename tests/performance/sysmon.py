@@ -193,7 +193,7 @@ def _init_resources_file(task_name: str) -> Path:
     version_directory = CMKPackageInfo(version_from_env(), edition_from_env()).version_directory()
     result_dir = Path(os.getenv("RESULT_PATH", Path(__file__).parent.parent.parent / "results"))
     report_dir = result_dir / "performance" / version_directory
-    report_dir.parent.mkdir(parents=True, exist_ok=True)
+    report_dir.mkdir(parents=True, exist_ok=True)
     benchmark_json_name = next(
         (_.split("=", 1)[-1] for _ in argv if _.startswith("--benchmark-json=")),
         "cmk.benchmark.json",

@@ -635,7 +635,7 @@ use_repo(multitool, "multitool", "multitool_hub")
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
-    versions = ["1.87.0"],
+    versions = ["1.90.0"],
 )
 rust.repository_set(
     name = "rust_linux_x86_64",
@@ -647,7 +647,7 @@ rust.repository_set(
         "@platforms//os:linux",
     ],
     target_triple = "x86_64-unknown-linux-gnu",
-    versions = ["1.87.0"],
+    versions = ["1.90.0"],
 )
 rust.repository_set(
     name = "rust_linux_x86_64",

@@ -5,9 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
-import { useId } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
+import useId from '@/lib/useId'
 
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkLabel from '@/components/CmkLabel.vue'

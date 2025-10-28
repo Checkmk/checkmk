@@ -1205,13 +1205,20 @@ async def process_cosmosdb(
         for resource_id, metrics in result.items():
             for metric in metrics:
                 if not (metadata := metric.get("metadata_mapping")):
-                    # this should never happen because of the dimension filter we use 'DatabaseName = *'
-                    LOGGER.error("Skipping metric without database name in metadata: %s", metric)
+                    # this should never happen because of the dimension filter we use '<SomeDimension> = *'
+                    LOGGER.error("Skipping metric without metadata: %s", metric)
                     continue
 
-                if (database_name := metadata.get("databasename", "<empty>")) == "<empty>":
-                    # this is the "general" metric for the cosmos account itself, we don't need it here
-                    # cosmos account metrics will be collected in the standard way as for other resources
+                if any(value == "<empty>" for value in metadata.values()):
+                    # we can safely ignore metrics with dimensions set to <empty>,
+                    # these are "grouped" metrics, and, as of now, we are not interested in
+                    # these aggregations and we also keep the agent output cleaner
+                    continue
+
+                if not (database_name := metadata.get("databasename")):
+                    # this should never happen because of the dimension filter,
+                    # right now we should always have the database name in the metadata
+                    LOGGER.error("Skipping metric without database name in metadata: %s", metric)
                     continue
 
                 if (db_resource := cosmosdb_databases.get(database_name)) is not None:

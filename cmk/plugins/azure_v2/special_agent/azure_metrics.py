@@ -139,16 +139,20 @@ COSMOS_DATABASE_METRICS = [
     # this metric is needed to always discover the DBs
     # since some other metrics are only available when there is activity
     AzureMetric(
-        name="DocumentCount",
+        name="DataUsage",
         interval="PT5M",
-        aggregation="average",
+        aggregation="count",
         dimension_filters=(
             DimensionFilter(
                 name="DatabaseName",
                 value="*",
             ),
+            DimensionFilter(
+                name="CollectionName",
+                value="*",
+            ),
         ),
-        explicit_metric_alias="average_DocumentCountdb",
+        explicit_metric_alias="count_DataUsage_discover",
     ),
 ]
 

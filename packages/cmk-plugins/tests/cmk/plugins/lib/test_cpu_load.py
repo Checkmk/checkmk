@@ -5,7 +5,6 @@
 
 import time
 from pathlib import Path
-from unittest.mock import Mock
 
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
@@ -45,7 +44,7 @@ def test_cpu_loads_fixed_levels() -> None:
     ]
 
 
-def test_cpu_loads_predictive(mocker: Mock, tmp_path: Path) -> None:
+def test_cpu_loads_predictive(tmp_path: Path) -> None:
     prep_u = PredictionParameters(
         period="minute", horizon=1, levels=("absolute", (2.0, 4.0)), bound=None
     )

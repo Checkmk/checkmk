@@ -188,6 +188,7 @@ pkg_files(
                "//packages/cmk-livestatus-client:cmk_livestatus_pkg_tar",
                "//packages/cmk-messaging:pkg_tar",
                "//packages/cmk-mkp-tool:pkg_tar",
+               "//packages/cmk-plugins:pkg_tar",
                "//packages/cmk-plugin-apis:pkg_tar",
                "//packages/cmk-relay-protocols:pkg_tar",
                "//packages/cmk-trace:pkg_tar",

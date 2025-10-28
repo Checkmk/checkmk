@@ -11,7 +11,7 @@ exports_files([
 ])
 
 py_library(
-    name = "plugins-lib",
+    name = "lib",
     srcs = [
         "cmk/plugins/lib/cache_helper.py",
         "cmk/plugins/lib/container_cgroupv2.py",
@@ -60,9 +60,7 @@ py_library(
 py_doc_test(
     name = "doctest",
     size = "small",
-    srcs = [
-        "plugins-lib",
-    ],
+    srcs = [":lib"],
     tags = ["no-mypy"],
 )
 
@@ -74,13 +72,13 @@ py_pytest_main(
 )
 
 py_test(
-    name = "plugins-lib-test",
+    name = "lib-test",
     size = "small",
     srcs = glob(["tests/cmk/plugins/lib/**/*.py"]) + [":__test__.py"],
     main = ":__test__.py",
     deps = [
         ":__test__",
-        ":plugins-lib",
+        ":lib",
         requirement("pytest"),
         requirement("time-machine"),
     ],
@@ -93,7 +91,7 @@ py_wheel(
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     deps = [
-        ":plugins-lib",
+        ":lib",
     ],
 )
 

@@ -211,6 +211,7 @@ CMK_PACKAGES = [
     "//packages/cmk-livestatus-client:py_livestatus",
     "//packages/cmk-messaging",
     "//packages/cmk-mkp-tool",
+    "//packages/cmk-plugins:lib",
     "//packages/cmk-plugin-apis:agent_based",
     "//packages/cmk-plugin-apis:bakery",
     "//packages/cmk-plugin-apis:graphing",

@@ -3030,9 +3030,6 @@ msgstr "Absolut"
 msgid "Absolute %s space"
 msgstr "Absoluter %s Speicherplatz"
 
-msgid "Absolute Limit"
-msgstr "Absolutes Limit"
-
 msgid "Absolute archive path"
 msgstr "Absoluter Pfad zum Archiv"
 
@@ -3119,6 +3116,10 @@ msgstr "Absolute Levels in Bits oder Bytes pro Sekunde"
 
 msgid "Absolute levels of active sessions"
 msgstr "Absolute Levels für aktive Sitzungen"
+
+#, fuzzy
+msgid "Absolute limit"
+msgstr "Absolutes Limit"
 
 msgid "Absolute number of active connections"
 msgstr "Gesamtzahl von aktiven Verbindungen"
@@ -8669,8 +8670,16 @@ msgid "Azure Cosmos DB Availability"
 msgstr "BI Verfügbarkeit"
 
 #, fuzzy
+msgid "Azure Cosmos DB Database Requests"
+msgstr "Web ACL Anfragen"
+
+#, fuzzy
 msgid "Azure Cosmos DB Requests"
 msgstr "Web ACL Anfragen"
+
+#, fuzzy
+msgid "Azure Cosmos DB Storage"
+msgstr "Azure DB Speicher"
 
 #, fuzzy
 msgid "Azure Cosmos DB Throughput"
@@ -21074,6 +21083,10 @@ msgstr "URL zur Dokumentation"
 
 msgid "Documentation files"
 msgstr "Dokumentation Dateien"
+
+#, fuzzy
+msgid "Documents"
+msgstr "Dokumentation"
 
 msgid "Documents fragmentation"
 msgstr "Dokumentation Fragmentation"
@@ -34010,6 +34023,10 @@ msgstr "Prozentuale Levels für Index-Bloat"
 msgid "Index space"
 msgstr "Index-Platz"
 
+#, fuzzy
+msgid "Index usage"
+msgstr "Index-Platz"
+
 msgid "Indexes to search"
 msgstr "Zu durchsuchende Indizes"
 
@@ -40495,9 +40512,6 @@ msgstr "Arbeitsspeicher (RAM)"
 msgid "Memory Limit"
 msgstr "Speichergrenze"
 
-msgid "Memory Limiter"
-msgstr "Speicherbegrenzer"
-
 msgid "Memory Modules"
 msgstr "Speichermodule"
 
@@ -46231,6 +46245,10 @@ msgstr "OpenTelemetry"
 
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry (experimentell)"
+
+#, fuzzy
+msgid "OpenTelemetry Collector Memory Limit"
+msgstr "OpenTelemetry Collector (experimentell)"
 
 msgid "OpenTelemetry collector (experimental)"
 msgstr "OpenTelemetry Collector (experimentell)"
@@ -52586,9 +52604,6 @@ msgstr "Relational Database Service (RDS)"
 msgid "Relative"
 msgstr "Relativ"
 
-msgid "Relative Limit in %"
-msgstr "Relative Grenze in %"
-
 msgid "Relative difference"
 msgstr "Relativer Unterschied"
 
@@ -52603,6 +52618,10 @@ msgstr "Relative Levels"
 
 msgid "Relative levels of active sessions."
 msgstr "Relative Schwellen für aktive Sitzungen."
+
+#, fuzzy
+msgid "Relative limit in %"
+msgstr "Relative Grenze in %"
 
 msgid "Relative manifest path"
 msgstr "Relativer Pfad zum Manifest"
@@ -58860,6 +58879,10 @@ msgstr "Der Filter für die Dateigröße muss das Format [OPERATOR][INT] haben."
 
 msgid "Size growth per minute"
 msgstr "Größenwachstum pro Minute"
+
+#, fuzzy
+msgid "Size of ClickHouse"
+msgstr "Größe der Lizenzierung"
 
 msgid "Size of OTel Collector"
 msgstr "Größe des OTel Collectors"
@@ -72459,6 +72482,20 @@ msgstr ""
 "in Prozent zu konfigurieren"
 
 #, fuzzy
+msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
+"Redis Durchsatzes zu konfigurieren"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"database throttled requests ratio"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
+"Redis Durchsatzes zu konfigurieren"
+
+#, fuzzy
 msgid ""
 "This ruleset allows you to configure upper limits for Azure Cosmos DB "
 "throttled requests ratio"
@@ -73642,6 +73679,10 @@ msgstr "Schwellwerte für obere Meldungsanzahl"
 
 msgid "Throttle periodic notifications"
 msgstr "Periodische Benachrichtigungen drosseln"
+
+#, fuzzy
+msgid "Throttled Requests Ratio"
+msgstr "gedrosselte Anfragen"
 
 msgid "Throttled Server Connections"
 msgstr "gedrosselte Serververbindungen"
@@ -76617,6 +76658,10 @@ msgstr "Obergrenzen der Gesamtgröße"
 
 msgid "Total slots"
 msgstr "Gesamte Slots"
+
+#, fuzzy
+msgid "Total storage"
+msgstr "Gesamtgröße"
 
 msgid "Total swap space"
 msgstr "Gesamter Auslagerungsspeicher"
@@ -89097,6 +89142,84 @@ msgstr "Titel-Hintergrund anzeigen"
 msgid "Show widget background"
 msgstr "Widget-Hintergrund anzeigen"
 
+msgid "Data selection"
+msgstr "Datenauswahl"
+
+#, fuzzy
+msgid "Alert & Notification"
+msgstr "Alerts & Benachrichtigungen"
+
+msgid "Define widget"
+msgstr "Widget definieren"
+
+msgid "Barplot"
+msgstr "Balkendiagramm"
+
+#, fuzzy
+msgid "Alert timeline"
+msgstr "Zeitleiste anzeigen"
+
+#, fuzzy
+msgid "Notification timeline"
+msgstr "Benachrichtigungsregel"
+
+msgid "Widget data"
+msgstr "Widget-Daten"
+
+msgid "Next step: Visualization"
+msgstr "Nächster Schritt: Visualisierung"
+
+msgid "Select the data you want to analyze"
+msgstr "Wählen Sie die Daten aus, die Sie analysieren wollen"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+msgid "Host selection"
+msgstr "Host-Auswahl"
+
+msgid "Service selection"
+msgstr "Service-Auswahl"
+
+msgid "Available visualization types"
+msgstr "Verfügbare Visualisierungstypen"
+
+msgid "Data settings"
+msgstr "Dateneinstellungen"
+
+#, fuzzy
+msgid "Limit objects to"
+msgstr "Objekte begrenzen"
+
+#, fuzzy
+msgid "Widget settings"
+msgstr "Einstellungen bearbeiten"
+
+#, fuzzy
+msgid "Choose a visualization type."
+msgstr "Balkenansicht anzeigen"
+
+#, fuzzy
+msgid "Show notifications for hosts and services"
+msgstr "Zeige %ss der Hosts und Services"
+
+#, fuzzy
+msgid "Show notifications for hosts only"
+msgstr "Benachrichtigungen für Regelanalyse speichern"
+
+#, fuzzy
+msgid "Show notifications for services only"
+msgstr "Benachrichtigungen für Regelanalyse speichern"
+
+msgid "Additional graph options"
+msgstr "Zusätzliche Graph-Optionen"
+
+msgid "Add & place widget"
+msgstr "Widget hinzufügen & platzieren"
+
+msgid "Update widget"
+msgstr "Widget aktualisieren"
+
 msgid "Unrestricted"
 msgstr "Unbegrenzt"
 
@@ -89131,9 +89254,6 @@ msgstr "Dashboard-Ziel"
 msgid "Data & visualization"
 msgstr "BI-Visualisierung"
 
-msgid "Define widget"
-msgstr "Widget definieren"
-
 #, fuzzy
 msgid "Must select a custom graph"
 msgstr "Benutzerdefinierten Graph klonen"
@@ -89142,21 +89262,12 @@ msgstr "Benutzerdefinierten Graph klonen"
 msgid "Select a custom graph"
 msgstr "Benutzerdefinierten Graph klonen"
 
-msgid "Data settings"
-msgstr "Dateneinstellungen"
-
 msgid "Widget visualization"
 msgstr "Widget-Visualisierung"
-
-msgid "Additional graph options"
-msgstr "Zusätzliche Graph-Optionen"
 
 #, fuzzy
 msgid "Save widget"
 msgstr "Widget aktualisieren"
-
-msgid "Add & place widget"
-msgstr "Widget hinzufügen & platzieren"
 
 msgid "Clone & review dashboard filters"
 msgstr "Schließen & Dashboard-Filter prüfen"
@@ -89182,30 +89293,9 @@ msgstr "In Drop-down-Menüs anzeigen"
 msgid "Dashboard settings of %{name}"
 msgstr "Dashboard-Einstellungen von %{name}"
 
-msgid "Data selection"
-msgstr "Datenauswahl"
-
-msgid "Widget data"
-msgstr "Widget-Daten"
-
-msgid "Next step: Visualization"
-msgstr "Nächster Schritt: Visualisierung"
-
-msgid "Select the data you want to analyze"
-msgstr "Wählen Sie die Daten aus, die Sie analysieren wollen"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
-
-msgid "Host selection"
-msgstr "Host-Auswahl"
-
 #, fuzzy
 msgid "Event selection"
 msgstr "Metrik-Auswahl"
-
-msgid "Available visualization types"
-msgstr "Verfügbare Visualisierungstypen"
 
 msgid "Show background in status color and label"
 msgstr "Hintergrund in Statusfarbe und -label anzeigen"
@@ -89243,9 +89333,6 @@ msgstr "Inventurpfad"
 msgid "Single graph"
 msgstr "Einzelner Graph"
 
-msgid "Barplot"
-msgstr "Balkendiagramm"
-
 msgid "Scatterplot"
 msgstr ""
 
@@ -89263,9 +89350,6 @@ msgstr "Service-Graph"
 
 msgid "Must select an option"
 msgstr "Sie müssen eine Option auswählen"
-
-msgid "Service selection"
-msgstr "Service-Auswahl"
 
 msgid "Fixed data range"
 msgstr "Fester Datenbereich"
@@ -89290,9 +89374,6 @@ msgstr "Nicht-OK-Zustände einfärben"
 
 msgid "Show summary for not OK states"
 msgstr "Zusammenfassung für Nicht-OK-Zustände anzeigen"
-
-msgid "Update widget"
-msgstr "Widget aktualisieren"
 
 msgid "Specific object type"
 msgstr "Spezifischer Objekttyp"
@@ -90192,6 +90273,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Memory Limiter"
+#~ msgstr "Speicherbegrenzer"
 
 #~ msgid "Node Status (off: ignore node status)"
 #~ msgstr "Knoten-Status (aus: Knoten-Status ignorieren)"

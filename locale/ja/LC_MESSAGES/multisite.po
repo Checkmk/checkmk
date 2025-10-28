@@ -2917,9 +2917,6 @@ msgstr "絶対"
 msgid "Absolute %s space"
 msgstr "絶対 %s スペース"
 
-msgid "Absolute Limit"
-msgstr "絶対限界"
-
 msgid "Absolute archive path"
 msgstr "絶対アーカイブパス"
 
@@ -3006,6 +3003,10 @@ msgstr "ビットまたはバイト/秒単位の絶対レベル"
 
 msgid "Absolute levels of active sessions"
 msgstr "アクティブなセッションの絶対レベル"
+
+#, fuzzy
+msgid "Absolute limit"
+msgstr "絶対限界"
 
 msgid "Absolute number of active connections"
 msgstr "アクティブな接続の絶対数"
@@ -8443,8 +8444,16 @@ msgid "Azure Cosmos DB Availability"
 msgstr "BI の可用性"
 
 #, fuzzy
+msgid "Azure Cosmos DB Database Requests"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
 msgid "Azure Cosmos DB Requests"
 msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Azure Cosmos DB Storage"
+msgstr "Azure DB ストレージ"
 
 #, fuzzy
 msgid "Azure Cosmos DB Throughput"
@@ -20629,6 +20638,10 @@ msgstr "ドキュメントURL"
 
 msgid "Documentation files"
 msgstr "ドキュメントファイル"
+
+#, fuzzy
+msgid "Documents"
+msgstr "ドキュメント"
 
 msgid "Documents fragmentation"
 msgstr "ドキュメントの断片化"
@@ -33238,6 +33251,10 @@ msgstr "肥大化レベルのパーセンテージのインデックス"
 msgid "Index space"
 msgstr "インデックススペース"
 
+#, fuzzy
+msgid "Index usage"
+msgstr "インデックススペース"
+
 msgid "Indexes to search"
 msgstr "検索するインデックス"
 
@@ -39648,10 +39665,6 @@ msgstr "メモリ(RAM)"
 msgid "Memory Limit"
 msgstr "メモリサイズ"
 
-#, fuzzy
-msgid "Memory Limiter"
-msgstr "メモリサイズ"
-
 msgid "Memory Modules"
 msgstr "メモリモジュール"
 
@@ -45310,6 +45323,10 @@ msgstr "OpenTelemetry（実験的）"
 
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry（実験的）"
+
+#, fuzzy
+msgid "OpenTelemetry Collector Memory Limit"
+msgstr "OpenTelemetryコレクター（実験的）"
 
 msgid "OpenTelemetry collector (experimental)"
 msgstr "OpenTelemetryコレクター（実験的）"
@@ -51552,10 +51569,6 @@ msgstr "リレーショナルデータベースサービス(RDS)"
 msgid "Relative"
 msgstr "相対的"
 
-#, fuzzy
-msgid "Relative Limit in %"
-msgstr "相対湿度"
-
 msgid "Relative difference"
 msgstr "相対的な差"
 
@@ -51570,6 +51583,10 @@ msgstr "相対レベル"
 
 msgid "Relative levels of active sessions."
 msgstr "アクティブなセッションの相対レベル。"
+
+#, fuzzy
+msgid "Relative limit in %"
+msgstr "相対湿度"
 
 msgid "Relative manifest path"
 msgstr "相対マニフェストパス"
@@ -57743,6 +57760,10 @@ msgstr "サイズフィルターの仕様は、[OPERATOR][INT]の形式である
 
 msgid "Size growth per minute"
 msgstr "1分あたりのサイズの増加"
+
+#, fuzzy
+msgid "Size of ClickHouse"
+msgstr "ライセンスのサイズ"
 
 #, fuzzy
 msgid "Size of OTel Collector"
@@ -70666,6 +70687,20 @@ msgstr ""
 "きます"
 
 #, fuzzy
+msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"database throttled requests ratio"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
 msgid ""
 "This ruleset allows you to configure upper limits for Azure Cosmos DB "
 "throttled requests ratio"
@@ -71786,6 +71821,10 @@ msgstr "メッセージの上限数に関するしきい値"
 
 msgid "Throttle periodic notifications"
 msgstr "スロットル定期通知"
+
+#, fuzzy
+msgid "Throttled Requests Ratio"
+msgstr "スロットルされたリクエスト"
 
 msgid "Throttled Server Connections"
 msgstr "スロットルされたサーバー接続"
@@ -74732,6 +74771,10 @@ msgstr "総容量 上位レベル"
 
 msgid "Total slots"
 msgstr "合計スロット"
+
+#, fuzzy
+msgid "Total storage"
+msgstr "全体の大きさ"
 
 msgid "Total swap space"
 msgstr "合計スワップスペース"
@@ -86924,6 +86967,95 @@ msgid "Show widget background"
 msgstr "背景なしでタイトルを表示"
 
 #, fuzzy
+msgid "Data selection"
+msgstr "サイト選択"
+
+#, fuzzy
+msgid "Alert & Notification"
+msgstr "テスト通知"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "ターゲットを追加"
+
+msgid "Barplot"
+msgstr "棒グラフ"
+
+#, fuzzy
+msgid "Alert timeline"
+msgstr "タイムライン表示"
+
+#, fuzzy
+msgid "Notification timeline"
+msgstr "通知ルール"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "フィルタを追加"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "視覚化"
+
+msgid "Select the data you want to analyze"
+msgstr "分析したいので早くデータを選択してください"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
+msgid "Host selection"
+msgstr "サイト選択"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "サイト選択"
+
+#, fuzzy
+msgid "Available visualization types"
+msgstr "利用可能なオプション"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "ダッシュボードのプロパティ"
+
+#, fuzzy
+msgid "Limit objects to"
+msgstr "オブジェクトを制限する"
+
+#, fuzzy
+msgid "Widget settings"
+msgstr "設定を編集する"
+
+#, fuzzy
+msgid "Choose a visualization type."
+msgstr "バーの表示"
+
+#, fuzzy
+msgid "Show notifications for hosts and services"
+msgstr "ホストとサービスの %ss を表示"
+
+#, fuzzy
+msgid "Show notifications for hosts only"
+msgstr "ルール分析のために通知を保存する"
+
+#, fuzzy
+msgid "Show notifications for services only"
+msgstr "ルール分析のために通知を保存する"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "追加オプション"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
 msgid "Unrestricted"
 msgstr "未登録"
 
@@ -86965,10 +87097,6 @@ msgid "Data & visualization"
 msgstr "BIの視覚化"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "ターゲットを追加"
-
-#, fuzzy
 msgid "Must select a custom graph"
 msgstr "カスタムグラフのクローンを作成する"
 
@@ -86977,23 +87105,11 @@ msgid "Select a custom graph"
 msgstr "カスタムグラフのクローンを作成する"
 
 #, fuzzy
-msgid "Data settings"
-msgstr "ダッシュボードのプロパティ"
-
-#, fuzzy
 msgid "Widget visualization"
 msgstr "BIの視覚化"
 
 #, fuzzy
-msgid "Additional graph options"
-msgstr "追加オプション"
-
-#, fuzzy
 msgid "Save widget"
-msgstr "ターゲットを追加"
-
-#, fuzzy
-msgid "Add & place widget"
 msgstr "ターゲットを追加"
 
 #, fuzzy
@@ -87028,34 +87144,8 @@ msgid "Dashboard settings of %{name}"
 msgstr "ダッシュボードのプロパティ"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "サイト選択"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "フィルタを追加"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "視覚化"
-
-msgid "Select the data you want to analyze"
-msgstr "分析したいので早くデータを選択してください"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
-
-#, fuzzy
-msgid "Host selection"
-msgstr "サイト選択"
-
-#, fuzzy
 msgid "Event selection"
 msgstr "ファイル選択"
-
-#, fuzzy
-msgid "Available visualization types"
-msgstr "利用可能なオプション"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -87104,9 +87194,6 @@ msgstr "インベントリツリー"
 msgid "Single graph"
 msgstr "オプション選択"
 
-msgid "Barplot"
-msgstr "棒グラフ"
-
 #, fuzzy
 msgid "Scatterplot"
 msgstr "平均散布図"
@@ -87130,10 +87217,6 @@ msgstr "サービスグラフ"
 #, fuzzy
 msgid "Must select an option"
 msgstr "オプション選択"
-
-#, fuzzy
-msgid "Service selection"
-msgstr "サイト選択"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -87165,10 +87248,6 @@ msgstr "%s以外の状態"
 #, fuzzy
 msgid "Show summary for not OK states"
 msgstr "%s状態以外の概要の表示"
-
-#, fuzzy
-msgid "Update widget"
-msgstr "ターゲットを追加"
 
 #, fuzzy
 msgid "Specific object type"
@@ -88164,6 +88243,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Memory Limiter"
+#~ msgstr "メモリサイズ"
 
 #~ msgid "Node Status (off: ignore node status)"
 #~ msgstr "ノードの状態(オフ:ノードの状態を無視する)"

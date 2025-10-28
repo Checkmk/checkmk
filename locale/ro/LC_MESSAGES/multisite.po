@@ -3069,10 +3069,6 @@ msgid "Absolute %s space"
 msgstr "Spațiu absolut %s"
 
 #, fuzzy
-msgid "Absolute Limit"
-msgstr "Absolut"
-
-#, fuzzy
 msgid "Absolute archive path"
 msgstr "Spațiu liber exact"
 
@@ -3159,6 +3155,10 @@ msgstr "Nivel-urile exacte în bits sau bytes per secundă"
 
 msgid "Absolute levels of active sessions"
 msgstr "Niveluri absolute de sesiuni active"
+
+#, fuzzy
+msgid "Absolute limit"
+msgstr "Absolut"
 
 msgid "Absolute number of active connections"
 msgstr "Numărul absolut de conexiuni active"
@@ -9045,8 +9045,16 @@ msgid "Azure Cosmos DB Availability"
 msgstr "Disponibilitatea BI"
 
 #, fuzzy
+msgid "Azure Cosmos DB Database Requests"
+msgstr "Cereri ACL Web"
+
+#, fuzzy
 msgid "Azure Cosmos DB Requests"
 msgstr "Cereri ACL Web"
+
+#, fuzzy
+msgid "Azure Cosmos DB Storage"
+msgstr "Azure DB Storage"
 
 #, fuzzy
 msgid "Azure Cosmos DB Throughput"
@@ -21988,6 +21996,10 @@ msgstr "URL de documentare"
 
 msgid "Documentation files"
 msgstr "Fișiere de documentare"
+
+#, fuzzy
+msgid "Documents"
+msgstr "URL de documentare"
 
 msgid "Documents fragmentation"
 msgstr "Fragmentarea documentelor"
@@ -35512,6 +35524,10 @@ msgstr "Niveluri procentuale de umflături"
 msgid "Index space"
 msgstr "Spațiul de indexare"
 
+#, fuzzy
+msgid "Index usage"
+msgstr "Spațiul de indexare"
+
 msgid "Indexes to search"
 msgstr "Indicii de căutare"
 
@@ -42264,10 +42280,6 @@ msgid "Memory Limit"
 msgstr "Dimensiunea memoriei"
 
 #, fuzzy
-msgid "Memory Limiter"
-msgstr "Dimensiunea memoriei"
-
-#, fuzzy
 msgid "Memory Modules"
 msgstr "Niveluri de memorie"
 
@@ -48323,6 +48335,10 @@ msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "OpenTelemetry (experimental)"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "OpenTelemetry Collector Memory Limit"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -55161,10 +55177,6 @@ msgstr "Serviciul de baze de date relaționale (RDS)"
 msgid "Relative"
 msgstr "Relativ"
 
-#, fuzzy
-msgid "Relative Limit in %"
-msgstr "Umiditate relativă"
-
 msgid "Relative difference"
 msgstr "Diferența relativă"
 
@@ -55179,6 +55191,10 @@ msgstr "Niveluri relative"
 
 msgid "Relative levels of active sessions."
 msgstr "Nivelurile relative ale sesiunilor active."
+
+#, fuzzy
+msgid "Relative limit in %"
+msgstr "Umiditate relativă"
 
 #, fuzzy
 msgid "Relative manifest path"
@@ -61740,6 +61756,10 @@ msgstr ""
 
 msgid "Size growth per minute"
 msgstr "Creșterea dimensiunii pe minut"
+
+#, fuzzy
+msgid "Size of ClickHouse"
+msgstr "Dimensiunea licenței"
 
 #, fuzzy
 msgid "Size of OTel Collector"
@@ -75354,6 +75374,20 @@ msgstr ""
 "tablespace și un indexspace al bazei de date."
 
 #, fuzzy
+msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"database throttled requests ratio"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
 msgid ""
 "This ruleset allows you to configure upper limits for Azure Cosmos DB "
 "throttled requests ratio"
@@ -76555,6 +76589,10 @@ msgstr "Praguri privind numărul de mesaje"
 
 msgid "Throttle periodic notifications"
 msgstr "Notificări periodice ale accelerației"
+
+#, fuzzy
+msgid "Throttled Requests Ratio"
+msgstr "Cereri restricționate"
 
 msgid "Throttled Server Connections"
 msgstr "Conexiuni de server restricționate"
@@ -80002,6 +80040,10 @@ msgstr "Containere niveluri superioare"
 
 msgid "Total slots"
 msgstr "Total sloturi"
+
+#, fuzzy
+msgid "Total storage"
+msgstr "Dimensiunea totală"
 
 msgid "Total swap space"
 msgstr "Spațiu swap total"
@@ -92961,6 +93003,96 @@ msgid "Show widget background"
 msgstr "Afișați titlul fără fundal"
 
 #, fuzzy
+msgid "Data selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Alert & Notification"
+msgstr "Notificări de testare"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Adăugați o țintă"
+
+msgid "Barplot"
+msgstr "Barplot"
+
+#, fuzzy
+msgid "Alert timeline"
+msgstr "Vezi cronologie"
+
+#, fuzzy
+msgid "Notification timeline"
+msgstr "Regula de notificare"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Adaugă filtre"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Vizualizare"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Selectați tipul de element de conținut"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
+msgid "Host selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Available visualization types"
+msgstr "Opțiuni disponibile"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Proprietățile tabloului de bord"
+
+#, fuzzy
+msgid "Limit objects to"
+msgstr "Obiecte limită"
+
+#, fuzzy
+msgid "Widget settings"
+msgstr "Editați setările"
+
+#, fuzzy
+msgid "Choose a visualization type."
+msgstr "Afișați vizualizarea barei"
+
+#, fuzzy
+msgid "Show notifications for hosts and services"
+msgstr "Afișați %ss pentru gazde și servicii"
+
+#, fuzzy
+msgid "Show notifications for hosts only"
+msgstr "Stocarea notificărilor pentru analiza regulilor"
+
+#, fuzzy
+msgid "Show notifications for services only"
+msgstr "Stocarea notificărilor pentru analiza regulilor"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
 msgid "Unrestricted"
 msgstr "Neînregistrat"
 
@@ -93003,10 +93135,6 @@ msgid "Data & visualization"
 msgstr "Vizualizare BI"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "Adăugați o țintă"
-
-#, fuzzy
 msgid "Must select a custom graph"
 msgstr "Clonarea graficului personalizat"
 
@@ -93015,23 +93143,11 @@ msgid "Select a custom graph"
 msgstr "Clonarea graficului personalizat"
 
 #, fuzzy
-msgid "Data settings"
-msgstr "Proprietățile tabloului de bord"
-
-#, fuzzy
 msgid "Widget visualization"
 msgstr "Vizualizare BI"
 
 #, fuzzy
-msgid "Additional graph options"
-msgstr "Opțiuni adiționale"
-
-#, fuzzy
 msgid "Save widget"
-msgstr "Adăugați o țintă"
-
-#, fuzzy
-msgid "Add & place widget"
 msgstr "Adăugați o țintă"
 
 #, fuzzy
@@ -93067,35 +93183,8 @@ msgid "Dashboard settings of %{name}"
 msgstr "Proprietățile tabloului de bord"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "Selecția fișierelor"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Adaugă filtre"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "Vizualizare"
-
-#, fuzzy
-msgid "Select the data you want to analyze"
-msgstr "Selectați tipul de element de conținut"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
-
-#, fuzzy
-msgid "Host selection"
-msgstr "Selecția fișierelor"
-
-#, fuzzy
 msgid "Event selection"
 msgstr "Selecția fișierelor"
-
-#, fuzzy
-msgid "Available visualization types"
-msgstr "Opțiuni disponibile"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -93144,9 +93233,6 @@ msgstr "Arbore de inventariere"
 msgid "Single graph"
 msgstr "Conexiuni respinse"
 
-msgid "Barplot"
-msgstr "Barplot"
-
 #, fuzzy
 msgid "Scatterplot"
 msgstr "Graficul de dispersie mediu"
@@ -93172,10 +93258,6 @@ msgstr "Grafice de servicii"
 #, fuzzy
 msgid "Must select an option"
 msgstr "Conexiuni respinse"
-
-#, fuzzy
-msgid "Service selection"
-msgstr "Selecția fișierelor"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -93207,10 +93289,6 @@ msgstr "nu %s state"
 #, fuzzy
 msgid "Show summary for not OK states"
 msgstr "Afișați rezumatul pentru statele care nu sunt %s"
-
-#, fuzzy
-msgid "Update widget"
-msgstr "Adăugați o țintă"
 
 #, fuzzy
 msgid "Specific object type"
@@ -94243,6 +94321,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Memory Limiter"
+#~ msgstr "Dimensiunea memoriei"
 
 #, fuzzy
 #~ msgid "Node Status (off: ignore node status)"

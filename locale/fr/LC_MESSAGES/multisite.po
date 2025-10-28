@@ -3079,10 +3079,6 @@ msgid "Absolute %s space"
 msgstr "Espace absolu %s"
 
 #, fuzzy
-msgid "Absolute Limit"
-msgstr "Absolument"
-
-#, fuzzy
 msgid "Absolute archive path"
 msgstr "Espace libre absolu"
 
@@ -3169,6 +3165,10 @@ msgstr "Niveaux absolus en bits ou en octets par seconde"
 
 msgid "Absolute levels of active sessions"
 msgstr "Niveaux absolus de sessions actives"
+
+#, fuzzy
+msgid "Absolute limit"
+msgstr "Absolument"
 
 msgid "Absolute number of active connections"
 msgstr "Nombre absolu de connexions actives"
@@ -9097,8 +9097,16 @@ msgid "Azure Cosmos DB Availability"
 msgstr "Disponibilité de la BI"
 
 #, fuzzy
+msgid "Azure Cosmos DB Database Requests"
+msgstr "Demandes d'ACL sur le Web"
+
+#, fuzzy
 msgid "Azure Cosmos DB Requests"
 msgstr "Demandes d'ACL sur le Web"
+
+#, fuzzy
+msgid "Azure Cosmos DB Storage"
+msgstr "Stockage Azure DB"
 
 #, fuzzy
 msgid "Azure Cosmos DB Throughput"
@@ -22090,6 +22098,10 @@ msgstr "URL de la documentation"
 
 msgid "Documentation files"
 msgstr "Dossiers de documentation"
+
+#, fuzzy
+msgid "Documents"
+msgstr "URL de la documentation"
 
 msgid "Documents fragmentation"
 msgstr "Fragmentation des documents"
@@ -35681,6 +35693,10 @@ msgstr "Niveaux de ballonnement en pourcentage de l'indice"
 msgid "Index space"
 msgstr "Espace d'indexation"
 
+#, fuzzy
+msgid "Index usage"
+msgstr "Espace d'indexation"
+
 msgid "Indexes to search"
 msgstr "Index à rechercher"
 
@@ -42489,10 +42505,6 @@ msgid "Memory Limit"
 msgstr "Taille de la mémoire"
 
 #, fuzzy
-msgid "Memory Limiter"
-msgstr "Taille de la mémoire"
-
-#, fuzzy
 msgid "Memory Modules"
 msgstr "Niveaux de mémoire"
 
@@ -48576,6 +48588,10 @@ msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
 msgid "OpenTelemetry (experimental)"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+msgid "OpenTelemetry Collector Memory Limit"
 msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
@@ -55484,10 +55500,6 @@ msgid "Relative"
 msgstr "Relative"
 
 #, fuzzy
-msgid "Relative Limit in %"
-msgstr "Humidité relative"
-
-#, fuzzy
 msgid "Relative difference"
 msgstr "Décalage horaire"
 
@@ -55502,6 +55514,10 @@ msgstr "Niveaux relatifs"
 
 msgid "Relative levels of active sessions."
 msgstr "Niveaux relatifs des sessions actives."
+
+#, fuzzy
+msgid "Relative limit in %"
+msgstr "Humidité relative"
 
 #, fuzzy
 msgid "Relative manifest path"
@@ -62082,6 +62098,10 @@ msgstr ""
 
 msgid "Size growth per minute"
 msgstr "Croissance de la taille par minute"
+
+#, fuzzy
+msgid "Size of ClickHouse"
+msgstr "Taille de la licence"
 
 #, fuzzy
 msgid "Size of OTel Collector"
@@ -75716,6 +75736,20 @@ msgstr ""
 "tablespace et un index de bases de données."
 
 #, fuzzy
+msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"database throttled requests ratio"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
 msgid ""
 "This ruleset allows you to configure upper limits for Azure Cosmos DB "
 "throttled requests ratio"
@@ -76932,6 +76966,10 @@ msgstr "Seuils sur le nombre de messages"
 
 msgid "Throttle periodic notifications"
 msgstr "Notifications périodiques de l'accélérateur"
+
+#, fuzzy
+msgid "Throttled Requests Ratio"
+msgstr "Des demandes étranglées"
 
 msgid "Throttled Server Connections"
 msgstr "Connexions au serveur étranglées"
@@ -80455,6 +80493,10 @@ msgstr "Conteneurs niveaux supérieurs"
 
 msgid "Total slots"
 msgstr "Total des créneaux horaires"
+
+#, fuzzy
+msgid "Total storage"
+msgstr "Taille totale"
 
 msgid "Total swap space"
 msgstr "Espace d'échange total"
@@ -93530,6 +93572,96 @@ msgid "Show widget background"
 msgstr "Afficher le titre sans arrière-plan"
 
 #, fuzzy
+msgid "Data selection"
+msgstr "Sélection des dossiers"
+
+#, fuzzy
+msgid "Alert & Notification"
+msgstr "dernière notification"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Ajouter une cible"
+
+msgid "Barplot"
+msgstr "Diagramme en barres"
+
+#, fuzzy
+msgid "Alert timeline"
+msgstr "Voir la chronologie"
+
+#, fuzzy
+msgid "Notification timeline"
+msgstr "Règle de notification"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Ajouter un filtre"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Visualisation"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Sélectionnez le type d'élément de contenu"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
+msgid "Host selection"
+msgstr "Sélection des dossiers"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Sélection des dossiers"
+
+#, fuzzy
+msgid "Available visualization types"
+msgstr "Options disponibles"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Propriétés du tableau de bord"
+
+#, fuzzy
+msgid "Limit objects to"
+msgstr "Limiter les objets"
+
+#, fuzzy
+msgid "Widget settings"
+msgstr "Modifier les paramètres"
+
+#, fuzzy
+msgid "Choose a visualization type."
+msgstr "Visualisation de la BI"
+
+#, fuzzy
+msgid "Show notifications for hosts and services"
+msgstr "Afficher les %ss pour les hôtes et les services"
+
+#, fuzzy
+msgid "Show notifications for hosts only"
+msgstr "Stocker les notifications pour l'analyse des règles"
+
+#, fuzzy
+msgid "Show notifications for services only"
+msgstr "Stocker les notifications pour l'analyse des règles"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Options supplémentaires"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Ajouter une cible"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "Ajouter une cible"
+
+#, fuzzy
 msgid "Unrestricted"
 msgstr "Non enregistré"
 
@@ -93572,10 +93704,6 @@ msgid "Data & visualization"
 msgstr "Visualisation de la BI"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "Ajouter une cible"
-
-#, fuzzy
 msgid "Must select a custom graph"
 msgstr "Cloner un graphique personnalisé"
 
@@ -93584,23 +93712,11 @@ msgid "Select a custom graph"
 msgstr "Cloner un graphique personnalisé"
 
 #, fuzzy
-msgid "Data settings"
-msgstr "Propriétés du tableau de bord"
-
-#, fuzzy
 msgid "Widget visualization"
 msgstr "Visualisation de la BI"
 
 #, fuzzy
-msgid "Additional graph options"
-msgstr "Options supplémentaires"
-
-#, fuzzy
 msgid "Save widget"
-msgstr "Ajouter une cible"
-
-#, fuzzy
-msgid "Add & place widget"
 msgstr "Ajouter une cible"
 
 #, fuzzy
@@ -93635,35 +93751,8 @@ msgid "Dashboard settings of %{name}"
 msgstr "Propriétés du tableau de bord"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "Sélection des dossiers"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Ajouter un filtre"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "Visualisation"
-
-#, fuzzy
-msgid "Select the data you want to analyze"
-msgstr "Sélectionnez le type d'élément de contenu"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
-
-#, fuzzy
-msgid "Host selection"
-msgstr "Sélection des dossiers"
-
-#, fuzzy
 msgid "Event selection"
 msgstr "Sélection des dossiers"
-
-#, fuzzy
-msgid "Available visualization types"
-msgstr "Options disponibles"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -93711,9 +93800,6 @@ msgstr "Arbre d'inventaire"
 msgid "Single graph"
 msgstr "Connexions rejetées"
 
-msgid "Barplot"
-msgstr "Diagramme en barres"
-
 #, fuzzy
 msgid "Scatterplot"
 msgstr "Diagramme de dispersion moyen"
@@ -93737,10 +93823,6 @@ msgstr "Graphiques des services"
 #, fuzzy
 msgid "Must select an option"
 msgstr "Connexions rejetées"
-
-#, fuzzy
-msgid "Service selection"
-msgstr "Sélection des dossiers"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -93771,10 +93853,6 @@ msgstr "pas %s États"
 #, fuzzy
 msgid "Show summary for not OK states"
 msgstr "Afficher le résumé pour les états qui ne sont pas %s"
-
-#, fuzzy
-msgid "Update widget"
-msgstr "Ajouter une cible"
 
 #, fuzzy
 msgid "Specific object type"
@@ -94806,6 +94884,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Memory Limiter"
+#~ msgstr "Taille de la mémoire"
 
 #, fuzzy
 #~ msgid "Node Status (off: ignore node status)"

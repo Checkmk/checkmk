@@ -3041,10 +3041,6 @@ msgid "Absolute %s space"
 msgstr "Absolute %s ruimte"
 
 #, fuzzy
-msgid "Absolute Limit"
-msgstr "Absoluut"
-
-#, fuzzy
 msgid "Absolute archive path"
 msgstr "Absolute vrije ruimte"
 
@@ -3133,6 +3129,10 @@ msgstr "Absolute niveaus in bits of bytes per seconde"
 
 msgid "Absolute levels of active sessions"
 msgstr "Absolute niveaus van actieve sessies"
+
+#, fuzzy
+msgid "Absolute limit"
+msgstr "Absoluut"
 
 msgid "Absolute number of active connections"
 msgstr "Absoluut aantal actieve verbindingen"
@@ -9044,8 +9044,16 @@ msgid "Azure Cosmos DB Availability"
 msgstr "BI-beschikbaarheid"
 
 #, fuzzy
+msgid "Azure Cosmos DB Database Requests"
+msgstr "Web ACL Verzoeken"
+
+#, fuzzy
 msgid "Azure Cosmos DB Requests"
 msgstr "Web ACL Verzoeken"
+
+#, fuzzy
+msgid "Azure Cosmos DB Storage"
+msgstr "Azure DB opslag"
 
 #, fuzzy
 msgid "Azure Cosmos DB Throughput"
@@ -21936,6 +21944,10 @@ msgstr "Documentatie URL"
 
 msgid "Documentation files"
 msgstr "Documentatiebestanden"
+
+#, fuzzy
+msgid "Documents"
+msgstr "Documentatie URL"
 
 msgid "Documents fragmentation"
 msgstr "Versnippering van documenten"
@@ -35395,6 +35407,10 @@ msgstr "Index percentage opgeblazen gevoeligheid"
 msgid "Index space"
 msgstr "Index ruimte"
 
+#, fuzzy
+msgid "Index usage"
+msgstr "Index ruimte"
+
 msgid "Indexes to search"
 msgstr "Indexen om te zoeken"
 
@@ -42176,10 +42192,6 @@ msgid "Memory Limit"
 msgstr "Geheugengrootte"
 
 #, fuzzy
-msgid "Memory Limiter"
-msgstr "Geheugengrootte"
-
-#, fuzzy
 msgid "Memory Modules"
 msgstr "Geheugenniveaus"
 
@@ -48217,6 +48229,10 @@ msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "OpenTelemetry (experimental)"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "OpenTelemetry Collector Memory Limit"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
@@ -55059,10 +55075,6 @@ msgid "Relative"
 msgstr "Relatief"
 
 #, fuzzy
-msgid "Relative Limit in %"
-msgstr "Relatieve vochtigheid"
-
-#, fuzzy
 msgid "Relative difference"
 msgstr "Tijdsverschil"
 
@@ -55077,6 +55089,10 @@ msgstr "Relatieve niveaus"
 
 msgid "Relative levels of active sessions."
 msgstr "Relatieve niveaus van actieve sessies."
+
+#, fuzzy
+msgid "Relative limit in %"
+msgstr "Relatieve vochtigheid"
 
 #, fuzzy
 msgid "Relative manifest path"
@@ -61573,6 +61589,10 @@ msgstr ""
 
 msgid "Size growth per minute"
 msgstr "Grootte groei per minuut"
+
+#, fuzzy
+msgid "Size of ClickHouse"
+msgstr "Omvang van de licentie"
 
 #, fuzzy
 msgid "Size of OTel Collector"
@@ -75067,6 +75087,20 @@ msgstr ""
 "tablespace en indexspace."
 
 #, fuzzy
+msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"database throttled requests ratio"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
 msgid ""
 "This ruleset allows you to configure upper limits for Azure Cosmos DB "
 "throttled requests ratio"
@@ -76258,6 +76292,10 @@ msgstr "Drempels voor aantal berichten"
 
 msgid "Throttle periodic notifications"
 msgstr "Periodieke meldingen"
+
+#, fuzzy
+msgid "Throttled Requests Ratio"
+msgstr "Afgedwongen verzoeken"
 
 msgid "Throttled Server Connections"
 msgstr "Beperkte serververbindingen"
@@ -79780,6 +79818,10 @@ msgstr "Containers bovenste niveaus"
 
 msgid "Total slots"
 msgstr "Totaal aantal slots"
+
+#, fuzzy
+msgid "Total storage"
+msgstr "Totale omvang"
 
 msgid "Total swap space"
 msgstr "Totale swap ruimte"
@@ -92714,6 +92756,96 @@ msgid "Show widget background"
 msgstr "Titel tonen zonder achtergrond"
 
 #, fuzzy
+msgid "Data selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Alert & Notification"
+msgstr "laatste mededeling"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Doel toevoegen"
+
+msgid "Barplot"
+msgstr "Barplot"
+
+#, fuzzy
+msgid "Alert timeline"
+msgstr "Bekijk tijdlijn"
+
+#, fuzzy
+msgid "Notification timeline"
+msgstr "Regel inzake kennisgeving"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Filter toevoegen"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Visualisatie"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Selecteer het type inhoudselement"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
+msgid "Host selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Available visualization types"
+msgstr "Beschikbare opties"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Eigenschappen van het dashboard"
+
+#, fuzzy
+msgid "Limit objects to"
+msgstr "Objecten beperken"
+
+#, fuzzy
+msgid "Widget settings"
+msgstr "Instellingen bewerken"
+
+#, fuzzy
+msgid "Choose a visualization type."
+msgstr "BI-visualisatie"
+
+#, fuzzy
+msgid "Show notifications for hosts and services"
+msgstr "Toon %ss voor hosts en diensten"
+
+#, fuzzy
+msgid "Show notifications for hosts only"
+msgstr "Meldingen opslaan voor regelanalyse"
+
+#, fuzzy
+msgid "Show notifications for services only"
+msgstr "Meldingen opslaan voor regelanalyse"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Extra opties"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
 msgid "Unrestricted"
 msgstr "Niet-geregistreerd"
 
@@ -92756,10 +92888,6 @@ msgid "Data & visualization"
 msgstr "BI-visualisatie"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "Doel toevoegen"
-
-#, fuzzy
 msgid "Must select a custom graph"
 msgstr "Kloon aangepaste grafiek"
 
@@ -92768,23 +92896,11 @@ msgid "Select a custom graph"
 msgstr "Kloon aangepaste grafiek"
 
 #, fuzzy
-msgid "Data settings"
-msgstr "Eigenschappen van het dashboard"
-
-#, fuzzy
 msgid "Widget visualization"
 msgstr "BI-visualisatie"
 
 #, fuzzy
-msgid "Additional graph options"
-msgstr "Extra opties"
-
-#, fuzzy
 msgid "Save widget"
-msgstr "Doel toevoegen"
-
-#, fuzzy
-msgid "Add & place widget"
 msgstr "Doel toevoegen"
 
 #, fuzzy
@@ -92819,35 +92935,8 @@ msgid "Dashboard settings of %{name}"
 msgstr "Eigenschappen van het dashboard"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "Map Selectie"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Filter toevoegen"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "Visualisatie"
-
-#, fuzzy
-msgid "Select the data you want to analyze"
-msgstr "Selecteer het type inhoudselement"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
-
-#, fuzzy
-msgid "Host selection"
-msgstr "Map Selectie"
-
-#, fuzzy
 msgid "Event selection"
 msgstr "Map Selectie"
-
-#, fuzzy
-msgid "Available visualization types"
-msgstr "Beschikbare opties"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -92895,9 +92984,6 @@ msgstr "Inventaris Boom"
 msgid "Single graph"
 msgstr "Afgewezen verbindingen"
 
-msgid "Barplot"
-msgstr "Barplot"
-
 #, fuzzy
 msgid "Scatterplot"
 msgstr "Gemiddelde scatterplot"
@@ -92921,10 +93007,6 @@ msgstr "Dienstgrafieken"
 #, fuzzy
 msgid "Must select an option"
 msgstr "Afgewezen verbindingen"
-
-#, fuzzy
-msgid "Service selection"
-msgstr "Map Selectie"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -92955,10 +93037,6 @@ msgstr "niet %s staten"
 #, fuzzy
 msgid "Show summary for not OK states"
 msgstr "Toon samenvatting voor niet %s staten"
-
-#, fuzzy
-msgid "Update widget"
-msgstr "Doel toevoegen"
 
 #, fuzzy
 msgid "Specific object type"
@@ -93987,6 +94065,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Memory Limiter"
+#~ msgstr "Geheugengrootte"
 
 #, fuzzy
 #~ msgid "Node Status (off: ignore node status)"

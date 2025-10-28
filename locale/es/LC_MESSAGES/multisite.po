@@ -3057,10 +3057,6 @@ msgid "Absolute %s space"
 msgstr "Espacio absoluto %s"
 
 #, fuzzy
-msgid "Absolute Limit"
-msgstr "Absoluto"
-
-#, fuzzy
 msgid "Absolute archive path"
 msgstr "Espacio libre absoluto"
 
@@ -3149,6 +3145,10 @@ msgstr "Niveles absolutos en bits o bytes por segundo"
 
 msgid "Absolute levels of active sessions"
 msgstr "Niveles absolutos de sesiones activas"
+
+#, fuzzy
+msgid "Absolute limit"
+msgstr "Absoluto"
 
 msgid "Absolute number of active connections"
 msgstr "Número absoluto de conexiones activas"
@@ -9118,8 +9118,16 @@ msgid "Azure Cosmos DB Availability"
 msgstr "Disponibilidad de BI"
 
 #, fuzzy
+msgid "Azure Cosmos DB Database Requests"
+msgstr "Solicitudes de ACL en la web"
+
+#, fuzzy
 msgid "Azure Cosmos DB Requests"
 msgstr "Solicitudes de ACL en la web"
+
+#, fuzzy
+msgid "Azure Cosmos DB Storage"
+msgstr "Almacenamiento Azure DB"
 
 #, fuzzy
 msgid "Azure Cosmos DB Throughput"
@@ -22109,6 +22117,10 @@ msgstr "URL de la documentación"
 
 msgid "Documentation files"
 msgstr "Archivos de documentación"
+
+#, fuzzy
+msgid "Documents"
+msgstr "URL de la documentación"
 
 msgid "Documents fragmentation"
 msgstr "Fragmentación de documentos"
@@ -35668,6 +35680,10 @@ msgstr "Índice de porcentaje de hinchazón"
 msgid "Index space"
 msgstr "Espacio del índice"
 
+#, fuzzy
+msgid "Index usage"
+msgstr "Espacio del índice"
+
 msgid "Indexes to search"
 msgstr "Índices de búsqueda"
 
@@ -42505,10 +42521,6 @@ msgid "Memory Limit"
 msgstr "Tamaño de la memoria"
 
 #, fuzzy
-msgid "Memory Limiter"
-msgstr "Tamaño de la memoria"
-
-#, fuzzy
 msgid "Memory Modules"
 msgstr "Niveles de memoria"
 
@@ -48599,6 +48611,10 @@ msgstr "Añadir configuración de estado"
 
 #, fuzzy
 msgid "OpenTelemetry (experimental)"
+msgstr "Añadir configuración de estado"
+
+#, fuzzy
+msgid "OpenTelemetry Collector Memory Limit"
 msgstr "Añadir configuración de estado"
 
 #, fuzzy
@@ -55487,10 +55503,6 @@ msgid "Relative"
 msgstr "Relativo"
 
 #, fuzzy
-msgid "Relative Limit in %"
-msgstr "Humedad relativa"
-
-#, fuzzy
 msgid "Relative difference"
 msgstr "Diferencia horaria"
 
@@ -55505,6 +55517,10 @@ msgstr "Niveles relativos"
 
 msgid "Relative levels of active sessions."
 msgstr "Niveles relativos de sesiones activas."
+
+#, fuzzy
+msgid "Relative limit in %"
+msgstr "Humedad relativa"
 
 #, fuzzy
 msgid "Relative manifest path"
@@ -62096,6 +62112,10 @@ msgstr ""
 
 msgid "Size growth per minute"
 msgstr "Crecimiento del tamaño por minuto"
+
+#, fuzzy
+msgid "Size of ClickHouse"
+msgstr "Tamaño de la licencia"
 
 #, fuzzy
 msgid "Size of OTel Collector"
@@ -75703,6 +75723,20 @@ msgstr ""
 "indexspace de una base de datos."
 
 #, fuzzy
+msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"database throttled requests ratio"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
 msgid ""
 "This ruleset allows you to configure upper limits for Azure Cosmos DB "
 "throttled requests ratio"
@@ -76901,6 +76935,10 @@ msgstr "Umbrales en el recuento de mensajes"
 
 msgid "Throttle periodic notifications"
 msgstr "Acelerar las notificaciones periódicas"
+
+#, fuzzy
+msgid "Throttled Requests Ratio"
+msgstr "Solicitudes aceleradas"
 
 msgid "Throttled Server Connections"
 msgstr "Conexiones de servidor restringidas"
@@ -80423,6 +80461,10 @@ msgstr "Contenedores niveles superiores"
 
 msgid "Total slots"
 msgstr "Total de ranuras"
+
+#, fuzzy
+msgid "Total storage"
+msgstr "Tamaño total"
 
 msgid "Total swap space"
 msgstr "Espacio total de intercambio"
@@ -93446,6 +93488,96 @@ msgid "Show widget background"
 msgstr "Mostrar el título sin fondo"
 
 #, fuzzy
+msgid "Data selection"
+msgstr "Selección de carpetas"
+
+#, fuzzy
+msgid "Alert & Notification"
+msgstr "última notificación"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Añadir objetivo"
+
+msgid "Barplot"
+msgstr "Barplot"
+
+#, fuzzy
+msgid "Alert timeline"
+msgstr "Ver cronología"
+
+#, fuzzy
+msgid "Notification timeline"
+msgstr "Norma de notificación"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Añadir filtro"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Visualización"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Seleccione el tipo de elemento de contenido"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
+msgid "Host selection"
+msgstr "Selección de carpetas"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Selección de carpetas"
+
+#, fuzzy
+msgid "Available visualization types"
+msgstr "Opciones disponibles"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Propiedades del cuadro de mandos"
+
+#, fuzzy
+msgid "Limit objects to"
+msgstr "Limitar los objetos"
+
+#, fuzzy
+msgid "Widget settings"
+msgstr "Editar ajustes"
+
+#, fuzzy
+msgid "Choose a visualization type."
+msgstr "Visualización de BI"
+
+#, fuzzy
+msgid "Show notifications for hosts and services"
+msgstr "Mostrar %ss para hosts y servicios"
+
+#, fuzzy
+msgid "Show notifications for hosts only"
+msgstr "Almacenar notificaciones para el análisis de reglas"
+
+#, fuzzy
+msgid "Show notifications for services only"
+msgstr "Almacenar notificaciones para el análisis de reglas"
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Opciones adicionales"
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Añadir objetivo"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "Añadir objetivo"
+
+#, fuzzy
 msgid "Unrestricted"
 msgstr "No registrado"
 
@@ -93488,10 +93620,6 @@ msgid "Data & visualization"
 msgstr "Visualización de BI"
 
 #, fuzzy
-msgid "Define widget"
-msgstr "Añadir objetivo"
-
-#, fuzzy
 msgid "Must select a custom graph"
 msgstr "Clonar gráfico personalizado"
 
@@ -93500,23 +93628,11 @@ msgid "Select a custom graph"
 msgstr "Clonar gráfico personalizado"
 
 #, fuzzy
-msgid "Data settings"
-msgstr "Propiedades del cuadro de mandos"
-
-#, fuzzy
 msgid "Widget visualization"
 msgstr "Visualización de BI"
 
 #, fuzzy
-msgid "Additional graph options"
-msgstr "Opciones adicionales"
-
-#, fuzzy
 msgid "Save widget"
-msgstr "Añadir objetivo"
-
-#, fuzzy
-msgid "Add & place widget"
 msgstr "Añadir objetivo"
 
 #, fuzzy
@@ -93551,35 +93667,8 @@ msgid "Dashboard settings of %{name}"
 msgstr "Propiedades del cuadro de mandos"
 
 #, fuzzy
-msgid "Data selection"
-msgstr "Selección de carpetas"
-
-#, fuzzy
-msgid "Widget data"
-msgstr "Añadir filtro"
-
-#, fuzzy
-msgid "Next step: Visualization"
-msgstr "Visualización"
-
-#, fuzzy
-msgid "Select the data you want to analyze"
-msgstr "Seleccione el tipo de elemento de contenido"
-
-msgid "Dashboard filters apply here and don't have to be selected again"
-msgstr ""
-
-#, fuzzy
-msgid "Host selection"
-msgstr "Selección de carpetas"
-
-#, fuzzy
 msgid "Event selection"
 msgstr "Selección de carpetas"
-
-#, fuzzy
-msgid "Available visualization types"
-msgstr "Opciones disponibles"
 
 #, fuzzy
 msgid "Show background in status color and label"
@@ -93628,9 +93717,6 @@ msgstr "Árbol de inventario"
 msgid "Single graph"
 msgstr "Conexiones rechazadas"
 
-msgid "Barplot"
-msgstr "Barplot"
-
 #, fuzzy
 msgid "Scatterplot"
 msgstr "Gráfico de dispersión media"
@@ -93654,10 +93740,6 @@ msgstr "Gráficos de servicio"
 #, fuzzy
 msgid "Must select an option"
 msgstr "Conexiones rechazadas"
-
-#, fuzzy
-msgid "Service selection"
-msgstr "Selección de carpetas"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -93689,10 +93771,6 @@ msgstr "estados no %s"
 #, fuzzy
 msgid "Show summary for not OK states"
 msgstr "Mostrar resumen para estados no %s"
-
-#, fuzzy
-msgid "Update widget"
-msgstr "Añadir objetivo"
 
 #, fuzzy
 msgid "Specific object type"
@@ -94724,6 +94802,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Memory Limiter"
+#~ msgstr "Tamaño de la memoria"
 
 #, fuzzy
 #~ msgid "Node Status (off: ignore node status)"

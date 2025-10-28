@@ -1846,7 +1846,7 @@
         "usagesDigest": "08kH9jjVabmjH4pZe4CwkHoktWUZb/WfeLdICjLor2c=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "04d4ed15fa141145e95835c8c83138f196f216789f7531302a93c9b83566f0b2",
+          "@@//requirements_all_lock.txt": "0bc119155f323945f523fdbb8a9f44fa94a65d0774c4496960a8cf339e7c5d7a",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -7939,7 +7939,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "google-api-core[grpc]==2.27.0     --hash=sha256:779a380db4e21a4ee3d717cf8efbf324e53900bf37e1ffb273e5348a9916dd42     --hash=sha256:d32e2f5dd0517e91037169e75bf0a9783b255aff1d11730517c0b2b29e9db06a"
+              "requirement": "google-api-core[grpc]==2.28.0     --hash=sha256:4743b7d45fe8c0930e59928b1bade287242910f30b06ff9b22f139a3e33271b8     --hash=sha256:b4362b0e2e6bc06037cfb0e2b28e2fe0c3f9d760dc311f314d5fb373768c7387"
             }
           },
           "cmk_requirements_312_hypothesis_jsonschema": {

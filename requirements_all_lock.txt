@@ -1056,9 +1056,9 @@ gitpython==3.1.43 \
     --hash=sha256:35f314a9f878467f5453cc1fee295c3e18e52f1b99f10f6cf5b1682e968a9e7c \
     --hash=sha256:eec7ec56b92aad751f9912a73404bc02ba212a23adb2c7098ee668417051a1ff
     # via -r requirements_all.txt
-google-api-core[grpc]==2.27.0 \
-    --hash=sha256:779a380db4e21a4ee3d717cf8efbf324e53900bf37e1ffb273e5348a9916dd42 \
-    --hash=sha256:d32e2f5dd0517e91037169e75bf0a9783b255aff1d11730517c0b2b29e9db06a
+google-api-core[grpc]==2.28.0 \
+    --hash=sha256:4743b7d45fe8c0930e59928b1bade287242910f30b06ff9b22f139a3e33271b8 \
+    --hash=sha256:b4362b0e2e6bc06037cfb0e2b28e2fe0c3f9d760dc311f314d5fb373768c7387
     # via
     #   -r requirements_all.txt
     #   google-api-python-client

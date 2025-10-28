@@ -101,3 +101,14 @@ test('FormInteger renders backend validation messages', async () => {
   const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
   expect(element.value).toBe('12')
 })
+
+test('FormInteger renders unit', () => {
+  render(FormInteger, {
+    props: {
+      spec,
+      data: 42.5,
+      backendValidation: []
+    }
+  })
+  expect(screen.getByText('fooUnit')).toBeInTheDocument()
+})

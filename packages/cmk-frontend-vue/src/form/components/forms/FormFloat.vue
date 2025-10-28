@@ -41,5 +41,6 @@ const componentId = useId()
     :placeholder="props.spec.input_hint || ''"
     :aria-label="props.spec.label || props.spec.title"
     :external-errors="validation"
+    :unit="props.spec.unit || ''"
   />
 </template>

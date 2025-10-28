@@ -98,3 +98,14 @@ test('FormFloat renders backend validation messages', async () => {
   const element = screen.getByRole<HTMLInputElement>('spinbutton', { name: 'fooLabel' })
   expect(element.value).toBe('12.5')
 })
+
+test('FormFloat renders unit', () => {
+  render(FormFloat, {
+    props: {
+      spec,
+      data: 42.5,
+      backendValidation: []
+    }
+  })
+  expect(screen.getByText('fooUnit')).toBeInTheDocument()
+})

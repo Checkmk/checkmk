@@ -560,6 +560,7 @@ result_type_registry.register(ScanParentsResult)
 class DiagSpecialAgentHostConfig:
     host_name: HostName
     host_alias: str
+    relay_id: str | None
     ip_address: HostAddress | None
     ip_stack_config: IPStackConfig
     host_attrs: Mapping[str, str]
@@ -577,6 +578,7 @@ class DiagSpecialAgentHostConfig:
         return cls(
             host_name=HostName(raw["host_name"]),
             host_alias=raw["host_alias"],
+            relay_id=raw.get("relay_id"),  # missing in 2.4 and earlier
             ip_address=HostAddress(raw["ip_address"]) if raw["ip_address"] else None,
             ip_stack_config=IPStackConfig(raw["ip_stack_config"]),
             host_attrs=raw["host_attrs"],
@@ -609,6 +611,7 @@ class DiagSpecialAgentHostConfig:
             {
                 "host_name": str(self.host_name),
                 "host_alias": self.host_alias,
+                "relay_id": self.relay_id,
                 "ip_address": str(self.ip_address) if self.ip_address else None,
                 "ip_stack_config": self.ip_stack_config.value,
                 "host_attrs": self.host_attrs,

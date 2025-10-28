@@ -23,3 +23,4 @@ UniqueBundleIDStr = "bundle_id"
 QSHostName = "host_name"
 QSHostPath = "host_path"
 QSSiteSelection = "site_selection"
+QSRelayId = "relay_id"  # not sure if this is even supported yet, adding it for consistency

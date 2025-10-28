@@ -90,10 +90,16 @@ ExecutableFinderProtocol = Callable[[str, str | None], str]
 
 
 class ExecutableFinder:
-    def __init__(self, local_search_path: Path, shipped_search_path: Path):
+    def __init__(
+        self, local_search_path: Path, shipped_search_path: Path, *, strip_prefix: Path | None
+    ) -> None:
         self._additional_search_paths = (local_search_path, shipped_search_path)
+        self._strip_prefix = strip_prefix
+
+    def _stripped(self, path: Path) -> str:
+        return str(path).removeprefix(f"{self._strip_prefix}/") if self._strip_prefix else str(path)
 
     def __call__(self, executable: str, module: str | None) -> str:
         libexec_paths = () if module is None else (family_libexec_dir(module),)
         full_path = discover_executable(executable, *libexec_paths, *self._additional_search_paths)
-        return str(full_path) if full_path else executable
+        return self._stripped(full_path) if full_path else executable

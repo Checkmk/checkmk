@@ -14,6 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
+    QSRelayId,
     QSSiteSelection,
     UniqueBundleIDStr,
 )
@@ -112,6 +113,8 @@ def _validate_test_connection(
     progress_logger.log_new_progress_step("parse_config", "Parse the connection configuration data")
     site_id = find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     host_name = find_id_in_form_data(all_stages_form_data, QSHostName) or str(uuid4())
+    # not sure is this is even supported yet, adding it for consistency
+    relay_id = find_id_in_form_data(all_stages_form_data, QSRelayId)
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     progress_logger.update_progress_step_status("parse_config", StepStatus.COMPLETED)
@@ -123,6 +126,7 @@ def _validate_test_connection(
         create_diag_special_agent_input(
             rulespec_name=rulespec_name,
             host_name=host_name,
+            relay_id=relay_id,
             passwords=passwords,
             params=params,
         ),

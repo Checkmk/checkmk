@@ -12,20 +12,22 @@ from cmk.agent_based.v2 import StringTable
 Section = Mapping[str, Mapping[str, Any]]
 
 RE_INTRO = re.compile(r"^QMNAME\((.*)\)[\s]*STATUS\((.*?)\)[\s]*NOW\((.*)\)")
-# Accept `AMQ[0-9]+?:` and `CSQM[0-9]+? !` as group line prefixes
 RE_GROUP = re.compile(r"^(AMQ\d+\w?:|CSQM\d+\w? !)")
-RE_KEY = re.compile(r"([\s]*|CSQM\d+\w? !MQSU[\s]+)([A-Z0-9]+\()")
-RE_SECOND_COLUMN = re.compile(r" [A-Z0-9]+\(")
-RE_KEY_VALUE = re.compile(r"([A-Z0-9]+)\((.*)\)[\s]*")
+RE_KEY = re.compile(r"([\s]*|CSQM\d+\w? ![A-Z0-9.]+[\s]+)([A-Z0-9]+\()")
+RE_SECOND_COLUMN = re.compile(r"[A-Z]+\([^&]+\)$")
+RE_KEY_VALUE = re.compile(r"([A-Z0-9]+)\(([^&]+)\)")
 
 
 def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
-    def record_attribute(s, attributes, parsed):
-        pair = RE_KEY_VALUE.match(s)
+    def record_attribute(s, attributes):
+        pair = RE_KEY_VALUE.search(s)
         if pair is None:
             return
         key = pair.group(1)
         value = pair.group(2).strip()
+        # Do not overwrite existing attributes
+        if key in attributes and str(value) in ("", "0", ",", "OFF"):
+            return
         attributes[key] = value
 
     def record_group(qmname, attributes, parsed):
@@ -72,11 +74,11 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
                 # do not go to next line now, test for attr
 
         if RE_KEY.match(line):
-            if RE_SECOND_COLUMN.match(line[39:]):
+            if RE_SECOND_COLUMN.search(line[39:]):
                 first_half = line[:40]
                 second_half = line[40:]
-                record_attribute(first_half, attributes, parsed)
-                record_attribute(second_half, attributes, parsed)
+                record_attribute(first_half, attributes)
+                record_attribute(second_half, attributes)
             else:
-                record_attribute(line, attributes, parsed)
+                record_attribute(line, attributes)
     return parsed

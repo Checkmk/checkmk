@@ -194,6 +194,75 @@ One valid MQSC command could not be processed.
         assert "MY.TEST:HERE.TO.THERE.TWO" in parsed
         assert "STATUS" not in parsed["MY.TEST:HERE.TO.THERE.TWO"]
 
+    def test_channels_in_csqm_format(self) -> None:
+        lines = """\
+QMNAME(MY.TE)                                          STATUS(RUNNING) NOW(2025-04-14T13:04:46)
+5724-H72 (C) Copyright IBM Corp. 1994, 2023.
+Starting MQSC for queue manager MY.TE
+
+CSQN205I   COUNT=      20, RETURN=00000000, REASON=00000000
+
+CSQM415I !MY.TE CHANNEL(CL.MY.TE.ADM)      CHLTYPE(SVRCONN)
+QSGDISP(QMGR)
+
+CSQM415I !MY.TE CHANNEL(CL.MY.TE.MQFA)     CHLTYPE(SVRCONN)
+QSGDISP(QMGR)
+
+CSQM415I !MY.TE CHANNEL(CLNT.ADM.MY.TE)  CHLTYPE(SVRCONN)
+QSGDISP(QMGR)
+
+CSQM410I !MY.TE CHANNEL(MY.TE.QMSMIQ11)    CHLTYPE(SDR)
+QSGDISP(QMGR)                            XMITQ(QMSMIQ11)
+
+CSQM412I !MY.TE CHANNEL(QMSMIQ11.MY.TE)    CHLTYPE(RCVR)
+QSGDISP(QMGR)
+
+CSQM412I !MY.TE CHANNEL(QMTQS02.MY.TE)   CHLTYPE(RCVR)
+QSGDISP(QMGR)
+
+2 MQSC commands read.
+"""
+        section = parse_info(lines, chr(10))
+        parsed = parse_ibm_mq_channels(section)
+
+        assert parsed == {
+            "MY.TE": {
+                "NOW": "2025-04-14T13:04:46",
+                "STATUS": "RUNNING",
+            },
+            "MY.TE:CL.MY.TE.ADM": {
+                "CHANNEL": "CL.MY.TE.ADM",
+                "CHLTYPE": "SVRCONN",
+                "QSGDISP": "QMGR",
+            },
+            "MY.TE:CL.MY.TE.MQFA": {
+                "CHANNEL": "CL.MY.TE.MQFA",
+                "CHLTYPE": "SVRCONN",
+                "QSGDISP": "QMGR",
+            },
+            "MY.TE:CLNT.ADM.MY.TE": {
+                "CHANNEL": "CLNT.ADM.MY.TE",
+                "CHLTYPE": "SVRCONN",
+                "QSGDISP": "QMGR",
+            },
+            "MY.TE:MY.TE.QMSMIQ11": {
+                "CHANNEL": "MY.TE.QMSMIQ11",
+                "CHLTYPE": "SDR",
+                "QSGDISP": "QMGR",
+                "XMITQ": "QMSMIQ11",
+            },
+            "MY.TE:QMSMIQ11.MY.TE": {
+                "CHANNEL": "QMSMIQ11.MY.TE",
+                "CHLTYPE": "RCVR",
+                "QSGDISP": "QMGR",
+            },
+            "MY.TE:QMTQS02.MY.TE": {
+                "CHANNEL": "QMTQS02.MY.TE",
+                "CHLTYPE": "RCVR",
+                "QSGDISP": "QMGR",
+            },
+        }
+
     def test_mq9_includes_severity_in_message_code(self) -> None:
         lines = """\
 QMNAME(MY.TEST)                                           STATUS(RUNNING) NOW(2020-04-03T17:27:02+0200)

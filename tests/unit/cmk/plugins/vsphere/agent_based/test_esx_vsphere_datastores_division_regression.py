@@ -8,7 +8,7 @@ from typing import Final
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.base.legacy_checks import esx_vsphere_datastores as esxds
+from cmk.plugins.vsphere.agent_based import esx_vsphere_datastores as esxds
 
 _STRING_TABLE: Final = [
     ["[backup_day_esx_blade_nfs_nfs32]"],

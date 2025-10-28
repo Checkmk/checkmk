@@ -14,7 +14,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.base.legacy_checks import esx_vsphere_datastores as esxds
+from cmk.plugins.vsphere.agent_based import esx_vsphere_datastores as esxds
 
 _STRING_TABLE = [
     ["[backup_day_esx_blade_nfs_nfs32]"],

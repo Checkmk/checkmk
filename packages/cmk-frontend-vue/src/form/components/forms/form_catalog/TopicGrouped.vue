@@ -10,11 +10,12 @@ import type {
   TopicGroup
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import useId from '@/lib/useId'
+
 import CmkLabel from '@/components/CmkLabel.vue'
 
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import { useFormEditDispatcher } from '@/form/private'
-import { useId } from '@/form/utils'
 
 const props = defineProps<{
   elements: TopicGroup[]

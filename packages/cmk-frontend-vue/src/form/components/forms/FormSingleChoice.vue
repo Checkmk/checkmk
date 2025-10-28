@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { SingleChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import { untranslated } from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -14,7 +15,6 @@ import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
 import FormLabel from '@/form/private/FormLabel.vue'
-import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: SingleChoice

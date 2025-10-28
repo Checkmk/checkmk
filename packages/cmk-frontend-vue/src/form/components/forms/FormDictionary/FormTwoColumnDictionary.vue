@@ -9,6 +9,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { computed, ref } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
+import useId from '@/lib/useId'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
@@ -21,7 +22,6 @@ import { useFormEditDispatcher } from '@/form/private'
 import FormHelp from '@/form/private/FormHelp.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
-import { useId } from '@/form/utils'
 
 import { getElementsInGroupsFromProps, titleRequired, toggleElement } from './_groups'
 

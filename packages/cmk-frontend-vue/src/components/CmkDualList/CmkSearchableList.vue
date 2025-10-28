@@ -7,8 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
-
-import { useId } from '@/form/utils'
+import useId from '@/lib/useId'
 
 import CmkInput from '../user-input/CmkInput.vue'
 import type { DualListElement } from './index.ts'

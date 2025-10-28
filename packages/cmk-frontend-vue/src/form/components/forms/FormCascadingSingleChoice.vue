@@ -12,6 +12,7 @@ import type {
 import { computed, ref, toRaw, watch } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
+import useId from '@/lib/useId'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkDropdown from '@/components/CmkDropdown'
@@ -24,7 +25,6 @@ import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { type ValidationMessages, validateValue } from '@/form/components/utils/validation'
 import { useFormEditDispatcher } from '@/form/private'
 import FormLabel from '@/form/private/FormLabel.vue'
-import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: CascadingSingleChoice

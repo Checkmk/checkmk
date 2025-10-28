@@ -5,7 +5,7 @@
  */
 import { useId as vueUseId } from 'vue'
 
-export function useId(): string {
+export default function useId(): string {
   const id = vueUseId()
   if (id === undefined) {
     // the original useId implementation should not throw an error:

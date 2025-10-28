@@ -8,6 +8,7 @@ import type { TopicElement } from 'cmk-shared-typing/typescript/vue_formspec_com
 import { onMounted, ref, watch } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
+import useId from '@/lib/useId'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkLabel from '@/components/CmkLabel.vue'
@@ -17,7 +18,6 @@ import { type ValidationMessages, groupNestedValidations } from '@/form/componen
 import { useFormEditDispatcher } from '@/form/private'
 import FormRequired from '@/form/private/FormRequired.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
-import { useId } from '@/form/utils'
 
 const props = defineProps<{
   elements: TopicElement[]

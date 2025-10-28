@@ -8,6 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { X } from 'lucide-vue-next'
 
 import { untranslated } from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkDropdownButton from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -19,7 +20,6 @@ import { type ValidationMessages, useValidation } from '@/form/components/utils/
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
-import { useId } from '@/form/utils'
 
 defineOptions({
   inheritAttrs: false

@@ -6,13 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { Integer } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import useId from '@/lib/useId'
+
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
-import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: Integer

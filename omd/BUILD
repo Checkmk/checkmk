@@ -122,9 +122,16 @@ pkg_files(
     prefix = "lib/omd/hooks",
 )
 
+pkg_files(
+    name = "agents",
+    srcs = ["//agents"],
+    prefix = "share/check_mk/agents",
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
+        ":agents",
         ":diskspace_cleanup_plugin",
         ":omd_hooks",
         ":rest_api_spec",

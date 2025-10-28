@@ -57,6 +57,11 @@ defineEmits(['toggleOpen'])
   border: none;
   cursor: pointer;
 
+  /* Reset global style from global css */
+  button&:active {
+    box-shadow: none;
+  }
+
   &:hover {
     background-color: transparent;
   }

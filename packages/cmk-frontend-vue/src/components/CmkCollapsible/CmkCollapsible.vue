@@ -14,7 +14,7 @@ defineProps<CmkCollapsibleProps>()
 </script>
 
 <template>
-  <CollapsibleRoot :open="open" class="cmk-collapsible">
+  <CollapsibleRoot :open="open">
     <Transition name="content">
       <CollapsibleContent v-show="open" class="cmk-collapsible__content">
         <slot />
@@ -24,10 +24,6 @@ defineProps<CmkCollapsibleProps>()
 </template>
 
 <style scoped lang="scss">
-.cmk-collapsible {
-  padding-top: 2px;
-}
-
 .content-enter-active {
   animation: slideDown 300ms ease-out;
   overflow: hidden;

@@ -56,11 +56,6 @@ ifeq ($(filter $(EDITION),cloud),)
 endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
-	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
-	rm $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks/__init__.py $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks/OWNERS
-	find $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks -name "*.py" -type f | sed -e 'p;s~.py$$~~' | xargs -n2 mv
-
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
 	find $(REPO_PATH)/notifications/ -maxdepth 1 -type f ! -name ".*" ! -name "OWNERS" -exec install -m 755 {} $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications \;
 	chmod 644 $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/README

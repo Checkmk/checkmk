@@ -1,9 +1,15 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+
+# To update the list run the following command:
+# echo "LEGACY_CHECKS = [" > legacy_checks_list.bzl;for F in $(ls *.py); do echo $F | sed 's/\(.*\)\.py/    "\1",/' >> legacy_checks_list.bzl; done; echo "]" >> legacy_checks_list.bzl
+load("legacy_checks_list.bzl", "LEGACY_CHECKS")
 
 exports_files([
     "requirements.in",
@@ -376,4 +382,19 @@ py_binary(
     deps = [
         "lib_cmk_repo",
     ],
+)
+
+LEGACY_CHECKS_DICT = {"base/legacy_checks/" + name + ".py": name for name in LEGACY_CHECKS}
+
+pkg_files(
+    name = "legacy_checks_pkg",
+    srcs = LEGACY_CHECKS_DICT.keys(),
+    prefix = "share/check_mk/checks",
+    renames = LEGACY_CHECKS_DICT,
+)
+
+pkg_tar(
+    name = "legacy_checks",
+    srcs = ["legacy_checks_pkg"],
+    visibility = ["//omd:__pkg__"],
 )

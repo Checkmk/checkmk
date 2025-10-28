@@ -114,30 +114,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	# cmk needs to be a namespace package (CMK-3979)
 	grep -Rl 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm
 
-	# Create the plugin namespaces
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/dashboard
-
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/nagios/plugins
-
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
-
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-update/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-update/02_cmk-update-config $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update/
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-mv
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-mv/01_cmk-post-rename-site $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-mv/
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-cp
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-cp/01_cmk-post-rename-site $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-cp/
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-restore
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-restore/01_cmk-post-rename-site $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-restore/
-	$(TOUCH) $@
-
 $(CHECK_MK_INSTALL): $(CHECK_MK_INTERMEDIATE_INSTALL)
 	$(RSYNC) $(CHECK_MK_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@

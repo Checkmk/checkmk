@@ -149,6 +149,7 @@ pkg_files(
                "//omd/packages/Python:python_tar",
                "//omd/packages/changelog",
                "//omd/packages/check-cert",
+               "//omd/packages/check_mk",
                "//omd/packages/cpp-libs",
                "//omd/packages/erlang",
                "//omd/packages/heirloom-mailx",

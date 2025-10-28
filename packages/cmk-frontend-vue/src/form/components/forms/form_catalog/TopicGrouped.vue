@@ -10,6 +10,8 @@ import type {
   TopicGroup
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import CmkLabel from '@/components/CmkLabel.vue'
+
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import { useFormEditDispatcher } from '@/form/private'
 import { useId } from '@/form/utils'
@@ -55,10 +57,9 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   >
     <td class="form-topic-grouped__group-title">
       <span class="form-topic-grouped__fixed-content-width">
-        <label>
+        <CmkLabel dots>
           {{ topic_group.title }}
-        </label>
-        <span class="form-topic-grouped__dots">{{ Array(200).join('.') }}</span>
+        </CmkLabel>
       </span>
     </td>
     <td class="form-topic-grouped__value">
@@ -96,12 +97,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   padding-bottom: 4px;
   empty-cells: show;
   white-space: nowrap;
-}
-
-.form-topic-grouped__dots {
-  margin-left: 5px;
-  overflow: hidden;
-  color: var(--grey-4-dimmed);
 }
 
 .form-topic-grouped:nth-child(1) > td {

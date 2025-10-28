@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
-
 import contextlib
 import dataclasses
 import os
@@ -59,7 +57,6 @@ def read_all(path: Path) -> Entry | None:
             return Symlink(path=path, content=path.readlink())
         case ManagedTypes.missing | ManagedTypes.unknown:
             return None
-    return None
 
 
 CONTENTS = [b"a", b"abc", b"a\nb\nc\n"]

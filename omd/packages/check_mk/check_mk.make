@@ -65,7 +65,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	    --exclude plugins/*.checksum \
 	    --exclude plugins/__init__.py \
 	    $(ADDITIONAL_EXCLUDE) \
-	    scripts \
 	    check-mk-agent_$(CMK_VERSION)-1_all.deb \
 	    check-mk-agent-$(CMK_VERSION)-1.noarch.rpm \
 	    linux \

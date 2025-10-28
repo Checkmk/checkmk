@@ -158,6 +158,19 @@ pkg_tar(
 )
 
 pkg_files(
+    name = "agents_scripts",
+    srcs = ["//agents:srcs"],
+    prefix = "share/check_mk/agents/scripts",
+)
+
+pkg_tar(
+    name = "agents_scripts_super_server",
+    srcs = ["//agents:super-server"],
+    package_dir = "share/check_mk",
+    strip_prefix = "scripts",
+)
+
+pkg_files(
     name = "agents_z_os",
     srcs = ["//agents/z_os:srcs"],
     prefix = "share/check_mk/agents/z_os",
@@ -170,6 +183,7 @@ pkg_files(
         ":agents_cfg_examples",
         ":agents_plugins",
         ":agents_sap",
+        ":agents_scripts",
         ":agents_z_os",
         ":diskspace_cleanup_plugin",
         ":omd_hooks",
@@ -246,6 +260,7 @@ pkg_files(
                "//packages/neb:neb_pkg",
                "//packages/cmk-shared-typing:pkg_tar",
                "//packages/unixcat:unixcat_tar",
+               ":agents_scripts_super_server",
                ":agents_windows",
                ":license_info",
            ] + select({

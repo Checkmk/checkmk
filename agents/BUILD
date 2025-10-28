@@ -20,3 +20,19 @@ filegroup(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "srcs",
+    srcs = [
+        "scripts/manage-agent-user.sh",
+        "scripts/manage-binaries.sh",
+        "scripts/migrate.sh",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "super-server",
+    srcs = glob(["scripts/super-server/**"]),
+    visibility = ["//visibility:public"],
+)

@@ -146,6 +146,12 @@ pkg_files(
     prefix = "share/check_mk/agents/sap",
 )
 
+pkg_files(
+    name = "agents_z_os",
+    srcs = ["//agents/z_os:srcs"],
+    prefix = "share/check_mk/agents/z_os",
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
@@ -153,6 +159,7 @@ pkg_files(
         ":agents_cfg_examples",
         ":agents_plugins",
         ":agents_sap",
+        ":agents_z_os",
         ":diskspace_cleanup_plugin",
         ":omd_hooks",
         ":rest_api_spec",

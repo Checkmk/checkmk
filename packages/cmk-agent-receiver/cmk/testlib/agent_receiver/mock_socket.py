@@ -13,6 +13,8 @@ import threading
 import time
 from collections.abc import Iterator
 
+_SOCKET_TIMEOUT = 2.0
+
 
 @dataclasses.dataclass
 class MockSocket:
@@ -39,10 +41,14 @@ class MockSocket:
                 # Check if the socket is ready to be used
                 rlist, _, _ = select.select([soc], [], [], 5.0)
                 if rlist:
-                    conn, _ = soc.accept()
-                    data = conn.recv(self._buffer_size)
-                    self.data_queue.put_nowait(data)
-                    conn.close()
+                    soc.settimeout(_SOCKET_TIMEOUT)
+                    try:
+                        conn, _ = soc.accept()
+                        data = conn.recv(self._buffer_size)
+                        self.data_queue.put_nowait(data)
+                        conn.close()
+                    except TimeoutError:
+                        pass
                 else:
                     # If the socket is not ready yet, wait just a bit more.
                     time.sleep(0.2)
@@ -61,6 +67,10 @@ class MockSocket:
         self._running_thread.join()
         self._running_thread = None
         self._stop_event.clear()
+
+    @property
+    def is_running(self) -> bool:
+        return self._running_thread is not None and self._running_thread.is_alive()
 
 
 @contextlib.contextmanager

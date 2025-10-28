@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+import time
 
+from cmk.testlib.agent_receiver.mock_socket import _SOCKET_TIMEOUT as SOCKET_TIMEOUT
 from cmk.testlib.agent_receiver.mock_socket import create_socket
 
 TIMEOUT = 5.0
@@ -38,3 +40,14 @@ def _connect_and_send(socket_path: str, data: bytes) -> None:
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
         client.connect(socket_path)
         client.sendall(data)
+
+
+def test_socket_timeout() -> None:
+    """
+    The socket must be stoppable even if no client connects to it. `Accept` must not block
+    indefinitely.
+    """
+    with create_socket() as ms:
+        time.sleep(SOCKET_TIMEOUT + 1)
+
+    assert not ms.is_running

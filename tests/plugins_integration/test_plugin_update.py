@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
-import pytest
-
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import get_services_with_status
 
@@ -51,7 +49,6 @@ SKIPPED_CHECKS = [
 ]
 
 
-@pytest.mark.skip(reason="CMK-27015; base-version to be changed -> 2.3.0p39.")
 def test_plugin_update(
     test_site_update: Site,
     site_factory_update: SiteFactory,

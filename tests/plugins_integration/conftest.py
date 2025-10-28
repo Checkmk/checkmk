@@ -11,7 +11,7 @@ import pytest
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.utils import run
-from tests.testlib.version import get_min_version
+from tests.testlib.version import CMKVersion
 
 from tests.plugins_integration import checks
 
@@ -160,7 +160,7 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
 
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
-    base_version = get_min_version(Edition.CEE)
+    base_version = CMKVersion("2.3.0p39", Edition.CEE)
     return get_site_factory(prefix="update_", version=base_version)
 
 

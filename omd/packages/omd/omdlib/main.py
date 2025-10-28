@@ -802,7 +802,7 @@ def _try_merge(
         skel_content = _read_skel_content(
             version=version,
             site_home=site_home,
-            skel_path=Path(skelroot, relpath, conflict_mode),
+            skel_path=Path(skelroot, relpath),
             relpath=relpath,
             conflict_mode=conflict_mode,
         )

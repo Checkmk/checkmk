@@ -3091,6 +3091,10 @@ msgstr "Absolute Levels in Bits oder Bytes pro Sekunde"
 msgid "Absolute levels of active sessions"
 msgstr "Absolute Levels für aktive Sitzungen"
 
+#, fuzzy
+msgid "Absolute limit"
+msgstr "Absolut"
+
 msgid "Absolute number of active connections"
 msgstr "Gesamtzahl von aktiven Verbindungen"
 
@@ -11788,6 +11792,10 @@ msgstr ""
 
 msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAP/EWS-Postfächer prüfen"
+
+#, fuzzy
+msgid "Check Interval"
+msgstr "Cache-Intervall"
 
 msgid "Check LDAP service access"
 msgstr "Check Zugriff auf LDAP-Service"
@@ -39194,8 +39202,21 @@ msgstr "Maximum erlaubter Benutzer"
 msgid "Maximum allowed validity"
 msgstr "Maximal zulässige Gültigkeit"
 
+msgid ""
+"Maximum amount of memory targeted to be allocated by the process heap. Note "
+"that typically the total memory usage of process will be about 50MiB higher "
+"than this value. This defines the hard limit."
+msgstr ""
+
 msgid "Maximum amount of non-operational access points"
 msgstr "Maximale Anzahl von nicht-operativen Zugangspunkten"
+
+msgid ""
+"Maximum amount of total memory targeted to be allocated by the process heap. "
+"This option is used to calculate memory limit from the total available "
+"memory. For instance setting of 75% with the total memory of 1GiB will "
+"result in the limit of 750 MiB."
+msgstr ""
 
 msgid "Maximum bulk size"
 msgstr "Maximale Bulk-Größe"
@@ -39439,6 +39460,20 @@ msgstr "Maximale Größe aller Dateien am Sicherungsspeicherplatz"
 msgid "Maximum speed"
 msgstr "Maximale Geschwindigkeit"
 
+msgid ""
+"Maximum spike expected between the measurements of memory usage. The value "
+"must be less than limit. This option is used to calculate spike limit from "
+"the total available memory. For instance setting of 25% with the total "
+"memory of 1GiB will result in the spike limit of 250MiB."
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum spike expected between the measurements of memory usage. The value "
+"must be less than the limit. The soft limit value will be equal to (limit - "
+"spike limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
+
 msgid "Maximum spool duration"
 msgstr "Maximale Dauer der Zwischenspeicherung"
 
@@ -39605,6 +39640,10 @@ msgstr "Arbeitsspeicher (RAM)"
 
 msgid "Memory (RAM)"
 msgstr "Arbeitsspeicher (RAM)"
+
+#, fuzzy
+msgid "Memory Limit"
+msgstr "Speichergröße"
 
 msgid "Memory Modules"
 msgstr "Speichermodule"
@@ -45107,6 +45146,10 @@ msgstr "OpenLDAP"
 
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry (experimentell)"
+
+#, fuzzy
+msgid "OpenTelemetry Collector Memory Limit"
+msgstr "Konfiguration des OpenTelemetry Collectors"
 
 msgid "OpenTelemetry collector prometheus scraping configurations"
 msgstr "Prometheus-Scraping-Konfigurationen des OpenTelemetry Collectors"
@@ -51411,6 +51454,10 @@ msgstr "Relative Levels"
 
 msgid "Relative levels of active sessions."
 msgstr "Relative Schwellen für aktive Sitzungen."
+
+#, fuzzy
+msgid "Relative limit in %"
+msgstr "Relative Luftfeuchtigkeit"
 
 msgid "Relative path to robot.yaml"
 msgstr "Relativer Pfad zu robot.yaml"
@@ -59032,6 +59079,10 @@ msgstr "Geschwindigkeit"
 msgid "Speed of interface groups (Netapp only)"
 msgstr "Geschwindigkeit der Schnittstellengruppen (nur Netapp)"
 
+#, fuzzy
+msgid "Spike Limit"
+msgstr "Service-Grenzen"
+
 msgid "Spin retries (id 10)"
 msgstr "Spin-Wiederholungen (id 10)"
 
@@ -64501,6 +64552,9 @@ msgstr ""
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Die Grenze für das Transport-Lag in <tt>v$dataguard_stats</tt>"
 
+msgid "The limit has to be bigger than the spike limit."
+msgstr ""
+
 msgid "The list needs to have at least one element"
 msgstr "Die Liste muss mindestens ein Element enthalten"
 
@@ -64775,6 +64829,14 @@ msgstr ""
 "Die Speicherebenen für ein spezifisches Modul dieses Hosts. Dies ist "
 "relevant für Hosts, die mehrere unterschiedliche Speicherbereiche haben, "
 "z. B. steckbare Karten"
+
+msgid ""
+"The memory limiter processor is used to prevent out of memory situations on "
+"the collector. Given that the amount and type of data the collector "
+"processes is environment-specific and resource utilization of the collector "
+"is also dependent on the configured processors, it is important to put "
+"checks in place regarding memory usage."
+msgstr ""
 
 #, no-python-format
 msgid ""
@@ -72014,6 +72076,13 @@ msgstr "Zeitraum eingrenzen"
 
 msgid "Time before connection times out"
 msgstr "Zeit bis Verbindungs-Timeout"
+
+msgid ""
+"Time between measurements of memory usage. The recommended value is 1 "
+"second. If the expected traffic to the Collector is very spiky then decrease "
+"the check interval or increase spike limit to avoid memory usage going over "
+"the hard limit."
+msgstr ""
 
 msgid "Time between new checks of type Check_MK"
 msgstr "Zeit zwischen neuen Checks vom Typ Check_MK"

@@ -2980,6 +2980,10 @@ msgstr "ビットまたはバイト/秒単位の絶対レベル"
 msgid "Absolute levels of active sessions"
 msgstr "アクティブなセッションの絶対レベル"
 
+#, fuzzy
+msgid "Absolute limit"
+msgstr "絶対"
+
 msgid "Absolute number of active connections"
 msgstr "アクティブな接続の絶対数"
 
@@ -11433,6 +11437,10 @@ msgstr ""
 
 msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAP/EWSメールボックスを確認する"
+
+#, fuzzy
+msgid "Check Interval"
+msgstr "キャッシュ間隔"
 
 msgid "Check LDAP service access"
 msgstr "LDAPサービスへのアクセスを確認する"
@@ -38173,8 +38181,21 @@ msgstr "最大許容ユーザー"
 msgid "Maximum allowed validity"
 msgstr "最大許容有効期間"
 
+msgid ""
+"Maximum amount of memory targeted to be allocated by the process heap. Note "
+"that typically the total memory usage of process will be about 50MiB higher "
+"than this value. This defines the hard limit."
+msgstr ""
+
 msgid "Maximum amount of non-operational access points"
 msgstr "動作していないアクセスポイントの最大数"
+
+msgid ""
+"Maximum amount of total memory targeted to be allocated by the process heap. "
+"This option is used to calculate memory limit from the total available "
+"memory. For instance setting of 75% with the total memory of 1GiB will "
+"result in the limit of 750 MiB."
+msgstr ""
 
 msgid "Maximum bulk size"
 msgstr "最大バルクサイズ"
@@ -38416,6 +38437,20 @@ msgstr "バックアップスペース上のすべてのファイルの最大サ
 msgid "Maximum speed"
 msgstr "最大速度"
 
+msgid ""
+"Maximum spike expected between the measurements of memory usage. The value "
+"must be less than limit. This option is used to calculate spike limit from "
+"the total available memory. For instance setting of 25% with the total "
+"memory of 1GiB will result in the spike limit of 250MiB."
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum spike expected between the measurements of memory usage. The value "
+"must be less than the limit. The soft limit value will be equal to (limit - "
+"spike limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
+
 msgid "Maximum spool duration"
 msgstr "最大スプール持続時間"
 
@@ -38578,6 +38613,10 @@ msgstr "記憶"
 
 msgid "Memory (RAM)"
 msgstr "メモリ(RAM)"
+
+#, fuzzy
+msgid "Memory Limit"
+msgstr "メモリサイズ"
 
 msgid "Memory Modules"
 msgstr "メモリモジュール"
@@ -43984,6 +44023,10 @@ msgstr "OpenLDAP"
 
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry（実験的）"
+
+#, fuzzy
+msgid "OpenTelemetry Collector Memory Limit"
+msgstr "Open Telemetryコレクターの設定"
 
 #, fuzzy
 msgid "OpenTelemetry collector prometheus scraping configurations"
@@ -50146,6 +50189,10 @@ msgstr "相対レベル"
 
 msgid "Relative levels of active sessions."
 msgstr "アクティブなセッションの相対レベル。"
+
+#, fuzzy
+msgid "Relative limit in %"
+msgstr "相対湿度"
 
 msgid "Relative path to robot.yaml"
 msgstr "robot.yamlへの相対パス"
@@ -57574,6 +57621,10 @@ msgstr "速度"
 msgid "Speed of interface groups (Netapp only)"
 msgstr "インターフェイスグループの速度(Netappのみ)"
 
+#, fuzzy
+msgid "Spike Limit"
+msgstr "サービス制限"
+
 msgid "Spin retries (id 10)"
 msgstr "スピン再試行 (ID 10)"
 
@@ -62814,6 +62865,9 @@ msgstr "ライセンスの使用履歴は少なくとも3日前に更新され�
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "<tt>v$dataguard_stats </tt>でのトランスポートラグの制限"
 
+msgid "The limit has to be bigger than the spike limit."
+msgstr ""
+
 msgid "The list needs to have at least one element"
 msgstr "クラスターには少なくとも1つの要素が必要です"
 
@@ -63060,6 +63114,14 @@ msgid ""
 msgstr ""
 "このホストの1つの特定モジュールのメモリレベル。これは、プラガブルカードなど、"
 "いくつかの異なるメモリ領域を持つホストに関連しています"
+
+msgid ""
+"The memory limiter processor is used to prevent out of memory situations on "
+"the collector. Given that the amount and type of data the collector "
+"processes is environment-specific and resource utilization of the collector "
+"is also dependent on the configured processors, it is important to put "
+"checks in place regarding memory usage."
+msgstr ""
 
 #, no-python-format
 msgid ""
@@ -69894,6 +69956,13 @@ msgstr "許可された時間"
 
 msgid "Time before connection times out"
 msgstr "接続がタイムアウトするまでの秒数"
+
+msgid ""
+"Time between measurements of memory usage. The recommended value is 1 "
+"second. If the expected traffic to the Collector is very spiky then decrease "
+"the check interval or increase spike limit to avoid memory usage going over "
+"the hard limit."
+msgstr ""
 
 msgid "Time between new checks of type Check_MK"
 msgstr "Checkmkタイプの新しいチェック間の時間"

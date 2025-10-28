@@ -12,7 +12,7 @@ use crate::config::ms_sql::{is_local_endpoint, is_use_tcp, Discovery};
 use crate::config::section;
 use crate::config::{
     self,
-    ms_sql::{AuthType, CustomInstance, Endpoint},
+    ms_sql::{AuthType, Connection, CustomInstance, Endpoint},
     section::names,
     CheckConfig,
 };
@@ -36,12 +36,11 @@ use crate::utils::{self, prepare_error};
 use core::fmt;
 use std::thread;
 
+use crate::platform::{get_row_value_by_idx, Block};
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-
-use crate::platform::{get_row_value_by_idx, Block};
 use tiberius::Row;
 
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
@@ -466,7 +465,7 @@ impl SqlInstance {
         if self.tcp {
             create_tcp_client(endpoint, database, self.port()).await
         } else {
-            create_odbc_client(&endpoint.conn().hostname(), &self.name, database).await
+            create_odbc_client(endpoint.conn(), &self.name, database).await
         }
     }
 
@@ -1361,10 +1360,11 @@ pub async fn create_tcp_client(
 }
 
 pub async fn create_odbc_client(
-    hostname: &HostName,
+    connection: &Connection,
     instance_name: &InstanceName,
     database: Option<String>,
 ) -> Result<UniClient> {
+    let hostname = connection.hostname();
     #[cfg(unix)]
     anyhow::bail!(
         "ODBC Not supported `{}` `{}` db:`{:?}`",
@@ -1374,8 +1374,13 @@ pub async fn create_odbc_client(
     );
     #[cfg(windows)]
     {
-        let connection_string =
-            odbc::make_connection_string(Some(hostname), instance_name, database.as_deref(), None);
+        let connection_string = odbc::make_connection_string(
+            Some(&hostname),
+            instance_name,
+            database.as_deref(),
+            None,
+            connection.trust_server_certificate(),
+        );
         let mut client = UniClient::Odbc(OdbcClient::new(connection_string));
         update_edition(&mut client).await;
         Ok(client)
@@ -2207,7 +2212,7 @@ async fn get_custom_instance_builder(
     let conn = endpoint.conn();
     if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
         log::info!("Use odbc for {} host:{}", instance_name, conn.hostname());
-        let ret = create_odbc_client(&conn.hostname(), instance_name, None).await;
+        let ret = create_odbc_client(conn, instance_name, None).await;
         return if let Ok(mut client) = ret {
             log::debug!("Trying to connect to `{instance_name}` using ODBC");
             obtain_properties(&mut client, instance_name)

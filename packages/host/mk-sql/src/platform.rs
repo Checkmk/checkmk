@@ -260,15 +260,16 @@ pub mod odbc {
     }
 
     /// creates a local connection string for the ODBC driver
-    /// always SSPI and Trusted connection
+    /// always SSPI = Trusted connection, but TrustServerCertificate depends
     pub fn make_connection_string(
         hostname: Option<&HostName>,
         instance: &InstanceName,
         database: Option<&str>,
         driver: Option<&str>,
+        trust_server_certificate: bool,
     ) -> String {
         format!(
-            "Driver={{{}}};SERVER={}{};Database={};Integrated Security=SSPI;Trusted_Connection=yes;",
+            "Driver={{{}}};SERVER={}{};Database={};Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate={};",
             driver.unwrap_or(&ODBC_DRIVER.clone()),
             hostname.map(|h| h.to_string()).unwrap_or("(local)".to_string()),
             if instance.to_string().to_uppercase() == *"MSSQLSERVER" {
@@ -276,7 +277,8 @@ pub mod odbc {
             } else {
                 format!("\\{}", instance)
             },
-            database.unwrap_or("master")
+            database.unwrap_or("master"),
+            if trust_server_certificate { "yes"} else {"no"}
         )
     }
 
@@ -361,22 +363,24 @@ pub mod odbc {
                 None,
                 &InstanceName::from("SQLEXPRESS_NAME"),
                 None,
-                None),
-                format!("Driver={{{}}};SERVER=(local)\\SQLEXPRESS_NAME;Database=master;Integrated Security=SSPI;Trusted_Connection=yes;", ODBC_DRIVER.clone()));
+                None, false),
+                format!("Driver={{{}}};SERVER=(local)\\SQLEXPRESS_NAME;Database=master;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=no;", ODBC_DRIVER.clone()));
             assert_eq!(
                 odbc::make_connection_string(
                     Some(&HostName::from("host".to_string())),
                     &InstanceName::from("Instance"),
                     Some("db"),
-                    Some("driver")),
-                "Driver={driver};SERVER=host\\Instance;Database=db;Integrated Security=SSPI;Trusted_Connection=yes;"
+                    Some("driver"),
+                    true
+                ),
+                "Driver={driver};SERVER=host\\Instance;Database=db;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=yes;"
             );
             assert_eq!( odbc::make_connection_string(
                 Some(&HostName::from("host".to_string())),
                 &InstanceName::from("mssqlserver"),
                     None,
-                    None),
-                    format!("Driver={{{}}};SERVER=host;Database=master;Integrated Security=SSPI;Trusted_Connection=yes;", ODBC_DRIVER.clone()));
+                    None, false),
+                    format!("Driver={{{}}};SERVER=host;Database=master;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=no;", ODBC_DRIVER.clone()));
         }
     }
 }

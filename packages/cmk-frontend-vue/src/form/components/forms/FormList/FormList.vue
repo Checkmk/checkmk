@@ -10,9 +10,10 @@ import { ref, watch } from 'vue'
 import CmkList from '@/components/CmkList'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import formListActions from '@/form/components/forms/utils/formListActions'
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import { useFormEditDispatcher } from '@/form/private'
+
+import formListActions from './formListActions'
 
 const props = defineProps<{
   spec: List

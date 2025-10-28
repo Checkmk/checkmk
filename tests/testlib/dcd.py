@@ -5,6 +5,7 @@
 import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
+from subprocess import CalledProcessError
 
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
@@ -43,7 +44,10 @@ def dcd_connector(
     Yields:
         The DCD ID of the created DCD connector.
     """
-    site.omd("restart", "dcd")
+    try:
+        site.omd("restart", "dcd", check=True)
+    except CalledProcessError as excp:
+        raise RuntimeError("Failed to restart DCD!") from excp
     logger.info("Creating a DCD connection for piggyback hosts...")
     host_attributes = host_attributes or {
         "tag_snmp_ds": "no-snmp",

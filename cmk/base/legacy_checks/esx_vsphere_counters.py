@@ -3,17 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-# mypy: disable-error-code="arg-type"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render
-from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    Result,
+    Service,
+    State,
+)
+from cmk.plugins.lib import uptime
+from cmk.plugins.vsphere.lib.esx_vsphere import SectionCounter
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -53,27 +58,29 @@ check_info = {}
 #   '----------------------------------------------------------------------'
 
 
-def inventory_esx_vsphere_counters_uptime(parsed):
-    if "sys.uptime" in parsed:
-        return [(None, {})]
-    return []
+def inventory_esx_vsphere_counters_uptime(section: SectionCounter) -> DiscoveryResult:
+    if "sys.uptime" in section:
+        yield Service()
 
 
-def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
-    if "sys.uptime" not in parsed:
+def check_esx_vsphere_counters_uptime(
+    params: Mapping[str, Any], section: SectionCounter
+) -> CheckResult:
+    if "sys.uptime" not in section:
         raise IgnoreResultsError("Counter data is missing")
-    uptime = int(parsed["sys.uptime"][""][0][0][-1])
-    if uptime < 0:
+    uptime_sec = int(section["sys.uptime"][""][0][0][-1])
+    if uptime_sec < 0:
         raise IgnoreResultsError("Counter data is corrupt")
-    return check_uptime_seconds(params, uptime)
+    yield from uptime.check(params, uptime.Section(uptime_sec=uptime_sec, message=None))
 
 
-check_info["esx_vsphere_counters.uptime"] = LegacyCheckDefinition(
+check_plugin_esx_vsphere_counters_uptime = CheckPlugin(
     name="esx_vsphere_counters_uptime",
     service_name="Uptime",
     sections=["esx_vsphere_counters"],
     discovery_function=inventory_esx_vsphere_counters_uptime,
     check_function=check_esx_vsphere_counters_uptime,
+    check_default_parameters={},
     check_ruleset_name="uptime",
 )
 
@@ -88,7 +95,7 @@ check_info["esx_vsphere_counters.uptime"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def _parse_esx_vsphere_counters_swap(parsed):
+def _parse_esx_vsphere_counters_swap(parsed: SectionCounter) -> Mapping[str, str]:
     swap_values = {}
 
     for agent_key, key in (("mem.swapin", "in"), ("mem.swapout", "out"), ("mem.swapused", "used")):
@@ -100,27 +107,22 @@ def _parse_esx_vsphere_counters_swap(parsed):
     return swap_values
 
 
-def inventory_esx_vsphere_counters_swap(parsed):
-    SWAP = _parse_esx_vsphere_counters_swap(parsed)
+def inventory_esx_vsphere_counters_swap(section: SectionCounter) -> DiscoveryResult:
+    SWAP = _parse_esx_vsphere_counters_swap(section)
 
     if any(elem for elem in SWAP.values()):
-        return [(None, {})]
-    return []
+        yield Service()
 
 
-def check_esx_vsphere_counters_swap(item, params, parsed):
-    SWAP = _parse_esx_vsphere_counters_swap(parsed)
+def check_esx_vsphere_counters_swap(section: SectionCounter) -> CheckResult:
+    swap = _parse_esx_vsphere_counters_swap(section)
 
-    for key in ("in", "out", "used"):
-        if SWAP.get(key):
-            value = render.bytes(float(SWAP[key]))
-        else:
-            value = "not available"
-
-        yield 0, f"Swap {key}: {value}"
+    for key, value in swap.items():
+        if value and key in {"in", "out", "used"}:
+            yield Result(state=State.OK, summary=f"Swap {key}: {render.bytes(float(value))}")
 
 
-check_info["esx_vsphere_counters.swap"] = LegacyCheckDefinition(
+check_plugin_esx_vsphere_counters_swap = CheckPlugin(
     name="esx_vsphere_counters_swap",
     service_name="VMKernel Swap",
     sections=["esx_vsphere_counters"],

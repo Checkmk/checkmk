@@ -127,6 +127,15 @@ def _site(description: str, distributed: bool) -> Iterator[Site]:
 def _single_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
     """Provide a default, single monitoring site."""
     with _site(description=request.node.name, distributed=False) as single_site:
+        single_site.openapi.hosts.create(
+            "local",
+            "/",
+            attributes={
+                "ipaddress": "127.0.0.1",
+                "tag_address_family": "ip-v4-only",
+            },
+        )
+        single_site.openapi.changes.activate_and_wait_for_completion()
         yield single_site
 
 

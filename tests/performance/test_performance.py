@@ -16,11 +16,14 @@ For more details, see pytest --help the documentation of pytest-benchmark.
 
 import logging
 from collections.abc import Iterator
+from enum import Enum
 from time import time
+from urllib.parse import urljoin
 
 import pytest
 import requests
 from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore[import-untyped]
+from requests.auth import HTTPBasicAuth
 
 from tests.performance.sysmon import track_resources
 from tests.testlib.agent_hosts import piggyback_host_from_dummy_generator
@@ -31,6 +34,13 @@ from tests.testlib.version import CMKVersion, version_from_env
 logger = logging.getLogger(__name__)
 
 dump_path_repo = qa_test_data_path() / "plugins_integration/dumps/piggyback"
+
+
+class CmkPageUrl(Enum):
+    LOGIN = "login.py"
+    EDIT_HOST = "wato.py?folder={folder}&host={host}&mode=edit_host"
+    SERVICE_DISCOVERY = "wato.py?folder={folder}&host={host}&mode=inventory"
+    HOST_PARAMETERS = "wato.py?folder={folder}&host={host}&mode=object_parameters"
 
 
 class PerformanceTest:
@@ -221,13 +231,13 @@ class PerformanceTest:
                 == pb_host_count
             )
 
-    def scenario_performance_ui_response(self) -> None:
+    def scenario_performance_ui_response(self, page_url: CmkPageUrl = CmkPageUrl.LOGIN) -> None:
         """
         Scenario: UI response time.
 
-        Issues up to 1000 sequential HTTP GET requests against the central site URL login page,
-        appending a millisecond timestamp (_ts) as query parameter to reduce cache hits. Each
-        request includes cache-busting headers and uses a 30-second timeout.
+        Sequentially issues 100 HTTP GET requests against the sites URL login page, appending a
+        millisecond timestamp (_ts) as query parameter to reduce cache hits. Each request includes
+        cache-busting headers and uses a 30-second timeout.
 
         Behavior:
         - Logs a warning if a response is non-OK (non-2xx status).
@@ -247,10 +257,16 @@ class PerformanceTest:
             - Introduce configurable request count and concurrency for broader coverage.
         """
         max_first_request_timeout = 30  # 30 seconds until first request times out
-        max_request_timeout = 0.3  # 300 milliseconds until consecutive requests time out
+        max_request_timeout = 0.5  # 0.5 seconds until consecutive requests time out
+        max_average_request_duration = 0.3  # 0.3 seconds for the maximum average request time
 
-        site_url = self.central_site.url
-        for i in range(1000):
+        first_request_duration = 0.0
+        site_url = urljoin(self.central_site.url, page_url.value).format_map(
+            {"folder": "/", "host": "local"}
+        )
+        counter = self.object_count
+        start_time = time()
+        for i in range(counter):
             unique_url = f"{site_url}?_ts={int(time() * 1000)}"
             try:
                 resp = requests.get(
@@ -261,8 +277,11 @@ class PerformanceTest:
                         "Expires": "0",
                         "Connection": "close",
                     },
+                    auth=None if page_url == page_url.LOGIN else HTTPBasicAuth("cmkadmin", "cmk"),
                     timeout=max_first_request_timeout if i == 0 else max_request_timeout,
                 )
+                if i == 0:
+                    first_request_duration = time() - start_time
                 if not resp.ok:
                     logger.warning(
                         "UI response request %s failed with status %s (%s)",
@@ -272,6 +291,10 @@ class PerformanceTest:
                     )
             except Exception as exc:
                 logger.warning("UI response request %s raised %r (%s)", i, exc, unique_url)
+        end_time = time()
+        duration = end_time - start_time
+        average_request_duration = (duration - first_request_duration) / (counter - 1)
+        assert average_request_duration < max_average_request_duration
 
 
 @pytest.fixture(name="perftest", scope="session")
@@ -337,12 +360,17 @@ def test_performance_piggyback(
     )
 
 
+@pytest.mark.parametrize("page_url", CmkPageUrl, ids=[_.name.lower() for _ in CmkPageUrl])
 def test_performance_ui_response(
-    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
+    perftest: PerformanceTest,
+    benchmark: BenchmarkFixture,
+    track_system_resources: None,
+    page_url: CmkPageUrl,
 ) -> None:
+    print(f"Checking {page_url.value}...")
     benchmark.pedantic(
         perftest.scenario_performance_ui_response,
-        args=[],
+        args=[page_url],
         rounds=perftest.rounds,
         iterations=perftest.iterations,
     )

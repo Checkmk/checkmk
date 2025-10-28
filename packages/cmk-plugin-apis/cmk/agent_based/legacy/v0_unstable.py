@@ -83,9 +83,7 @@ _CheckFunctionLegacy = Callable[
     ...,
     None | LegacyResult | Iterable[LegacyResult] | Generator[LegacyResult],
 ]
-_CheckFunctionV2Compliant = Callable[
-    ..., Generator[Result | Metric | IgnoreResults, None, None]
-]
+_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults]]
 
 
 @dataclass(frozen=True, kw_only=True)

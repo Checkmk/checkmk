@@ -144,6 +144,7 @@ pkg_files(
                "//doc/plugin-api:pkg_tar",
                "//cmk:legacy_checks",
                "//locale",
+               "//notifications",
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
                "//omd/packages/changelog",

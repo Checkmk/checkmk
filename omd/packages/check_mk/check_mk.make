@@ -56,13 +56,6 @@ ifeq ($(filter $(EDITION),cloud),)
 endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
-	find $(REPO_PATH)/notifications/ -maxdepth 1 -type f ! -name ".*" ! -name "OWNERS" -exec install -m 755 {} $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications \;
-	chmod 644 $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/README
-
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/templates/mail
-	find $(REPO_PATH)/notifications/templates/mail/ -maxdepth 1 -type f ! -name ".*" ! -name "OWNERS" -exec install -m 644 {} $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/templates/mail \;
-
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents
 	tar -c -C $(REPO_PATH)/agents \
 	    $(CHECK_MK_TAROPTS) \

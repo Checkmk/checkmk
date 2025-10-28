@@ -13,6 +13,7 @@ import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlideout.vue'
 
+import AiExplainThisIssueApp from './ai/AiExplainButtonApp.vue'
 import Dashboard from './dashboard-wip/DashboardApp.vue'
 import LoadingTransition from './loading-transition/LoadingTransition.vue'
 import MainMenuApp from './main-menu/MainMenuApp.vue'
@@ -45,3 +46,4 @@ defineCmkComponent('cmk-welcome-snapin-slideout', WelcomeSnapinSlideout)
 defineCmkComponent('cmk-main-menu', MainMenuApp)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)
 defineCmkComponent('cmk-loading-transition', LoadingTransition)
+defineCmkComponent('cmk-ai-explain-button', AiExplainThisIssueApp)

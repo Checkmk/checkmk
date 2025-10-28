@@ -1,0 +1,65 @@
+<!--
+Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+
+<script setup lang="ts">
+import { type AiButton } from 'cmk-shared-typing/typescript/ai_button'
+
+import CmkButton from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+
+defineProps<AiButton>()
+
+function explainThis() {
+  // TODO BKP: add AiConversation invokation
+}
+</script>
+
+<template>
+  <div id="ai-explain-button"></div>
+  <Teleport defer :to="teleport ?? '#ai-explain-button'">
+    <CmkButton class="ai-explain-button-app__button" @click="explainThis">
+      <div class="ai-explain-button-app__shimmer"></div>
+      <CmkIcon name="sparkle" />
+      {{ button_text }}
+    </CmkButton>
+  </Teleport>
+</template>
+
+<style scoped>
+.ai-explain-button-app__button {
+  height: 30px;
+  margin: 3px 0;
+  position: relative;
+  overflow: hidden;
+
+  .ai-explain-button-app__shimmer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    opacity: 0.2;
+    background: linear-gradient(
+      90deg,
+      transparent 0,
+      var(--color-purple-80) 20%,
+      var(--color-purple-60) 60%,
+      transparent
+    );
+    animation: shimmer 3s infinite;
+  }
+
+  img {
+    margin-right: var(--dimension-3);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+</style>

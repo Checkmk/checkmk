@@ -40,6 +40,8 @@ agent_section_proxmox_ve_replication = AgentSection(
 
 
 def discover_proxmox_ve_replication(section: SectionReplication) -> DiscoveryResult:
+    if not section.cluster:
+        return
     yield Service()
 
 

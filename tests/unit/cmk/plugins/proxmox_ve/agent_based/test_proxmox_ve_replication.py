@@ -23,18 +23,28 @@ from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplicati
 
 SECTION_NO_REPLICATIONS = SectionReplication(
     node="node1",
+    cluster="cluster1",
     replications=[],
     cluster_has_replications=True,
 )
 
 SECTION_CLUSTER_NO_REPLICATIONS = SectionReplication(
     node="node1",
+    cluster="cluster1",
+    replications=[],
+    cluster_has_replications=False,
+)
+
+SECTION_NODE_WITH_NO_CLUSTER = SectionReplication(
+    node="node1",
+    cluster=None,
     replications=[],
     cluster_has_replications=False,
 )
 
 SECTION_WITH_ONE_ERROR = SectionReplication(
     node="node1",
+    cluster="cluster1",
     replications=[
         Replication(
             id="r1",
@@ -53,6 +63,7 @@ SECTION_WITH_ONE_ERROR = SectionReplication(
 
 SECTION_WITH_TWO_ERRORS = SectionReplication(
     node="node1",
+    cluster="cluster1",
     replications=[
         Replication(
             id="r1",
@@ -82,6 +93,7 @@ SECTION_WITH_TWO_ERRORS = SectionReplication(
 
 SECTION_WITH_ONE_REPLICATION = SectionReplication(
     node="node1",
+    cluster="cluster1",
     replications=[
         Replication(
             id="r1",
@@ -121,6 +133,11 @@ SECTION_WITH_ONE_REPLICATION = SectionReplication(
             SECTION_WITH_ONE_REPLICATION,
             [Service()],
             id="Cluster has no replications",
+        ),
+        pytest.param(
+            SECTION_NODE_WITH_NO_CLUSTER,
+            [],
+            id="Node with no cluster -> no service",
         ),
     ],
 )

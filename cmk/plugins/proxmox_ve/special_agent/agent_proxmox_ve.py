@@ -283,6 +283,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
                 writer.append_json(
                     SectionReplication(
                         node=node["node"],
+                        cluster=node_cluster_mapping.get(node["node"]),
                         replications=[
                             Replication(
                                 id=repl["id"],

@@ -22,5 +22,6 @@ class Replication(BaseModel, frozen=True):
 
 class SectionReplication(BaseModel, frozen=True):
     node: str
+    cluster: str | None = Field(default=None)
     replications: Sequence[Replication]
     cluster_has_replications: bool

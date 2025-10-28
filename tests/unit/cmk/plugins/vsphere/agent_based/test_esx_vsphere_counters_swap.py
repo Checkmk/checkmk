@@ -7,11 +7,13 @@
 from typing import Final
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.base.legacy_checks.esx_vsphere_counters import (
+from cmk.plugins.vsphere.agent_based.esx_vsphere_counters import (
+    parse_esx_vsphere_counters,
+)
+from cmk.plugins.vsphere.agent_based.esx_vsphere_counters_2 import (
     check_esx_vsphere_counters_swap,
     inventory_esx_vsphere_counters_swap,
 )
-from cmk.plugins.vsphere.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
 
 _STRING_TABLE: Final = [
     ["mem.swapin", "", "0", "kiloBytes"],

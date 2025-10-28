@@ -11,7 +11,7 @@ import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
 
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import FormEdit from '@/form/components/FormEdit.vue'
+import FormEdit from '@/form/FormEdit.vue'
 
 const apiReturnsError = ref<boolean>(false)
 

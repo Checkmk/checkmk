@@ -11,7 +11,7 @@ import { untranslated } from '@/lib/i18n'
 import CmkHelpText from '@/components/CmkHelpText.vue'
 
 import type { ValidationMessages } from '@/form'
-import FormEdit from '@/form/components/FormEdit.vue'
+import FormEdit from '@/form/FormEdit.vue'
 
 import { type FormSpecWidgetProps } from './widget_types'
 

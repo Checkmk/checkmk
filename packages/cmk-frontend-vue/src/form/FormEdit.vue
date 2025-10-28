@@ -12,7 +12,7 @@ import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 import { dispatcherKey } from '@/form/private'
 
-import FormEditDispatcher from './FormEditDispatcher.vue'
+import FormEditDispatcher from './components/FormEditDispatcher.vue'
 
 defineProps<{
   spec: FormSpec

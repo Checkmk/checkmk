@@ -13,10 +13,9 @@ import { immediateWatch } from '@/lib/watch'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkHelpText from '@/components/CmkHelpText.vue'
 
-import FormReadonly from '@/form/components/FormReadonly.vue'
+import FormEdit from '@/form/FormEdit.vue'
+import FormReadonly from '@/form/FormReadonly.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
-
-import FormEdit from './components/FormEdit.vue'
 
 const props = defineProps<{
   id: string

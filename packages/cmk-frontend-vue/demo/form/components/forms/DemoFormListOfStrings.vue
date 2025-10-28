@@ -9,7 +9,7 @@ import { HttpResponse, http } from 'msw'
 import { setupWorker } from 'msw/browser'
 import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
 
-import FormEdit from '@/form/components/FormEdit.vue'
+import FormEdit from '@/form/FormEdit.vue'
 
 async function interceptor({ request }: { request: Request }) {
   const jsonData = (await request.formData()).get('request')

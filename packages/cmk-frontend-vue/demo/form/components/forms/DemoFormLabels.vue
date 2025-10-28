@@ -9,7 +9,7 @@ import { HttpResponse, http } from 'msw'
 import { setupWorker } from 'msw/browser'
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue'
 
-import FormReadonly from '@/form/components/FormReadonly.vue'
+import FormReadonly from '@/form/FormReadonly.vue'
 import FormLabels from '@/form/components/forms/FormLabels.vue'
 
 defineProps<{ screenshotMode: boolean }>()

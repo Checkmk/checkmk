@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type ValidationMessages } from '@/form'
-import FormEdit from '@/form/components/FormEdit.vue'
+import FormEdit from '@/form/FormEdit.vue'
 
 import { makeString } from '@/graph-designer/specs'
 

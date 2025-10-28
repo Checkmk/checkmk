@@ -4,6 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import FormApp from './FormApp.vue'
+import FormEdit from './FormEdit.vue'
+import FormReadonly from './FormReadonly.vue'
 import { type ValidationMessages } from './components/utils/validation'
 
-export { FormApp, type ValidationMessages }
+export { FormEdit, FormReadonly, FormApp, type ValidationMessages }

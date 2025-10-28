@@ -14,7 +14,7 @@ import { computed, ref } from 'vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import FormEdit from '@/form/components/FormEdit.vue'
+import FormEdit from '@/form/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

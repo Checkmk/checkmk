@@ -10,8 +10,8 @@ import { computed, ref } from 'vue'
 
 import CmkSpace from '@/components/CmkSpace.vue'
 
-import FormEdit from '@/form/components/FormEdit.vue'
-import FormReadonly from '@/form/components/FormReadonly.vue'
+import FormEdit from '@/form/FormEdit.vue'
+import FormReadonly from '@/form/FormReadonly.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

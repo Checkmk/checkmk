@@ -16,7 +16,7 @@ import CmkHtml from '@/components/CmkHtml.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import FormReadonly from '@/form/components/FormReadonly.vue'
+import FormReadonly from '@/form/FormReadonly.vue'
 import { type ValidationMessages, groupNestedValidations } from '@/form/components/utils/validation'
 import { useFormEditDispatcher } from '@/form/private'
 import FormHelp from '@/form/private/FormHelp.vue'

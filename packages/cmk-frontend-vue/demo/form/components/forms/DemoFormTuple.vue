@@ -11,8 +11,8 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 
-import FormEdit from '@/form/components/FormEdit.vue'
-import FormReadonly from '@/form/components/FormReadonly.vue'
+import FormEdit from '@/form/FormEdit.vue'
+import FormReadonly from '@/form/FormReadonly.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

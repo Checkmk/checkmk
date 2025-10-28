@@ -21,7 +21,7 @@ import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 
-import FormEdit from '@/form/components/FormEdit.vue'
+import FormEdit from '@/form/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

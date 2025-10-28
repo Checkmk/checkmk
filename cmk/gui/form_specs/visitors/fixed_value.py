@@ -2,7 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable, Sequence
 from typing import override, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -31,10 +30,6 @@ class FixedValueVisitor(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         return self.form_spec.value
-
-    @override
-    def _validators(self) -> Sequence[Callable[[_FixedValueT], object]]:
-        return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     @override
     def _to_vue(

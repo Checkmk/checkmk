@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="misc"
 
-from typing import Literal
+from typing import cast, Literal
 from unittest.mock import ANY, patch
 
 import pytest
@@ -40,7 +40,7 @@ def test_password_encrypts_password(
 
     assert not any(password in value for value in frontend_value if isinstance(value, str))
 
-    disk_value: PasswordOnDisk = visitor.to_disk(RawFrontendData(frontend_value))
+    disk_value = cast(PasswordOnDisk, visitor.to_disk(RawFrontendData(frontend_value)))
     assert disk_value[2][1] == password
 
 
@@ -56,7 +56,7 @@ def test_password_masks_password(
     patch_pwstore: None, request_context: None, value: IncomingData
 ) -> None:
     visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=True))
-    _, _, (_, masked_password) = visitor.to_disk(value)
+    _, _, (_, masked_password) = cast(PasswordOnDisk, visitor.to_disk(value))
     assert masked_password == "******"
 
 
@@ -73,7 +73,7 @@ def test_nested_password_gets_masked(
 ) -> None:
     spec = Dictionary(elements={"el": DictElement(parameter_form=Password())})
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=True))
-    dict_result = visitor.to_disk(value)
+    dict_result = cast(dict[str, PasswordOnDisk], visitor.to_disk(value))
     _, _, (_, masked_password) = dict_result["el"]
     assert masked_password == "******"
 

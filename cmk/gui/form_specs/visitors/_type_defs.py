@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
-
-DiskModel = Any
 
 
 class DefaultValue:

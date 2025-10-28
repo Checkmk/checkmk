@@ -155,9 +155,12 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
     def __init__(self) -> None:
         super().__init__()
-        self._options = get_visitor(
+        options = get_visitor(
             self._audit_log_options_fs(), VisitorOptions(migrate_values=False, mask_values=False)
         ).to_disk(DEFAULT_VALUE)
+        if not isinstance(options, dict):
+            raise TypeError("Audit log options are not a dictionary")
+        self._options = options
         if self._request_data.is_ok():
             self._options.update(self._request_data.ok.audit_log_options)
         self._current_audit_log = wato_var_dir() / "log" / "wato_audit.log"
@@ -662,7 +665,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
         html.close_div()
 
-    def _audit_log_options_fs(self):
+    def _audit_log_options_fs(self) -> Dictionary:
         object_types = [
             SingleChoiceElementExtended[Any](name="", title=Title("All object types")),
             SingleChoiceElementExtended[Any](name=None, title=Title("No object type")),

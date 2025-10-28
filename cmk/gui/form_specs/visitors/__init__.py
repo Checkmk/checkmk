@@ -10,7 +10,6 @@ from ._registry import (
 from ._type_defs import (
     DEFAULT_VALUE,
     DefaultValue,
-    DiskModel,
     FormSpecValidationError,
     IncomingData,
     InvalidValue,
@@ -22,7 +21,6 @@ from ._type_defs import (
 __all__ = [
     "DEFAULT_VALUE",
     "DefaultValue",
-    "DiskModel",
     "FormSpecValidationError",
     "get_visitor",
     "IncomingData",

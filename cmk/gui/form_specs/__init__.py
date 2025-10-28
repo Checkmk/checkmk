@@ -16,7 +16,6 @@ from ._utils import (
 from .visitors import (
     DEFAULT_VALUE,
     DefaultValue,
-    DiskModel,
     FormSpecValidationError,
     get_visitor,
     IncomingData,
@@ -31,7 +30,6 @@ __all__ = [
     "DEFAULT_VALUE",
     "DefaultValue",
     "VisitorOptions",
-    "DiskModel",
     "IncomingData",
     "InvalidValue",
     "DisplayMode",

@@ -10,7 +10,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ._type_defs import DiskModel, IncomingData, InvalidValue, RawDiskData, VisitorOptions
+from ._type_defs import IncomingData, InvalidValue, RawDiskData, VisitorOptions
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -63,7 +63,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
         )
 
     @final
-    def to_disk(self, raw_value: IncomingData) -> DiskModel:
+    def to_disk(self, raw_value: IncomingData) -> object:
         parsed_value = self._parse_value(
             self._migrate_disk_value(raw_value)
             if self.visitor_options.migrate_values
@@ -95,7 +95,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
     ) -> tuple[shared_type_defs.FormSpec, object]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 
-    def _validators(self) -> Sequence[Callable[[DiskModel], object]]:
+    def _validators(self) -> Sequence[Callable[[Any], object]]:
         return compute_validators(self.form_spec)
 
     def _validate(
@@ -105,5 +105,5 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, _ParsedValueModel, _Fallba
         return []
 
     @abc.abstractmethod
-    def _to_disk(self, parsed_value: _ParsedValueModel) -> DiskModel:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         """Transforms the value into a serializable format for disk storage."""

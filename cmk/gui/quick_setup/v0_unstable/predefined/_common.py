@@ -14,7 +14,6 @@ from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgent
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.form_specs import (
-    DiskModel,
     get_visitor,
     RawFrontendData,
     serialize_data_for_frontend,
@@ -38,8 +37,11 @@ from cmk.utils.ip_lookup import IPStackConfig
 def collect_params_with_defaults_from_form_data(
     all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, object]:
+    default_dict = _get_rule_defaults(parameter_form)
+    if not isinstance(default_dict, dict):
+        raise TypeError("Rule defaults options are not a dictionary")
     return _add_defaults_to_form_data(
-        _get_rule_defaults(parameter_form),
+        default_dict,
         _collect_params_from_form_data(all_stages_form_data, parameter_form),
     )
 
@@ -144,7 +146,7 @@ def _collect_params_from_form_data(
     }
 
 
-def _get_rule_defaults(parameter_form: Dictionary) -> DiskModel:
+def _get_rule_defaults(parameter_form: Dictionary) -> object:
     # We need to create a valid default ruleset configuration that adheres to the form spec.
     # This two-step process:
     # 1.  First serialize the form to the frontend format, which automatically fills in

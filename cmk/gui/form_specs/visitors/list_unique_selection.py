@@ -154,7 +154,7 @@ class ListUniqueSelectionVisitor(
         return element_validations
 
     @override
-    def _to_disk(self, parsed_value: _ParsedValueModel) -> list[T]:
+    def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         disk_values = []
         element_visitor = get_visitor(self._build_element_template(), self.visitor_options)
         for entry in parsed_value:

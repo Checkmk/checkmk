@@ -140,12 +140,19 @@ pkg_files(
     prefix = "share/check_mk/agents/plugins",
 )
 
+pkg_files(
+    name = "agents_sap",
+    srcs = ["//agents/sap:srcs"],
+    prefix = "share/check_mk/agents/sap",
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
         ":agents",
         ":agents_cfg_examples",
         ":agents_plugins",
+        ":agents_sap",
         ":diskspace_cleanup_plugin",
         ":omd_hooks",
         ":rest_api_spec",

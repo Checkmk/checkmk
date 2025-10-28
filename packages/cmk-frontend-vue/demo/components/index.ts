@@ -13,6 +13,7 @@ import { pages as CmkTabPages } from './CmkTabs'
 import DemoCmkAlertBox from './DemoCmkAlertBox.vue'
 import DemoCmkBadge from './DemoCmkBadge.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
+import DemoCmkCatalogPanel from './DemoCmkCatalogPanel.vue'
 import DemoCmkChip from './DemoCmkChip.vue'
 import DemoCmkCode from './DemoCmkCode.vue'
 import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
@@ -39,36 +40,36 @@ import { pages as typographyPages } from './typography'
 import { pages as userInputPages } from './user-input'
 
 export const pages = [
-  new Folder('user-input', DemoEmpty, userInputPages),
-  new Folder('typography', DemoEmpty, typographyPages),
   new Folder('CmkAccordion', DemoEmpty, CmkAccordionPages),
   new Folder('CmkAccordionStepPanel', DemoEmpty, CmkAccordionStepPanelPages),
   new Folder('CmkTabs', DemoEmpty, CmkTabPages),
+  new Folder('typography', DemoEmpty, typographyPages),
+  new Folder('user-input', DemoEmpty, userInputPages),
   new Page('CmkAlertBox', DemoCmkAlertBox),
-  new Page('CmkSlideInDialog', DemoCmkSlideInDialog),
-  new Page('CmkPopupDialog', DemoCmkPopupDialog),
-  new Page('CmkSpace', DemoCmkSpace),
-  new Page('CmkIcon', DemoCmkIcon),
-  new Page('CmkList', DemoCmkList),
-  new Page('ToggleButtonGroup', DemoToggleButtonGroup),
-  new Page('CmkButton', DemoCmkButton),
-  new Page('CmkDialog', DemoCmkDialog),
-  new Page('CmkDropdown', DemoCmkDropdown),
-  new Page('CmkErrorBoundary', DemoErrorBoundary),
-  new Page('CmkSwitch', DemoCmkSwitch),
-  new Page('CmkColorPicker', DemoCmkColorPicker),
-  new Page('CmkHtml', DemoCmkHtml),
-  new Page('CmkSkeleton', DemoCmkSkeleton),
-  new Page('CmkMultitoneIcon', DemoCmkMultitoneIcon),
-  new Page('CmkWizard', DemoCmkWizard),
   new Page('CmkBadge', DemoCmkBadge),
+  new Page('CmkButton', DemoCmkButton),
+  new Page('CmkCatalogPanel', DemoCmkCatalogPanel),
   new Page('CmkChip', DemoCmkChip),
-  new Page('CmkProgressbar', DemoCmkProgressbar),
-  new Page('CmkList', DemoCmkList),
-  new Page('CmkLinkCard', DemoCmkLinkCard),
   new Page('CmkCode', DemoCmkCode),
   new Page('CmkCollapsible', DemoCmkCollapsible),
-  new Page('CmkKeyboardKey', DemoCmkKeyboardKey),
+  new Page('CmkColorPicker', DemoCmkColorPicker),
+  new Page('CmkDialog', DemoCmkDialog),
+  new Page('CmkDropdown', DemoCmkDropdown),
   new Page('CmkDualList', DemoCmkDualList),
-  new Page('CmkHelpText', DemoHelp)
+  new Page('CmkErrorBoundary', DemoErrorBoundary),
+  new Page('CmkHelpText', DemoHelp),
+  new Page('CmkHtml', DemoCmkHtml),
+  new Page('CmkIcon', DemoCmkIcon),
+  new Page('CmkKeyboardKey', DemoCmkKeyboardKey),
+  new Page('CmkLinkCard', DemoCmkLinkCard),
+  new Page('CmkList', DemoCmkList),
+  new Page('CmkMultitoneIcon', DemoCmkMultitoneIcon),
+  new Page('CmkPopupDialog', DemoCmkPopupDialog),
+  new Page('CmkProgressbar', DemoCmkProgressbar),
+  new Page('CmkSkeleton', DemoCmkSkeleton),
+  new Page('CmkSlideInDialog', DemoCmkSlideInDialog),
+  new Page('CmkSpace', DemoCmkSpace),
+  new Page('CmkSwitch', DemoCmkSwitch),
+  new Page('CmkWizard', DemoCmkWizard),
+  new Page('ToggleButtonGroup', DemoToggleButtonGroup)
 ]

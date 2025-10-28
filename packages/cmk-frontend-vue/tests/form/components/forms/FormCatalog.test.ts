@@ -1,9 +1,10 @@
 /**
- * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import userEvent from '@testing-library/user-event'
+import { render, screen } from '@testing-library/vue'
 import type {
   Catalog,
   DictionaryElement,
@@ -104,38 +105,26 @@ function renderSimpleCatalog() {
 test('FormCatalog open/close topic', async () => {
   renderSimpleCatalog()
 
+  // Sync barrier
+  await screen.findByText('dict_title')
+
   const headline = await screen.findByText('topic_title')
-  const img = headline.querySelector('img')
-  // the visibility of elements is changed via classes and css, but the css is not
-  // available in the tests, so we have to manually check if the classes are added.
-  // TODO: we should really change our code to make the following possible:
-  // it should be quite easy to use v-show for that...
-  // expect(title).not.toBeVisible()
-  expect(img).toHaveClass('form-catalog__icon--open')
+  await userEvent.click(headline)
+  expect(await screen.queryByText('dict_title')).toBeNull()
 
-  await fireEvent.click(headline)
-  expect(img).not.toHaveClass('form-catalog__icon--open')
-
-  await fireEvent.click(headline)
-  expect(img).toHaveClass('form-catalog__icon--open')
+  await userEvent.click(headline)
+  expect(await screen.findByText('dict_title')).toBeInTheDocument()
 })
 
 test.skip('FormCatalog collapse/open all - skipped until the toggle gets a better implementation', async () => {
   renderSimpleCatalog()
-  await screen.findByText('title of string input')
+  await screen.findByText('dict_title')
 
-  const headline = await screen.findByText('ut embedded dictionary title')
-  const parent = headline.parentElement!.parentElement!.parentElement!
-  expect(parent).toHaveClass('open')
-  expect(parent).not.toHaveClass('closed')
+  await userEvent.click(screen.getByText('Collapse all'))
+  expect(await screen.queryByText('dict_title')).toBeNull()
 
-  await fireEvent.click(screen.getByText('Collapse all'))
-  expect(parent).toHaveClass('closed')
-  expect(parent).not.toHaveClass('open')
-
-  await fireEvent.click(screen.getByText('Open all'))
-  expect(parent).toHaveClass('open')
-  expect(parent).not.toHaveClass('closed')
+  await userEvent.click(screen.getByText('Open all'))
+  expect(await screen.findByText('dict_title')).toBeInTheDocument()
 })
 
 test('FormCatalog default value', async () => {

@@ -20,6 +20,7 @@ import type {
   IAiConversationElement,
   ImageConversationElementContent,
   ListConversationElementContent,
+  MarkdownConversationElementContent,
   TAiConversationElementContent,
   TextConversationElementContent
 } from '@/ai/lib/conversation-templates/base-template'
@@ -30,6 +31,7 @@ import CodeContent from './content/CodeContent.vue'
 import DialogContent from './content/DialogContent.vue'
 import ImageContent from './content/ImageContent.vue'
 import ListContent from './content/ListContent.vue'
+import MarkdownContent from './content/MarkdownContent.vue'
 import TextContent from './content/TextContent.vue'
 
 const { _t } = usei18n()
@@ -145,6 +147,12 @@ onMounted(async () => {
           <ImageContent
             v-else-if="cnt.type === 'image'"
             v-bind="cnt as ImageConversationElementContent"
+            :no-animation="props.noAnimation"
+            @done="onContentDone"
+          />
+          <MarkdownContent
+            v-else-if="cnt.type === 'markdown'"
+            v-bind="cnt as MarkdownConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"
           />

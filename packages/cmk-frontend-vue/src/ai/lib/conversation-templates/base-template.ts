@@ -52,6 +52,11 @@ export interface ListConversationElementContent extends BaseConversationElementC
   items: string[]
 }
 
+export interface MarkdownConversationElementContent extends BaseConversationElementContent {
+  type: 'markdown'
+  markdown: string
+}
+
 export interface TextConversationElementContent extends BaseConversationElementContent {
   type: 'text'
   text: string
@@ -63,6 +68,7 @@ export type TAiConversationElementContent =
   | DialogConversationElementContent
   | ImageConversationElementContent
   | ListConversationElementContent
+  | MarkdownConversationElementContent
   | TextConversationElementContent
 export interface IAiConversationElement {
   role: AiConversationElementRole

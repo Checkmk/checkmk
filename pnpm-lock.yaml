@@ -321,6 +321,9 @@ importers:
       lucide-vue-next:
         specifier: ^0.487.0
         version: 0.487.0(vue@3.5.22)
+      marked:
+        specifier: ^16.4.1
+        version: 16.4.1
       openapi-fetch:
         specifier: ^0.14.1
         version: 0.14.1
@@ -10648,6 +10651,12 @@ packages:
     dependencies:
       tmpl: 1.0.5
     dev: true
+
+  /marked@16.4.1:
+    resolution: {integrity: sha512-ntROs7RaN3EvWfy3EZi14H4YxmT6A5YvywfhO+0pm+cH/dnSQRmdAmoFIc3B9aiwTehyk7pESH4ofyBY+V5hZg==}
+    engines: {node: '>= 20'}
+    hasBin: true
+    dev: false
 
   /math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}

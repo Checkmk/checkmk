@@ -3,8 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
+from collections.abc import Mapping
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 # Example Output:
 # <<<msexch_dag:sep(58)>>>
@@ -102,17 +113,12 @@
 # SeedingNetwork                   :
 # ActiveCopy                       : False
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
-
 
 def parse_msexch_dag(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["msexch_dag"] = LegacyCheckDefinition(
+agent_section_msexch_dag = AgentSection(
     name="msexch_dag",
     parse_function=parse_msexch_dag,
 )
@@ -127,44 +133,47 @@ check_info["msexch_dag"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_msexch_dag_dbcopy(info):
+def discover_msexch_dag_dbcopy(section: StringTable) -> DiscoveryResult:
     getit = False
     key = "Status"
-    for line in info:
+    dbname = None
+    for line in section:
         if len(line) == 2:
             if line[0].strip() == "DatabaseName":
                 dbname = line[1].strip()
                 getit = True
             elif getit and line[0].strip() == key:
-                yield dbname, {"inv_key": key, "inv_val": line[1].strip()}
+                yield Service(item=dbname, parameters={"inv_key": key, "inv_val": line[1].strip()})
                 getit = False
 
 
-def check_msexch_dag_dbcopy(item, params, info):
+def check_msexch_dag_dbcopy(
+    item: str, params: Mapping[str, str], section: StringTable
+) -> CheckResult:
     getit = False
     inv_key = params["inv_key"]
     inv_val = params["inv_val"]
-    for line in info:
+    for line in section:
         if len(line) == 2:
             key, val = (i.strip() for i in line)
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == inv_key:
                 if val == inv_val:
-                    state = 0
+                    state = State.OK
                     infotxt = f"{inv_key} is {val}"
                 else:
-                    state = 1
+                    state = State.WARN
                     infotxt = f"{inv_key} changed from {inv_val} to {val}"
-                return state, infotxt
-    return None
+                yield Result(state=state, summary=infotxt)
+                return
 
 
-check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
+check_plugin_msexch_dag_dbcopy = CheckPlugin(
     name="msexch_dag_dbcopy",
     service_name="Exchange DAG DBCopy for %s",
     sections=["msexch_dag"],
-    discovery_function=inventory_msexch_dag_dbcopy,
+    discovery_function=discover_msexch_dag_dbcopy,
     check_function=check_msexch_dag_dbcopy,
     check_default_parameters={},
 )
@@ -180,33 +189,33 @@ check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_msexch_dag_contentindex(info):
-    for line in info:
+def discover_msexch_dag_contentindex(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if line[0].strip() == "DatabaseName":
-            yield line[1].strip(), None
+            yield Service(item=line[1].strip())
 
 
-def check_msexch_dag_contentindex(item, _no_params, info):
+def check_msexch_dag_contentindex(item: str, section: StringTable) -> CheckResult:
     getit = False
-    for line in info:
+    for line in section:
         if len(line) == 2:
             key, val = (i.strip() for i in line)
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == "ContentIndexState":
                 if val == "Healthy":
-                    state = 0
+                    state = State.OK
                 else:
-                    state = 1
-                return state, "Status: %s" % val
-    return None
+                    state = State.WARN
+                yield Result(state=state, summary="Status: %s" % val)
+                return
 
 
-check_info["msexch_dag.contentindex"] = LegacyCheckDefinition(
+check_plugin_msexch_dag_contentindex = CheckPlugin(
     name="msexch_dag_contentindex",
     service_name="Exchange DAG ContentIndex of %s",
     sections=["msexch_dag"],
-    discovery_function=inventory_msexch_dag_contentindex,
+    discovery_function=discover_msexch_dag_contentindex,
     check_function=check_msexch_dag_contentindex,
 )
 
@@ -221,37 +230,39 @@ check_info["msexch_dag.contentindex"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_msexch_dag_copyqueue(info):
-    for line in info:
+def discover_msexch_dag_copyqueue(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if line[0].strip() == "DatabaseName":
-            yield line[1].strip(), {}
+            yield Service(item=line[1].strip())
 
 
-def check_msexch_dag_copyqueue(item, params, info):
+def check_msexch_dag_copyqueue(
+    item: str, params: Mapping[str, tuple[float, float]], section: StringTable
+) -> CheckResult:
     getit = False
-    for line in info:
+    for line in section:
         if len(line) == 2:
             key, val = (i.strip() for i in line)
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == "CopyQueueLength":
-                yield check_levels(
+                yield from check_levels(
                     int(val),
-                    "length",
-                    params["levels"],
-                    human_readable_func=str,
+                    metric_name="length",
+                    levels_upper=("fixed", params["levels"]),
+                    render_func=str,
                     boundaries=(0, None),
-                    infoname="Queue length",
+                    label="Queue length",
                 )
                 return
 
 
-check_info["msexch_dag.copyqueue"] = LegacyCheckDefinition(
+check_plugin_msexch_dag_copyqueue = CheckPlugin(
     name="msexch_dag_copyqueue",
     service_name="Exchange DAG CopyQueue of %s",
     sections=["msexch_dag"],
-    discovery_function=inventory_msexch_dag_copyqueue,
+    discovery_function=discover_msexch_dag_copyqueue,
     check_function=check_msexch_dag_copyqueue,
-    check_ruleset_name="msexch_copyqueue",
     check_default_parameters={"levels": (100, 200)},
+    check_ruleset_name="msexch_copyqueue",
 )

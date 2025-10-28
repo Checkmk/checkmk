@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Annotated, NamedTuple, NewType, Self
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 # The name of the folder in the tar archive that contains the relay config files
 CONFIG_ARCHIVE_ROOT_FOLDER_NAME: str = "config"
@@ -41,22 +41,6 @@ class Host(BaseModel):
 class HistoryConfig(BaseModel):
     timeout: float = 60.0
     maxlen: int = 100
-
-
-class SiteConfig(BaseModel):
-    """
-    Configuration which site we are connecting to, and additional information for the connection.
-
-    We separate this from the other configuration for reliability.
-    A problem during a change in the engine configuration should not break the site connection.
-    """
-
-    site_url: HttpUrl
-    relay_id: str
-
-    @classmethod
-    def load(cls, path: Path) -> Self:
-        return cls.model_validate_json(path.read_text())
 
 
 class LogLevel(enum.StrEnum):

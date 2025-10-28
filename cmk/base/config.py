@@ -131,6 +131,7 @@ from cmk.server_side_calls_backend import (
     ActiveServiceData,
     config_processing,
     ExecutableFinder,
+    ExecutableFinderProtocol,
     load_active_checks,
     load_special_agents,
     SpecialAgent,
@@ -2447,6 +2448,7 @@ class ConfigCache:
         passwords: Mapping[str, str],
         password_store_file: Path,
         ip_address_of: IPLookup,
+        executable_finder: ExecutableFinderProtocol,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
         if not (host_special_agents := self.special_agents(host_name)):
             return
@@ -2479,11 +2481,7 @@ class ConfigCache:
             ),
             passwords,
             password_store_file,
-            ExecutableFinder(
-                # NOTE: we can't ignore these, they're an API promise.
-                cmk.utils.paths.local_special_agents_dir,
-                cmk.utils.paths.special_agents_dir,
-            ),
+            executable_finder,
         )
         for agentname, params_seq in host_special_agents:
             for params in params_seq:

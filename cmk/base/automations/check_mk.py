@@ -3512,6 +3512,11 @@ class AutomationDiagHost(Automation):
                 password_store_file=pending_passwords_file,
                 passwords=passwords,
                 ip_address_of=ip_address_of,
+                executable_finder=ExecutableFinder(
+                    # NOTE: we can't ignore these, they're an API promise.
+                    cmk.utils.paths.local_special_agents_dir,
+                    cmk.utils.paths.special_agents_dir,
+                ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
             check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
@@ -4076,6 +4081,11 @@ class AutomationGetAgentOutput(Automation):
                         password_store_file=core_password_store_file,
                         passwords=cmk.utils.password_store.load(core_password_store_file),
                         ip_address_of=ip_address_of_with_fallback,
+                        executable_finder=ExecutableFinder(
+                            # NOTE: we can't ignore these, they're an API promise.
+                            cmk.utils.paths.local_special_agents_dir,
+                            cmk.utils.paths.special_agents_dir,
+                        ),
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),
                     check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

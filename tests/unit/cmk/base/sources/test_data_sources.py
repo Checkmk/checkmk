@@ -100,6 +100,7 @@ def _make_sources(
             password_store_file=Path("/pw/store"),
             passwords={},
             ip_address_of=lambda *a: ipaddress,
+            executable_finder=lambda name, module: "/yolo/bin/hurra",
         ),
         agent_connection_mode=config_cache.agent_connection_mode(hostname),
         check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

@@ -121,7 +121,7 @@ from cmk.inventory.structured_data import (
     SDPath,
 )
 from cmk.piggyback import backend as piggyback_backend
-from cmk.server_side_calls_backend import load_active_checks
+from cmk.server_side_calls_backend import ExecutableFinder, load_active_checks
 from cmk.snmplib import (
     get_single_oid,
     OID,
@@ -661,7 +661,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         service_name_config,
         plugins.check_plugins,
     )
-    fetcher_trigger = config.make_fetcher_trigger(edition, label_manager.labels_of_host(hostname))
+
+    host_labels = label_manager.labels_of_host(hostname)
+    fetcher_trigger = config.make_fetcher_trigger(edition, host_labels)
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
@@ -749,6 +751,11 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     ip_address_of_bare,
                     allow_empty=hosts_config.clusters,
                     error_handler=handle_ip_lookup_failure,
+                ),
+                executable_finder=ExecutableFinder(
+                    # NOTE: we can't ignore these, they're an API promise.
+                    cmk.utils.paths.local_special_agents_dir,
+                    cmk.utils.paths.special_agents_dir,
                 ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),

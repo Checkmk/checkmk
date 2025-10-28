@@ -100,7 +100,7 @@ from cmk.fetchers import (
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
-from cmk.server_side_calls_backend import SpecialAgentCommandLine
+from cmk.server_side_calls_backend import ExecutableFinder, SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.utils import password_store
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -469,6 +469,11 @@ class CMKFetcher:
                         passwords,
                         self.password_store_file,
                         ip_address_of=self.ip_address_of,
+                        executable_finder=ExecutableFinder(
+                            # NOTE: we can't ignore these, they're an API promise.
+                            cmk.utils.paths.local_special_agents_dir,
+                            cmk.utils.paths.special_agents_dir,
+                        ),
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(
                         current_host_name

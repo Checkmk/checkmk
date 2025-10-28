@@ -40,6 +40,7 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.helper_interface import SourceType
+from cmk.server_side_calls_backend import ExecutableFinder
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.tags import ComputedDataSources
@@ -271,6 +272,11 @@ def dump_host(
                     password_store_file=used_password_store,
                     passwords=passwords,
                     ip_address_of=ip_address_of,
+                    executable_finder=ExecutableFinder(
+                        # NOTE: we can't ignore these, they're an API promise.
+                        cmk.utils.paths.local_special_agents_dir,
+                        cmk.utils.paths.special_agents_dir,
+                    ),
                 ),
                 agent_connection_mode=config_cache.agent_connection_mode(hostname),
                 check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

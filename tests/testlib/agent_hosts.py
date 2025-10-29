@@ -75,7 +75,7 @@ def _discover_services_of_piggybacked_hosts(
     dcd_interval: int = 5,
     cleanup: bool = True,
     discovery_max_count: int = 3,
-    discovery_wait_timeout: int = 1,
+    discovery_wait_timeout: int = 3,
 ) -> Iterator[None]:
     """Discover the services of piggybacked hosts.
 

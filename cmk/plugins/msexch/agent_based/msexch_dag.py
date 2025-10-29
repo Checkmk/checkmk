@@ -128,15 +128,6 @@ agent_section_msexch_dag = AgentSection(
     parse_function=parse_msexch_dag,
 )
 
-#   .--dbcopy--------------------------------------------------------------.
-#   |                      _ _                                             |
-#   |                   __| | |__   ___ ___  _ __  _   _                   |
-#   |                  / _` | '_ \ / __/ _ \| '_ \| | | |                  |
-#   |                 | (_| | |_) | (_| (_) | |_) | |_| |                  |
-#   |                  \__,_|_.__/ \___\___/| .__/ \__, |                  |
-#   |                                       |_|    |___/                   |
-#   +----------------------------------------------------------------------+
-
 
 def discover_msexch_dag_dbcopy(section: Section) -> DiscoveryResult:
     getit = False
@@ -179,16 +170,6 @@ check_plugin_msexch_dag_dbcopy = CheckPlugin(
     check_default_parameters={},
 )
 
-# .
-#   .--contentindex--------------------------------------------------------.
-#   |                      _             _   _           _                 |
-#   |       ___ ___  _ __ | |_ ___ _ __ | |_(_)_ __   __| | _____  __      |
-#   |      / __/ _ \| '_ \| __/ _ \ '_ \| __| | '_ \ / _` |/ _ \ \/ /      |
-#   |     | (_| (_) | | | | ||  __/ | | | |_| | | | | (_| |  __/>  <       |
-#   |      \___\___/|_| |_|\__\___|_| |_|\__|_|_| |_|\__,_|\___/_/\_\      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
 
 def discover_msexch_dag_contentindex(section: Section) -> DiscoveryResult:
     for key, val in section.items():
@@ -218,16 +199,6 @@ check_plugin_msexch_dag_contentindex = CheckPlugin(
     discovery_function=discover_msexch_dag_contentindex,
     check_function=check_msexch_dag_contentindex,
 )
-
-# .
-#   .--copyqueue-----------------------------------------------------------.
-#   |                                                                      |
-#   |           ___ ___  _ __  _   _  __ _ _   _  ___ _   _  ___           |
-#   |          / __/ _ \| '_ \| | | |/ _` | | | |/ _ \ | | |/ _ \          |
-#   |         | (_| (_) | |_) | |_| | (_| | |_| |  __/ |_| |  __/          |
-#   |          \___\___/| .__/ \__, |\__, |\__,_|\___|\__,_|\___|          |
-#   |                   |_|    |___/    |_|                                |
-#   +----------------------------------------------------------------------+
 
 
 def discover_msexch_dag_copyqueue(section: Section) -> DiscoveryResult:

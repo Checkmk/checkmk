@@ -15,6 +15,8 @@ import CmkWizard, {
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import StepOne from './StepOne.vue'
+
 defineProps<{ screenshotMode: boolean }>()
 const currentStep = ref(1)
 const currentMode = ref<'guided' | 'overview'>('guided')
@@ -23,17 +25,7 @@ const currentMode = ref<'guided' | 'overview'>('guided')
 <template>
   <CmkWizardModeToggle v-model="currentMode" />
   <CmkWizard v-model="currentStep" :mode="currentMode">
-    <CmkWizardStep :index="1" :is-completed="() => currentStep >= 1">
-      <template #header>
-        <CmkHeading>Step 1</CmkHeading>
-      </template>
-      <template #content>
-        <CmkParagraph> This is the content of the first step. </CmkParagraph>
-      </template>
-      <template #actions>
-        <CmkWizardButton type="next" />
-      </template>
-    </CmkWizardStep>
+    <StepOne :index="1" :is-completed="() => currentStep >= 1" />
     <CmkWizardStep :index="2" :is-completed="() => currentStep >= 2">
       <template #header>
         <CmkHeading>Step 2</CmkHeading>

@@ -5,7 +5,7 @@
  */
 import DemoEmpty from '@demo/_demo/DemoEmpty.vue'
 import { Folder, Page } from '@demo/_demo/page'
-import DemoCmkWizard from '@demo/components/DemoCmkWizard.vue'
+import DemoCmkWizard from '@demo/components/CmkWizard/DemoCmkWizard.vue'
 
 import { pages as CmkAccordionPages } from './CmkAccordion'
 import { pages as CmkAccordionStepPanelPages } from './CmkAccordionStepPanel'

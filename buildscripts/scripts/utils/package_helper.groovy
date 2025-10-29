@@ -23,6 +23,12 @@ def branch_base_folder(with_testing_prefix) {
     return project_name_components[checkmk_index..checkmk_index + 1].join('/');
 }
 
+def directory_sha256sum(directories) {
+    return directories.collectEntries({ path ->
+        [("${path}".toString()): cmd_output("sha256sum <(find ${path} -type f -exec sha256sum {} \\; | sort) | cut -d' ' -f1")]
+    });
+}
+
 def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
@@ -41,7 +47,7 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             condition: true, // edition != "raw",  // FIXME!
             dependency_paths: [
                 "agents",
-                "non-free/cmk-update-agent"
+                "non-free/cmk-update-agent",
             ],
             install_cmd: """\
                 # check-mk-agent-*.{deb,rpm}
@@ -114,18 +120,25 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
         if ( ! details.get("condition", true) ) {
             return;
         }
+
+        def all_directory_hash = "";
+        dir("${checkout_dir}") {
+            def all_directory_hash_map = directory_sha256sum(details.dependency_paths);
+            all_directory_hash = all_directory_hash_map.collect { k, v -> "${k}=${v}" }.join('-');
+        }
+
         upstream_build(
             relative_job_name: details.relative_job_name,
             build_params: [
-                CUSTOM_GIT_REF: effective_git_ref,
+                CIPARAM_PATH_HASH: all_directory_hash,
                 DISABLE_CACHE: disable_cache,
                 VERSION: version,
             ],
             build_params_no_check: [
+                CUSTOM_GIT_REF: effective_git_ref,
                 CIPARAM_BISECT_COMMENT: bisect_comment,
                 CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
             ],
-            dependency_paths: details.dependency_paths,
             no_venv: true,          // run ci-artifacts call without venv
             omit_build_venv: true,  // do not check or build a venv first
             dest: "${artifacts_base_dir}/${job_name}",

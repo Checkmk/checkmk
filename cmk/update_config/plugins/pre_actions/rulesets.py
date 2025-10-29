@@ -11,9 +11,10 @@ from logging import Logger
 from cmk.ccc import version
 
 from cmk.utils import paths
+from cmk.utils.hostaddress import HostAddress
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
-from cmk.utils.regex import RegexFutureWarning
+from cmk.utils.regex import is_regex, RegexFutureWarning
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec
@@ -33,7 +34,11 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 
 
 class PreUpdateRulesets(PreUpdateAction):
-    """Load all rulesets before the real update happens"""
+    """
+    Load all rulesets before the real update happens and:
+    * validate rule values
+    * validate host conditions
+    """
 
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         try:
@@ -65,8 +70,50 @@ class PreUpdateRulesets(PreUpdateAction):
                     logger.exception("This is the exception: ")
                     if _continue_on_broken_ruleset(conflict_mode).is_abort():
                         raise MKUserError(None, "broken ruleset")
+
+                self._validate_host_condition(ruleset, conflict_mode, logger)
+
         if not result:
             raise MKUserError(None, "failed ruleset validation")
+
+    def _validate_host_condition(
+        self, ruleset: Ruleset, conflict_mode: ConflictMode, logger: Logger
+    ) -> None:
+        for folder, index, rule in ruleset.get_rules():
+            if (host_name_conditions := rule.conditions.host_name) is None:
+                continue
+
+            if isinstance(host_name_conditions, dict) and "$nor" in host_name_conditions:
+                host_name_conditions = host_name_conditions["$nor"]
+
+            for condition in host_name_conditions:
+                # {'$regex': 'old*'}
+                if isinstance(condition, dict):
+                    continue
+
+                # 'old.de'
+                try:
+                    HostAddress(condition)
+                    continue
+                except ValueError:
+                    pass
+
+                # 'old'
+                if not is_regex(condition):
+                    continue
+
+                exception = f"Invalid host condition: '{condition}' is a regex but not marked as such ('~' in front)."
+                error_message = (
+                    "WARNING: Invalid rule configuration detected\n"
+                    f"Ruleset: {ruleset.name}\n"
+                    f"Title: {ruleset.title()}\n"
+                    f"Folder: {folder.path() or 'main'}\n"
+                    f"Rule nr: {index + 1}\n"
+                    f"Exception: {exception}\n\n"
+                )
+                logger.error(error_message)
+                if _continue_on_broken_ruleset(conflict_mode).is_abort():
+                    raise MKUserError(None, "invalid host condition")
 
 
 def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:

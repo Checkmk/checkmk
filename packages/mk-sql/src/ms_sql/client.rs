@@ -357,7 +357,7 @@ pub async fn connect_custom_instance(
     client
 }
 
-pub fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Option<Credentials> {
+pub fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Option<Credentials<'_>> {
     match auth.auth_type() {
         AuthType::SqlServer => Some(Credentials::SqlServer {
             user: auth.username(),

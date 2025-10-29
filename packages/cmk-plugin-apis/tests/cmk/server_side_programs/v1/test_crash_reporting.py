@@ -103,10 +103,7 @@ def test_crash_report_masks_secrets(fixed_path: Path) -> None:
     _ = main()
     (crash_dir,) = fixed_path.iterdir()
 
-    local_vars = base64.b64decode(
-        json.loads((crash_dir / "crash.info").read_text())["local_vars"]
-    )
+    local_vars = base64.b64decode(json.loads((crash_dir / "crash.info").read_text())["local_vars"])
     assert (
-        local_vars
-        == b"{'_moo': {'foo': 'bar', 'passphrase': 'redacted'}, '_secret': 'redacted'}"
+        local_vars == b"{'_moo': {'foo': 'bar', 'passphrase': 'redacted'}, '_secret': 'redacted'}"
     )

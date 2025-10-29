@@ -59,9 +59,7 @@ def vcrtrace(
             help: str | None = None,
             metavar: str | tuple[str, ...] | None = "TRACEFILE",
         ):
-            help_part = (
-                "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
-            )
+            help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
             help = f"{help_part} {help}" if help else help_part
 
             super().__init__(

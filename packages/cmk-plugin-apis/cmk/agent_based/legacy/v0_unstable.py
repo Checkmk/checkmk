@@ -52,9 +52,7 @@ __all__ = [
 _DiscoveredParameters = Mapping | tuple | str | None
 
 
-_DiscoveryFunctionLegacy = Callable[
-    ..., None | Iterable[tuple[str | None, _DiscoveredParameters]]
-]
+_DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]
 _DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]
 
 _OptNumber = None | int | float
@@ -93,9 +91,7 @@ class LegacyCheckDefinition:
     fetch: list[SNMPTree] | SNMPTree | None = None
     sections: list[str] | None = None
     check_function: _CheckFunctionV2Compliant | _CheckFunctionLegacy | None = None
-    discovery_function: (
-        _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None
-    ) = None
+    discovery_function: _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None = None
     parse_function: Callable[[list], object] | None = None
     check_ruleset_name: str | None = None
     check_default_parameters: Mapping[str, Any] | None = None
@@ -163,9 +159,7 @@ def _build_perfdata(
 ) -> list:
     if not dsname:
         return []
-    used_boundaries = (
-        boundaries if isinstance(boundaries, tuple) and len(boundaries) == 2 else ()
-    )
+    used_boundaries = boundaries if isinstance(boundaries, tuple) and len(boundaries) == 2 else ()
     return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 

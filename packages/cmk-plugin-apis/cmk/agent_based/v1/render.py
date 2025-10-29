@@ -127,9 +127,7 @@ def _digits_left(value: float) -> int:
         return 1
 
 
-def _auto_scale(
-    value: float, use_si_units: bool, add_bytes_prefix: bool = True
-) -> tuple[str, str]:
+def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True) -> tuple[str, str]:
     if use_si_units:
         base = 1000.0
         size_prefixes = _SIZE_PREFIXES_SI
@@ -158,9 +156,7 @@ def frequency(hertz: float) -> str:
         >>> frequency(1e10 / 3.)
         '3.33 GHz'
     """
-    value_str, unit = _auto_scale(
-        float(hertz), use_si_units=True, add_bytes_prefix=False
-    )
+    value_str, unit = _auto_scale(float(hertz), use_si_units=True, add_bytes_prefix=False)
     return f"{value_str} {unit}Hz"
 
 
@@ -196,9 +192,7 @@ def filesize(bytes_: float) -> str:
     val_str = f"{float(bytes_):.0f}"
     offset = len(val_str) % 3
 
-    groups = [val_str[0:offset]] + [
-        val_str[i : i + 3] for i in range(offset, len(val_str), 3)
-    ]
+    groups = [val_str[0:offset]] + [val_str[i : i + 3] for i in range(offset, len(val_str), 3)]
     return f"{','.join(groups).strip(',')} B"
 
 

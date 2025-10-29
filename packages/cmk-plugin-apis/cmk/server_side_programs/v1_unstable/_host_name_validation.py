@@ -14,9 +14,7 @@ class HostnameValidationAdapter(HTTPAdapter):
         super().__init__()
         self._reference_hostname = hostname
 
-    def cert_verify(
-        self, conn: HTTPSConnection, url: Never, verify: Never, cert: Never
-    ) -> None:
+    def cert_verify(self, conn: HTTPSConnection, url: Never, verify: Never, cert: Never) -> None:
         """Verify a SSL certificate. This method should not be called from user code.
 
         Since the superclass method is untyped anyway, we type the arguments as Never

@@ -32,10 +32,7 @@ ScriptletGenerator = Iterator[ScriptletReturnType]
 """Return type for the 'scriptlets_function' generator function."""
 
 WindowsConfigReturnType = (
-    WindowsConfigEntry
-    | WindowsConfigItems
-    | WindowsGlobalConfigEntry
-    | WindowsSystemConfigEntry
+    WindowsConfigEntry | WindowsConfigItems | WindowsGlobalConfigEntry | WindowsSystemConfigEntry
 )
 WindowsConfigGenerator = Iterator[WindowsConfigReturnType]
 """Return type for the 'windows_config_function' generator function."""
@@ -62,9 +59,7 @@ class BakeryPluginName:
             raise ValueError(f"{cls.__name__} initializer must not be empty")
 
         if invalid := "".join(c for c in __str if c not in cls.VALID_CHARACTERS):
-            raise ValueError(
-                f"Invalid characters in {__str!r} for {cls.__name__}: {invalid!r}"
-            )
+            raise ValueError(f"Invalid characters in {__str!r} for {cls.__name__}: {invalid!r}")
 
         return __str
 
@@ -129,9 +124,7 @@ def _validate_function(
     function_args = set(inspect.signature(function).parameters)
 
     if not_allowed := function_args.difference(set(allowed_args)):
-        raise ValueError(
-            f"Unsupported argument(s) {not_allowed} in definition of {function_name}."
-        )
+        raise ValueError(f"Unsupported argument(s) {not_allowed} in definition of {function_name}.")
 
 
 def _noop_files_function() -> FileGenerator:
@@ -185,9 +178,7 @@ def _filter_scriptlets_function(
 ) -> ScriptletsFunction:
     if function is None:
         return _noop_scriptlets_function
-    filtered_function = _get_function_filter(
-        function, "scriptlets_function", [Scriptlet]
-    )
+    filtered_function = _get_function_filter(function, "scriptlets_function", [Scriptlet])
     return functools.wraps(function)(filtered_function)
 
 
@@ -218,9 +209,7 @@ def create_bakery_plugin(
 ) -> BakeryPlugin:
     _validate_function(files_function, "files_function", ["conf"])
     _validate_function(scriptlets_function, "scriptlets_function", ["conf", "aghash"])
-    _validate_function(
-        windows_config_function, "windows_config_function", ["conf", "aghash"]
-    )
+    _validate_function(windows_config_function, "windows_config_function", ["conf", "aghash"])
 
     return BakeryPlugin(
         BakeryPluginName(name),

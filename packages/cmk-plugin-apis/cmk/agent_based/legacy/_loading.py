@@ -42,9 +42,7 @@ class _PYCHeader:
 
     SIZE = 16
 
-    def __init__(
-        self, magic: bytes, hash_: int, origin_mtime: int, f_size: int
-    ) -> None:
+    def __init__(self, magic: bytes, hash_: int, origin_mtime: int, f_size: int) -> None:
         self.magic = magic
         self.hash = hash_
         self.origin_mtime = origin_mtime
@@ -59,9 +57,7 @@ class _PYCHeader:
 
 
 class FileLoader:
-    def __init__(
-        self, *, precomile_path: Path, makedirs: Callable[[str], None]
-    ) -> None:
+    def __init__(self, *, precomile_path: Path, makedirs: Callable[[str], None]) -> None:
         self._precompile_path = precomile_path
         self._makedirs = makedirs
 
@@ -88,9 +84,7 @@ class FileLoader:
             # The original file is from the version so the calculated mode is world readable...
             os.chmod(precompiled_path, 0o640)
 
-        code: CodeType = marshal.loads(
-            Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]
-        )  # nosec B302
+        code: CodeType = marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :])  # nosec B302
         exec(code, check_context)  # nosec B102 # BNS:aee528
 
         return do_compile
@@ -149,9 +143,7 @@ def discover_legacy_checks(
 
             loaded_files.add(file_name)
 
-            if not isinstance(
-                defined_checks := check_context.get("check_info", {}), dict
-            ):
+            if not isinstance(defined_checks := check_context.get("check_info", {}), dict):
                 raise TypeError(defined_checks)
 
         except Exception as e:

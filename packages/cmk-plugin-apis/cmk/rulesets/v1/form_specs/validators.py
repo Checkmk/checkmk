@@ -38,9 +38,7 @@ class LengthInRange:
     ) -> None:
         self.range: Final = (min_value, max_value)
         self.error_msg: Final = (
-            self._get_default_errmsg(min_value, max_value)
-            if error_msg is None
-            else error_msg
+            self._get_default_errmsg(min_value, max_value) if error_msg is None else error_msg
         )
 
     @staticmethod
@@ -77,9 +75,7 @@ class NumberInRange:
     ) -> None:
         self.range: Final = (min_value, max_value)
         self.error_msg: Final = (
-            self._get_default_errmsg(min_value, max_value)
-            if error_msg is None
-            else error_msg
+            self._get_default_errmsg(min_value, max_value) if error_msg is None else error_msg
         )
 
     @staticmethod
@@ -116,9 +112,7 @@ class RegexGroupsInRange:
     ) -> None:
         self.range: Final = (min_groups, max_groups)
         self.error_msg: Final = (
-            self._get_default_errmsg(min_groups, max_groups)
-            if error_msg is None
-            else error_msg
+            self._get_default_errmsg(min_groups, max_groups) if error_msg is None else error_msg
         )
 
     @staticmethod
@@ -131,14 +125,10 @@ class RegexGroupsInRange:
                         " otherwise this validator is meaningless."
                     )
                 )
-            return Message("The maximum allowed number of regex groups is %s.") % str(
-                max_
-            )
+            return Message("The maximum allowed number of regex groups is %s.") % str(max_)
 
         if max_ is None:
-            return Message("The minimum allowed number of regex groups is %s.") % str(
-                min_
-            )
+            return Message("The minimum allowed number of regex groups is %s.") % str(min_)
         return Message("Allowed number of regex groups ranges from %s to %s.") % (
             str(min_),
             str(max_),
@@ -155,13 +145,10 @@ class RegexGroupsInRange:
 class MatchRegex:
     """Custom validator that ensures the validated value matches the given regular expression."""
 
-    def __init__(
-        self, regex: re.Pattern[str] | str, error_msg: Message | None = None
-    ) -> None:
+    def __init__(self, regex: re.Pattern[str] | str, error_msg: Message | None = None) -> None:
         self.regex: Final = re.compile(regex) if isinstance(regex, str) else regex
         self.error_msg: Final = error_msg or (
-            Message("Your input does not match the required format '%s'.")
-            % self.regex.pattern
+            Message("Your input does not match the required format '%s'.") % self.regex.pattern
         )
 
     def __call__(self, value: str) -> None:
@@ -215,14 +202,10 @@ class UrlProtocol(enum.StrEnum):
 class Url:
     """Custom validator that ensures the validated value is a URL with the specified scheme."""
 
-    def __init__(
-        self, protocols: Sequence[UrlProtocol], error_msg: Message | None = None
-    ) -> None:
+    def __init__(self, protocols: Sequence[UrlProtocol], error_msg: Message | None = None) -> None:
         self.protocols: Final = protocols
         self.error_msg: Final = error_msg or (
-            Message(
-                "Your input is not a valid URL conforming to any allowed protocols ('%s')."
-            )
+            Message("Your input is not a valid URL conforming to any allowed protocols ('%s').")
             % str(", ".join(self.protocols))
         )
 
@@ -240,9 +223,7 @@ class EmailAddress:
     """Validator that ensures the validated value is an email address"""
 
     def __init__(self, error_msg: Message | None = None) -> None:
-        self.error_msg: Final = error_msg or (
-            Message("Your input is not a valid email address.")
-        )
+        self.error_msg: Final = error_msg or (Message("Your input is not a valid email address."))
 
     def __call__(self, value: str) -> None:
         # According to RFC5322 an email address is defined as:

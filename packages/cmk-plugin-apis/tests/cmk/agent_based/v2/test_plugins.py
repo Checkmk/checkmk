@@ -30,9 +30,7 @@ def test_invalid_agent_section_name(str_name: str) -> None:
 @pytest.mark.parametrize("str_name", INVALID_NAMES)
 def test_invalid_agent_parsed_section_name(str_name: str) -> None:
     with pytest.raises(ValueError):
-        _ = AgentSection(
-            name="foo", parsed_section_name=str_name, parse_function=lambda x: x
-        )
+        _ = AgentSection(name="foo", parsed_section_name=str_name, parse_function=lambda x: x)
 
 
 @pytest.mark.parametrize("str_name", INVALID_NAMES)
@@ -73,9 +71,7 @@ def test_invalid_snmp_parsed_section_name(str_name: str) -> None:
 @pytest.mark.parametrize("str_name", INVALID_NAMES)
 def test_invalid_snmp_section_name(str_name: str) -> None:
     with pytest.raises(ValueError):
-        _ = SNMPSection(
-            name=str_name, detect=exists("1"), fetch=(), parse_function=lambda x: x
-        )
+        _ = SNMPSection(name=str_name, detect=exists("1"), fetch=(), parse_function=lambda x: x)
 
 
 def _noop(*_a: object) -> Generator[Never]:

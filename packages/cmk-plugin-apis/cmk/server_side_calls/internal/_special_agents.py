@@ -21,9 +21,7 @@ class SpecialAgentConfig[ParsedParameters]:
         *,
         name: str,
         parameter_parser: Callable[[Mapping[str, object]], ParsedParameters],
-        commands_function: Callable[
-            [ParsedParameters, HostConfig], Iterable[SpecialAgentCommand]
-        ],
+        commands_function: Callable[[ParsedParameters, HostConfig], Iterable[SpecialAgentCommand]],
     ):
         self.name = name
         self._parameter_parser = parameter_parser

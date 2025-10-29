@@ -112,9 +112,7 @@ class ChoiceField(Generic[T]):
     title: Title
     _: KW_ONLY
     mapping: OrderedMapping[T]
-    style: Callable[[T], Iterable[Alignment | BackgroundColor | LabelColor]] = (
-        lambda _: ()
-    )
+    style: Callable[[T], Iterable[Alignment | BackgroundColor | LabelColor]] = lambda _: ()
 
     def __post_init__(self) -> None:
         if not self.title.localize(lambda v: v):
@@ -125,21 +123,11 @@ class ChoiceField(Generic[T]):
 
 type OrderedAttributes = Mapping[
     str,
-    BoolField
-    | NumberField
-    | TextField
-    | ChoiceField[int]
-    | ChoiceField[float]
-    | ChoiceField[str],
+    BoolField | NumberField | TextField | ChoiceField[int] | ChoiceField[float] | ChoiceField[str],
 ]
 type OrderedColumns = Mapping[
     str,
-    BoolField
-    | NumberField
-    | TextField
-    | ChoiceField[int]
-    | ChoiceField[float]
-    | ChoiceField[str],
+    BoolField | NumberField | TextField | ChoiceField[int] | ChoiceField[float] | ChoiceField[str],
 ]
 
 

@@ -25,9 +25,7 @@ from cmk.agent_based.v1.type_defs import (
 _Section = TypeVar("_Section", bound=object)  # yes, object.
 _TableTypeT = TypeVar("_TableTypeT", StringByteTable, StringTable)
 _HostLabelFunctionNoParams = Callable[[_Section], HostLabelGenerator]
-_HostLabelFunctionMergedParams = Callable[
-    [Mapping[str, object], _Section], HostLabelGenerator
-]
+_HostLabelFunctionMergedParams = Callable[[Mapping[str, object], _Section], HostLabelGenerator]
 _HostLabelFunctionAllParams = Callable[
     [Sequence[Mapping[str, object]], _Section], HostLabelGenerator
 ]

@@ -44,9 +44,7 @@ def test_boundaries(
 
 
 def test_check_levels_wo_levels() -> None:
-    assert list(
-        check_levels_v1(5, metric_name="battery", render_func=render.percent)
-    ) == [
+    assert list(check_levels_v1(5, metric_name="battery", render_func=render.percent)) == [
         Result(state=State.OK, summary="5.00%"),
         Metric("battery", 5.0),
     ]

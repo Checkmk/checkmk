@@ -76,8 +76,7 @@ class _PredictiveLevelsT[NumberT: (int, float)](TypedDict):
 
 
 type SimpleLevelsConfigModel[_NumberT: (int, float)] = (
-    tuple[Literal["no_levels"], None]
-    | tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+    tuple[Literal["no_levels"], None] | tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
 )
 
 
@@ -137,9 +136,7 @@ class SimpleLevels[NumberT: (int, float)](FormSpec[SimpleLevelsConfigModel[Numbe
     title: Title | None = None
     help_text: Help | None = None
     migrate: Callable[[object], SimpleLevelsConfigModel[NumberT]] | None = None
-    custom_validate: (
-        tuple[Callable[[SimpleLevelsConfigModel[NumberT]], object], ...] | None
-    ) = None
+    custom_validate: tuple[Callable[[SimpleLevelsConfigModel[NumberT]], object], ...] | None = None
 
     form_spec_template: FormSpec[NumberT]
     """Template for the specification of the form fields of the warning and critical levels.
@@ -147,8 +144,8 @@ class SimpleLevels[NumberT: (int, float)](FormSpec[SimpleLevelsConfigModel[Numbe
     level_direction: LevelDirection
     """Specifies the type of bound the levels represents. This is used only to adjust the
     labels and error messages in the UI."""
-    prefill_levels_type: DefaultValue[Literal[LevelsType.NONE, LevelsType.FIXED]] = (
-        DefaultValue(LevelsType.FIXED)
+    prefill_levels_type: DefaultValue[Literal[LevelsType.NONE, LevelsType.FIXED]] = DefaultValue(
+        LevelsType.FIXED
     )
     """Pre-selected type of the levels (no levels or fixed levels)."""
     prefill_fixed_levels: Prefill[tuple[NumberT, NumberT]]
@@ -193,9 +190,7 @@ class Levels[NumberT: (int, float)](FormSpec[LevelsConfigModel[NumberT]]):
     title: Title | None = None
     help_text: Help | None = None
     migrate: Callable[[object], LevelsConfigModel[NumberT]] | None = None
-    custom_validate: (
-        tuple[Callable[[LevelsConfigModel[NumberT]], object], ...] | None
-    ) = None
+    custom_validate: tuple[Callable[[LevelsConfigModel[NumberT]], object], ...] | None = None
 
     form_spec_template: FormSpec[NumberT]
     """Template for the specification of the form fields of the warning and critical levels.

@@ -137,9 +137,7 @@ def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
         return []
 
     return [exc] + _follow_exception_chain(
-        exc.__context__
-        if exc.__cause__ is None and not exc.__suppress_context__
-        else exc.__cause__
+        exc.__context__ if exc.__cause__ is None and not exc.__suppress_context__ else exc.__cause__
     )
 
 
@@ -151,9 +149,7 @@ def _get_local_vars_of_last_exception() -> str:
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
-        _truncate_str(pprint.pformat(local_vars), max_size=5 * 1024 * 1024).encode(
-            "utf-8"
-        )
+        _truncate_str(pprint.pformat(local_vars), max_size=5 * 1024 * 1024).encode("utf-8")
     ).decode()
 
 
@@ -170,9 +166,7 @@ def _truncate_str(value: str, max_size: int) -> str:
     return value
 
 
-def _format_var_for_export(
-    val: object, maxdepth: int = 4, maxsize: int = 1024 * 1024
-) -> object:
+def _format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> object:
     if maxdepth == 0:
         return "Max recursion depth reached"
 

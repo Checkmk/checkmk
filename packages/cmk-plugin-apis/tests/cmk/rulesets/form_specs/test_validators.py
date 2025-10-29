@@ -111,10 +111,7 @@ def test_number_in_range(
     with expected_raises as e:
         NumberInRange(**input_args, error_msg=input_message)(test_value)
 
-    assert (
-        expected_message is None
-        or e.value.message.localize(lambda x: x) == expected_message
-    )
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 
 
 @pytest.mark.parametrize(
@@ -211,10 +208,7 @@ def test_regex_groups_in_range(
     with expected_raises as e:
         RegexGroupsInRange(**input_args, error_msg=input_message)(test_value)
 
-    assert (
-        expected_message is None
-        or e.value.message.localize(lambda x: x) == expected_message
-    )
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 
 
 @pytest.mark.parametrize(
@@ -254,10 +248,7 @@ def test_match_regex(
     with expected_raises as e:
         MatchRegex(input_regex, **input_msg)(test_value)
 
-    assert (
-        expected_message is None
-        or e.value.message.localize(lambda x: x) == expected_message
-    )
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 
 
 @pytest.mark.parametrize(
@@ -337,10 +328,7 @@ def test_length_in_range(
     with expected_raises as e:
         LengthInRange(**input_args, error_msg=input_message)(test_value)
 
-    assert (
-        expected_message is None
-        or e.value.message.localize(lambda x: x) == expected_message
-    )
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 
 
 @pytest.mark.parametrize(
@@ -379,10 +367,7 @@ def test_network_port(
     with expected_raises as e:
         NetworkPort(**input_msg)(test_value)
 
-    assert (
-        expected_message is None
-        or e.value.message.localize(lambda x: x) == expected_message
-    )
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 
 
 @pytest.mark.parametrize(
@@ -448,18 +433,13 @@ def test_url(
     with expected_raises as e:
         Url(protocols, **input_msg)(test_value)
 
-    assert (
-        expected_message is None
-        or e.value.message.localize(lambda x: x) == expected_message
-    )
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 
 
 @pytest.mark.parametrize(
     ["input_msg", "test_value", "expected_raises", "expected_message"],
     [
-        pytest.param(
-            {}, "simple@example.com", does_not_raise(), None, id="valid address"
-        ),
+        pytest.param({}, "simple@example.com", does_not_raise(), None, id="valid address"),
         pytest.param(
             {},
             "name.surname@example.com",
@@ -506,7 +486,4 @@ def test_email_address(
     with expected_raises as e:
         EmailAddress(**input_msg)(test_value)
 
-    assert (
-        expected_message is None
-        or e.value.message.localize(lambda x: x) == expected_message
-    )
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message

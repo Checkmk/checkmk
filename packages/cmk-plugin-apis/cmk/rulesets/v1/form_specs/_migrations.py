@@ -113,9 +113,7 @@ def _parse_to_predictive_levels(
 def _migrate_to_levels(
     model: object, scale: float, ntype: type[_NumberT], level_dir: LevelDirection
 ) -> LevelsConfigModel[_NumberT]:
-    if (
-        already_migrated := _parse_already_migrated(model, ntype, level_dir)
-    ) is not None:
+    if (already_migrated := _parse_already_migrated(model, ntype, level_dir)) is not None:
         return already_migrated
 
     match model:
@@ -128,9 +126,7 @@ def _migrate_to_levels(
         # 2.2. format + format released in 2.3.0b3
         case dict(val_dict) | ("predictive", dict(val_dict)):
             if (
-                pred_levels := _parse_to_predictive_levels(
-                    val_dict, scale, ntype, level_dir
-                )
+                pred_levels := _parse_to_predictive_levels(val_dict, scale, ntype, level_dir)
             ) is None:
                 return "no_levels", None
             return "cmk_postprocessed", "predictive_levels", pred_levels
@@ -155,9 +151,7 @@ def _parse_already_migrated(
         case ("cmk_postprocessed", "predictive_levels", val_dict):
             # do not scale, but for the typing we still need to parse.
             if (
-                pred_levels := _parse_to_predictive_levels(
-                    val_dict, 1.0, ntype, level_dir
-                )
+                pred_levels := _parse_to_predictive_levels(val_dict, 1.0, ntype, level_dir)
             ) is None:
                 return "no_levels", None
             return "cmk_postprocessed", "predictive_levels", pred_levels
@@ -165,9 +159,7 @@ def _parse_already_migrated(
             return None
 
 
-def migrate_to_upper_integer_levels(
-    model: object, scale: float = 1.0
-) -> LevelsConfigModel[int]:
+def migrate_to_upper_integer_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[int]:
     """
     Transform a previous levels configuration (Tuple, SimpleLevels, Levels or PredictiveLevels)
     representing upper (warn, crit) levels to an integer-based model of the `Levels` FormSpec.
@@ -181,9 +173,7 @@ def migrate_to_upper_integer_levels(
     return _migrate_to_levels(model, scale, int, LevelDirection.UPPER)
 
 
-def migrate_to_upper_float_levels(
-    model: object, scale: float = 1.0
-) -> LevelsConfigModel[float]:
+def migrate_to_upper_float_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[float]:
     """
     Transform a previous levels configuration (Tuple, SimpleLevels, Levels or PredictiveLevels)
     representing upper (warn, crit) levels to a float-based model of the `Levels` FormSpec
@@ -196,9 +186,7 @@ def migrate_to_upper_float_levels(
     return _migrate_to_levels(model, scale, float, LevelDirection.UPPER)
 
 
-def migrate_to_lower_integer_levels(
-    model: object, scale: float = 1.0
-) -> LevelsConfigModel[int]:
+def migrate_to_lower_integer_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[int]:
     """
     Transform a previous levels configuration (Tuple, SimpleLevels, Levels or PredictiveLevels)
     representing lower (warn, crit) levels to an integer-based model of the `Levels` FormSpec.
@@ -212,9 +200,7 @@ def migrate_to_lower_integer_levels(
     return _migrate_to_levels(model, scale, int, LevelDirection.LOWER)
 
 
-def migrate_to_lower_float_levels(
-    model: object, scale: float = 1.0
-) -> LevelsConfigModel[float]:
+def migrate_to_lower_float_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[float]:
     """
     Transform a previous levels configuration (Tuple, SimpleLevels, Levels or PredictiveLevels)
     representing lower (warn, crit) levels to a float-based model of the `Levels` FormSpec
@@ -240,8 +226,8 @@ def _migrate_to_simple_levels(
         case (int(warn), int(crit)) | (float(warn), float(crit)):
             return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
-        case ("cmk_postprocessed", "predictive_levels", val_dict) | val_dict if (
-            isinstance(val_dict, dict)
+        case ("cmk_postprocessed", "predictive_levels", val_dict) | val_dict if isinstance(
+            val_dict, dict
         ):
             raise TypeError(
                 f"Could not migrate {model!r} to SimpleLevelsConfigModel. "

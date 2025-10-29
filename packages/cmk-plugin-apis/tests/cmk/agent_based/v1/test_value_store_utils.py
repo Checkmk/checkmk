@@ -88,9 +88,7 @@ def test_get_rate(
         ),
     ],
 )
-def test_get_average(
-    backlog_min: int, timeseries: Sequence[tuple[float, float, float]]
-) -> None:
+def test_get_average(backlog_min: int, timeseries: Sequence[tuple[float, float, float]]) -> None:
     store: dict[str, tuple[float, float, float]] = {}
     for idx, (this_time, this_value, expected_average) in enumerate(timeseries):
         avg = get_average(
@@ -100,6 +98,4 @@ def test_get_average(
             this_value,
             backlog_min,
         )
-        assert avg == expected_average, (
-            f"at [{idx!r}]: got {avg!r} expected {expected_average!r}"
-        )
+        assert avg == expected_average, f"at [{idx!r}]: got {avg!r} expected {expected_average!r}"

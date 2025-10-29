@@ -21,9 +21,7 @@ class ActiveCheckConfig[ParsedParameters]:
         *,
         name: str,
         parameter_parser: Callable[[Mapping[str, object]], ParsedParameters],
-        commands_function: Callable[
-            [ParsedParameters, HostConfig], Iterable[ActiveCheckCommand]
-        ],
+        commands_function: Callable[[ParsedParameters, HostConfig], Iterable[ActiveCheckCommand]],
     ):
         self.name = name
         self._parameter_parser = parameter_parser

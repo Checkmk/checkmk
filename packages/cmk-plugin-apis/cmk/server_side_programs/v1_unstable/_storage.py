@@ -40,9 +40,7 @@ class Storage:
     def _sanitize_key(key: str) -> str:
         skey = urlquote(key, safe="")
         if len(skey) > 255:
-            raise ValueError(
-                f"too long (max 255 characters after URL quoting): {skey!r}"
-            )
+            raise ValueError(f"too long (max 255 characters after URL quoting): {skey!r}")
         return skey
 
     def _get_path(self, key: str) -> Path:

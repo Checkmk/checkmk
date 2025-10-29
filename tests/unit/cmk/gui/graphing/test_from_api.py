@@ -459,7 +459,7 @@ if edition(omd_root) not in (Edition.CRE, Edition.CEE):
     _ALLOWED_DUPLICATE_METRIC_TITLES.update(_CCE_ALLOWED_DUPLICATE_METRIC_TITLES)
 
 
-def test_duplicate_metric_titles() -> None:
+def test_duplicate_metric_titles_new() -> None:
     # CMK-26844
     metric_names_by_title: dict[str, set[str]] = {}
     for plugin in _load_graphing_plugins().plugins.values():
@@ -468,28 +468,45 @@ def test_duplicate_metric_titles() -> None:
 
     duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
 
-    new = {
-        t: mns
-        for t, mns in duplicate_metric_titles.items()
-        if t not in _ALLOWED_DUPLICATE_METRIC_TITLES
-    }
-    assert not new, "Found new duplicate_metric_titles:\n" + "\n".join(
+    new = {}
+    for t, duplicates in duplicate_metric_titles.items():
+        if (allowed := _ALLOWED_DUPLICATE_METRIC_TITLES.get(t)) is None:
+            new[t] = duplicates
+            continue
+
+        if duplicates != allowed:
+            new[t] = duplicates.difference(allowed)
+    assert not new, "Found new duplicate titles:\n" + "\n".join(
         [f"- {t}: {', '.join(mns)}" for t, mns in new.items()]
     )
 
-    already_fixed = {
-        t: mns
-        for t, mns in _ALLOWED_DUPLICATE_METRIC_TITLES.items()
-        if t not in duplicate_metric_titles
-    }
-    assert not already_fixed, "Found already fixed duplicate_metric_titles:\n" + "\n".join(
-        [f"- {t}: {', '.join(mns)}" for t, mns in already_fixed.items()]
+
+def test_duplicate_metric_titles_fixed() -> None:
+    # CMK-26844
+    metric_names_by_title: dict[str, set[str]] = {}
+    for plugin in _load_graphing_plugins().plugins.values():
+        if isinstance(plugin, metrics_api.Metric):
+            metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
+
+    duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
+
+    already_fixed = {}
+    for t, allowed in _ALLOWED_DUPLICATE_METRIC_TITLES.items():
+        if (duplicates := duplicate_metric_titles.get(t)) is None:
+            already_fixed[t] = allowed
+            continue
+
+        if allowed != duplicates:
+            already_fixed[t] = allowed.difference(duplicates)
+
+    assert not already_fixed, "Found already fixed duplicate titles:\n" + "\n".join(
+        [f"- {t}: {', '.join(gps)}" for t, gps in already_fixed.items()]
     )
 
 
 _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Connections": {"azure_redis_connections"},
-    "Throughput": {"azure_redis_throughput"},
+    "Throughput": {"azure_redis_throughput", "azure_cosmosdb_database_throughput"},
     "Memory utilization": {"azure_redis_memory_utilization"},
     "Memory": {"azure_redis_used_memory"},
     "Requests": {"azure_cosmosdb_database_requests"},
@@ -543,6 +560,10 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
         "podman_disk_usage_volumes",
         "podman_disk_usage_images",
     },
+    "Requests": {"requests"},
+    "Throughput": {"throughput"},
+    "Memory": {"kube_memory_usage"},
+    "Memory utilization": {"memory_utilization_percentile"},
 }
 
 if edition(omd_root) not in (Edition.CRE, Edition.CEE):
@@ -550,7 +571,7 @@ if edition(omd_root) not in (Edition.CRE, Edition.CEE):
         _ALLOWED_DUPLICATE_GRAPH_TITLES.setdefault(title, set()).update(graph_plugins)
 
 
-def test_duplicate_graph_titles() -> None:
+def test_duplicate_graph_titles_new() -> None:
     # CMK-26844
     graphs_by_title: dict[str, set[str]] = {}
     for plugin in _load_graphing_plugins().plugins.values():
@@ -559,20 +580,38 @@ def test_duplicate_graph_titles() -> None:
 
     duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}
 
-    new = {
-        t: gps
-        for t, gps in duplicate_graph_titles.items()
-        if t not in _ALLOWED_DUPLICATE_GRAPH_TITLES
-    }
-    assert not new, "Found new duplicate_graph_titles:\n" + "\n".join(
+    new = {}
+    for t, duplicates in duplicate_graph_titles.items():
+        if (allowed := _ALLOWED_DUPLICATE_GRAPH_TITLES.get(t)) is None:
+            new[t] = duplicates
+            continue
+
+        if duplicates != allowed:
+            new[t] = duplicates.difference(allowed)
+
+    assert not new, "Found new duplicate titles:\n" + "\n".join(
         [f"- {t}: {', '.join(gps)}" for t, gps in new.items()]
     )
 
-    already_fixed = {
-        t: gps
-        for t, gps in _ALLOWED_DUPLICATE_GRAPH_TITLES.items()
-        if t not in duplicate_graph_titles
-    }
-    assert not already_fixed, "Found already fixed duplicate_graph_titles:\n" + "\n".join(
+
+def test_duplicate_graph_titles_fixed() -> None:
+    # CMK-26844
+    graphs_by_title: dict[str, set[str]] = {}
+    for plugin in _load_graphing_plugins().plugins.values():
+        if isinstance(plugin, graphs_api.Graph | graphs_api.Bidirectional):
+            graphs_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
+
+    duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}
+
+    already_fixed = {}
+    for t, allowed in _ALLOWED_DUPLICATE_GRAPH_TITLES.items():
+        if (duplicates := duplicate_graph_titles.get(t)) is None:
+            already_fixed[t] = allowed
+            continue
+
+        if allowed != duplicates:
+            already_fixed[t] = allowed.difference(duplicates)
+
+    assert not already_fixed, "Found already fixed duplicate titles:\n" + "\n".join(
         [f"- {t}: {', '.join(gps)}" for t, gps in already_fixed.items()]
     )

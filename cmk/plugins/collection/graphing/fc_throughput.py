@@ -42,7 +42,7 @@ perfometer_fc_bytes = perfometers.Bidirectional(
 
 graph_throughput = graphs.Bidirectional(
     name="throughput",
-    title=Title("Throughput"),
+    title=Title("Throughput (FC)"),
     lower=graphs.Graph(
         name="throughput_tx",
         title=Title("Throughput"),

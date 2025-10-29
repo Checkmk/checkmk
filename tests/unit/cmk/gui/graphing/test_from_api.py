@@ -504,10 +504,6 @@ def test_duplicate_metric_titles_fixed() -> None:
     )
 
 
-_CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
-    "Throughput": {"azure_redis_throughput", "azure_cosmosdb_database_throughput"},
-}
-
 _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Errors": {"fc_errors", "if_errors_discards", "fc_errors_detailed"},
     "Huge pages": {"huge_pages_2", "huge_pages"},
@@ -525,12 +521,7 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     },
     "Packets": {"packets_1", "packets_2", "packets_3"},
     "Commit charge": {"pagefile_absolute", "pagefile_percent"},
-    "Throughput": {"throughput"},
 }
-
-if edition(omd_root) not in (Edition.CRE, Edition.CEE):
-    for title, graph_plugins in _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES.items():
-        _ALLOWED_DUPLICATE_GRAPH_TITLES.setdefault(title, set()).update(graph_plugins)
 
 
 def test_duplicate_graph_titles_new() -> None:

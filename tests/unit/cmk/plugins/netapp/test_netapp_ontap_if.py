@@ -168,23 +168,23 @@ def test_merge_if_counters_sections() -> None:
         interfaces_section, ports_section, interfaces_counters_section
     )
 
-    assert result[0][0][0].attributes.oper_status_name == "up"
-    assert result[0][0][0].attributes.oper_status == "1"
-    assert result[0][0][1].attributes.oper_status_name == "down"
-    assert result[0][0][1].attributes.oper_status == "2"
+    assert result[0][0].attributes.oper_status_name == "up"
+    assert result[0][0].attributes.oper_status == "1"
+    assert result[0][1].attributes.oper_status_name == "down"
+    assert result[0][1].attributes.oper_status == "2"
 
-    assert result[0][0][0].counters.in_octets == 100
-    assert result[0][0][0].counters.in_ucast == 100
+    assert result[0][0].counters.in_octets == 100
+    assert result[0][0].counters.in_ucast == 100
 
-    assert result[0][0][1].counters.in_octets == 200
-    assert result[0][0][1].counters.in_ucast == 200
+    assert result[0][1].counters.in_octets == 200
+    assert result[0][1].counters.in_ucast == 200
 
-    assert result[0][1]["interface1"]["is_home"] is True
-    assert result[0][1]["interface1"]["home_port"] == "port1"
-    assert "failover_ports" not in result[0][1]["interface1"]
+    assert result[1]["interface1"]["is_home"] is True
+    assert result[1]["interface1"]["home_port"] == "port1"
+    assert "failover_ports" not in result[1]["interface1"]
 
-    assert result[0][1]["interface2"]["is_home"] is False
-    assert result[0][1]["interface2"]["home_port"] == "port2"
-    assert result[0][1]["interface2"]["failover_ports"] == [
+    assert result[1]["interface2"]["is_home"] is False
+    assert result[1]["interface2"]["home_port"] == "port2"
+    assert result[1]["interface2"]["failover_ports"] == [
         {"node": "node_name", "port": "port2", "link-status": "down"}
     ]

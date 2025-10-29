@@ -492,6 +492,7 @@ def test_netapp_api_if_regression(
                 (params),
                 section,
                 value_store={},
+                ignore_failover_policy=True,
             )
         )
         assert generated_results == expected_results

@@ -107,7 +107,7 @@ def check_netapp_api_if(
     params: Mapping[str, Any],
     section: IfSection,
 ) -> type_defs.CheckResult:
-    yield from check_netapp_interfaces(item, params, section, get_value_store())
+    yield from check_netapp_interfaces(item, params, section, get_value_store(), True)
 
 
 register.check_plugin(

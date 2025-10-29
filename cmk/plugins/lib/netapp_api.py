@@ -55,6 +55,7 @@ class NICExtraInfo(TypedDict, total=False):
     home_node: str | None
     is_home: bool
     failover_ports: Sequence[Mapping[str, str]]
+    failover_policy: str
 
 
 ExtraInfo = Mapping[str, NICExtraInfo]
@@ -66,6 +67,12 @@ STATUS_MAP = {
     "check_and_display": 0,
 }
 INFO_INCLUDED_MAP = {"dont_show_and_check": False}
+FAILOVER_STATUS = {
+    "home_port_only": State.OK,
+    "default": State.OK,
+    "home_node_only": State.OK,
+    "broadcast_domain_only": State.OK,
+}
 
 
 class Qtree(NamedTuple):
@@ -507,6 +514,9 @@ def merge_if_sections(  # pylint: disable=too-many-branches
                     "home_port": values["home-port"],
                     "home_node": values.get("home-node"),
                     "is_home": str(values.get("is-home")).lower() == "true",
+                    # if it's not present, it's because it's the old-api interface
+                    # and in this case we don't need to check the failover_policy
+                    "failover_policy": values.get("failover", ""),
                 }
             )
 
@@ -518,12 +528,23 @@ def _check_netapp_interfaces(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     nics: interfaces.Section[interfaces.InterfaceWithCounters],
     extra_info: ExtraInfo,
+    ignore_failover_policy: bool = False,
 ) -> CheckResult:
     for iface in interfaces.matching_interfaces_for_item(item, nics):
         first_member = True
         vif = extra_info.get(iface.attributes.descr)
         if vif is None:
             continue
+
+        failover_policy = vif.get("failover_policy", "unknown")
+        # ignore_failover_policy is needed for the deprecated netapp api
+        # which is returning different failover_policy values
+        # and we don't want to break existing monitoring statuses
+        if not ignore_failover_policy:
+            yield Result(
+                state=FAILOVER_STATUS.get(failover_policy, State.UNKNOWN),
+                summary=f"Failover policy: {failover_policy}",
+            )
 
         speed_state, speed_info_included = 1, True
         home_state, home_info_included = 0, True
@@ -609,6 +630,7 @@ def check_netapp_interfaces(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     section: IfSection,
     value_store: MutableMapping[str, Any],
+    ignore_failover_policy: bool = False,
 ) -> CheckResult:
     nics, extra_info = section
     yield from interfaces.check_multiple_interfaces(
@@ -618,12 +640,7 @@ def check_netapp_interfaces(  # pylint: disable=too-many-branches
         value_store=value_store,
     )
 
-    yield from _check_netapp_interfaces(
-        item,
-        params,
-        nics,
-        extra_info,
-    )
+    yield from _check_netapp_interfaces(item, params, nics, extra_info, ignore_failover_policy)
 
 
 def check_netapp_vs_traffic(

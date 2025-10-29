@@ -67,6 +67,18 @@ STATUS_MAP = {
     "check_and_display": 0,
 }
 INFO_INCLUDED_MAP = {"dont_show_and_check": False}
+
+# rest failover policies are mapped different than
+# cli failover policies. This maps translates from rest-terms to cli-terms
+# for a better user experience
+FAILOVER_REST_TRANSLATION = {
+    "home_port_only": "disabled",
+    "default": "system-defined",
+    "home_node_only": "local-only",
+    "sfo_partners_only": "sfo-partner-only",
+    "broadcast_domain_only": "broadcast-domain-wide",
+}
+
 FAILOVER_STATUS = {
     "home_port_only": State.OK,
     "default": State.OK,
@@ -543,7 +555,7 @@ def _check_netapp_interfaces(  # pylint: disable=too-many-branches
         if not ignore_failover_policy:
             yield Result(
                 state=FAILOVER_STATUS.get(failover_policy, State.UNKNOWN),
-                summary=f"Failover policy: {failover_policy}",
+                summary=f"Failover policy: {FAILOVER_REST_TRANSLATION.get(failover_policy, failover_policy)}",
             )
 
         speed_state, speed_info_included = 1, True

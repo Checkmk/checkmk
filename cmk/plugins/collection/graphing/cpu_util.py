@@ -329,7 +329,7 @@ graph_cpu_utilization_5 = graphs.Graph(
 )
 graph_cpu_utilization_5_util = graphs.Graph(
     name="cpu_utilization_5_util",
-    title=Title("CPU utilization"),
+    title=Title("CPU utilization (User, system, IO wait & levels)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,

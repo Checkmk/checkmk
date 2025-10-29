@@ -517,10 +517,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
         "aws_dynamodb_write_capacity_single",
         "aws_dynamodb_read_capacity_single",
     },
-    "CPU utilization": {
-        "util_fallback",
-        "cpu_utilization_5_util",
-    },
     "Connections": {"connections", "connection_count"},
     "Threads": {"threads", "jenkins_threads"},
     "Errors": {"fc_errors", "if_errors_discards", "fc_errors_detailed"},

@@ -49,7 +49,7 @@ perfometer_connections = perfometers.Perfometer(
 
 graph_connections = graphs.Graph(
     name="connections",
-    title=Title("Connections"),
+    title=Title("Network connections"),
     compound_lines=["connections"],
     simple_lines=[
         "connections_async_writing",

@@ -505,7 +505,6 @@ def test_duplicate_metric_titles_fixed() -> None:
 
 
 _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
-    "Connections": {"azure_redis_connections"},
     "Throughput": {"azure_redis_throughput", "azure_cosmosdb_database_throughput"},
     "Memory utilization": {"azure_redis_memory_utilization"},
     "Memory": {"azure_redis_used_memory"},
@@ -517,7 +516,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
         "aws_dynamodb_write_capacity_single",
         "aws_dynamodb_read_capacity_single",
     },
-    "Connections": {"connections", "connection_count"},
     "Threads": {"threads", "jenkins_threads"},
     "Errors": {"fc_errors", "if_errors_discards", "fc_errors_detailed"},
     "Huge pages": {"huge_pages_2", "huge_pages"},

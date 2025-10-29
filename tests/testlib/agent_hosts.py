@@ -82,7 +82,7 @@ def _discover_services_of_piggybacked_hosts(
         host_name: The name of the piggyback source host.
         expected_pb_hosts: The list of expected piggybacked hosts.
         folder_name: The name of the host folder in the site which the host is created in.
-        dcd_max_count: The maxmimum number of attempts to perform when waiting for the hosts.
+        dcd_max_count: The maximum number of attempts to perform when waiting for the hosts.
         dcd_interval: The dcd interval in seconds.
         cleanup: Specifies if the dump file is cleaned up at the end."""
     with _fake_host_and_discover_services(site, host_name, folder_name, cleanup):
@@ -124,7 +124,7 @@ def piggyback_host_from_dump_file(
         site: The test site.
         dump_name: The name of the dump file, which will also be the host name.
         folder_name: The name of the host folder in the site which the host is created in.
-        dcd_max_count: The maxmimum number of attempts to perform when waiting for the hosts.
+        dcd_max_count: The maximum number of attempts to perform when waiting for the hosts.
         dcd_interval: The dcd interval in seconds.
         source_dir: The source dir of the dump file.
         target_dir: The target dir of the dump file.
@@ -175,7 +175,7 @@ def piggyback_host_from_dummy_generator(
         site: The test site.
         host_name: The name of the host to be created.
         folder_name: The name of the host folder in the site which the host is created in.
-        dcd_max_count: The maxmimum number of attempts to perform when waiting for the hosts.
+        dcd_max_count: The maximum number of attempts to perform when waiting for the hosts.
         dcd_interval: The dcd interval in seconds.
         pb_host_count: The number of piggybacked hosts.
         pb_service_count: The number of services per piggybacked host.

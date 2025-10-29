@@ -98,7 +98,7 @@ def execute_dcd_cycle(
     Args:
         site: The Site instance where the DCD cycle should be executed.
         expected_pb_hosts: The number of piggyback hosts expected to be discovered.
-        max_count: The maxmimum number of attempts to perform when waiting for the hosts.
+        max_count: The maximum number of attempts to perform when waiting for the hosts.
         interval: The delay per attempt when waiting for the hosts (seconds).
     """
 

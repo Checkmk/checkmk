@@ -397,7 +397,7 @@ class TestMergeIfCountersSections:
     def test_merged_attributes(
         self,
     ) -> None:
-        (interfaces_data, _), _ = _merge_if_counters_sections(
+        (interfaces_data, _) = _merge_if_counters_sections(
             self.interfaces_section, self.ports_section, self.counters_section
         )
 
@@ -453,7 +453,7 @@ class TestMergeIfCountersSections:
     def test_merged_counters(
         self,
     ) -> None:
-        (interfaces_data, _), _ = _merge_if_counters_sections(
+        (interfaces_data, _) = _merge_if_counters_sections(
             self.interfaces_section, self.ports_section, self.counters_section
         )
 
@@ -509,7 +509,7 @@ class TestMergeIfCountersSections:
     def test_merged_extra_data(
         self,
     ) -> None:
-        (_, extra_data), _ = _merge_if_counters_sections(
+        (_, extra_data) = _merge_if_counters_sections(
             self.interfaces_section, self.ports_section, self.counters_section
         )
 
@@ -517,12 +517,14 @@ class TestMergeIfCountersSections:
 
         # do not check "lif1" because order is not guaranteed in a nested list
         assert extra_data["lif2"] == {
+            "failover_policy": "home_port_only",
             "failover_ports": [{"node": "node1", "port": "a0a", "link-status": "down"}],
             "home_port": "a0a",
             "home_node": "node1",
             "is_home": False,
         }
         assert extra_data["lif3"] == {
+            "failover_policy": "broadcast_domain_only",
             "failover_ports": [{"node": "node2", "port": "e0a-100", "link-status": "up"}],
             "home_port": "e0a-100",
             "home_node": "node2",
@@ -532,7 +534,7 @@ class TestMergeIfCountersSections:
     def test_without_counters(
         self,
     ) -> None:
-        (interfaces_data, _), _ = _merge_if_counters_sections(
+        (interfaces_data, _) = _merge_if_counters_sections(
             self.interfaces_section, self.ports_section, None
         )
 

@@ -378,10 +378,14 @@ INTERFACE = interfaces.InterfaceWithCounters(
                         "home_port": "e0a",
                         "home_node": "node1",
                         "is_home": True,
+                        "failover_policy": "default",
                     }
                 )
             },
-            [Result(state=State.OK, summary="Current Port: e0a (is home port)")],
+            [
+                Result(state=State.OK, summary="Failover policy: default"),
+                Result(state=State.OK, summary="Current Port: e0a (is home port)"),
+            ],
             id="Is home port",
         ),
         pytest.param(
@@ -394,10 +398,14 @@ INTERFACE = interfaces.InterfaceWithCounters(
                         "home_port": "e0a",
                         "home_node": "node1",
                         "is_home": False,
+                        "failover_policy": "default",
                     }
                 )
             },
-            [Result(state=State.OK, summary="Current Port: e0a (is not home port)")],
+            [
+                Result(state=State.OK, summary="Failover policy: default"),
+                Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
+            ],
             id="Is not home port and empty params",
         ),
         pytest.param(
@@ -413,10 +421,14 @@ INTERFACE = interfaces.InterfaceWithCounters(
                         "home_port": "e0a",
                         "home_node": "node1",
                         "is_home": False,
+                        "failover_policy": "default",
                     }
                 )
             },
-            [Result(state=State.CRIT, summary="Current Port: e0a (is not home port)")],
+            [
+                Result(state=State.OK, summary="Failover policy: default"),
+                Result(state=State.CRIT, summary="Current Port: e0a (is not home port)"),
+            ],
             id="Check and crit when not home port",
         ),
         pytest.param(
@@ -466,6 +478,7 @@ def test_check_home_port_status(
                         "home_port": "e0a",
                         "home_node": "node1",
                         "is_home": False,
+                        "failover_policy": "default",
                         "failover_ports": [
                             {"node": "node1", "port": "e0a", "link-status": "up"},
                             {"node": "node1", "port": "e0b", "link-status": "up"},
@@ -474,6 +487,7 @@ def test_check_home_port_status(
                 )
             },
             [
+                Result(state=State.OK, summary="Failover policy: default"),
                 Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
                 Result(state=State.OK, notice="Failover Group: [node1:e0a=up, node1:e0b=up]"),
             ],
@@ -489,6 +503,7 @@ def test_check_home_port_status(
                         "home_port": "e0a",
                         "home_node": "node1",
                         "is_home": False,
+                        "failover_policy": "default",
                         "failover_ports": [
                             {"node": "node1", "port": "e0a", "link-status": "down"},
                             {"node": "node2", "port": "e0b", "link-status": "up"},
@@ -497,6 +512,7 @@ def test_check_home_port_status(
                 )
             },
             [
+                Result(state=State.OK, summary="Failover policy: default"),
                 Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
                 Result(state=State.CRIT, notice="Failover Group: [node1:e0a=down, node2:e0b=up]"),
             ],
@@ -505,6 +521,86 @@ def test_check_home_port_status(
     ],
 )
 def test_check_home_port_status_with_failover_ports(
+    item: str,
+    params: Mapping[str, Any],
+    interfaces: interfaces.Section[interfaces.InterfaceWithCounters],
+    extra_info: ExtraInfo,
+    expected_output: CheckResult,
+) -> None:
+    assert list(_check_netapp_interfaces(item, params, interfaces, extra_info)) == expected_output
+
+
+@pytest.mark.parametrize(
+    "item, params, interfaces, extra_info, expected_output",
+    [
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": False,
+                        "failover_policy": "non_handled_policy",
+                        "failover_ports": [],
+                    }
+                )
+            },
+            [
+                Result(state=State.UNKNOWN, summary="Failover policy: non_handled_policy"),
+                Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
+                Result(state=State.OK, notice="Failover Group: []"),
+            ],
+            id="Failover policy not handled",
+        ),
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": False,
+                        "failover_policy": "sfo_partners_only",
+                        "failover_ports": [],
+                    }
+                )
+            },
+            [
+                Result(state=State.UNKNOWN, summary="Failover policy: sfo_partners_only"),
+                Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
+                Result(state=State.OK, notice="Failover Group: []"),
+            ],
+            id="Failover policy not handled 2",
+        ),
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": False,
+                        "failover_ports": [],
+                    }
+                )
+            },
+            [
+                Result(state=State.UNKNOWN, summary="Failover policy: unknown"),
+                Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
+                Result(state=State.OK, notice="Failover Group: []"),
+            ],
+            id="Failover policy not set",
+        ),
+    ],
+)
+def test_unknown_failover_policy(
     item: str,
     params: Mapping[str, Any],
     interfaces: interfaces.Section[interfaces.InterfaceWithCounters],

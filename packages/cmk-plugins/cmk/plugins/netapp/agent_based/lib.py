@@ -43,6 +43,7 @@ class NICExtraInfo(TypedDict, total=False):
     home_node: str | None
     is_home: bool
     failover_ports: Sequence[Mapping[str, str]]
+    failover_policy: str
 
 
 ExtraInfo = Mapping[str, NICExtraInfo]
@@ -54,6 +55,12 @@ STATUS_MAP = {
     "check_and_display": 0,
 }
 INFO_INCLUDED_MAP = {"dont_show_and_check": False}
+FAILOVER_STATUS = {
+    "home_port_only": State.OK,
+    "default": State.OK,
+    "home_node_only": State.OK,
+    "broadcast_domain_only": State.OK,
+}
 
 
 class Qtree(NamedTuple):
@@ -368,6 +375,7 @@ def merge_if_sections(
                     "home_port": values["home-port"],
                     "home_node": values.get("home-node"),
                     "is_home": str(values.get("is-home")).lower() == "true",
+                    "failover_policy": values["failover"],
                 }
             )
 
@@ -384,6 +392,12 @@ def _check_netapp_interfaces(
         vif = extra_info.get(iface.attributes.descr)
         if vif is None:
             continue
+
+        failover_policy = vif.get("failover_policy", "unknown")
+        yield Result(
+            state=FAILOVER_STATUS.get(failover_policy, State.UNKNOWN),
+            summary=f"Failover policy: {failover_policy}",
+        )
 
         speed_state, speed_info_included = 1, True
         home_state, home_info_included = 0, True

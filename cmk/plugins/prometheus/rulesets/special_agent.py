@@ -81,9 +81,7 @@ def _parameter_form() -> Dictionary:
             "exporter": DictElement(
                 required=True,
                 parameter_form=List(
-                    title=Title(
-                        "Prometheus Scrape Targets (include Prometheus Exporters) to fetch information from"
-                    ),
+                    title=Title("Prometheus Scrape Targets to fetch information from (deprecated)"),
                     help_text=Help(
                         "You can specify which Scrape Targets including Exporters "
                         "are connected to your Prometheus instance. The Prometheus "
@@ -514,6 +512,17 @@ rule_spec_special_agent_prometheus = SpecialAgent(
     title=Title("Prometheus"),
     topic=Topic.CLOUD,
     parameter_form=_parameter_form,
+    help_text=Help(
+        "Integrate Checkmk with your Prometheus to create pre-defined services for popular "
+        "Prometheus exporters or define custom PromQL queries Checkmk should use to retrieve "
+        "metrics and generate services. The option 'Prometheus Scrape Targets' is deprecated. We "
+        "recommend transitioning to our Kubernetes integration "
+        "(https://docs.checkmk.com/latest/en/monitoring_kubernetes.html), if you want to monitor "
+        "a Kubernetes environment. For monitoring Prometheus exporters or Prometheus metrics "
+        "endpoints directly in general, please use the dedicated OpenTelemetry "
+        "(https://docs.checkmk.com/latest/en/opentelemetry.html) integration, as it is the more "
+        "robust and appropriate solution for that use case."
+    ),
 )
 
 

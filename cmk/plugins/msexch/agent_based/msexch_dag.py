@@ -128,7 +128,7 @@ def parse_msexch_dag(string_table: StringTable) -> Section:
         if key == start_key:
             current_record = {}
         if key == "DatabaseName":
-            collected_databases[key] = current_record
+            collected_databases[val] = current_record
         else:
             current_record[key] = val
 
@@ -180,7 +180,11 @@ check_plugin_msexch_dag_dbcopy = CheckPlugin(
 
 
 def discover_msexch_dag_contentindex(section: Section) -> DiscoveryResult:
-    yield from (Service(item=dbname) for dbname in section)
+    yield from (
+        Service(item=dbname)
+        for dbname, db in section.items()
+        if db.get("ContentIndexState") not in (None, "NotApplicable")
+    )
 
 
 def check_msexch_dag_contentindex(
@@ -188,6 +192,13 @@ def check_msexch_dag_contentindex(
     section: Section,
 ) -> CheckResult:
     if (val := section.get(item, {}).get("ContentIndexState")) is None:
+        return
+
+    if val == "NotApplicable":
+        yield Result(
+            state=State.OK,
+            summary="ContentIndex no longer available in recent Exchange versions. You can safely delete this Service.",
+        )
         return
 
     yield Result(state=State.OK if val == "Healthy" else State.WARN, summary=f"Status: {val}")

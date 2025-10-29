@@ -40,8 +40,6 @@ import requests
 
 from tests.testlib.version import CMKVersion
 
-from cmk.ccc.version import Edition
-
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
 
@@ -1265,7 +1263,7 @@ class PasswordsAPI(BaseAPI):
             "owner": owner,
             "shared": ["all"],
         }
-        if self.session.site_version.edition == Edition.CME:
+        if self.session.site_version.is_managed_edition():
             body["customer"] = "global"
         response = self.session.post(
             "/domain-types/password/collections/all",

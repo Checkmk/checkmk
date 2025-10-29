@@ -518,7 +518,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
         "aws_dynamodb_read_capacity_single",
     },
     "CPU utilization": {
-        "cpu_utilization_percentile",
         "util_fallback",
         "cpu_utilization_6_steal_util",
         "cpu_utilization_6_steal",

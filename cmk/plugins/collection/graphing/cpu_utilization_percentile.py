@@ -28,7 +28,7 @@ metric_util_99 = metrics.Metric(
 
 graph_cpu_utilization_percentile = graphs.Graph(
     name="cpu_utilization_percentile",
-    title=Title("CPU utilization"),
+    title=Title("CPU utilization (Percentiles)"),
     simple_lines=[
         "util_50",
         "util_95",

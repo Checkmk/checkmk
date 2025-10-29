@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-from cmk.gui.form_specs.generators.tuple_utils import TupleLevels
+from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,

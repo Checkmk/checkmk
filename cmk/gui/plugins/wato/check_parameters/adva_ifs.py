@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from cmk.gui.form_specs.generators.tuple_utils import TupleLevels
+from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, Float
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic

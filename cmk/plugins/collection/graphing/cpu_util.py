@@ -542,7 +542,7 @@ graph_util_fallback = graphs.Graph(
 )
 graph_cpu_utilization = graphs.Graph(
     name="cpu_utilization",
-    title=Title("CPU utilization"),
+    title=Title("CPU utilization (Caching engine)"),
     simple_lines=[
         "util",
         "engine_cpu_util",

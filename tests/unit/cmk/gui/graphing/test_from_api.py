@@ -523,7 +523,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
         "cpu_utilization_6_steal",
         "cpu_utilization_6_guest",
         "cpu_utilization_6_guest_util",
-        "cpu_utilization",
         "cpu_utilization_7_util",
         "util_average_1",
         "cpu_utilization_5",

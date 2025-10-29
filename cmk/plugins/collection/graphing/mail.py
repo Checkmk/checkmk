@@ -117,7 +117,7 @@ graph_size_of_mails_in_queues = graphs.Graph(
 )
 graph_amount_of_mails_in_secondary_queues = graphs.Graph(
     name="amount_of_mails_in_secondary_queues",
-    title=Title("Amount of mails in queues"),
+    title=Title("Amount of mails in queues (Secondary)"),
     compound_lines=[
         "mail_queue_hold_length",
         "mail_queue_incoming_length",

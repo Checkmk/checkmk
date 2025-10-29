@@ -6,13 +6,17 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
+from collections.abc import Mapping
+
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.plugins.netapp.agent_based.netapp_ontap_if import (
     _get_failover_home_port,
-    _merge_if_counters_sections,
+    _merge_interface_counters,
     _merge_interface_port,
+    parse_netapp_interfaces,
+    parse_netapp_interfaces_counters,
 )
 from cmk.plugins.netapp.models import InterfaceCounters, IpInterfaceModel, PortModel
 
@@ -29,165 +33,353 @@ class PortModelFactory(ModelFactory):
     __model__ = PortModel
 
 
-_PORT_MODELS = [
+PORT_MODELS = [
     PortModelFactory.build(
         port_type="physical",
-        node_name="node_name",
-        name="port1",
+        uuid="uuid-physical",
+        node_name="node1",
+        name="e0a",
         state="up",
-        speed=100,
-        mac_address="00:00:00:00:00:00",
+        speed=1000,
+        mac_address="00:0c:29:12:34:56",
+        broadcast_domain="Default",
     ),
     PortModelFactory.build(
         port_type="lag",
-        node_name="node_name",
-        name="port2",
+        uuid="uuid-lag",
+        node_name="node1",
+        name="a0a",
         state="down",
-        speed=100,
-        mac_address="01:00:00:00:00:00",
+        speed=2000,
+        mac_address="00:0c:29:12:34:57",
+        broadcast_domain="Default",
+    ),
+    PortModelFactory.build(
+        port_type="vlan",
+        uuid="uuid-vlan",
+        node_name="node2",
+        name="e0a-100",
+        state="up",
+        speed=1000,
+        mac_address="00:0c:29:12:34:58",
+        broadcast_domain="VLAN100",
     ),
 ]
 
-_INTERFACE_MODELS = [
+
+INTERFACE_MODELS = [
     IpInterfaceModelFactory.build(
-        name="interface1",
-        uuid="uuid1",
+        name="lif1",
+        uuid="uuid-lif1",
         state="up",
         enabled=True,
-        node_name="node_name",
-        port_name="port1",
-        failover="alert_failover",
-        home_node="node_name",
-        home_port="port1",
+        node_name="node1",
+        port_name="e0a",
+        failover="default",
+        home_node="node1",
+        home_port="e0a",
         is_home=True,
     ),
     IpInterfaceModelFactory.build(
-        name="interface2",
-        uuid="uuid1",
+        name="lif2",
+        uuid="uuid-lif2",
         state="down",
         enabled=True,
-        node_name="node_name",
-        port_name="port2",
+        node_name="node1",
+        port_name="a0a",
         failover="home_port_only",
-        home_node="node_name",
-        home_port="port2",
+        home_node="node1",
+        home_port="a0a",
         is_home=False,
+    ),
+    IpInterfaceModelFactory.build(
+        name="lif3",
+        uuid="uuid-lif3",
+        state="up",
+        enabled=True,
+        node_name="node2",
+        port_name="e0a-100",
+        failover="broadcast_domain_only",
+        home_node="node2",
+        home_port="e0a-100",
+        is_home=True,
     ),
 ]
 
-_INTERFACE_COUNTERS_MODELS = [
+
+INTERFACE_COUNTERS = [
     InterfaceCountersFactory.build(
-        # id composition: node_name:interface_name:??
-        id="node_name:interface1:random",
-        recv_data=100,
-        recv_packet=100,
-        recv_errors=100,
-        send_data=100,
-        send_packet=100,
-        send_errors=100,
+        id="node1:lif1:12345",
+        recv_data=1000000,
+        recv_packet=10000,
+        recv_errors=5,
+        send_data=2000000,
+        send_packet=20000,
+        send_errors=10,
     ),
     InterfaceCountersFactory.build(
-        # id composition: node_name:interface_name:??
-        id="node_name:interface2:random",
-        recv_data=200,
-        recv_packet=200,
-        recv_errors=200,
-        send_data=200,
-        send_packet=200,
-        send_errors=200,
+        id="node1:lif2:12346",
+        recv_data=500000,
+        recv_packet=5000,
+        recv_errors=2,
+        send_data=1000000,
+        send_packet=10000,
+        send_errors=3,
+    ),
+    InterfaceCountersFactory.build(
+        id="node2:lif3:12347",
+        recv_data=3000000,
+        recv_packet=30000,
+        recv_errors=0,
+        send_data=4000000,
+        send_packet=40000,
+        send_errors=1,
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "interface, expected_result",
+    "string_table, expected_result",
     [
         pytest.param(
-            IpInterfaceModelFactory.build(
-                home_node="node_name",
-                home_port="port1",
-            ),
-            "node_name|port1|up",
-            id="matching port-interface",
+            [
+                [
+                    '{"name": "lif1", "uuid": "uuid1", "state": "up", "enabled": true, '
+                    '"node_name": "node1", "port_name": "e0a", "failover": "default", '
+                    '"home_node": "node1", "home_port": "e0a", "is_home": true}'
+                ]
+            ],
+            {
+                "lif1": IpInterfaceModel(
+                    name="lif1",
+                    uuid="uuid1",
+                    state="up",
+                    enabled=True,
+                    node_name="node1",
+                    port_name="e0a",
+                    failover="default",
+                    home_node="node1",
+                    home_port="e0a",
+                    is_home=True,
+                ),
+            },
+            id="Single interface",
         ),
         pytest.param(
-            IpInterfaceModelFactory.build(
-                home_node="node_name_not_matching",
-                home_port="port1",
-            ),
-            None,
-            id="no maching port-interface",
+            [
+                [
+                    '{"name": "lif1", "uuid": "uuid1", "state": "up", "enabled": true, '
+                    '"node_name": "node1", "port_name": "e0a", "failover": "default", '
+                    '"home_node": "node1", "home_port": "e0a", "is_home": true}'
+                ],
+                [
+                    '{"name": "lif2", "uuid": "uuid2", "state": "down", "enabled": true, '
+                    '"node_name": "node1", "port_name": "e0b", "failover": "default", '
+                    '"home_node": "node1", "home_port": "e0b", "is_home": false}'
+                ],
+            ],
+            {
+                "lif1": IpInterfaceModel(
+                    name="lif1",
+                    uuid="uuid1",
+                    state="up",
+                    enabled=True,
+                    node_name="node1",
+                    port_name="e0a",
+                    failover="default",
+                    home_node="node1",
+                    home_port="e0a",
+                    is_home=True,
+                ),
+                "lif2": IpInterfaceModel(
+                    name="lif2",
+                    uuid="uuid2",
+                    state="down",
+                    enabled=True,
+                    node_name="node1",
+                    port_name="e0b",
+                    failover="default",
+                    home_node="node1",
+                    home_port="e0b",
+                    is_home=False,
+                ),
+            },
+            id="Multiple interfaces",
         ),
+        pytest.param([], {}, id="Empty input"),
+    ],
+)
+def test_parse_netapp_interfaces(
+    string_table: list[list[str]], expected_result: Mapping[str, IpInterfaceModel]
+) -> None:
+    assert parse_netapp_interfaces(string_table) == expected_result
+
+
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
+        pytest.param(
+            [
+                [
+                    '{"id": "node1:lif1:12345", "recv_data": 1000, "recv_packet": 100, '
+                    '"recv_errors": 1, "send_data": 2000, "send_packet": 200, "send_errors": 2}'
+                ]
+            ],
+            {
+                "node1:lif1:12345": InterfaceCounters(
+                    id="node1:lif1:12345",
+                    recv_data=1000,
+                    recv_packet=100,
+                    recv_errors=1,
+                    send_data=2000,
+                    send_packet=200,
+                    send_errors=2,
+                )
+            },
+            id="Single Counter",
+        ),
+        pytest.param(
+            [
+                [
+                    '{"id": "node1:lif1:12345", "recv_data": 1000, "recv_packet": 100, '
+                    '"recv_errors": 1, "send_data": 2000, "send_packet": 200, "send_errors": 2}'
+                ],
+                [
+                    '{"id": "node1:lif2:12346", "recv_data": 3000, "recv_packet": 300, '
+                    '"recv_errors": 3, "send_data": 4000, "send_packet": 400, "send_errors": 4}'
+                ],
+            ],
+            {
+                "node1:lif1:12345": InterfaceCounters(
+                    id="node1:lif1:12345",
+                    recv_data=1000,
+                    recv_packet=100,
+                    recv_errors=1,
+                    send_data=2000,
+                    send_packet=200,
+                    send_errors=2,
+                ),
+                "node1:lif2:12346": InterfaceCounters(
+                    id="node1:lif2:12346",
+                    recv_data=3000,
+                    recv_packet=300,
+                    recv_errors=3,
+                    send_data=4000,
+                    send_packet=400,
+                    send_errors=4,
+                ),
+            },
+            id="Multiple Counters",
+        ),
+        pytest.param([], {}, id="Emtpy"),
+    ],
+)
+def test_parse_netapp_interfaces_counters(
+    string_table: list[list[str]], expected_result: Mapping[str, InterfaceCounters]
+) -> None:
+    assert parse_netapp_interfaces_counters(string_table) == expected_result
+
+
+@pytest.mark.parametrize(
+    "home_node, home_port, expected_result",
+    [
+        pytest.param("node1", "e0a", "node1|e0a|up", id="physical port up"),
+        pytest.param("node1", "a0a", "node1|a0a|down", id="lag port down"),
+        pytest.param("node_invalid", "e0a", None, id="invalid node"),
+        pytest.param("node1", "invalid_port", None, id="invalid port"),
+        pytest.param("node_invalid", "invalid_port", None, id="invalid node and port"),
     ],
 )
 def test_get_failover_home_port(
-    interface: IpInterfaceModel,
+    home_node: str,
+    home_port: str,
     expected_result: str | None,
 ) -> None:
-    interface_values = interface.serialize()
-    ports_section = {port_model.item_name(): port_model for port_model in _PORT_MODELS}
+    interface_values = {"home-node": home_node, "home-port": home_port}
+    ports_section = {port.item_name(): port for port in PORT_MODELS}
 
     result = _get_failover_home_port(ports_section, interface_values)
     assert result == expected_result
 
 
 @pytest.mark.parametrize(
-    "interface, added_info",
+    "node_name, port_name, expected_result",
     [
         pytest.param(
-            IpInterfaceModelFactory.build(
-                node_name="node_name",
-                port_name="port1",
-            ),
-            _PORT_MODELS[0].serialize(),
-            id="matching port-interface",
+            "node1",
+            "e0a",
+            {
+                "node_name": "node1",
+                "port-node": "node1",
+                "port-uuid": "uuid-physical",
+                "port_name": "e0a",
+                "port_state": "up",
+                "port-name": "e0a",
+                "port_type": "physical",
+                "speed": 1000,
+                "mac-address": "00:0c:29:12:34:56",
+                "broadcast_domain": "Default",
+            },
+            id="matching physical port",
         ),
         pytest.param(
-            IpInterfaceModelFactory.build(
-                node_name="node_name_not_matching",
-                port_name="port1",
-            ),
-            {},
-            id="no maching port-interface",
+            "node1",
+            "a0a",
+            {
+                "node_name": "node1",
+                "port-node": "node1",
+                "port-uuid": "uuid-lag",
+                "port_name": "a0a",
+                "port_state": "down",
+                "port-name": "a0a",
+                "port_type": "lag",
+                "speed": 2000,
+                "mac-address": "00:0c:29:12:34:57",
+                "broadcast_domain": "Default",
+            },
+            id="matching lag port",
         ),
     ],
 )
-def test_merge_interface_port(interface: IpInterfaceModel, added_info: dict) -> None:
-    interface_values = interface.serialize()
-    ports_section = {port_model.item_name(): port_model for port_model in _PORT_MODELS}
+def test_merge_interface_port(
+    node_name: str,
+    port_name: str,
+    expected_result: dict,
+) -> None:
+    interface_values = {"node_name": node_name, "port_name": port_name}
+    ports_section = {port.item_name(): port for port in PORT_MODELS}
 
     result = _merge_interface_port(ports_section, interface_values)
-    assert result == (interface_values | added_info)
+    assert result == expected_result
 
 
-def test_merge_if_counters_sections() -> None:
-    ports_section = {port_model.item_name(): port_model for port_model in _PORT_MODELS}
-    interfaces_section = {interface.name: interface for interface in _INTERFACE_MODELS}
-    interfaces_counters_section = {
-        if_counter.id: if_counter for if_counter in _INTERFACE_COUNTERS_MODELS
-    }
-
-    result = _merge_if_counters_sections(
-        interfaces_section, ports_section, interfaces_counters_section
-    )
-
-    assert result[0][0][0].attributes.oper_status_name == "up"
-    assert result[0][0][0].attributes.oper_status == "1"
-    assert result[0][0][1].attributes.oper_status_name == "down"
-    assert result[0][0][1].attributes.oper_status == "2"
-
-    assert result[0][0][0].counters.in_octets == 100
-    assert result[0][0][0].counters.in_ucast == 100
-
-    assert result[0][0][1].counters.in_octets == 200
-    assert result[0][0][1].counters.in_ucast == 200
-
-    assert result[0][1]["interface1"]["is_home"] is True
-    assert result[0][1]["interface1"]["home_port"] == "port1"
-    assert "failover_ports" not in result[0][1]["interface1"]
-
-    assert result[0][1]["interface2"]["is_home"] is False
-    assert result[0][1]["interface2"]["home_port"] == "port2"
-    assert result[0][1]["interface2"]["failover_ports"] == [
-        {"node": "node_name", "port": "port2", "link-status": "down"}
-    ]
+@pytest.mark.parametrize(
+    "counters, expected_result",
+    [
+        pytest.param(
+            INTERFACE_COUNTERS[0],
+            {
+                "name": "test_interface",
+                "state": "up",
+                "id": "node1:lif1:12345",
+                "recv_data": 1000000,
+                "recv_packet": 10000,
+                "recv_errors": 5,
+                "send_data": 2000000,
+                "send_packet": 20000,
+                "send_errors": 10,
+            },
+            id="Counters",
+        ),
+        pytest.param(
+            None,
+            {"name": "test_interface", "state": "up"},
+            id="No Counters",
+        ),
+    ],
+)
+def test_merge_interface_counters(
+    counters: InterfaceCounters, expected_result: Mapping[str, str]
+) -> None:
+    interface_dict = {"name": "test_interface", "state": "up"}
+    assert _merge_interface_counters(counters, interface_dict) == expected_result

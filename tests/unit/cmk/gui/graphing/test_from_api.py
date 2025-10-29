@@ -523,7 +523,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
         "cpu_utilization_6_guest_util",
         "cpu_utilization_7_util",
         "cpu_utilization_5_util",
-        "cpu_utilization_8",
     },
     "Connections": {"connections", "connection_count"},
     "Threads": {"threads", "jenkins_threads"},

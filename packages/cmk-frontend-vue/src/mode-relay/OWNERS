@@ -1,0 +1,9 @@
+# Component Relay
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
+
+set noparent  # don't inherit owners information from parent folders
+
+file:/component_owners/relay/OWNERS_DEFINITION

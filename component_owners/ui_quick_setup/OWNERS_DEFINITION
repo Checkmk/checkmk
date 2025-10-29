@@ -1,0 +1,14 @@
+# UI - Quick Setup
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
+
+leonardo.petrora@checkmk.com  # component lead
+
+gavin.mcguigan@checkmk.com
+christopher.krause@checkmk.com
+kenneth.okoh@checkmk.com
+lukas.lengler@checkmk.com
+ronny.bruska@checkmk.com
+wontek.hong@checkmk.com

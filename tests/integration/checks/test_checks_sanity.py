@@ -130,6 +130,7 @@ def _runs_cmc(site: Site) -> bool:
     return site.omd("config", "show", "CORE", check=True).stdout.strip() == "cmc"
 
 
+@pytest.mark.skip_if_edition("saas")  # CMK-27131
 def test_shipped_ps_discovery(host_services: dict[str, ServiceInfo], site: Site) -> None:
     expected_ps_services = {  # compare cmk.gui.watolib.sample_config
         f"Process {site.id} agent receiver",

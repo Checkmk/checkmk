@@ -79,6 +79,7 @@ def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]
     )
 
 
+@pytest.mark.skip_if_edition("saas")  # CMK-27131
 def test_world_accessible_files_parents(site: Site) -> None:
     """files which are supposed to be accessible need their parents to be also accessible"""
     for file in KNOWN_WORLD_WRITABLE_FILES | KNOWN_WORLD_READABLE_FILES:

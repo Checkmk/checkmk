@@ -8,6 +8,7 @@ import pytest
 from tests.testlib.site import Site
 
 
+@pytest.mark.skip_if_edition("saas")  # CMK-27131
 @pytest.mark.parametrize(
     "args",
     [

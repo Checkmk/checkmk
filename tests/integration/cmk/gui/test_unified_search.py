@@ -41,6 +41,7 @@ def test_result_counts_of_different_search_queries(session: CMKWebSession) -> No
     assert host_with_provider_result_count and host_with_provider_result_count < host_result_count
 
 
+@pytest.mark.skip_if_edition("saas")  # CMK-27131
 def test_result_payload_shape_and_metadata(session: CMKWebSession) -> None:
     resp_json = _SearchClient(session).search("host").json()
 

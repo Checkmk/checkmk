@@ -129,6 +129,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
 )
 
 
+@pytest.mark.skip_if_edition("saas")  # CMK-27131
 @pytest.mark.medium_test_chain
 @pytest.mark.parametrize(
     "plugin",

@@ -28,10 +28,8 @@ from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
-from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
@@ -54,6 +52,7 @@ from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, ReadOnlySpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
@@ -272,16 +271,7 @@ class ModeRevertChanges(WatoMode):
 
         request_index_rebuild()
 
-        make_header(
-            html,
-            self.title(),
-            breadcrumb=self.breadcrumb(),
-            show_body_start=display_options.enabled(display_options.H),
-            show_top_heading=display_options.enabled(display_options.T),
-        )
-        html.open_div(class_="wato")
-        html.show_message(_("Successfully discarded all pending changes."))
-        html.footer()
+        flash(_("Pending changes reverted."))
         return HTTPRedirect(makeuri_contextless(request, [("mode", ModeActivateChanges.name())]))
 
     def page(self, config: Config) -> None:

@@ -43,6 +43,12 @@ pkg_files(
 )
 
 pkg_mkdirs(
+    name = "skel_cache",
+    dirs = ["skel/.cache"],
+    tags = ["manual"],
+)
+
+pkg_mkdirs(
     name = "skel_diskspace",
     dirs = ["skel/local/share/diskspace"],
     tags = ["manual"],
@@ -61,6 +67,7 @@ pkg_tar(
         ":bin_diskspace_pkg",
         ":bin_pkg",
         ":skel",
+        ":skel_cache",
         ":skel_crontab",
         ":skel_diskspace",
     ],

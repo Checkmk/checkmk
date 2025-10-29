@@ -112,17 +112,9 @@ def main() {
                     CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                 ],
                 no_remove_others: true, // do not delete other files in the dest dir
-                download: false,    // use copyArtifacts to avoid nested directories
+                download: true,
+                dest: deliverables_dir,
             );
-
-            if (build_instance) {
-                copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-bom",
-                    selector: specific(build_instance.getId()),
-                    target: relative_deliverables_dir,
-                    fingerprintArtifacts: true,
-                );
-            }
         }
     }
 
@@ -159,20 +151,9 @@ def main() {
                         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                     ],
                     no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
+                    download: true,
+                    dest: deliverables_dir,
                 );
-            }
-            smart_stage(
-                name: "Copy artifacts",
-                condition: build_instance,
-                raiseOnError: false,
-            ) {
-                copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-source_tgz",
-                    selector: specific(build_instance.getId()),
-                    target: relative_deliverables_dir,
-                    fingerprintArtifacts: true,
-                )
             }
         }
     ];

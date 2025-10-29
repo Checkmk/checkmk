@@ -28,7 +28,7 @@ metric_memory_util_99 = metrics.Metric(
 
 graph_memory_utilization_percentile = graphs.Graph(
     name="memory_utilization_percentile",
-    title=Title("Memory utilization"),
+    title=Title("Memory utilization (Percentiles)"),
     simple_lines=[
         "memory_util_50",
         "memory_util_95",

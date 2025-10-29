@@ -506,7 +506,6 @@ def test_duplicate_metric_titles_fixed() -> None:
 
 _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Throughput": {"azure_redis_throughput", "azure_cosmosdb_database_throughput"},
-    "Memory utilization": {"azure_redis_memory_utilization"},
     "Requests": {"azure_cosmosdb_database_requests"},
 }
 
@@ -529,7 +528,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Commit charge": {"pagefile_absolute", "pagefile_percent"},
     "Requests": {"requests"},
     "Throughput": {"throughput"},
-    "Memory utilization": {"memory_utilization_percentile"},
 }
 
 if edition(omd_root) not in (Edition.CRE, Edition.CEE):

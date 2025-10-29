@@ -8,9 +8,9 @@ import { fireEvent, render, screen, waitFor, waitForElementToBeRemoved } from '@
 
 import { Response } from '@/components/CmkSuggestions'
 
-import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
-vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
+vi.mock(import('@/form/private/FormAutocompleter/autocompleter'), async (importOriginal) => {
   const mod = await importOriginal() // type is inferred
   return {
     ...mod,

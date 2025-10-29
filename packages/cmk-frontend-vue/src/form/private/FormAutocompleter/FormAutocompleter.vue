@@ -12,7 +12,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkDropdown from '@/components/CmkDropdown'
 import { ErrorResponse, Response, type Suggestion } from '@/components/CmkSuggestions'
 
-import { fetchSuggestions } from '@/form/components/utils/autocompleter'
+import { fetchSuggestions } from '@/form/private/FormAutocompleter/autocompleter'
 
 const props = defineProps<{
   id?: string

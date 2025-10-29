@@ -23,7 +23,7 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import { inputSizes } from '@/components/user-input/sizes'
 
-import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
 const { _t } = usei18n()
 

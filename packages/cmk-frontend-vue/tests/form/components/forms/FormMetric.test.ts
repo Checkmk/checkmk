@@ -13,7 +13,7 @@ import FormMetric from '@/form/components/forms/FormMetric.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 
-vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
+vi.mock(import('@/form/private/FormAutocompleter/autocompleter'), async (importOriginal) => {
   const mod = await importOriginal() // type is inferred
   return {
     ...mod,

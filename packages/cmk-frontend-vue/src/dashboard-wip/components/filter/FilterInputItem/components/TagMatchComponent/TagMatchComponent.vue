@@ -12,7 +12,7 @@ import usei18n, { untranslated } from '@/lib/i18n'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIcon from '@/components/CmkIcon'
 
-import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
 import type { TagFilterConfig } from '../../../types.ts'
 

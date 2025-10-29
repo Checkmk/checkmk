@@ -9,7 +9,7 @@ import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_co
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
 const { _t } = usei18n()
 

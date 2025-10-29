@@ -17,7 +17,7 @@ const EXISTING_LABEL_KEY = 'existing_key'
 const EXISTING_LABEL_VALUE = 'existing_value'
 const EXISTING_LABEL_CONCAT = `${EXISTING_LABEL_KEY}:${EXISTING_LABEL_VALUE}`
 
-vi.mock(import('@/form/components/utils/autocompleter'), async (importOriginal) => {
+vi.mock(import('@/form/private/FormAutocompleter/autocompleter'), async (importOriginal) => {
   const mod = await importOriginal() // type is inferred
   return {
     ...mod,

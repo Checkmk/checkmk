@@ -14,7 +14,8 @@ import CmkDualList from '@/components/CmkDualList'
 import type { DualListElement } from '@/components/CmkDualList'
 import CmkIcon from '@/components/CmkIcon'
 
-import { fetchData } from '../utils/autocompleters/ajax'
+import { fetchData } from '@/form/private/FormAutocompleter/autocompleters/ajax'
+
 import { type ValidationMessages } from '../utils/validation'
 
 const props = defineProps<{

@@ -17,7 +17,7 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 import { inputSizes } from '@/components/user-input/sizes'
 
 import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
-import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 

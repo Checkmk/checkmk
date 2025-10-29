@@ -10,7 +10,7 @@ import { ref, watch } from 'vue'
 import { cmkFetch } from '@/lib/cmkFetch.ts'
 import usei18n from '@/lib/i18n'
 
-import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
 import type { DynamicDropdownConfig } from '../../types.ts'
 import type { ComponentEmits, FilterComponentProps } from './types.ts'

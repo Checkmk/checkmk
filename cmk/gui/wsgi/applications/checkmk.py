@@ -85,7 +85,7 @@ def _noauth(handler: pages.PageHandler) -> Callable[[pages.PageContext], Respons
 def _page_not_found(ctx: pages.PageContext) -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
-    if request.has_var("_plain_error"):
+    if ctx.request.has_var("_plain_error"):
         html.write_text_permissive(_("Page not found"))
     else:
         title = _("Page not found")
@@ -202,7 +202,7 @@ def _process_request(
 ) -> WSGIResponse:
     resp: Response
     try:
-        file_name = requested_file_name(request, on_error="raise")
+        file_name = requested_file_name(ctx.request, on_error="raise")
 
         if file_name is None:
             page_handler = _page_not_found

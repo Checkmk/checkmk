@@ -23,7 +23,7 @@ metric_aws_dynamodb_maximum_consumed_rcu = metrics.Metric(
 
 graph_aws_dynamodb_read_capacity_single = graphs.Graph(
     name="aws_dynamodb_read_capacity_single",
-    title=Title("Single-request consumption"),
+    title=Title("Single-request consumption (AWS, DynamoDB read)"),
     simple_lines=[
         "aws_dynamodb_minimum_consumed_rcu",
         "aws_dynamodb_maximum_consumed_rcu",

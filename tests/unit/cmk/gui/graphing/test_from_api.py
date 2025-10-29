@@ -511,10 +511,6 @@ _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
 }
 
 _ALLOWED_DUPLICATE_GRAPH_TITLES = {
-    "Single-request consumption": {
-        "aws_dynamodb_write_capacity_single",
-        "aws_dynamodb_read_capacity_single",
-    },
     "Errors": {"fc_errors", "if_errors_discards", "fc_errors_detailed"},
     "Huge pages": {"huge_pages_2", "huge_pages"},
     "Bandwidth": {"bandwidth_translated", "bandwidth"},

@@ -7,6 +7,8 @@ import CmkWizard from './CmkWizard.vue'
 import CmkWizardButton from './CmkWizardButton.vue'
 import CmkWizardModeToggle from './CmkWizardModeToggle.vue'
 import CmkWizardStep from './CmkWizardStep.vue'
+import type { CmkWizardStepProps } from './CmkWizardStep.vue'
 
 export default CmkWizard
 export { CmkWizardButton, CmkWizardModeToggle, CmkWizardStep }
+export type { CmkWizardStepProps }

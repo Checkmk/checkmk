@@ -18,15 +18,22 @@ export interface CmkWizardButtonProps {
   iconName?: SimpleIcons | undefined
   iconRotate?: number
   overrideLabel?: TranslatedString
+  validationCb?: () => Promise<boolean>
 }
 
 const { _t } = usei18n()
 const context = getWizardContext()
 const props = defineProps<CmkWizardButtonProps>()
 
-function onClick() {
+async function onClick() {
   switch (props.type) {
     case 'next':
+      if (props.validationCb) {
+        const isValid = await props.validationCb()
+        if (!isValid) {
+          return
+        }
+      }
       context.navigation.next()
       break
     case 'previous':

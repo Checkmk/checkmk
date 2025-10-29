@@ -322,13 +322,18 @@ class ABCGlobalSettingsMode(WatoMode):
 
 
 class ABCEditGlobalSettingMode(WatoMode):
+    def __init__(self) -> None:
+        super().__init__()
+        # Don't call this in _from_vars. make_global_settings_context might rely on the object
+        # being fully initialized.
+        self._valuespec = self._config_variable.valuespec(
+            self.make_global_settings_context(active_config)
+        )
+
     def _from_vars(self):
         self._varname = request.get_ascii_input_mandatory("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]
-            self._valuespec = self._config_variable.valuespec(
-                self.make_global_settings_context(active_config)
-            )
         except KeyError:
             raise MKUserError(
                 "varname", _('The global setting "%s" does not exist.') % self._varname

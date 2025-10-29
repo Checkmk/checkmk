@@ -32,7 +32,7 @@ def main() {
     def make_target = "test-schemathesis-openapi-docker";
     def download_dir = "package_download";
 
-    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target);
+    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
     currentBuild.description += (
         """
@@ -68,6 +68,7 @@ def main() {
             single_tests.fetch_package(
                 edition: edition,
                 distro: distro,
+                docker_tag: setup_values.docker_tag,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
                 fake_windows_artifacts: fake_windows_artifacts,

@@ -11,11 +11,7 @@ import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
 
-import {
-  getSelectedMagnitudes,
-  joinToSeconds,
-  splitToUnits as utilsSplitToUnits
-} from '../utils/timeSpan'
+import { getSelectedMagnitudes, joinToSeconds, splitToUnits as utilsSplitToUnits } from './timeSpan'
 
 type Magnitude = TimeSpan['displayed_magnitudes'][number]
 

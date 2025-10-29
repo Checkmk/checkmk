@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type { TimeSpan } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
+import FormTimeSpan from '@/form/components/forms/FormTimeSpan/FormTimeSpan.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

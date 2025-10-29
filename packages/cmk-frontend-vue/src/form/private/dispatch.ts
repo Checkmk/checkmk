@@ -33,7 +33,7 @@ import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
 import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import FormString from '@/form/components/forms/FormString.vue'
 import FormTimePicker from '@/form/components/forms/FormTimePicker.vue'
-import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
+import FormTimeSpan from '@/form/components/forms/FormTimeSpan/FormTimeSpan.vue'
 import FormTimeSpecific from '@/form/components/forms/FormTimeSpecific.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
 

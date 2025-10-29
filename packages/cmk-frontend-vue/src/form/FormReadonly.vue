@@ -51,7 +51,11 @@ import {
   type OperatorI18n,
   translateOperator
 } from './components/forms/FormConditionChoices/utils'
-import { ALL_MAGNITUDES, getSelectedMagnitudes, splitToUnits } from './components/utils/timeSpan'
+import {
+  ALL_MAGNITUDES,
+  getSelectedMagnitudes,
+  splitToUnits
+} from './components/forms/FormTimeSpan/timeSpan'
 
 function renderForm(
   formSpec: FormSpec,

@@ -7,7 +7,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import FormEdit from '@/form/FormEdit.vue'
-import FormDictionary from '@/form/components/forms/FormDictionary/FormDictionary.vue'
+import FormDictionary from '@/form/private/forms/FormDictionary/FormDictionary.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

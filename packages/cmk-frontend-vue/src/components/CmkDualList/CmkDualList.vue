@@ -12,7 +12,7 @@ import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/utils/validation'
 
 import CmkSearchableList from './CmkSearchableList.vue'
 import type { DualListElement } from './index.ts'

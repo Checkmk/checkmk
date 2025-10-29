@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Integer } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 
-import FormInteger from '@/form/components/forms/FormInteger.vue'
+import FormInteger from '@/form/private/forms/FormInteger.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

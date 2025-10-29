@@ -6,7 +6,7 @@
 import { render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormDataSize from '@/form/components/forms/FormDataSize.vue'
+import FormDataSize from '@/form/private/forms/FormDataSize.vue'
 
 const spec: FormSpec.DataSize = {
   type: 'data_size',

@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
+import FormSimplePassword from '@/form/private/forms/FormSimplePassword.vue'
 
 const validators: FormSpec.Validator[] = [
   {

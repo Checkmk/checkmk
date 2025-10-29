@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Float } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 
-import FormFloat from '@/form/components/forms/FormFloat.vue'
+import FormFloat from '@/form/private/forms/FormFloat.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

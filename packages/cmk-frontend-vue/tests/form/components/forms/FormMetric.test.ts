@@ -9,7 +9,7 @@ import { vi } from 'vitest'
 
 import { Response } from '@/components/CmkSuggestions'
 
-import FormMetric from '@/form/components/forms/FormMetric.vue'
+import FormMetric from '@/form/private/forms/FormMetric.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
-import FormButton from '@/form/components/FormButton.vue'
+import FormButton from '@/form/private/FormButton.vue'
 
 defineOptions({
   inheritAttrs: false

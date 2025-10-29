@@ -9,7 +9,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 
 import { Response } from '@/components/CmkSuggestions'
 
-import FormLabel from '@/form/components/forms/FormLabels.vue'
+import FormLabel from '@/form/private/forms/FormLabels.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

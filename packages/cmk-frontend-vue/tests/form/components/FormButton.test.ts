@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent } from 'vue'
 
-import FormButton from '@/form/components/FormButton.vue'
+import FormButton from '@/form/private/FormButton.vue'
 
 const submitHandler = vi.fn((e) => e.preventDefault())
 

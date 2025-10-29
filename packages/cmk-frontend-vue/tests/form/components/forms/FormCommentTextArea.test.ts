@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormCommentTextArea from '@/form/components/forms/FormCommentTextArea.vue'
+import FormCommentTextArea from '@/form/private/forms/FormCommentTextArea.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

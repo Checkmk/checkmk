@@ -6,7 +6,7 @@
 import { type RenderResult, render } from '@testing-library/vue'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import type { ValidationMessages } from '@/form/components/utils/validation'
+import type { ValidationMessages } from '@/form/private/utils/validation'
 
 import FormDataVisualizer from './FormDataVisualizer.vue'
 

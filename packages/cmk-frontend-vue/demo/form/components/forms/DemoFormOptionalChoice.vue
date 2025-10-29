@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { OptionalChoice, String } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 
-import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
+import FormOptionalChoice from '@/form/private/forms/FormOptionalChoice.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

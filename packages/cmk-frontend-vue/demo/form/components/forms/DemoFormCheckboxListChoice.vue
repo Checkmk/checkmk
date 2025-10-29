@@ -9,7 +9,7 @@ import { ref } from 'vue'
 
 import FormCheckboxListChoice, {
   type CheckboxListChoiceElement
-} from '@/form/components/forms/FormCheckboxListChoice.vue'
+} from '@/form/private/forms/FormCheckboxListChoice.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

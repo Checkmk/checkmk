@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormMultilineText from '@/form/components/forms/FormMultilineText.vue'
+import FormMultilineText from '@/form/private/forms/FormMultilineText.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

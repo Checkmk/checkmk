@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Metric } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 
-import FormMetric from '@/form/components/forms/FormMetric.vue'
+import FormMetric from '@/form/private/forms/FormMetric.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

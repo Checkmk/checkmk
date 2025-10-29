@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormFloat from '@/form/components/forms/FormFloat.vue'
+import FormFloat from '@/form/private/forms/FormFloat.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

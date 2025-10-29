@@ -13,7 +13,7 @@ import { ref } from 'vue'
 
 import { type DualListElement } from '@/components/CmkDualList/index.ts'
 
-import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
+import FormDualListChoice from '@/form/private/forms/FormDualListChoice.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

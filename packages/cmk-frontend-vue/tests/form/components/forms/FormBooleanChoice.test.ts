@@ -6,7 +6,7 @@
 import { render, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
+import FormBooleanChoice from '@/form/private/forms/FormBooleanChoice.vue'
 
 function getBooleanChoice(withLabel = false): FormSpec.BooleanChoice {
   return {

@@ -15,7 +15,7 @@ import CmkHelpText from '@/components/CmkHelpText.vue'
 
 import FormEdit from '@/form/FormEdit.vue'
 import FormReadonly from '@/form/FormReadonly.vue'
-import type { ValidationMessages } from '@/form/components/utils/validation'
+import type { ValidationMessages } from '@/form/private/utils/validation'
 
 const props = defineProps<{
   id: string

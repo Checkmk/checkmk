@@ -38,24 +38,24 @@ import { type PropType, type VNode, defineComponent, h } from 'vue'
 
 import type { DualListElement } from '@/components/CmkDualList'
 
-import type { CheckboxListChoiceElement } from '@/form/components/forms/FormCheckboxListChoice.vue'
-import FormLabelsLabel from '@/form/components/forms/FormLabelsLabel.vue'
+import type { CheckboxListChoiceElement } from '@/form/private/forms/FormCheckboxListChoice.vue'
+import FormLabelsLabel from '@/form/private/forms/FormLabelsLabel.vue'
 import {
   type ValidationMessages,
   groupIndexedValidations,
   groupNestedValidations
-} from '@/form/components/utils/validation'
+} from '@/form/private/utils/validation'
 
 import {
   type Operator,
   type OperatorI18n,
   translateOperator
-} from './components/forms/FormConditionChoices/utils'
+} from './private/forms/FormConditionChoices/utils'
 import {
   ALL_MAGNITUDES,
   getSelectedMagnitudes,
   splitToUnits
-} from './components/forms/FormTimeSpan/timeSpan'
+} from './private/forms/FormTimeSpan/timeSpan'
 
 function renderForm(
   formSpec: FormSpec,

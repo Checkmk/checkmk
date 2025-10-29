@@ -6,6 +6,6 @@
 import FormApp from './FormApp.vue'
 import FormEdit from './FormEdit.vue'
 import FormReadonly from './FormReadonly.vue'
-import { type ValidationMessages } from './components/utils/validation'
+import { type ValidationMessages } from './private/utils/validation'
 
 export { FormEdit, FormReadonly, FormApp, type ValidationMessages }

@@ -9,9 +9,9 @@ import { provide } from 'vue'
 
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
-import FormEditDispatcher from '@/form/components/FormEditDispatcher/FormEditDispatcher.vue'
-import { dispatcherKey } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
-import type { ValidationMessages } from '@/form/components/utils/validation'
+import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
+import { dispatcherKey } from '@/form/private/FormEditDispatcher/useFormEditDispatcher'
+import type { ValidationMessages } from '@/form/private/utils/validation'
 
 defineProps<{
   spec: FormSpec

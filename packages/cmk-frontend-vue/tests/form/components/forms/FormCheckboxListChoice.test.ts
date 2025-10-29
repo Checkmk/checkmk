@@ -6,7 +6,7 @@
 import { findAllByRole, findByRole, fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import CheckboxListChoice from '@/form/components/forms/FormCheckboxListChoice.vue'
+import CheckboxListChoice from '@/form/private/forms/FormCheckboxListChoice.vue'
 
 const spec: FormSpec.CheckboxListChoice = {
   type: 'checkbox_list_choice',

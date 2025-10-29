@@ -6,7 +6,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
+import FormSingleChoice from '@/form/private/forms/FormSingleChoice.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

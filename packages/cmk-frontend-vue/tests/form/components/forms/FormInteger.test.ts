@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormInteger from '@/form/components/forms/FormInteger.vue'
+import FormInteger from '@/form/private/forms/FormInteger.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

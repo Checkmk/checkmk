@@ -6,7 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormConditionChoices from '@/form/components/forms/FormConditionChoices'
+import FormConditionChoices from '@/form/private/forms/FormConditionChoices'
 
 const validators: FormSpec.Validator[] = [
   {

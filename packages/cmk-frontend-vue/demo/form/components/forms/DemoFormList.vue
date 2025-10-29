@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { List, String } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 
-import FormList from '@/form/components/forms/FormList/FormList.vue'
+import FormList from '@/form/private/forms/FormList/FormList.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 

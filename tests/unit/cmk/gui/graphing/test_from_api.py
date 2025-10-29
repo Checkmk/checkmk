@@ -514,7 +514,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
     "Capacity usage": {"capacity_usage_2", "capacity_usage"},
     "Size and used space": {"fs_used", "fs_used_2"},
-    "Licenses": {"licenses_max", "licenses_total"},
     "Amount of mails in queues": {
         "amount_of_mails_in_queues",
         "amount_of_mails_in_secondary_queues",

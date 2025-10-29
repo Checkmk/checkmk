@@ -108,6 +108,7 @@ py_library(
     name = "password_store",
     srcs = [
         "cmk/password_store/v1_unstable/__init__.py",
+        "cmk/password_store/v1_unstable/_convenience.py",
         "cmk/password_store/v1_unstable/_impl.py",
     ],
     data = ["cmk/password_store/py.typed"],

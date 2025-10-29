@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._convenience import parser_add_secret_option, resolve_secret_option
 from ._impl import dereference_secret, PasswordStore, PasswordStoreError, Secret
 
 __all__ = [
@@ -10,4 +11,6 @@ __all__ = [
     "Secret",
     "dereference_secret",
     "PasswordStore",
+    "parser_add_secret_option",
+    "resolve_secret_option",
 ]

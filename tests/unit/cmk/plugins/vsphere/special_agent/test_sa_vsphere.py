@@ -26,7 +26,6 @@ DEFAULT_AGRS = {
     "modules": ["hostsystem", "virtualmachine", "datastore", "counters", "licenses"],
     "host_address": "test_host",
     "user": None,
-    "secret": None,
 }
 
 
@@ -55,16 +54,12 @@ DEFAULT_AGRS = {
         (["-i", "are,not,vectorspaces"], {"modules": ["are", "not", "vectorspaces"]}),
         (["--user", "hi-its-me"], {"user": "hi-its-me"}),
         (["-u", "hi-its-me"], {"user": "hi-its-me"}),
-        (
-            ["--secret-id", "I'm Batman"],
-            {"secret_id": "I'm Batman"},
-        ),
     ],
 )
 def test_parse_arguments(
     argv: Sequence[str], expected_non_default_args: Mapping[str, object]
 ) -> None:
-    args = agent_vsphere.parse_arguments([*argv, "test_host"])
+    args = agent_vsphere.parse_arguments(["-s", "mysecret", *argv, "test_host"])
     for attr, value in DEFAULT_AGRS.items():
         expected = expected_non_default_args.get(attr, value)
         actual = getattr(args, attr)
@@ -83,15 +78,20 @@ def test_parse_arguments_secret_long() -> None:
     assert args.secret.reveal() == "I like listening to Folk music"
 
 
+def test_parse_arguments_secret_id() -> None:
+    args = agent_vsphere.parse_arguments(["--secret-id", "I'm Batman", "test_host"])
+    assert args.secret_id == "I'm Batman"
+
+
 @pytest.mark.parametrize(
     "invalid_argv",
     [
         [],
-        ["--tracefile", "wrongly_interpreted_as_host_address"],
-        ["--spaces", "safe"],
-        ["--host_pwr_display", "whoopdeedoo"],
-        ["--vm_pwr_display", "whoopdeedoo"],
-        ["--vm_piggyname", "MissPiggy"],
+        ["-s", "mysecret", "--tracefile", "wrongly_interpreted_as_host_address"],
+        ["-s", "mysecret", "--spaces", "safe"],
+        ["-s", "mysecret", "--host_pwr_display", "whoopdeedoo"],
+        ["-s", "mysecret", "--vm_pwr_display", "whoopdeedoo"],
+        ["-s", "mysecret", "--vm_piggyname", "MissPiggy"],
     ],
 )
 def test_parse_arguments_invalid(invalid_argv: Sequence[str]) -> None:

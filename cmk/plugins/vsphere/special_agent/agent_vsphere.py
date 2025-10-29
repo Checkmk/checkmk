@@ -28,7 +28,11 @@ import dateutil.parser
 import requests
 import urllib3
 
-from cmk.password_store.v1_unstable import dereference_secret, Secret
+from cmk.password_store.v1_unstable import (
+    parser_add_secret_option,
+    resolve_secret_option,
+    Secret,
+)
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, Storage, vcrtrace
 
 #   .--defines-------------------------------------------------------------.
@@ -91,6 +95,8 @@ REQUESTED_COUNTERS_KEYS = (
 )
 
 COOKIE_MAX_AGE = 4 * 3600
+
+SECRET_OPTION = "secret"
 
 
 class SoapTemplates:
@@ -1026,8 +1032,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
     # optional arguments (from a coding point of view - should some of them be mandatory?)
     parser.add_argument("-u", "--user", default=None, help="""Username for vSphere login""")
-    _add_secret_option(
-        parser, short="-s", long="--secret", help="Secret/Password for vSphere login"
+    parser_add_secret_option(
+        parser, short="-s", long=f"--{SECRET_OPTION}", help="Secret/Password for vSphere login"
     )
 
     # positional arguments
@@ -1036,34 +1042,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
 
     return parser.parse_args(argv)
-
-
-# we'll use this a lot. we can consider providing this as a utility API element
-def _add_secret_option(
-    parser: argparse.ArgumentParser, short: str | None, long: str, help: str
-) -> None:
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        *((short,) if short else ()),
-        long,
-        default=None,
-        help=help,
-        type=Secret,
-    )
-    group.add_argument(
-        f"{long}-id",
-        default=None,
-        help=f'Same as "{long}", but containing the reference to the password store rather than the actual secret.',
-    )
-
-
-# we'll use this a lot. we can consider providing this as a utility API element
-def _resolve_secret_option(secret_id: str | None, secret: Secret | None) -> Secret:
-    if secret_id is None:
-        if secret is None:
-            raise ValueError("neither secret nor secret id given")
-        return secret
-    return dereference_secret(secret_id)
 
 
 # .
@@ -2115,7 +2093,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         esx_connection = ESXConnection(opt.host_address, opt.port, opt)
 
-        esx_connection.login(opt.user, _resolve_secret_option(opt.secret_id, opt.secret))
+        esx_connection.login(opt.user, resolve_secret_option(opt, SECRET_OPTION))
         try:
             vsphere_output = fetch_data(esx_connection, opt)
         except ESXCookieInvalid:

@@ -12,7 +12,9 @@ from ._impl import dereference_secret, Secret
 
 def parser_add_secret_option(
     parser: argparse.ArgumentParser,
-    short: str | None,
+    /,
+    *,
+    short: str | None = None,
     long: str,
     help: str,
     required: bool = True,

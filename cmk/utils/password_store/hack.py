@@ -40,7 +40,7 @@ HACK_AGENTS = {
     "gerrit": False,
     "jenkins": True,
     "mobileiron": True,
-    "netapp_ontap": True,
+    "netapp_ontap": False,
     "prism": True,
     "proxmox_ve": True,
     "pure_storage_fa": True,

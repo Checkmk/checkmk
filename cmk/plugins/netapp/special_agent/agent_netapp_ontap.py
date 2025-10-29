@@ -13,6 +13,7 @@ import sys
 import traceback
 from collections.abc import Collection, Iterable, Sequence
 from enum import Enum
+from typing import Final
 
 import urllib3
 from netapp_ontap import resources as NetAppResource
@@ -20,15 +21,17 @@ from netapp_ontap.error import NetAppRestError
 from netapp_ontap.host_connection import HostConnection
 from pydantic import BaseModel
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.netapp import models
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
 from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_dump
-from cmk.utils.password_store import lookup as lookup_stored_passwords
-from cmk.utils.password_store.hack import resolve_password_hack
 
 __version__ = "2.5.0b1"
 
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
+
+
+PASSWORD_OPTION: Final = "password"
 
 
 class CannotRecover(RuntimeError):
@@ -1007,7 +1010,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--hostname", help="Hostname or IP-address of NetApp Filer.", required=True)
     parser.add_argument("--username", help="Username for NetApp login", required=True)
-    parser.add_argument("--password", help="Secret/Password for NetApp login", required=True)
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", help="Secret/Password for NetApp login", required=True
+    )
 
     parser.add_argument(
         "-t",
@@ -1079,7 +1084,7 @@ def agent_netapp_main(args: argparse.Namespace) -> int:
     with HostConnection(
         args.hostname,
         args.username,
-        args.password,
+        resolve_secret_option(args, PASSWORD_OPTION).reveal(),
         verify=False if args.no_cert_check else True,
         headers={"User-Agent": USER_AGENT},
     ) as connection:
@@ -1103,7 +1108,7 @@ def agent_netapp_main(args: argparse.Namespace) -> int:
 
 def main() -> int:
     """Main entry point to be used"""
-    args = parse_arguments(resolve_password_hack(sys.argv[1:], lookup_stored_passwords))
+    args = parse_arguments(sys.argv[1:])
 
     try:
         return agent_netapp_main(args)

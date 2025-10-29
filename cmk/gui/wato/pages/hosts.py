@@ -352,6 +352,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                         ipv4_address=HostAttributeIPv4Address().name(),
                         ipv6_address=HostAttributeIPv6Address().name(),
                         site=HostAttributeSite().name(),
+                        relay="relay",
                         ip_address_family="tag_address_family",
                         cmk_agent_connection="cmk_agent_connection",
                         tag_agent="tag_agent",

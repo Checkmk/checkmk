@@ -34,6 +34,7 @@ const ipv4InputElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv4InputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv6InputElement: Ref<HTMLInputElement | null> = ref(null)
 const ipv6InputButtonElement: Ref<HTMLInputElement | null> = ref(null)
+const relayInputButtonElement: Ref<HTMLInputElement | null> = ref(null)
 const ipAddressFamilySelectElement: Ref<HTMLSelectElement | null> = ref(null)
 const ipAddressFamilyInputElement: Ref<HTMLInputElement | null> = ref(null)
 const tagAgentInputSelectElement: Ref<HTMLSelectElement | null> = ref(null)
@@ -85,6 +86,9 @@ onMounted(() => {
   cmkConnectionModeSelectElement.value = document.querySelector(
     `select[name="${props.form_keys.cmk_agent_connection}"]`
   )
+  relayInputButtonElement.value = document.querySelector(
+    `input[id="${props.form_keys.cb_change}_${props.form_keys.relay}"]`
+  )
 })
 
 function getElementBySelector<T>(selector: string): T {
@@ -118,6 +122,7 @@ function getElementBySelector<T>(selector: string): T {
     :ipv4-input-button-element="ipv4InputButtonElement"
     :ipv6-input-element="ipv6InputElement"
     :ipv6-input-button-element="ipv6InputButtonElement"
+    :relay-input-button-element="relayInputButtonElement"
     :site-select-element="siteSelectElement"
     :sites="sites"
   ></PingHost>

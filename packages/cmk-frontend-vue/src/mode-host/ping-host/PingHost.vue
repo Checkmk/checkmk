@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import axios from 'axios'
 import { type I18NPingHost, type ModeHostSite } from 'cmk-shared-typing/typescript/mode_host'
-import { type Ref, onMounted, ref } from 'vue'
+import { type Ref, computed, onMounted, ref } from 'vue'
 
 import StatusBox, { type DNSStatus } from '@/mode-host/ping-host/StatusBox.vue'
 
@@ -21,6 +21,7 @@ const props = defineProps<{
   ipv4InputButtonElement: HTMLInputElement
   ipv6InputElement: HTMLInputElement
   ipv6InputButtonElement: HTMLInputElement
+  relayInputButtonElement: HTMLInputElement | null
   siteSelectElement: HTMLSelectElement
   sites: Array<ModeHostSite>
 }>()
@@ -55,11 +56,16 @@ const statusElements: Ref<Record<string, Result>> = ref({})
 const isNoIP = ref(
   props.ipAddressFamilyInputElement.checked && props.ipAddressFamilySelectElement.value === 'no-ip'
 )
+const isRelay = ref(props.relayInputButtonElement?.checked)
 const controller = ref(new AbortController())
 const ajaxRequestInProgress = ref(false)
 
 const typingTimer: Ref<ReturnType<typeof setTimeout> | null> = ref(null)
 const doneTypingInterval = 250
+
+const showPingHost = computed(() => {
+  return !isNoIP.value && !isRelay.value
+})
 
 onMounted(() => {
   props.formElement.addEventListener('change', (e: Event) => {
@@ -81,14 +87,16 @@ onMounted(() => {
         isNoIP.value =
           props.ipAddressFamilyInputElement.checked &&
           props.ipAddressFamilySelectElement.value === 'no-ip'
-        if (isNoIP.value) {
-          statusElements.value = {}
-        }
         break
+      case props.relayInputButtonElement:
+        isRelay.value = props.relayInputButtonElement?.checked
+    }
+    if (!showPingHost.value) {
+      statusElements.value = {}
     }
   })
   props.hostnameInputElement.addEventListener('input', () => {
-    if (isNoIP.value) {
+    if (!showPingHost.value) {
       statusElements.value = {}
       return
     }
@@ -98,14 +106,14 @@ onMounted(() => {
     callPingHostOnElement(props.hostnameInputElement, PingCmd.Ping, false)
   })
   props.ipv4InputElement.addEventListener('input', () => {
-    if (isNoIP.value) {
+    if (!showPingHost.value) {
       statusElements.value = {}
       return
     }
     callPingHostOnElement(props.ipv4InputElement, PingCmd.Ping4, true)
   })
   props.ipv6InputElement.addEventListener('input', () => {
-    if (isNoIP.value) {
+    if (!showPingHost.value) {
       statusElements.value = {}
       return
     }

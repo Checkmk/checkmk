@@ -84,30 +84,34 @@ public:
     cma::evl::EventLogDebug event_log{tst::SimpleLogData()};
     State state{"Application", cfg::kFromBegin, true};
     const size_t max_pos{tst::SimpleLogData().size()};
-    static constexpr LogWatchLimits lwl_all_with_skip{
+    static inline const LogWatchLimits lwl_all_with_skip{
         .max_size = 10'000,
         .max_line_length = -1,
         .max_entries = -1,
         .timeout = -1,
-        .skip = SkipDuplicatedRecords::yes};
-    static constexpr LogWatchLimits lwl_all_without_skip{
+        .skip = SkipDuplicatedRecords::yes,
+        .allowed_ids = LogWatchIntervals()};
+    static inline const LogWatchLimits lwl_all_without_skip{
         .max_size = 10'000,
         .max_line_length = -1,
         .max_entries = -1,
         .timeout = -1,
-        .skip = SkipDuplicatedRecords::no};
-    static constexpr LogWatchLimits lwl_all_with_skip_and_cut_same{
+        .skip = SkipDuplicatedRecords::no,
+        .allowed_ids = LogWatchIntervals()};
+    static inline const LogWatchLimits lwl_all_with_skip_and_cut_same{
         .max_size = 10'000,
         .max_line_length = -1,
         .max_entries = 2,
         .timeout = -1,
-        .skip = SkipDuplicatedRecords::yes};
-    static constexpr LogWatchLimits lwl_all_with_skip_and_cut_diff{
+        .skip = SkipDuplicatedRecords::yes,
+        .allowed_ids = LogWatchIntervals()};
+    static inline const LogWatchLimits lwl_all_with_skip_and_cut_diff{
         .max_size = 10'000,
         .max_line_length = -1,
         .max_entries = 4,
         .timeout = -1,
-        .skip = SkipDuplicatedRecords::yes};
+        .skip = SkipDuplicatedRecords::yes,
+        .allowed_ids = LogWatchIntervals()};
 };
 
 TEST_F(LogWatchEventFixture, DumpEventLogWithSkip) {
@@ -164,7 +168,8 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .max_line_length = -1,
                            .max_entries = -1,
                            .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no};
+                           .skip = SkipDuplicatedRecords::no,
+                           .allowed_ids = LogWatchIntervals()};
         auto [pos, out] = DumpEventLog(*ptr, state, lwl);
         EXPECT_TRUE(pos > 0);
         EXPECT_TRUE(out.length() < 12'000);
@@ -175,7 +180,8 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .max_line_length = 10,
                            .max_entries = 19,
                            .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no};
+                           .skip = SkipDuplicatedRecords::no,
+                           .allowed_ids = LogWatchIntervals()};
         auto [pos, out] = DumpEventLog(*ptr, state, lwl);
         EXPECT_TRUE(pos > 0);
         EXPECT_TRUE(out.length() < 20000);
@@ -189,7 +195,8 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .max_line_length = 10,
                            .max_entries = -1,
                            .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no};
+                           .skip = SkipDuplicatedRecords::no,
+                           .allowed_ids = LogWatchIntervals()};
         auto start = steady_clock::now();
         auto [_, out] = DumpEventLog(*ptr, state, lwl);
         auto end = steady_clock::now();
@@ -972,6 +979,87 @@ TEST(LogWatchEventTest, TestSkip) {
     EXPECT_TRUE(result.substr(pos).find(text) != std::string::npos);
     EXPECT_TRUE(result.find(fmt::format(evl::kSkippedMessageFormat, 1)) ==
                 std::string::npos);
+}
+
+TEST(LogWatchEventTest, TestIntervals) {
+    IntervalSetBuilder<uint32_t> empty;
+    EXPECT_EQ(empty.build(), std::nullopt);
+
+    IntervalSetBuilder<uint32_t> b;
+    b.add(3, 6);
+    {
+        auto r = b.build().value();
+        EXPECT_TRUE(r.contains(3));
+        EXPECT_TRUE(r.contains(5));
+        EXPECT_FALSE(r.contains(2));
+        EXPECT_FALSE(r.contains(6));
+    }
+
+    b.add(8, 11);
+    {
+        auto r = b.build().value();
+        EXPECT_TRUE(r.contains(8));
+        EXPECT_TRUE(r.contains(10));
+        EXPECT_FALSE(r.contains(7));
+        EXPECT_FALSE(r.contains(11));
+    }
+
+    b.add(6, 8);
+    {
+        auto r = b.build().value();
+        EXPECT_TRUE(r.contains(6));
+        EXPECT_TRUE(r.contains(10));
+        EXPECT_TRUE(r.contains(7));
+        EXPECT_FALSE(r.contains(11));
+    }
+
+    b.add(2, 12);
+    {
+        auto r = b.build().value();
+        EXPECT_TRUE(r.contains(2));
+        EXPECT_TRUE(r.contains(11));
+        EXPECT_FALSE(r.contains(1));
+        EXPECT_FALSE(r.contains(12));
+    }
+}
+
+TEST(LogWatchEventTest, TestIntervalsApi) {
+    {
+        const auto r = LogWatchIntervals();
+        EXPECT_TRUE(r.check(2123312));
+    }
+
+    {
+        IntervalSetBuilder<uint64_t> includes;
+        IntervalSetBuilder<uint64_t> excludes;
+        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        EXPECT_TRUE(r.check(2));
+    }
+
+    {
+        IntervalSetBuilder<uint64_t> includes;
+        IntervalSetBuilder<uint64_t> excludes;
+        excludes.add(3, 4);
+        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        EXPECT_TRUE(r.check(1));
+        EXPECT_TRUE(r.check(2));
+        EXPECT_FALSE(r.check(3));
+        EXPECT_TRUE(r.check(4));
+        EXPECT_TRUE(r.check(5));
+    }
+
+    {
+        IntervalSetBuilder<uint64_t> includes;
+        IntervalSetBuilder<uint64_t> excludes;
+        includes.add(2, 5);
+        excludes.add(3, 4);
+        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        EXPECT_FALSE(r.check(1));
+        EXPECT_TRUE(r.check(2));
+        EXPECT_FALSE(r.check(3));
+        EXPECT_TRUE(r.check(4));
+        EXPECT_FALSE(r.check(5));
+    }
 }
 
 }  // namespace cma::provider

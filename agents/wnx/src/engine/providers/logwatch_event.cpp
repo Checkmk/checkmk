@@ -581,7 +581,8 @@ LogWatchLimits LogWatchEvent::getLogWatchLimits() const noexcept {
             .max_line_length = max_line_length_,
             .max_entries = max_entries_,
             .timeout = timeout_,
-            .skip = skip_};
+            .skip = skip_,
+            .allowed_ids = LogWatchIntervals()};
 }
 
 std::vector<fs::path> LogWatchEvent::makeStateFilesTable() const {

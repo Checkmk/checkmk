@@ -22,12 +22,117 @@ namespace cma::provider {
 constexpr std::string_view kLogWatchEventStateFileName{"eventstate"};
 constexpr std::string_view kLogWatchEventStateFileExt{".txt"};
 
+template <typename T>
+struct Interval {
+    T lo;
+    T hi;
+};
+
+/// If empty returns true for any value
+template <typename T>
+class IntervalSet {
+public:
+    explicit IntervalSet(std::vector<Interval<T>> intervals)
+        : intervals_(std::move(intervals)) {}
+
+    bool contains(const T &x) const {
+        if (intervals_.empty()) {
+            return false;
+        }
+
+        // attempt to find first not good interval
+        auto it = std::upper_bound(intervals_.begin(), intervals_.end(), x,
+                                   [](const T &value, const Interval<T> &iv) {
+                                       return value < iv.lo;
+                                   });
+        if (it == intervals_.begin()) {
+            return false;
+        }
+        // and step back if found
+        --it;
+        return it->lo <= x && x < it->hi;
+    }
+
+private:
+    std::vector<Interval<T>> intervals_;
+};
+
+template <typename T>
+class IntervalSetBuilder {
+public:
+    void add(T lo, T hi) {
+        if (hi < lo) {
+            intervals_.push_back({hi, lo});
+        } else {
+            intervals_.push_back({lo, hi});
+        }
+    }
+
+    std::optional<IntervalSet<T>> build() {
+        if (intervals_.empty()) {
+            return std::nullopt;
+        }
+        std::sort(intervals_.begin(), intervals_.end(),
+                  [](const Interval<T> &a, const Interval<T> &b) {
+                      return a.lo < b.lo;
+                  });
+
+        std::vector<Interval<T>> merged;
+        merged.push_back(intervals_.front());
+        for (size_t i = 1; i < intervals_.size(); ++i) {
+            auto &last = merged.back();
+            const auto &cur = intervals_[i];
+            if (cur.lo <= last.hi) {  // overlap or touch (inclusive)
+                if (cur.hi > last.hi) last.hi = cur.hi;
+            } else {
+                merged.push_back(cur);
+            }
+        }
+
+        return std::optional<IntervalSet<T>>(IntervalSet<T>(merged));
+    }
+
+private:
+    std::vector<Interval<T>> intervals_;
+};
+
+class LogWatchIntervals {
+    using OptionalIntervals = std::optional<IntervalSet<uint64_t>>;
+
+public:
+    LogWatchIntervals() = default;
+
+    explicit LogWatchIntervals(OptionalIntervals includes,
+                               OptionalIntervals excludes = std::nullopt)
+        : includes_(std::move(includes)), excludes_(std::move(excludes)) {}
+
+    bool check(uint64_t id) const {
+        // skip if present _and_ list contains id
+        if (excludes_ && excludes_->contains(id)) {
+            return false;
+        }
+
+        // if includes is present, then check it and return
+        if (includes_) {
+            return includes_->contains(id);
+        }
+
+        // either not in excludes and no includes - all good
+        return true;
+    }
+
+private:
+    OptionalIntervals includes_;
+    OptionalIntervals excludes_;
+};
+
 struct LogWatchLimits {
     int64_t max_size;
     int64_t max_line_length;
     int64_t max_entries;
     int64_t timeout;
     evl::SkipDuplicatedRecords skip;
+    LogWatchIntervals allowed_ids;
 };
 
 struct State {

@@ -17,11 +17,13 @@ import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
-import { type Payload, configEntityAPI } from '@/form/components/utils/configuration_entity'
+import FormButton from '@/form/components/forms/FormButton.vue'
+import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
+import {
+  type Payload,
+  configEntityAPI
+} from '@/form/components/forms/FormSingleChoiceEditable/configuration_entity'
 import { type ValidationMessages, useValidation } from '@/form/components/utils/validation'
-
-import FormButton from './FormButton.vue'
 
 const props = defineProps<{
   spec: SingleChoiceEditable

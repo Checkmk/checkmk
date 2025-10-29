@@ -11,8 +11,8 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
-import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
-import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
+import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
 import { dispatcherKey } from '@/form/private'
 
 test('FormSingleChoiceEditableEditAsync renders form', async () => {

@@ -16,8 +16,8 @@ import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import type {
   API,
   SetDataResult
-} from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
-import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+} from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
+import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
 import { dispatcherKey } from '@/form/private'
 
 defineProps<{ screenshotMode: boolean }>()

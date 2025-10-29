@@ -10,8 +10,8 @@ import { setupWorker } from 'msw/browser'
 import { onBeforeMount, onBeforeUnmount, provide, ref } from 'vue'
 
 import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
-import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
-import { configEntityAPI } from '@/form/components/utils/configuration_entity'
+import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditable.vue'
+import { configEntityAPI } from '@/form/components/forms/FormSingleChoiceEditable/configuration_entity'
 import { dispatcherKey } from '@/form/private'
 
 defineProps<{ screenshotMode: boolean }>()

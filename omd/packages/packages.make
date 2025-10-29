@@ -33,13 +33,13 @@ $(DEPS_INSTALL_BAZEL):
 	#       resulting in different builds
 	# IMPORTANT: Keep the executio log file name in sync with what bazel_logs.groovy cleans-up.
 	# TODO: Find a better way to sync the generation and its clean up.
-	bazel build --cmk_version=$(VERSION) --cmk_edition=$(EDITION_SHORT) \
+	bazel build --cmk_version=$(VERSION) --cmk_edition=$(EDITION) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
-	    $(if $(filter cre,$(EDITION_SHORT)),--//:repo_license="gpl") \
+	    $(if $(filter raw,$(EDITION)),--//:repo_license="gpl") \
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \
-	    //omd:deps_install_$(EDITION_SHORT)
+	    //omd:deps_install_$(EDITION)
 	$(MKDIR) $(DESTDIR)
-	tar -C $(DESTDIR) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION_SHORT).tar.xz
+	tar -C $(DESTDIR) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION).tar.xz
 
 	#TODO: The following code should be executed by Bazel instead of make
 	# Fix sysconfigdata

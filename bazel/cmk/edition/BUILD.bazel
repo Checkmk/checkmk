@@ -4,37 +4,37 @@ package(default_visibility = ["//visibility:public"])
 
 string_flag(
     name = "edition",
-    build_setting_default = "cre",
+    build_setting_default = "raw",
     values = [
-        "cre",
-        "cce",
-        "cee",
-        "cme",
-        "cse",
+        "raw",
+        "cloud",
+        "enterprise",
+        "managed",
+        "saas",
     ],
 )
 
 config_setting(
-    name = "cre",
-    flag_values = {":edition": "cre"},
+    name = "raw",
+    flag_values = {":edition": "raw"},
 )
 
 config_setting(
-    name = "cce",
-    flag_values = {":edition": "cce"},
+    name = "cloud",
+    flag_values = {":edition": "cloud"},
 )
 
 config_setting(
-    name = "cee",
-    flag_values = {":edition": "cee"},
+    name = "enterprise",
+    flag_values = {":edition": "enterprise"},
 )
 
 config_setting(
-    name = "cme",
-    flag_values = {":edition": "cme"},
+    name = "managed",
+    flag_values = {":edition": "managed"},
 )
 
 config_setting(
-    name = "cse",
-    flag_values = {":edition": "cse"},
+    name = "saas",
+    flag_values = {":edition": "saas"},
 )

@@ -208,11 +208,11 @@ pkg_files(
            }) +
            edition_deps[edition],
 ) for edition in [
-    "cre",
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "raw",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 [genrule(
@@ -298,19 +298,11 @@ pkg_tar(
     tags = ["manual"],
 )
 
-editions = {
-    "cce": "cloud",
-    "cee": "enterprise",
-    "cme": "managed",
-    "cre": "raw",
-    "cse": "saas",
-}
-
 [pkg_name_info(
     name = "cmk_pkg_variables_" + edition,
     architecture = "amd64",
     cmk_version = "@cmk//version",
-    package = "check-mk-" + editions[edition],
+    package = "check-mk-" + edition,
     tags = ["manual"],
     version = select({
         "@cmk//distro:almalinux-8": "el8-38",
@@ -324,17 +316,17 @@ editions = {
         "@cmk//distro:ubuntu-24.04": "0.noble",
     }),
 ) for edition in [
-    "cre",
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "raw",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 [pkg_deb(
     name = "deb_" + edition,
     architecture = "amd64",
-    changelog = ":changelog_" + edition,
+    changelog = "//omd/packages/changelog:changelog_" + edition,
     config = "//omd/debian:config",
     #control = "//omd/debian:control", Field does not exist, do we need it?
     data = "deps_install_" + edition,
@@ -344,7 +336,7 @@ editions = {
     homepage = "https://checkmk.com",
     maintainer = "Checkmk team <feedback@checkmk.com>",
     # check-mk-enterprise-2.5.0-2025.06.26_0.noble_amd64.deb
-    package = "check-mk-" + editions[edition],
+    package = "check-mk-" + edition,
     package_file_name = "{package}-{cmk_version}_{version}_{architecture}.deb",
     package_variables = ":cmk_pkg_variables_" + edition,
     postinst = "//omd/debian:postinst",
@@ -358,9 +350,9 @@ editions = {
     triggers = "//omd/debian:triggers",
     version_file = "//omd/distros:distro_version_file",
 ) for edition in [
-    "cre",
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "raw",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]

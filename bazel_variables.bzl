@@ -3,26 +3,26 @@ RUFF_VERSION = "0.14.2"  # keep in sync with the multitool hub
 
 # TODO: Re-work this with edition_deps + check for duplicate in cmk/BUILD
 edition_python_deps = {
-    "cre": [],
-    "cce": [
+    "raw": [],
+    "cloud": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
     ],
-    "cee": [
+    "enterprise": [
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
     ],
-    "cme": [
+    "managed": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
     ],
-    "cse": [
+    "saas": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
@@ -35,11 +35,11 @@ edition_deps = {
     # NOTES:
     # * jaeger should be added to all editions EXCEPT saas - saas has its own tracing collector
     # * nagvis should be added to all editions EXCEPT saas - see CMK-14926
-    "cre": [
+    "raw": [
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
-    "cce": [
+    "cloud": [
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -60,7 +60,7 @@ edition_deps = {
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
-    "cee": [
+    "enterprise": [
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -77,7 +77,7 @@ edition_deps = {
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
-    "cme": [
+    "managed": [
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -99,7 +99,7 @@ edition_deps = {
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
-    "cse": [
+    "saas": [
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",

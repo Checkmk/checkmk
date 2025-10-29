@@ -21,6 +21,14 @@ py_binary(
     deps = ["//packages/cmk-werks"],
 )
 
+short_editions = {
+    "cloud": "cce",
+    "enterprise": "cee",
+    "managed": "cme",
+    "raw": "cre",
+    "saas": "cse",
+}
+
 [run_binary(
     name = "run_werks_precompile_" + edition,
     srcs = [
@@ -34,17 +42,17 @@ py_binary(
         "precompile",
         "$(location //:werks_group)",
         "--filter-by-edition",
-        edition,
+        short_editions[edition],
         "$(location werks_precompiled_%s)" % edition,
     ],
     tags = ["manual"],
     tool = ":werks_utils_binary",
 ) for edition in [
-    "cre",
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "raw",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 [run_binary(
@@ -60,32 +68,32 @@ py_binary(
     tool = ":werks_utils_binary",
     visibility = ["@@//omd:__subpackages__"],
 ) for edition in [
-    "cre",
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "raw",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 [pkg_files(
     name = "changelog_pkg_" + edition,
     srcs = [":changelog_" + edition],
-    prefix = "share/doc/check_mk" + postfix,
+    prefix = "share/doc/check_mk_" + edition,
     renames = {":changelog_" + edition: "ChangeLog"},
     tags = ["manual"],
-) for (edition, postfix) in [
-    ("cre", ""),
-    ("cce", "_cloud"),
-    ("cee", "_enterprise"),
-    ("cme", "_managed"),
-    ("cse", "_saas"),
+) for edition in [
+    "raw",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 pkg_files(
-    name = "werks_pkg_cre",
-    srcs = [":werks_precompiled_cre"],
+    name = "werks_pkg_raw",
+    srcs = [":werks_precompiled_raw"],
     prefix = "share/check_mk/werks",
-    renames = {":werks_precompiled_cre": "werks"},
+    renames = {":werks_precompiled_raw": "werks"},
     tags = ["manual"],
 )
 
@@ -96,10 +104,10 @@ pkg_files(
     renames = {":werks_precompiled_" + edition: "werks_" + edition},
     tags = ["manual"],
 ) for edition in [
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 pkg_mklink(
@@ -113,25 +121,25 @@ pkg_tar(
     name = "changelog",
     srcs = [
         "changelog_link",
-        "changelog_pkg_cre",
-        "werks_pkg_cre",
+        "changelog_pkg_raw",
+        "werks_pkg_raw",
     ] + select({
-        "@cmk//edition:cre": [],
-        "@cmk//edition:cee": [
-            "changelog_pkg_cee",
-            "werks_pkg_cee",
+        "@cmk//edition:raw": [],
+        "@cmk//edition:enterprise": [
+            "changelog_pkg_enterprise",
+            "werks_pkg_enterprise",
         ],
-        "@cmk//edition:cce": [
-            "changelog_pkg_cce",
-            "werks_pkg_cce",
+        "@cmk//edition:cloud": [
+            "changelog_pkg_cloud",
+            "werks_pkg_cloud",
         ],
-        "@cmk//edition:cme": [
-            "changelog_pkg_cme",
-            "werks_pkg_cme",
+        "@cmk//edition:managed": [
+            "changelog_pkg_managed",
+            "werks_pkg_managed",
         ],
-        "@cmk//edition:cse": [
-            "changelog_pkg_cse",
-            "werks_pkg_cse",
+        "@cmk//edition:saas": [
+            "changelog_pkg_saas",
+            "werks_pkg_saas",
         ],
     }),
     tags = ["manual"],

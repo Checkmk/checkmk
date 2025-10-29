@@ -107,7 +107,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "werkzeug",
 ]
 
-CRE_PY = glob(
+RAW_PY = glob(
     [
         "**/cre/**/*.py",
         "**/cre.py",
@@ -117,7 +117,7 @@ CRE_PY = glob(
     allow_empty = True,
 )
 
-CCE_PY = glob(
+CLOUD_PY = glob(
     [
         "**/cce/**/*.py",
         "**/cce.py",
@@ -125,7 +125,7 @@ CCE_PY = glob(
     allow_empty = True,
 )
 
-CEE_PY = glob(
+ENTERPRISE_PY = glob(
     [
         "**/cee/**/*.py",
         "**/cee.py",
@@ -133,7 +133,7 @@ CEE_PY = glob(
     allow_empty = True,
 )
 
-CME_PY = glob(
+MANAGED_PY = glob(
     [
         "**/cme/**/*.py",
         "**/cme.py",
@@ -141,7 +141,7 @@ CME_PY = glob(
     allow_empty = True,
 )
 
-CSE_PY = glob(
+SAAS_PY = glob(
     [
         "**/cse/**/*.py",
         "**/cse.py",
@@ -245,7 +245,7 @@ py_library(
     srcs = glob(
         # Keep in sync with `REPO_PATCH_RULES` from `versioning.groovy`.
         include = ["**/*.py"],
-        exclude = CRE_PY + CCE_PY + CEE_PY + CME_PY + CSE_PY,
+        exclude = RAW_PY + CLOUD_PY + ENTERPRISE_PY + MANAGED_PY + SAAS_PY,
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
@@ -261,8 +261,8 @@ py_library(
 )
 
 py_library(
-    name = "lib_cmk_cre",
-    srcs = CRE_PY,
+    name = "lib_cmk_raw",
+    srcs = RAW_PY,
     imports = [".."],
     visibility = [
         "//tests:__subpackages__",
@@ -283,10 +283,10 @@ py_library(
         "lib_cmk",
     ] + edition_python_deps[edition],
 ) for edition, srcs in [
-    ("cce", CCE_PY),
-    ("cee", CEE_PY),
-    ("cme", CME_PY),
-    ("cse", CSE_PY),
+    ("cloud", CLOUD_PY),
+    ("enterprise", ENTERPRISE_PY),
+    ("managed", MANAGED_PY),
+    ("saas", SAAS_PY),
 ]]
 
 py_library(
@@ -308,15 +308,15 @@ py_library(
 )
 
 py_wheel(
-    name = "cmk_cre",
+    name = "cmk_raw",
     distribution = "checkmk",
     requires = REQUIRED_EXTERNAL_DEPS,
     # TODO(ml): cmk_version vs. PEP 440?
-    version = "1+cre",
+    version = "1+raw",
     visibility = ["//visibility:public"],
     deps = [
         "lib_cmk",
-        "lib_cmk_cre",
+        "lib_cmk_raw",
         ":checkman",
         ":libexec",
         ":miscellaneous",
@@ -335,10 +335,10 @@ py_wheel(
         "lib_cmk_" + edition,
     ],
 ) for edition in [
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 [package_wheel(
@@ -346,11 +346,11 @@ py_wheel(
     visibility = ["//visibility:public"],
     whl = "cmk_" + edition,
 ) for edition in [
-    "cre",
-    "cce",
-    "cee",
-    "cme",
-    "cse",
+    "raw",
+    "cloud",
+    "enterprise",
+    "managed",
+    "saas",
 ]]
 
 py_pytest_main(

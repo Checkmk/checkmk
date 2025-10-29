@@ -45,25 +45,23 @@ def _get_package_dependencies(package_path: str) -> Sequence[str]:
 
 
 def _get_omd_version(cmk_version: str, package_path: str) -> str:
-    # Extract the files edition
-    edition_short = _edition_short_from_pkg_path(package_path)
-    return f"{cmk_version}.{edition_short}"
+    """Extract the files edition"""
+    edition = _edition_from_pkg_path(package_path)
+    return f"{cmk_version}.{edition}"
 
 
-def _edition_short_from_pkg_path(package_path: str) -> str:
+def _edition_from_pkg_path(package_path: str) -> str:
     file_name = os.path.basename(package_path)
     if file_name.startswith("check-mk-raw-"):
-        return "cre"
+        return "raw"
     if file_name.startswith("check-mk-enterprise-"):
-        return "cee"
+        return "enterprise"
     if file_name.startswith("check-mk-managed-"):
-        return "cme"
-    if file_name.startswith("check-mk-free-"):
-        return "cfe"
+        return "managed"
     if file_name.startswith("check-mk-cloud-"):
-        return "cce"
+        return "cloud"
     if file_name.startswith("check-mk-saas-"):
-        return "cse"
+        return "saas"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
@@ -359,7 +357,7 @@ def test_monitoring_cores_packaging(package_path: str, cmk_version: str) -> None
     if package_path.endswith(".tar.gz"):
         pytest.skip("%s do not test source packages" % os.path.basename(package_path))
 
-    if _edition_short_from_pkg_path(package_path) != "cre":
+    if _edition_from_pkg_path(package_path) != "raw":
         assert (
             len(_get_file_from_package(package_path, cmk_version, version_rel_path="bin/cmc")) > 0
         )
@@ -429,8 +427,8 @@ def test_python_files_are_precompiled_pycs(package_path: str, cmk_version: str) 
         raise ValueError("Unable to find shipped Python version")
 
     def expected_pyc_path(python_file_path: str, python3_version: str) -> str:
-        # In: /opt/omd/versions/2.4.0-2025.02.06.cee/lib/python3/cmk/automations/__init__.py
-        # Out: /opt/omd/versions/2.4.0-2025.02.06.cee/lib/python3/cmk/automations/__pycache__/__init__.cpython-312.pyc
+        # In: /opt/omd/versions/2.4.0-2025.02.06.enterprise/lib/python3/cmk/automations/__init__.py
+        # Out: /opt/omd/versions/2.4.0-2025.02.06.enterprise/lib/python3/cmk/automations/__pycache__/__init__.cpython-312.pyc
         path = PosixPath(python_file_path)
 
         cachedir = path.parent / "__pycache__"

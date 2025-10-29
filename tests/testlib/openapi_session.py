@@ -40,6 +40,8 @@ import requests
 
 from tests.testlib.version import CMKVersion
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
 
@@ -1254,17 +1256,20 @@ class PasswordsAPI(BaseAPI):
         owner: str = "admin",
     ) -> None:
         """Create a password via REST API."""
+        body = {
+            "ident": ident,
+            "title": title,
+            "comment": comment,
+            "documentation_url": "localhost",
+            "password": password,
+            "owner": owner,
+            "shared": ["all"],
+        }
+        if self.session.site_version.edition == Edition.CME:
+            body["customer"] = "global"
         response = self.session.post(
             "/domain-types/password/collections/all",
-            json={
-                "ident": ident,
-                "title": title,
-                "comment": comment,
-                "documentation_url": "localhost",
-                "password": password,
-                "owner": owner,
-                "shared": ["all"],
-            },
+            json=body,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

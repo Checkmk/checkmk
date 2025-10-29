@@ -16,13 +16,17 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
+from cmk.plugins.lib import interfaces
 from cmk.plugins.netapp.agent_based.lib import (
+    _check_netapp_interfaces,
     check_netapp_luns,
     check_netapp_qtree_quota,
     check_netapp_vs_traffic,
     discover_netapp_qtree_quota,
+    ExtraInfo,
     get_single_check,
     get_summary_check,
+    NICExtraInfo,
     Qtree,
 )
 
@@ -335,3 +339,176 @@ def test_check_netapp_vs_traffic():
             Result(state=State.OK, summary="iSCSI read data: 27 B"),
             Metric("iscsi_read_data", 27.22222222222222),
         ]
+
+
+INTERFACE = interfaces.InterfaceWithCounters(
+    interfaces.Attributes(
+        index="1",
+        descr="lif1",
+        alias="",
+        type="6",
+        speed=1000,
+        oper_status="1",
+        phys_address=b"\x00\x0c\x29\x12\x34\x56",
+        oper_status_name="up",
+    ),
+    interfaces.Counters(
+        in_octets=1000,
+        in_ucast=100,
+        in_mcast=0,
+        in_err=1000,
+        out_octets=1000,
+        out_ucast=200,
+        out_mcast=0,
+        out_err=1000,
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    "item, params, interfaces, extra_info, expected_output",
+    [
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": True,
+                    }
+                )
+            },
+            [Result(state=State.OK, summary="Current Port: e0a (is home port)")],
+            id="Is home port",
+        ),
+        pytest.param(
+            "lif1",
+            {},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": False,
+                    }
+                )
+            },
+            [Result(state=State.OK, summary="Current Port: e0a (is not home port)")],
+            id="Is not home port and empty params",
+        ),
+        pytest.param(
+            "lif1",
+            {
+                "errors": {"both": ("perc", (0.01, 0.1))},
+                "home_port": "check_and_crit",
+            },
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": False,
+                    }
+                )
+            },
+            [Result(state=State.CRIT, summary="Current Port: e0a (is not home port)")],
+            id="Check and crit when not home port",
+        ),
+        pytest.param(
+            "lif1",
+            {
+                "errors": {"both": ("perc", (0.01, 0.1))},
+                "home_port": "check_and_crit",
+            },
+            [INTERFACE],
+            {},
+            [],
+            id="Check no extra info",
+        ),
+        pytest.param(
+            "non_existing_lif",
+            {
+                "errors": {"both": ("perc", (0.01, 0.1))},
+                "home_port": "check_and_crit",
+            },
+            [INTERFACE],
+            {},
+            [],
+            id="Check non existent",
+        ),
+    ],
+)
+def test_check_home_port_status(
+    item: str,
+    params: Mapping[str, Any],
+    interfaces: interfaces.Section[interfaces.InterfaceWithCounters],
+    extra_info: ExtraInfo,
+    expected_output: CheckResult,
+) -> None:
+    assert list(_check_netapp_interfaces(item, params, interfaces, extra_info)) == expected_output
+
+
+@pytest.mark.parametrize(
+    "item, params, interfaces, extra_info, expected_output",
+    [
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": False,
+                        "failover_ports": [
+                            {"node": "node1", "port": "e0a", "link-status": "up"},
+                            {"node": "node1", "port": "e0b", "link-status": "up"},
+                        ],
+                    }
+                )
+            },
+            [
+                Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
+                Result(state=State.OK, notice="Failover Group: [node1:e0a=up, node1:e0b=up]"),
+            ],
+            id="Failover ports all up",
+        ),
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": False,
+                        "failover_ports": [
+                            {"node": "node1", "port": "e0a", "link-status": "down"},
+                            {"node": "node2", "port": "e0b", "link-status": "up"},
+                        ],
+                    }
+                )
+            },
+            [
+                Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
+                Result(state=State.CRIT, notice="Failover Group: [node1:e0a=down, node2:e0b=up]"),
+            ],
+            id="Failover ports up and down",
+        ),
+    ],
+)
+def test_check_home_port_status_with_failover_ports(
+    item: str,
+    params: Mapping[str, Any],
+    interfaces: interfaces.Section[interfaces.InterfaceWithCounters],
+    extra_info: ExtraInfo,
+    expected_output: CheckResult,
+) -> None:
+    assert list(_check_netapp_interfaces(item, params, interfaces, extra_info)) == expected_output

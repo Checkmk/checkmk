@@ -519,7 +519,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     },
     "CPU utilization": {
         "util_fallback",
-        "cpu_utilization_6_steal_util",
         "cpu_utilization_7_util",
         "cpu_utilization_5_util",
     },

@@ -12,13 +12,13 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { provide, ref, toRaw } from 'vue'
 
-import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
+import FormEditDispatcher from '@/form/components/FormEditDispatcher/FormEditDispatcher.vue'
+import { dispatcherKey } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 import type {
   API,
   SetDataResult
 } from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
 import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
-import { dispatcherKey } from '@/form/private'
 
 defineProps<{ screenshotMode: boolean }>()
 

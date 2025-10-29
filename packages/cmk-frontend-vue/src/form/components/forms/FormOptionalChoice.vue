@@ -14,8 +14,8 @@ import FormIndent from '@/components/CmkIndent.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
+import { useFormEditDispatcher } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 import { type ValidationMessages } from '@/form/components/utils/validation'
-import { useFormEditDispatcher } from '@/form/private'
 
 import { immediateWatch } from '../../../lib/watch'
 

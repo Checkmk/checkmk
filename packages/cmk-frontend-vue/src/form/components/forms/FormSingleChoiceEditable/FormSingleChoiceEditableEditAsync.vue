@@ -21,7 +21,7 @@ import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
 
-import { useFormEditDispatcher } from '@/form/private'
+import { useFormEditDispatcher } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 
 export type Payload = Record<string, unknown>
 

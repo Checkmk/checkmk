@@ -9,10 +9,10 @@ import { HttpResponse, bypass, http, passthrough } from 'msw'
 import { setupWorker } from 'msw/browser'
 import { onBeforeMount, onBeforeUnmount, provide, ref } from 'vue'
 
-import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
+import FormEditDispatcher from '@/form/components/FormEditDispatcher/FormEditDispatcher.vue'
+import { dispatcherKey } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditable.vue'
 import { configEntityAPI } from '@/form/components/forms/FormSingleChoiceEditable/configuration_entity'
-import { dispatcherKey } from '@/form/private'
 
 defineProps<{ screenshotMode: boolean }>()
 

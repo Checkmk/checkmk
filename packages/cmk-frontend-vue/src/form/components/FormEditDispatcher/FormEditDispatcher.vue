@@ -8,7 +8,8 @@ import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_compone
 
 import type { ValidationMessages } from '@/form/components/utils/validation'
 import FormHelp from '@/form/private/FormHelp.vue'
-import { getComponent } from '@/form/private/dispatch'
+
+import { getComponent } from './dispatch'
 
 defineProps<{
   spec: FormSpec

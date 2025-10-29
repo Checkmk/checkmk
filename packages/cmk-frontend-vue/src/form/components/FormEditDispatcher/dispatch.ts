@@ -15,6 +15,7 @@ import FormConditionChoices from '@/form/components/forms/FormConditionChoices'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormDatePicker from '@/form/components/forms/FormDatePicker.vue'
 import FormDictionary from '@/form/components/forms/FormDictionary/FormDictionary.vue'
+import FormTwoColumnDictionary from '@/form/components/forms/FormDictionary/FormTwoColumnDictionary.vue'
 import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
 import FormFileUpload from '@/form/components/forms/FormFileUpload.vue'
 import FormFixedValue from '@/form/components/forms/FormFixedValue.vue'
@@ -25,6 +26,7 @@ import FormLegacyValueSpec from '@/form/components/forms/FormLegacyValueSpec.vue
 import FormList from '@/form/components/forms/FormList/FormList.vue'
 import FormListUniqueSelection from '@/form/components/forms/FormList/FormListUniqueSelection.vue'
 import FormListOfStrings from '@/form/components/forms/FormListOfStrings.vue'
+import FormMetric from '@/form/components/forms/FormMetric.vue'
 import FormMultilineText from '@/form/components/forms/FormMultilineText.vue'
 import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
 import FormPassword from '@/form/components/forms/FormPassword.vue'
@@ -36,9 +38,6 @@ import FormTimePicker from '@/form/components/forms/FormTimePicker.vue'
 import FormTimeSpan from '@/form/components/forms/FormTimeSpan/FormTimeSpan.vue'
 import FormTimeSpecific from '@/form/components/forms/FormTimeSpecific.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
-
-import FormTwoColumnDictionary from '../components/forms/FormDictionary/FormTwoColumnDictionary.vue'
-import FormMetric from '../components/forms/FormMetric.vue'
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<Components['type'], Component> = {

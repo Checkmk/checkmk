@@ -10,10 +10,10 @@ import type {
   String
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
+import FormEditDispatcher from '@/form/components/FormEditDispatcher/FormEditDispatcher.vue'
+import { dispatcherKey } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
 import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
-import { dispatcherKey } from '@/form/private'
 
 test('FormSingleChoiceEditableEditAsync renders form', async () => {
   type Data = Record<string, unknown>

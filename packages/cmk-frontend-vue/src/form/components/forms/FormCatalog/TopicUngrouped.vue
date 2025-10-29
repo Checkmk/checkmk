@@ -14,8 +14,8 @@ import { immediateWatch } from '@/lib/watch'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
+import { useFormEditDispatcher } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 import { type ValidationMessages, groupNestedValidations } from '@/form/components/utils/validation'
-import { useFormEditDispatcher } from '@/form/private'
 import FormRequired from '@/form/private/FormRequired.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 

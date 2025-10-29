@@ -10,8 +10,8 @@ import { ref, watch } from 'vue'
 import CmkList from '@/components/CmkList'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
+import { useFormEditDispatcher } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 import { type ValidationMessages } from '@/form/components/utils/validation'
-import { useFormEditDispatcher } from '@/form/private'
 
 import formListActions from './formListActions'
 

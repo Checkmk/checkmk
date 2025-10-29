@@ -22,8 +22,8 @@ import CmkSpace from '@/components/CmkSpace.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
+import { useFormEditDispatcher } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 import { type ValidationMessages, validateValue } from '@/form/components/utils/validation'
-import { useFormEditDispatcher } from '@/form/private'
 import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{

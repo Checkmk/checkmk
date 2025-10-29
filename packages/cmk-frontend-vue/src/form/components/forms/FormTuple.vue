@@ -14,11 +14,11 @@ import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
+import { useFormEditDispatcher } from '@/form/components/FormEditDispatcher/useFormEditDispatcher'
 import {
   type ValidationMessages,
   groupIndexedValidations
 } from '@/form/components/utils/validation'
-import { useFormEditDispatcher } from '@/form/private'
 import FormLabel from '@/form/private/FormLabel.vue'
 
 const props = defineProps<{

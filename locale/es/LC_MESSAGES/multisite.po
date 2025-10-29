@@ -53906,6 +53906,10 @@ msgstr "Utilización de la concurrencia prevista"
 msgid "Provisioned space"
 msgstr "Espacio previsto"
 
+#, fuzzy
+msgid "Provisioned storage usage"
+msgstr "Espacio previsto"
+
 msgid "Provisioning Levels"
 msgstr "Niveles de aprovisionamiento"
 
@@ -80720,6 +80724,10 @@ msgstr "De confianza"
 msgid "Trust system wide configured CAs"
 msgstr "Confiar en las CAs configuradas en todo el sistema"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "Tiempo estimado de realización"
+
 msgid "Trusted"
 msgstr "De confianza"
 
@@ -86943,6 +86951,15 @@ msgstr ""
 "SNMP disponibles para traducir los traps SNMP entrantes. La información que "
 "no puede ser traducida, por ejemplo, porque falta una MIB, se escribe sin "
 "tocar en el mensaje de evento."
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "
@@ -93460,14 +93477,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Failed to load sidebar elements."
-msgstr "Añadir elemento de la barra lateral"
-
-#, fuzzy
-msgid "Loading sidebar elements..."
-msgstr "Añadir elemento de la barra lateral"
-
-#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "El valor debe ser una cadena"
 
@@ -93763,6 +93772,36 @@ msgstr "Advertencia si supera"
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "inscripciones (máx. 50)"
+
+msgid "Enter URL to embed"
+msgstr ""
+
+#, fuzzy
+msgid "Loading sidebar elements..."
+msgstr "Añadir elemento de la barra lateral"
+
+#, fuzzy
+msgid "Failed to load sidebar elements."
+msgstr "Añadir elemento de la barra lateral"
+
+#, fuzzy
+msgid "Select sidebar element"
+msgstr "Elemento de la barra lateral"
+
+#, fuzzy
+msgid "Sidebar widget"
+msgstr "Añadir objetivo"
+
+msgid "Embed URL"
+msgstr ""
+
+#, fuzzy
+msgid "Add other element"
+msgstr "Añadir un nuevo elemento"
+
+#, fuzzy
+msgid "Enter text"
+msgstr "Introduzca el nombre de usuario"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -95050,9 +95089,6 @@ msgstr ""
 
 #~ msgid "Enclosure ID"
 #~ msgstr "Enclosure ID"
-
-#~ msgid "Estimated time to complete"
-#~ msgstr "Tiempo estimado de realización"
 
 #~ msgid "Hardware status"
 #~ msgstr "Estado del hardware"

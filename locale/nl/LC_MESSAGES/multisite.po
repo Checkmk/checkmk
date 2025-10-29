@@ -53484,6 +53484,10 @@ msgstr "Voorziene bezettingsgraad"
 msgid "Provisioned space"
 msgstr "Voorziene ruimte"
 
+#, fuzzy
+msgid "Provisioned storage usage"
+msgstr "Voorziene ruimte"
+
 msgid "Provisioning Levels"
 msgstr "Provisioning Niveaus"
 
@@ -80075,6 +80079,10 @@ msgstr "Vertrouwd"
 msgid "Trust system wide configured CAs"
 msgstr "Vertrouw op systeemwijde geconfigureerde CA's"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "Geschatte tijd om te voltooien"
+
 msgid "Trusted"
 msgstr "Vertrouwd"
 
@@ -86245,6 +86253,15 @@ msgstr ""
 "bestanden worden gebruikt om de inkomende SNMP traps te vertalen. Informatie "
 "die niet vertaald kan worden, b.v. omdat een MIB ontbreekt, wordt "
 "onaangeroerd in het event bericht geschreven."
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "
@@ -92728,14 +92745,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Failed to load sidebar elements."
-msgstr "Zijbalk element toevoegen"
-
-#, fuzzy
-msgid "Loading sidebar elements..."
-msgstr "Zijbalk element toevoegen"
-
-#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "De waarde moet een string zijn"
 
@@ -93029,6 +93038,36 @@ msgstr "Waarschuwing indien meer dan"
 
 msgid "entries (max. %{max_entries})"
 msgstr ""
+
+msgid "Enter URL to embed"
+msgstr ""
+
+#, fuzzy
+msgid "Loading sidebar elements..."
+msgstr "Zijbalk element toevoegen"
+
+#, fuzzy
+msgid "Failed to load sidebar elements."
+msgstr "Zijbalk element toevoegen"
+
+#, fuzzy
+msgid "Select sidebar element"
+msgstr "Zijbalk element"
+
+#, fuzzy
+msgid "Sidebar widget"
+msgstr "Doel toevoegen"
+
+msgid "Embed URL"
+msgstr ""
+
+#, fuzzy
+msgid "Add other element"
+msgstr "Nieuw element toevoegen"
+
+#, fuzzy
+msgid "Enter text"
+msgstr "Voer gebruikersnaam in"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -94312,9 +94351,6 @@ msgstr ""
 
 #~ msgid "Enclosure ID"
 #~ msgstr "Behuizing ID"
-
-#~ msgid "Estimated time to complete"
-#~ msgstr "Geschatte tijd om te voltooien"
 
 #~ msgid "Hardware status"
 #~ msgstr "Hardware status"

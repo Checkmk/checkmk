@@ -51111,6 +51111,10 @@ msgstr "Vorgesehene gleichzeitige Auslastung"
 msgid "Provisioned space"
 msgstr "Bereitgestellter Speicherplatz"
 
+#, fuzzy
+msgid "Provisioned storage usage"
+msgstr "Bereitgestellter Speicherplatz"
+
 msgid "Provisioning Levels"
 msgstr "Schwellen für Provisionierung"
 
@@ -76892,6 +76896,10 @@ msgstr "Vertrauen"
 msgid "Trust system wide configured CAs"
 msgstr "Systemweit konfigurierten CAs vertrauen"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "Geschätzte Zeit um abzuschließen"
+
 msgid "Trusted"
 msgstr "Vertrauenswürdig"
 
@@ -82766,6 +82774,15 @@ msgstr ""
 "verwendet, um eingehende SNMP-Traps zu übersetzen. Informationen, die nicht "
 "übersetzt werden können, beispielsweise wegen fehlender MIBs, werden "
 "unverändert in die Ereignismeldung geschrieben."
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "
@@ -89121,12 +89138,6 @@ msgid ""
 "Do not follow timerange changes of other graphs on the current dashboard"
 msgstr ""
 
-msgid "Failed to load sidebar elements."
-msgstr "Laden der Seitenleistenelement ist fehlgeschlagen."
-
-msgid "Loading sidebar elements..."
-msgstr "Seitenleistenelemente laden..."
-
 msgid "Value must be a valid URL"
 msgstr "Wert muss eine gültige URL sein"
 
@@ -89368,6 +89379,34 @@ msgstr "Rangfolge"
 
 msgid "entries (max. %{max_entries})"
 msgstr "Einträge (max. %{max_entries})"
+
+msgid "Enter URL to embed"
+msgstr ""
+
+msgid "Loading sidebar elements..."
+msgstr "Seitenleistenelemente laden..."
+
+msgid "Failed to load sidebar elements."
+msgstr "Laden der Seitenleistenelement ist fehlgeschlagen."
+
+#, fuzzy
+msgid "Select sidebar element"
+msgstr "Seitenleistenelement"
+
+#, fuzzy
+msgid "Sidebar widget"
+msgstr "Widget aktualisieren"
+
+msgid "Embed URL"
+msgstr ""
+
+#, fuzzy
+msgid "Add other element"
+msgstr "Element hinzufügen"
+
+#, fuzzy
+msgid "Enter text"
+msgstr "Namen eingeben"
 
 msgid "Colorize not OK states"
 msgstr "Nicht-OK-Zustände einfärben"
@@ -90484,9 +90523,6 @@ msgstr ""
 
 #~ msgid "Enclosure ID"
 #~ msgstr "Anhang-ID"
-
-#~ msgid "Estimated time to complete"
-#~ msgstr "Geschätzte Zeit um abzuschließen"
 
 #~ msgid "Hardware status"
 #~ msgstr "Hardwarestatus"

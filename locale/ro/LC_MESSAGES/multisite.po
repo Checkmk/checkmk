@@ -53587,6 +53587,10 @@ msgstr "Utilizarea simultaneității provizionate"
 msgid "Provisioned space"
 msgstr "Spațiu provizionat"
 
+#, fuzzy
+msgid "Provisioned storage usage"
+msgstr "Spațiu provizionat"
+
 msgid "Provisioning Levels"
 msgstr "Niveluri de provizionare"
 
@@ -80294,6 +80298,10 @@ msgstr "Încredere"
 msgid "Trust system wide configured CAs"
 msgstr "Încredere în CA configurate la nivel de sistem"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "Timpul estimat de finalizare"
+
 msgid "Trusted"
 msgstr "De încredere"
 
@@ -86471,6 +86479,15 @@ msgstr ""
 "fi utilizate pentru a traduce capcanele SNMP primite. Informațiile care nu "
 "pot fi traduse, de exemplu, pentru că lipsește un MIB, sunt scrise neatinse "
 "în mesajul de eveniment."
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "
@@ -92975,14 +92992,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Failed to load sidebar elements."
-msgstr "Adăugați elementul sidebar"
-
-#, fuzzy
-msgid "Loading sidebar elements..."
-msgstr "Adăugați elementul sidebar"
-
-#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "Valoarea trebuie să fie un șir de caractere"
 
@@ -93281,6 +93290,36 @@ msgstr "Ordinea de clasament"
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "intrări (max. 50)"
+
+msgid "Enter URL to embed"
+msgstr ""
+
+#, fuzzy
+msgid "Loading sidebar elements..."
+msgstr "Adăugați elementul sidebar"
+
+#, fuzzy
+msgid "Failed to load sidebar elements."
+msgstr "Adăugați elementul sidebar"
+
+#, fuzzy
+msgid "Select sidebar element"
+msgstr "Element de bară laterală"
+
+#, fuzzy
+msgid "Sidebar widget"
+msgstr "Adăugați o țintă"
+
+msgid "Embed URL"
+msgstr ""
+
+#, fuzzy
+msgid "Add other element"
+msgstr "Adaungă un nou element"
+
+#, fuzzy
+msgid "Enter text"
+msgstr "Introduceți numele de utilizator"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -94568,9 +94607,6 @@ msgstr ""
 
 #~ msgid "Enclosure ID"
 #~ msgstr "ID-ul incintei"
-
-#~ msgid "Estimated time to complete"
-#~ msgstr "Timpul estimat de finalizare"
 
 #~ msgid "Hardware status"
 #~ msgstr "Starea hardware"

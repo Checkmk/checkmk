@@ -50083,6 +50083,10 @@ msgstr "プロビジョニングされた同時使用率"
 msgid "Provisioned space"
 msgstr "プロビジョニングされたスペース"
 
+#, fuzzy
+msgid "Provisioned storage usage"
+msgstr "プロビジョニングされたスペース"
+
 msgid "Provisioning Levels"
 msgstr "プロビジョニングレベル"
 
@@ -75004,6 +75008,10 @@ msgstr "信頼できる"
 msgid "Trust system wide configured CAs"
 msgstr "システム全体で構成されたCAを信頼する"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "完了するまでの推定時間"
+
 msgid "Trusted"
 msgstr "信頼できる"
 
@@ -80710,6 +80718,15 @@ msgstr ""
 "このオプションを有効にすると、使用可能なすべてのSNMPMIBファイルが着信SNMPト"
 "ラップの変換に使用されます。MIBが欠落しているなどの理由で変換できない情報は、"
 "イベントメッセージにそのまま書き込まれます。"
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "
@@ -86939,14 +86956,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Failed to load sidebar elements."
-msgstr "サイドバー要素を追加する"
-
-#, fuzzy
-msgid "Loading sidebar elements..."
-msgstr "サイドバー要素を追加する"
-
-#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "値は文字列であること"
 
@@ -87240,6 +87249,36 @@ msgstr "順位"
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "エントリー数 (最大50)"
+
+msgid "Enter URL to embed"
+msgstr ""
+
+#, fuzzy
+msgid "Loading sidebar elements..."
+msgstr "サイドバー要素を追加する"
+
+#, fuzzy
+msgid "Failed to load sidebar elements."
+msgstr "サイドバー要素を追加する"
+
+#, fuzzy
+msgid "Select sidebar element"
+msgstr "サイドバーエレメント"
+
+#, fuzzy
+msgid "Sidebar widget"
+msgstr "ターゲットを追加"
+
+msgid "Embed URL"
+msgstr ""
+
+#, fuzzy
+msgid "Add other element"
+msgstr "新しい要素を追加する"
+
+#, fuzzy
+msgid "Enter text"
+msgstr "ユーザーネームを入力してください"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -88484,9 +88523,6 @@ msgstr ""
 
 #~ msgid "Enclosure ID"
 #~ msgstr "エンクロージャーID"
-
-#~ msgid "Estimated time to complete"
-#~ msgstr "完了するまでの推定時間"
 
 #~ msgid "Hardware status"
 #~ msgstr "ハードウェアステータス"

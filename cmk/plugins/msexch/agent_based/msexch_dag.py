@@ -113,14 +113,26 @@ from cmk.agent_based.v2 import (
 # SeedingNetwork                   :
 # ActiveCopy                       : False
 
-Section = Mapping[str, str]
+Section = Mapping[str, Mapping[str, str]]
 
 
 def parse_msexch_dag(string_table: StringTable) -> Section:
-    return {
-        key: val
-        for (key, val) in ((i.strip() for i in line) for line in string_table if len(line) == 2)
-    }
+    collected_databases: dict[str, dict[str, str]] = {}
+    current_record: dict[str, str] = {}
+
+    # We don't know which entry starts the table, so we record it.
+    # We can then at least expect that a new DB starts with this entry.
+    start_key = string_table[0][0].strip()
+
+    for key, val in ((l[0].strip(), l[1].strip()) for l in string_table if len(l) == 2):
+        if key == start_key:
+            current_record = {}
+        if key == "DatabaseName":
+            collected_databases[key] = current_record
+        else:
+            current_record[key] = val
+
+    return collected_databases
 
 
 agent_section_msexch_dag = AgentSection(
@@ -130,15 +142,13 @@ agent_section_msexch_dag = AgentSection(
 
 
 def discover_msexch_dag_dbcopy(section: Section) -> DiscoveryResult:
-    getit = False
-    dbname = None
-    for key, val in section.items():
-        if key == "DatabaseName":
-            dbname = val
-            getit = True
-        elif getit and key == "Status":
-            yield Service(item=dbname, parameters={"inv_key": key, "inv_val": val})
-            getit = False
+    status_key = "Status"
+
+    yield from (
+        Service(item=dbname, parameters={"inv_key": status_key, "inv_val": status})
+        for dbname, db in section.items()
+        if (status := db.get(status_key)) is not None
+    )
 
 
 def check_msexch_dag_dbcopy(
@@ -146,19 +156,17 @@ def check_msexch_dag_dbcopy(
     params: Mapping[str, str],
     section: Section,
 ) -> CheckResult:
-    getit = False
     inv_key = params["inv_key"]
     inv_val = params["inv_val"]
-    for key, val in section.items():
-        if key == "DatabaseName" and val == item:
-            getit = True
-        elif getit and key == inv_key:
-            yield (
-                Result(state=State.OK, summary=f"{inv_key} is {val}")
-                if val == inv_val
-                else Result(state=State.WARN, summary=f"{inv_key} changed from {inv_val} to {val}")
-            )
-            return
+
+    if (val := section.get(item, {}).get(inv_key)) is None:
+        return
+
+    yield (
+        Result(state=State.OK, summary=f"{inv_key} is {val}")
+        if val == inv_val
+        else Result(state=State.WARN, summary=f"{inv_key} changed from {inv_val} to {val}")
+    )
 
 
 check_plugin_msexch_dag_dbcopy = CheckPlugin(
@@ -172,24 +180,17 @@ check_plugin_msexch_dag_dbcopy = CheckPlugin(
 
 
 def discover_msexch_dag_contentindex(section: Section) -> DiscoveryResult:
-    for key, val in section.items():
-        if key == "DatabaseName":
-            yield Service(item=val)
+    yield from (Service(item=dbname) for dbname in section)
 
 
 def check_msexch_dag_contentindex(
     item: str,
     section: Section,
 ) -> CheckResult:
-    getit = False
-    for key, val in section.items():
-        if key == "DatabaseName" and val == item:
-            getit = True
-        elif getit and key == "ContentIndexState":
-            yield Result(
-                state=State.OK if val == "Healthy" else State.WARN, summary="Status: %s" % val
-            )
-            return
+    if (val := section.get(item, {}).get("ContentIndexState")) is None:
+        return
+
+    yield Result(state=State.OK if val == "Healthy" else State.WARN, summary=f"Status: {val}")
 
 
 check_plugin_msexch_dag_contentindex = CheckPlugin(
@@ -202,9 +203,7 @@ check_plugin_msexch_dag_contentindex = CheckPlugin(
 
 
 def discover_msexch_dag_copyqueue(section: Section) -> DiscoveryResult:
-    for key, val in section.items():
-        if key == "DatabaseName":
-            yield Service(item=val)
+    yield from (Service(item=dbname) for dbname in section)
 
 
 def check_msexch_dag_copyqueue(
@@ -212,20 +211,17 @@ def check_msexch_dag_copyqueue(
     params: Mapping[str, tuple[float, float]],
     section: Section,
 ) -> CheckResult:
-    getit = False
-    for key, val in section.items():
-        if key == "DatabaseName" and val == item:
-            getit = True
-        elif getit and key == "CopyQueueLength":
-            yield from check_levels(
-                int(val),
-                metric_name="length",
-                levels_upper=("fixed", params["levels"]),
-                render_func=str,
-                boundaries=(0, None),
-                label="Queue length",
-            )
-            return
+    if (val := section.get(item, {}).get("CopyQueueLength")) is None:
+        return
+
+    yield from check_levels(
+        int(val),
+        metric_name="length",
+        levels_upper=("fixed", params["levels"]),
+        render_func=str,
+        boundaries=(0, None),
+        label="Queue length",
+    )
 
 
 check_plugin_msexch_dag_copyqueue = CheckPlugin(

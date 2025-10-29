@@ -16,9 +16,8 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 if sys.version_info[0] == 2:
-    from mock import Mock, patch
-
     import agents.plugins.mk_postgres_2 as mk_postgres
+    from mock import Mock, patch
 else:
     from unittest.mock import Mock, patch
 

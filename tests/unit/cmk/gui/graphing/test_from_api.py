@@ -512,7 +512,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Access point statistics": {"access_point_statistics2", "access_point_statistics"},
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
     "Capacity usage": {"capacity_usage_2", "capacity_usage"},
-    "Size and used space": {"fs_used", "fs_used_2"},
     "Packets": {"packets_1", "packets_2", "packets_3"},
 }
 

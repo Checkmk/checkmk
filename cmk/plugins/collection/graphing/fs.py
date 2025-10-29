@@ -125,7 +125,7 @@ graph_fs_used = graphs.Graph(
 )
 graph_fs_used_2 = graphs.Graph(
     name="fs_used_2",
-    title=Title("Size and used space"),
+    title=Title("Size, used and reserved space"),
     minimal_range=graphs.MinimalRange(
         0,
         metrics.MaximumOf(

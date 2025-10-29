@@ -26,6 +26,7 @@ _GLOBAL_EXCLUDES = (
     ".gitignore",
     ".f12",
     "OWNERS",
+    "BUILD",
 )
 
 _PERMISSIONS = (

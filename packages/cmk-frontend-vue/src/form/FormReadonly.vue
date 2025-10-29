@@ -5,6 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import type {
+  BinaryConditionChoices,
+  BinaryConditionChoicesItem,
+  BinaryConditionChoicesValue,
   BooleanChoice,
   CascadingSingleChoice,
   CheckboxListChoice,
@@ -107,6 +110,11 @@ function renderForm(
       )
     case 'condition_choices':
       return renderConditionChoices(formSpec as ConditionChoices, value as ConditionChoicesValue[])
+    case 'binary_condition_choices':
+      return renderBinaryConditionChoices(
+        formSpec as BinaryConditionChoices,
+        value as BinaryConditionChoicesValue
+      )
     case 'legacy_valuespec':
       return renderLegacyValuespec(formSpec as LegacyValuespec, value, backendValidation)
     case 'fixed_value':
@@ -626,6 +634,50 @@ function renderConditionChoices(formSpec: ConditionChoices, value: ConditionChoi
           throw new Error('Invalid group')
         }
         return renderConditionChoiceGroup(group, v, formSpec.i18n)
+      })
+    ])
+  ])
+}
+
+function renderBinaryConditionChoicesGroup(items: BinaryConditionChoicesItem[]): VNode {
+  // TODO use translated texts
+  const parts = []
+  for (const [index, item] of items.entries()) {
+    if (index === 0) {
+      if (item.operator === 'not') {
+        parts.push('not')
+      }
+    } else {
+      if (item.operator === 'not') {
+        parts.push('and not')
+      } else {
+        parts.push(item.operator)
+      }
+    }
+    parts.push(item.label)
+  }
+  return h('td', `[ ${parts.join(' ')} ]`)
+}
+
+function renderBinaryConditionChoices(
+  formSpec: BinaryConditionChoices,
+  value: BinaryConditionChoicesValue
+): VNode {
+  // TODO use translated texts
+  return h('table', { class: 'form-readonly__table' }, [
+    h('tbody', [
+      value.map((v, index) => {
+        if (index === 0) {
+          return h('tr', [
+            h('td', `${formSpec.label}:`),
+            renderBinaryConditionChoicesGroup(v.label_group)
+          ])
+        } else {
+          return h('tr', [
+            h('td', `{v.operator}:`),
+            renderBinaryConditionChoicesGroup(v.label_group)
+          ])
+        }
       })
     ])
   ])

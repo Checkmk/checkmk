@@ -2,8 +2,10 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from cmk.rulesets.internal.form_specs import ListExtended
 
+from .binary_condition_choices import BinaryConditionChoices
 from .cascading_single_choice_extended import CascadingSingleChoiceExtended
 from .catalog import Catalog, Topic, TopicElement, TopicGroup
 from .comment_text_area import CommentTextArea
@@ -45,6 +47,7 @@ __all__ = [
     "TopicGroup",
     "CommentTextArea",
     "ConditionChoices",
+    "BinaryConditionChoices",
     "DatePicker",
     "DictionaryExtended",
     "Labels",

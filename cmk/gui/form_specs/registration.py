@@ -7,6 +7,7 @@
 import cmk.gui.form_specs.unstable.validators as private_form_specs_validators
 import cmk.rulesets.v1.form_specs.validators as formspec_validators
 from cmk.gui.form_specs.unstable import (
+    BinaryConditionChoices,
     CascadingSingleChoiceExtended,
     Catalog,
     CommentTextArea,
@@ -35,6 +36,9 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 )
 from cmk.gui.form_specs.unstable.passwordstore_password import PasswordStorePassword
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
+from cmk.gui.form_specs.visitors.binary_condition_choices import (
+    BinaryConditionChoicesVisitor,
+)
 from cmk.gui.form_specs.visitors.condition_choices import ConditionChoicesVisitor
 from cmk.gui.form_specs.visitors.metric import MetricVisitor
 from cmk.gui.form_specs.visitors.recomposers import (
@@ -165,6 +169,7 @@ def register_form_specs() -> None:
     register_visitor_class(SimplePassword, SimplePasswordVisitor)
     register_visitor_class(StringAutocompleter, StringVisitor)
     register_visitor_class(ConditionChoices, ConditionChoicesVisitor)
+    register_visitor_class(BinaryConditionChoices, BinaryConditionChoicesVisitor)
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
     register_visitor_class(MultipleChoiceExtended, MultipleChoiceVisitor)
     register_visitor_class(Labels, LabelsVisitor)

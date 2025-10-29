@@ -61,10 +61,46 @@
       },
       "required": ["group_name", "value"]
     },
+    "binary_condition_choices_operator": {
+      "type": "string",
+      "enum": ["and", "or", "not"]
+    },
+    "binary_condition_choices_value": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "title": "binary_condition_choices_group",
+        "properties": {
+          "operator": {
+            "$ref": "#/$defs/binary_condition_choices_operator"
+          },
+          "label_group": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "title": "binary_condition_choices_item",
+              "properties": {
+                "operator": {
+                  "$ref": "#/$defs/binary_condition_choices_operator"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": ["operator", "label"]
+            }
+          }
+        },
+        "required": ["operator", "label_group"]
+      }
+    },
     "values": {
       "oneOf": [
         {
           "$ref": "#/$defs/condition_choices_value"
+        },
+        {
+          "$ref": "#/$defs/binary_condition_choices_value"
         }
       ]
     }

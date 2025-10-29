@@ -1539,6 +1539,43 @@
         }
       ]
     },
+    "binary_condition_choices": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "binary_condition_choices",
+              "default": "binary_condition_choices"
+            },
+            "label": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "title": "BinaryCondition",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "title"]
+              }
+            }
+          },
+          "required": ["type", "label", "conditions"]
+        }
+      ]
+    },
     "labels": {
       "type": "object",
       "allOf": [
@@ -1742,6 +1779,9 @@
         },
         {
           "$ref": "#/$defs/condition_choices"
+        },
+        {
+          "$ref": "#/$defs/binary_condition_choices"
         },
         {
           "$ref": "#/$defs/labels"

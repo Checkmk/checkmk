@@ -6,6 +6,7 @@
 import type { Components } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { type Component } from 'vue'
 
+import FormBinaryConditionChoices from '@/form/private/forms/FormBinaryConditionChoices'
 import FormBooleanChoice from '@/form/private/forms/FormBooleanChoice.vue'
 import FormCascadingSingleChoice from '@/form/private/forms/FormCascadingSingleChoice.vue'
 import FormCatalog from '@/form/private/forms/FormCatalog/FormCatalog.vue'
@@ -42,6 +43,7 @@ import FormTuple from '@/form/private/forms/FormTuple.vue'
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<Components['type'], Component> = {
+  binary_condition_choices: FormBinaryConditionChoices,
   boolean_choice: FormBooleanChoice,
   cascading_single_choice: FormCascadingSingleChoice,
   catalog: FormCatalog,

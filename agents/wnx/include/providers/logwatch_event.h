@@ -97,13 +97,12 @@ private:
 };
 
 class LogWatchIntervals {
-    using OptionalIntervals = std::optional<IntervalSet<uint64_t>>;
-
 public:
+    using Intervals = std::optional<IntervalSet<uint64_t>>;
     LogWatchIntervals() = default;
 
-    explicit LogWatchIntervals(OptionalIntervals includes,
-                               OptionalIntervals excludes = std::nullopt)
+    explicit LogWatchIntervals(Intervals includes,
+                               Intervals excludes = std::nullopt)
         : includes_(std::move(includes)), excludes_(std::move(excludes)) {}
 
     bool check(uint64_t id) const {
@@ -122,8 +121,8 @@ public:
     }
 
 private:
-    OptionalIntervals includes_;
-    OptionalIntervals excludes_;
+    Intervals includes_;
+    Intervals excludes_;
 };
 
 struct LogWatchLimits {
@@ -161,30 +160,44 @@ using StateVector = std::vector<State>;
 
 class LogWatchEntry {
 public:
-    bool loadFromMapNode(const YAML::Node &node);
-    bool loadFrom(std::string_view line);
-    void init(std::string_view name, std::string_view level_value,
-              cfg::EventContext context);
-    LogWatchEntry &withDefault() {
-        init("*", ConvertLogWatchLevelToString(cfg::EventLevels::kWarn),
-             cfg::EventContext::with);
-        return *this;
+    LogWatchEntry(std::string_view name, std::string_view level_value,
+                  cfg::EventContext context);
+
+    static LogWatchEntry makeDefaultEntry() {
+        return LogWatchEntry(
+            "*", ConvertLogWatchLevelToString(cfg::EventLevels::kWarn),
+            cfg::EventContext::with);
     }
 
-    [[nodiscard]] std::string name() const noexcept {
-        return loaded_ ? name_ : std::string{};
-    }
+    LogWatchEntry()
+        : LogWatchEntry("",
+                        ConvertLogWatchLevelToString(cfg::EventLevels::kOff),
+                        cfg::EventContext::hide) {}
+
+    [[nodiscard]] std::string name() const noexcept { return name_; }
     [[nodiscard]] cfg::EventContext context() const noexcept {
         return context_;
     }
-    [[nodiscard]] bool loaded() const noexcept { return loaded_; }
     [[nodiscard]] cfg::EventLevels level() const noexcept { return level_; }
 
 private:
     std::string name_;
     cfg::EventLevels level_{cfg::EventLevels::kOff};
     cfg::EventContext context_{cfg::EventContext::hide};
-    bool loaded_{false};
+};
+
+class LogWatchEventIds {
+public:
+    explicit LogWatchEventIds(std::string_view value);
+
+    [[nodiscard]] std::string name() const noexcept { return name_; }
+    [[nodiscard]] LogWatchIntervals intervals() const noexcept {
+        return intervals_;
+    }
+
+private:
+    std::string name_;
+    LogWatchIntervals intervals_;
 };
 
 enum class EvlType { classic, vista };
@@ -219,14 +232,17 @@ public:
 
 private:
     LogWatchEntryVector entries_;
+    std::vector<LogWatchEventIds> event_ids_;
     size_t default_entry_ = 0;
     bool send_all_ = false;
     EvlType evl_type_ = EvlType::classic;
     evl::SkipDuplicatedRecords skip_{evl::SkipDuplicatedRecords::no};
     void loadSectionParameters();
-    static std::optional<YAML::Node> readLogEntryArray();
+    static std::optional<YAML::Node> readLogEntryArray(std::string_view name);
     /// returns count of found entries
     size_t processLogEntryArray(const YAML::Node &log_array);
+    void processEventIds(const YAML::Node &log_ids);
+
     void setupDefaultEntry();
     size_t addDefaultEntry();
 
@@ -294,6 +310,7 @@ struct RawLogWatchData {
     cfg::EventContext context_;
 };
 
+std::optional<LogWatchEntry> LoadFromString(std::string_view line);
 }  // namespace cma::provider
 
 #endif  // LOGWATCH_EVENT_H

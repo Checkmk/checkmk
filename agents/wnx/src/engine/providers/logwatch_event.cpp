@@ -53,14 +53,10 @@ cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
     return EventLevels::kOff;
 }
 
-void LogWatchEntry::init(std::string_view name, std::string_view level_value,
-                         cfg::EventContext context) {
-    name_ = name;
-    context_ = context;
-    level_ = LabelToEventLevel(level_value);
-
-    loaded_ = true;
-}
+LogWatchEntry::LogWatchEntry(std::string_view name,
+                             std::string_view level_value,
+                             cfg::EventContext context)
+    : name_(name), context_(context), level_(LabelToEventLevel(level_value)) {}
 
 namespace {
 std::pair<std::string, std::string> ParseLine(std::string_view line) {
@@ -96,38 +92,96 @@ std::pair<std::string, std::string> ParseLine(std::string_view line) {
     tools::AllTrim(body);
     return {name, body};
 }
-}  // namespace
 
-bool LogWatchEntry::loadFromMapNode(const YAML::Node &node) {
+std::optional<std::string> ObtainString(const YAML::Node &node) {
     if (node.IsNull() || !node.IsDefined() || !node.IsMap()) {
-        return false;
+        return std::nullopt;
     }
+
     try {
         YAML::Emitter emit;
         emit << node;
-        return loadFrom(emit.c_str());
+        return emit.c_str();
     } catch (const std::exception &e) {
         XLOG::l(
             "Failed to load logwatch entry from Node exception: '{}' in file '{}'",
             e.what(), wtools::ToUtf8(cfg::GetPathOfLoadedConfig()));
-        return false;
+        return std::nullopt;
+    }
+}
+
+std::optional<Interval<uint64_t>> ParseIdRange(std::string_view range) {
+    auto pair = tools::SplitString(std::string(range), "-");
+    if (pair.size() > 1) {
+        auto lo = tools::ConvertToUint64(pair[0]);
+        auto hi = tools::ConvertToUint64(pair[1]);
+        if (lo.has_value() && hi.has_value()) {
+            return Interval<uint64_t>{*lo, *hi + 1};
+        }
+    } else {
+        auto val = tools::ConvertToUint64(pair[0]);
+        if (val.has_value()) {
+            return Interval<uint64_t>{*val, *val + 1};
+        }
+    }
+
+    return std::nullopt;
+}
+}  // namespace
+
+LogWatchEventIds::LogWatchEventIds(std::string_view line) {
+    if (line.data() == nullptr || line.empty()) {
+        XLOG::t("Skipping logwatch filter with empty name");
+        return;
+    }
+
+    try {
+        auto [name, body] = ParseLine(line);
+        if (name.empty() || !body.contains(";;")) {
+            return;
+        }
+        name_ = name;
+
+        IntervalSetBuilder<uint64_t> includes_builder;
+        IntervalSetBuilder<uint64_t> excludes_builder;
+        auto table = tools::SplitString(std::string(body), ";;", 2);
+        auto includes = tools::SplitString(table[0], ";");
+        for (const auto &i : includes) {
+            const auto range = ParseIdRange(i);
+            includes_builder.add(range->lo, range->hi);
+        }
+        if (table.size() > 1) {
+            auto excludes = tools::SplitString(table[1], ";");
+            for (const auto &i : excludes) {
+                const auto range = ParseIdRange(i);
+                excludes_builder.add(range->lo, range->hi);
+            }
+        }
+        intervals_ = LogWatchIntervals(includes_builder.build(),
+                                       excludes_builder.build());
+
+    } catch (const std::exception &e) {
+        XLOG::l(
+            "Failed to load logwatch ids entry '{}' exception: '{}' in file '{}'",
+            std::string(line), e.what(),
+            wtools::ToUtf8(cfg::GetPathOfLoadedConfig()));
     }
 }
 
 // For one-line encoding, example:
 // - 'Application' : crit context
-bool LogWatchEntry::loadFrom(std::string_view line) {
+std::optional<LogWatchEntry> LoadFromString(std::string_view line) {
     using cfg::EventLevels;
     if (line.data() == nullptr || line.empty()) {
         XLOG::t("Skipping logwatch entry with empty name");
-        return false;
+        return std::nullopt;
     }
 
     try {
         auto context = cfg::EventContext::hide;
         auto [name, body] = ParseLine(line);
         if (name.empty()) {
-            return false;
+            return std::nullopt;
         }
 
         auto table = tools::SplitString(std::string(body), " ");
@@ -147,14 +201,13 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
                     name);
         }
 
-        init(name, level_string, context);
-        return true;
+        return LogWatchEntry(name, level_string, context);
     } catch (const std::exception &e) {
         XLOG::l(
             "Failed to load logwatch entry '{}' exception: '{}' in file '{}'",
             std::string(line), e.what(),
             wtools::ToUtf8(cfg::GetPathOfLoadedConfig()));
-        return false;
+        return std::nullopt;
     }
 }
 
@@ -162,13 +215,17 @@ void LogWatchEvent::loadConfig() {
     loadSectionParameters();
     size_t count = 0;
     try {
-        auto log_array = readLogEntryArray();
+        auto log_array = readLogEntryArray(cfg::vars::kLogWatchEventLogFile);
         if (!log_array.has_value()) {
             return;
         }
         count = processLogEntryArray(*log_array);
         setupDefaultEntry();
         XLOG::d.t("Loaded [{}] entries in LogWatch", count);
+        auto log_ids = readLogEntryArray(cfg::vars::kLogWatchEventLogFileIds);
+        if (log_ids.has_value()) {
+            processEventIds(*log_ids);
+        }
 
     } catch (const std::exception &e) {
         XLOG::l(
@@ -212,7 +269,8 @@ void LogWatchEvent::loadSectionParameters() {
     }
 }
 
-std::optional<YAML::Node> LogWatchEvent::readLogEntryArray() {
+std::optional<YAML::Node> LogWatchEvent::readLogEntryArray(
+    std::string_view name) {
     const auto cfg = cfg::GetLoadedConfig();
     const auto section = cfg[cfg::groups::kLogWatchEvent];
 
@@ -228,16 +286,16 @@ std::optional<YAML::Node> LogWatchEvent::readLogEntryArray() {
     }
 
     // get array, on success, return it
-    const auto log_array = section[cfg::vars::kLogWatchEventLogFile];
+    const auto log_array = section[name];
     if (!log_array) {
         XLOG::t("'{}' section has no '{}' member", cfg::groups::kLogWatchEvent,
-                cfg::vars::kLogWatchEventLogFile);
+                name);
         return {};
     }
 
     if (!log_array.IsSequence()) {
         XLOG::t("'{}' section has no '{}' member", cfg::groups::kLogWatchEvent,
-                cfg::vars::kLogWatchEventLogFile);
+                name);
         return {};
     }
     return log_array;
@@ -247,15 +305,28 @@ size_t LogWatchEvent::processLogEntryArray(const YAML::Node &log_array) {
     size_t count{0U};
     entries_.clear();
     for (const auto &l : log_array) {
-        LogWatchEntry lwe;
-        lwe.loadFromMapNode(l);
-        if (lwe.loaded()) {
-            ++count;
-            entries_.emplace_back(lwe);
+        const auto line = ObtainString(l);
+        if (line.has_value()) {
+            auto lwe = LoadFromString(*line);
+            if (lwe) {
+                ++count;
+                entries_.emplace_back(std::move(*lwe));
+            }
         }
     }
 
     return count;
+}
+
+void LogWatchEvent::processEventIds(const YAML::Node &log_ids) {
+    event_ids_.clear();
+    for (const auto &l : log_ids) {
+        const auto line = ObtainString(l);
+        if (line.has_value()) {
+            auto id = LogWatchEventIds(*line);
+            event_ids_.emplace_back(std::move(id));
+        }
+    }
 }
 
 namespace {
@@ -275,8 +346,7 @@ void LogWatchEvent::setupDefaultEntry() {
 }
 
 size_t LogWatchEvent::addDefaultEntry() {
-    entries_.emplace_back(LogWatchEntry());
-    entries_.back().init("*", "off", cfg::EventContext::hide);
+    entries_.emplace_back(LogWatchEntry("*", "off", cfg::EventContext::hide));
     return entries_.size() - 1;
 }
 
@@ -539,7 +609,9 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State &state,
     return out;
 }
 
-LogWatchEntry GenerateDefaultValue() { return LogWatchEntry().withDefault(); }
+LogWatchEntry GenerateDefaultValue() {
+    return LogWatchEntry::makeDefaultEntry();
+}
 
 bool UpdateState(State &state, const LogWatchEntryVector &entries) noexcept {
     for (const auto &config_entry : entries) {

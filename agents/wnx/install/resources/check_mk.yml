@@ -194,6 +194,8 @@ logwatch:
         - 'Parameters': ignore
         - 'State': ignore
         - '*': warn nocontext # This is default params for not missing entries
+    logfile_ids: # to filter event log by id
+        - '*': ;;       # 1;2-10;;3;5-7 means include 1, 2, 4, 8, 9, 10. ;; means nothing
 
 plugins:
     enabled: yes

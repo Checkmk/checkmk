@@ -205,12 +205,12 @@ TEST(CvtTest, LogWatchSection) {
     };
 
     for (int i = 0; i < 4; ++i) {
-        provider::LogWatchEntry lwe;
-        lwe.loadFromMapNode(logfiles[i]);
+        YAML::Emitter emit;
+        emit << logfiles[i];
+        const auto lwe = *provider::LoadFromString(emit.c_str());
         EXPECT_EQ(lwe.name(), base[i].name_);
         EXPECT_EQ(lwe.level(), base[i].level_);
         EXPECT_EQ(lwe.context(), base[i].context_);
-        EXPECT_EQ(lwe.loaded(), base[i].loaded_);
     }
 }
 

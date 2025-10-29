@@ -562,7 +562,7 @@ impl std::borrow::Borrow<uuid::Uuid> for TrustedConnection {
 }
 
 impl TrustedConnection {
-    pub fn tls_handshake_credentials(&self) -> AnyhowResult<certs::HandshakeCredentials> {
+    pub fn tls_handshake_credentials(&self) -> AnyhowResult<certs::HandshakeCredentials<'_>> {
         Ok(certs::HandshakeCredentials {
             server_root_cert: &self.root_cert,
             client_identity: Some(self.identity()?),

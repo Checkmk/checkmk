@@ -17,7 +17,7 @@ import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import FormButton from '@/form/components/forms/FormButton.vue'
+import FormButton from '@/form/components/FormButton.vue'
 import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditable/FormSingleChoiceEditableEditAsync.vue'
 import {
   type Payload,

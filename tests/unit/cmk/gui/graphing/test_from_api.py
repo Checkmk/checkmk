@@ -535,7 +535,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     },
     "Packets": {"packets_1", "packets_2", "packets_3"},
     "Commit charge": {"pagefile_absolute", "pagefile_percent"},
-    "RAM": {"mem_absolute", "mem_absolute_2"},
     "Requests": {"requests"},
     "Throughput": {"throughput"},
     "Memory": {"kube_memory_usage"},

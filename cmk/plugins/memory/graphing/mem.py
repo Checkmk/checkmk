@@ -146,7 +146,7 @@ graph_mem_absolute = Graph(
 )
 graph_mem_absolute_2 = Graph(
     name="mem_absolute_2",
-    title=Title("RAM"),
+    title=Title("RAM (Cached, buffers)"),
     simple_lines=(
         # see mem_linux.py
         Sum(

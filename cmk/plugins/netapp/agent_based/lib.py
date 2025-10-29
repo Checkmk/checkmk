@@ -374,20 +374,12 @@ def merge_if_sections(
     return nics, extra_info
 
 
-def check_netapp_interfaces(
+def _check_netapp_interfaces(
     item: str,
     params: Mapping[str, Any],
-    section: IfSection,
-    value_store: MutableMapping[str, Any],
+    nics: interfaces.Section[interfaces.InterfaceWithCounters],
+    extra_info: ExtraInfo,
 ) -> CheckResult:
-    nics, extra_info = section
-    yield from interfaces.check_multiple_interfaces(
-        item,
-        params,
-        nics,
-        value_store=value_store,
-    )
-
     for iface in interfaces.matching_interfaces_for_item(item, nics):
         vif = extra_info.get(iface.attributes.descr)
         if vif is None:
@@ -444,6 +436,28 @@ def check_netapp_interfaces(
                 state=State(speed_state),
                 summary="Interfaces do not have the same speed",
             )
+
+
+def check_netapp_interfaces(
+    item: str,
+    params: Mapping[str, Any],
+    section: IfSection,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    nics, extra_info = section
+    yield from interfaces.check_multiple_interfaces(
+        item,
+        params,
+        nics,
+        value_store=value_store,
+    )
+
+    yield from _check_netapp_interfaces(
+        item,
+        params,
+        nics,
+        extra_info,
+    )
 
 
 def check_netapp_vs_traffic(

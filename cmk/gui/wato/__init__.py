@@ -57,6 +57,9 @@ from cmk.gui.valuespec import TextAscii as TextAscii
 from cmk.gui.valuespec import TextUnicode as TextUnicode
 from cmk.gui.valuespec import Transform as Transform
 from cmk.gui.visuals.filter import FilterRegistry
+from cmk.gui.wato._check_mk_configuration import (
+    ConfigVariableTrustedCertificateAuthorities as ConfigVariableTrustedCertificateAuthorities,
+)
 from cmk.gui.wato._main_module_topics import MainModuleTopicAgents as MainModuleTopicAgents
 from cmk.gui.wato._main_module_topics import MainModuleTopicEvents as MainModuleTopicEvents
 from cmk.gui.wato._main_module_topics import MainModuleTopicExporter as MainModuleTopicExporter

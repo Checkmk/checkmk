@@ -43,6 +43,22 @@ def test_bcrypt_too_long(password: str) -> None:
         ph.hash_password(Password(password))
 
 
+def test_hash_password_truncation() -> None:
+    long_pass_str = "a" * 80
+    trunc_pass_str = "a" * 72
+    long_pass = Password(long_pass_str)
+    trunc_pass = Password(trunc_pass_str)
+
+    with pytest.raises(ph.PasswordTooLongError):
+        ph.hash_password(long_pass)
+
+    pw_hash = ph.hash_password(trunc_pass)
+
+    assert ph.matches(long_pass, pw_hash) is False
+    with pytest.raises(ph.PasswordInvalidError):
+        ph.verify(long_pass, pw_hash)
+
+
 @pytest.mark.parametrize(
     "valid_hash",
     [
@@ -89,7 +105,7 @@ def test_verify_invalid_password_failure(password: str, password_hash: str) -> N
     ],
 )
 def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
-    with pytest.raises(ValueError, match="Invalid salt"):
+    with pytest.raises(ph.PasswordInvalidError):
         ph.verify(Password(password), ph.PasswordHash(password_hash))
 
 
@@ -119,5 +135,5 @@ def test_verify_null_bytes(password: str, password_hash: str) -> None:
     ],
 )
 def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
-    with pytest.raises(ValueError, match="Invalid salt"):
+    with pytest.raises(ph.PasswordInvalidError):
         ph.verify(Password(password), ph.PasswordHash(pw_hash))

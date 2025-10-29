@@ -41,15 +41,13 @@ class PasswordInvalidError(MKCryptoException):
     """Indicates that the provided password could not be verified"""
 
 
-def hash_password(password: Password, *, allow_truncation: bool = False) -> PasswordHash:
+def hash_password(password: Password) -> PasswordHash:
     """Hash a password using the preferred algorithm
 
     Uses bcrypt with 12 rounds to hash a password.
 
     :param password: The password to hash. The password must not be longer than 72 bytes (except if
                      allow_truncation is set).
-    :param allow_truncation: Allow passwords longer than 72 bytes and silently truncate them.
-                             This should be avoided but is required for some use cases.
 
     :return: The hashed password Modular Crypto Format (see module docstring). The identifier used
              for bcrypt is "2y" for compatibility with htpasswd.
@@ -58,13 +56,14 @@ def hash_password(password: Password, *, allow_truncation: bool = False) -> Pass
     :raise: ValueError if the input password contains null bytes.
     """
 
-    if len(password.raw_bytes) <= 72 or allow_truncation:
-        hash_pass = bcrypt.hashpw(password.raw_bytes, bcrypt.gensalt(BCRYPT_ROUNDS)).decode("utf-8")
-        assert hash_pass.startswith("$2b$")
-        return PasswordHash(
-            "$2y$" + hash_pass.removeprefix("$2b$")
-        )  # Forcing 2y for htpasswd, bcrypt will still verify 2y hashes but not generate them.
-    raise PasswordTooLongError("Password too long")
+    if len(password.raw_bytes) > 72:
+        raise PasswordTooLongError("Password too long")
+
+    hash_pass = bcrypt.hashpw(password.raw_bytes, bcrypt.gensalt(BCRYPT_ROUNDS)).decode("utf-8")
+    assert hash_pass.startswith("$2b$")
+    return PasswordHash(
+        "$2y$" + hash_pass.removeprefix("$2b$")
+    )  # Forcing 2y for htpasswd, bcrypt will still verify 2y hashes but not generate them.
 
 
 def verify(password: Password, password_hash: PasswordHash) -> None:
@@ -90,4 +89,8 @@ def matches(password: Password, password_hash: PasswordHash) -> bool:
     if "\0" in password_hash:
         raise ValueError("Null character identified in password hash.")
 
-    return bcrypt.checkpw(password.raw_bytes, password_hash.encode("utf-8"))
+    try:
+        return bcrypt.checkpw(password.raw_bytes, password_hash.encode("utf-8"))
+    except ValueError:
+        # when pw > 72 bytes
+        return False

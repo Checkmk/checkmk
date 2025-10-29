@@ -60,7 +60,10 @@ const emit = defineEmits<{
 
 const filterDefinitions = useFilterDefinitions()
 
-const widgetFilterManager = useWidgetFilterManager({}, filterDefinitions)
+const widgetFilterManager = useWidgetFilterManager(
+  props.editWidgetSpec?.filter_context.filters || {},
+  filterDefinitions
+)
 
 const addFilters = useAddFilter()
 

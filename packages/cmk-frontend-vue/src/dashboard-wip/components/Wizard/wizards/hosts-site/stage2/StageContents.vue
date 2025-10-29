@@ -134,7 +134,11 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
       :action="gotoPrevStage"
       variant="secondary"
     />
-    <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="secondary" />
+    <ActionButton
+      :label="editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
+      :action="gotoNextStage"
+      variant="primary"
+    />
   </ActionBar>
 
   <ContentSpacer />

@@ -25,7 +25,7 @@ from cmk.gui.utils.json import CustomObjectJSONEncoder
 PageResult = object
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PageContext:
     """Context passed to page handlers, please use these instead of importing globals."""
 

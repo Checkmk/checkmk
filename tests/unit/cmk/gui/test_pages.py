@@ -286,7 +286,7 @@ def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None
     handler = endpoint.handler
     assert isinstance(handler, Page)
 
-    handler.handle_page(PageContext(Config()))
+    handler.handle_page(PageContext(config=Config()))
     assert capsys.readouterr()[0] == "234"
 
 
@@ -306,7 +306,7 @@ def test_page_registry_register_page_handler(
     handler = endpoint.handler
     assert not isinstance(handler, Page)
 
-    handler(PageContext(Config()))
+    handler(PageContext(config=Config()))
     assert capsys.readouterr()[0] == "234"
 
 

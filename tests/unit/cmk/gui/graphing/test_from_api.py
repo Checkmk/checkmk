@@ -505,7 +505,6 @@ def test_duplicate_metric_titles_fixed() -> None:
 
 
 _ALLOWED_DUPLICATE_GRAPH_TITLES = {
-    "Errors": {"fc_errors", "if_errors_discards", "fc_errors_detailed"},
     "Huge pages": {"huge_pages_2", "huge_pages"},
     "Bandwidth": {"bandwidth_translated", "bandwidth"},
     "Traffic": {"read_write_data", "traffic"},

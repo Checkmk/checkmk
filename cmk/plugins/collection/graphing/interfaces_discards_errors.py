@@ -34,7 +34,7 @@ metric_if_out_discards = metrics.Metric(
 
 graph_if_errors_discards = graphs.Bidirectional(
     name="if_errors_discards",
-    title=Title("Errors"),
+    title=Title("Errors (Discards)"),
     lower=graphs.Graph(
         name="if_errors_out",
         title=Title("Errors"),

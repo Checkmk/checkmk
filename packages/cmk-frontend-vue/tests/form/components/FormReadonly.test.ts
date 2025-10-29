@@ -28,7 +28,7 @@ test('FormReadonly renders integer', () => {
       backendValidation: []
     }
   })
-  screen.getByText('42')
+  screen.getByText('42 fooUnit')
 })
 
 test('FormReadonly updates integer', async () => {
@@ -41,9 +41,9 @@ test('FormReadonly updates integer', async () => {
   const { rerender } = render(FormReadonly, {
     props
   })
-  screen.getByText('42')
+  screen.getByText('42 fooUnit')
   await rerender({ ...props, data: 41 })
-  screen.getByText('41')
+  screen.getByText('41 fooUnit')
 })
 
 test('FormReadonly renders float', () => {
@@ -54,7 +54,7 @@ test('FormReadonly renders float', () => {
       backendValidation: []
     }
   })
-  screen.getByText('42.23')
+  screen.getByText('42.23 fooUnit')
 })
 
 const stringFormSpec: FormSpec.String = {
@@ -224,7 +224,7 @@ test('FormReadonly renders cascading/integer, 2nd choice', () => {
   // Title of element choice
   screen.getByText('integerChoiceTitle:')
   // Value of element
-  screen.getByText(23)
+  screen.getByText('23 fooUnit')
 })
 
 const booleanChoiceFormSpec: FormSpec.BooleanChoice = {

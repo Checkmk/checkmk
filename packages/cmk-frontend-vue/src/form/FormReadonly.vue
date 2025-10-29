@@ -18,7 +18,9 @@ import type {
   DualListChoice,
   FileUpload,
   FixedValue,
+  Float,
   FormSpec,
+  Integer,
   Labels,
   LegacyValuespec,
   List,
@@ -81,7 +83,9 @@ function renderForm(
       return renderTimeSpan(formSpec as TimeSpan, value as number)
     case 'string':
     case 'integer':
+      return renderIntegerUnit(formSpec as Integer, value as number)
     case 'float':
+      return renderFloatUnit(formSpec as Float, value as number)
     case 'metric':
     case 'date_picker':
     case 'time_picker':
@@ -292,6 +296,21 @@ function renderFixedValue(formSpec: FixedValue): VNode {
     shownValue = formSpec.label
   }
   return h('div', shownValue as string)
+}
+
+function renderIntegerUnit(formSpec: Integer, value: number): VNode {
+  let shownValue = `${value}`
+  if (formSpec.unit) {
+    shownValue += ` ${formSpec.unit}`
+  }
+  return h('div', shownValue)
+}
+function renderFloatUnit(formSpec: Float, value: number): VNode {
+  let shownValue = `${value}`
+  if (formSpec.unit) {
+    shownValue += ` ${formSpec.unit}`
+  }
+  return h('div', shownValue)
 }
 
 function renderDict(

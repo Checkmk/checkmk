@@ -50,12 +50,11 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, get_args, Literal
+from typing import Any, get_args, Literal, TypedDict
 
 import psycopg
 from psycopg import sql
 from psycopg.errors import Error as PsycopgError
-from typing_extensions import TypedDict
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)

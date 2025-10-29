@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type ValidationMessages } from '@/form'
 import FormEdit from '@/form/FormEdit.vue'
 
-import { makeString } from '@/graph-designer/specs'
+import { makeString } from '@/graph-designer/private/specs'
 
 const data = defineModel('data', { type: String, default: '' })
 const spec = makeString('', '', null)

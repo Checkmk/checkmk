@@ -21,7 +21,7 @@ import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
-import { extractExplicitVerticalRangeBounds } from '../converters'
+import { extractExplicitVerticalRangeBounds } from './converters'
 
 const { _t } = usei18n()
 

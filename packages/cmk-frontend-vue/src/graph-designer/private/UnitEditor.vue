@@ -23,7 +23,7 @@ import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
-import { extractUnitFields } from '../converters'
+import { extractUnitFields } from './converters'
 
 const { _t } = usei18n()
 

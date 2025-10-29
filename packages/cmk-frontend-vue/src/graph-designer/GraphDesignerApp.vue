@@ -7,8 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
 
-import GraphDesigner from '@/graph-designer/GraphDesigner.vue'
-import { graphRenderer } from '@/graph-designer/graph'
+import GraphDesigner from '@/graph-designer/private/GraphDesigner.vue'
+import { graphRenderer } from '@/graph-designer/private/graph'
 
 defineProps<{
   graph_id: string

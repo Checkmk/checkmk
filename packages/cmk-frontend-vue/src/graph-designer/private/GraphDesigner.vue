@@ -27,14 +27,6 @@ import CmkSwitch from '@/components/CmkSwitch.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
-import {
-  convertFromExplicitVerticalRange,
-  convertFromUnit,
-  convertToExplicitVerticalRange,
-  convertToUnit
-} from '@/graph-designer/converters'
-import { fetchMetricColor, fetchMetricTypes } from '@/graph-designer/fetch_metric_properties'
-import { type GraphRenderer } from '@/graph-designer/graph'
 import FixedMetricRowRenderer from '@/graph-designer/private/FixedMetricRowRenderer.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/private/FormMetricCells.vue'
 import FormQuery, { type Query } from '@/graph-designer/private/FormQuery.vue'
@@ -42,6 +34,17 @@ import FormTitle from '@/graph-designer/private/FormTitle.vue'
 import GraphOptionsEditor from '@/graph-designer/private/GraphOptionsEditor.vue'
 import MetricRowRenderer from '@/graph-designer/private/MetricRowRenderer.vue'
 import TopicsRenderer from '@/graph-designer/private/TopicsRenderer.vue'
+import {
+  convertFromExplicitVerticalRange,
+  convertFromUnit,
+  convertToExplicitVerticalRange,
+  convertToUnit
+} from '@/graph-designer/private/converters'
+import {
+  fetchMetricColor,
+  fetchMetricTypes
+} from '@/graph-designer/private/fetch_metric_properties'
+import { type GraphRenderer } from '@/graph-designer/private/graph'
 
 import type { Topic } from './type_defs'
 

@@ -9,7 +9,7 @@ import { ref } from 'vue'
 
 import CmkIcon from '@/components/CmkIcon'
 
-import { type Topic } from '@/graph-designer/type_defs'
+import { type Topic } from '@/graph-designer/private/type_defs'
 
 const props = defineProps<{
   topics: Topic[]

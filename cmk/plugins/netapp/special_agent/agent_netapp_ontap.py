@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
 import argparse
 import logging
@@ -19,6 +16,7 @@ import urllib3
 from netapp_ontap import resources as NetAppResource
 from netapp_ontap.error import NetAppRestError
 from netapp_ontap.host_connection import HostConnection
+from netapp_ontap.resource import Resource
 from pydantic import BaseModel
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
@@ -81,7 +79,9 @@ def write_section(
         sys.stdout.write(json_dict + "\n")
 
 
-def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
+def _collect_netapp_resource_volume(
+    connection: HostConnection, is_constituent: bool
+) -> Iterable[Resource]:
     field_query = (
         "uuid",
         "state",
@@ -107,7 +107,7 @@ def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: 
     )
 
 
-def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeModel]:
+def _collect_volume_models(netapp_volumes: Iterable[Resource]) -> Iterable[models.VolumeModel]:
     for netapp_resources in netapp_volumes:
         element_data = netapp_resources.to_dict()
 
@@ -327,7 +327,7 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
         )
 
 
-def _aggregates_ids(connection: HostConnection, args: argparse.Namespace) -> Collection:
+def _aggregates_ids(connection: HostConnection, args: argparse.Namespace) -> Collection[str]:
     # wee need to retrieve the uuid of the aggregates via the CLI passthrough
     # because the REST API does not return, per design, the uuid of the root aggregates
     response = connection.session.get(

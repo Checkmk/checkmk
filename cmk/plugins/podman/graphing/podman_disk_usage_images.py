@@ -29,6 +29,6 @@ perfometer_images_size = perfometers.Perfometer(
 
 graph_podman_disk_usage_images = graphs.Graph(
     name="podman_disk_usage_images",
-    title=Title("Disk Usage"),
+    title=Title("Disk usage (Podman images)"),
     simple_lines=["podman_disk_usage_images_total_size"],
 )

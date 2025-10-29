@@ -36,7 +36,7 @@ perfometer_containers_size = perfometers.Perfometer(
 
 graph_podman_disk_usage_containers = graphs.Graph(
     name="podman_disk_usage_containers",
-    title=Title("Disk Usage"),
+    title=Title("Disk usage (Podman containers)"),
     simple_lines=["podman_disk_usage_containers_total_size"],
     compound_lines=["podman_disk_usage_containers_reclaimable_size"],
 )

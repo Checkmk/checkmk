@@ -536,11 +536,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Packets": {"packets_1", "packets_2", "packets_3"},
     "Commit charge": {"pagefile_absolute", "pagefile_percent"},
     "RAM": {"mem_absolute", "mem_absolute_2"},
-    "Disk Usage": {
-        "podman_disk_usage_containers",
-        "podman_disk_usage_volumes",
-        "podman_disk_usage_images",
-    },
     "Requests": {"requests"},
     "Throughput": {"throughput"},
     "Memory": {"kube_memory_usage"},

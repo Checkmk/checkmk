@@ -17,8 +17,8 @@ import usei18n from '@/lib/i18n'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import ExplicitVerticalRangeEditor from '@/graph-designer/components/ExplicitVerticalRangeEditor.vue'
-import UnitEditor from '@/graph-designer/components/UnitEditor.vue'
+import ExplicitVerticalRangeEditor from '@/graph-designer/private/ExplicitVerticalRangeEditor.vue'
+import UnitEditor from '@/graph-designer/private/UnitEditor.vue'
 
 const { _t } = usei18n()
 

@@ -49,7 +49,7 @@ test('catalog panel hides content on click', async () => {
   const header = screen.getByRole('button', { name: 'Toggle Catalog Panel Title' })
   await userEvent.click(header)
 
-  expect(await screen.queryByText('Some content')).toBeNull()
+  expect(await screen.queryByText('Some content')).not.toBeVisible()
 })
 
 test('catalog panel does not submit form on toggle', async () => {

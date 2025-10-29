@@ -110,10 +110,10 @@ test('FormCatalog open/close topic', async () => {
 
   const headline = await screen.findByText('topic_title')
   await userEvent.click(headline)
-  expect(await screen.queryByText('dict_title')).toBeNull()
+  expect(await screen.queryByText('dict_title')).not.toBeVisible()
 
   await userEvent.click(headline)
-  expect(await screen.findByText('dict_title')).toBeInTheDocument()
+  expect(await screen.findByText('dict_title')).toBeVisible()
 })
 
 test.skip('FormCatalog collapse/open all - skipped until the toggle gets a better implementation', async () => {
@@ -121,10 +121,10 @@ test.skip('FormCatalog collapse/open all - skipped until the toggle gets a bette
   await screen.findByText('dict_title')
 
   await userEvent.click(screen.getByText('Collapse all'))
-  expect(await screen.queryByText('dict_title')).toBeNull()
+  expect(await screen.queryByText('dict_title')).not.toBeVisible()
 
   await userEvent.click(screen.getByText('Open all'))
-  expect(await screen.findByText('dict_title')).toBeInTheDocument()
+  expect(await screen.findByText('dict_title')).toBeVisible()
 })
 
 test('FormCatalog default value', async () => {

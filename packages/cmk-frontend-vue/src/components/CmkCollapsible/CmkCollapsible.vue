@@ -4,23 +4,46 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { CollapsibleContent, CollapsibleRoot } from 'radix-vue'
+import { nextTick, ref, watch } from 'vue'
 
 interface CmkCollapsibleProps {
   open: boolean
 }
 
-defineProps<CmkCollapsibleProps>()
+const props = defineProps<CmkCollapsibleProps>()
+
+const contentRef = ref<HTMLElement | null>(null)
+const heightCSS = ref<string>('auto')
+
+watch(
+  () => [props.open, contentRef.value],
+  async () => {
+    await nextTick()
+    if (contentRef.value) {
+      // Temporarily disable transitions and animations to get the correct height
+      const currentTransitionDuration = contentRef.value.style.transitionDuration
+      const currentAnimationName = contentRef.value.style.animationName
+      contentRef.value.style.transitionDuration = '0ms'
+      contentRef.value.style.animationName = 'none'
+
+      const height = contentRef.value.getBoundingClientRect().height
+      heightCSS.value = `${height}px`
+
+      // Re-enable transitions and animations
+      contentRef.value.style.transitionDuration = currentTransitionDuration
+      contentRef.value.style.animationName = currentAnimationName
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
-  <CollapsibleRoot :open="open">
-    <Transition name="content">
-      <CollapsibleContent v-show="open" class="cmk-collapsible__content">
-        <slot />
-      </CollapsibleContent>
-    </Transition>
-  </CollapsibleRoot>
+  <Transition name="content">
+    <div v-show="open" ref="contentRef">
+      <slot />
+    </div>
+  </Transition>
 </template>
 
 <style scoped lang="scss">
@@ -40,7 +63,7 @@ defineProps<CmkCollapsibleProps>()
 }
 
 @mixin full-height {
-  height: var(--radix-collapsible-content-height);
+  height: v-bind('heightCSS');
   opacity: 1;
 }
 

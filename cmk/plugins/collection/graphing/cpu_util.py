@@ -246,7 +246,7 @@ graph_cpu_utilization_numcpus = graphs.Graph(
 )
 graph_cpu_utilization_simple = graphs.Graph(
     name="cpu_utilization_simple",
-    title=Title("CPU utilization"),
+    title=Title("CPU utilization (User, system)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,

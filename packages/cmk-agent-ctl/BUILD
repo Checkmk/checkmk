@@ -149,4 +149,5 @@ rust_doc(
     name = "doc",
     crate = ":cmk-agent-ctl-lib",
     rustdoc_flags = ["--document-private-items"],
+    tags = ["manual"],
 )

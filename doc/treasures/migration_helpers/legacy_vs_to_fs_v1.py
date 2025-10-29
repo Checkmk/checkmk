@@ -32,7 +32,7 @@ _ADDED_IMPORTS = (
     "from typing import Any",
     "from cmk.gui.form_specs.unstable import LegacyValueSpec, ListExtended",
     "from cmk.gui.form_specs.generators.cascading_choice_utils import enable_deprecated_cascading_elements, CascadingDataConversion",
-    "from cmk.gui.form_specs.generators.tuple_utils import TupleLevels",
+    "from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels, OptionalTupleLevels",
     "from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative",
     "from cmk.gui.form_specs.generators.absolute_date import AbsoluteTimestamp, DateTimeFormat",
     "from cmk.gui.form_specs.generators.age import Age",
@@ -282,6 +282,7 @@ class VSTransformer(cst.CSTTransformer):
             "SimpleLevels",
             "Tuple",
             "TupleLevels",
+            "OptionalTupleLevels",
             "HostState",
             "ServiceState",
             "enable_deprecated_cascading_elements",
@@ -361,7 +362,7 @@ class VSTransformer(cst.CSTTransformer):
                 case "Age":
                     convert_call = self._make_age(updated_node)
                 case "SimpleLevels":
-                    convert_call = self._make_simple_levels(updated_node)
+                    convert_call = self._make_optional_tuple_levels(updated_node)
                 case "AbsoluteDate":
                     convert_call = self._make_absolute_date(updated_node)
                 case "Integer":
@@ -450,7 +451,11 @@ class VSTransformer(cst.CSTTransformer):
         )
 
         args = {k.value: arg.value for arg in new_args if (k := arg.keyword) is not None}
-        new_args.extend(self._make_simple_levels_template_args(template_name, args, template_args))
+        new_args.extend(
+            self._make_simple_levels_template_args(
+                template_name, args, template_args, add_migration=True
+            )
+        )
         return cst.Call(func=cst.Name("SimpleLevels"), args=new_args)
 
     def _make_dictionary_from_tuple(self, old: cst.Call) -> cst.Call:
@@ -1259,7 +1264,7 @@ class VSTransformer(cst.CSTTransformer):
 
         return cst.Call(func=cst.Name("AbsoluteTimestamp"), args=new_args)
 
-    def _make_simple_levels(self, old: cst.Call) -> cst.Call:
+    def _make_optional_tuple_levels(self, old: cst.Call) -> cst.Call:
         args = {k.value: arg.value for arg in old.args if (k := arg.keyword) is not None}
         handled_args = ["spec", "unit", "default_value", "default_levels"]
         kept_args = [
@@ -1292,54 +1297,87 @@ class VSTransformer(cst.CSTTransformer):
                 cst.ensure_type(args["spec"], cst.Name),
                 args,
                 template_args,
+                add_migration=False,
             )
         )
 
-        return cst.Call(func=cst.Name("SimpleLevels"), args=(*kept_args, *new_args))
+        return cst.Call(func=cst.Name("OptionalTupleLevels"), args=(*kept_args, *new_args))
 
     def _make_simple_levels_template_args(
         self,
         spec: cst.SimpleString | cst.Name,
         args: Mapping[str, cst.BaseExpression],
         template_args: list[cst.Arg],
+        add_migration: bool,
     ) -> list[cst.Arg]:
         match spec.value:
             case "Age":
-                return [
-                    cst.Arg(
-                        cst.Call(cst.Name("TimeSpan"), args=DEFAULT_TIME_SPAN_ARGS),
-                        cst.Name("form_spec_template"),
-                    ),
-                    cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
-                    cst.Arg(self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")),
-                ]
+                return (
+                    [
+                        cst.Arg(
+                            cst.Call(cst.Name("TimeSpan"), args=DEFAULT_TIME_SPAN_ARGS),
+                            cst.Name("form_spec_template"),
+                        ),
+                        cst.Arg(
+                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
+                        ),
+                    ]
+                    + []
+                    if not add_migration
+                    else [
+                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                    ]
+                )
             case "Integer":
-                return [
-                    cst.Arg(
-                        cst.Call(cst.Name(spec.value), args=template_args),
-                        cst.Name("form_spec_template"),
-                    ),
-                    cst.Arg(cst.Name("migrate_to_integer_simple_levels"), cst.Name("migrate")),
-                    cst.Arg(
-                        self._get_simple_level_prefill(args, float_type=False),
-                        cst.Name("prefill_fixed_levels"),
-                    ),
-                ]
+                return (
+                    [
+                        cst.Arg(
+                            cst.Call(cst.Name(spec.value), args=template_args),
+                            cst.Name("form_spec_template"),
+                        ),
+                        cst.Arg(
+                            self._get_simple_level_prefill(args, float_type=False),
+                            cst.Name("prefill_fixed_levels"),
+                        ),
+                    ]
+                    + []
+                    if not add_migration
+                    else [
+                        cst.Arg(cst.Name("migrate_to_integer_simple_levels"), cst.Name("migrate")),
+                    ]
+                )
             case "Float":
-                return [
-                    cst.Arg(
-                        cst.Call(cst.Name(spec.value), args=template_args),
-                        cst.Name("form_spec_template"),
-                    ),
-                    cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
-                    cst.Arg(self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")),
-                ]
+                return (
+                    [
+                        cst.Arg(
+                            cst.Call(cst.Name(spec.value), args=template_args),
+                            cst.Name("form_spec_template"),
+                        ),
+                        cst.Arg(
+                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
+                        ),
+                    ]
+                    + []
+                    if not add_migration
+                    else [
+                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                    ]
+                )
             case "Percentage":
-                return [
-                    cst.Arg(cst.Call(cst.Name(spec.value)), cst.Name("form_spec_template")),
-                    cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
-                    cst.Arg(self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")),
-                ]
+                return (
+                    [
+                        cst.Arg(cst.Call(cst.Name(spec.value)), cst.Name("form_spec_template")),
+                        # cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                        cst.Arg(
+                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
+                        ),
+                    ]
+                    + []
+                    if not add_migration
+                    else [
+                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                    ]
+                )
 
             case _:
                 assert False, f"Unknown SimpleLevels spec: {spec.value}"

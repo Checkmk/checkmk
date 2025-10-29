@@ -1,1 +1,2 @@
 modules/** rules-lint-ignored=true
+*.patch text eol=lf

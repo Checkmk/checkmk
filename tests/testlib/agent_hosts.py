@@ -86,6 +86,8 @@ def _discover_services_of_piggybacked_hosts(
         folder_name: The name of the host folder in the site which the host is created in.
         dcd_max_count: The maximum number of attempts to perform when waiting for the hosts.
         dcd_interval: The dcd interval in seconds.
+        discovery_max_count: The maxmimum number of discovery attempts.
+        discovery_wait_timeout: The timeout for a single discovery cycle.
         cleanup: Specifies if the dump file is cleaned up at the end."""
     with _fake_host_and_discover_services(site, host_name, folder_name, cleanup):
         execute_dcd_cycle(

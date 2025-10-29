@@ -13,9 +13,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
-    Result,
     RuleSetType,
-    State,
     StringTable,
 )
 from cmk.plugins.lib import interfaces
@@ -95,18 +93,12 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
     section_netapp_ontap_if: InterfacesSection,
     section_netapp_ontap_ports: PortsSection,
     section_netapp_ontap_if_counters: InterfacesCountersSection | None,
-) -> tuple[IfSection, str | None]:
+) -> IfSection:
     """
-    1 interface -> 1 port
-
-    Failover rules as per my understanding:
-    - if failover (policy) is 'default' or 'broadcast_domain_only' in case of port failure
-      the failover ports are the ports of the broadcast_domain of the failing port
-    - if failover (policy) is 'home_node_only' in case of port failure
-      the failover ports are the port(s) of the broadcast_domain which are on the home node
-    - if failover (policy) is 'home_port_only' in case of port failure
-      the failover ports is the home_port
-    Cfr: https://docs.netapp.com/us-en/ontap-restmap-9131//net.html#net-port-broadcast-domain-get
+    Failover policy docs:
+    - https://docs.netapp.com/us-en/ontap/networking/relationship_between_broadcast_domains.html#failover-policy-decision-tree
+    - https://kb.netapp.com/on-prem/ontap/Ontap_OS/OS-KBs/Network_interface_failover_policies_behavior_and_uses
+    - https://kb.netapp.com/on-prem/ontap/Ontap_OS/OS-KBs/What_is_an_SFO_Partner
 
     """
 
@@ -168,7 +160,6 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
             if_mac_list.setdefault(interface["mac-address"], [])
             if_mac_list[interface["mac-address"]].append((interface_name, computed_state))
 
-        failover_policy_alert = None
         failover_policy = interface.get("failover")
         fail_ports: set = broadcast_domains_ports.get(interface.get("broadcast_domain", ""), set())
         match failover_policy:
@@ -181,12 +172,9 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
             case "home_port_only":
                 interface["failover_ports"] = failover_home_port
             case _:
-                failover_policy_alert = failover_policy
+                ...
 
-    return (
-        merge_if_sections(interfaces_data_section, if_mac_list, virtual_interfaces),
-        failover_policy_alert,
-    )
+    return merge_if_sections(interfaces_data_section, if_mac_list, virtual_interfaces)
 
 
 def discover_netapp_ontap_if(
@@ -198,7 +186,7 @@ def discover_netapp_ontap_if(
     if not section_netapp_ontap_if or not section_netapp_ontap_ports:
         return
 
-    (interfaces_section, _), _ = _merge_if_counters_sections(
+    (interfaces_section, _) = _merge_if_counters_sections(
         section_netapp_ontap_if,
         section_netapp_ontap_ports,
         section_netapp_ontap_if_counters,
@@ -220,17 +208,11 @@ def check_netapp_ontap_if(
     if not section_netapp_ontap_if or not section_netapp_ontap_ports:
         return
 
-    (interfaces_section, extra_info), failover_policy_alert = _merge_if_counters_sections(
+    (interfaces_section, extra_info) = _merge_if_counters_sections(
         section_netapp_ontap_if,
         section_netapp_ontap_ports,
         section_netapp_ontap_if_counters,
     )
-
-    if failover_policy_alert is not None:
-        yield Result(
-            state=State.UNKNOWN,
-            summary=f"Failover policy: {failover_policy_alert}.",
-        )
 
     yield from check_netapp_interfaces(
         item, params, (interfaces_section, extra_info), get_value_store()

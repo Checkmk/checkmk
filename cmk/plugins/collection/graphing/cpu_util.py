@@ -201,7 +201,7 @@ perfometer_user_system_streams = perfometers.Perfometer(
 
 graph_util_average_1 = graphs.Graph(
     name="util_average_1",
-    title=Title("CPU utilization"),
+    title=Title("CPU utilization (Average)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,

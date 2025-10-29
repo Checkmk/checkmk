@@ -33,7 +33,7 @@ metric_pagefile_free = Metric(
 
 graph_pagefile_absolute = Graph(
     name="pagefile_absolute",
-    title=Title("Commit charge"),
+    title=Title("Commit charge (Absolute)"),
     simple_lines=(
         Sum(Title("Total commitable memory"), Color.DARK_BLUE, ("pagefile_used", "pagefile_free")),
         WarningOf("pagefile_used"),

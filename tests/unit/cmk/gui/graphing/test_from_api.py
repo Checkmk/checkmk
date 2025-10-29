@@ -519,7 +519,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
         "amount_of_mails_in_secondary_queues",
     },
     "Packets": {"packets_1", "packets_2", "packets_3"},
-    "Commit charge": {"pagefile_absolute", "pagefile_percent"},
 }
 
 

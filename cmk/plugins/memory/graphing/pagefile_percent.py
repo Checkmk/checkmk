@@ -5,7 +5,14 @@
 
 from cmk.graphing.v1 import Title
 from cmk.graphing.v1.graphs import Graph, MinimalRange
-from cmk.graphing.v1.metrics import Color, CriticalOf, DecimalNotation, Metric, Unit, WarningOf
+from cmk.graphing.v1.metrics import (
+    Color,
+    CriticalOf,
+    DecimalNotation,
+    Metric,
+    Unit,
+    WarningOf,
+)
 from cmk.graphing.v1.perfometers import Closed, FocusRange, Perfometer
 
 UNIT_PERCENTAGE = Unit(DecimalNotation("%"))

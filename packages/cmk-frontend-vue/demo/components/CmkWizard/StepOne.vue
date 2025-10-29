@@ -5,36 +5,55 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
+import CmkLabel from '@/components/CmkLabel.vue'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+import CmkInput from '@/components/user-input/CmkInput.vue'
+import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 defineProps<CmkWizardStepProps>()
 
 const checkboxChecked = ref(false)
-const checkboxErrors = ref<string[]>([])
+const yourName = ref<string>('')
 
-async function validate(): Promise<boolean> {
-  const isValid = checkboxChecked.value
+const displayErrors = ref(false)
 
-  if (!isValid) {
-    checkboxErrors.value = ['This checkbox needs to be checked']
-  } else {
-    checkboxErrors.value = []
+const getCheckboxErrors = () => {
+  const errors: string[] = []
+  if (!checkboxChecked.value) {
+    errors.push('This checkbox needs to be checked')
   }
-
-  return isValid
+  return errors
 }
 
-watch(checkboxChecked, (newValue) => {
-  if (newValue) {
-    checkboxErrors.value = []
+const getNameErrors = () => {
+  const errors: string[] = []
+  const name = yourName.value.trim()
+  if (name.length === 0) {
+    errors.push('Your name is required')
+  } else if (name.length > 10) {
+    errors.push('Name cannot be longer than 10 characters')
   }
+  return errors
+}
+
+const checkboxErrors = computed(() => {
+  return displayErrors.value ? getCheckboxErrors() : []
 })
+
+const yourNameErrors = computed(() => {
+  return displayErrors.value ? getNameErrors() : []
+})
+
+async function validate(): Promise<boolean> {
+  displayErrors.value = true
+  return getCheckboxErrors().length === 0 && getNameErrors().length === 0
+}
 </script>
 
 <template>
@@ -48,6 +67,16 @@ watch(checkboxChecked, (newValue) => {
         v-model="checkboxChecked"
         label="This checkbox needs to be checked to proceed."
         :external-errors="checkboxErrors"
+      />
+      <CmkLabel>
+        Choose a name
+        <CmkLabelRequired />
+      </CmkLabel>
+      <CmkInput
+        v-model="yourName"
+        type="text"
+        field-size="MEDIUM"
+        :external-errors="yourNameErrors"
       />
     </template>
     <template #actions>

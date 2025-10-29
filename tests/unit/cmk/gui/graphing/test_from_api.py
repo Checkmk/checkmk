@@ -506,7 +506,6 @@ def test_duplicate_metric_titles_fixed() -> None:
 
 _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Throughput": {"azure_redis_throughput", "azure_cosmosdb_database_throughput"},
-    "Requests": {"azure_cosmosdb_database_requests"},
 }
 
 _ALLOWED_DUPLICATE_GRAPH_TITLES = {
@@ -526,7 +525,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     },
     "Packets": {"packets_1", "packets_2", "packets_3"},
     "Commit charge": {"pagefile_absolute", "pagefile_percent"},
-    "Requests": {"requests"},
     "Throughput": {"throughput"},
 }
 

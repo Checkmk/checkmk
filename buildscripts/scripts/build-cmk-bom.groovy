@@ -89,7 +89,7 @@ def main() {
         }
 
         dir("${checkout_dir}") {
-            stage("Create license.csv") {
+            stage("Create bill-of-materials.csv") {
                 inside_container() {
                     sh("""
                         bazel build //omd:generate_bom_csv

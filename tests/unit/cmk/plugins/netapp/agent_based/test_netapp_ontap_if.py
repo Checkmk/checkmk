@@ -11,8 +11,10 @@ from collections.abc import Mapping
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
+from cmk.plugins.lib import interfaces
 from cmk.plugins.netapp.agent_based.netapp_ontap_if import (
     _get_failover_home_port,
+    _merge_if_counters_sections,
     _merge_interface_counters,
     _merge_interface_port,
     parse_netapp_interfaces,
@@ -383,3 +385,176 @@ def test_merge_interface_counters(
 ) -> None:
     interface_dict = {"name": "test_interface", "state": "up"}
     assert _merge_interface_counters(counters, interface_dict) == expected_result
+
+
+class TestMergeIfCountersSections:
+    @pytest.fixture(autouse=True)
+    def setup_sections(self) -> None:
+        self.interfaces_section = {iface.name: iface for iface in INTERFACE_MODELS}
+        self.ports_section = {port.item_name(): port for port in PORT_MODELS}
+        self.counters_section = {counter.id: counter for counter in INTERFACE_COUNTERS}
+
+    def test_merged_attributes(
+        self,
+    ) -> None:
+        (interfaces_data, _), _ = _merge_if_counters_sections(
+            self.interfaces_section, self.ports_section, self.counters_section
+        )
+
+        assert interfaces_data[0].attributes == interfaces.Attributes(
+            index="1",
+            descr="lif1",
+            alias="",
+            type="6",
+            speed=0,
+            oper_status="1",
+            out_qlen=None,
+            phys_address="\x00\x0c)\x124V",
+            oper_status_name="up",
+            speed_as_text="",
+            group=None,
+            node=None,
+            admin_status=None,
+            extra_info=None,
+        )
+        assert interfaces_data[1].attributes == interfaces.Attributes(
+            index="2",
+            descr="lif2",
+            alias="",
+            type="6",
+            speed=0,
+            oper_status="2",
+            out_qlen=None,
+            phys_address="\x00\x0c)\x124W",
+            oper_status_name="down",
+            speed_as_text="",
+            group=None,
+            node=None,
+            admin_status=None,
+            extra_info=None,
+        )
+        assert interfaces_data[2].attributes == interfaces.Attributes(
+            index="3",
+            descr="lif3",
+            alias="",
+            type="6",
+            speed=0,
+            oper_status="1",
+            out_qlen=None,
+            phys_address="\x00\x0c)\x124X",
+            oper_status_name="up",
+            speed_as_text="",
+            group=None,
+            node=None,
+            admin_status=None,
+            extra_info=None,
+        )
+
+    def test_merged_counters(
+        self,
+    ) -> None:
+        (interfaces_data, _), _ = _merge_if_counters_sections(
+            self.interfaces_section, self.ports_section, self.counters_section
+        )
+
+        assert interfaces_data[0].counters == interfaces.Counters(
+            in_octets=1000000,
+            in_mcast=0,
+            in_bcast=None,
+            in_nucast=None,
+            in_ucast=10000,
+            in_disc=None,
+            in_err=5,
+            out_octets=2000000,
+            out_mcast=0,
+            out_bcast=None,
+            out_nucast=None,
+            out_ucast=20000,
+            out_disc=None,
+            out_err=10,
+        )
+        assert interfaces_data[1].counters == interfaces.Counters(
+            in_octets=500000,
+            in_mcast=0,
+            in_bcast=None,
+            in_nucast=None,
+            in_ucast=5000,
+            in_disc=None,
+            in_err=2,
+            out_octets=1000000,
+            out_mcast=0,
+            out_bcast=None,
+            out_nucast=None,
+            out_ucast=10000,
+            out_disc=None,
+            out_err=3,
+        )
+        assert interfaces_data[2].counters == interfaces.Counters(
+            in_octets=3000000,
+            in_mcast=0,
+            in_bcast=None,
+            in_nucast=None,
+            in_ucast=30000,
+            in_disc=None,
+            in_err=0,
+            out_octets=4000000,
+            out_mcast=0,
+            out_bcast=None,
+            out_nucast=None,
+            out_ucast=40000,
+            out_disc=None,
+            out_err=1,
+        )
+
+    def test_merged_extra_data(
+        self,
+    ) -> None:
+        (_, extra_data), _ = _merge_if_counters_sections(
+            self.interfaces_section, self.ports_section, self.counters_section
+        )
+
+        assert len(extra_data) == 3
+
+        # do not check "lif1" because order is not guaranteed in a nested list
+        assert extra_data["lif2"] == {
+            "failover_ports": [{"node": "node1", "port": "a0a", "link-status": "down"}],
+            "home_port": "a0a",
+            "home_node": "node1",
+            "is_home": False,
+        }
+        assert extra_data["lif3"] == {
+            "failover_ports": [{"node": "node2", "port": "e0a-100", "link-status": "up"}],
+            "home_port": "e0a-100",
+            "home_node": "node2",
+            "is_home": True,
+        }
+
+    def test_without_counters(
+        self,
+    ) -> None:
+        (interfaces_data, _), _ = _merge_if_counters_sections(
+            self.interfaces_section, self.ports_section, None
+        )
+
+        # Should still work, but with no counter data
+        assert (
+            interfaces_data[0].counters
+            == interfaces_data[1].counters
+            == interfaces_data[2].counters
+            == interfaces.Counters(
+                in_octets=0,
+                in_mcast=0,
+                in_bcast=None,
+                in_nucast=None,
+                in_ucast=0,
+                in_disc=None,
+                in_err=0,
+                out_octets=0,
+                out_mcast=0,
+                out_bcast=None,
+                out_nucast=None,
+                out_ucast=0,
+                out_disc=None,
+                out_err=0,
+            )
+        )

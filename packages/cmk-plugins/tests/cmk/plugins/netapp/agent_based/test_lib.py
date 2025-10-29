@@ -383,7 +383,7 @@ INTERFACE = interfaces.InterfaceWithCounters(
                 )
             },
             [
-                Result(state=State.OK, summary="Failover policy: default"),
+                Result(state=State.OK, summary="Failover policy: system-defined"),
                 Result(state=State.OK, summary="Current Port: e0a (is home port)"),
             ],
             id="Is home port",
@@ -403,7 +403,7 @@ INTERFACE = interfaces.InterfaceWithCounters(
                 )
             },
             [
-                Result(state=State.OK, summary="Failover policy: default"),
+                Result(state=State.OK, summary="Failover policy: system-defined"),
                 Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
             ],
             id="Is not home port and empty params",
@@ -426,7 +426,7 @@ INTERFACE = interfaces.InterfaceWithCounters(
                 )
             },
             [
-                Result(state=State.OK, summary="Failover policy: default"),
+                Result(state=State.OK, summary="Failover policy: system-defined"),
                 Result(state=State.CRIT, summary="Current Port: e0a (is not home port)"),
             ],
             id="Check and crit when not home port",
@@ -487,7 +487,7 @@ def test_check_home_port_status(
                 )
             },
             [
-                Result(state=State.OK, summary="Failover policy: default"),
+                Result(state=State.OK, summary="Failover policy: system-defined"),
                 Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
                 Result(state=State.OK, notice="Failover Group: [node1:e0a=up, node1:e0b=up]"),
             ],
@@ -512,7 +512,7 @@ def test_check_home_port_status(
                 )
             },
             [
-                Result(state=State.OK, summary="Failover policy: default"),
+                Result(state=State.OK, summary="Failover policy: system-defined"),
                 Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
                 Result(state=State.CRIT, notice="Failover Group: [node1:e0a=down, node2:e0b=up]"),
             ],
@@ -571,7 +571,7 @@ def test_check_home_port_status_with_failover_ports(
                 )
             },
             [
-                Result(state=State.UNKNOWN, summary="Failover policy: sfo_partners_only"),
+                Result(state=State.UNKNOWN, summary="Failover policy: sfo-partner-only"),
                 Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
                 Result(state=State.OK, notice="Failover Group: []"),
             ],

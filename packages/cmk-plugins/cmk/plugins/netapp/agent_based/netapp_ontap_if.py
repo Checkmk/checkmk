@@ -165,6 +165,7 @@ def _merge_if_counters_sections(
 
         failover_policy = interface.get("failover")
         fail_ports: set = broadcast_domains_ports.get(interface.get("broadcast_domain", ""), set())
+        # see FAILOVER_REST_TRANSLATION in lib.py for mapping rest-cli failover names
         match failover_policy:
             case "default" | "broadcast_domain_only":
                 interface["failover_ports"] = ";".join(el for el in fail_ports)

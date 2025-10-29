@@ -7,7 +7,6 @@
 import argparse
 import logging
 import sys
-import traceback
 from collections.abc import Collection, Iterable, Sequence
 from enum import Enum
 from typing import Final
@@ -21,12 +20,17 @@ from pydantic import BaseModel
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.netapp import models
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
-from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_dump
+from cmk.server_side_programs.v1_unstable import (
+    HostnameValidationAdapter,
+    report_agent_crashes,
+    vcrtrace,
+)
 
 __version__ = "2.5.0b1"
 
-USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
+AGENT = "netapp-ontap"
+
+USER_AGENT = f"checkmk-special-{AGENT}-{__version__}"
 
 
 PASSWORD_OPTION: Final = "password"
@@ -1106,6 +1110,7 @@ def agent_netapp_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
     args = parse_arguments(sys.argv[1:])
@@ -1114,13 +1119,7 @@ def main() -> int:
         return agent_netapp_main(args)
     except CannotRecover as exc:
         sys.stderr.write(f"{exc}\n")
-    except Exception:
-        if args.debug:
-            raise
-        crash_dump = create_agent_crash_dump()
-        sys.stderr.write(crash_dump)
-        sys.stderr.write(f"\n\n{traceback.format_exc()}")
-    return 1
+        return 1
 
 
 if __name__ == "__main__":

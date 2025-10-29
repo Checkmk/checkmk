@@ -14,11 +14,11 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import (
     CheckResult,
-    get_value_store,
     Metric,
     Result,
     State,
 )
+from cmk.plugins.netapp.agent_based import netapp_ontap_cpu as mocktarget
 from cmk.plugins.netapp.agent_based.netapp_ontap_cpu import (
     check_netapp_ontap_cpu_utilization,
     check_netapp_ontap_nvram_bat,
@@ -30,7 +30,6 @@ class NodeModelFactory(ModelFactory):
     __model__ = NodeModel
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "node_model, params, expected_state",
     [
@@ -61,10 +60,12 @@ class NodeModelFactory(ModelFactory):
     ],
 )
 def test_check_netapp_ontap_cpu_utilization(
+    monkeypatch: pytest.MonkeyPatch,
     node_model: NodeModel,
     params: Mapping[str, Any],
     expected_state: State,
 ) -> None:
+    monkeypatch.setattr(mocktarget, "get_value_store", dict)
     section = {node_model.name: node_model}
 
     result = list(check_netapp_ontap_cpu_utilization(item="cpu1", params=params, section=section))
@@ -76,7 +77,6 @@ def test_check_netapp_ontap_cpu_utilization(
     assert result[2] == Result(state=State.OK, summary="Number of CPUs: 2 CPUs")
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "node_model, params, expected_state",
     [
@@ -95,13 +95,14 @@ def test_check_netapp_ontap_cpu_utilization(
     ],
 )
 def test_check_netapp_ontap_cpu_utilization_average(
+    monkeypatch: pytest.MonkeyPatch,
     node_model: NodeModel,
     params: Mapping[str, Any],
     expected_state: State,
 ) -> None:
-    get_value_store().update(
-        {"cpu_utilization.avg": (1759243800.0, 1759243800.0, 60)}
-    )  # 2025-09-30T14:50:00Z
+    store = {"cpu_utilization.avg": (1759243800.0, 1759243800.0, 60)}  # 2025-09-30T14:50:00Z
+    monkeypatch.setattr(mocktarget, "get_value_store", lambda: store)
+
     section = {node_model.name: node_model}
 
     result = list(check_netapp_ontap_cpu_utilization(item="cpu1", params=params, section=section))
@@ -115,9 +116,11 @@ def test_check_netapp_ontap_cpu_utilization_average(
     assert result[2] == Metric("util_average", 45.0, levels=(90.0, 95.0), boundaries=(0.0, None))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_netapp_ontap_cpu_utilization_not_present() -> None:
-    get_value_store().update({"netapp_cpu_util": (60, 15)})
+def test_check_netapp_ontap_cpu_utilization_not_present(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = {"netapp_cpu_util": (60, 15)}
+    monkeypatch.setattr(mocktarget, "get_value_store", lambda: store)
 
     node_model = NodeModelFactory.build(name="cpu1")
     section = {node_model.name: node_model}

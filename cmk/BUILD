@@ -49,7 +49,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "meraki",
     "msal",
     "mypy-boto3-logs",
-    "netapp-ontap",  # provided elsewhere
     "numpy",
     "oauthlib",
     "openapi-spec-validator",

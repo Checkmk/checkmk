@@ -1769,7 +1769,7 @@ netapp-ontap==9.17.1.0 \
     --hash=sha256:d80ace80f2e54f68e2fafffae580a9923393bac4a472ff50da6c84ca4c78d9cd
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
 numpy==2.3.4 \
     --hash=sha256:035796aaaddfe2f9664b9a9372f089cfc88bd795a67bd1bfe15e6e770934cf64 \
     --hash=sha256:043885b4f7e6e232d7df4f51ffdef8c36320ee9d5f227b380ea636722c7ed12e \
@@ -2463,6 +2463,7 @@ pydantic==2.10.6 \
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   fastapi
 pydantic-core==2.27.2 \
@@ -3502,6 +3503,7 @@ urllib3==2.3.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   botocore
     #   clickhouse-connect
     #   kubernetes

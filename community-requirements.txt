@@ -2998,7 +2998,7 @@ netapp-ontap==9.17.1.0 \
     --hash=sha256:d80ace80f2e54f68e2fafffae580a9923393bac4a472ff50da6c84ca4c78d9cd
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
 networkx==3.5 \
     --hash=sha256:0030d386a9a06dee3565298b4a734b68589749a544acbb6c412dc9e2489ec6ec \
     --hash=sha256:d4c6f9cf81f52d69230866796b82afbccdec3db7ae4fbd1b65ea750feed50037
@@ -3897,6 +3897,7 @@ pydantic==2.10.6 \
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   -r packages/cmk-werks/requirements.in
     #   checkmk-dev-tools
     #   datamodel-code-generator
@@ -6024,6 +6025,7 @@ urllib3==2.3.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   botocore
     #   clickhouse-connect
     #   docker

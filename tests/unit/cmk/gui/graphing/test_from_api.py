@@ -522,7 +522,11 @@ def test_duplicate_metric_titles_fixed() -> None:
 _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Huge pages": {"huge_pages_2", "huge_pages"},
     "Bandwidth": {"bandwidth_translated", "bandwidth"},
-    "Traffic": {"read_write_data", "traffic"},
+    # 'Traffic' is commented out b/c it *appears* fixed to this test (if you run via bazel).
+    # This is caused by the netapp family being moved into the  cmk-plugins package.
+    # We may have to move this test to integration/cmk/plugins_consistency.
+    # See also CMK-27183
+    # "Traffic": {"read_write_data", "traffic"},
     "Disk latency": {"disk_latency", "disk_rw_latency"},
     "Access point statistics": {"access_point_statistics2", "access_point_statistics"},
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},

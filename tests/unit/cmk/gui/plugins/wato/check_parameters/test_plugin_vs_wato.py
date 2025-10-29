@@ -252,6 +252,16 @@ def test_plugin_vs_wato(agent_based_plugins: AgentBasedPlugins) -> None:
 class ErrorReporter:
     KNOWN_WATO_UNUSED = {
         # type # name
+        # ----- these belong to the plugin family 'netapp' (also see CMK-27183) ----------
+        ("check", RuleGroup.CheckgroupParameters("fcp")),
+        ("check", RuleGroup.CheckgroupParameters("hw_psu")),
+        ("check", RuleGroup.CheckgroupParameters("netapp_luns")),
+        ("check", RuleGroup.CheckgroupParameters("netapp_snapshots")),
+        ("check", RuleGroup.CheckgroupParameters("snapvault")),
+        ("check", RuleGroup.CheckgroupParameters("netapp_volumes")),
+        ("discovery", "discovery_qtree"),
+        ("discovery", "discovery_snapvault"),
+        # --------------------------------------------------------------------------------
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),

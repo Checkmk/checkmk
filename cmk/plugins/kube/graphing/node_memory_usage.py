@@ -43,7 +43,7 @@ perfometer_kube_memory_usage = perfometers.Perfometer(
 
 graph_kube_memory_usage = graphs.Graph(
     name="kube_memory_usage",
-    title=Title("Memory"),
+    title=Title("Memory (Kube)"),
     compound_lines=["kube_memory_usage"],
     simple_lines=[
         "kube_memory_request",

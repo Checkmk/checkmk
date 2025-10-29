@@ -12,7 +12,7 @@ import type {
   String as StringSpec
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
+import FormCatalog from '@/form/components/forms/FormCatalog/FormCatalog.vue'
 
 import { renderFormWithData } from '../cmk-form-helper'
 

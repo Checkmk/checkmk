@@ -17,8 +17,8 @@ import { immediateWatch } from '@/lib/watch'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
-import TopicGrouped from '@/form/components/forms/form_catalog/TopicGrouped.vue'
-import TopicUngrouped from '@/form/components/forms/form_catalog/TopicUngrouped.vue'
+import TopicGrouped from '@/form/components/forms/FormCatalog/TopicGrouped.vue'
+import TopicUngrouped from '@/form/components/forms/FormCatalog/TopicUngrouped.vue'
 import { type ValidationMessages, groupNestedValidations } from '@/form/components/utils/validation'
 
 const props = defineProps<{

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 Section = Mapping[str, Any]
 

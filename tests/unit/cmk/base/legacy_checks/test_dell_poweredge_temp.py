@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_temp
 from cmk.base.legacy_checks.dell_poweredge_temp import (
     inventory_dell_poweredge_temp,

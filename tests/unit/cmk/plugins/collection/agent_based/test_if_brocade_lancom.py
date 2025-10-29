@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringByteTable
+from cmk.agent_based.v2 import StringByteTable
 from cmk.plugins.collection.agent_based.if_brocade_lancom import (
     parse_if_brocade_lancom,
     parse_if_lancom,

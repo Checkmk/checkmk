@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.azure_usagedetails import (
     check_azure_usagedetails,
     discover_azure_usagedetails,

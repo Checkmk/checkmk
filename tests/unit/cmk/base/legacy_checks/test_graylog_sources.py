@@ -7,8 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import get_value_store, Metric, Result, State
+from cmk.agent_based.v2 import get_value_store, Metric, Result, State, StringTable
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName, SectionName
 
 

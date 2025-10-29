@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.fsc_fans import check_fsc_fans, inventory_fsc_fans, parse_fsc_fans
 
 

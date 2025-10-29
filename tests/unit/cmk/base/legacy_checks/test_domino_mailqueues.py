@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.domino_mailqueues import (
     check_domino_mailqueues,
     discover_domino_mailqueues,

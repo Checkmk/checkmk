@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.elphase import check_elphase as check_ups_cps_inphase
 from cmk.base.legacy_checks.ups_cps_inphase import inventory_ups_cps_inphase, parse_ups_cps_inphase
 

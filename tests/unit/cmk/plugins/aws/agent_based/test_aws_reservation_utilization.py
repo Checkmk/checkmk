@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.agent_based.v1 import Metric, Result, State
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.aws.agent_based.aws_reservation_utilization import (
     check_aws_reservation_utilization,
     parse_aws_reservation_utilization,

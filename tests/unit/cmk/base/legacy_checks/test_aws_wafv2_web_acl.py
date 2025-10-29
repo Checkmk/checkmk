@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.aws_wafv2_web_acl import (
     check_aws_wafv2_web_acl,
     discover_aws_wafv2_web_acl,

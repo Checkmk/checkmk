@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.f5_bigip_chassis_temp import (
     check_f5_bigip_chassis_temp,
     inventory_f5_bigip_chassis_temp,

@@ -8,7 +8,6 @@ import re
 from collections.abc import Mapping
 from typing import Literal, NamedTuple, TypedDict
 
-from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
@@ -19,6 +18,7 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 
 FloatLevels = tuple[Literal["no_levels"], None] | tuple[Literal["fixed"], tuple[float, float]]

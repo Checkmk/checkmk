@@ -10,8 +10,7 @@ import json
 from collections.abc import Mapping
 
 from cmk.agent_based.v1 import HostLabel
-from cmk.agent_based.v1.type_defs import HostLabelGenerator, StringTable
-from cmk.agent_based.v2 import AgentSection
+from cmk.agent_based.v2 import AgentSection, HostLabelGenerator, StringTable
 from cmk.plugins.lib.labels import ensure_valid_labels
 
 

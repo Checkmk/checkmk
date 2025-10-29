@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.cups_queues import (
     check_cups_queues,
     inventory_cups_queues,

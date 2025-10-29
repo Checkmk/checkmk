@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.qnap_fans import check_qnap_fans, discover_qnap_fans, parse_qnap_fans
 
 

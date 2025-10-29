@@ -15,7 +15,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.legacy.v0_unstable import _DiscoveredParameters
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks import azure_ad
 
 STRING_TABLE = [

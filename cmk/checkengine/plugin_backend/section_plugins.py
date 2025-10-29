@@ -18,8 +18,13 @@ from typing import Any
 
 from cmk.agent_based.v1 import HostLabel, SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
-from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
-from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection
+from cmk.agent_based.v2 import (
+    AgentSection,
+    SimpleSNMPSection,
+    SNMPSection,
+    StringByteTable,
+    StringTable,
+)
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.checkengine.plugins import (
     AgentParseFunction,

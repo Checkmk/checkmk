@@ -12,7 +12,7 @@
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.esx_vsphere_counters import (
     check_esx_vsphere_counters_swap,
     inventory_esx_vsphere_counters_swap,

@@ -6,8 +6,7 @@
 from collections.abc import Mapping
 from enum import Enum
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import all_of, any_of, contains, startswith
+from cmk.agent_based.v2 import all_of, any_of, contains, startswith, StringTable
 
 
 class SNMPEnum(Enum):

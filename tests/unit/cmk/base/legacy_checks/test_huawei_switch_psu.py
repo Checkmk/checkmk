@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.huawei_switch_psu import (
     check_huawei_switch_psu,
     discover_huawei_switch_psu,

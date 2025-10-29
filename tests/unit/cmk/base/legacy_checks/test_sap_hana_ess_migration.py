@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 from .checktestlib import Check
 

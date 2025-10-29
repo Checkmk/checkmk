@@ -7,7 +7,7 @@
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.checkmk.agent_based.mkbackup import (
     check_mkbackup_site,
     check_mkbackup_system,

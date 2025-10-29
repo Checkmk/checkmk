@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.apc_netbotz_smoke import (
     check_apc_netbotz_smoke,
     discover_apc_netbotz_smoke,

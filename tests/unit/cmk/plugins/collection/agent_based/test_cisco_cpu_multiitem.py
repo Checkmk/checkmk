@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
+from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.cisco_cpu_multiitem import (
     check_cisco_cpu_multiitem,
     CPUInfo,

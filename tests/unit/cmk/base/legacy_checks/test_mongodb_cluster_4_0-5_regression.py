@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.mongodb_cluster import (
     check_mongodb_cluster_balancer,
     check_mongodb_cluster_databases,

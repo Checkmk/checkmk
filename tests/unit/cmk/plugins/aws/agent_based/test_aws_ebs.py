@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v1 import get_value_store, GetRateError, Metric, Result, Service, State
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.aws.agent_based.aws_ebs import (
     check_aws_ebs,
     check_aws_ebs_burst_balance,

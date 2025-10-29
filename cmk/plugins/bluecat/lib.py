@@ -6,8 +6,15 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, equals, IgnoreResults, Metric, Result, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    equals,
+    IgnoreResults,
+    Metric,
+    Result,
+    State,
+    StringTable,
+)
 from cmk.agent_based.v2.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]

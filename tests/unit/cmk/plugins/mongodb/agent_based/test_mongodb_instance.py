@@ -11,8 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.mongodb.agent_based.mongodb_instance import (
     check_mongodb_instance,
     inventory_mongodb_instance,

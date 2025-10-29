@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.enterasys_powersupply import (
     check_enterasys_powersupply,
     inventory_enterasys_powersupply,

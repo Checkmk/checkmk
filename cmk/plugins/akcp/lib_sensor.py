@@ -3,8 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, get_value_store, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.humidity import check_humidity, CheckParams
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 

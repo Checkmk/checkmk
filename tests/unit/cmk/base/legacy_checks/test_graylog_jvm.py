@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.graylog_jvm import check_graylog_jvm, discover_graylog_jvm
 from cmk.plugins.graylog.lib import deserialize_and_merge_json
 

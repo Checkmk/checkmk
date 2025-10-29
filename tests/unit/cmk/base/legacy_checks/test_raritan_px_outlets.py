@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.raritan_px_outlets import (
     check_raritan_px_outlets,
     inventory_raritan_px_outlets,

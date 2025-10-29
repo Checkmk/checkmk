@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.aws import parse_aws_limits_generic
 from cmk.base.legacy_checks.aws_glacier_limits import (
     check_aws_glacier_limits,

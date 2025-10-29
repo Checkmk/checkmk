@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.jira_custom_svc import (
     check_jira_custom_svc,
     discover_jira_custom_svc,

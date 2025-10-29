@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.temperature import TempParamType
 from cmk.base.legacy_checks.huawei_switch_temp import (
     check_huawei_switch_temp,

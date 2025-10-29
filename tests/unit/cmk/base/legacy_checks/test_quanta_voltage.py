@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.quanta import parse_quanta
 from cmk.base.legacy_checks.quanta_voltage import check_quanta_voltage, discover_quanta_voltage
 

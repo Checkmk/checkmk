@@ -8,8 +8,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.splunk.agent_based import splunk_jobs as plugin
 
 

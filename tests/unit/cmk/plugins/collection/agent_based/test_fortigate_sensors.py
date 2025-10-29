@@ -7,8 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.fortigate_sensors import (
     check_fortigate_sensors,
     discover_fortigate_sensors,

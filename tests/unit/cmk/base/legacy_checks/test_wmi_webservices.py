@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.wmi_webservices import check_wmi_webservices, discover_wmi_webservices
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 

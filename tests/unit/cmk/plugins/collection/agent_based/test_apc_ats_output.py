@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from cmk.agent_based.v1 import Metric, Result, State
-from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult
 from cmk.plugins.collection.agent_based.apc_ats_output import (
     check_apc_ats_output,
     DefaultParameters,

@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.veeam_client import (
     check_veeam_client,
     inventory_veeam_client,

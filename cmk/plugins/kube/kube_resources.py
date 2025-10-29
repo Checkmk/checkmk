@@ -9,8 +9,7 @@ from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from typing import Any, cast, Literal, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, Metric, render, Result
+from cmk.agent_based.v2 import CheckResult, Metric, render, Result, StringTable
 from cmk.plugins.kube.schemata.section import (
     AllocatableResource,
     HardResourceRequirement,

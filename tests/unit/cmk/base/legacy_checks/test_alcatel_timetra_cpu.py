@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.alcatel_timetra_cpu import (
     check_alcatel_timetra_cpu,
     inventory_alcatel_timetra_cpu,

@@ -9,8 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.cisco_wlc_clients import (
     parse_cisco_wlc_9800_clients,
     parse_cisco_wlc_clients,

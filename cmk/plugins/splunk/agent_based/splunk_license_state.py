@@ -14,7 +14,6 @@ from typing import Literal, NewType, Self, TypedDict
 
 import pydantic
 
-from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
@@ -26,6 +25,7 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 
 DEFAULT_WARNING_EXPIRATION_TIME = 14 * 24 * 60 * 60

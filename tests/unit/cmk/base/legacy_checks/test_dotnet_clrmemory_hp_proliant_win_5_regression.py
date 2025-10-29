@@ -13,7 +13,7 @@
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.dotnet_clrmemory import (
     check_dotnet_clrmemory,
     discover_dotnet_clrmemory,

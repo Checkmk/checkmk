@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.checkmk.agent_based.checkmk_cached_plugins import parse_checkmk_cached_plugins
 from cmk.plugins.checkmk.agent_based.lib import CachedPlugin, CachedPluginsSection, CachedPluginType
 

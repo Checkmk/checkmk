@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 threware_disks = importlib.import_module("cmk.base.legacy_checks.3ware_disks")
 check_3ware_disks = threware_disks.check_3ware_disks

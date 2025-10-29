@@ -12,7 +12,7 @@
 
 from typing import Any
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.check_legacy_includes.hwg import parse_hwg
 from cmk.base.legacy_checks.hwg_humidity import (
     check_hwg_humidity,

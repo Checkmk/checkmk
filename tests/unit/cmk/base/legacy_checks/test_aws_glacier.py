@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.base.legacy_checks.aws_glacier import check_aws_glacier_archives as check_aws_glacier
 from cmk.base.legacy_checks.aws_glacier import inventory_aws_glacier, parse_aws_glacier
 

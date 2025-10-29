@@ -16,8 +16,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based import job
 
 SECTION_1: job.Section = {

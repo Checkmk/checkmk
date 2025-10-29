@@ -11,8 +11,15 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import AgentSection, IgnoreResultsError, Metric, Result, Service, State
+from cmk.agent_based.v2 import (
+    AgentSection,
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.agent_based.v2.render import iobandwidth
 from cmk.plugins.collection.agent_based.diskstat import check_plugin_diskstat
 from cmk.plugins.collection.agent_based.docker_container_diskstat import (

@@ -19,8 +19,16 @@ from re import Match
 from typing import Any, NamedTuple
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib import eval_regex
 from cmk.plugins.lib.interfaces import saveint
 

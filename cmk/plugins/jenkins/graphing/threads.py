@@ -9,7 +9,13 @@ Graphs for Jenkins system metrics: threads
 
 from cmk.graphing.v1 import Title
 from cmk.graphing.v1.graphs import Graph
-from cmk.graphing.v1.metrics import Color, DecimalNotation, Metric, StrictPrecision, Unit
+from cmk.graphing.v1.metrics import (
+    Color,
+    DecimalNotation,
+    Metric,
+    StrictPrecision,
+    Unit,
+)
 
 THREADS_UNIT = Unit(DecimalNotation(""), StrictPrecision(0))
 
@@ -72,7 +78,7 @@ metric_jenkins_threads_timed_waiting = Metric(
 # Daemon threads can be waiting, being blocked, etc.
 graph_jenkins_threads = Graph(
     name="jenkins_threads",
-    title=Title("Threads"),
+    title=Title("Threads (Jenkins)"),
     simple_lines=(
         "jenkins_threads_vm_deadlock_count",
         "jenkins_threads_vm_daemon_count",

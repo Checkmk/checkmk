@@ -36,7 +36,7 @@ perfometer_threads = perfometers.Perfometer(
 
 graph_threads = graphs.Graph(
     name="threads",
-    title=Title("Threads"),
+    title=Title("CPU threads"),
     compound_lines=[
         "threads",
         "threads_daemon",

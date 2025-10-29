@@ -1,4 +1,4 @@
 @echo off
-set CMK_VERSION="2.4.0p15"
+set CMK_VERSION="2.4.0p16"
 echo ^<^<^<winperf_if_win32_networkadapter:sep^(44^)^>^>^>
 wmic path Win32_NetworkAdapter get speed,macaddress,name,netconnectionid,netconnectionstatus /format:csv

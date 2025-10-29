@@ -8,6 +8,7 @@ import { nextTick, ref, watch } from 'vue'
 
 interface CmkCollapsibleProps {
   open: boolean
+  contentId?: string | undefined
 }
 
 const props = defineProps<CmkCollapsibleProps>()
@@ -40,7 +41,7 @@ watch(
 
 <template>
   <Transition name="content">
-    <div v-show="open" ref="contentRef">
+    <div v-show="open" :id="contentId" ref="contentRef">
       <slot />
     </div>
   </Transition>

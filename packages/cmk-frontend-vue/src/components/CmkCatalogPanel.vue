@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useId } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -21,6 +21,8 @@ const { title } = defineProps<{
 const open = ref(true)
 
 const label = _t('Toggle %{ title }', { title })
+
+const id = useId()
 </script>
 
 <template>
@@ -29,6 +31,7 @@ const label = _t('Toggle %{ title }', { title })
       class="cmk-catalog-panel__header"
       :title="label"
       :aria-label="label"
+      :aria-controls="id"
       @click.prevent="open = !open"
     >
       <CmkIcon
@@ -39,7 +42,7 @@ const label = _t('Toggle %{ title }', { title })
       />
       <slot name="header">{{ title }}</slot>
     </button>
-    <CmkCollapsible :open="open">
+    <CmkCollapsible :content-id="id" :open="open">
       <div class="cmk-catalog-panel__content">
         <slot />
       </div>

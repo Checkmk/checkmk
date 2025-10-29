@@ -7,10 +7,12 @@ import sys
 from typing import override
 
 import pytest
+from werkzeug.test import create_environ
 
 import cmk.ccc.version as cmk_version
 import cmk.gui.pages
 from cmk.gui.config import Config
+from cmk.gui.http import Request
 from cmk.gui.pages import Page, PageContext, PageEndpoint
 from cmk.utils import paths
 
@@ -286,7 +288,12 @@ def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None
     handler = endpoint.handler
     assert isinstance(handler, Page)
 
-    handler.handle_page(PageContext(config=Config()))
+    handler.handle_page(
+        PageContext(
+            config=Config(),
+            request=Request(create_environ()),
+        )
+    )
     assert capsys.readouterr()[0] == "234"
 
 
@@ -306,7 +313,12 @@ def test_page_registry_register_page_handler(
     handler = endpoint.handler
     assert not isinstance(handler, Page)
 
-    handler(PageContext(config=Config()))
+    handler(
+        PageContext(
+            config=Config(),
+            request=Request(create_environ()),
+        )
+    )
     assert capsys.readouterr()[0] == "234"
 
 

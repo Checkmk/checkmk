@@ -187,7 +187,7 @@ class CheckmkApp(AbstractWSGIApp):
             #                 Flask.make_response()
             #                     AbstractWSGIApp.__call__()
             #                         CheckmkApp.wsgi_app()
-            context = pages.PageContext(config=active_config)
+            context = pages.PageContext(config=active_config, request=request)
             return _process_request(
                 context, environ, start_response, debug=self.debug, testing=self.testing
             )

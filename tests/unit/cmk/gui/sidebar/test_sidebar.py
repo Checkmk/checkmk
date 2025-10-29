@@ -11,10 +11,11 @@ from pathlib import Path
 
 import pytest
 from pytest_mock import MockerFixture
+from werkzeug.test import create_environ
 
 from cmk.gui import sidebar
 from cmk.gui.config import active_config, Config
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import UserSidebarSnapin
@@ -275,7 +276,12 @@ def test_ajax_fold(
     m_save = mocker.patch.object(user, "save_file")
 
     request.set_var("fold", fold_var)
-    sidebar.AjaxFoldSnapin().page(PageContext(config=Config()))
+    sidebar.AjaxFoldSnapin().page(
+        PageContext(
+            config=Config(),
+            request=Request(create_environ()),
+        )
+    )
 
     m_config.assert_called_once()
     m_save.assert_called_once_with(
@@ -321,7 +327,12 @@ def test_ajax_openclose_close(mocker: MockerFixture, origin_state: str, set_stat
     m_save = mocker.patch.object(user, "save_file")
 
     user_permissions = UserPermissions({}, {}, {}, [])
-    sidebar.AjaxOpenCloseSnapin().page(PageContext(config=Config()))
+    sidebar.AjaxOpenCloseSnapin().page(
+        PageContext(
+            config=Config(),
+            request=Request(create_environ()),
+        )
+    )
 
     snapins = [UserSidebarSnapin.from_snapin_type_id("views", user_permissions)]
 
@@ -348,7 +359,12 @@ def test_move_snapin_not_permitted(monkeypatch: pytest.MonkeyPatch, mocker: Mock
     with monkeypatch.context() as m:
         m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
         m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
-        sidebar.move_snapin(PageContext(config=Config()))
+        sidebar.move_snapin(
+            PageContext(
+                config=Config(),
+                request=Request(create_environ()),
+            )
+        )
         m_load.assert_not_called()
 
 
@@ -364,7 +380,12 @@ def test_move_snapin(mocker: MockerFixture, move: str, before: str, do_save: boo
     request.set_var("before", before)
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")
 
-    sidebar.move_snapin(PageContext(config=Config()))
+    sidebar.move_snapin(
+        PageContext(
+            config=Config(),
+            request=Request(create_environ()),
+        )
+    )
 
     if do_save is None:
         m_save.assert_not_called()

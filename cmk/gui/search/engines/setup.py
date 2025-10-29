@@ -341,7 +341,12 @@ def _try_page(file_name: str, config: Config) -> None:
         return
 
     with output_funnel.plugged():
-        handler(PageContext(config=config))
+        handler(
+            PageContext(
+                config=config,
+                request=request,
+            )
+        )
         output_funnel.drain()
 
 

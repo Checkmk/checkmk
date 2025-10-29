@@ -18,7 +18,7 @@ from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, request, response
 from cmk.gui.log import logger
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 
@@ -30,6 +30,7 @@ class PageContext:
     """Context passed to page handlers, please use these instead of importing globals."""
 
     config: Config
+    request: Request
 
 
 class PageHandler(Protocol):

@@ -248,6 +248,10 @@ pkg_tar(
         "@cmk//distro:debian-13": [
             ":wrapper_curl",
         ],
+        "@cmk//distro:almalinux-10": [
+            ":wrapper_curl",
+            ":wrapper_pdftoppm",
+        ],
         "//conditions:default": [],
     }),
     empty_dirs = [

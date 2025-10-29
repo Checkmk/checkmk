@@ -442,11 +442,10 @@ def build_image(
     registry: str,
     folder: str,
     version_tag: str,
-    suffix: str,
     docker_repo_name: str = "checkmk",
 ) -> None:
     """Build an image, create a tar ball and tag the image"""
-    docker_path = f"{tmp_path}/check-mk-{args.edition}-{args.version}{suffix}/docker_image"
+    docker_path = f"{tmp_path}/check-mk-{args.edition}-{args.version}/docker_image"
     docker_image_archive = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
     pkg_name = f"check-mk-{args.edition}-{args.version}"
     architecture = run_cmd(cmd=["dpkg", "--print-architecture"]).stdout.strip()
@@ -460,7 +459,7 @@ def build_image(
 
     LOG.info("Unpack source tar to %s", tmp_path)
     with tarfile.open(
-        name=f"{args.source_path}/check-mk-{args.edition}-{args.version}{suffix}.tar.gz",
+        name=f"{args.source_path}/check-mk-{args.edition}-{args.version}.tar.gz",
         mode="r:gz",
     ) as tar:
         tar.extractall(tmp_path, filter="data")
@@ -518,19 +517,14 @@ def main() -> None:
 
     match args.edition:
         case "raw":
-            suffix = ".cre"
             registries = [dockerhub]
         case "enterprise":
-            suffix = ".cee"
             registries = [enterprise_registry]
         case "managed":
-            suffix = ".cme"
             registries = [dockerhub]
         case "cloud":
-            suffix = ".cce"
             registries = [dockerhub, nexus]
         case "saas":
-            suffix = ".cse"
             registries = [nexus]
         case _:
             raise Exception(f"ERROR: Unknown edition '{args.edition}'")
@@ -541,7 +535,6 @@ def main() -> None:
     LOG.debug("tmp_path: %s", tmp_path)
     LOG.debug("version_tag: %s", version_tag)
     LOG.debug("registry: %s", registries)
-    LOG.debug("suffix: %s", suffix)
     LOG.debug("base_path: %s", base_path)
 
     for registry in registries:
@@ -552,7 +545,6 @@ def main() -> None:
                     registry=registry.url,
                     folder=registry.namespace,
                     version_tag=version_tag,
-                    suffix=suffix,
                 )
             case "push":
                 docker_push(

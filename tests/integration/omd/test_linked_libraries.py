@@ -137,27 +137,27 @@ def test_linked_libraries(site: Site) -> None:
         "lib/nagios/plugins/check_pgsql",
         # To be investigated
         "bin/heirloom-mailx",
-        "lib/python3.12/site-packages/netsnmp/client_intf.cpython-312-x86_64-linux-gnu.so",
+        "lib/python3.13/site-packages/netsnmp/client_intf.cpython-313-x86_64-linux-gnu.so",
         "var/tmp/xinetd",
         # Actually fixed, but not here
         "lib/nagios/plugins/check_nrpe",
         # system kerberos links on certain distros to openssl 1, see CMK-15651
-        "lib/python3.12/site-packages/activedirectory/protocol/krb5.cpython-312-x86_64-linux-gnu.so",
+        "lib/python3.13/site-packages/activedirectory/protocol/krb5.cpython-313-x86_64-linux-gnu.so",
         # ToDo: Pymsql links on certain distros to openssl 1, see CMK-21906
-        "lib/python3.12/site-packages/pymssql/_mssql.cpython-312-x86_64-linux-gnu.so",
-        "lib/python3.12/site-packages/pymssql/_pymssql.cpython-312-x86_64-linux-gnu.so",
+        "lib/python3.13/site-packages/pymssql/_mssql.cpython-313-x86_64-linux-gnu.so",
+        "lib/python3.13/site-packages/pymssql/_pymssql.cpython-313-x86_64-linux-gnu.so",
         # ToDo: _ldap links on certain distros to openssl 1, see CMK-21908
-        "lib/python3.12/site-packages/_ldap.cpython-312-x86_64-linux-gnu.so",
+        "lib/python3.13/site-packages/_ldap.cpython-313-x86_64-linux-gnu.so",
         # ToDo: SSLeay links on certain distros to openssl 1, see CMK-21910
         "lib/perl5/lib/perl5/x86_64-linux-thread-multi/auto/Crypt/SSLeay/SSLeay.so",
         # ToDo: Psycog 2 links on certain distros to openssl 1, see CMK-21909
-        "lib/python3.12/site-packages/psycopg2/_psycopg.cpython-312-x86_64-linux-gnu.so",
+        "lib/python3.13/site-packages/psycopg2/_psycopg.cpython-313-x86_64-linux-gnu.so",
     ]
 
     if os.environ["DISTRO"] == "almalinux-8":
         # ToDo: dbm links on almalinux-8 to /lib64/libcrypto.so.1.1, see CMK-22718
         exclude_from_forbidden_links_check.append(
-            "lib/python3.12/lib-dynload/_dbm.cpython-312-x86_64-linux-gnu.so"
+            "lib/python3.13/lib-dynload/_dbm.cpython-313-x86_64-linux-gnu.so"
         )
 
     for file in files:

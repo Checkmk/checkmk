@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 import re
+import socket
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, cast
 
@@ -31,6 +32,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 )
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
+from cmk.utils.ip_lookup import IPStackConfig
 
 
 def collect_params_with_defaults_from_form_data(
@@ -73,7 +75,15 @@ def create_diag_special_agent_input(
 ) -> DiagSpecialAgentInput:
     return DiagSpecialAgentInput(
         host_config=DiagSpecialAgentHostConfig(
-            host_name=HostName(host_name or ""), host_alias=host_name or ""
+            host_name=HostName(host_name or ""),
+            host_alias=host_name or "",
+            ip_address=None,
+            ip_stack_config=IPStackConfig.NO_IP,
+            host_attrs={},
+            macros={},
+            host_primary_family=socket.AddressFamily.AF_INET,
+            host_additional_addresses_ipv4=[],
+            host_additional_addresses_ipv6=[],
         ),
         agent_name=rulespec_name.split(":")[1],
         params=params,

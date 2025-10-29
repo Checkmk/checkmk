@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import socket
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -27,6 +28,7 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 from cmk.checkengine.plugins import SectionName
 from cmk.utils import paths
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import HostLabel
 
 
@@ -175,6 +177,13 @@ class TestDiagSpecialAgentInput:
         host_config=DiagSpecialAgentHostConfig(
             host_name=HostName("test-host"),
             host_alias="test-host",
+            ip_address=None,
+            ip_stack_config=IPStackConfig.NO_IP,
+            host_attrs={},
+            macros={},
+            host_primary_family=socket.AddressFamily.AF_INET,
+            host_additional_addresses_ipv4=[],
+            host_additional_addresses_ipv6=[],
         ),
         agent_name="aws",
         params={

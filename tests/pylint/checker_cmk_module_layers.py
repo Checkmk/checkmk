@@ -732,6 +732,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.host_storage",
         "cmk.utils.html",
         "cmk.utils.images",
+        "cmk.utils.ip_lookup",
         "cmk.utils.jsontype",
         "cmk.utils.labels",
         "cmk.utils.licensing",

@@ -560,47 +560,35 @@ result_type_registry.register(ScanParentsResult)
 class DiagSpecialAgentHostConfig:
     host_name: HostName
     host_alias: str
-    ip_address: HostAddress | None = None
-    ip_stack_config: IPStackConfig = IPStackConfig.NO_IP
-    host_attrs: Mapping[str, str] = field(default_factory=dict)
-    macros: Mapping[str, object] = field(default_factory=dict)
+    ip_address: HostAddress | None
+    ip_stack_config: IPStackConfig
+    host_attrs: Mapping[str, str]
+    macros: Mapping[str, object]
     host_primary_family: Literal[
         socket.AddressFamily.AF_INET,
         socket.AddressFamily.AF_INET6,
-    ] = socket.AddressFamily.AF_INET
-    host_additional_addresses_ipv4: list[HostAddress] = field(default_factory=list)
-    host_additional_addresses_ipv6: list[HostAddress] = field(default_factory=list)
+    ]
+    host_additional_addresses_ipv4: list[HostAddress]
+    host_additional_addresses_ipv6: list[HostAddress]
 
     @classmethod
-    def deserialize(cls, serialized_input: str) -> DiagSpecialAgentHostConfig:
+    def deserialize(cls, serialized_input: str) -> Self:
         raw = json.loads(serialized_input)
-        deserialized = {
-            "host_name": HostName(raw["host_name"]),
-            "host_alias": raw["host_alias"],
-        }
-        if "ip_address" in raw:
-            deserialized["ip_address"] = (
-                HostAddress(raw["ip_address"]) if raw["ip_address"] else None
-            )
-        if "ip_stack_config" in raw:
-            deserialized["ip_stack_config"] = IPStackConfig(raw["ip_stack_config"])
-        if "host_attrs" in raw:
-            deserialized["host_attrs"] = raw["host_attrs"]
-        if "macros" in raw:
-            deserialized["macros"] = raw["macros"]
-        if "host_primary_family" in raw:
-            deserialized["host_primary_family"] = cls.deserialize_host_primary_family(
-                raw["host_primary_family"]
-            )
-        if "host_additional_addresses_ipv4" in raw:
-            deserialized["host_additional_addresses_ipv4"] = [
+        return cls(
+            host_name=HostName(raw["host_name"]),
+            host_alias=raw["host_alias"],
+            ip_address=HostAddress(raw["ip_address"]) if raw["ip_address"] else None,
+            ip_stack_config=IPStackConfig(raw["ip_stack_config"]),
+            host_attrs=raw["host_attrs"],
+            macros=raw["macros"],
+            host_primary_family=cls.deserialize_host_primary_family(raw["host_primary_family"]),
+            host_additional_addresses_ipv4=[
                 HostAddress(ip) for ip in raw["host_additional_addresses_ipv4"]
-            ]
-        if "host_additional_addresses_ipv6" in raw:
-            deserialized["host_additional_addresses_ipv6"] = [
+            ],
+            host_additional_addresses_ipv6=[
                 HostAddress(ip) for ip in raw["host_additional_addresses_ipv6"]
-            ]
-        return cls(**deserialized)
+            ],
+        )
 
     @staticmethod
     def deserialize_host_primary_family(

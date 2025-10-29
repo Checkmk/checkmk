@@ -23,7 +23,7 @@ import {
   type Payload,
   configEntityAPI
 } from '@/form/private/forms/FormSingleChoiceEditable/configuration_entity'
-import { type ValidationMessages, useValidation } from '@/form/private/utils/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 const props = defineProps<{
   spec: SingleChoiceEditable

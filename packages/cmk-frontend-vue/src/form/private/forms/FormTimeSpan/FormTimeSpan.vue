@@ -9,7 +9,7 @@ import { ref, watch, watchEffect } from 'vue'
 
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import { type ValidationMessages, useValidation } from '@/form/private/utils/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 import { getSelectedMagnitudes, joinToSeconds, splitToUnits as utilsSplitToUnits } from './timeSpan'
 

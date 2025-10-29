@@ -10,7 +10,7 @@ import { untranslated } from '@/lib/i18n'
 
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import { type ValidationMessages, useValidation } from '@/form/private/utils/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 const props = defineProps<{
   spec: BooleanChoice

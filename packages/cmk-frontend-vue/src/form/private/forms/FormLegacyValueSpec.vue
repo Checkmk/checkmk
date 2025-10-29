@@ -9,7 +9,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import type { ValidationMessages } from '@/form/private/utils/validation'
+import type { ValidationMessages } from '@/form/private/validation'
 
 const QUERY_INPUT_OBSERVER = 'select,input,textarea'
 

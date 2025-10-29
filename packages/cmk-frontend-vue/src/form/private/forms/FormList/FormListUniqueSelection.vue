@@ -11,7 +11,7 @@ import CmkList from '@/components/CmkList'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { useFormEditDispatcher } from '@/form/private/FormEditDispatcher/useFormEditDispatcher'
-import { type ValidationMessages } from '@/form/private/utils/validation'
+import { type ValidationMessages } from '@/form/private/validation'
 
 import formListActions from './formListActions'
 

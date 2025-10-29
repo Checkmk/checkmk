@@ -15,7 +15,7 @@ import useId from '@/lib/useId'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 import { useFormEditDispatcher } from '@/form/private/FormEditDispatcher/useFormEditDispatcher'
-import { type ValidationMessages } from '@/form/private/utils/validation'
+import { type ValidationMessages } from '@/form/private/validation'
 
 const props = defineProps<{
   elements: TopicGroup[]

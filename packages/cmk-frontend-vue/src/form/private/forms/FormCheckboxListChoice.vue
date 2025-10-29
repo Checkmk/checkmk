@@ -14,7 +14,7 @@ import { untranslated } from '@/lib/i18n'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import { type ValidationMessages, useValidation } from '../utils/validation'
+import { type ValidationMessages, useValidation } from '../validation'
 
 const props = defineProps<{
   spec: CheckboxListChoice

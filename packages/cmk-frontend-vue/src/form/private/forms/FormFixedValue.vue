@@ -10,7 +10,7 @@ import { computed } from 'vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
-import { type ValidationMessages, useValidation } from '@/form/private/utils/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 const props = defineProps<{
   spec: FixedValue

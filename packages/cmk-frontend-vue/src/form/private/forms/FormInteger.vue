@@ -13,7 +13,7 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
-import { type ValidationMessages, useValidation } from '@/form/private/utils/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 const props = defineProps<{
   spec: Integer

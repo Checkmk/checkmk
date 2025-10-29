@@ -17,7 +17,7 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import { useFormEditDispatcher } from '@/form/private/FormEditDispatcher/useFormEditDispatcher'
 import FormRequired from '@/form/private/FormRequired.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
-import { type ValidationMessages, groupNestedValidations } from '@/form/private/utils/validation'
+import { type ValidationMessages, groupNestedValidations } from '@/form/private/validation'
 
 const props = defineProps<{
   elements: TopicElement[]

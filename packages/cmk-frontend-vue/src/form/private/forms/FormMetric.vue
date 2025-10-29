@@ -10,7 +10,7 @@ import { computed, ref } from 'vue'
 import FormIndent from '@/components/CmkIndent.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
-import { type ValidationMessages } from '@/form/private/utils/validation'
+import { type ValidationMessages } from '@/form/private/validation'
 
 import FormString from './FormString.vue'
 

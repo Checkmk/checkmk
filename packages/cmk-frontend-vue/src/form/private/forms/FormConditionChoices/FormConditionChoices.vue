@@ -15,7 +15,7 @@ import CmkList from '@/components/CmkList'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { required } from '@/form/private/requiredValidator'
-import { type ValidationMessages, validateValue } from '@/form/private/utils/validation'
+import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
 import ConditionChoice from './ConditionChoice.vue'
 

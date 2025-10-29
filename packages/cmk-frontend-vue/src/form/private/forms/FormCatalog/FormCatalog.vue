@@ -19,7 +19,7 @@ import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
 import TopicGrouped from '@/form/private/forms/FormCatalog/TopicGrouped.vue'
 import TopicUngrouped from '@/form/private/forms/FormCatalog/TopicUngrouped.vue'
-import { type ValidationMessages, groupNestedValidations } from '@/form/private/utils/validation'
+import { type ValidationMessages, groupNestedValidations } from '@/form/private/validation'
 
 const props = defineProps<{
   spec: Catalog

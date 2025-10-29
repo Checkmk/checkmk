@@ -13,7 +13,7 @@ import { immediateWatch } from '@/lib/watch'
 import CmkDropdown from '@/components/CmkDropdown'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import { type ValidationMessages, validateValue } from '@/form/private/utils/validation'
+import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
 const { _t } = usei18n()
 

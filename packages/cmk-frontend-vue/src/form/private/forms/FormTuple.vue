@@ -16,7 +16,7 @@ import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { useFormEditDispatcher } from '@/form/private/FormEditDispatcher/useFormEditDispatcher'
 import FormLabel from '@/form/private/FormLabel.vue'
-import { type ValidationMessages, groupIndexedValidations } from '@/form/private/utils/validation'
+import { type ValidationMessages, groupIndexedValidations } from '@/form/private/validation'
 
 const props = defineProps<{
   spec: FormSpec.Tuple

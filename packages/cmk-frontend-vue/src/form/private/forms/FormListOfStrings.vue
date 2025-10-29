@@ -10,7 +10,7 @@ import { onBeforeMount, ref, watch } from 'vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { useFormEditDispatcher } from '@/form/private/FormEditDispatcher/useFormEditDispatcher'
-import { type ValidationMessages, groupIndexedValidations } from '@/form/private/utils/validation'
+import { type ValidationMessages, groupIndexedValidations } from '@/form/private/validation'
 
 const props = defineProps<{
   spec: ListOfStrings

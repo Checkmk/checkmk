@@ -22,7 +22,7 @@ import { useFormEditDispatcher } from '@/form/private/FormEditDispatcher/useForm
 import FormHelp from '@/form/private/FormHelp.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
-import { type ValidationMessages, groupNestedValidations } from '@/form/private/utils/validation'
+import { type ValidationMessages, groupNestedValidations } from '@/form/private/validation'
 
 import { getElementsInGroupsFromProps, titleRequired, toggleElement } from './_groups'
 

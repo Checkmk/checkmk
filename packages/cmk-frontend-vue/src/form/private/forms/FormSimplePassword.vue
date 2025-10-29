@@ -12,7 +12,7 @@ import { immediateWatch } from '@/lib/watch'
 
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import { type ValidationMessages, validateValue } from '@/form/private/utils/validation'
+import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
 const props = defineProps<{
   spec: SimplePassword

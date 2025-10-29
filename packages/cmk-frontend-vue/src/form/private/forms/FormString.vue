@@ -19,7 +19,7 @@ import { inputSizes } from '@/components/user-input/sizes'
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
-import { type ValidationMessages, useValidation } from '@/form/private/utils/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 defineOptions({
   inheritAttrs: false

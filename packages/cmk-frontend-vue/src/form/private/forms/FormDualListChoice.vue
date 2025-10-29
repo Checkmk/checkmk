@@ -16,7 +16,7 @@ import CmkIcon from '@/components/CmkIcon'
 
 import { fetchData } from '@/form/private/FormAutocompleter/autocompleters/ajax'
 
-import { type ValidationMessages } from '../utils/validation'
+import { type ValidationMessages } from '../validation'
 
 const props = defineProps<{
   spec: DualListChoice

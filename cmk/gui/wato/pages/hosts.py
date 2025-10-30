@@ -116,6 +116,38 @@ def register(mode_registry: ModeRegistry, page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("wato_ajax_diag_cmk_agent", PageAjaxDiagCmkAgent()))
 
 
+class UpdateDnsCacheLoadingContainer:
+    """Class grouping the elements and logic to show a loading container when updating the
+    site DNS cache.
+
+    The different parts are spread at different locations, so we group them here for better
+    maintainability (this is still not nice but accepted as we will migrate the page at some point)
+    """
+
+    a_tag_id = "update_site_dns_cache"
+    div_load_container_id = "container_load_update_dns_container"
+
+    @classmethod
+    def render_load_container(cls) -> None:
+        html.open_div(id=cls.div_load_container_id, style="display: none")
+        html.show_message_by_msg_type(
+            msg="Updating site DNS cache",
+            msg_type="message",
+            flashed=True,
+        )
+        html.close_div()
+
+    @classmethod
+    def include_catch_link_script(cls) -> None:
+        html.javascript(
+            f"""
+        document.getElementById('menu_suggestion_{cls.a_tag_id}').addEventListener('click', function (event) {{
+            document.getElementById('{cls.div_load_container_id}').style.display = 'block';
+        }});
+        """
+        )
+
+
 class ABCHostMode(WatoMode, abc.ABC):
     VAR_HOST: Final = "host"
 
@@ -403,6 +435,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                 )
             ),
         )
+        UpdateDnsCacheLoadingContainer.render_load_container()
 
         with html.form_context(form_name, method="POST"):
             html.prevent_password_auto_completion()
@@ -514,6 +547,10 @@ class ModeEditHost(ABCHostMode):
 
     def title(self) -> str:
         return _("Properties of host") + " " + self._host.name()
+
+    def page(self, config: Config) -> None:
+        super().page(config)
+        UpdateDnsCacheLoadingContainer.include_catch_link_script()
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
@@ -639,6 +676,7 @@ class ModeEditHost(ABCHostMode):
 def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenuEntry]:
     if should_use_dns_cache:
         yield PageMenuEntry(
+            name=UpdateDnsCacheLoadingContainer.a_tag_id,
             title=_("Update DNS cache"),
             icon_name="update",
             item=make_simple_link(

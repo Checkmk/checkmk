@@ -156,7 +156,12 @@ const configuredFiltersByObjectType = computed(() =>
     {{ _t('Metric selection') }}
   </CmkHeading>
 
-  <MetricSelector v-model:metric-type="metricType" v-model:metric-handler="metricHandler" />
+  <MetricSelector
+    v-model:metric-type="metricType"
+    v-model:metric-handler="metricHandler"
+    :host-selection-mode="hostFilterType"
+    :service-selection-mode="serviceFilterType"
+  />
 
   <ContentSpacer />
 

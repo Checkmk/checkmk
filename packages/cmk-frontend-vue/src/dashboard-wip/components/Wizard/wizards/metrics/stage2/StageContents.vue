@@ -13,7 +13,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
-import type { ElementSelection, UseWidgetHandler } from '@/dashboard-wip/components/Wizard/types'
+import { ElementSelection, type UseWidgetHandler } from '@/dashboard-wip/components/Wizard/types'
 import {
   Graph,
   MetricSelection,
@@ -119,11 +119,6 @@ const availableWidgetsBottom: WidgetItemList = [
   { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' }
 ]
 
-const availableGraphWidgets: WidgetItemList = [
-  { id: Graph.PERFORMANCE_GRAPH, label: _t('Performance graph'), icon: 'graph' },
-  { id: Graph.COMBINED_GRAPH, label: _t('Combined graph'), icon: 'graph' }
-]
-
 const selectedWidget = ref<Graph | null>(enabledWidgets[0] || null)
 
 let handler: Partial<Record<Graph, UseWidgetHandler>> = {}
@@ -173,15 +168,14 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
     )
   }
 } else {
-  handler = {
-    [Graph.PERFORMANCE_GRAPH]: await usePerformanceGraph(
-      props.metric,
-      props.filters,
-      props.dashboardConstants,
-      props.editWidgetSpec
-    ),
+  const graphHandler =
+    props.hostFilterType === ElementSelection.SPECIFIC &&
+    props.serviceFilterType === ElementSelection.SPECIFIC
+      ? usePerformanceGraph
+      : useCombinedGraph
 
-    [Graph.COMBINED_GRAPH]: await useCombinedGraph(
+  handler = {
+    [Graph.ANY_GRAPH]: await graphHandler(
       props.metric,
       props.filters,
       props.dashboardConstants,
@@ -227,14 +221,6 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
       :enabled-widgets="enabledWidgets"
     />
   </div>
-  <div v-else>
-    <SelectableWidgets
-      v-model:selected-widget="selectedWidget as Graph"
-      :available-items="availableGraphWidgets"
-      :enabled-widgets="enabledWidgets"
-    />
-  </div>
-
   <ContentSpacer />
 
   <div v-if="metricType === MetricSelection.SINGLE_METRIC">
@@ -275,13 +261,13 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
   <div v-else>
     <PerformanceGraphWidget
       v-if="selectedWidget === Graph.PERFORMANCE_GRAPH"
-      v-model:handler="handler[Graph.PERFORMANCE_GRAPH] as unknown as UsePerformanceGraph"
+      v-model:handler="handler[Graph.ANY_GRAPH] as unknown as UsePerformanceGraph"
       :dashboard-name="dashboardName"
     />
 
     <CombinedGraphWidget
       v-if="selectedWidget === Graph.COMBINED_GRAPH"
-      v-model:handler="handler[Graph.COMBINED_GRAPH] as unknown as UseCombinedGraph"
+      v-model:handler="handler[Graph.ANY_GRAPH] as unknown as UseCombinedGraph"
       :dashboard-name="dashboardName"
     />
   </div>

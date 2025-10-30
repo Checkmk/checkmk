@@ -39,22 +39,14 @@ const graphSelector = {
         Graph.ANY_GRAPH
       ],
 
-      [MetricSelection.COMBINED_GRAPH]: [
-        Graph.PERFORMANCE_GRAPH,
-        Graph.COMBINED_GRAPH,
-        Graph.ANY_GRAPH
-      ]
+      [MetricSelection.COMBINED_GRAPH]: [Graph.PERFORMANCE_GRAPH, Graph.ANY_GRAPH]
     },
 
     [ElementSelection.MULTIPLE]: {
       //service
       [MetricSelection.SINGLE_METRIC]: [Graph.SCATTERPLOT, Graph.TOP_LIST],
 
-      [MetricSelection.COMBINED_GRAPH]: [
-        Graph.PERFORMANCE_GRAPH,
-        Graph.COMBINED_GRAPH,
-        Graph.ANY_GRAPH
-      ]
+      [MetricSelection.COMBINED_GRAPH]: [Graph.COMBINED_GRAPH, Graph.ANY_GRAPH]
     }
   },
 
@@ -64,22 +56,14 @@ const graphSelector = {
       //service
       [MetricSelection.SINGLE_METRIC]: [Graph.BARPLOT, Graph.SCATTERPLOT, Graph.TOP_LIST],
 
-      [MetricSelection.COMBINED_GRAPH]: [
-        Graph.PERFORMANCE_GRAPH,
-        Graph.COMBINED_GRAPH,
-        Graph.ANY_GRAPH
-      ]
+      [MetricSelection.COMBINED_GRAPH]: [Graph.COMBINED_GRAPH, Graph.ANY_GRAPH]
     },
 
     [ElementSelection.MULTIPLE]: {
       //service
       [MetricSelection.SINGLE_METRIC]: [Graph.SCATTERPLOT, Graph.TOP_LIST],
 
-      [MetricSelection.COMBINED_GRAPH]: [
-        Graph.PERFORMANCE_GRAPH,
-        Graph.COMBINED_GRAPH,
-        Graph.ANY_GRAPH
-      ]
+      [MetricSelection.COMBINED_GRAPH]: [Graph.COMBINED_GRAPH, Graph.ANY_GRAPH]
     }
   }
 }

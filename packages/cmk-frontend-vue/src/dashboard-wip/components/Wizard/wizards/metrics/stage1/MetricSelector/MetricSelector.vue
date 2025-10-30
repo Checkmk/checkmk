@@ -12,15 +12,23 @@ import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
-import AutocompleteAvailableGraphTemplates from '@/dashboard-wip/components/Wizard/components/autocompleters/AutocompleteAvailableGraphTemplates.vue'
 import AutocompleteHost from '@/dashboard-wip/components/Wizard/components/autocompleters/AutocompleteHost.vue'
 import AutocompleteMonitoredMetrics from '@/dashboard-wip/components/Wizard/components/autocompleters/AutocompleteMonitoredMetrics.vue'
 import AutocompleteService from '@/dashboard-wip/components/Wizard/components/autocompleters/AutocompleteService.vue'
+import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
 import { MetricSelection } from '@/dashboard-wip/components/Wizard/wizards/metrics/composables/useSelectGraphTypes'
 
+import GraphAutocompleter from './GraphAutocompleter.vue'
 import type { UseMetric } from './useMetric'
 
 const { _t } = usei18n()
+
+interface MetricSelectorProps {
+  hostSelectionMode: ElementSelection
+  serviceSelectionMode: ElementSelection
+}
+
+defineProps<MetricSelectorProps>()
 
 const metricType = defineModel<MetricSelection>('metricType', {
   default: MetricSelection.SINGLE_METRIC
@@ -43,12 +51,14 @@ const _updateMetricType = (value: string) => {
     @update:model-value="_updateMetricType"
   />
   <CmkIndent>
-    <div class="db-metric-selector__base-container">
-      <CmkLabel v-if="metricType === MetricSelection.SINGLE_METRIC"
-        >{{ _t('Service metric') }} (*)</CmkLabel
-      >
-      <CmkLabel v-else>{{ _t('Service graph') }} (*)</CmkLabel>
+    <div
+      v-if="metricType === MetricSelection.SINGLE_METRIC"
+      class="db-metric-selector__base-container"
+    >
+      <CmkLabel>{{ _t('Service metric') }} (*)</CmkLabel>
+
       <ContentSpacer />
+
       <CmkIndent>
         <div class="db-metric-selector__container">
           <div class="row db-metric-selector__top-row">
@@ -66,11 +76,27 @@ const _updateMetricType = (value: string) => {
               :host-name="handler.host.value"
               :service-description="handler.service.value"
             />
-            <AutocompleteAvailableGraphTemplates
-              v-else
+            <CmkInlineValidation
+              v-if="handler.metricValidationError.value"
+              :validation="[_t('Must select an option')]"
+            />
+          </div>
+        </div>
+      </CmkIndent>
+    </div>
+
+    <div v-else class="db-metric-selector__base-container">
+      <CmkLabel>{{ _t('Service graph') }} (*)</CmkLabel>
+
+      <ContentSpacer />
+
+      <CmkIndent>
+        <div class="db-metric-selector__container">
+          <div class="row db-metric-selector__bottom-row">
+            <GraphAutocompleter
               v-model:combined-metrics="handler.metric.value"
-              :host-name="handler.host.value"
-              :service-description="handler.service.value"
+              :host-selection-mode="hostSelectionMode"
+              :service-selection-mode="serviceSelectionMode"
             />
             <CmkInlineValidation
               v-if="handler.metricValidationError.value"

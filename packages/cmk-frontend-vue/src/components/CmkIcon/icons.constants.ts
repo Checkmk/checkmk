@@ -148,17 +148,20 @@ export const simpleIcons = [
 ] as const
 
 export const oneColorIcons = [
-  'services',
-  'show-more',
-  'show-less',
-  'search',
-  'monitoring',
-  'customize',
-  'setup',
   'changes',
-  'user',
+  'customize',
+  'error',
   'help',
-  'sidebar'
+  'monitoring',
+  'search',
+  'services',
+  'setup',
+  'show-less',
+  'show-more',
+  'sidebar',
+  'success',
+  'user',
+  'warning'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

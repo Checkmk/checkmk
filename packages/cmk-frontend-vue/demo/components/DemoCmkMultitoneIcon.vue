@@ -9,6 +9,7 @@ import { ref } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
+import { oneColorIcons, twoColorIcons } from '@/components/CmkIcon/icons.constants'
 import type {
   CmkIconSize,
   CmkMultitoneIconColor,
@@ -18,9 +19,10 @@ import type {
 defineProps<{ screenshotMode: boolean }>()
 
 const icon = ref<CmkMultitoneIconNames>('services')
+
 const iconSuggestions = [
-  { name: 'services', title: 'services' },
-  { name: 'aggr', title: 'aggr' }
+  ...oneColorIcons.map((name) => ({ name, title: name })),
+  ...twoColorIcons.map((name) => ({ name, title: name }))
 ]
 
 const size = ref<CmkIconSize>('xxlarge')

@@ -12,10 +12,12 @@ from collections.abc import Iterator, Mapping
 from typing import Any, Literal
 
 from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
@@ -63,6 +65,26 @@ _URL_PATTERN = (
 )
 # fmt: on
 _STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
+
+
+def determine_must_escape(config: Config, row: Row) -> bool:
+    """determine if we must escape the output
+
+    When the row comes from a remote site the output might be malicious. We don't care if that site
+    is trusted. To determine if the site is trusted we need the origin site that is sometimes stored
+    in the Row and sometimes not.
+    Due to some bugs that were introduced with the original Change (Werk #17998) fixs: Werk #18953
+    and Werk #18952, we decided to be more robust."""
+
+    if "site" not in row:
+        # We have no idea if the origin site is trusted
+        return True
+
+    if (siteid := row["site"]) not in config.sites:
+        logger.warning("Unknown siteid in row: %r", siteid)
+        return True
+
+    return not config.sites[row["site"]]["is_trusted"]
 
 
 def format_plugin_output(

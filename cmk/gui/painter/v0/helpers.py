@@ -90,7 +90,7 @@ def format_plugin_output(output: str, *, request: Request, row: Row) -> HTML:
         output,
         request=request,
         row=row,
-        must_escape=not active_config.sites[row["site"]].get("is_trusted", False),
+        must_escape=cmk.gui.view_utils.determine_must_escape(active_config, row),
         shall_escape=active_config.escape_plugin_output,
     )
 

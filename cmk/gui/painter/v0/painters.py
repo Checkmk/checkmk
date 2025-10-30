@@ -76,6 +76,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.view_utils import (
     CellSpec,
     CSSClass,
+    determine_must_escape,
     format_plugin_output,
     get_labels,
     render_labels,
@@ -618,7 +619,7 @@ class PainterSvcPluginOutput(Painter):
             format_plugin_output(
                 row["service_plugin_output"],
                 request=self.request,
-                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                must_escape=determine_must_escape(self.config, row),
                 row=row,
             ),
             self.config.staleness_threshold,
@@ -675,7 +676,7 @@ class PainterSvcLongPluginOutput(Painter):
             request=self.request,
             row=row,
             newlineishs_to_brs=True,
-            must_escape=not self.config.sites[row["site"]]["is_trusted"],
+            must_escape=determine_must_escape(self.config, row),
         )
 
         # has to be placed after format_plugin_output() to keep links save from
@@ -2094,7 +2095,7 @@ class PainterHostPluginOutput(Painter):
             format_plugin_output(
                 row["host_plugin_output"],
                 request=self.request,
-                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                must_escape=determine_must_escape(self.config, row),
                 row=row,
             ),
         )
@@ -4117,7 +4118,7 @@ class PainterCommentComment(Painter):
             format_plugin_output(
                 row["comment_comment"],
                 request=self.request,
-                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                must_escape=determine_must_escape(self.config, row),
                 row=row,
             ),
         )
@@ -4317,7 +4318,7 @@ class PainterDowntimeComment(Painter):
             format_plugin_output(
                 row["downtime_comment"],
                 request=self.request,
-                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                must_escape=determine_must_escape(self.config, row),
                 row=row,
             ),
         )
@@ -4578,7 +4579,7 @@ class PainterLogDetailsHistory(Painter):
             long_output,
             request=self.request,
             row=row_to_format,
-            must_escape=not self.config.sites[row["site"]]["is_trusted"],
+            must_escape=determine_must_escape(self.config, row),
             newlineishs_to_brs=True,
         )
 
@@ -4649,7 +4650,7 @@ class PainterLogPluginOutput(Painter):
             return "", format_plugin_output(
                 output,
                 request=self.request,
-                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                must_escape=determine_must_escape(self.config, row),
                 row=row,
             )
 

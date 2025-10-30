@@ -68,7 +68,11 @@ def _diff(before: dict[str, Info], after: dict[str, Info]) -> str:
     updated = set((v.name, v.version) for v in after.values() if v.name not in added) - set(
         (v.name, v.version) for v in before.values()
     )
-    return_value = "\n".join(f"{d} removed" for d in sorted(deleted)) + "\n\n"
+    if deleted:
+        return_value = "\n".join(f"{d} removed" for d in sorted(deleted)) + "\n\n"
+    else:
+        return_value = ""
+
     for lib, to_version in sorted(updated):
         before_version = before[lib].version
         return_value += f"{lib} updated from {before_version} to {to_version}\n"
@@ -98,7 +102,7 @@ def _main() -> None:
     subprocess.check_call(["make", "relock_venv"])
     after = RequriementsTxtParser.parse(Path("requirements_all_lock.txt"))
     with open(".git-commit-msg", "w") as f:
-        f.write("Update Python libraries\n")
+        f.write("Update Python libraries\n\n")
         f.write(_diff(before.info, after.info))
     print("git commit -F .git-commit-msg")
 

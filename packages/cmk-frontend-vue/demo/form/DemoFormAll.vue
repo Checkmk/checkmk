@@ -65,6 +65,11 @@ function getVeryLongHelp(name: string) {
 function getTitle(name: string) {
   return `${name} title`
 }
+
+function getLongTitle(name: string) {
+  return `Very long title with many many characters to test the layout for ${name}`
+}
+
 function getInputHint(name: string) {
   if (showInputHint.value) {
     return `${name} input hint`
@@ -102,7 +107,7 @@ function getInteger(name: string, options?: Partial<Omit<Integer, 'type'>>): Int
 function getLongTitleInteger(name: string, options?: Partial<Omit<Integer, 'type'>>): Integer {
   return {
     type: 'integer',
-    title: 'Very long title with many many characters to test the layout',
+    title: getLongTitle(name),
     help: getVeryLongHelp(name),
     validators: [],
     label: getLabel(name),
@@ -139,6 +144,17 @@ function getCatalog(name: string, options?: Partial<Omit<Catalog, 'type'>>): Cat
             name: 'topic_element name',
             required: true,
             parameter_form: getString('something'),
+            default_value: 'default_value'
+          },
+          {
+            type: 'topic_element',
+            name: 'topic_element name no label',
+            required: true,
+            parameter_form: {
+              ...getString('something2'),
+              label: null,
+              title: getLongTitle('something2')
+            },
             default_value: 'default_value'
           },
           {
@@ -185,6 +201,14 @@ function getString(name: string, options?: Partial<Omit<String, 'type'>>): Strin
   return {
     type: 'string',
     ...getFormSpecDefaults(name),
+    validators: [
+      {
+        min_value: 1,
+        max_value: null,
+        error_message: 'The minimum allowed length is 1.',
+        type: 'length_in_range'
+      }
+    ],
     label: getLabel(name),
     input_hint: getInputHint(name),
     field_size: 'MEDIUM',
@@ -690,6 +714,7 @@ const forms: Array<[string, (name: string) => Components, unknown]> = [
     {
       something_ungrouped: {
         'topic_element name': 'asd',
+        'topic_element name no label': 'qwe',
         'topic_element 2 name': 42
       },
       something_grouped: {

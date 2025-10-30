@@ -65,6 +65,7 @@ const delegatedProps = computed(() => {
 .cmk-label__container {
   display: inline-flex;
   min-width: 0;
+  max-width: 100%;
 }
 
 .cmk-label__content {

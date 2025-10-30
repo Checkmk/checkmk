@@ -195,7 +195,7 @@ class CheckmkApp(AbstractWSGIApp):
 
 
 def _process_request(
-    context: pages.PageContext,
+    ctx: pages.PageContext,
     environ: WSGIEnvironment,
     start_response: StartResponse,
     debug: bool = False,
@@ -214,10 +214,10 @@ def _process_request(
         else:
             page_handler = _page_not_found
 
-        resp = page_handler(context)
+        resp = page_handler(ctx)
 
     except MKNotFound:
-        resp = _page_not_found(context)
+        resp = _page_not_found(ctx)
 
     except HTTPRedirect as exc:
         return flask.redirect(exc.url)(environ, start_response)

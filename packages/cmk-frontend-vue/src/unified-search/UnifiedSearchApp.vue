@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Providers } from 'cmk-shared-typing/typescript/unified_search'
+import { type UnifiedSearchConfig } from 'cmk-shared-typing/typescript/unified_search'
 import { onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
@@ -36,12 +36,9 @@ import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
 
-const props = defineProps<{
-  providers: Providers
-  user_id: string
-}>()
+const props = defineProps<UnifiedSearchConfig>()
 
-const searchId = `unified-search-${props.user_id}`
+const searchId = `unified-search-${props.user_id}-${props.edition}`
 
 const api = new Api()
 

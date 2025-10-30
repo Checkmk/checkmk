@@ -4,9 +4,10 @@
   "title": "unified_search_config",
   "properties": {
     "providers": { "$ref": "#/$defs/providers" },
-    "user_id": { "type": "string" }
+    "user_id": { "type": "string" },
+    "edition": { "type": "string" }
   },
-  "required": ["providers", "user_id"],
+  "required": ["providers", "user_id", "edition"],
   "$defs": {
     "providers": {
       "type": "object",
@@ -24,6 +25,9 @@
         "sort": { "type": "number" }
       },
       "required": ["active", "sort"]
+    },
+    "editions": {
+      "enum": ["cre", "cee", "cce", "cse", "cme"]
     }
   }
 }

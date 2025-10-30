@@ -7,6 +7,7 @@
 from dataclasses import dataclass
 from typing import override
 
+from cmk.ccc.version import edition
 from cmk.gui.http import Request
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
@@ -14,6 +15,7 @@ from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import ABCMainMenuSearch, MainMenu, MainMenuData, MainMenuVueApp
 from cmk.gui.wato._snapins import _hide_menu
 from cmk.shared_typing.unified_search import Provider, Providers, UnifiedSearchConfig
+from cmk.utils import paths
 
 
 @dataclass
@@ -28,6 +30,7 @@ def get_unified_search_config(request: Request) -> UnifiedSearchMainMenuData:
             setup=Provider(active=not _hide_menu(), sort=2),
         ),
         user_id=str(user.id),
+        edition=edition(paths.omd_root).short,
     )
 
 

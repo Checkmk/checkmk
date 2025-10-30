@@ -2227,6 +2227,10 @@ msgstr ""
 msgid "A host with this name already exists in this folder."
 msgstr "この名前のホストは、このフォルダーに既に存在します。"
 
+#, fuzzy
+msgid "A human-readable name for this relay configuration."
+msgstr "新しい仮想ホストツリー構成を作成する"
+
 msgid ""
 "A joined column can display information about specific services for host "
 "objects in a view showing host objects. You need to specify the service name "
@@ -2342,8 +2346,8 @@ msgstr ""
 "<tt> $ </tt>を使用できます。指定されたホスト上の一致するサービスごとに、1つの"
 "子ノードが作成されます。 "
 
-#, python-format
-msgid "A relay with alias '%s' already exists"
+#, fuzzy, python-format
+msgid "A relay with alias '%s' already exists."
 msgstr "エイリアス '%s' は既に存在します"
 
 msgid ""
@@ -7095,8 +7099,14 @@ msgstr "正規表現で割り当てる"
 msgid "Assignee"
 msgstr "受任者"
 
+msgid "Assignment of hosts to contact groups"
+msgstr "連絡先グループへのホストの割り当て"
+
 msgid "Assignment of hosts to host groups"
 msgstr "ホストグループへのホストの割り当て"
+
+msgid "Assignment of services to contact groups"
+msgstr "連絡先グループへのサービスの割り当て"
 
 msgid "Assignment of services to service groups"
 msgstr "サービスグループへのサービスの割り当て"
@@ -7256,6 +7266,10 @@ msgstr "添付最大"
 
 msgid "Attempt to interpret OEM data"
 msgstr "OEMデータの解釈の試行"
+
+#, fuzzy
+msgid "Attempted concurrent connections"
+msgstr "現在の接続数"
 
 msgid "Atto Fibrebridge FC port"
 msgstr "Atto Fibrebridge FCポート"
@@ -8444,7 +8458,19 @@ msgid "Azure Cosmos DB Availability"
 msgstr "BI の可用性"
 
 #, fuzzy
+msgid "Azure Cosmos DB Database Container Requests"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Azure Cosmos DB Database Container Throughput"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
 msgid "Azure Cosmos DB Database Requests"
+msgstr "Web ACLリクエスト"
+
+#, fuzzy
+msgid "Azure Cosmos DB Database Throughput"
 msgstr "Web ACLリクエスト"
 
 #, fuzzy
@@ -8476,6 +8502,10 @@ msgstr "ロードバランサーヘルス"
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Azureロードバランサーヘルス"
+
+#, fuzzy
+msgid "Azure NAT Gateways Connections"
+msgstr "Azure データベース接続"
 
 #, fuzzy
 msgid "Azure NAT Gateways datapath availability"
@@ -8663,6 +8693,10 @@ msgstr "Azure Webサーバー(IIS)"
 #, fuzzy
 msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Azure Webサーバー(IIS)"
+
+#, fuzzy
+msgid "Azure/Cosmos DB Database Container"
+msgstr "Web ACLリクエスト"
 
 msgid "B"
 msgstr "B"
@@ -11758,6 +11792,10 @@ msgstr "キャラクター"
 msgid "Chassis"
 msgstr "シャーシ"
 
+#, fuzzy
+msgid "Check"
+msgstr "チェック済み"
+
 msgid "Check / Uncheck all"
 msgstr "すべてチェック/チェックしない"
 
@@ -13958,6 +13996,14 @@ msgstr "すべての単調カウンターのレートを計算する"
 msgid "Computing differences"
 msgstr "計算の違い"
 
+#, fuzzy
+msgid "Concurrent SNAT connections"
+msgstr "現在の接続状況"
+
+#, fuzzy
+msgid "Concurrent connections"
+msgstr "現在の接続状況"
+
 msgid "Concurrent executions"
 msgstr "同時実行"
 
@@ -15624,16 +15670,11 @@ msgstr "国(C)"
 msgid "Cr"
 msgstr "Cr"
 
-msgid "Crash Checkmk Version"
+#, fuzzy
+msgid "Crash Checkmk version"
 msgstr "Crash Checkmkバージョン"
 
-msgid "Crash Exception"
-msgstr "クラッシュ例外"
-
 msgid "Crash ID"
-msgstr "クラッシュID"
-
-msgid "Crash Ident"
 msgstr "クラッシュID"
 
 msgid "Crash Report"
@@ -15642,11 +15683,28 @@ msgstr "クラッシュレポート"
 msgid "Crash Reports"
 msgstr "クラッシュレポート"
 
-msgid "Crash Time"
-msgstr "クラッシュタイム"
-
 msgid "Crash Type"
 msgstr "クラッシュタイプ"
+
+#, fuzzy
+msgid "Crash check type"
+msgstr "チェックタイプと一致する"
+
+#, fuzzy
+msgid "Crash exception"
+msgstr "クラッシュ例外"
+
+#, fuzzy
+msgid "Crash host"
+msgstr "クラッシュレポート"
+
+#, fuzzy
+msgid "Crash ident"
+msgstr "クラッシュID"
+
+#, fuzzy
+msgid "Crash item"
+msgstr "クラッシュタイム"
 
 msgid "Crash report"
 msgstr "クラッシュレポート"
@@ -15663,6 +15721,14 @@ msgstr "クラッシュレポート: %s"
 
 msgid "Crash reports"
 msgstr "クラッシュレポート"
+
+#, fuzzy
+msgid "Crash service item"
+msgstr "このサービスは古くなっています"
+
+#, fuzzy
+msgid "Crash service name"
+msgstr "サービス名"
 
 msgid "Crash source"
 msgstr "クラッシュソース"
@@ -21587,10 +21653,6 @@ msgstr "このルールのプロパティを編集する"
 msgid "Edit properties of this rule pack"
 msgstr "このルールパックのプロパティを編集する"
 
-#, fuzzy
-msgid "Edit relay configuration"
-msgstr "この接続を編集する"
-
 msgid "Edit report content"
 msgstr "レポートの内容を編集する"
 
@@ -21750,6 +21812,10 @@ msgstr "ユーザー属性を編集する"
 #, python-format
 msgid "Edit view of user %s"
 msgstr "ユーザー %sのビューを編集する"
+
+#, fuzzy
+msgid "Edit: Relay"
+msgstr "レイアウトを編集する"
 
 msgid "Editable by"
 msgstr "編集可能"
@@ -24075,6 +24141,10 @@ msgstr "プロキシからの予期しない相互作用が原因で失敗した
 
 msgid "Failed certificate validations"
 msgstr "失敗した証明書の検証"
+
+#, fuzzy
+msgid "Failed concurrent connections"
+msgstr "失敗した接続"
 
 msgid "Failed connections"
 msgstr "失敗した接続"
@@ -33674,6 +33744,19 @@ msgstr ""
 msgid "Integer field can not be empty"
 msgstr "入力を空にすることはできません"
 
+msgid ""
+"Integrate Checkmk with your Prometheus to create pre-defined services for "
+"popular Prometheus exporters or define custom PromQL queries Checkmk should "
+"use to retrieve metrics and generate services. The option 'Prometheus Scrape "
+"Targets' is deprecated. We recommend transitioning to our Kubernetes "
+"integration (https://docs.checkmk.com/latest/en/monitoring_kubernetes.html), "
+"if you want to monitor a Kubernetes environment. For monitoring Prometheus "
+"exporters or Prometheus metrics endpoints directly in general, please use "
+"the dedicated OpenTelemetry (https://docs.checkmk.com/latest/en/"
+"opentelemetry.html) integration, as it is the more robust and appropriate "
+"solution for that use case."
+msgstr ""
+
 msgid "Integrate Nagios plug-ins"
 msgstr "Nagiosプラグイン統合"
 
@@ -36433,6 +36516,10 @@ msgstr ""
 
 msgid "License key list"
 msgstr "ライセンスキーリスト"
+
+#, fuzzy
+msgid "License saved."
+msgstr "ライセンスの状態"
 
 msgid "License start"
 msgstr "ライセンス開始"
@@ -39248,6 +39335,10 @@ msgstr "最大同時実行"
 
 msgid "Maximum concurrent executions for forwarded messages"
 msgstr "転送されたメッセージの最大同時実行数"
+
+#, fuzzy
+msgid "Maximum concurrent fetchers"
+msgstr "同時Checkmkフェッチャーの最大数"
 
 msgid "Maximum concurrent real-time checks"
 msgstr "最大同時リアルタイムチェック"
@@ -42648,6 +42739,10 @@ msgstr "プロキシなし"
 msgid "No re-executions"
 msgstr "再実行なし"
 
+#, fuzzy
+msgid "No relay ID specified."
+msgstr "まだリレーが設定されていません。"
+
 msgid "No relays configured yet."
 msgstr "まだリレーが設定されていません。"
 
@@ -42975,6 +43070,14 @@ msgstr "通常:定期的なプッシュ通知(デフォルト)"
 
 #, fuzzy
 msgid "Normalized RU consumption"
+msgstr "ストレージIO消費量"
+
+#, fuzzy
+msgid "Normalized RU consumption lower levels"
+msgstr "ストレージIO消費量"
+
+#, fuzzy
+msgid "Normalized RU consumption upper levels"
 msgstr "ストレージIO消費量"
 
 msgid ""
@@ -49979,9 +50082,8 @@ msgstr "Prometheus APIエンドポイント"
 msgid "Prometheus Alertmanager"
 msgstr "Prometheus アラートマネージャ"
 
-msgid ""
-"Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
-"information from"
+#, fuzzy
+msgid "Prometheus Scrape Targets to fetch information from (deprecated)"
 msgstr ""
 "情報を取得するためのPrometheus スクレープターゲット(Prometheus Exportersを含"
 "む)"
@@ -51614,6 +51716,10 @@ msgstr "ディレイ:"
 #, fuzzy
 msgid "Relay ID"
 msgstr "キーID"
+
+#, fuzzy
+msgid "Relay configuration"
+msgstr "プラン構成"
 
 #, fuzzy
 msgid "Relay configurations"
@@ -56218,10 +56324,6 @@ msgstr ""
 msgid "Set height"
 msgstr "高さを設定する"
 
-#, fuzzy
-msgid "Set host visibility for contact groups"
-msgstr "連絡先グループへのホストの割り当て"
-
 msgid "Set levels"
 msgstr "レベルを設定する"
 
@@ -56399,10 +56501,6 @@ msgstr ""
 "自動的に削除します。これと'一致する消失したサービスを削除しない'の両方を設定"
 "した場合、削除するサービスには両方のルールを適用する必要があります。"
 
-#, fuzzy
-msgid "Set service visibility for contact groups"
-msgstr "サービス連絡先グループ"
-
 msgid "Set state to"
 msgstr "状態をに設定します"
 
@@ -56542,6 +56640,11 @@ msgstr "プラグインとローカルチェックのタイムアウト設定"
 
 msgid "Set to \"0\" to disable the automatic reload."
 msgstr "自動リロードを無効にするには、\"0\"に設定します。"
+
+msgid ""
+"Set to \"Warning\" or \"Error\" to keep logs lean in production. Temporarily "
+"set it to \"Info\" or \"Debug\" for troubleshooting."
+msgstr ""
 
 #, python-format
 msgid "Set to '%s'"
@@ -65332,6 +65435,13 @@ msgid "The operational transmit power"
 msgstr "動作送信電力"
 
 msgid ""
+"The optimal number of Relay fetcher processes depends primarily on the "
+"number of hosts and services you want to monitor, and the responsiveness and "
+"latency of these hosts. Be aware that each fetcher process consumes "
+"resources, primarily memory."
+msgstr ""
+
+msgid ""
 "The option 'Display a summary over all SLA periods' aggregates all results "
 "of SLA calculations into one result. This means it will show how many "
 "percent of SLA periods have broken the SLA, for example if 1 SLA period of "
@@ -70560,6 +70670,22 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB database "
+"container throughput metrics"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB database "
+"throughput metrics"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB service "
 "availability"
 msgstr ""
@@ -70569,6 +70695,14 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB throughput "
 "metrics"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways "
+"connections monitoring"
 msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
 "きます"
@@ -70692,6 +70826,14 @@ msgstr ""
 
 #, fuzzy
 msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"database container throttled requests ratio"
 msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
 "きます"
@@ -72857,8 +72999,20 @@ msgstr "合計RAM +インストールされたスワップ"
 msgid "Total RUs"
 msgstr "合計RAM"
 
+#, fuzzy
+msgid "Total RUs lower levels"
+msgstr "コンテナの下位レベル"
+
+#, fuzzy
+msgid "Total RUs upper levels"
+msgstr "総容量 上位レベル"
+
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "稼動中のオンデマンドインスタンスの総数(AWSで非推奨)"
+
+#, fuzzy
+msgid "Total SNAT connections"
+msgstr "総接続数"
 
 msgid "Total Throughput Optimized HDD space"
 msgstr "合計スループットが最適化されたHDDスペース"
@@ -72871,6 +73025,10 @@ msgstr "一意のポート連絡先の合計"
 
 msgid "Total accumulated Active Energy of Power Channel"
 msgstr "電力チャネルの積算電力量"
+
+#, fuzzy
+msgid "Total active connections"
+msgstr "総接続数"
 
 msgid "Total active sessions"
 msgstr "合計アクティブセッション"
@@ -72903,10 +73061,22 @@ msgstr "トータルコメント :%d"
 msgid "Total commitable memory"
 msgstr "合計コミット可能メモリ"
 
+#, fuzzy
+msgid "Total concurrent connections"
+msgstr "現在の接続状況"
+
 msgid "Total connections"
 msgstr "総接続数"
 
+#, fuzzy
+msgid "Total connections lower limit"
+msgstr "最大接続数"
+
 msgid "Total connections maximum"
+msgstr "最大接続数"
+
+#, fuzzy
+msgid "Total connections upper limit"
 msgstr "最大接続数"
 
 msgid "Total containers"
@@ -86235,6 +86405,10 @@ msgstr[0] ""
 msgid "Toggle accordion item %{item}"
 msgstr ""
 
+#, fuzzy
+msgid "Toggle %{ title }"
+msgstr "ログエントリを切り替えます"
+
 msgid "Copy to clipboard failed with error: "
 msgstr ""
 
@@ -88209,9 +88383,6 @@ msgid ""
 "your environment."
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "連絡先グループへのホストの割り当て"
-
 #, fuzzy
 msgid "Create a dashboard"
 msgstr "関連ダッシュボード"
@@ -88282,6 +88453,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Edit relay configuration"
+#~ msgstr "この接続を編集する"
+
+#, fuzzy
+#~ msgid "Set host visibility for contact groups"
+#~ msgstr "連絡先グループへのホストの割り当て"
+
+#, fuzzy
+#~ msgid "Set service visibility for contact groups"
+#~ msgstr "サービス連絡先グループ"
 
 #, fuzzy
 #~ msgid "Memory Limiter"
@@ -88616,9 +88799,6 @@ msgstr ""
 
 #~ msgid "iSCSI HBAs"
 #~ msgstr "iSCSI HBA"
-
-#~ msgid "Assignment of services to contact groups"
-#~ msgstr "連絡先グループへのサービスの割り当て"
 
 #, python-format
 #~ msgid ""

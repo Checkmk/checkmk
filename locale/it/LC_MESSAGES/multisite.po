@@ -2300,6 +2300,10 @@ msgid "A host with this name already exists in this folder."
 msgstr "Un host con questo nome esiste già in questa cartella."
 
 #, fuzzy
+msgid "A human-readable name for this relay configuration."
+msgstr "Creare una nuova configurazione dell'albero degli host virtuali"
+
+#, fuzzy
 msgid ""
 "A joined column can display information about specific services for host "
 "objects in a view showing host objects. You need to specify the service name "
@@ -2425,7 +2429,7 @@ msgstr ""
 "specificati verrà creato un nodo figlio. "
 
 #, fuzzy, python-format
-msgid "A relay with alias '%s' already exists"
+msgid "A relay with alias '%s' already exists."
 msgstr "Un pacchetto di regole con questo ID esiste già."
 
 msgid ""
@@ -7453,8 +7457,14 @@ msgstr "Assegnare tramite espressioni regolari"
 msgid "Assignee"
 msgstr ""
 
+msgid "Assignment of hosts to contact groups"
+msgstr "Assegnazione di host a gruppi di contatto"
+
 msgid "Assignment of hosts to host groups"
 msgstr "Assegnazione di host a gruppi di host"
+
+msgid "Assignment of services to contact groups"
+msgstr "Assegnazione di servizi a gruppi di contatto"
 
 msgid "Assignment of services to service groups"
 msgstr "Assegnazione di servizi a gruppi di servizi"
@@ -7628,6 +7638,10 @@ msgstr "Mostra fino a"
 
 msgid "Attempt to interpret OEM data"
 msgstr "Tentativo di interpretazione dei dati OEM"
+
+#, fuzzy
+msgid "Attempted concurrent connections"
+msgstr "Numero di connessioni attuali"
 
 msgid "Atto Fibrebridge FC port"
 msgstr "Porta Atto Fibrebridge FC"
@@ -8981,7 +8995,19 @@ msgid "Azure Cosmos DB Availability"
 msgstr "Disponibilità della BI"
 
 #, fuzzy
+msgid "Azure Cosmos DB Database Container Requests"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Azure Cosmos DB Database Container Throughput"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
 msgid "Azure Cosmos DB Database Requests"
+msgstr "Richieste Web ACL"
+
+#, fuzzy
+msgid "Azure Cosmos DB Database Throughput"
 msgstr "Richieste Web ACL"
 
 #, fuzzy
@@ -9013,6 +9039,10 @@ msgstr "Stato del Load Balancer"
 #, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Stato del bilanciatore di carico di Azure"
+
+#, fuzzy
+msgid "Azure NAT Gateways Connections"
+msgstr "Connessioni al database"
 
 #, fuzzy
 msgid "Azure NAT Gateways datapath availability"
@@ -9201,6 +9231,10 @@ msgstr "Azure web server (IIS)"
 #, fuzzy
 msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Azure web server (IIS)"
+
+#, fuzzy
+msgid "Azure/Cosmos DB Database Container"
+msgstr "Richieste Web ACL"
 
 msgid "B"
 msgstr "B"
@@ -12403,6 +12437,10 @@ msgstr "Personaggi"
 msgid "Chassis"
 msgstr "Telaio"
 
+#, fuzzy
+msgid "Check"
+msgstr "Controllato"
+
 msgid "Check / Uncheck all"
 msgstr "Controlla / Deseleziona tutto"
 
@@ -14690,6 +14728,14 @@ msgstr ""
 msgid "Computing differences"
 msgstr "Differenze di calcolo"
 
+#, fuzzy
+msgid "Concurrent SNAT connections"
+msgstr "Connessioni attuali"
+
+#, fuzzy
+msgid "Concurrent connections"
+msgstr "Connessioni attuali"
+
 msgid "Concurrent executions"
 msgstr "Esecuzioni simultanee"
 
@@ -16434,17 +16480,12 @@ msgstr "Paese (C)"
 msgid "Cr"
 msgstr "Cr"
 
-msgid "Crash Checkmk Version"
+#, fuzzy
+msgid "Crash Checkmk version"
 msgstr "Versione Crash Checkmk"
-
-msgid "Crash Exception"
-msgstr "Eccezione di crash"
 
 msgid "Crash ID"
 msgstr "ID incidente"
-
-msgid "Crash Ident"
-msgstr "Crash Ident"
 
 msgid "Crash Report"
 msgstr "Rapporto Crash"
@@ -16452,11 +16493,28 @@ msgstr "Rapporto Crash"
 msgid "Crash Reports"
 msgstr "Rapporti sugli incidenti"
 
-msgid "Crash Time"
-msgstr "Tempo di crash"
-
 msgid "Crash Type"
 msgstr "Tipo di incidente"
+
+#, fuzzy
+msgid "Crash check type"
+msgstr "Tipi di controllo di corrispondenza"
+
+#, fuzzy
+msgid "Crash exception"
+msgstr "Eccezione di crash"
+
+#, fuzzy
+msgid "Crash host"
+msgstr "Rapporto Crash"
+
+#, fuzzy
+msgid "Crash ident"
+msgstr "Crash Ident"
+
+#, fuzzy
+msgid "Crash item"
+msgstr "Tempo di crash"
 
 msgid "Crash report"
 msgstr "Rapporto d'urto"
@@ -16473,6 +16531,14 @@ msgstr "Rapporto di crash: %s"
 
 msgid "Crash reports"
 msgstr "Rapporti sugli incidenti"
+
+#, fuzzy
+msgid "Crash service item"
+msgstr "Questo servizio è stantio"
+
+#, fuzzy
+msgid "Crash service name"
+msgstr "Il nome del servizio"
 
 msgid "Crash source"
 msgstr "Fonte dell'incidente"
@@ -22744,10 +22810,6 @@ msgstr "Modifica le proprietà di questo pacchetto di regole"
 msgid "Edit properties of this rule pack"
 msgstr "Modifica le proprietà di questo pacchetto di regole"
 
-#, fuzzy
-msgid "Edit relay configuration"
-msgstr "Configurazione dell'host"
-
 msgid "Edit report content"
 msgstr "Modifica il contenuto del rapporto"
 
@@ -22911,6 +22973,10 @@ msgstr "Modifica attributo utente"
 #, python-format
 msgid "Edit view of user %s"
 msgstr "Modifica della vista dell'utente %s"
+
+#, fuzzy
+msgid "Edit: Relay"
+msgstr "Modifica del layout"
 
 msgid "Editable by"
 msgstr "Modificabile da"
@@ -25318,6 +25384,10 @@ msgstr "Chiamate fallite causate da un'interazione inaspettata dal proxy"
 
 msgid "Failed certificate validations"
 msgstr "Convalide dei certificati non riuscite"
+
+#, fuzzy
+msgid "Failed concurrent connections"
+msgstr "Connessioni fallite"
 
 msgid "Failed connections"
 msgstr "Connessioni fallite"
@@ -35575,6 +35645,19 @@ msgstr ""
 msgid "Integer field can not be empty"
 msgstr "Chiave segreta"
 
+msgid ""
+"Integrate Checkmk with your Prometheus to create pre-defined services for "
+"popular Prometheus exporters or define custom PromQL queries Checkmk should "
+"use to retrieve metrics and generate services. The option 'Prometheus Scrape "
+"Targets' is deprecated. We recommend transitioning to our Kubernetes "
+"integration (https://docs.checkmk.com/latest/en/monitoring_kubernetes.html), "
+"if you want to monitor a Kubernetes environment. For monitoring Prometheus "
+"exporters or Prometheus metrics endpoints directly in general, please use "
+"the dedicated OpenTelemetry (https://docs.checkmk.com/latest/en/"
+"opentelemetry.html) integration, as it is the more robust and appropriate "
+"solution for that use case."
+msgstr ""
+
 #, fuzzy
 msgid "Integrate Nagios plug-ins"
 msgstr "Integrare i plugin Nagios"
@@ -38499,6 +38582,10 @@ msgstr ""
 msgid "License key list"
 msgstr "Dettagli della licenza"
 
+#, fuzzy
+msgid "License saved."
+msgstr "Stato della licenza"
+
 msgid "License start"
 msgstr "Inizio licenza"
 
@@ -41418,6 +41505,10 @@ msgstr "Massimo di esecuzioni simultanee"
 
 msgid "Maximum concurrent executions for forwarded messages"
 msgstr "Esecuzioni massime contemporanee per i messaggi inoltrati"
+
+#, fuzzy
+msgid "Maximum concurrent fetchers"
+msgstr "Massimo di fetcher Checkmk simultanei"
 
 #, fuzzy
 msgid "Maximum concurrent real-time checks"
@@ -45022,6 +45113,10 @@ msgid "No re-executions"
 msgstr "Nessuna riesecuzione"
 
 #, fuzzy
+msgid "No relay ID specified."
+msgstr "Configurazione dell'host"
+
+#, fuzzy
 msgid "No relays configured yet."
 msgstr "Configurazione dell'host"
 
@@ -45371,6 +45466,14 @@ msgstr "Normale: Notifica push regolare (predefinita)"
 
 #, fuzzy
 msgid "Normalized RU consumption"
+msgstr "Consumo IO dello storage"
+
+#, fuzzy
+msgid "Normalized RU consumption lower levels"
+msgstr "Consumo IO dello storage"
+
+#, fuzzy
+msgid "Normalized RU consumption upper levels"
 msgstr "Consumo IO dello storage"
 
 msgid ""
@@ -52960,9 +53063,8 @@ msgstr "Endpoint API di Prometheus"
 msgid "Prometheus Alertmanager"
 msgstr "Alertmanager"
 
-msgid ""
-"Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
-"information from"
+#, fuzzy
+msgid "Prometheus Scrape Targets to fetch information from (deprecated)"
 msgstr ""
 "Prometheus Scrape Targets (include Prometheus Exporters) per recuperare "
 "informazioni da"
@@ -54686,6 +54788,10 @@ msgstr "Ritardo:"
 
 msgid "Relay ID"
 msgstr ""
+
+#, fuzzy
+msgid "Relay configuration"
+msgstr "configurazione"
 
 #, fuzzy
 msgid "Relay configurations"
@@ -59498,10 +59604,6 @@ msgstr ""
 msgid "Set height"
 msgstr "Imposta l'altezza"
 
-#, fuzzy
-msgid "Set host visibility for contact groups"
-msgstr "Assegnazione di host a gruppi di contatto"
-
 msgid "Set levels"
 msgstr "Impostare i livelli"
 
@@ -59703,10 +59805,6 @@ msgstr ""
 "questo che \"Non rimuovere i servizi svaniti corrispondenti\", entrambe le "
 "regole devono essere applicate perché un servizio sia rimosso."
 
-#, fuzzy
-msgid "Set service visibility for contact groups"
-msgstr "Gruppi di contatto di servizio"
-
 msgid "Set state to"
 msgstr "Imposta lo stato su"
 
@@ -59853,6 +59951,11 @@ msgstr "Impostare i timeout per i plugin e i controlli locali"
 
 msgid "Set to \"0\" to disable the automatic reload."
 msgstr "Impostare su \"0\" per disabilitare la ricarica automatica."
+
+msgid ""
+"Set to \"Warning\" or \"Error\" to keep logs lean in production. Temporarily "
+"set it to \"Info\" or \"Debug\" for troubleshooting."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Set to '%s'"
@@ -69015,6 +69118,13 @@ msgid "The operational transmit power"
 msgstr "La potenza di trasmissione operativa"
 
 msgid ""
+"The optimal number of Relay fetcher processes depends primarily on the "
+"number of hosts and services you want to monitor, and the responsiveness and "
+"latency of these hosts. Be aware that each fetcher process consumes "
+"resources, primarily memory."
+msgstr ""
+
+msgid ""
 "The option 'Display a summary over all SLA periods' aggregates all results "
 "of SLA calculations into one result. This means it will show how many "
 "percent of SLA periods have broken the SLA, for example if 1 SLA period of "
@@ -74393,6 +74503,22 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB database "
+"container throughput metrics"
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Cosmos DB database "
+"throughput metrics"
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB service "
 "availability"
 msgstr ""
@@ -74403,6 +74529,14 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for Azure Cosmos DB throughput "
 "metrics"
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways "
+"connections monitoring"
 msgstr ""
 "Questa regola permette di configurare i livelli di bloat per il tablespace e "
 "l'indexspace di un database."
@@ -74539,6 +74673,14 @@ msgstr ""
 
 #, fuzzy
 msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure upper limits for Azure Cosmos DB "
+"database container throttled requests ratio"
 msgstr ""
 "Questa regola permette di configurare i livelli di bloat per il tablespace e "
 "l'indexspace di un database."
@@ -76813,8 +76955,20 @@ msgstr "Totale RAM + Swap installato"
 msgid "Total RUs"
 msgstr "RAM totale"
 
+#, fuzzy
+msgid "Total RUs lower levels"
+msgstr "Contenitori livelli inferiori"
+
+#, fuzzy
+msgid "Total RUs upper levels"
+msgstr "Contenitori livelli superiori"
+
 msgid "Total Running On-Demand Instances(Deprecated by AWS)"
 msgstr "Totale istanze On-Demand in esecuzione (deprecato da AWS)"
+
+#, fuzzy
+msgid "Total SNAT connections"
+msgstr "connessione normale"
 
 msgid "Total Throughput Optimized HDD space"
 msgstr "Throughput totale Spazio HDD ottimizzato"
@@ -76827,6 +76981,10 @@ msgstr "Contatti unici totali della porta"
 
 msgid "Total accumulated Active Energy of Power Channel"
 msgstr "Energia attiva totale accumulata del canale di potenza"
+
+#, fuzzy
+msgid "Total active connections"
+msgstr "connessione normale"
 
 #, fuzzy
 msgid "Total active sessions"
@@ -76861,11 +77019,23 @@ msgid "Total commitable memory"
 msgstr "Memoria totale impegnabile"
 
 #, fuzzy
+msgid "Total concurrent connections"
+msgstr "Connessioni attuali"
+
+#, fuzzy
 msgid "Total connections"
 msgstr "connessione normale"
 
 #, fuzzy
+msgid "Total connections lower limit"
+msgstr "Connessioni totali Massimo"
+
+#, fuzzy
 msgid "Total connections maximum"
+msgstr "Connessioni totali Massimo"
+
+#, fuzzy
+msgid "Total connections upper limit"
 msgstr "Connessioni totali Massimo"
 
 msgid "Total containers"
@@ -91260,6 +91430,10 @@ msgstr[1] ""
 msgid "Toggle accordion item %{item}"
 msgstr ""
 
+#, fuzzy
+msgid "Toggle %{ title }"
+msgstr "Allineare le voci del registro"
+
 msgid "Copy to clipboard failed with error: "
 msgstr ""
 
@@ -93280,9 +93454,6 @@ msgid ""
 "your environment."
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Assegnazione di host a gruppi di contatto"
-
 #, fuzzy
 msgid "Create a dashboard"
 msgstr "Cruscotti correlati"
@@ -93355,6 +93526,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Edit relay configuration"
+#~ msgstr "Configurazione dell'host"
+
+#, fuzzy
+#~ msgid "Set host visibility for contact groups"
+#~ msgstr "Assegnazione di host a gruppi di contatto"
+
+#, fuzzy
+#~ msgid "Set service visibility for contact groups"
+#~ msgstr "Gruppi di contatto di servizio"
 
 #, fuzzy
 #~ msgid "Memory Limiter"
@@ -93695,9 +93878,6 @@ msgstr ""
 
 #~ msgid "iSCSI HBAs"
 #~ msgstr "HBA iSCSI"
-
-#~ msgid "Assignment of services to contact groups"
-#~ msgstr "Assegnazione di servizi a gruppi di contatto"
 
 #, python-format
 #~ msgid ""

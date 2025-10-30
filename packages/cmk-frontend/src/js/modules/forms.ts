@@ -364,7 +364,8 @@ export function confirm_dialog(
   optional_args: any,
   confirm_handler: null | (() => void),
   cancel_handler: null | (() => void) = null,
-  deny_handler: null | (() => void) = null
+  deny_handler: null | (() => void) = null,
+  post_confirm_waiting_text: string | null = null
 ) {
   const default_custom_class_args = {
     title: 'confirm_title',
@@ -411,6 +412,14 @@ export function confirm_dialog(
     customClass: custom_class_args
   }
 
+  if (!!post_confirm_waiting_text) {
+    const current_confirm_handler = confirm_handler ?? (() => {})
+    confirm_handler = () => {
+      waiting_flash_message(post_confirm_waiting_text, 0)
+      current_confirm_handler()
+    }
+  }
+
   const args = {
     ...default_args,
     ...optional_args
@@ -425,6 +434,14 @@ export function confirm_dialog(
       if (cancel_handler) cancel_handler()
     }
   })
+}
+
+export function waiting_flash_message(message: string, delay_ms: number = 0) {
+  setTimeout(() => {
+    document
+      .getElementById('page_menu_popups')
+      ?.insertAdjacentHTML('beforeend', '<div class="waiting flashed">' + message + '</div>')
+  }, delay_ms)
 }
 
 // Makes a form submittable after explicit confirmation

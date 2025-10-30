@@ -152,6 +152,7 @@ def show_confirm_cancel_dialog(
     message: str | HTML | None = None,
     confirm_text: str | None = None,
     show_cancel_button: bool = True,
+    post_confirm_waiting_text: str | None = None,
 ) -> None:
     dialog_options = {
         "title": title,
@@ -166,11 +167,12 @@ def show_confirm_cancel_dialog(
     }
 
     html.javascript(
-        "cmk.forms.confirm_dialog(%s, function() {location.href = %s;}, %s)"
+        "cmk.forms.confirm_dialog(%s, function() {location.href = %s;}, %s, null, %s)"
         % (
             json.dumps(dialog_options),
             json.dumps(confirm_url),
             f"function() {{location.href = {json.dumps(cancel_url)}}}" if cancel_url else "null",
+            json.dumps(post_confirm_waiting_text),
         )
     )
 

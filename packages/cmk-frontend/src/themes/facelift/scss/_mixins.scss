@@ -6,7 +6,7 @@
 // TODO Render flashed messages in Sweetalert style, maybe we can implement
 // this one day in VUE including a button to make it disappear.
 
-@mixin flashed-mixin($color, $icon) {
+@mixin flashed-mixin($color, $icon, $bg-size: auto) {
   padding: 16px 16px 16px 34px;
   background-color: $ux-theme-4;
   box-shadow: 0 2px rgba(0, 0, 0, 0.4);
@@ -26,7 +26,7 @@
     background-image: $icon;
     background-repeat: no-repeat;
     background-position: center;
-    background-size: auto;
+    background-size: $bg-size;
     z-index: 1;
   }
 }

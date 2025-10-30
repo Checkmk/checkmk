@@ -446,7 +446,8 @@ div.really,
 div.success,
 div.error,
 div.message,
-div.warning {
+div.warning,
+div.waiting {
   padding: 16px;
   margin: $spacing 0;
   border-radius: $theme-border-radius;
@@ -498,7 +499,8 @@ div.really {
   }
 }
 
-div.success {
+div.success,
+div.waiting {
   background-color: $headline-color;
 }
 
@@ -526,6 +528,14 @@ div.error {
 
 .warning.flashed {
   @include flashed-mixin($yellow, url('images/icon_problem.svg'));
+}
+
+.waiting.flashed {
+  @include flashed-mixin(
+    $color-corporate-green-100,
+    url('../facelift/images/load_graph.png'),
+    20px
+  );
 }
 
 // TODO: what is using this? can we remove it?

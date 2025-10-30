@@ -305,6 +305,7 @@ class ModeRevertChanges(WatoMode):
             cancel_url,
             message,
             confirm_text=_("Revert changes"),
+            post_confirm_waiting_text=_("Reverting pending changes."),
         )
 
         _change_table(

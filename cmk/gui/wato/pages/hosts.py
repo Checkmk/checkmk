@@ -552,10 +552,15 @@ class ModeEditHost(ABCHostMode):
                 automation_config=make_automation_config(config.sites[self._host.site_id()]),
                 debug=config.debug,
             )
+            n = update_dns_cache_result.n_updated
             infotext = (
-                _("Successfully updated IP addresses of %d hosts.")
-                % update_dns_cache_result.n_updated
+                _("Site DNS cache is already up to date.")
+                if n == 0
+                else _("Site DNS cache updated for 1 host.")
+                if n == 1
+                else _("Site DNS cache updated for %d hosts.") % n
             )
+
             if update_dns_cache_result.failed_hosts:
                 infotext += "<br><br><b>Host names failed to lookup:</b> " + ", ".join(
                     ["<tt>%s</tt>" % h for h in update_dns_cache_result.failed_hosts]

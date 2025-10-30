@@ -380,6 +380,26 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("doc/treasures/migration_helpers/legacy_checks_to_v2.py"),
         Path("doc/treasures/migration_helpers/legacy_vs_to_fs_v1.py"),
     },
+    # TODO: added reminder to drop these file paths post-migration:
+    ImportName("cmk_addons"): {
+        Path("doc/treasures/cisco_meraki/agent_based/appliance_performance.py"),
+        Path("doc/treasures/cisco_meraki/libexec/agent_cisco_meraki"),
+        Path("doc/treasures/cisco_meraki/rulesets/meraki_agent.py"),
+        Path("doc/treasures/cisco_meraki/lib/agent.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/appliance_vpns.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/device_uplinks.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/switch_ports_statuses.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/networks.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/appliance_performance.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/cellular_uplinks.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/wireless_ethernet_statuses.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/organisations_api.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/device_status.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/licenses_overview.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/appliance_uplinks.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/device_info.py"),
+        Path("doc/treasures/cisco_meraki/agent_based/wireless_device_ssid_status.py"),
+    },
     ImportName("pip"): {  # is included by default in python
         Path("omd/packages/Python/pip")
     },

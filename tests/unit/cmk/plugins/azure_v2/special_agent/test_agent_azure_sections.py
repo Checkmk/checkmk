@@ -116,7 +116,7 @@ AZURE_SUBSCRIPTION_SAFEHOSTNAME = AzureSubscription(
             [
                 "<<<<test-resource>>>>",
                 "<<<azure_v2_labels:sep(0)>>>",
-                "{}",
+                '{"cloud": "azure"}',
                 "{}",
                 "<<<<>>>>",
             ],
@@ -132,7 +132,7 @@ AZURE_SUBSCRIPTION_SAFEHOSTNAME = AzureSubscription(
             [
                 "<<<<test-resource>>>>",
                 "<<<azure_v2_labels:sep(0)>>>",
-                '{"key1": "value1", "key2": "value2"}',
+                '{"cloud": "azure", "key1": "value1", "key2": "value2"}',
                 '{"tag1": "tagvalue1", "tag2": "tagvalue2"}',
                 "<<<<>>>>",
             ],
@@ -148,7 +148,7 @@ AZURE_SUBSCRIPTION_SAFEHOSTNAME = AzureSubscription(
             [
                 "<<<<azr-test-resource-12345678>>>>",
                 "<<<azure_v2_labels:sep(0)>>>",
-                '{"key1": "value1", "key2": "value2"}',
+                '{"cloud": "azure", "key1": "value1", "key2": "value2"}',
                 '{"tag1": "tagvalue1", "tag2": "tagvalue2"}',
                 "<<<<>>>>",
             ],
@@ -178,7 +178,7 @@ def test_azure_labels_section(
             [
                 "<<<<>>>>",
                 "<<<azure_v2_labels:sep(0)>>>",
-                '{"entity": "tenant"}',
+                '{"cloud": "azure", "entity": "tenant"}',
                 "{}",
                 "<<<<>>>>",
             ],
@@ -192,7 +192,7 @@ def test_azure_labels_section(
             [
                 "<<<<>>>>",
                 "<<<azure_v2_labels:sep(0)>>>",
-                '{"entity": "tenant", "key1": "value1", "key2": "value2"}',
+                '{"cloud": "azure", "entity": "tenant", "key1": "value1", "key2": "value2"}',
                 '{"tag1": "tagvalue1", "tag2": "tagvalue2"}',
                 "<<<<>>>>",
             ],

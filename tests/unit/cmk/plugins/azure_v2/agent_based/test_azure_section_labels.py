@@ -128,6 +128,16 @@ def test_parse_host_labels(
             ],
             id="Labels with special characters",
         ),
+        pytest.param(
+            LabelsSection(
+                host_labels={"cloud": "azure"},
+                tags={},
+            ),
+            [
+                HostLabel("cmk/cloud", "azure"),
+            ],
+            id="Cloud label",
+        ),
     ],
 )
 def test_host_labels(

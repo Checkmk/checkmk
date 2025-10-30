@@ -29,6 +29,9 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
     """Host label function
 
     Labels:
+        cmk/cloud:azure:
+            This label is set for all hosts monitoring an azure cloud object.
+
         cmk/azure/resource_group:
             This label contains the name of the resource group.
 
@@ -69,6 +72,9 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
             continue
         if label == "vm_instance":
             yield HostLabel("cmk/azure/vm", "instance")
+            continue
+        if label == "cloud":
+            yield HostLabel("cmk/cloud", value)
             continue
 
         yield HostLabel(f"cmk/azure/{label}", value)

@@ -513,6 +513,9 @@ class AzureSection(Section):
 
 
 class _AzureBaseLabelsSection(AzureSection):
+    def _apply_default_label(self, labels: Mapping[str, str]) -> Mapping[str, str]:
+        return {"cloud": "azure", **labels}
+
     def _initialize_data(self, labels: Mapping[str, str], tags: Mapping[str, str]) -> None:
         super().add(json.dumps(labels))  # first line: labels
         super().add(json.dumps(tags))  # second line: tags
@@ -531,19 +534,21 @@ class AzureLabelsSection(_AzureBaseLabelsSection):
         tags: Mapping[str, str],
     ) -> None:
         super().__init__("labels", [piggytarget], separator=0, subscription=subscription)
-        self._initialize_data(labels, tags)
+        self._initialize_data(self._apply_default_label(labels), tags)
 
 
-class AzureTenantLabelsSection(_AzureBaseLabelsSection, AzureSection):
+class AzureTenantLabelsSection(_AzureBaseLabelsSection):
     def __init__(
         self,
         *,
         labels: Mapping[str, str] = {},
         tags: Mapping[str, str] = {},
     ) -> None:
-        final_labels = {"entity": "tenant", **labels}
         super().__init__("labels", separator=0)
-        self._initialize_data(final_labels, tags)
+        self._initialize_data(self._apply_default_label(labels), tags)
+
+    def _apply_default_label(self, labels: Mapping[str, str]) -> Mapping[str, str]:
+        return super()._apply_default_label({"entity": "tenant", **labels})
 
 
 class HostTarget(StrEnum):

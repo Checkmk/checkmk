@@ -71,7 +71,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"resource_group": "burningman", "entity": "virtualmachines", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "resource_group": "burningman", "entity": "virtualmachines", "subscription_name": "mock_subscription_name",'
                     ' "subscription_id": "mock_subscription_id", "vm_instance": true}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                 ],
@@ -105,7 +105,7 @@ Args = argparse.Namespace
             },
             (
                 [
-                    '{"resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
                     ' "subscription_id": "mock_subscription_id"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
@@ -134,7 +134,7 @@ Args = argparse.Namespace
             {"resource_group_name": {}},
             (
                 [
-                    '{"resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
                     ' "subscription_id": "mock_subscription_id"}\n',
                     "{}\n",
                 ],
@@ -383,7 +383,7 @@ async def test_filter_tags(
             {"burningman": {"my-resource-tag": "my-resource-value"}},
             "<<<<burningman>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<mock_subscription_name>>>>\n"
@@ -411,7 +411,7 @@ async def test_filter_tags(
             {"resource_group_name": {"my-resource-tag": "my-resource-value"}},
             "<<<<resource_group_name>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"resource_group": "resource_group_name", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "resource_group": "resource_group_name", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<mock_subscription_name>>>>\n"

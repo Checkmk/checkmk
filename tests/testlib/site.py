@@ -1308,6 +1308,31 @@ class Site:
     def is_running(self) -> bool:
         return self.omd("status").returncode == 0
 
+    def wait_for_status_update(
+        self,
+        expected_status: int,
+        timeout: int = 60,
+        interval: int = 2,
+    ) -> None:
+        wait_until(
+            lambda: self.omd("status").returncode == expected_status,
+            timeout=timeout,
+            interval=interval,
+            condition_name="Site status update",
+        )
+
+    def activate_changes_and_wait_for_site_restart(
+        self, timeout: int = 60, interval: int = 2
+    ) -> None:
+        """Activate changes which require a site restart and wait until the site is
+        fully running again.
+        """
+        self.openapi.changes.activate()
+        # first wait for the site to change the status to partially running
+        self.wait_for_status_update(2, timeout, interval)
+        # then wait for the site to be fully running
+        self.wait_for_status_update(0, timeout, interval)
+
     def get_omd_service_names_and_statuses(self, service: str = "") -> dict[str, int]:
         """
         Return all service names and their statuses for the given site.

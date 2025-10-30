@@ -1617,7 +1617,7 @@ class OtelCollectorAPI(BaseAPI):
         if prometheus_scrape_configs:
             body["prometheus_scrape_configs"] = prometheus_scrape_configs
 
-        # hack to use the "unstable" version of the API endpoint
+        # hack to use the "internal" version of the API endpoint
         response = self.session.post(
             url=self.base_url + "/domain-types/otel_collector_config_prom_scrape/collections/all",
             json=body,
@@ -1639,6 +1639,22 @@ class OtelCollectorAPI(BaseAPI):
             self.base_url + f"/objects/otel_collector_config_prom_scrape/{ident}"
         )
         if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def disable(self, site_id: str) -> None:
+        response = self.session.put(
+            url=self.base_url + "/domain-types/otel_collector/actions/update/invoke",
+            json={"site_id": site_id, "activation": {"mode": "disabled"}},
+        )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def enable(self, site_id: str) -> None:
+        response = self.session.put(
+            url=self.base_url + "/domain-types/otel_collector/actions/update/invoke",
+            json={"site_id": site_id, "activation": {"mode": "enabled"}},
+        )
+        if not response.ok:
             raise UnexpectedResponse.from_response(response)
 
 

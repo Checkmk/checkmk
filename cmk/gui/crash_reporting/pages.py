@@ -123,6 +123,7 @@ class ABCCrashReportPage(Page, abc.ABC):
 class PageCrash(ABCCrashReportPage):
     @override
     def page(self, ctx: PageContext) -> None:
+        self._handle_http_request()
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 

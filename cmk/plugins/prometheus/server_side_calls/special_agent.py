@@ -106,6 +106,14 @@ class Params(BaseModel, frozen=True):
                 raise TypeError(other)
 
 
+def _primary_ip_address_from_host_config_if_configured(host_config: HostConfig) -> str | None:
+    try:
+        primary_ip_config = host_config.primary_ip_config
+    except ValueError:
+        return None
+    return primary_ip_config.address
+
+
 def _commands_function(
     params: Params,
     host_config: HostConfig,
@@ -117,7 +125,7 @@ def _commands_function(
             context=host_config.macros,
         )
         | {
-            "host_address": host_config.primary_ip_config.address,
+            "host_address": _primary_ip_address_from_host_config_if_configured(host_config),
             "host_name": host_config.name,
         }
     )

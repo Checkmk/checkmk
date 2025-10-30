@@ -8,8 +8,9 @@
 # mypy: disable-error-code="type-arg"
 
 
+from collections.abc import Callable, Iterable, Mapping
+
 from cmk.ccc.hostaddress import HostAddress
-from cmk.ccc.version import Edition, edition
 from cmk.gui.form_specs.unstable import ListExtended
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -36,9 +37,30 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils.paths import omd_root
 
-OPENSHIFT_EDITIONS = (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.PRO)
+openshift_element: Callable[
+    [Dictionary], Iterable[CascadingSingleChoiceElement[Mapping[str, object]]]
+]
+transform_openshift_endpoint: Callable[[dict[str, object]], dict[str, object]]
+try:
+    from .nonfree.special_agent_options import (  # type: ignore[no-redef,import-not-found, unused-ignore]
+        openshift_element,
+        transform_openshift_endpoint,
+    )
+except ImportError:
+
+    def openshift_element(
+        tcp_timeouts: Dictionary,
+    ) -> Iterable[CascadingSingleChoiceElement[Mapping[str, object]]]:
+        return ()
+
+    def transform_openshift_endpoint(p: dict[str, object]) -> dict[str, object]:
+        return {
+            k: v
+            for k, v in p.items()
+            if k != "usage_endpoint"
+            or (isinstance(v, tuple) and v[0] in ("cluster_collector", "cluster-collector"))
+        }
 
 
 def _tcp_timeouts() -> Dictionary:
@@ -68,13 +90,11 @@ def _tcp_timeouts() -> Dictionary:
     )
 
 
-def _usage_endpoint(edition_: Edition) -> CascadingSingleChoice:
+def _usage_endpoint() -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Enrich with usage data"),
         migrate=_migrate_usage_endpoint,
-        elements=[_cluster_collector(), _openshift()]
-        if edition_ in OPENSHIFT_EDITIONS
-        else [_cluster_collector()],
+        elements=[_cluster_collector(), *openshift_element(_tcp_timeouts())],
         prefill=DefaultValue("cluster_collector"),
     )
 
@@ -85,68 +105,9 @@ def _migrate_usage_endpoint(p: object) -> tuple[str, object]:
     return (p[0].replace("-", "_"), p[1])
 
 
-def _is_cre_spec(k: str, vs: object) -> bool:
-    if k != "usage_endpoint":
-        return True
-    return isinstance(vs, tuple) and vs[0] in ("cluster_collector", "cluster-collector")
-
-
-def _transform_openshift_endpoint(p: dict[str, object], edition_: Edition) -> dict[str, object]:
-    return (
-        p if edition_ in OPENSHIFT_EDITIONS else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
-    )
-
-
-def _migrate_and_transform(p: object, edition_: Edition) -> dict[str, object]:
+def migrate_and_transform(p: object) -> dict[str, object]:
     p = _migrate_form_specs(p)
-    return _transform_openshift_endpoint(p, edition_)
-
-
-def _openshift() -> CascadingSingleChoiceElement:
-    return CascadingSingleChoiceElement(
-        name="prometheus",
-        title=Title("Use data from OpenShift"),
-        parameter_form=Dictionary(
-            migrate=_migrate_form_specs,
-            elements={
-                "endpoint_v2": DictElement(
-                    required=True,
-                    parameter_form=String(
-                        title=Title("Prometheus API endpoint"),
-                        prefill=DefaultValue("https://"),
-                        custom_validate=(
-                            validators.LengthInRange(min_value=1),
-                            validators.Url(
-                                protocols=[
-                                    validators.UrlProtocol.HTTP,
-                                    validators.UrlProtocol.HTTPS,
-                                ]
-                            ),
-                        ),
-                        help_text=Help(
-                            "The full URL to the Prometheus API endpoint including the "
-                            "protocol (http or https). OpenShift exposes such "
-                            "endpoints via a route in the openshift-monitoring "
-                            "namespace called prometheus-k8s."
-                        ),
-                    ),
-                ),
-                "verify_cert": DictElement(
-                    required=True,
-                    parameter_form=BooleanChoice(
-                        title=Title("SSL certificate verification"),
-                        label=Label("Verify the certificate"),
-                        prefill=DefaultValue(True),
-                    ),
-                ),
-                "proxy": DictElement(
-                    required=False,
-                    parameter_form=Proxy(migrate=migrate_to_proxy),
-                ),
-                "timeout": DictElement(required=False, parameter_form=_tcp_timeouts()),
-            },
-        ),
-    )
+    return transform_openshift_endpoint(p)
 
 
 def _cluster_collector() -> CascadingSingleChoiceElement:
@@ -284,7 +245,7 @@ def _migrate_import_annotations(p: object) -> tuple[str, object]:
 
 def _valuespec_special_agents_kube() -> Dictionary:
     return Dictionary(
-        migrate=lambda v: _migrate_and_transform(v, edition(omd_root)),
+        migrate=lambda v: migrate_and_transform(v),
         title=Title("Kubernetes"),
         elements={
             "cluster_name": DictElement(
@@ -316,7 +277,7 @@ def _valuespec_special_agents_kube() -> Dictionary:
             ),
             "usage_endpoint": DictElement(
                 required=False,
-                parameter_form=_usage_endpoint(edition(omd_root)),
+                parameter_form=_usage_endpoint(),
             ),
             "monitored_objects": DictElement(
                 required=True,

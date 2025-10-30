@@ -508,8 +508,16 @@ class AzureSection(Section):
         )
 
 
-class AzureLabelsSection(AzureSection):
-    # TODO: refactor, first line labels, second line tags
+class _AzureBaseLabelsSection(AzureSection):
+    def _initialize_data(self, labels: Mapping[str, str], tags: Mapping[str, str]) -> None:
+        super().add((json.dumps(labels),))  # first line: labels
+        super().add((json.dumps(tags),))  # second line: tags
+
+    def add(self, info):
+        raise NotImplementedError("Use constructor to add labels and tags")
+
+
+class AzureLabelsSection(_AzureBaseLabelsSection):
     def __init__(
         self,
         piggytarget: str,
@@ -519,11 +527,7 @@ class AzureLabelsSection(AzureSection):
         tags: Mapping[str, str],
     ) -> None:
         super().__init__("labels", [piggytarget], separator=0, subscription=subscription)
-        super().add((json.dumps(labels),))  # first line: labels
-        super().add((json.dumps(tags),))  # second line: tags
-
-    def add(self, info):
-        raise NotImplementedError("Use constructor to add labels and tags")
+        self._initialize_data(labels, tags)
 
 
 class HostTarget(StrEnum):

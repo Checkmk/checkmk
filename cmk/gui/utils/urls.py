@@ -423,6 +423,7 @@ class DocReference(Enum):
     INFLUXDB_CONNECTIONS = "metrics_exporter"
     INTRO_CREATING_FOLDERS = "intro_setup_monitor#folders"
     INTRO_FOLDERS = "intro_setup_monitor#folders"
+    INTRO_GUI = "intro_gui"
     INTRO_LINUX = "intro_setup_monitor#linux"
     INTRO_SERVICES = "intro_setup_monitor#services"
     INTRO_WELCOME = "welcome"

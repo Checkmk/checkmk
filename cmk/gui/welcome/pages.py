@@ -135,7 +135,7 @@ def get_welcome_data() -> WelcomePage:
         cards=WelcomeCards(
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
-            checkmk_docs=doc_reference_url(),
+            checkmk_docs=doc_reference_url(DocReference.INTRO_GUI),
             create_contactgroups=makeuri(
                 request,
                 addvars=[("mode", "contact_groups")],

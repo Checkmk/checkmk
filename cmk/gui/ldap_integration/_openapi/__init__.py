@@ -29,18 +29,18 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.custom_fields import LDAPConnectionID
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
-from cmk.gui.ldap._openapi.error_schemas import GETLdapConnection404
-from cmk.gui.ldap._openapi.internal_to_restapi_interface import (
+from cmk.gui.ldap_integration._openapi.error_schemas import GETLdapConnection404
+from cmk.gui.ldap_integration._openapi.internal_to_restapi_interface import (
     LDAPConnectionInterface,
     request_ldap_connection,
     request_ldap_connections,
     update_suffixes,
 )
-from cmk.gui.ldap._openapi.request_schemas import (
+from cmk.gui.ldap_integration._openapi.request_schemas import (
     LDAPConnectionConfigCreateRequest,
     LDAPConnectionConfigUpdateRequest,
 )
-from cmk.gui.ldap._openapi.response_schemas import (
+from cmk.gui.ldap_integration._openapi.response_schemas import (
     LDAPConnectionResponse,
     LDAPConnectionResponseCollection,
 )

@@ -23,7 +23,7 @@ from cmk.crypto.password import Password
 from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.ldap import ldap_connector as ldap
+from cmk.gui.ldap_integration import ldap_connector as ldap
 from cmk.gui.session import session
 from cmk.gui.type_defs import (
     CustomUserAttrSpec,

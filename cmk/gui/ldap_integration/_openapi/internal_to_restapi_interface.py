@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, cast, get_args, Literal, TypedDict
 
-from cmk.gui.ldap.ldap_connector import LDAPUserConnector
+from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
 from cmk.gui.type_defs import DisableNotificationsAttribute
 from cmk.gui.user_connection_config_types import (
     ACTIVE_DIR,

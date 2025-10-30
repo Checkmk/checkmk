@@ -19961,7 +19961,7 @@ paths:
         \ (see below).\n   * User management (`wato.users`): This permission is needed\
         \ for the modules <b>Users</b>, <b>Roles</b> and <b>Contact groups</b>\n"
       summary: Show all LDAP connections
-      operationId: cmk.gui.ldap._openapi.show_ldap_connections
+      operationId: cmk.gui.ldap_integration._openapi.show_ldap_connections
       responses:
         '406':
           description: 'Not Acceptable: The requests accept headers can not be satisfied.'
@@ -20055,7 +20055,7 @@ paths:
         \ management (`wato.users`): This permission is needed for the modules <b>Users</b>,\
         \ <b>Roles</b> and <b>Contact groups</b>\n"
       summary: Create an LDAP connection
-      operationId: cmk.gui.ldap._openapi.create_ldap_connection
+      operationId: cmk.gui.ldap_integration._openapi.create_ldap_connection
       parameters:
       - name: Content-Type
         description: A header specifying which type of content is in the request/response
@@ -20340,7 +20340,7 @@ paths:
         \ (see below).\n   * User management (`wato.users`): This permission is needed\
         \ for the modules <b>Users</b>, <b>Roles</b> and <b>Contact groups</b>\n"
       summary: Show an LDAP connection
-      operationId: cmk.gui.ldap._openapi.show_ldap_connection
+      operationId: cmk.gui.ldap_integration._openapi.show_ldap_connection
       parameters:
       - in: path
         name: ldap_connection_id
@@ -20457,7 +20457,7 @@ paths:
         \ management (`wato.users`): This permission is needed for the modules <b>Users</b>,\
         \ <b>Roles</b> and <b>Contact groups</b>\n"
       summary: Update an ldap connection
-      operationId: cmk.gui.ldap._openapi.edit_ldap_connection
+      operationId: cmk.gui.ldap_integration._openapi.edit_ldap_connection
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can
@@ -20784,7 +20784,7 @@ paths:
         \ management (`wato.users`): This permission is needed for the modules <b>Users</b>,\
         \ <b>Roles</b> and <b>Contact groups</b>\n"
       summary: Delete an LDAP connection
-      operationId: cmk.gui.ldap._openapi.delete_ldap_connection
+      operationId: cmk.gui.ldap_integration._openapi.delete_ldap_connection
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can

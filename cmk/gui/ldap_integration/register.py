@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.ldap._openapi import register as openapi_register
-from cmk.gui.ldap.ldap import register as ldap_register
+from cmk.gui.ldap_integration._openapi import register as openapi_register
+from cmk.gui.ldap_integration.ldap import register as ldap_register
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.userdb._connector import UserConnectorRegistry
 from cmk.gui.watolib.analyze_configuration import ACTestRegistry

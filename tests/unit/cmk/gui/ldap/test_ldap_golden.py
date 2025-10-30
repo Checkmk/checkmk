@@ -20,7 +20,7 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
-from cmk.gui.ldap.ldap_connector import LDAPUserConnector
+from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
 from cmk.gui.type_defs import Users
 from cmk.gui.user_connection_config_types import (
     Fixed,

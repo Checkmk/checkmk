@@ -29,7 +29,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u, get_language_alias, get_languages, ungettext
-from cmk.gui.ldap.ldap_connector import LDAPUserConnector
+from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (

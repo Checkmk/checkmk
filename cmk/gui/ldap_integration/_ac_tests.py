@@ -6,7 +6,7 @@
 from collections.abc import Iterator
 from typing import override
 
-import cmk.gui.ldap.ldap_connector as ldap
+import cmk.gui.ldap_integration.ldap_connector as ldap
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config, Config
 from cmk.gui.i18n import _

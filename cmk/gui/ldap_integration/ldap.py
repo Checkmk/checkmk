@@ -18,7 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.ldap.ldap_connector import (
+from cmk.gui.ldap_integration.ldap_connector import (
     ldap_attr_of_connection,
     ldap_attribute_plugins_elements,
     ldap_filter_of_connection,

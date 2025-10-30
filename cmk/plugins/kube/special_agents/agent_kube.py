@@ -80,7 +80,6 @@ from cmk.plugins.kube.common import (
 )
 from cmk.plugins.kube.schemata import api, section
 from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
 
 
 class Profile:
@@ -425,13 +424,6 @@ def filter_pods_by_phase(pods: Iterable[api.Pod], phase: api.Phase) -> Sequence[
     return [pod for pod in pods if pod.status.phase == phase]
 
 
-def _write_sections(sections: Mapping[str, Callable[[], section.Section | None]]) -> None:
-    for section_name, section_call in sections.items():
-        if section_output := section_call():
-            with SectionWriter(section_name) as writer:
-                writer.append(section_output.model_dump_json())
-
-
 def namespaced_name_from_metadata(metadata: api.MetaData) -> str:
     return api.namespaced_name(metadata.namespace, metadata.name)
 
@@ -444,8 +436,9 @@ def write_machine_sections(
     # make sure we only print sections for nodes currently visible via Kubernetes api:
     for api_node in composed_entities.nodes:
         if sections := machine_sections.get(str(api_node.metadata.name)):
-            with ConditionalPiggybackSection(piggyback_formatter(api_node)):
-                sys.stdout.write(sections)
+            sys.stdout.write(f"<<<<{piggyback_formatter(api_node)}>>>>\n")
+            sys.stdout.write(sections)
+            sys.stdout.write("<<<<>>>>\n")
 
 
 def _supported_cluster_collector_major_version(
@@ -755,14 +748,13 @@ def write_cluster_collector_info_section(
     cluster_collector: section.ClusterCollectorMetadata | None = None,
     node_collectors_metadata: Sequence[section.NodeMetadata] | None = None,
 ) -> None:
-    with SectionWriter("kube_collector_metadata_v1") as writer:
-        writer.append(
-            section.CollectorComponentsMetadata(
-                processing_log=processing_log,
-                cluster_collector=cluster_collector,
-                nodes=node_collectors_metadata,
-            ).model_dump_json()
-        )
+    section_content = section.CollectorComponentsMetadata(
+        processing_log=processing_log,
+        cluster_collector=cluster_collector,
+        nodes=node_collectors_metadata,
+    ).model_dump_json()
+    sys.stdout.write("<<<kube_collector_metadata_v1>>>\n")
+    sys.stdout.write(f"{section_content}\n")
 
 
 class CollectorHandlingException(Exception):
@@ -1315,13 +1307,12 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         usage_config,
     )
 
-    with SectionWriter("kube_collector_processing_logs_v1") as writer:
-        writer.append(
-            section.CollectorProcessingLogs(
-                container=collector_container_log,
-                machine=collector_machine_log,
-            ).model_dump_json()
-        )
+    section_content = section.CollectorProcessingLogs(
+        container=collector_container_log,
+        machine=collector_machine_log,
+    ).model_dump_json()
+    sys.stdout.write("<<<kube_collector_processing_logs_v1>>>\n")
+    sys.stdout.write(f"{section_content}\n")
 
 
 def _main_with_setup(

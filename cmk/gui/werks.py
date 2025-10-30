@@ -30,7 +30,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -135,28 +135,30 @@ class ChangeLogPage(Page):
             main_menu_registry["help"], _("Change log (Werks)")
         )
 
-        werk_table_options = _werk_table_options_from_request()
+        werk_table_options = _werk_table_options_from_request(ctx.request)
 
         make_header(
             html,
             _("Change log (Werks)"),
             breadcrumb,
-            self._page_menu(breadcrumb, werk_table_options),
+            self._page_menu(ctx.request, breadcrumb, werk_table_options),
         )
 
         for message in get_flashed_messages():
             html.show_message(message.msg)
 
-        handle_acknowledgement()
+        handle_acknowledgement(ctx.request)
 
         html.open_div(class_="wato")
-        render_werks_table(werk_table_options)
+        render_werks_table(ctx.request, werk_table_options)
         html.close_div()
 
         html.footer()
         return None
 
-    def _page_menu(self, breadcrumb: Breadcrumb, werk_table_options: WerkTableOptions) -> PageMenu:
+    def _page_menu(
+        self, request: Request, breadcrumb: Breadcrumb, werk_table_options: WerkTableOptions
+    ) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -165,18 +167,18 @@ class ChangeLogPage(Page):
                     topics=[
                         PageMenuTopic(
                             title=_("Incompatible werks"),
-                            entries=list(_page_menu_entries_ack_all_werks()),
+                            entries=list(_page_menu_entries_ack_all_werks(request)),
                         ),
                     ],
                 ),
             ],
             breadcrumb=breadcrumb,
         )
-        _extend_display_dropdown(menu, werk_table_options)
+        _extend_display_dropdown(request, menu, werk_table_options)
         return menu
 
 
-def handle_acknowledgement() -> None:
+def handle_acknowledgement(request: Request) -> None:
     if not transactions.check_transaction():
         return
 
@@ -189,9 +191,9 @@ def handle_acknowledgement() -> None:
             acknowledge_werk(werk)
             html.show_message(
                 _("Werk %s - %s has been acknowledged.")
-                % (render_werk_id(werk), render_werk_title(werk))
+                % (render_werk_id(werk), render_werk_title(request, werk))
             )
-            render_unacknowleged_werks()
+            render_unacknowleged_werks(request)
 
     elif request.var("_ack_all"):
         num = len(unacknowledged_incompatible_werks())
@@ -199,7 +201,7 @@ def handle_acknowledgement() -> None:
         html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
 
 
-def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
+def _page_menu_entries_ack_all_werks(request: Request) -> Iterator[PageMenuEntry]:
     if not may_acknowledge():
         return
 
@@ -219,7 +221,9 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     )
 
 
-def _extend_display_dropdown(menu: PageMenu, werk_table_options: WerkTableOptions) -> None:
+def _extend_display_dropdown(
+    request: Request, menu: PageMenu, werk_table_options: WerkTableOptions
+) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
         0,
@@ -229,7 +233,7 @@ def _extend_display_dropdown(menu: PageMenu, werk_table_options: WerkTableOption
                 PageMenuEntry(
                     title=_("Filter"),
                     icon_name="filter",
-                    item=PageMenuSidePopup(_render_werk_options_form(werk_table_options)),
+                    item=PageMenuSidePopup(_render_werk_options_form(request, werk_table_options)),
                     name="filters",
                     is_shortcut=True,
                 ),
@@ -238,12 +242,12 @@ def _extend_display_dropdown(menu: PageMenu, werk_table_options: WerkTableOption
     )
 
 
-def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
+def _render_werk_options_form(request: Request, werk_table_options: WerkTableOptions) -> HTML:
     with output_funnel.plugged():
         with html.form_context("werks"):
             html.hidden_field("wo_set", "set")
 
-            _show_werk_options_controls()
+            _show_werk_options_controls(request)
 
             html.open_div(class_="side_popup_content")
             for name, height, vs, _default_value in _werk_table_option_entries():
@@ -262,7 +266,7 @@ def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
         return HTML.without_escaping(output_funnel.drain())
 
 
-def _show_werk_options_controls() -> None:
+def _show_werk_options_controls(request: Request) -> None:
     html.open_div(class_="side_popup_controls")
 
     html.open_div(class_="update_buttons")
@@ -274,7 +278,7 @@ def _show_werk_options_controls() -> None:
 
 
 def page_werk(ctx: PageContext) -> None:
-    werk = get_werk_by_id(request.get_integer_input_mandatory("werk"))
+    werk = get_werk_by_id(ctx.request.get_integer_input_mandatory("werk"))
 
     title = ("%s %s - %s") % (
         _("Werk"),
@@ -290,7 +294,7 @@ def page_werk(ctx: PageContext) -> None:
         )
     )
     breadcrumb.append(make_current_page_breadcrumb_item(title))
-    make_header(html, title, breadcrumb, _page_menu_werk(breadcrumb, werk))
+    make_header(html, title, breadcrumb, _page_menu_werk(ctx.request, breadcrumb, werk))
 
     html.open_table(class_=["data", "headerleft", "werks"])
 
@@ -302,7 +306,7 @@ def page_werk(ctx: PageContext) -> None:
 
     translator = werks_utils.WerkTranslator()
     werk_table_row(_("ID"), render_werk_id(werk))
-    werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(werk)))
+    werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(ctx.request, werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
     werk_table_row(_("Date"), get_date_formatted(werk))
     werk_table_row(_("Checkmk Version"), werk.version)
@@ -330,7 +334,7 @@ def page_werk(ctx: PageContext) -> None:
     html.footer()
 
 
-def _page_menu_werk(breadcrumb: Breadcrumb, werk: Werk) -> PageMenu:
+def _page_menu_werk(request: Request, breadcrumb: Breadcrumb, werk: Werk) -> PageMenu:
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -339,7 +343,7 @@ def _page_menu_werk(breadcrumb: Breadcrumb, werk: Werk) -> PageMenu:
                 topics=[
                     PageMenuTopic(
                         title=_("Incompatible werk"),
-                        entries=list(_page_menu_entries_ack_werk(werk)),
+                        entries=list(_page_menu_entries_ack_werk(request, werk)),
                     ),
                 ],
             ),
@@ -348,7 +352,7 @@ def _page_menu_werk(breadcrumb: Breadcrumb, werk: Werk) -> PageMenu:
     )
 
 
-def _page_menu_entries_ack_werk(werk: Werk) -> Iterator[PageMenuEntry]:
+def _page_menu_entries_ack_werk(request: Request, werk: Werk) -> Iterator[PageMenuEntry]:
     if not may_acknowledge():
         return
 
@@ -538,7 +542,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
     ]
 
 
-def render_unacknowleged_werks() -> None:
+def render_unacknowleged_werks(request: Request) -> None:
     werks = unacknowledged_incompatible_werks()
     if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
@@ -599,7 +603,7 @@ _SORT_AND_GROUP: dict[
 # TODO: validate version field of markdown files!
 
 
-def render_werks_table(werk_table_options: WerkTableOptions) -> None:
+def render_werks_table(request: Request, werk_table_options: WerkTableOptions) -> None:
     translator = werks_utils.WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
@@ -615,7 +619,7 @@ def render_werks_table(werk_table_options: WerkTableOptions) -> None:
         ) as table:
             for werk in werks:
                 number_of_werks += 1
-                render_werks_table_row(table, translator, werk)
+                render_werks_table_row(request, table, translator, werk)
     if not number_of_werks:
         html.h3(_("No matching Werks found."))
 
@@ -632,10 +636,10 @@ def compatibility_of(compatible: Compatibility, acknowledged: bool) -> str:
 
 
 def render_werks_table_row(
-    table: Table, translator: werks_utils.WerkTranslator, werk: Werk
+    request: Request, table: Table, translator: werks_utils.WerkTranslator, werk: Werk
 ) -> None:
     table.row()
-    table.cell(_("ID"), render_werk_link(werk), css=["number narrow"])
+    table.cell(_("ID"), render_werk_link(request, werk), css=["number narrow"])
     table.cell(_("Version"), werk.version, css=["number narrow"])
     table.cell(_("Date"), get_date_formatted(werk), css=["number narrow"])
     table.cell(
@@ -654,7 +658,7 @@ def render_werks_table_row(
         css=["werkcomp werkcomp%s" % _to_ternary_compatibility(werk)],
     )
     table.cell(_("Component"), translator.component_of(werk), css=["nowrap"])
-    table.cell(_("Title"), render_werk_title(werk))
+    table.cell(_("Title"), render_werk_title(request, werk))
 
 
 def _to_ternary_compatibility(werk: Werk) -> str:
@@ -713,7 +717,7 @@ def _default_werk_table_options() -> WerkTableOptions:
     return cast(WerkTableOptions, werk_table_options)
 
 
-def _werk_table_options_from_request() -> WerkTableOptions:
+def _werk_table_options_from_request(request: Request) -> WerkTableOptions:
     if request.var("show_unack") and not request.has_var("wo_set"):
         return _default_werk_table_options()
 
@@ -739,19 +743,19 @@ def render_werk_id(werk: Werk) -> str:
     return "#%04d" % werk.id
 
 
-def render_werk_link(werk: Werk) -> HTML:
+def render_werk_link(request: Request, werk: Werk) -> HTML:
     werk_id = render_werk_id(werk)
     url = makeuri_contextless(request, [("werk", werk.id)], filename="werk.py")
     return HTMLWriter.render_a(werk_id, href=url)
 
 
-def render_werk_title(werk: Werk) -> HTML:
+def render_werk_title(request: Request, werk: Werk) -> HTML:
     title = werk.title
     # if the title begins with the name or names of check plug-ins, then
     # we link to the man pages of those checks
     if ":" in title:
         parts = title.split(":", 1)
-        return insert_manpage_links(parts[0]) + escape_to_html_permissive(":" + parts[1])
+        return insert_manpage_links(request, parts[0]) + escape_to_html_permissive(":" + parts[1])
     return escape_to_html_permissive(title)
 
 
@@ -805,7 +809,7 @@ def render_nowiki_werk_description(
         return HTML.without_escaping(output_funnel.drain())
 
 
-def insert_manpage_links(text: str) -> HTML:
+def insert_manpage_links(request: Request, text: str) -> HTML:
     parts = text.replace(",", " ").split()
     known_checks = _get_known_checks()
     new_parts: list[HTML] = []

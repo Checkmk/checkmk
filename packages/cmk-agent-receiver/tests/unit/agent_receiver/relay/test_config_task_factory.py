@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import datetime
 
 from cmk.agent_receiver.config import Config

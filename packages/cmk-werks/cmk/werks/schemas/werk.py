@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import ast
 import datetime
 import sys

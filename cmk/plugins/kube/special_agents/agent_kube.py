@@ -16,6 +16,7 @@ endpoints monitored by Checkmk must be provided.
 from __future__ import annotations
 
 import argparse
+import cProfile
 import enum
 import logging
 import sys
@@ -23,13 +24,13 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
+from pathlib import Path
 from typing import TypeVar
 
 import requests
 import urllib3
 from pydantic import TypeAdapter
 
-import cmk.ccc.profile
 import cmk.utils.password_store
 from cmk.plugins.kube import common, performance, prometheus_section, query
 from cmk.plugins.kube.agent_handlers import (
@@ -79,6 +80,91 @@ from cmk.plugins.kube.common import (
 from cmk.plugins.kube.schemata import api, section
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+
+logger = logging.getLogger("cmk.ccc.profile")
+
+
+class Profile:
+    def __init__(
+        self,
+        *,
+        enabled: bool = True,
+        profile_file: Path | str | None = None,
+        # cProfile.Profile arguments, avoids the need for Any
+        timer: Callable[[], float] | None = None,
+        timeunit: float = 0.0,
+        subcalls: bool = True,
+        builtins: bool = True,
+    ) -> None:
+        self._enabled = enabled
+        self._profile_file = (
+            profile_file
+            if profile_file is None or isinstance(profile_file, Path)
+            else Path(profile_file)
+        )
+        self._timer = timer
+        self._timeunit = timeunit
+        self._subcalls = subcalls
+        self._builtins = builtins
+        self._profile: cProfile.Profile | None = None
+
+    def __enter__(self) -> Profile:
+        if self._enabled:
+            logger.info("Recording profile")
+            # cProfile.Profile has a slightly interesting API: None is not allowed as a timer argument. o_O
+            self._profile = (
+                cProfile.Profile(
+                    timeunit=self._timeunit,
+                    subcalls=self._subcalls,
+                    builtins=self._builtins,
+                )
+                if self._timer is None
+                else cProfile.Profile(
+                    timer=self._timer,
+                    timeunit=self._timeunit,
+                    subcalls=self._subcalls,
+                    builtins=self._builtins,
+                )
+            )
+            self._profile.enable()
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        if not self._enabled:
+            return
+
+        if not self._profile:
+            return
+
+        self._profile.disable()
+
+        if not self._profile_file:
+            self._profile.print_stats()
+            return
+
+        self._write_profile()
+        self._write_dump_script()
+
+    def _write_profile(self) -> None:
+        if not self._profile:
+            return
+        self._profile.dump_stats(str(self._profile_file))
+        logger.info("Created profile file: %s", self._profile_file)
+
+    def _write_dump_script(self) -> None:
+        if not self._profile_file:
+            return
+
+        script_path = self._profile_file.with_suffix(".py")
+        with script_path.open("w", encoding="utf-8") as f:
+            f.write(
+                "#!/usr/bin/env python3\n"
+                "import pstats\n"
+                f'stats = pstats.Stats("{self._profile_file}")\n'
+                "stats.sort_stats('cumtime').print_stats()\n"
+            )
+        script_path.chmod(0o755)
+        logger.info("Created profile dump script: %s", script_path)
 
 
 class MonitoredObject(enum.Enum):
@@ -1297,7 +1383,7 @@ def _main_with_setup(
     setup_logging(arguments.verbose)
     LOGGER.debug("parsed arguments: %s\n", arguments)
 
-    with cmk.ccc.profile.Profile(enabled=bool(arguments.profile), profile_file=arguments.profile):
+    with Profile(enabled=bool(arguments.profile), profile_file=arguments.profile):
         _main(arguments, checkmk_host_settings)
 
 

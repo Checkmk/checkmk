@@ -766,7 +766,7 @@ export function content_scrollbar(scrollable_id: string) {
 
 export function setButtonLoadingState(event: Event) {
   const target = event.target as HTMLInputElement
-  target.setAttribute('data-loading', 'true')
+  target.classList.add('shimmer-input-button')
 }
 
 export async function fix_simplebar_scroll_to_id_in_chrome(

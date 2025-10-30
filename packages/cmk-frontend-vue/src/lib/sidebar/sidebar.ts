@@ -8,11 +8,12 @@ import { type Ref, ref } from 'vue'
 
 import type { KeyShortcutService } from '../keyShortcuts'
 import { ServiceBase } from '../service/base'
-import { SidebarApiClient } from './sidebar-api-cleint'
+import { SidebarApiClient } from './sidebar-api-client'
 import type { OnUpdateSnapinContent, SidebarSnapinContents } from './type-defs'
 
 const active = ref<boolean>(true)
 export class SidebarService extends ServiceBase {
+  public snapinsRef = ref<SidebarSnapin[]>([])
   protected snapinContents: SidebarSnapinContents = {}
   protected showMoreActive: { [key: string]: Ref<boolean> } = {}
   protected api = new SidebarApiClient()
@@ -20,6 +21,7 @@ export class SidebarService extends ServiceBase {
 
   public constructor(
     protected snapins: SidebarSnapin[],
+    protected updateInterval: number,
     shortCutService: KeyShortcutService
   ) {
     super('sidebar-service', shortCutService)
@@ -55,6 +57,78 @@ export class SidebarService extends ServiceBase {
       }
     }
     return null
+  }
+
+  public async getAvailableSnapins(): Promise<SidebarSnapin[]> {
+    const snapins = await this.api.getAvailableSidebarSnapins()
+
+    const contents: SidebarSnapinContents = {}
+
+    for (const s of snapins) {
+      if (s.content) {
+        this.snapinContents[s.name] = contents[s.name] = s.content
+      }
+    }
+
+    setTimeout(() => {
+      this.dispatchCallback('update-snapin-content', contents)
+    })
+
+    return snapins
+  }
+
+  public async persistSnapinToggleState(name: string, state: 'open' | 'closed') {
+    return this.api.setSidebarSnapinState(name, state)
+  }
+
+  public async addSnapin(snapin: SidebarSnapin): Promise<void> {
+    const res = await this.api.addSidebarSnapin(snapin)
+
+    this.snapins.push(snapin)
+    this.setSnapinsRef()
+
+    const contents: SidebarSnapinContents = {}
+    this.snapinContents[snapin.name] = contents[snapin.name] = res.content
+
+    setTimeout(() => {
+      this.dispatchCallback('update-snapin-content', contents)
+    })
+  }
+
+  public async removeSnapin(name: string): Promise<void> {
+    await this.api.setSidebarSnapinState(name, 'off')
+    this.snapins = this.snapins.filter((s) => s.name !== name)
+    this.setSnapinsRef()
+  }
+
+  public async moveSnapin(initIndex: number, endIndex: number): Promise<void> {
+    if (initIndex + 1 === endIndex) {
+      return
+    }
+
+    const movedSnapin = this.snapins[initIndex]
+    let beforeSnapin = this.snapins[endIndex]
+    let beforeIndex = endIndex
+
+    if (initIndex < endIndex) {
+      beforeSnapin = this.snapins[endIndex - 1]
+      beforeIndex = endIndex - 1
+    }
+
+    if (movedSnapin) {
+      const snapins = this.snapins.filter((s) => s.name !== movedSnapin.name)
+
+      if (beforeSnapin) {
+        snapins.splice(beforeIndex, 0, movedSnapin)
+      } else {
+        snapins.push(movedSnapin)
+      }
+
+      this.snapins = snapins
+      this.setSnapinsRef()
+
+      await this.api.moveSnapin(movedSnapin.name, beforeSnapin?.name)
+    }
   }
 
   public refreshesOnRestart(name: string): boolean {
@@ -94,7 +168,7 @@ export class SidebarService extends ServiceBase {
     }
   }
 
-  protected async updateSnapinContent(names: string[]) {
+  public async updateSnapinContent(names: string[]) {
     const contents = await this.api.getSidebarSnapinContents(names, this.restart_since)
     this.restart_since = Math.floor(new Date().getTime() / 1000)
 
@@ -112,7 +186,12 @@ export class SidebarService extends ServiceBase {
     this.dispatchCallback('update-snapin-content', contents)
   }
 
+  private setSnapinsRef() {
+    this.snapinsRef.value = this.snapins.slice()
+  }
+
   private init() {
+    this.setSnapinsRef()
     for (const s of this.snapins) {
       this.snapinContents[s.name] = null
 
@@ -148,6 +227,6 @@ export class SidebarService extends ServiceBase {
       void this.updateSnapinContent(
         this.snapins.filter((s) => s.refresh_on_restart || s.refresh_on_restart).map((s) => s.name)
       )
-    }, 30000)
+    }, this.updateInterval * 1000)
   }
 }

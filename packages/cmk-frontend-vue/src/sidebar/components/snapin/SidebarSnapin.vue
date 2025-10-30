@@ -5,10 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { type SidebarSnapin } from 'cmk-shared-typing/typescript/sidebar'
 import { computed, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
+import type { TSidebarSnapin } from '@/lib/sidebar/type-defs'
 
 import CmkCollapsible from '@/components/CmkCollapsible/CmkCollapsible.vue'
 import CmkCollapsibleTitle from '@/components/CmkCollapsible/CmkCollapsibleTitle.vue'
@@ -19,7 +19,11 @@ import CmkSkeleton from '@/components/CmkSkeleton.vue'
 
 import { getInjectedSidebar } from '@/sidebar/provider/sidebar'
 
-const props = defineProps<SidebarSnapin>()
+interface SidebarSnapinProps extends TSidebarSnapin {
+  isDragged?: boolean | undefined
+}
+
+const props = defineProps<SidebarSnapinProps>()
 const sidebar = getInjectedSidebar()
 const snapinOpen = ref(props.open || false)
 const snapinContent = ref<string | null>(null)
@@ -38,17 +42,25 @@ const showMoreColor = computed(() => {
 const showMoreIcon = computed(() => {
   return (sidebar.showMoreIsActive(props.name) ? 'show-less' : 'show-more') as OneColorIcons
 })
+
+async function onToggle() {
+  snapinOpen.value = !snapinOpen.value
+  await sidebar.persistSnapinToggleState(props.name, snapinOpen.value ? 'open' : 'closed')
+}
 </script>
 
 <template>
-  <div class="sidebar-snapin__container">
+  <div
+    class="sidebar-snapin__container"
+    :class="{ 'sidebar-snapin--drag-active': props.isDragged ?? false }"
+  >
     <CmkCollapsibleTitle
       :open="snapinOpen"
       :title="props.title as TranslatedString"
-      @toggle-open="snapinOpen = !snapinOpen"
+      @toggle-open="onToggle"
     />
     <button
-      v-if="props.has_show_more_items"
+      v-if="props.has_show_more_items && snapinOpen"
       class="sidebar-snapin__show-more"
       @click="sidebar.toggleShowMoreLess(props.name)"
       @mouseenter="showMoreHover = true"
@@ -59,12 +71,17 @@ const showMoreIcon = computed(() => {
     <CmkCollapsible :open="snapinOpen">
       <div class="sidebar-snapin__content-wrapper">
         <CmkSkeleton v-if="!snapinContent" class="sidebar-snapin__skel" />
-        <template v-else>
-          <!-- eslint-disable-next-line vue/no-v-html-->
-          <div :class="{ more: sidebar.showMoreIsActive(props.name) }" v-html="snapinContent"></div>
-          <!-- TODO: BKP replace click handler with snapin delete call: https://jira.lan.tribe29.com/browse/CMK-26152  -->
-          <CmkIconButton class="sidebar-snapin__delete" name="delete" @click="() => {}" />
-        </template>
+        <!-- eslint-disable vue/no-v-html-->
+        <div
+          v-else
+          :class="{ more: sidebar.showMoreIsActive(props.name) }"
+          v-html="snapinContent"
+        ></div>
+        <CmkIconButton
+          class="sidebar-snapin__delete"
+          name="delete"
+          @click="sidebar.removeSnapin(props.name)"
+        />
       </div>
     </CmkCollapsible>
   </div>
@@ -76,6 +93,10 @@ const showMoreIcon = computed(() => {
   box-sizing: border-box;
   padding: var(--dimension-4) var(--dimension-7) 0 var(--dimension-7);
   position: relative;
+
+  &.sidebar-snapin--drag-active {
+    opacity: 0.2;
+  }
 
   .sidebar-snapin__show-more {
     border: 0;

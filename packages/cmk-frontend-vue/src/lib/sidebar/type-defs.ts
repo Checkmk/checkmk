@@ -9,3 +9,21 @@ export interface SidebarSnapinContents {
 }
 
 export type OnUpdateSnapinContent = (contents: SidebarSnapinContents) => void
+
+export interface AddSnapinResponse {
+  name: string
+  url: string
+  content: string
+}
+
+export interface TSidebarSnapin {
+  name: string
+  title: string
+  refresh_regularly?: boolean | undefined
+  refresh_on_restart?: boolean | undefined
+  has_show_more_items?: boolean | undefined
+  open?: boolean | undefined
+  show_more_active?: boolean | undefined
+  content?: string | undefined
+  description?: string | undefined
+}

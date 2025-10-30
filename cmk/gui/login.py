@@ -28,7 +28,7 @@ from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, M
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, response
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import (
     LoggedInNobody,
@@ -105,7 +105,7 @@ def TransactionIdContext(user_id: UserId, user_permissions: UserPermissions) -> 
             transactions.store_new()
 
 
-def del_auth_cookie() -> None:
+def del_auth_cookie(request: Request) -> None:
     cookie_name = auth_cookie_name()
     if not request.has_cookie(cookie_name):
         return
@@ -149,20 +149,20 @@ class LoginPage(Page):
     def page(self, ctx: PageContext) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        cmk.gui.i18n.localize(request.var("lang", ctx.config.default_language))
+        cmk.gui.i18n.localize(ctx.request.var("lang", ctx.config.default_language))
 
-        self._do_login(ctx.config)
+        self._do_login(ctx.request, ctx.config)
 
         if self._no_html_output:
             raise MKAuthException(_("Invalid login credentials."))
 
-        if is_mobile(request, response):
+        if is_mobile(ctx.request, response):
             cmk.gui.mobile.page_login(ctx.config)
             return
 
-        self._show_login_page(ctx.config)
+        self._show_login_page(ctx.request, ctx.config)
 
-    def _do_login(self, config: Config) -> None:
+    def _do_login(self, request: Request, config: Config) -> None:
         """handle the login form"""
         if not request.var("_login"):
             return
@@ -297,7 +297,7 @@ class LoginPage(Page):
             )
             user_errors.add(e)
 
-    def _show_login_page(self, config: Config) -> None:
+    def _show_login_page(self, request: Request, config: Config) -> None:
         html.render_headfoot = False
         html.add_body_css_class("login")
         make_header(html, get_page_heading(config), Breadcrumb())
@@ -476,11 +476,11 @@ class LogoutPage(Page):
             raise HTTPRedirect(url_prefix() + "check_mk/login.py")
 
         # Implement HTTP logout with cookie hack
-        if not request.has_cookie("logout"):
+        if not ctx.request.has_cookie("logout"):
             response.headers["WWW-Authenticate"] = (
                 'Basic realm="OMD Monitoring Site %s"' % omd_site()
             )
-            response.set_http_cookie("logout", "1", secure=request.is_secure)
+            response.set_http_cookie("logout", "1", secure=ctx.request.is_secure)
             raise FinalizeRequest(http.client.UNAUTHORIZED)
 
         response.delete_cookie("logout")

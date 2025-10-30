@@ -22,7 +22,7 @@ from cmk.gui import login, pages, userdb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
-from cmk.gui.http import request, Response, response
+from cmk.gui.http import Request, request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.pages import PageContext
@@ -119,7 +119,7 @@ def ensure_authentication(handler: pages.PageHandler) -> Callable[[PageContext],
 
             # This may raise an exception with error messages, which will then be displayed to
             # the user.
-            _ensure_general_access()
+            _ensure_general_access(ctx.request)
 
             # Initialize the multisite cmk.gui.i18n. This will be replaced by
             # language settings stored in the user profile after the user
@@ -154,7 +154,7 @@ def fail_silently() -> bool:
     return request.has_var("_ajaxid")
 
 
-def _ensure_general_access() -> None:
+def _ensure_general_access(request: Request) -> None:
     if user.may("general.use"):
         return
 
@@ -179,7 +179,7 @@ def _ensure_general_access() -> None:
         reason.append(
             _("<p>You have been logged out. Please reload the page to re-authenticate.</p>")
         )
-        login.del_auth_cookie()
+        login.del_auth_cookie(request)
 
     raise MKAuthException(" ".join(reason))
 

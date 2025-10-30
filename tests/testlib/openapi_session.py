@@ -134,6 +134,7 @@ class CMKOpenApiSession(requests.Session):
         self.rules = RulesAPI(self)
         self.rulesets = RulesetsAPI(self)
         self.broker_connections = BrokerConnectionsAPI(self)
+        self.bi_aggregation = BIAggregationAPI(self)
         self.sites = SitesAPI(self)
         self.background_jobs = BackgroundJobsAPI(self)
         self.dcd = DcdAPI(self)
@@ -1179,6 +1180,57 @@ class BackgroundJobsAPI(BaseAPI):
 
         value: dict[str, Any] = response.json()
         return value
+
+
+class BIAggregationAPI(BaseAPI):
+    def get(self, aggregation_id: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value
+
+    def update(self, aggregation_id: str, body: dict[str, Any]) -> None:
+        response = self.session.put(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json=body,
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, aggregation_id: str) -> None:
+        response = self.session.delete(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def create(self, aggregation_id: str, body: dict[str, Any]) -> None:
+        response = self.session.post(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json=body,
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
 
 
 class DcdAPI(BaseAPI):

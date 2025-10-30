@@ -66,6 +66,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.view_utils import (
     CellSpec,
     CSSClass,
+    determine_must_escape,
     format_plugin_output,
     get_labels,
     render_labels,
@@ -600,7 +601,7 @@ class PainterSvcPluginOutput(Painter):
             row,
             format_plugin_output(
                 row["service_plugin_output"],
-                must_escape=not get_site_config(row["site"]).get("is_trusted", False),
+                must_escape=determine_must_escape(active_config, row),
                 row=row,
             ),
         )
@@ -653,7 +654,7 @@ class PainterSvcLongPluginOutput(Painter):
 
         content = format_plugin_output(
             long_output,
-            must_escape=not get_site_config(row["site"]).get("is_trusted", False),
+            must_escape=determine_must_escape(active_config, row),
             row=row,
         )
 
@@ -2021,7 +2022,7 @@ class PainterHostPluginOutput(Painter):
             None,
             format_plugin_output(
                 row["host_plugin_output"],
-                must_escape=not get_site_config(row["site"]).get("is_trusted", False),
+                must_escape=determine_must_escape(active_config, row),
                 row=row,
             ),
         )
@@ -3999,7 +4000,7 @@ class PainterCommentComment(Painter):
             None,
             format_plugin_output(
                 row["comment_comment"],
-                must_escape=not get_site_config(row["site"]).get("is_trusted", False),
+                must_escape=determine_must_escape(active_config, row),
                 row=row,
             ),
         )
@@ -4184,7 +4185,7 @@ class PainterDowntimeComment(Painter):
             None,
             format_plugin_output(
                 row["downtime_comment"],
-                must_escape=not get_site_config(row["site"]).get("is_trusted", False),
+                must_escape=determine_must_escape(active_config, row),
                 row=row,
             ),
         )
@@ -4450,7 +4451,7 @@ class PainterLogDetailsHistory(Painter):
         )
         content = format_plugin_output(
             output=long_output,
-            must_escape=not get_site_config(row["site"]).get("is_trusted", False),
+            must_escape=determine_must_escape(active_config, row),
             row=row_to_format,
         )
 
@@ -4521,7 +4522,7 @@ class PainterLogPluginOutput(Painter):
         if output := self._decode_item(row, column="log_plugin_output"):
             return "", format_plugin_output(
                 output,
-                must_escape=not get_site_config(row["site"]).get("is_trusted", False),
+                must_escape=determine_must_escape(active_config, row),
                 row=row,
             )
 

@@ -6,14 +6,19 @@
 
 import pathlib
 
+import pytest
+
 from cmk.plugins.kube import performance
+from cmk.server_side_programs.v1_unstable import Storage
 from tests.unit.cmk.plugins.kube.agent_kube import factory
 
 
-def test__create_cpu_rate_metrics(tmp_path: pathlib.Path) -> None:
-    container_store_file = tmp_path.joinpath("store.json")
+def test__create_cpu_rate_metrics(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+    container_store_key = "store"
     first_cpu_sample = factory.CPUSampleFactory.build(timestamp=1.0, container_name="bernd")
     second_cpu_sample = factory.CPUSampleFactory.build(timestamp=2.0, container_name="bernd")
-    performance._create_cpu_rate_metrics(container_store_file, [first_cpu_sample])
-    samples = performance._create_cpu_rate_metrics(container_store_file, [second_cpu_sample])
+    storage = Storage("agent_kube", "server_name")
+    performance.create_cpu_rate_metrics(storage, container_store_key, [first_cpu_sample])
+    samples = performance.create_cpu_rate_metrics(storage, container_store_key, [second_cpu_sample])
     assert len(samples) == 1

@@ -13,22 +13,17 @@ from __future__ import annotations
 
 import enum
 import json
-import os
-import tempfile
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Literal, NewType, TypeVar
+from typing import Final, Literal, NewType, TypeVar
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from cmk.plugins.kube import common
 from cmk.plugins.kube.schemata import section
-from cmk.utils.paths import tmp_dir
+from cmk.server_side_programs.v1_unstable import Storage
 
-AGENT_TMP_PATH = (
-    tmp_dir if os.environ.get("OMD_SITE") else Path(tempfile.gettempdir())
-) / "agent_kube"
+AGENT_NAME: Final = "agent_kube"
 
 ContainerName = NewType("ContainerName", str)
 
@@ -111,8 +106,10 @@ def create_selectors(
     """Converts parsed metrics into Selectors."""
 
     metrics = _group_metric_types(container_metrics)
-    container_store_path = AGENT_TMP_PATH.joinpath(f"{cluster_name}_containers_counters.json")
-    cpu_rate_metrics = _create_cpu_rate_metrics(container_store_path, metrics.cpu)
+    container_store_key = "containers_counters.json"
+    cpu_rate_metrics = create_cpu_rate_metrics(
+        Storage(AGENT_NAME, cluster_name), container_store_key, metrics.cpu
+    )
     return (
         common.Selector(cpu_rate_metrics, aggregator=_aggregate_cpu_metrics),
         common.Selector(metrics.memory, aggregator=_aggregate_memory_metrics),
@@ -149,12 +146,12 @@ def _group_metric_types(metrics: Sequence[_AllSamples]) -> Samples:
     return Samples(memory=memory_metrics, cpu=cpu_metrics)
 
 
-def _create_cpu_rate_metrics(
-    container_store_path: Path, cpu_metrics: Sequence[CPUSample]
+def create_cpu_rate_metrics(
+    storage: Storage, container_store_key: str, cpu_metrics: Sequence[CPUSample]
 ) -> Sequence[CPURateSample]:
     # We only persist the relevant counter metrics (not all metrics)
     current_cycle_store = ContainersStore(cpu=cpu_metrics)
-    previous_cycle_store = _load_containers_store(container_store_path)
+    previous_cycle_store = _load_containers_store(storage, container_store_key)
 
     # The agent will store the latest counter values returned by the collector overwriting the
     # previous ones. The collector will return the same metric values for a certain time interval
@@ -162,31 +159,31 @@ def _create_cpu_rate_metrics(
     # is polled too frequently (no performance section for the checks). All cases where no
     # performance section can be generated should be handled on the check side (reusing the same
     # value, etc.)
-    _persist_containers_store(container_store_path, current_cycle_store)
+    _persist_containers_store(storage, container_store_key, current_cycle_store)
     return _determine_cpu_rate_metrics(current_cycle_store.cpu, previous_cycle_store.cpu)
 
 
-def _load_containers_store(container_store_path: Path) -> ContainersStore:
-    common.LOGGER.debug("Load previous cycle containers store from %s", container_store_path)
+def _load_containers_store(storage: Storage, container_store_key: str) -> ContainersStore:
+    common.LOGGER.debug("Load previous cycle containers store from %s", container_store_key)
+    if (content := storage.read(container_store_key, None)) is None:
+        common.LOGGER.info("Could not find stored metrics. This is expected if the first run.")
+        return ContainersStore(cpu=[])
+
     try:
-        with open(container_store_path, encoding="utf-8") as file:
-            return ContainersStore.model_validate_json(file.read())
-    except FileNotFoundError as e:
-        common.LOGGER.info("Could not find metrics file. This is expected if the first run.")
-        common.LOGGER.debug("Exception: %s", e)
+        return ContainersStore.model_validate_json(content)
     except (ValidationError, json.decoder.JSONDecodeError):
         common.LOGGER.exception("Found metrics file, but could not parse it.")
-
-    return ContainersStore(cpu=[])
+        return ContainersStore(cpu=[])
 
 
 def _persist_containers_store(
-    container_store_path: Path, containers_store: ContainersStore
+    storage: Storage, container_store_key: str, containers_store: ContainersStore
 ) -> None:
-    common.LOGGER.debug("Persisting current containers store under %s", container_store_path)
-    container_store_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(container_store_path, "w", encoding="utf-8") as f:
-        f.write(containers_store.model_dump_json(by_alias=True))
+    common.LOGGER.debug("Persisting current containers store under %s", container_store_key)
+    storage.write(
+        container_store_key,
+        containers_store.model_dump_json(by_alias=True),
+    )
 
 
 def _determine_cpu_rate_metrics(

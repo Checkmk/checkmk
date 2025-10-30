@@ -10,7 +10,7 @@ rules:
     pattern-either:
       - patterns:
           - pattern-inside: |
-              from cmk.gui.cee.saml2._config import
+              from cmk.gui.cee.saml2_auth._config import
               replace_builtin_signature_cert
               ...
           - patterns:

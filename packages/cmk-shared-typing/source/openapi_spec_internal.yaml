@@ -26991,7 +26991,7 @@ paths:
       description: "\n\nThis endpoint requires the following permissions: \n * Global\
         \ settings (`wato.global`): Access to the module <i>Global settings</i>\n"
       summary: Show all SAML connections
-      operationId: cmk.gui.cee.saml2._openapi.show_saml_connections
+      operationId: cmk.gui.cee.saml2_auth._openapi.show_saml_connections
       responses:
         '406':
           description: 'Not Acceptable: The requests accept headers can not be satisfied.'
@@ -27082,7 +27082,7 @@ paths:
         \ he has explicit permissions for.\n   * Global settings (`wato.global`):\
         \ Access to the module <i>Global settings</i>\n"
       summary: Create a SAML connection
-      operationId: cmk.gui.cee.saml2._openapi.create_saml_connection
+      operationId: cmk.gui.cee.saml2_auth._openapi.create_saml_connection
       parameters:
       - name: Content-Type
         description: A header specifying which type of content is in the request/response
@@ -27294,7 +27294,7 @@ paths:
       description: "\n\nThis endpoint requires the following permissions: \n * Global\
         \ settings (`wato.global`): Access to the module <i>Global settings</i>\n"
       summary: Show a SAML connection
-      operationId: cmk.gui.cee.saml2._openapi.show_saml_connection
+      operationId: cmk.gui.cee.saml2_auth._openapi.show_saml_connection
       parameters:
       - in: path
         name: saml_connection_id
@@ -27408,7 +27408,7 @@ paths:
         \ he has explicit permissions for.\n   * Global settings (`wato.global`):\
         \ Access to the module <i>Global settings</i>\n"
       summary: Delete a SAML connection
-      operationId: cmk.gui.cee.saml2._openapi.delete_saml_connection
+      operationId: cmk.gui.cee.saml2_auth._openapi.delete_saml_connection
       parameters:
       - name: If-Match
         description: The value of the, to be modified, object's ETag header. You can

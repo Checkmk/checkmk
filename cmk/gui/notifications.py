@@ -18,7 +18,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -198,8 +198,8 @@ class ClearFailedNotificationPage(Page):
         if not _may_see_failed_notifications():
             raise MKAuthException(_("You are not allowed to view the failed notifications."))
 
-        acktime = request.get_float_input_mandatory("acktime", time.time())
-        if request.var("_confirm"):
+        acktime = ctx.request.get_float_input_mandatory("acktime", time.time())
+        if ctx.request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())
 
             if get_enabled_remote_sites_for_logged_in_user(user, ctx.config.sites):
@@ -215,16 +215,18 @@ class ClearFailedNotificationPage(Page):
                 return
 
         failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
-        self._show_page(acktime, failed_notifications)
-        if request.var("_confirm"):
+        self._show_page(ctx.request, acktime, failed_notifications)
+        if ctx.request.var("_confirm"):
             html.reload_whole_page()
 
     # TODO: We should really recode this to use the view and a normal view command / action
-    def _show_page(self, acktime: float, failed_notifications: LivestatusResponse) -> None:
+    def _show_page(
+        self, request: Request, acktime: float, failed_notifications: LivestatusResponse
+    ) -> None:
         title = _("Confirm failed notifications")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
 
-        page_menu = self._page_menu(acktime, failed_notifications, breadcrumb)
+        page_menu = self._page_menu(request, acktime, failed_notifications, breadcrumb)
 
         make_header(html, title, breadcrumb, page_menu)
 
@@ -249,6 +251,7 @@ class ClearFailedNotificationPage(Page):
 
     def _page_menu(
         self,
+        request: Request,
         acktime: float,
         failed_notifications: LivestatusResponse,
         breadcrumb: Breadcrumb,

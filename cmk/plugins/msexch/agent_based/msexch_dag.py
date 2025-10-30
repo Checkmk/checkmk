@@ -115,6 +115,8 @@ from cmk.agent_based.v2 import (
 
 Section = Mapping[str, Mapping[str, str]]
 
+DEPRECATED_CONTENTINDEX_MESSAGE = "ContentIndex no longer available in recent Exchange versions. You can safely delete this Service."
+
 
 def parse_msexch_dag(string_table: StringTable) -> Section:
     collected_databases: dict[str, dict[str, str]] = {}
@@ -197,7 +199,7 @@ def check_msexch_dag_contentindex(
     if val == "NotApplicable":
         yield Result(
             state=State.OK,
-            summary="ContentIndex no longer available in recent Exchange versions. You can safely delete this Service.",
+            summary=DEPRECATED_CONTENTINDEX_MESSAGE,
         )
         return
 

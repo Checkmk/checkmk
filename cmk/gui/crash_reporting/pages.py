@@ -39,7 +39,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
-from cmk.gui.http import ContentDispositionType, request, response
+from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -82,7 +82,7 @@ class ReportSubmitDetails(TypedDict):
 
 
 class ABCCrashReportPage(Page, abc.ABC):
-    def _handle_http_request(self) -> None:
+    def _handle_http_request(self, request: Request) -> None:
         self._crash_id = request.get_str_input_mandatory("crash_id")
         self._site_id = request.get_str_input_mandatory("site")
 
@@ -123,15 +123,15 @@ class ABCCrashReportPage(Page, abc.ABC):
 class PageCrash(ABCCrashReportPage):
     @override
     def page(self, ctx: PageContext) -> None:
-        self._handle_http_request()
+        self._handle_http_request(ctx.request)
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 
         title = _("Crash report: %s") % self._crash_id
         breadcrumb = self._breadcrumb(
-            title, UserPermissions.from_config(ctx.config, permission_registry)
+            ctx.request, title, UserPermissions.from_config(ctx.config, permission_registry)
         )
-        make_header(html, title, breadcrumb, self._page_menu(breadcrumb, crash_info))
+        make_header(html, title, breadcrumb, self._page_menu(ctx.request, breadcrumb, crash_info))
 
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
@@ -148,9 +148,9 @@ class PageCrash(ABCCrashReportPage):
             html.footer()
             return
 
-        if request.has_var("_report") and transactions.check_transaction():
+        if ctx.request.has_var("_report") and transactions.check_transaction():
             details = self._handle_report_form(
-                ctx.config.crash_report_target, ctx.config.crash_report_url
+                ctx.request, ctx.config.crash_report_target, ctx.config.crash_report_url
             )
         else:
             details = ReportSubmitDetails(name="", mail="")
@@ -173,7 +173,9 @@ class PageCrash(ABCCrashReportPage):
 
         html.footer()
 
-    def _breadcrumb(self, title: str, user_permissions: UserPermissions) -> Breadcrumb:
+    def _breadcrumb(
+        self, request: Request, title: str, user_permissions: UserPermissions
+    ) -> Breadcrumb:
         breadcrumb = make_topic_breadcrumb(
             main_menu_registry.menu_monitoring(),
             PagetypeTopics.get_topic("analyze", user_permissions).title(),
@@ -195,7 +197,9 @@ class PageCrash(ABCCrashReportPage):
 
         return breadcrumb
 
-    def _page_menu(self, breadcrumb: Breadcrumb, crash_info: CrashInfo) -> PageMenu:
+    def _page_menu(
+        self, request: Request, breadcrumb: Breadcrumb, crash_info: CrashInfo
+    ) -> PageMenu:
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -243,7 +247,7 @@ class PageCrash(ABCCrashReportPage):
         yield from renderer.page_menu_entries_related_monitoring(crash_info, self._site_id)
 
     def _handle_report_form(
-        self, crash_report_target: str, crash_report_url: str
+        self, request: Request, crash_report_target: str, crash_report_url: str
     ) -> ReportSubmitDetails:
         details = ReportSubmitDetails(name="", mail="")
         try:
@@ -722,7 +726,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
     @override
     def page(self, ctx: PageContext) -> None:
         user.need_permission("general.see_crash_reports")
-        self._handle_http_request()
+        self._handle_http_request(ctx.request)
 
         filename = "Checkmk_Crash_{}_{}_{}.tar.gz".format(
             urlencode(self._site_id),

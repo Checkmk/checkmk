@@ -78,6 +78,7 @@ def main() {
         |FAKE_WINDOWS_ARTIFACTS:............ │${params.FAKE_WINDOWS_ARTIFACTS}│
         |cmk_version:....................... │${cmk_version}│
         |cmk_version_rc_aware:.............. │${cmk_version_rc_aware}│
+        |deliverables_dir:.................. │${deliverables_dir}│
         |relative_deliverables_dir:......... │${relative_deliverables_dir}│
         |upload_to_testbuilds:.............. │${upload_to_testbuilds}│
         |deploy_to_website:................. │${deploy_to_website}│
@@ -85,6 +86,12 @@ def main() {
         |safe_branch_name:.................. │${safe_branch_name}│
         |===================================================
         """.stripMargin());
+
+    stage(name: "Cleanup leftovers in deliverables_dir") {
+        dir("${deliverables_dir}") {
+            cleanup_directory("${deliverables_dir}");
+        }
+    }
 
     // All following jobs (source package and distro specific packages)
     // require a BOM file. We create this first to ensure that it is

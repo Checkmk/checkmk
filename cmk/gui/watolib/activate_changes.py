@@ -142,6 +142,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_preserving_link,
     folder_tree,
+    FolderTree,
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
@@ -1643,7 +1644,7 @@ class ActivateChangesManager:
         self._set_persisted_changes()
 
         with _debug_log_message("Verifying host config"):
-            self._verify_valid_host_config()
+            self._verify_valid_host_config(tree := folder_tree())
         self._save_activation()
 
         with _debug_log_message("Calling pre-activate changes"):
@@ -1687,17 +1688,14 @@ class ActivateChangesManager:
                     },
                     {
                         host_name: host.site_id()
-                        for host_name, host in folder_tree()
-                        .root_folder()
-                        .all_hosts_recursively()
-                        .items()
+                        for host_name, host in tree.root_folder().all_hosts_recursively().items()
                     },
                 )
 
         return self._activation_id
 
-    def _verify_valid_host_config(self):
-        defective_hosts = validate_all_hosts(folder_tree(), [], force_all=True)
+    def _verify_valid_host_config(self, tree: FolderTree) -> None:
+        defective_hosts = validate_all_hosts(tree, [], force_all=True)
         if defective_hosts:
             raise MKUserError(
                 None,

@@ -90,29 +90,25 @@ public:
         .max_line_length = -1,
         .max_entries = -1,
         .timeout = -1,
-        .skip = SkipDuplicatedRecords::yes,
-        .allowed_ids = LogWatchIntervals()};
+        .skip = SkipDuplicatedRecords::yes};
     static inline const LogWatchLimits lwl_all_without_skip{
         .max_size = 10'000,
         .max_line_length = -1,
         .max_entries = -1,
         .timeout = -1,
-        .skip = SkipDuplicatedRecords::no,
-        .allowed_ids = LogWatchIntervals()};
+        .skip = SkipDuplicatedRecords::no};
     static inline const LogWatchLimits lwl_all_with_skip_and_cut_same{
         .max_size = 10'000,
         .max_line_length = -1,
         .max_entries = 2,
         .timeout = -1,
-        .skip = SkipDuplicatedRecords::yes,
-        .allowed_ids = LogWatchIntervals()};
+        .skip = SkipDuplicatedRecords::yes};
     static inline const LogWatchLimits lwl_all_with_skip_and_cut_diff{
         .max_size = 10'000,
         .max_line_length = -1,
         .max_entries = 4,
         .timeout = -1,
-        .skip = SkipDuplicatedRecords::yes,
-        .allowed_ids = LogWatchIntervals()};
+        .skip = SkipDuplicatedRecords::yes};
 };
 
 TEST_F(LogWatchEventFixture, DumpEventLogWithSkip) {
@@ -169,8 +165,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .max_line_length = -1,
                            .max_entries = -1,
                            .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no,
-                           .allowed_ids = LogWatchIntervals()};
+                           .skip = SkipDuplicatedRecords::no};
         auto [pos, out] = DumpEventLog(*ptr, state, lwl);
         EXPECT_TRUE(pos > 0);
         EXPECT_TRUE(out.length() < 12'000);
@@ -181,8 +176,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .max_line_length = 10,
                            .max_entries = 19,
                            .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no,
-                           .allowed_ids = LogWatchIntervals()};
+                           .skip = SkipDuplicatedRecords::no};
         auto [pos, out] = DumpEventLog(*ptr, state, lwl);
         EXPECT_TRUE(pos > 0);
         EXPECT_TRUE(out.length() < 20000);
@@ -196,8 +190,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .max_line_length = 10,
                            .max_entries = -1,
                            .timeout = -1,
-                           .skip = SkipDuplicatedRecords::no,
-                           .allowed_ids = LogWatchIntervals()};
+                           .skip = SkipDuplicatedRecords::no};
         auto start = steady_clock::now();
         auto [_, out] = DumpEventLog(*ptr, state, lwl);
         auto end = steady_clock::now();
@@ -211,7 +204,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
 TEST(LogWatchEventTest, UpdateState) {
     State state("xx", 1, true);
 
-    LogWatchEntryVector entries;
+    LogWatchEntries entries;
     EXPECT_FALSE(UpdateState(state, entries));
 
     const auto lwe = *LoadFromString("XX: warn context");
@@ -343,7 +336,7 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
         emit << line;
         auto l = std::string(emit.c_str());
         EXPECT_EQ(l, "\"*\": ;;");
-        const auto ids = LogWatchEventIds(l);
+        const auto ids = EventFilter(l);
         EXPECT_EQ(ids.name(), "*");
         EXPECT_TRUE(ids.intervals().check(0));
         pos++;
@@ -1014,14 +1007,14 @@ TEST(LogWatchEventTest, TestIntervals) {
 
 TEST(LogWatchEventTest, TestIntervalsApi) {
     {
-        const auto r = LogWatchIntervals();
+        const auto r = EventIdIntervals();
         EXPECT_TRUE(r.check(2123312));
     }
 
     {
         IntervalSetBuilder<uint64_t> includes;
         IntervalSetBuilder<uint64_t> excludes;
-        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        const auto r = EventIdIntervals(includes.build(), excludes.build());
         EXPECT_TRUE(r.check(2));
     }
 
@@ -1029,7 +1022,7 @@ TEST(LogWatchEventTest, TestIntervalsApi) {
         IntervalSetBuilder<uint64_t> includes;
         IntervalSetBuilder<uint64_t> excludes;
         excludes.add(3, 4);
-        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        const auto r = EventIdIntervals(includes.build(), excludes.build());
         EXPECT_TRUE(r.check(1));
         EXPECT_TRUE(r.check(2));
         EXPECT_FALSE(r.check(3));
@@ -1042,7 +1035,7 @@ TEST(LogWatchEventTest, TestIntervalsApi) {
         IntervalSetBuilder<uint64_t> excludes;
         includes.add(2, 5);
         excludes.add(3, 4);
-        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        const auto r = EventIdIntervals(includes.build(), excludes.build());
         EXPECT_FALSE(r.check(1));
         EXPECT_TRUE(r.check(2));
         EXPECT_FALSE(r.check(3));
@@ -1053,14 +1046,14 @@ TEST(LogWatchEventTest, TestIntervalsApi) {
 
 TEST(LogWatchEventTest, TestIds) {
     {
-        const auto r = LogWatchIntervals();
+        const auto r = EventIdIntervals();
         EXPECT_TRUE(r.check(2123312));
     }
 
     {
         IntervalSetBuilder<uint64_t> includes;
         IntervalSetBuilder<uint64_t> excludes;
-        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        const auto r = EventIdIntervals(includes.build(), excludes.build());
         EXPECT_TRUE(r.check(2));
     }
 
@@ -1068,7 +1061,7 @@ TEST(LogWatchEventTest, TestIds) {
         IntervalSetBuilder<uint64_t> includes;
         IntervalSetBuilder<uint64_t> excludes;
         excludes.add(3, 4);
-        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        const auto r = EventIdIntervals(includes.build(), excludes.build());
         EXPECT_TRUE(r.check(1));
         EXPECT_TRUE(r.check(2));
         EXPECT_FALSE(r.check(3));
@@ -1081,7 +1074,7 @@ TEST(LogWatchEventTest, TestIds) {
         IntervalSetBuilder<uint64_t> excludes;
         includes.add(2, 5);
         excludes.add(3, 4);
-        const auto r = LogWatchIntervals(includes.build(), excludes.build());
+        const auto r = EventIdIntervals(includes.build(), excludes.build());
         EXPECT_FALSE(r.check(1));
         EXPECT_TRUE(r.check(2));
         EXPECT_FALSE(r.check(3));
@@ -1092,12 +1085,12 @@ TEST(LogWatchEventTest, TestIds) {
 
 TEST(LogWatchEventTest, TestIdsFromString) {
     {
-        const auto ids = LogWatchEventIds("\"*\" :   ;;");
+        const auto ids = EventFilter("\"*\" :   ;;");
         EXPECT_EQ(ids.name(), "*");
         EXPECT_TRUE(ids.intervals().check(0));
     }
     {
-        const auto ids = LogWatchEventIds("\"*\" :   ;;0;2-3");
+        const auto ids = EventFilter("\"*\" :   ;;0;2-3");
         EXPECT_EQ(ids.name(), "*");
         EXPECT_FALSE(ids.intervals().check(0));
         EXPECT_TRUE(ids.intervals().check(1));
@@ -1106,7 +1099,7 @@ TEST(LogWatchEventTest, TestIdsFromString) {
         EXPECT_TRUE(ids.intervals().check(4));
     }
     {
-        const auto ids = LogWatchEventIds("\"*\" :   0;3-4;;");
+        const auto ids = EventFilter("\"*\" :   0;3-4;;");
         EXPECT_EQ(ids.name(), "*");
         EXPECT_TRUE(ids.intervals().check(0));
         EXPECT_FALSE(ids.intervals().check(1));
@@ -1114,7 +1107,7 @@ TEST(LogWatchEventTest, TestIdsFromString) {
         EXPECT_TRUE(ids.intervals().check(4));
     }
     {
-        const auto ids = LogWatchEventIds("\"*\" :   0;3-4;;3-4;0");
+        const auto ids = EventFilter("\"*\" :   0;3-4;;3-4;0");
         EXPECT_EQ(ids.name(), "*");
         EXPECT_FALSE(ids.intervals().check(0));
         EXPECT_FALSE(ids.intervals().check(1));

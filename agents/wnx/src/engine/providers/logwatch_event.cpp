@@ -129,7 +129,7 @@ std::optional<Interval<uint64_t>> ParseIdRange(std::string_view range) {
 }
 }  // namespace
 
-LogWatchEventIds::LogWatchEventIds(std::string_view line) {
+EventFilter::EventFilter(std::string_view line) {
     if (line.data() == nullptr || line.empty()) {
         XLOG::t("Skipping logwatch filter with empty name");
         return;
@@ -157,8 +157,8 @@ LogWatchEventIds::LogWatchEventIds(std::string_view line) {
                 excludes_builder.add(range->lo, range->hi);
             }
         }
-        intervals_ = LogWatchIntervals(includes_builder.build(),
-                                       excludes_builder.build());
+        intervals_ = EventIdIntervals(includes_builder.build(),
+                                      excludes_builder.build());
 
     } catch (const std::exception &e) {
         XLOG::l(
@@ -319,18 +319,18 @@ size_t LogWatchEvent::processLogEntryArray(const YAML::Node &log_array) {
 }
 
 void LogWatchEvent::processEventIds(const YAML::Node &log_ids) {
-    event_ids_.clear();
+    event_filters_.clear();
     for (const auto &l : log_ids) {
         const auto line = ObtainString(l);
         if (line.has_value()) {
-            auto id = LogWatchEventIds(*line);
-            event_ids_.emplace_back(std::move(id));
+            auto id = EventFilter(*line);
+            event_filters_.emplace_back(std::move(id));
         }
     }
 }
 
 namespace {
-std::optional<size_t> FindLastEntryWithName(const LogWatchEntryVector &entries,
+std::optional<size_t> FindLastEntryWithName(const LogWatchEntries &entries,
                                             std::string_view name) {
     auto found = rs::find_if(entries.rbegin(), entries.rend(),
                              [name](auto e) { return e.name() == name; });
@@ -558,9 +558,8 @@ std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
                 }
             }
             return true;
-        }
-
-    );
+        },
+        [](const evl::EventLogRecordBase *record) { return true; });
 
     return {pos, out};
 }
@@ -613,7 +612,7 @@ LogWatchEntry GenerateDefaultValue() {
     return LogWatchEntry::makeDefaultEntry();
 }
 
-bool UpdateState(State &state, const LogWatchEntryVector &entries) noexcept {
+bool UpdateState(State &state, const LogWatchEntries &entries) noexcept {
     for (const auto &config_entry : entries) {
         if (tools::IsEqual(state.name_, config_entry.name())) {
             state.context_ = config_entry.context();
@@ -626,7 +625,7 @@ bool UpdateState(State &state, const LogWatchEntryVector &entries) noexcept {
     return false;
 }
 
-void UpdateStates(StateVector &states, const LogWatchEntryVector &entries,
+void UpdateStates(StateVector &states, const LogWatchEntries &entries,
                   const LogWatchEntry *dflt) {
     LogWatchEntry default_entry =
         dflt != nullptr ? *dflt : GenerateDefaultValue();
@@ -653,8 +652,7 @@ LogWatchLimits LogWatchEvent::getLogWatchLimits() const noexcept {
             .max_line_length = max_line_length_,
             .max_entries = max_entries_,
             .timeout = timeout_,
-            .skip = skip_,
-            .allowed_ids = LogWatchIntervals()};
+            .skip = skip_};
 }
 
 std::vector<fs::path> LogWatchEvent::makeStateFilesTable() const {
@@ -677,8 +675,19 @@ std::vector<fs::path> LogWatchEvent::makeStateFilesTable() const {
     return statefiles;
 }
 
+std::optional<EventFilter> FindIds(std ::string_view name,
+                                   std::vector<EventFilter> &ids) {
+    for (const auto &i : ids) {
+        if (name == i.name()) {
+            return i;
+        }
+    }
+    return std::nullopt;
+}
+
 std::string GenerateOutputFromStates(EvlType type, StateVector &states,
-                                     LogWatchLimits lwl) {
+                                     LogWatchLimits lwl,
+                                     const EventFilters &filters) {
     std::string out;
     for (auto &state : states) {
         switch (state.level_) {
@@ -743,7 +752,8 @@ std::string LogWatchEvent::makeBody() {
     UpdateStates(states, entries_, defaultEntry());
 
     // make string
-    auto out = GenerateOutputFromStates(evl_type_, states, getLogWatchLimits());
+    auto out = GenerateOutputFromStates(evl_type_, states, getLogWatchLimits(),
+                                        event_filters_);
 
     // The offsets are persisted in a statefile.
     // Always use the first available statefile name. In case of a

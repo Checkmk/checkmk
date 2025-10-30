@@ -96,13 +96,13 @@ private:
     std::vector<Interval<T>> intervals_;
 };
 
-class LogWatchIntervals {
+class EventIdIntervals {
 public:
     using Intervals = std::optional<IntervalSet<uint64_t>>;
-    LogWatchIntervals() = default;
+    EventIdIntervals() = default;
 
-    explicit LogWatchIntervals(Intervals includes,
-                               Intervals excludes = std::nullopt)
+    explicit EventIdIntervals(Intervals includes,
+                              Intervals excludes = std::nullopt)
         : includes_(std::move(includes)), excludes_(std::move(excludes)) {}
 
     bool check(uint64_t id) const {
@@ -131,7 +131,6 @@ struct LogWatchLimits {
     int64_t max_entries;
     int64_t timeout;
     evl::SkipDuplicatedRecords skip;
-    LogWatchIntervals allowed_ids;
 };
 
 struct State {
@@ -186,23 +185,27 @@ private:
     cfg::EventContext context_{cfg::EventContext::hide};
 };
 
-class LogWatchEventIds {
+class EventFilter {
 public:
-    explicit LogWatchEventIds(std::string_view value);
+    explicit EventFilter(std::string_view line);
 
+    [[nodiscard]] bool checkId(uint64_t id) const noexcept {
+        return intervals_.check(id);
+    }
     [[nodiscard]] std::string name() const noexcept { return name_; }
-    [[nodiscard]] LogWatchIntervals intervals() const noexcept {
+    [[nodiscard]] EventIdIntervals intervals() const noexcept {
         return intervals_;
     }
 
 private:
     std::string name_;
-    LogWatchIntervals intervals_;
+    EventIdIntervals intervals_;
 };
 
 enum class EvlType { classic, vista };
 
-using LogWatchEntryVector = std::vector<LogWatchEntry>;
+using LogWatchEntries = std::vector<LogWatchEntry>;
+using EventFilters = std::vector<EventFilter>;
 
 class LogWatchEvent final : public Asynchronous {
 public:
@@ -231,8 +234,8 @@ public:
     std::string makeBody() override;
 
 private:
-    LogWatchEntryVector entries_;
-    std::vector<LogWatchEventIds> event_ids_;
+    LogWatchEntries entries_;
+    EventFilters event_filters_;
     size_t default_entry_ = 0;
     bool send_all_ = false;
     EvlType evl_type_ = EvlType::classic;
@@ -270,13 +273,13 @@ int UpdateEventLogStates(StateVector &states,
 LogWatchEntry GenerateDefaultValue();
 
 std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name);
-bool UpdateState(State &state, const LogWatchEntryVector &entries) noexcept;
+bool UpdateState(State &state, const LogWatchEntries &entries) noexcept;
 
 std::pair<uint64_t, std::string> DumpEventLog(cma::evl::EventLogBase &log,
                                               const State &state,
                                               LogWatchLimits lwl);
 // Fix Values in states according to the config
-void UpdateStates(StateVector &states, const LogWatchEntryVector &entries,
+void UpdateStates(StateVector &states, const LogWatchEntries &entries,
                   const LogWatchEntry *dflt);
 // manual adding: two things possible
 // 1. added brand new
@@ -295,8 +298,8 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State &state,
                                            LogWatchLimits lwl);
 
 std::string GenerateOutputFromStates(
-    EvlType type, StateVector &states,
-    LogWatchLimits lwl);  // by value(32 bytes is ok)
+    EvlType type, StateVector &states, LogWatchLimits lwl,
+    const EventFilters &ids);  // by value(32 bytes is ok)
 
 bool IsEventLogInRegistry(std::string_view name);
 

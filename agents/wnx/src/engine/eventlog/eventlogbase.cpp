@@ -7,6 +7,7 @@
 
 #include "eventlog/eventlogstd.h"
 #include "eventlog/eventlogvista.h"
+#include "providers/logwatch_event.h"
 #include "wnx/logger.h"
 
 namespace cma::evl {
@@ -66,13 +67,13 @@ bool operator==(const EventLogRecordBase::ptr &lhs,
 
 }  // namespace
 
-/// scans eventlog and applies processor to every entry.
+/// scans eventlog and applies printer to every entry.
 ///
-/// returns last scanned pos where processor returns false
+/// returns last scanned pos where printer returns false
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                        cfg::EventLevels level, cfg::EventContext context,
-                       SkipDuplicatedRecords skip,
-                       const EvlProcessor &processor) {
+                       SkipDuplicatedRecords skip, const PrintFoo &printer,
+                       const AllowedFoo &allowed) {
     // we must seek past the previously read event - if there was one
     log.seek(choosePos(from_pos));
 
@@ -84,31 +85,35 @@ uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
         EventLogRecordBase::ptr record{log.readRecord()};
         if (!record) {
             if (skip == SkipDuplicatedRecords::yes && duplicated_count) {
-                processor(fmt::format(kSkippedMessageFormat, duplicated_count));
+                printer(fmt::format(kSkippedMessageFormat, duplicated_count));
             }
             break;
         }
 
         last_pos = record->recordId();
+        if (!allowed(record.get())) {
+            XLOG::d("skipped ID {} ", record->eventId());
+            continue;
+        }
         if (skip == SkipDuplicatedRecords::yes) {
             if (previous == record) {
                 ++duplicated_count;
                 continue;
             }
             if (duplicated_count) {
-                processor(fmt::format(kSkippedMessageFormat, duplicated_count));
+                printer(fmt::format(kSkippedMessageFormat, duplicated_count));
                 duplicated_count = 0;
             }
             auto str = record->stringize(level, context);
-            if (!str.empty() && !processor(str)) {
-                // processor request to stop scanning
+            if (!str.empty() && !printer(str)) {
+                // printer request to stop scanning
                 break;
             }
             previous = std::move(record);
         } else {
             auto str = record->stringize(level, context);
-            if (!str.empty() && !processor(str)) {
-                // processor request to stop scanning
+            if (!str.empty() && !printer(str)) {
+                // printer request to stop scanning
                 break;
             }
         }

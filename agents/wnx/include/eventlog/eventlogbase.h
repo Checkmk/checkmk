@@ -104,13 +104,14 @@ std::pair<uint64_t, cfg::EventLevels> ScanEventLog(EventLogBase &log,
                                                    uint64_t pos,
                                                    cfg::EventLevels level);
 
-using EvlProcessor = std::function<bool(const std::string &)>;
+using PrintFoo = std::function<bool(const std::string &)>;
+using AllowedFoo = std::function<bool(const EventLogRecordBase *)>;
 
 // third call
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
-                       cfg::EventLevels level, cfg::EventContext verbose,
-                       SkipDuplicatedRecords skip,
-                       const EvlProcessor &processor);
+                       cfg::EventLevels level, cfg::EventContext context,
+                       SkipDuplicatedRecords skip, const PrintFoo &printer,
+                       const AllowedFoo &allowed);
 // internal
 inline uint64_t choosePos(uint64_t last_read_pos) {
     return cfg::kFromBegin == last_read_pos ? 0 : last_read_pos + 1;

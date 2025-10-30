@@ -55,7 +55,7 @@ from cmk.gui.dashboard.type_defs import (
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.figures import create_figures_response
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import SingleInfos, VisualContext
@@ -98,7 +98,7 @@ type FigureDashletConfig = (
 )
 
 
-def _get_figure_config() -> FigureDashletConfig:
+def _get_figure_config(request: Request) -> FigureDashletConfig:
     content_str = request.get_ascii_input_mandatory("content")
     adapter: TypeAdapter[FigureContent] = TypeAdapter(  # nosemgrep: type-adapter-detected
         FigureContent
@@ -113,13 +113,15 @@ def _get_figure_config() -> FigureDashletConfig:
 class FigureWidgetPage(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        figure_config: FigureDashletConfig = _get_figure_config()
+        figure_config: FigureDashletConfig = _get_figure_config(ctx.request)
         dashlet_type = cast(type[ABCFigureDashlet], dashlet_registry[figure_config["type"]])
 
         # Get context from the AJAX request body (not simply from the dashboard config) to include
         # potential dashboard context given via HTTP request variables
-        context: VisualContext = json.loads(request.get_ascii_input_mandatory("context"))
-        single_infos: SingleInfos = json.loads(request.get_ascii_input_mandatory("single_infos"))
+        context: VisualContext = json.loads(ctx.request.get_ascii_input_mandatory("context"))
+        single_infos: SingleInfos = json.loads(
+            ctx.request.get_ascii_input_mandatory("single_infos")
+        )
 
         figure_config["context"] = context
         figure_config["single_infos"] = single_infos

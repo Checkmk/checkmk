@@ -21,7 +21,7 @@ from cmk.gui.breadcrumb import (
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -63,9 +63,9 @@ class EditDashletPage(Page):
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-        self._board = request.get_str_input_mandatory("name")
-        self._owner = request.get_validated_type_input_mandatory(UserId, "owner")
-        self._ident = request.get_integer_input("id")
+        self._board = ctx.request.get_str_input_mandatory("name")
+        self._owner = ctx.request.get_validated_type_input_mandatory(UserId, "owner")
+        self._ident = ctx.request.get_integer_input("id")
 
         try:
             self._dashboard = get_permitted_dashboards_by_owners()[self._board][self._owner]
@@ -73,7 +73,7 @@ class EditDashletPage(Page):
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
         if self._ident is None:
-            type_name = request.get_str_input_mandatory("type")
+            type_name = ctx.request.get_str_input_mandatory("type")
             mode = "add"
 
             try:
@@ -97,7 +97,7 @@ class EditDashletPage(Page):
 
             self._ident = len(self._dashboard["dashlets"])
 
-            single_infos_raw = request.var("single_infos")
+            single_infos_raw = ctx.request.var("single_infos")
             single_infos: SingleInfos = []
             if single_infos_raw:
                 single_infos = single_infos_raw.split(",")
@@ -124,6 +124,7 @@ class EditDashletPage(Page):
             title = _("Edit element: %s") % dashlet_type.title()
 
         breadcrumb = dashlet_editor_breadcrumb(
+            ctx.request,
             self._board,
             self._dashboard,
             title,
@@ -180,7 +181,7 @@ class EditDashletPage(Page):
                 "Dashboard element settings and properties have a shared option name"
             )
 
-        if request.var("_save") and transactions.transaction_valid():
+        if ctx.request.var("_save") and transactions.transaction_valid():
             try:
                 # Take over keys not managed by the edit dialog
                 new_dashlet_spec = DashletConfig(
@@ -220,7 +221,9 @@ class EditDashletPage(Page):
 
                 save_and_replicate_all_dashboards(self._owner)
                 html.footer()
-                raise HTTPRedirect(request.get_url_input("next", request.get_url_input("back")))
+                raise HTTPRedirect(
+                    ctx.request.get_url_input("next", ctx.request.get_url_input("back"))
+                )
 
             except MKUserError as e:
                 html.user_error(e)
@@ -326,7 +329,11 @@ def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 
 def dashlet_editor_breadcrumb(
-    name: str, board: DashboardConfig, title: str, user_permissions: UserPermissions
+    request: Request,
+    name: str,
+    board: DashboardConfig,
+    title: str,
+    user_permissions: UserPermissions,
 ) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),

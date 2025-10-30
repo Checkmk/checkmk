@@ -6,7 +6,7 @@
 import time
 
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
@@ -22,11 +22,11 @@ def page_clone_dashlet(ctx: PageContext) -> None:
     if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = request.var("name")
+    board = ctx.request.var("name")
     if not board:
         raise MKUserError("name", _("The name of the dashboard is missing."))
 
-    ident = request.get_integer_input_mandatory("id")
+    ident = ctx.request.get_integer_input_mandatory("id")
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -46,18 +46,18 @@ def page_clone_dashlet(ctx: PageContext) -> None:
     dashboard["mtime"] = int(time.time())
     save_and_replicate_all_dashboards(dashboard["owner"])
 
-    raise HTTPRedirect(request.get_url_input("back"))
+    raise HTTPRedirect(ctx.request.get_url_input("back"))
 
 
 def page_delete_dashlet(ctx: PageContext) -> None:
     if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = request.var("name")
+    board = ctx.request.var("name")
     if not board:
         raise MKUserError("name", _("The name of the dashboard is missing."))
 
-    ident = request.get_integer_input_mandatory("id")
+    ident = ctx.request.get_integer_input_mandatory("id")
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -73,27 +73,27 @@ def page_delete_dashlet(ctx: PageContext) -> None:
     dashboard["mtime"] = int(time.time())
     save_and_replicate_all_dashboards(dashboard["owner"])
 
-    raise HTTPRedirect(request.get_url_input("back"))
+    raise HTTPRedirect(ctx.request.get_url_input("back"))
 
 
 def ajax_dashlet_pos(ctx: PageContext) -> None:
-    dashlet_spec, board = check_ajax_update()
+    dashlet_spec, board = check_ajax_update(ctx.request)
 
     board["mtime"] = int(time.time())
 
     dashlet_spec["position"] = (
-        request.get_integer_input_mandatory("x"),
-        request.get_integer_input_mandatory("y"),
+        ctx.request.get_integer_input_mandatory("x"),
+        ctx.request.get_integer_input_mandatory("y"),
     )
     dashlet_spec["size"] = (
-        request.get_integer_input_mandatory("w"),
-        request.get_integer_input_mandatory("h"),
+        ctx.request.get_integer_input_mandatory("w"),
+        ctx.request.get_integer_input_mandatory("h"),
     )
     save_and_replicate_all_dashboards(board["owner"])
     response.set_data("OK %d" % board["mtime"])
 
 
-def check_ajax_update() -> tuple[DashletConfig, DashboardConfig]:
+def check_ajax_update(request: Request) -> tuple[DashletConfig, DashboardConfig]:
     if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 

@@ -14,7 +14,7 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import PageContext
@@ -41,9 +41,10 @@ __all__ = ["page_create_link_view_dashlet", "page_create_view_dashlet"]
 
 def page_create_link_view_dashlet(ctx: PageContext) -> None:
     """Choose an existing view from the list of available views"""
-    name = request.get_str_input_mandatory("name")
-    owner = request.get_validated_type_input_mandatory(UserId, "owner")
+    name = ctx.request.get_str_input_mandatory("name")
+    owner = ctx.request.get_validated_type_input_mandatory(UserId, "owner")
     choose_view(
+        ctx.request,
         owner,
         name,
         _("Embed existing view"),
@@ -67,14 +68,14 @@ def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedV
 
 
 def page_create_view_dashlet(ctx: PageContext) -> None:
-    create = request.var("create", "1") == "1"
-    name = request.get_str_input_mandatory("name")
-    owner = request.get_validated_type_input_mandatory(UserId, "owner")
+    create = ctx.request.var("create", "1") == "1"
+    name = ctx.request.get_str_input_mandatory("name")
+    owner = ctx.request.get_validated_type_input_mandatory(UserId, "owner")
 
     if create:
         url = makeuri(
-            request,
-            [("back", makeuri(request, [])), ("owner", owner)],
+            ctx.request,
+            [("back", makeuri(ctx.request, [])), ("owner", owner)],
             filename="create_view_dashlet_infos.py",
         )
         show_create_view_dialog(next_url=url)
@@ -82,6 +83,7 @@ def page_create_view_dashlet(ctx: PageContext) -> None:
     else:
         # Choose an existing view from the list of available views
         choose_view(
+            ctx.request,
             owner,
             name,
             _("Copy existing view"),
@@ -149,6 +151,7 @@ def page_create_view_dashlet_infos(ctx: PageContext) -> None:
 
 
 def choose_view(
+    request: Request,
     owner: UserId,
     name: DashboardName,
     title: str,
@@ -167,7 +170,7 @@ def choose_view(
     except KeyError:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    breadcrumb = dashlet_editor_breadcrumb(name, dashboard, title, user_permissions)
+    breadcrumb = dashlet_editor_breadcrumb(request, name, dashboard, title, user_permissions)
     make_header(
         html,
         title,

@@ -42,7 +42,6 @@ from cmk.gui.graphing import (
     metrics_from_api,
 )
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
@@ -73,8 +72,7 @@ type GraphDashletConfig = (
 )
 
 
-def _get_graph_config() -> GraphDashletConfig:
-    content_str = request.get_ascii_input_mandatory("content")
+def _get_graph_config(content_str: str) -> GraphDashletConfig:
     adapter: TypeAdapter[GraphContent] = TypeAdapter(  # nosemgrep: type-adapter-detected
         GraphContent
     )
@@ -88,13 +86,16 @@ def _get_graph_config() -> GraphDashletConfig:
 class GraphWidgetPage(cmk.gui.pages.Page):
     @override
     def page(self, ctx: PageContext) -> None:
-        widget_id = request.get_str_input_mandatory("widget_id")
-        graph_config: GraphDashletConfig = _get_graph_config()
+        widget_id = ctx.request.get_str_input_mandatory("widget_id")
+        content_str = ctx.request.get_ascii_input_mandatory("content")
+        graph_config: GraphDashletConfig = _get_graph_config(content_str)
 
         dashlet_type = cast(type[ABCGraphDashlet], dashlet_registry[graph_config["type"]])
 
-        context: VisualContext = json.loads(request.get_ascii_input_mandatory("context"))
-        single_infos: SingleInfos = json.loads(request.get_ascii_input_mandatory("single_infos"))
+        context: VisualContext = json.loads(ctx.request.get_ascii_input_mandatory("context"))
+        single_infos: SingleInfos = json.loads(
+            ctx.request.get_ascii_input_mandatory("single_infos")
+        )
 
         graph_config["context"] = context
         graph_config["single_infos"] = single_infos

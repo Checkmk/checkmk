@@ -21,7 +21,6 @@ import cmk.ccc.version as cmk_version
 import cmk.gui.mkeventd.wato
 import cmk.utils.paths
 from cmk import trace
-from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
@@ -109,7 +108,6 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
     (cmk.utils.paths.omd_root / "local").mkdir(parents=True, exist_ok=True)
     (cmk.utils.paths.var_dir / "packages").mkdir(parents=True, exist_ok=True)
-    frozen_aggregations_dir.mkdir(parents=True, exist_ok=True)
     topology_dir.mkdir(parents=True, exist_ok=True)
 
     gui_conf_dir = cmk.utils.paths.default_config_dir / "multisite.d/wato"

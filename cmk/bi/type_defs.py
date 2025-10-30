@@ -6,7 +6,6 @@ import dataclasses
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, NotRequired, TypedDict
 
-import cmk.utils.paths
 from cmk.utils.labels import AndOrNotLiteral, LabelGroups
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
@@ -78,8 +77,6 @@ class AggrConfigDict(TypedDict):
     computation_options: ComputationConfigDict
     aggregation_visualization: Any
 
-
-frozen_aggregations_dir = cmk.utils.paths.var_dir / "frozen_aggregations"
 
 HostState = int
 HostRegexMatches = dict[str, tuple[str, ...]]

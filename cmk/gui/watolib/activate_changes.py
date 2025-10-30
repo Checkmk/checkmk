@@ -52,6 +52,7 @@ from setproctitle import setthreadtitle
 
 from livestatus import BrokerConnections, SiteConfiguration, SiteConfigurations
 
+import cmk.bi.filesystem
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils
 import cmk.gui.watolib.automations
@@ -59,7 +60,6 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
 from cmk import mkp_tool, trace
-from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.ccc import store, version
 from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.exceptions import MKGeneralException
@@ -330,7 +330,10 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
             ident="frozen_aggregations",
-            site_path=os.path.relpath(frozen_aggregations_dir, cmk.utils.paths.omd_root),
+            site_path=os.path.relpath(
+                cmk.bi.filesystem.get_default_site_filesystem().var.frozen_aggregations,
+                cmk.utils.paths.omd_root,
+            ),
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,

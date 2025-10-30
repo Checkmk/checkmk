@@ -4,14 +4,29 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type VariantProps, cva } from 'class-variance-authority'
 import { computed } from 'vue'
 
 import CmkIcon from '@/components/CmkIcon'
 
-type AlertType = 'error' | 'warning' | 'success' | 'info'
+const propsCva = cva('', {
+  variants: {
+    variant: {
+      error: 'cmk-alert-box--error',
+      warning: 'cmk-alert-box--warning',
+      success: 'cmk-alert-box--success',
+      info: 'cmk-alert-box--info'
+    }
+  },
+  defaultVariants: {
+    variant: 'info'
+  }
+})
 
-interface CmkAlertBoxProps {
-  variant?: AlertType
+export type Variants = VariantProps<typeof propsCva>['variant']
+
+export interface CmkAlertBoxProps {
+  variant?: Variants
 }
 
 const props = withDefaults(defineProps<CmkAlertBoxProps>(), {
@@ -30,24 +45,10 @@ const alertIconName = computed(() => {
       return 'about-checkmk'
   }
 })
-
-/* TODO: change these classes to proper variants */
-const alertClass = computed(() => {
-  switch (props.variant) {
-    case 'error':
-      return 'error'
-    case 'warning':
-      return 'warning'
-    case 'success':
-      return 'success'
-    default:
-      return 'message'
-  }
-})
 </script>
 
 <template>
-  <div class="cmk-alert-box" :class="alertClass">
+  <div class="cmk-alert-box" :class="propsCva({ variant })">
     <CmkIcon :name="alertIconName" variant="inline" size="large" />
     <div class="content">
       <slot />
@@ -69,11 +70,25 @@ const alertClass = computed(() => {
   & > .content {
     margin-left: 7px;
   }
+}
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  &.error {
-    color: var(--font-color);
-    background-color: var(--error-msg-bg-color);
-  }
+.cmk-alert-box--error {
+  color: var(--font-color);
+  background: color-mix(in srgb, var(--color-dark-red-50) 10%, transparent);
+}
+
+.cmk-alert-box--warning {
+  color: var(--font-color);
+  background-color: color-mix(in srgb, var(--color-yellow-50) 10%, transparent);
+}
+
+.cmk-alert-box--success {
+  color: var(--font-color);
+  background: color-mix(in srgb, var(--color-corporate-green-50) 10%, transparent);
+}
+
+.cmk-alert-box--info {
+  color: var(--font-color);
+  background-color: color-mix(in srgb, var(--color-dark-blue-50) 10%, transparent);
 }
 </style>

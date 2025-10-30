@@ -18,7 +18,6 @@ from pydantic import BaseModel, ConfigDict, RootModel, ValidationError
 
 from cmk.plugins.kube.prometheus_api import parse_raw_response, Response, ResponseSuccess, Vector
 from cmk.plugins.lib import node_exporter
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 TCPTimeout = NewType("TCPTimeout", tuple[int, int])
 
@@ -58,6 +57,16 @@ class NoUsageConfig(BaseModel, frozen=True):
     pass
 
 
+def _to_requests_proxies(raw: str) -> MutableMapping[str, str]:
+    match raw:
+        case "NO_PROXY":
+            return {"http": "", "https": ""}
+        case "FROM_ENVIRONMENT":
+            return {}
+        case url:
+            return {"http": url, "https": url}
+
+
 class SessionConfig(BaseModel, frozen=True):
     token: str
     usage_proxy: str
@@ -69,7 +78,7 @@ class SessionConfig(BaseModel, frozen=True):
         return TCPTimeout((self.usage_connect_timeout, self.usage_read_timeout))
 
     def requests_proxies(self) -> Mapping[str, str]:
-        return deserialize_http_proxy_config(self.usage_proxy).to_requests_proxies() or {}
+        return _to_requests_proxies(self.usage_proxy)
 
 
 class APISessionConfig(BaseModel):
@@ -86,9 +95,7 @@ class APISessionConfig(BaseModel):
         return TCPTimeout((self.k8s_api_connect_timeout, self.k8s_api_read_timeout))
 
     def requests_proxies(self) -> MutableMapping[str, str]:
-        return dict(
-            deserialize_http_proxy_config(self.api_server_proxy).to_requests_proxies() or {}
-        )
+        return _to_requests_proxies(self.api_server_proxy)
 
     def url(self, resource_path: str) -> str:
         return self.api_server_endpoint.removesuffix("/") + resource_path

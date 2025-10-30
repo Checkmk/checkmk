@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { SingleChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 
+import CmkSpace from '@/components/CmkSpace.vue'
+
 import FormEdit from '@/form/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -19,10 +21,10 @@ function getSingleChoiceSpec(): SingleChoice {
     title: '',
     help: '',
     validators: [],
-    no_elements_text: '',
+    no_elements_text: 'No Elements',
     frozen: false,
     label: 'some label',
-    input_hint: 'Please choose',
+    input_hint: 'input hint',
     elements: [
       {
         name: '1',
@@ -43,9 +45,24 @@ function getSingleChoiceSpec(): SingleChoice {
     ]
   }
 }
+function getSingleChoiceSpecNoElements(): SingleChoice {
+  return {
+    type: 'single_choice',
+    title: '',
+    help: '',
+    validators: [],
+    no_elements_text: 'No Elements',
+    frozen: false,
+    label: 'No Elements',
+    input_hint: 'input hint',
+    elements: []
+  }
+}
 </script>
 
 <template>
   <pre>{{ JSON.stringify(data) }}</pre>
   <FormEdit v-model:data="data" :spec="getSingleChoiceSpec()" :backend-validation="[]" />
+  <CmkSpace size="medium" />
+  <FormEdit v-model:data="data" :spec="getSingleChoiceSpecNoElements()" :backend-validation="[]" />
 </template>

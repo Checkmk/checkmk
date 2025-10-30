@@ -87,3 +87,19 @@ test('FormSingleChoice renders backend validation messages', async () => {
 
   await screen.findByText('Backend error message')
 })
+
+test('FormSingleChoice displays no_elements_text when elements are empty', async () => {
+  const noElementsSpec = {
+    ...spec,
+    elements: []
+  }
+  render(FormSingleChoice, {
+    props: {
+      spec: noElementsSpec,
+      data: null,
+      backendValidation: []
+    }
+  })
+
+  await screen.findByText('no_text')
+})

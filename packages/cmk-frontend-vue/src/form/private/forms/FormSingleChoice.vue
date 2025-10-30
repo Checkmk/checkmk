@@ -45,10 +45,14 @@ const componentId = useId()
           title: untranslated(element.title)
         }))
       }"
-      :input-hint="untranslated(spec.input_hint || '')"
+      :input-hint="
+        props.spec.elements.length === 0
+          ? untranslated(props.spec.no_elements_text || '')
+          : untranslated(props.spec.input_hint || '')
+      "
       :disabled="spec.frozen"
       :component-id="componentId"
-      :no-elements-text="untranslated(props.spec.no_elements_text || '')"
+      :no-results-hint="untranslated(props.spec.no_elements_text || '')"
       :label="untranslated(props.spec.label || props.spec.title)"
       required
     />

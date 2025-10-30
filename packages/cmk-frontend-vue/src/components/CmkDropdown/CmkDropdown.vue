@@ -85,9 +85,12 @@ immediateWatch(
   { deep: 2 }
 )
 
-const multipleChoicesAvailable = computed(() => {
+const canOpenDropdown = computed(() => {
   if (options.type === 'filtered' || options.type === 'fixed') {
-    return options.suggestions.length !== 0
+    if (!noResultsHint && options.suggestions.length === 0) {
+      return false
+    }
+    return true
   }
   return true // assume something is available via callback/backend
   // we don't know the number of available suggestions, as this is handled by CmkSuggestions,
@@ -100,7 +103,7 @@ const comboboxButtonRef =
   useTemplateRef<InstanceType<typeof CmkDropdownButton>>('comboboxButtonRef')
 
 function showSuggestions(): void {
-  if (!disabled && multipleChoicesAvailable.value) {
+  if (!disabled && canOpenDropdown.value) {
     suggestionsShown.value = !suggestionsShown.value
     if (!suggestionsShown.value) {
       return
@@ -154,7 +157,7 @@ const truncatedButtonLabel = computed(() =>
       :aria-expanded="suggestionsShown"
       :title="buttonLabel.length > maxLabelLength ? buttonLabel : ''"
       :disabled="disabled"
-      :multiple-choices-available="multipleChoicesAvailable"
+      :multiple-choices-available="canOpenDropdown"
       :value-is-selected="selectedOption !== null"
       :group="startOfGroup ? 'start' : 'no'"
       :width="width"
@@ -167,7 +170,7 @@ const truncatedButtonLabel = computed(() =>
       </span>
       <ArrowDown
         class="cmk-dropdown--arrow"
-        :class="{ rotated: suggestionsShown, disabled: disabled || !multipleChoicesAvailable }"
+        :class="{ rotated: suggestionsShown, disabled: disabled || !canOpenDropdown }"
     /></CmkDropdownButton>
     <CmkSuggestions
       v-if="!!suggestionsShown"

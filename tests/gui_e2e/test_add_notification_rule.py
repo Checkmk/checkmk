@@ -122,6 +122,13 @@ def test_add_new_notification_rule(
         add_rule_filesystem_page.description_text_field.fill(filesystem_rule_description)
         add_rule_filesystem_page.levels_for_used_free_space_warning_text_field.fill(used_space)
         add_rule_filesystem_page.save_button.click()
+        filesystems_rules_page = Ruleset(
+            dashboard_page.page,
+            "Filesystems (used space and growth)",
+            "Service monitoring rules",
+            navigate_to_page=False,
+        )
+        filesystems_rules_page.check_rule_is_present(rule_id=filesystem_rule_description)
         add_rule_filesystem_page.activate_changes(test_site)
 
         was_filesystem_ruleset_created = True
@@ -149,11 +156,7 @@ def test_add_new_notification_rule(
         edit_notification_rule_page.apply_and_create_another_rule()
 
         if was_filesystem_ruleset_created:
-            filesystems_rules_page = Ruleset(
-                dashboard_page.page,
-                "Filesystems (used space and growth)",
-                "Service monitoring rules",
-            )
+            filesystems_rules_page.navigate()
             logger.info("Delete the filesystems rule")
             filesystems_rules_page.delete_rule(rule_id=filesystem_rule_description)
             filesystems_rules_page.activate_changes(test_site)

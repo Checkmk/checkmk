@@ -49,12 +49,12 @@ class Ruleset(CmkPage):
         selection = results.get_by_role(role="link", name=rule_pattern, exact=self._exact)
 
         selection.click()
-        self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_ruleset")), wait_until="load")
         self.validate_page()
 
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.rule_name)
+        self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_ruleset")), wait_until="load")
         self.main_area.check_page_title(self.rule_name)
         expect(self.main_area.get_suggestion("Add rule")).to_be_visible()
 
@@ -116,6 +116,12 @@ class Ruleset(CmkPage):
                 "Expected 'str' (rule description) or 'int' (rule position)!",
             )
         return rule_row_locator
+
+    def check_rule_is_present(self, rule_id: str | int) -> None:
+        expect(
+            self._rule_row(rule_id),
+            message=f"Rule '{rule_id}' is not present in the ruleset table",
+        ).to_be_visible()
 
     def rule_position(self, rule_description: str) -> Locator:
         return self._rule_row(rule_description).locator("td[class*='narrow']")

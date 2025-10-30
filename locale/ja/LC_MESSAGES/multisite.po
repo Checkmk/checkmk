@@ -7020,8 +7020,15 @@ msgstr "正規表現で割り当てる"
 msgid "Assignee"
 msgstr "受任者"
 
+#, fuzzy
+msgid "Assignment of hosts to contact groups"
+msgstr "ホストグループへのホストの割り当て"
+
 msgid "Assignment of hosts to host groups"
 msgstr "ホストグループへのホストの割り当て"
+
+msgid "Assignment of services to contact groups"
+msgstr "連絡先グループへのサービスの割り当て"
 
 msgid "Assignment of services to service groups"
 msgstr "サービスグループへのサービスの割り当て"
@@ -54677,10 +54684,6 @@ msgstr ""
 msgid "Set height"
 msgstr "高さを設定する"
 
-#, fuzzy
-msgid "Set host visibility for contact groups"
-msgstr "連絡先グループへのホストの割り当て"
-
 msgid "Set levels"
 msgstr "レベルを設定する"
 
@@ -54857,10 +54860,6 @@ msgstr ""
 "ここでサービス名または正規表現パターンを設定して、一致する消失したサービスを"
 "自動的に削除します。これと'一致する消失したサービスを削除しない'の両方を設定"
 "した場合、削除するサービスには両方のルールを適用する必要があります。"
-
-#, fuzzy
-msgid "Set service visibility for contact groups"
-msgstr "サービス連絡先グループ"
 
 msgid "Set state to"
 msgstr "状態をに設定します"
@@ -84123,14 +84122,19 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
 
+#, fuzzy
+#~ msgid "Set host visibility for contact groups"
+#~ msgstr "連絡先グループへのホストの割り当て"
+
+#, fuzzy
+#~ msgid "Set service visibility for contact groups"
+#~ msgstr "サービス連絡先グループ"
+
 #~ msgid "Invalid receipt"
 #~ msgstr "無効なレシート"
 
 #~ msgid "Monitor the collector"
 #~ msgstr "コレクターの監視"
-
-#~ msgid "Assignment of services to contact groups"
-#~ msgstr "連絡先グループへのサービスの割り当て"
 
 #, python-format
 #~ msgid ""

@@ -7476,8 +7476,15 @@ msgstr "Attribution via des expressions régulières"
 msgid "Assignee"
 msgstr ""
 
+#, fuzzy
+msgid "Assignment of hosts to contact groups"
+msgstr "Affectation des hôtes aux groupes d'hôtes"
+
 msgid "Assignment of hosts to host groups"
 msgstr "Affectation des hôtes aux groupes d'hôtes"
+
+msgid "Assignment of services to contact groups"
+msgstr "Attribution de services à des groupes de contacts"
 
 msgid "Assignment of services to service groups"
 msgstr "Affectation des services aux groupes de services"
@@ -58801,10 +58808,6 @@ msgstr ""
 msgid "Set height"
 msgstr "Régler la hauteur"
 
-#, fuzzy
-msgid "Set host visibility for contact groups"
-msgstr "Affectation des hôtes aux groupes de contacts"
-
 msgid "Set levels"
 msgstr "Définir les niveaux"
 
@@ -59016,10 +59019,6 @@ msgstr ""
 "définissez à la fois cette option et \"Ne pas supprimer les services "
 "disparus correspondants\", les deux règles doivent s'appliquer pour qu'un "
 "service soit supprimé."
-
-#, fuzzy
-msgid "Set service visibility for contact groups"
-msgstr "Groupes de contact des services"
 
 msgid "Set state to"
 msgstr "Régler l'état sur"
@@ -90588,15 +90587,20 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
 #, fuzzy
+#~ msgid "Set host visibility for contact groups"
+#~ msgstr "Affectation des hôtes aux groupes de contacts"
+
+#, fuzzy
+#~ msgid "Set service visibility for contact groups"
+#~ msgstr "Groupes de contact des services"
+
+#, fuzzy
 #~ msgid "Invalid receipt"
 #~ msgstr "Rapport invalide"
 
 #, fuzzy
 #~ msgid "Monitor the collector"
 #~ msgstr "Collecteurs stoppés"
-
-#~ msgid "Assignment of services to contact groups"
-#~ msgstr "Attribution de services à des groupes de contacts"
 
 #, python-format
 #~ msgid ""

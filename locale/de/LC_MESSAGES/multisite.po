@@ -7249,8 +7249,15 @@ msgstr "Zuweisung über reguläre Ausdrücke"
 msgid "Assignee"
 msgstr "Adressat"
 
+#, fuzzy
+msgid "Assignment of hosts to contact groups"
+msgstr "Zuweisung von Hosts zu Host-Gruppen"
+
 msgid "Assignment of hosts to host groups"
 msgstr "Zuweisung von Hosts zu Host-Gruppen"
+
+msgid "Assignment of services to contact groups"
+msgstr "Zuweisung von Services zu Kontaktgruppen"
 
 msgid "Assignment of services to service groups"
 msgstr "Zuweisung von Services zu Service-Gruppen"
@@ -56001,9 +56008,6 @@ msgstr ""
 msgid "Set height"
 msgstr "Höhe festlegen"
 
-msgid "Set host visibility for contact groups"
-msgstr "Host-Sichtbarkeit für Kontaktgruppen festlegen"
-
 msgid "Set levels"
 msgstr "Levels festlegen"
 
@@ -56192,9 +56196,6 @@ msgstr ""
 "fest, um passende verschwundene Services automatisch zu entfernen. Wenn Sie "
 "sowohl dies als auch 'Verschwundene Services nicht entfernen' einstellen, "
 "müssen beide Regeln zutreffen, damit ein Service entfernt wird."
-
-msgid "Set service visibility for contact groups"
-msgstr "Service-Sichtbarkeit für Kontaktgruppen festlegen"
 
 msgid "Set state to"
 msgstr "Zustand setzen auf"
@@ -86677,14 +86678,17 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid "Set host visibility for contact groups"
+#~ msgstr "Host-Sichtbarkeit für Kontaktgruppen festlegen"
+
+#~ msgid "Set service visibility for contact groups"
+#~ msgstr "Service-Sichtbarkeit für Kontaktgruppen festlegen"
+
 #~ msgid "Invalid receipt"
 #~ msgstr "Ungültiger Beleg"
 
 #~ msgid "Monitor the collector"
 #~ msgstr "Den Kollektor überwachen"
-
-#~ msgid "Assignment of services to contact groups"
-#~ msgstr "Zuweisung von Services zu Kontaktgruppen"
 
 #, python-format
 #~ msgid ""

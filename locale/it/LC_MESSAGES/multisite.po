@@ -7358,8 +7358,15 @@ msgstr "Assegnare tramite espressioni regolari"
 msgid "Assignee"
 msgstr ""
 
+#, fuzzy
+msgid "Assignment of hosts to contact groups"
+msgstr "Assegnazione di host a gruppi di host"
+
 msgid "Assignment of hosts to host groups"
 msgstr "Assegnazione di host a gruppi di host"
+
+msgid "Assignment of services to contact groups"
+msgstr "Assegnazione di servizi a gruppi di contatto"
 
 msgid "Assignment of services to service groups"
 msgstr "Assegnazione di servizi a gruppi di servizi"
@@ -57808,10 +57815,6 @@ msgstr ""
 msgid "Set height"
 msgstr "Imposta l'altezza"
 
-#, fuzzy
-msgid "Set host visibility for contact groups"
-msgstr "Assegnazione di host a gruppi di contatto"
-
 msgid "Set levels"
 msgstr "Impostare i livelli"
 
@@ -58012,10 +58015,6 @@ msgstr ""
 "rimuovere automaticamente i servizi svaniti corrispondenti. Se imposti sia "
 "questo che \"Non rimuovere i servizi svaniti corrispondenti\", entrambe le "
 "regole devono essere applicate perché un servizio sia rimosso."
-
-#, fuzzy
-msgid "Set service visibility for contact groups"
-msgstr "Gruppi di contatto di servizio"
 
 msgid "Set state to"
 msgstr "Imposta lo stato su"
@@ -88958,15 +88957,20 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
 
 #, fuzzy
+#~ msgid "Set host visibility for contact groups"
+#~ msgstr "Assegnazione di host a gruppi di contatto"
+
+#, fuzzy
+#~ msgid "Set service visibility for contact groups"
+#~ msgstr "Gruppi di contatto di servizio"
+
+#, fuzzy
 #~ msgid "Invalid receipt"
 #~ msgstr "Rapporto non valido"
 
 #, fuzzy
 #~ msgid "Monitor the collector"
 #~ msgstr "Collezionisti fermi"
-
-#~ msgid "Assignment of services to contact groups"
-#~ msgstr "Assegnazione di servizi a gruppi di contatto"
 
 #, python-format
 #~ msgid ""

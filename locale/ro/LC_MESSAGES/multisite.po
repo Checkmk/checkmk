@@ -7423,8 +7423,15 @@ msgstr "Atribuirea prin expresii regulate"
 msgid "Assignee"
 msgstr ""
 
+#, fuzzy
+msgid "Assignment of hosts to contact groups"
+msgstr "Atribuirea de gazde la grupuri de gazde"
+
 msgid "Assignment of hosts to host groups"
 msgstr "Atribuirea de gazde la grupuri de gazde"
+
+msgid "Assignment of services to contact groups"
+msgstr "Atribuirea serviciilor la grupurile de contact"
 
 msgid "Assignment of services to service groups"
 msgstr "Atribuirea serviciilor la grupurile de servicii"
@@ -58395,10 +58402,6 @@ msgstr ""
 msgid "Set height"
 msgstr "Setați înălțimea"
 
-#, fuzzy
-msgid "Set host visibility for contact groups"
-msgstr "Alocarea gazdelor la grupurile de contact"
-
 msgid "Set levels"
 msgstr "Setați nivelurile"
 
@@ -58601,10 +58604,6 @@ msgstr ""
 "elimina automat serviciile dispărute corespunzătoare. Dacă setați atât acest "
 "lucru, cât și 'Don'don't remove matching vanished services', ambele reguli "
 "trebuie să se aplice pentru ca un serviciu să fie eliminat."
-
-#, fuzzy
-msgid "Set service visibility for contact groups"
-msgstr "Grupuri de contact pentru servicii"
 
 msgid "Set state to"
 msgstr "Setați starea la"
@@ -89913,15 +89912,20 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
 #, fuzzy
+#~ msgid "Set host visibility for contact groups"
+#~ msgstr "Alocarea gazdelor la grupurile de contact"
+
+#, fuzzy
+#~ msgid "Set service visibility for contact groups"
+#~ msgstr "Grupuri de contact pentru servicii"
+
+#, fuzzy
 #~ msgid "Invalid receipt"
 #~ msgstr "Raport invalid"
 
 #, fuzzy
 #~ msgid "Monitor the collector"
 #~ msgstr "Colectoare oprite"
-
-#~ msgid "Assignment of services to contact groups"
-#~ msgstr "Atribuirea serviciilor la grupurile de contact"
 
 #, python-format
 #~ msgid ""

@@ -7410,8 +7410,15 @@ msgstr "Toewijzen via reguliere expressies"
 msgid "Assignee"
 msgstr ""
 
+#, fuzzy
+msgid "Assignment of hosts to contact groups"
+msgstr "Toewijzing van hosts aan hostgroepen"
+
 msgid "Assignment of hosts to host groups"
 msgstr "Toewijzing van hosts aan hostgroepen"
+
+msgid "Assignment of services to contact groups"
+msgstr "Toewijzing van diensten aan contactgroepen"
 
 msgid "Assignment of services to service groups"
 msgstr "Toewijzing van diensten aan dienstengroepen"
@@ -58284,10 +58291,6 @@ msgstr ""
 msgid "Set height"
 msgstr "Hoogte instellen"
 
-#, fuzzy
-msgid "Set host visibility for contact groups"
-msgstr "Toewijzing van hosts aan contactgroepen"
-
 msgid "Set levels"
 msgstr "Ingestelde niveaus"
 
@@ -58488,10 +58491,6 @@ msgstr ""
 "verdwenen diensten automatisch te verwijderen. Als je zowel dit als "
 "'Verwijder geen overeenkomende verdwenen diensten' instelt, moeten beide "
 "regels van toepassing zijn om een dienst te kunnen verwijderen."
-
-#, fuzzy
-msgid "Set service visibility for contact groups"
-msgstr "Dienstcontactgroepen"
 
 msgid "Set state to"
 msgstr "Stel de toestand in op"
@@ -89716,15 +89715,20 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
 #, fuzzy
+#~ msgid "Set host visibility for contact groups"
+#~ msgstr "Toewijzing van hosts aan contactgroepen"
+
+#, fuzzy
+#~ msgid "Set service visibility for contact groups"
+#~ msgstr "Dienstcontactgroepen"
+
+#, fuzzy
 #~ msgid "Invalid receipt"
 #~ msgstr "Ongeldig rapport"
 
 #, fuzzy
 #~ msgid "Monitor the collector"
 #~ msgstr "Gestopte verzamelaars"
-
-#~ msgid "Assignment of services to contact groups"
-#~ msgstr "Toewijzing van diensten aan contactgroepen"
 
 #, python-format
 #~ msgid ""

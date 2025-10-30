@@ -123,7 +123,7 @@ class QueryDataValue:
 
 
 type RRDData = Mapping[RRDDataKey, TimeSeries]
-type QueryData = Mapping[QueryDataKey, QueryDataValue]
+type QueryData = Mapping[QueryDataKey, Sequence[QueryDataValue]]
 
 
 def _derive_num_points(rrd_data: RRDData) -> tuple[int, int, int, int]:

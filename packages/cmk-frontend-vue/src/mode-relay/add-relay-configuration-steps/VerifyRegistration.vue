@@ -18,14 +18,18 @@ const { _t } = usei18n()
 
 const props = defineProps<{ relayName: string }>()
 
+const emit = defineEmits(['success'])
+
 const loading = ref(true)
 const registrationSuccess = ref(false)
 const unexpectedErrorMessage = ref('')
 
 onMounted(async () => {
+  emit('success', false)
   try {
     const relays = await getRelayCollection()
     registrationSuccess.value = relays.some((relay) => relay.alias === props.relayName)
+    emit('success', registrationSuccess.value)
   } catch (err) {
     unexpectedErrorMessage.value = err instanceof Error ? err.message : 'Unknown error'
   } finally {

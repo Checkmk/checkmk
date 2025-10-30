@@ -18,9 +18,15 @@ import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
 import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistration.vue'
 
 const { _t } = usei18n()
+const props = defineProps<{ create_host_url: string }>()
 
 const currentStep = ref<number>(1)
 const relayName = ref<string>('')
+const registrationSuccess = ref(false)
+const openCreateHostPage = () => {
+  const url = `${props.create_host_url}&relay=${relayName.value}&prefill=relay`
+  window.location.href = url
+}
 </script>
 
 <template>
@@ -88,10 +94,18 @@ const relayName = ref<string>('')
         </template>
 
         <template #content>
-          <VerifyRegistration :relay-name="relayName"></VerifyRegistration>
+          <VerifyRegistration
+            :relay-name="relayName"
+            @success="registrationSuccess = $event"
+          ></VerifyRegistration>
         </template>
         <template #actions>
-          <CmkWizardButton type="finish" />
+          <CmkWizardButton
+            v-if="registrationSuccess"
+            type="finish"
+            :override-label="_t('Continue to add host')"
+            @click="openCreateHostPage"
+          />
           <CmkWizardButton type="previous" />
         </template>
       </CmkWizardStep>

@@ -962,6 +962,15 @@ class ModeCreateHost(CreateHostMode):
                         ),
                         cluster_nodes=None,
                     )
+                case "relay":
+                    return Host(
+                        folder=folder_from_request(request.var("folder"), host_name),
+                        host_name=host_name,
+                        attributes=HostAttributes(
+                            relay=request.get_str_input_mandatory("relay"),
+                        ),
+                        cluster_nodes=None,
+                    )
         return Host(
             folder=folder_from_request(request.var("folder"), host_name),
             host_name=host_name,

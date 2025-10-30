@@ -70,6 +70,7 @@ bool operator==(const EventLogRecordBase::ptr &lhs,
 /// scans eventlog and applies printer to every entry.
 ///
 /// returns last scanned pos where printer returns false
+/// TODO(sk): move cfg::EventLevels level, cfg::EventContext context UP!
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                        cfg::EventLevels level, cfg::EventContext context,
                        SkipDuplicatedRecords skip, const PrintFoo &printer,
@@ -104,19 +105,13 @@ uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                 printer(fmt::format(kSkippedMessageFormat, duplicated_count));
                 duplicated_count = 0;
             }
-            auto str = record->stringize(level, context);
-            if (!str.empty() && !printer(str)) {
-                // printer request to stop scanning
-                break;
-            }
-            previous = std::move(record);
-        } else {
-            auto str = record->stringize(level, context);
-            if (!str.empty() && !printer(str)) {
-                // printer request to stop scanning
-                break;
-            }
         }
+        auto str = record->stringize(level, context);
+        if (!str.empty() && !printer(str)) {
+            // printer request to stop scanning
+            break;
+        }
+        previous = std::move(record);
     }
 
     return last_pos;

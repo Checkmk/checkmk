@@ -277,7 +277,8 @@ bool UpdateState(State &state, const LogWatchEntries &entries) noexcept;
 
 std::pair<uint64_t, std::string> DumpEventLog(cma::evl::EventLogBase &log,
                                               const State &state,
-                                              LogWatchLimits lwl);
+                                              LogWatchLimits lwl,
+                                              const EventFilters &filters);
 // Fix Values in states according to the config
 void UpdateStates(StateVector &states, const LogWatchEntries &entries,
                   const LogWatchEntry *dflt);
@@ -295,11 +296,12 @@ void AddConfigEntry(StateVector &states, const LogWatchEntry &log_entry,
 // nothing when log is absent
 // empty string when no more to read
 std::optional<std::string> ReadDataFromLog(EvlType type, State &state,
-                                           LogWatchLimits lwl);
+                                           LogWatchLimits lwl,
+                                           const EventFilters &filters);
 
 std::string GenerateOutputFromStates(
     EvlType type, StateVector &states, LogWatchLimits lwl,
-    const EventFilters &ids);  // by value(32 bytes is ok)
+    const EventFilters &filters);  // by value(32 bytes is ok)
 
 bool IsEventLogInRegistry(std::string_view name);
 

@@ -525,39 +525,62 @@ std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
     return {};
 }
 
+namespace {
+void PrintEvent(LogWatchLimits lwl, std::string &out,
+                const std::string_view str) {
+    if (lwl.max_line_length > 0 &&
+        static_cast<int64_t>(str.length()) >= lwl.max_line_length) {
+        out += str.substr(0, static_cast<size_t>(lwl.max_line_length));
+        out += '\n';
+    } else {
+        out += str;
+    }
+}
+
+bool TooMuch(LogWatchLimits lwl, const std::string &out, int64_t &count) {
+    if (lwl.max_size > 0 &&
+        static_cast<int64_t>(out.length()) >= lwl.max_size) {
+        return true;
+    }
+    ++count;
+    if (lwl.max_entries > 0 && count >= lwl.max_entries) {
+        return true;
+    }
+    return false;
+}
+
+bool TooLong(LogWatchLimits lwl,
+             std::chrono::time_point<std::chrono::steady_clock> start) {
+    if (lwl.timeout > 0) {
+        auto p = std::chrono::steady_clock::now();
+        auto span = std::chrono::duration_cast<std::chrono::seconds>(p - start);
+        if (span.count() > lwl.timeout) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RecordAllowed(const std::string_view name,
+                   const evl::EventLogRecordBase *record,
+                   const EventFilters &filters) {
+    return false;
+}
+
+}  // namespace
+
 std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
                                               const State &state,
-                                              LogWatchLimits lwl) {
+                                              LogWatchLimits lwl,
+                                              const EventFilters &filters) {
     std::string out;
     int64_t count = 0;
     auto start = std::chrono::steady_clock::now();
     auto pos = evl::PrintEventLog(
         log, state.pos_, state.level_, state.context_, lwl.skip,
         [&out, lwl, &count, start](const std::string &str) {
-            if (lwl.max_line_length > 0 &&
-                static_cast<int64_t>(str.length()) >= lwl.max_line_length) {
-                out += str.substr(0, static_cast<size_t>(lwl.max_line_length));
-                out += '\n';
-            } else {
-                out += str;
-            }
-            if (lwl.max_size > 0 &&
-                static_cast<int64_t>(out.length()) >= lwl.max_size) {
-                return false;
-            }
-            ++count;
-            if (lwl.max_entries > 0 && count >= lwl.max_entries) {
-                return false;
-            }
-            if (lwl.timeout > 0) {
-                auto p = std::chrono::steady_clock::now();
-                auto span =
-                    std::chrono::duration_cast<std::chrono::seconds>(p - start);
-                if (span.count() > lwl.timeout) {
-                    return false;
-                }
-            }
-            return true;
+            PrintEvent(lwl, out, str);
+            return !TooMuch(lwl, out, count) && !TooLong(lwl, start);
         },
         [](const evl::EventLogRecordBase *record) { return true; });
 
@@ -565,7 +588,8 @@ std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
 }
 
 std::optional<std::string> ReadDataFromLog(EvlType type, State &state,
-                                           LogWatchLimits lwl) {
+                                           LogWatchLimits lwl,
+                                           const EventFilters &filters) {
     if (type == EvlType::classic && !IsEventLogInRegistry(state.name_)) {
         // we have to check registry, Windows always return success for
         // OpenLog for any even not existent log, but opens Application
@@ -597,7 +621,7 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State &state,
         return "";
     }
 
-    auto [pos, out] = DumpEventLog(*log, state, lwl);
+    auto [pos, out] = DumpEventLog(*log, state, lwl, filters);
 
     if (provider::config::g_set_logwatch_pos_to_end && last_pos > pos) {
         XLOG::d.t("Skipping logwatch pos from [{}] to [{}]", pos, last_pos);
@@ -703,7 +727,7 @@ std::string GenerateOutputFromStates(EvlType type, StateVector &states,
             case cfg::EventLevels::kWarn:
             case cfg::EventLevels::kCrit:
                 if (state.in_config_) {
-                    auto log_data = ReadDataFromLog(type, state, lwl);
+                    auto log_data = ReadDataFromLog(type, state, lwl, filters);
                     if (log_data.has_value()) {
                         out += "[[[" + state.name_ + "]]]\n" + *log_data;
                     } else

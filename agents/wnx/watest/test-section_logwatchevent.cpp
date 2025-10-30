@@ -112,7 +112,7 @@ public:
 };
 
 TEST_F(LogWatchEventFixture, DumpEventLogWithSkip) {
-    auto [pos, out] = DumpEventLog(event_log, state, lwl_all_with_skip);
+    auto [pos, out] = DumpEventLog(event_log, state, lwl_all_with_skip, {});
     EXPECT_EQ(pos, max_pos - 1);
     auto table = tools::SplitString(out, "\n");
     EXPECT_EQ(table.size(), 5);  // 3 unique entry + 2 repeated messages
@@ -124,7 +124,7 @@ TEST_F(LogWatchEventFixture, DumpEventLogWithSkip) {
 }
 
 TEST_F(LogWatchEventFixture, DumpEventLogWithoutSkip) {
-    auto [pos, out] = DumpEventLog(event_log, state, lwl_all_without_skip);
+    auto [pos, out] = DumpEventLog(event_log, state, lwl_all_without_skip, {});
     EXPECT_EQ(pos, max_pos - 1);
     auto table = tools::SplitString(out, "\n");
     EXPECT_EQ(table.size(), max_pos);
@@ -137,7 +137,7 @@ TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnSameEntry) {
     // special case when cut occurs at the repeating entry
     // we can cut  at the entries+1 !
     auto lwl = lwl_all_with_skip_and_cut_same;
-    auto [pos, out] = DumpEventLog(event_log, state, lwl);
+    auto [pos, out] = DumpEventLog(event_log, state, lwl, {});
     EXPECT_EQ(pos, lwl.max_entries);
     auto table = tools::SplitString(out, "\n");
     EXPECT_EQ(table.size(), lwl.max_entries + 1);
@@ -147,7 +147,7 @@ TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnSameEntry) {
 
 TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnDiffEntry) {
     auto lwl = lwl_all_with_skip_and_cut_diff;
-    auto [pos, out] = DumpEventLog(event_log, state, lwl);
+    auto [pos, out] = DumpEventLog(event_log, state, lwl, {});
     EXPECT_EQ(pos, lwl.max_entries - 1);
     auto table = tools::SplitString(out, "\n");
     EXPECT_EQ(table.size(), lwl.max_entries);
@@ -166,7 +166,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .max_entries = -1,
                            .timeout = -1,
                            .skip = SkipDuplicatedRecords::no};
-        auto [pos, out] = DumpEventLog(*ptr, state, lwl);
+        auto [pos, out] = DumpEventLog(*ptr, state, lwl, {});
         EXPECT_TRUE(pos > 0);
         EXPECT_TRUE(out.length() < 12'000);
     }
@@ -177,7 +177,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .max_entries = 19,
                            .timeout = -1,
                            .skip = SkipDuplicatedRecords::no};
-        auto [pos, out] = DumpEventLog(*ptr, state, lwl);
+        auto [pos, out] = DumpEventLog(*ptr, state, lwl, {});
         EXPECT_TRUE(pos > 0);
         EXPECT_TRUE(out.length() < 20000);
         auto table = cma::tools::SplitString(out, "\n");
@@ -192,7 +192,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .timeout = -1,
                            .skip = SkipDuplicatedRecords::no};
         auto start = steady_clock::now();
-        auto [_, out] = DumpEventLog(*ptr, state, lwl);
+        auto [_, out] = DumpEventLog(*ptr, state, lwl, {});
         auto end = steady_clock::now();
         EXPECT_LE(std::chrono::duration_cast<std::chrono::seconds>(end - start)
                       .count(),

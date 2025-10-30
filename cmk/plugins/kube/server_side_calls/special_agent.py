@@ -97,7 +97,7 @@ def _usage_endpoint(
 def command_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
     args: list[str | Secret] = ["--cluster", params.cluster_name]
     args.extend(["--kubernetes-cluster-hostname", host_config.name])
-    args.extend(["--token", params.token.unsafe()])
+    args.extend(["--token-id", params.token])
 
     args.append("--monitored-objects")
     args.extend(params.monitored_objects)

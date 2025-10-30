@@ -130,10 +130,6 @@ def parse_session_config(arguments: argparse.Namespace) -> _AllConfigs:
     return _Parser.model_validate(arguments.__dict__).root
 
 
-def parse_api_session_config(arguments: argparse.Namespace) -> APISessionConfig:
-    return APISessionConfig.model_validate(arguments.__dict__)
-
-
 def send_requests(
     config: PrometheusSessionConfig,
     queries: Iterable[Query],

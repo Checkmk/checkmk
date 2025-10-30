@@ -32,7 +32,7 @@ import requests
 import urllib3
 from pydantic import TypeAdapter
 
-import cmk.utils.password_store
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.kube import common, performance, prometheus_section, query
 from cmk.plugins.kube.agent_handlers import (
     cluster_handler,
@@ -80,6 +80,8 @@ from cmk.plugins.kube.common import (
 )
 from cmk.plugins.kube.schemata import api, section
 from cmk.server_side_programs.v1_unstable import vcrtrace
+
+TOKEN_OPTION = "token"
 
 
 class Profile:
@@ -151,7 +153,7 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         help="The name of the Checkmk host which represents the Kubernetes cluster (this will be "
         "the host where the Kubernetes rule has been assigned to)",
     )
-    p.add_argument("--token", help="Token for that user")
+    parser_add_secret_option(p, long=f"--{TOKEN_OPTION}", help="Token for that user", required=True)
     p.add_argument(
         "--monitored-objects",
         type=MonitoredObject,
@@ -1193,7 +1195,13 @@ def _create_sections_based_on_machine_section(
 
 
 def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
-    client_config = query.parse_api_session_config(arguments)
+    client_config = query.APISessionConfig.model_validate(
+        {
+            **arguments.__dict__,
+            "token": resolve_secret_option(arguments, TOKEN_OPTION),
+        }
+    )
+
     api_data = _collect_api_data(client_config, MonitoredObject.pvcs in arguments.monitored_objects)
     # Namespaces are handled independently from the cluster object in order to improve
     # testability. The long term goal is to remove all objects from the cluster object
@@ -1327,7 +1335,6 @@ def _main_with_setup(
 
 def main(args: list[str] | None = None) -> int:
     if args is None:
-        cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
     arguments = parse_arguments(args)
     checkmk_host_settings = CheckmkHostSettings(

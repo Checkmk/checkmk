@@ -11,6 +11,7 @@
 
 import abc
 import base64
+import dataclasses
 import io
 import json
 import pprint
@@ -18,7 +19,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping, Sequence
-from typing import override, TypedDict
+from typing import override, Protocol, Self, TypedDict
 
 import livestatus
 
@@ -81,62 +82,71 @@ class ReportSubmitDetails(TypedDict):
     mail: str
 
 
-class ABCCrashReportPage(Page, abc.ABC):
-    def _handle_http_request(self, request: Request) -> None:
-        self._crash_id = request.get_str_input_mandatory("crash_id")
-        self._site_id = request.get_str_input_mandatory("site")
+class CrashReportsRowFetcher(Protocol):
+    def get_crash_report_rows(
+        self, only_sites: livestatus.OnlySites, filter_headers: str
+    ) -> Iterator[dict[str, str]]: ...
 
-    def _get_crash_info(self, row: CrashReportRow) -> CrashInfo:
-        return json.loads(row["crash_info"])
 
-    def _get_crash_row(self):
-        if row := self._get_crash_report_row(self._crash_id, site_id=self._site_id):
-            return row
-        raise MKUserError(
-            None,
-            _(
-                "Could not find the requested crash %s on site %s. "
-                "Maybe the automatic cleanup found more than 200 crash reports "
-                "below ~/var/check_mk/crashes and already deleted the requested crash report."
-            )
-            % (self._crash_id, self._site_id),
+@dataclasses.dataclass(frozen=True)
+class CrashReport:
+    crash_id: str
+    site_id: str
+    row: CrashReportRow
+    info: CrashInfo
+
+    @classmethod
+    def build(cls, request: Request, fetcher: CrashReportsRowFetcher) -> Self:
+        return cls(
+            crash_id=(crash_id := request.get_str_input_mandatory("crash_id")),
+            site_id=(site_id := request.get_str_input_mandatory("site")),
+            row=(row := cls._extract_row(fetcher, crash_id, site_id)),
+            info=json.loads(row["crash_info"]),
         )
 
-    def _get_crash_report_row(self, crash_id: str, *, site_id: str) -> CrashReportRow | None:
-        rows = CrashReportsRowTable().get_crash_report_rows(
-            only_sites=[SiteId(site_id)],
-            filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
-        )
+    @staticmethod
+    def _extract_row(
+        fetcher: CrashReportsRowFetcher, crash_id: str, site_id: str
+    ) -> CrashReportRow:
         try:
-            return next(rows)
+            return next(
+                fetcher.get_crash_report_rows(
+                    only_sites=[SiteId(site_id)],
+                    filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
+                )
+            )
         except StopIteration:
-            return None
+            raise MKUserError(
+                None,
+                _(
+                    "Could not find the requested crash %s on site %s. "
+                    "Maybe the automatic cleanup found more than 200 crash reports "
+                    "below ~/var/check_mk/crashes and already deleted the requested crash report."
+                )
+                % (crash_id, site_id),
+            )
 
-    def _get_serialized_crash_report(self) -> Mapping[str, bytes | None]:
-        return {
-            k: v.encode()
-            for k, v in self._get_crash_row().items()
-            if k not in ["site", "crash_id", "crash_type"]
-        }
+
+def _get_serialized_crash_report(row: CrashReportRow) -> Mapping[str, bytes | None]:
+    return {k: v.encode() for k, v in row.items() if k not in ["site", "crash_id", "crash_type"]}
 
 
-class PageCrash(ABCCrashReportPage):
+class PageCrash(Page):
     @override
     def page(self, ctx: PageContext) -> None:
-        self._handle_http_request(ctx.request)
-        row = self._get_crash_row()
-        crash_info = self._get_crash_info(row)
+        report = CrashReport.build(ctx.request, CrashReportsRowTable())
+        title = _("Crash report: %s") % report.crash_id
 
-        title = _("Crash report: %s") % self._crash_id
-        breadcrumb = self._breadcrumb(
-            ctx.request, title, UserPermissions.from_config(ctx.config, permission_registry)
-        )
-        make_header(html, title, breadcrumb, self._page_menu(ctx.request, breadcrumb, crash_info))
+        permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        breadcrumb = self._breadcrumb(ctx.request, title, permissions)
+
+        page_menu = self._page_menu(ctx.request, breadcrumb, report.info, report.site_id)
+        make_header(html, title, breadcrumb, page_menu)
 
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
         if not user.may("general.see_crash_reports"):
-            html.show_error("<b>{}:</b> {}".format(_("Internal error"), crash_info["exc_value"]))
+            html.show_error("<b>{}:</b> {}".format(_("Internal error"), report.info["exc_value"]))
             html.p(
                 _(
                     "An internal error occurred while processing your request. "
@@ -150,13 +160,13 @@ class PageCrash(ABCCrashReportPage):
 
         if ctx.request.has_var("_report") and transactions.check_transaction():
             details = self._handle_report_form(
-                ctx.request, ctx.config.crash_report_target, ctx.config.crash_report_url
+                ctx.request, ctx.config.crash_report_target, ctx.config.crash_report_url, report.row
             )
         else:
             details = ReportSubmitDetails(name="", mail="")
 
-        if crash_info["crash_type"] == "gui":
-            html.show_error("<b>{}:</b> {}".format(_("Internal error"), crash_info["exc_value"]))
+        if report.info["crash_type"] == "gui":
+            html.show_error("<b>{}:</b> {}".format(_("Internal error"), report.info["exc_value"]))
             html.p(
                 _(
                     "An internal error occurred while processing your request. "
@@ -165,11 +175,11 @@ class PageCrash(ABCCrashReportPage):
                 )
             )
 
-        self._warn_about_sensitive_information(crash_info)
-        self._warn_about_local_files(crash_info)
-        self._show_report_form(crash_info, details)
-        self._show_crash_report(crash_info)
-        self._show_crash_report_details(crash_info, row)
+        self._warn_about_sensitive_information(report.info)
+        self._warn_about_local_files(report.info)
+        self._show_report_form(report.info, details)
+        self._show_crash_report(report.info)
+        self._show_crash_report_details(report.info, report.row)
 
         html.footer()
 
@@ -198,7 +208,7 @@ class PageCrash(ABCCrashReportPage):
         return breadcrumb
 
     def _page_menu(
-        self, request: Request, breadcrumb: Breadcrumb, crash_info: CrashInfo
+        self, request: Request, breadcrumb: Breadcrumb, info: CrashInfo, site_id: str
     ) -> PageMenu:
         return PageMenu(
             dropdowns=[
@@ -232,7 +242,7 @@ class PageCrash(ABCCrashReportPage):
                     topics=[
                         PageMenuTopic(
                             title=_("Monitoring"),
-                            entries=list(self._page_menu_entries_related_monitoring(crash_info)),
+                            entries=list(self._page_menu_entries_related_monitoring(info, site_id)),
                         ),
                     ],
                 ),
@@ -241,13 +251,17 @@ class PageCrash(ABCCrashReportPage):
         )
 
     def _page_menu_entries_related_monitoring(
-        self, crash_info: CrashInfo
+        self, info: CrashInfo, site_id: str
     ) -> Iterator[PageMenuEntry]:
-        renderer = self._crash_type_renderer(crash_info["crash_type"])
-        yield from renderer.page_menu_entries_related_monitoring(crash_info, self._site_id)
+        renderer = self._crash_type_renderer(info["crash_type"])
+        yield from renderer.page_menu_entries_related_monitoring(info, site_id)
 
     def _handle_report_form(
-        self, request: Request, crash_report_target: str, crash_report_url: str
+        self,
+        request: Request,
+        crash_report_target: str,
+        crash_report_url: str,
+        row: CrashReportRow,
     ) -> ReportSubmitDetails:
         details = ReportSubmitDetails(name="", mail="")
         try:
@@ -263,7 +277,7 @@ class PageCrash(ABCCrashReportPage):
                     (
                         "crashdump",
                         base64.b64encode(
-                            _pack_crash_report(self._get_serialized_crash_report())
+                            _pack_crash_report(_get_serialized_crash_report(row))
                         ).decode("ascii"),
                     ),
                 ]
@@ -722,20 +736,20 @@ def _show_agent_output(row: CrashReportRow) -> None:
         _show_output_box(_("Agent output"), agent_output.encode())
 
 
-class PageDownloadCrashReport(ABCCrashReportPage):
+class PageDownloadCrashReport(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         user.need_permission("general.see_crash_reports")
-        self._handle_http_request(ctx.request)
+        report = CrashReport.build(ctx.request, CrashReportsRowTable())
 
         filename = "Checkmk_Crash_{}_{}_{}.tar.gz".format(
-            urlencode(self._site_id),
-            urlencode(self._crash_id),
+            urlencode(report.site_id),
+            urlencode(report.crash_id),
             time.strftime("%Y-%m-%d_%H-%M-%S"),
         )
         response.set_content_type("application/x-tgz")
         response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)
-        response.set_data(_pack_crash_report(self._get_serialized_crash_report()))
+        response.set_data(_pack_crash_report(_get_serialized_crash_report(report.row)))
 
 
 def _pack_crash_report(serialized_crash_report: Mapping[str, bytes | None]) -> bytes:

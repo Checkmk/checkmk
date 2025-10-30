@@ -733,6 +733,8 @@ class PerftestPlotArgs(argparse.Namespace):
         edition (str): The default edition.
         update_db (bool): If True, update existing job data in the database.
         purge_db (bool): If True, delete existing job data from the database.
+        baseline_offset (int): The offset for the baseline validation.
+        overshoot_tolerance (float): The tolerance level for the baseline validation.
         log_level (str): Logging level of the application.
     """
 
@@ -763,6 +765,8 @@ class PerftestPlotArgs(argparse.Namespace):
     edition: str
     update_db: bool
     purge_db: bool
+    baseline_offset: int
+    overshoot_tolerance: float
     log_level: str
 
 
@@ -1246,15 +1250,24 @@ class PerftestPlot:
             list[str]: A sorted list of valid job names found on disk or in the database.
         """
 
-        def weekly_jobs() -> list[str]:
+        def baseline_jobs(offset=0) -> list[str]:
+            num_old_jobs = 4
             return [
-                (Datetime.today() - timedelta(days=i)).strftime(
+                (Datetime.today() - timedelta(days=offset + i)).strftime(
                     f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}"
                 )
-                for i in range(4, -1, -1)
+                for i in range(num_old_jobs, 0, -1)
+            ] + [
+                Datetime.today().strftime(
+                    f"{self.args.branch_version}-%Y.%m.%d.{self.args.edition}"
+                )
             ]
 
-        job_names = sorted(list(set(self.args.job_names))) if self.args.job_names else weekly_jobs()
+        job_names = (
+            sorted(list(set(self.args.job_names)))
+            if self.args.job_names
+            else baseline_jobs(self.args.baseline_offset)
+        )
 
         if self.root_dir.is_dir():
             print(f'Scanning root dir "{self.root_dir}" for reports...')
@@ -1598,7 +1611,7 @@ class PerftestPlot:
                 A list of human-readable alert messages. The list is empty if all scenarios
                 are within tolerated performance bounds.
         """
-        overshoot_tolerance = 10
+        overshoot_tolerance = self.args.overshoot_tolerance
 
         alerts = []
         for scenario_name in self.scenario_names:
@@ -1920,6 +1933,20 @@ def parse_args() -> PerftestPlotArgs:
         help="Specifies if the DB will be purged, if job data for a selected job exists already.",
     )
     parser.add_argument(
+        "--baseline-offset",
+        dest="baseline_offset",
+        type=int,
+        default=0,
+        help="Specifies the number of days in the past to use for the baseline validation (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--overshoot-tolerance",
+        dest="overshoot_tolerance",
+        type=float,
+        default=10,
+        help="Specifies the tolerance percentage to which the baseline may be exceeded (default: %(default)s).",
+    )
+    parser.add_argument(
         "--log-level",
         dest="log_level",
         type=str,
@@ -1940,6 +1967,7 @@ def main():
     Raises:
         SystemExit: If no benchmark jobs are provided.
     """
+    rc = 0
     args = parse_args()
     logger.setLevel(args.log_level)
     app = PerftestPlot(args=args)
@@ -1965,8 +1993,11 @@ def main():
         print(f"{summary}: {description}")
         if app.alert_on_failure and alerts:
             app.create_ticket(summary=summary, description=description)
+        if alerts:
+            rc = 2
 
     print(app.output_dir)
+    sys_exit(rc)
 
 
 if __name__ == "__main__":

@@ -107,6 +107,7 @@
   --icon-check-parameters: url('~cmk-frontend/themes/facelift/images/icon_check_parameters.svg');
   --icon-sites: url('~cmk-frontend/themes/facelift/images/icon_sites.svg');
   --icon-folder: url('~cmk-frontend/themes/facelift/images/icon_folder.svg');
+  --icon-custom-snapin: url('~cmk-frontend/themes/facelift/images/icon_custom_snapin.svg');
   --icon-networking: url('~cmk-frontend/themes/facelift/images/icon_networking.svg');
   --icon-aws-logo: url('~cmk-frontend/themes/facelift/images/icon_aws_logo.svg');
   --icon-azure-vms: url('~cmk-frontend/themes/facelift/images/icon_azure_vms.svg');

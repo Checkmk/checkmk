@@ -142,7 +142,8 @@ export const simpleIcons = [
   'widget-delete',
   'debian',
   'redhat',
-  'windows'
+  'windows',
+  'custom-snapin'
 ] as const
 
 export const oneColorIcons = [

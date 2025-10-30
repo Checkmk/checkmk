@@ -9,7 +9,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from collections import defaultdict
 from collections.abc import Mapping
+from typing import Any, NotRequired, TypedDict
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
@@ -27,33 +29,37 @@ check_info = {}
 # url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa
 
 
-type Section = Mapping[str, dict[str, bool | int | str | None]]
+class Store(TypedDict):
+    accessible: NotRequired[bool]
+    capacity: NotRequired[int]
+    freeSpace: NotRequired[int]
+    uncommitted: NotRequired[int]
+
+
+type Section = Mapping[str, Store]
 
 
 def parse_esx_vsphere_datastores(string_table: StringTable) -> Section:
-    stores = dict[str, dict[str, bool | int | str | None]]()
+    stores: dict[str, Store] = defaultdict(Store)
+    name = ""
     for line in string_table:
         if line[0].startswith("["):
             name = line[0][1:-1]
-            store = {}
-            stores[name] = store
-        else:
-            # Seems that the url attribute can have an empty value
-            if len(line) == 1:
-                key = line[0].strip()
-                value: str | bool | int | None = None
-            else:
-                key, value = line
+            continue
 
-            if key == "accessible" and value is not None:
-                value = str(value).lower() == "true"
-            elif key in ["capacity", "freeSpace", "uncommitted"] and value is not None:
-                value = int(value)
-            store[key] = value
+        match line:
+            case "accessible" as key, value:
+                stores[name][key] = value.lower() == "true"
+            case "capacity" | "freeSpace" | "uncommitted" as key, value:
+                stores[name][key] = int(value)
+            case _:
+                pass
+
     return stores
 
 
-def check_esx_vsphere_datastores(item, params, parsed):
+# types will improve soon
+def check_esx_vsphere_datastores(item: str, params: Mapping[str, Any], parsed: Section) -> Any:
     if not (data := parsed.get(item)):
         return
     if not data["accessible"]:
@@ -62,7 +68,7 @@ def check_esx_vsphere_datastores(item, params, parsed):
     mib = 1024.0**2
     size_bytes = data.get("capacity")
     avail_bytes = data.get("freeSpace")
-    if size_bytes is None or size_bytes == 0 or avail_bytes is None:
+    if not size_bytes or avail_bytes is None:
         return
 
     yield df_check_filesystem_single(
@@ -72,6 +78,7 @@ def check_esx_vsphere_datastores(item, params, parsed):
     uncommitted_bytes = data.get("uncommitted")
     if uncommitted_bytes is None:
         return
+
     text_uncommitted = "Uncommitted: %s" % render.bytes(uncommitted_bytes)
     yield 0, text_uncommitted, [("uncommitted", uncommitted_bytes / mib)]  # fixed: true-division
 
@@ -104,7 +111,7 @@ def check_esx_vsphere_datastores(item, params, parsed):
         yield 0, "", [("overprovisioned", prov_bytes / mib)]  # fixed: true-division
 
 
-def discover_esx_vsphere_datastores(section):
+def discover_esx_vsphere_datastores(section: Section) -> Any:
     yield from ((item, {}) for item in section)
 
 

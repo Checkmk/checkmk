@@ -90,7 +90,7 @@ const dataPointAttribute = ref<string | null>(null)
 
 // autocompleters
 export interface AutoCompleteContext {
-  metricName?: string
+  metric_name?: string
   resource_attributes?: string[]
   scope_attributes?: string[]
   data_point_attributes?: string[]
@@ -145,7 +145,7 @@ const dataPointAttributesAutocompleter = computed<Autocompleter>(() => ({
 function getAutoCompleterContext() {
   const context: AutoCompleteContext = {}
   if (metricName.value) {
-    context.metricName = metricName.value
+    context.metric_name = metricName.value
   }
   if (resourceAttributes.value.length > 0) {
     context.resource_attributes = resourceAttributes.value

@@ -13,14 +13,14 @@ export enum MetricSelection {
 }
 
 export enum Graph {
-  SINGLE_GRAPH = 'SINGLE_GRAPH',
-  GAUGE = 'GAUGE',
-  SINGLE_METRIC = 'SINGLE_METRIC',
-  BARPLOT = 'BARPLOT',
-  SCATTERPLOT = 'SCATTERPLOT',
-  TOP_LIST = 'TOP_LIST',
-  PERFORMANCE_GRAPH = 'PERFORMANCE_GRAPH',
-  COMBINED_GRAPH = 'COMBINED_GRAPH',
+  SINGLE_GRAPH = 'single_timeseries',
+  GAUGE = 'gauge',
+  SINGLE_METRIC = 'single_metric',
+  BARPLOT = 'barplot',
+  SCATTERPLOT = 'average_scatterplot',
+  TOP_LIST = 'top_list',
+  PERFORMANCE_GRAPH = 'performance_graph',
+  COMBINED_GRAPH = 'combined_graph',
   ANY_GRAPH = 'ANY_GRAPH'
 }
 
@@ -96,4 +96,48 @@ export const getAvailableGraphs = (
   metricSelection: MetricSelection
 ): Graph[] => {
   return [...graphSelector[hostSelection][serviceSelection][metricSelection]]
+}
+
+interface GetDefaultsFromGraph {
+  hostSelection: ElementSelection
+  serviceSelection: ElementSelection
+  metricSelection: MetricSelection
+}
+
+export const getDefaultsFromGraph = (graph?: Graph | string): GetDefaultsFromGraph => {
+  let hostSelection: ElementSelection = ElementSelection.SPECIFIC
+  let serviceSelection: ElementSelection = ElementSelection.SPECIFIC
+  let metricSelection: MetricSelection = MetricSelection.SINGLE_METRIC
+
+  switch (graph) {
+    case Graph.BARPLOT:
+      hostSelection = ElementSelection.MULTIPLE
+      break
+
+    case Graph.SCATTERPLOT:
+      hostSelection = ElementSelection.MULTIPLE
+      serviceSelection = ElementSelection.MULTIPLE
+      break
+
+    case Graph.TOP_LIST:
+      hostSelection = ElementSelection.MULTIPLE
+      serviceSelection = ElementSelection.MULTIPLE
+      break
+
+    case Graph.PERFORMANCE_GRAPH:
+      metricSelection = MetricSelection.COMBINED_GRAPH
+      break
+
+    case Graph.COMBINED_GRAPH:
+      hostSelection = ElementSelection.MULTIPLE
+      serviceSelection = ElementSelection.MULTIPLE
+      metricSelection = MetricSelection.COMBINED_GRAPH
+      break
+  }
+
+  return {
+    hostSelection,
+    serviceSelection,
+    metricSelection
+  }
 }

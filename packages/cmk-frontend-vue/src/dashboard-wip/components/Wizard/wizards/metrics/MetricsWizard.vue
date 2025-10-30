@@ -35,10 +35,11 @@ import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import { ElementSelection } from '../../types'
-import { MetricSelection } from './composables/useSelectGraphTypes'
+import { type MetricSelection, getDefaultsFromGraph } from './composables/useSelectGraphTypes'
 import { useMetric } from './stage1/MetricSelector/useMetric'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
+import { getMetricFromWidget } from './utils'
 
 const { _t } = usei18n()
 
@@ -63,23 +64,20 @@ const emit = defineEmits<{
 
 const filterDefinitions = useFilterDefinitions()
 
-const widgetFilterManager = useWidgetFilterManager({}, filterDefinitions)
-
+const widgetFilterManager = useWidgetFilterManager(
+  props.editWidgetSpec?.filter_context.filters || {},
+  filterDefinitions
+)
 const addFilters = useAddFilter()
 
-// /////////////////////////////////////////////////////////
-// TODO: Fill with saved values if available --v--
-// Stage 1
-const hostFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
-const serviceFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
+const { hostSelection, serviceSelection, metricSelection } = getDefaultsFromGraph(
+  props.editWidgetSpec?.content?.type
+)
 
-const metricType = ref<MetricSelection>(MetricSelection.SINGLE_METRIC)
-const metricHandler = useMetric(null, null, null)
-
-// Stage 2
-
-// TODO: Fill with saved values if available --^--
-// /////////////////////////////////////////////////////////
+const hostFilterType = ref<ElementSelection>(hostSelection)
+const serviceFilterType = ref<ElementSelection>(serviceSelection)
+const metricType = ref<MetricSelection>(metricSelection)
+const metricHandler = useMetric(null, null, getMetricFromWidget(props.editWidgetSpec))
 
 watch([hostFilterType, serviceFilterType], ([newHostFilterType, newServiceFilterType]) => {
   if (newHostFilterType === ElementSelection.MULTIPLE) {

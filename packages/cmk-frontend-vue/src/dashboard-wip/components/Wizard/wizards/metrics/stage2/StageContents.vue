@@ -30,6 +30,7 @@ import type {
 
 import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
+import { getGraph } from '../utils'
 import BarplotWidget from './BarplotWidget/BarplotWidget.vue'
 import { type UseBarplot, useBarplot } from './BarplotWidget/composables/useBarplot'
 import CombinedGraphWidget from './CombinedGraphWidget/CombinedGraphWidget.vue'
@@ -83,7 +84,11 @@ const gotoNextStage = () => {
     return
   }
 
-  const activeHandler = handler[selectedWidget.value]
+  const activeHandler = [Graph.COMBINED_GRAPH, Graph.PERFORMANCE_GRAPH].includes(
+    selectedWidget.value
+  )
+    ? handler[Graph.ANY_GRAPH]
+    : handler[selectedWidget.value]
   const isValid = activeHandler?.validate()
 
   if (isValid) {
@@ -119,7 +124,9 @@ const availableWidgetsBottom: WidgetItemList = [
   { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' }
 ]
 
-const selectedWidget = ref<Graph | null>(enabledWidgets[0] || null)
+const selectedWidget = ref<Graph | null>(
+  getGraph(enabledWidgets, props.editWidgetSpec?.content?.type)
+)
 
 let handler: Partial<Record<Graph, UseWidgetHandler>> = {}
 

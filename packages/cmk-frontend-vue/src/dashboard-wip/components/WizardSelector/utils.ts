@@ -16,6 +16,7 @@ export function widgetTypeToSelectorMatcher(
     case 'gauge':
     case 'single_metric':
     case 'average_scatterplot':
+    case 'top_list':
     case 'single_timeseries': {
       return 'metrics_graphs'
     }

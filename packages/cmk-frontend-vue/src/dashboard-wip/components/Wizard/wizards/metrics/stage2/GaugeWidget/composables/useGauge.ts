@@ -59,8 +59,8 @@ export const useGauge = async (
     fixedDataRangeProps
   } = useFixedDataRange(
     currentContent?.display_range?.unit,
-    currentContent?.display_range?.maximum,
-    currentContent?.display_range?.minimum
+    currentContent?.display_range?.minimum,
+    currentContent?.display_range?.maximum
   )
 
   // TODO: This field is incomplete, both here and the vue component.

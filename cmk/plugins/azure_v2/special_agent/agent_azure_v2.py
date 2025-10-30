@@ -1263,7 +1263,6 @@ async def process_cosmosdb(
                     "type": "Microsoft.DocumentDB/databaseAccounts/cosmosdb_databases",  # fake type to fake the section (last part after /)
                     # data from cosmos account:
                     "location": resource.info.get("location"),
-                    "tags": resource.tags,
                     "group": resource.info.get("group"),
                 }
 

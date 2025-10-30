@@ -72,4 +72,4 @@ def tls_connect(host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion
     if error_1 == "tlsv1 alert protocol version" and msg == "SSL alert number 70":
         raise CMKTLSError(msg)
 
-    raise RuntimeError("Unknown openssl error: {openssl_call.stderr=}")
+    raise RuntimeError(f"Unknown openssl error: {openssl_call.stderr=}")

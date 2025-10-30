@@ -38,6 +38,9 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
         cmk/azure/subscription_id:
             This label contains the azure id of the subscription.
 
+        cmk/azure/entity:tenant:
+            This label is set for all hosts that are monitoring a tenant.
+
         cmk/azure/entity:subscription:
             This label is set for all hosts that are monitoring a subscription.
 

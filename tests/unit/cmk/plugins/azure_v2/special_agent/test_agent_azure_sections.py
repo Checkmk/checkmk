@@ -12,6 +12,7 @@ import pytest
 from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     AzureLabelsSection,
     AzureSubscription,
+    AzureTenantLabelsSection,
     Section,
 )
 
@@ -157,6 +158,50 @@ AZURE_SUBSCRIPTION_SAFEHOSTNAME = AzureSubscription(
 )
 def test_azure_labels_section(
     labels_section: AzureLabelsSection,
+    section_result: Sequence[str],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    labels_section.write()
+    output = capsys.readouterr().out
+    lines = output.strip().split("\n")
+    assert lines == section_result
+
+
+@pytest.mark.parametrize(
+    "labels_section, section_result",
+    [
+        pytest.param(
+            AzureTenantLabelsSection(
+                labels={},
+                tags={},
+            ),
+            [
+                "<<<<>>>>",
+                "<<<azure_v2_labels:sep(0)>>>",
+                '{"entity": "tenant"}',
+                "{}",
+                "<<<<>>>>",
+            ],
+            id="basic test empty labels and tags",
+        ),
+        pytest.param(
+            AzureTenantLabelsSection(
+                labels={"key1": "value1", "key2": "value2"},
+                tags={"tag1": "tagvalue1", "tag2": "tagvalue2"},
+            ),
+            [
+                "<<<<>>>>",
+                "<<<azure_v2_labels:sep(0)>>>",
+                '{"entity": "tenant", "key1": "value1", "key2": "value2"}',
+                '{"tag1": "tagvalue1", "tag2": "tagvalue2"}',
+                "<<<<>>>>",
+            ],
+            id="basic test",
+        ),
+    ],
+)
+def test_azure_tenant_labels_section(
+    labels_section: AzureTenantLabelsSection,
     section_result: Sequence[str],
     capsys: pytest.CaptureFixture[str],
 ) -> None:

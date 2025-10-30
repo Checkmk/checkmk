@@ -534,6 +534,18 @@ class AzureLabelsSection(_AzureBaseLabelsSection):
         self._initialize_data(labels, tags)
 
 
+class AzureTenantLabelsSection(_AzureBaseLabelsSection, AzureSection):
+    def __init__(
+        self,
+        *,
+        labels: Mapping[str, str] = {},
+        tags: Mapping[str, str] = {},
+    ) -> None:
+        final_labels = {"entity": "tenant", **labels}
+        super().__init__("labels", separator=0)
+        self._initialize_data(final_labels, tags)
+
+
 class HostTarget(StrEnum):
     RESOURCE_NAME = auto()
     PIGGYTARGETS = auto()
@@ -2383,6 +2395,10 @@ async def _collect_resources(
     return selected_resources, monitored_groups
 
 
+def write_tenant_info() -> None:
+    AzureTenantLabelsSection().write()
+
+
 async def main_subscription(
     args: Args, selector: Selector, subscription: AzureSubscription, monitored_services: set[str]
 ) -> None:
@@ -2404,6 +2420,7 @@ async def main_subscription(
             write_resource_groups_sections(resource_groups, subscription)
             write_subscription_info(subscription)
             write_subscription_section(subscription)
+            write_tenant_info()
 
             tasks = {
                 process_usage_details(mgmt_client, subscription, monitored_groups, args)

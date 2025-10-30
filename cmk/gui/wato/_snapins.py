@@ -109,6 +109,7 @@ def get_wato_menu_items(user_permissions: UserPermissions) -> list[MainMenuTopic
                 is_show_more=module.is_show_more,
                 icon=module.icon,
                 main_menu_search_terms=module.main_menu_search_terms(),
+                loading_transition=module.loading_transition,
             )
         )
 

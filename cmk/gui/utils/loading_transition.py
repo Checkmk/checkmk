@@ -19,5 +19,5 @@ def loading_transition(template: LoadingTransition, delay_ms: int = 1000) -> Gen
         yield
         html.span(
             HTML(output_funnel.drain(), False),
-            onclick=f"cmk.utils.createSkeleton('{template.value}', {delay_ms});",
+            onclick=f"cmk.utils.makeLoadingTransition('{template.value}', {delay_ms});",
         )

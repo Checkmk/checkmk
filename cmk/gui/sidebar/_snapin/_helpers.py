@@ -21,6 +21,7 @@ from cmk.gui.main_menu_types import MainMenuItem, MainMenuTopic
 from cmk.gui.sites import SiteStatus, states
 from cmk.gui.type_defs import Choices, Icon, Visual
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_title
 
@@ -177,6 +178,13 @@ def make_main_menu(
             topic = topics["other"]
 
         url = _visual_url(visual_type_name, name, visual)
+        match visual_type_name:
+            case "dashboards" | "custom_graph":
+                loading_transition: LoadingTransition | None = LoadingTransition.dashboard
+            case "reports" | "views":
+                loading_transition = LoadingTransition.table
+            case _:
+                loading_transition = None
 
         main_menu_topic = by_topic.setdefault(
             topic,
@@ -200,6 +208,7 @@ def make_main_menu(
                 is_show_more=visual["is_show_more"],
                 icon=visual["icon"],
                 main_menu_search_terms=visual["main_menu_search_terms"],
+                loading_transition=loading_transition,
             )
         )
 

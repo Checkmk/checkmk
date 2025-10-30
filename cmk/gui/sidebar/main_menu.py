@@ -10,6 +10,7 @@
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the main menu
 """
 
+from contextlib import nullcontext
 from dataclasses import asdict
 from typing import NamedTuple, override, TypedDict
 
@@ -27,6 +28,7 @@ from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.loading_transition import loading_transition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.roles import UserPermissions
@@ -422,17 +424,22 @@ oncontextmenu = e => e.preventDefault();"""
         html.close_ul()
 
     def _show_item(self, item: MainMenuItem) -> None:
-        html.open_li(class_="show_more_mode" if item.is_show_more else None)
-        html.open_a(
-            href=item.url,
-            target=item.target,
-            onclick="cmk.popup_menu.close_popup()",
-        )
-        if user.get_attribute("icons_per_item"):
-            html.icon(item.icon or "dash")
-        self._show_item_title(item)
-        html.close_a()
-        html.close_li()
+        with (
+            loading_transition(template=item.loading_transition)
+            if item.loading_transition
+            else nullcontext()
+        ):
+            html.open_li(class_="show_more_mode" if item.is_show_more else None)
+            html.open_a(
+                href=item.url,
+                target=item.target,
+                onclick="cmk.popup_menu.close_popup()",
+            )
+            if user.get_attribute("icons_per_item"):
+                html.icon(item.icon or "dash")
+            self._show_item_title(item)
+            html.close_a()
+            html.close_li()
 
     def _show_item_title(self, item: MainMenuItem | MainMenuTopicSegment) -> None:
         item_title: HTML | str = item.title

@@ -943,7 +943,7 @@ function getContentBody(): HTMLElement {
     : document.body
 }
 
-export function createSkeleton(template: string, delay: number): void {
+export function makeLoadingTransition(template: string, delay: number): void {
   const contentBody = getContentBody()
   contentBody.setAttribute('data-prepare-loading-transition', 'true')
   contentBody.style.cursor = 'wait'

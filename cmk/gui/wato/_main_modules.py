@@ -15,6 +15,7 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.utils import paths
@@ -183,6 +184,10 @@ class MainModuleGlobalSettings(ABCMainModule):
     def is_show_more(self) -> bool:
         return False
 
+    @property
+    def loading_transition(self) -> LoadingTransition | None:
+        return LoadingTransition.catalog
+
 
 class MainModuleReadOnly(ABCMainModule):
     @property
@@ -318,6 +323,10 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
     @property
     def is_show_more(self) -> bool:
         return False
+
+    @property
+    def loading_transition(self) -> LoadingTransition | None:
+        return LoadingTransition.catalog
 
 
 class MainModuleHWSWInventory(ABCMainModule):
@@ -977,6 +986,10 @@ class MainModuleAuditLog(ABCMainModule):
     def is_show_more(self) -> bool:
         return True
 
+    @property
+    def loading_transition(self) -> LoadingTransition | None:
+        return LoadingTransition.table
+
 
 class MainModuleAnalyzeConfig(ABCMainModule):
     @property
@@ -1115,6 +1128,10 @@ class MainModuleMonitoringRules(ABCMainModule):
     @property
     def is_show_more(self) -> bool:
         return False
+
+    @property
+    def loading_transition(self) -> LoadingTransition | None:
+        return LoadingTransition.catalog
 
 
 class MainModuleDiscoveryRules(ABCMainModule):

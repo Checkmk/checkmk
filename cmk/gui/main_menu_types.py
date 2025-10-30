@@ -12,6 +12,7 @@ from typing import Literal, NamedTuple, override
 
 from cmk.gui.http import Request
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.speaklater import LazyString
 
@@ -31,6 +32,7 @@ class MainMenuItem(_MainMenuEntry):
     target: str = "main"
     button_title: str | None = None
     main_menu_search_terms: Sequence[str] = ()
+    loading_transition: LoadingTransition | None = None
 
 
 @dataclass(kw_only=True, slots=True)

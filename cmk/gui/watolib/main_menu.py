@@ -15,6 +15,7 @@ from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -63,6 +64,10 @@ class MenuItem:
     @property
     def enabled(self) -> bool:
         return True
+
+    @property
+    def loading_transition(self) -> LoadingTransition | None:
+        return None
 
     def may_see(self) -> bool:
         """Whether or not the currently logged in user is allowed to see this module"""

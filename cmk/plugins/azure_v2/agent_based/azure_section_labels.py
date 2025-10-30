@@ -67,9 +67,6 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
     # This is to be sure we only work with valid labels
     labels = ensure_valid_labels({key: str(val) for key, val in section.host_labels.items()})
     for label, value in labels.items():
-        if label == "group_name":
-            yield HostLabel("cmk/azure/resource_group", value)
-            continue
         if label == "vm_instance":
             yield HostLabel("cmk/azure/vm", "instance")
             continue

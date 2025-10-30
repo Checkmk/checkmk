@@ -61,7 +61,7 @@ def test_parse_host_labels(
                 host_labels={"group_name": "rg-pm-weu"},
                 tags={},
             ),
-            [HostLabel("cmk/azure/resource_group", "rg-pm-weu")],
+            [HostLabel("cmk/azure/group_name", "rg-pm-weu")],
             id="Simple recognized label",
         ),
         pytest.param(
@@ -70,7 +70,7 @@ def test_parse_host_labels(
                 tags={},
             ),
             [
-                HostLabel("cmk/azure/resource_group", "rg-pm-weu"),
+                HostLabel("cmk/azure/group_name", "rg-pm-weu"),
                 HostLabel("cmk/azure/another_label", "value"),
             ],
             id="Recognized and unrecognized labels",
@@ -104,7 +104,7 @@ def test_parse_host_labels(
                 },
             ),
             [
-                HostLabel("cmk/azure/resource_group", "rg-pm-weu"),
+                HostLabel("cmk/azure/group_name", "rg-pm-weu"),
                 HostLabel("cmk/azure/another_label", "value"),
                 HostLabel("cmk/azure/tag/tag-test-name", "tag-test-value"),
                 HostLabel("cmk/azure/tag/the_tag", "the_value"),

@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from cmk.ccc.i18n import _
@@ -14,7 +15,7 @@ from cmk.gui.form_specs import (
 from cmk.gui.form_specs.generators.folder import create_full_path_folder_choice
 from cmk.gui.form_specs.unstable import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.unstable.validators import not_empty
-from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, FolderTree
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -22,12 +23,15 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
 INTERNAL_TRANSFORM_ERROR = _("FormSpec and internal data structure mismatch")
 
 
-def folder_is_writable(name: str) -> None:
-    if not folder_tree().all_folders()[name].permissions.may("write"):
-        raise ValidationError(Message("You do not have write permission for this folder."))
+def _make_folder_is_writable_validator(tree: FolderTree) -> Callable[[str], None]:
+    def folder_is_writable(name: str) -> None:
+        if not tree.all_folders()[name].permissions.may("write"):
+            raise ValidationError(Message("You do not have write permission for this folder."))
+
+    return folder_is_writable
 
 
-def get_folder_slidein_schema() -> Catalog:
+def get_folder_slidein_schema(tree: FolderTree) -> Catalog:
     return Catalog(
         elements={
             "general": Topic(
@@ -44,7 +48,7 @@ def get_folder_slidein_schema() -> Catalog:
                         parameter_form=create_full_path_folder_choice(
                             title=Title("Parent folder"),
                             help_text=Help("Select the parent folder"),
-                            custom_validate=[folder_is_writable],
+                            custom_validate=[_make_folder_is_writable_validator(tree)],
                         ),
                         required=True,
                     ),
@@ -90,14 +94,14 @@ def _append_full_parent_title(title: str, parent_folder: Folder | None) -> str:
 
 
 def save_folder_from_slidein_schema(
-    data: RawFrontendData, *, pprint_value: bool, use_git: bool
+    tree: FolderTree, data: RawFrontendData, *, pprint_value: bool, use_git: bool
 ) -> FolderDescription:
     """Save a folder from data returned from folder slide in.
 
     Raises:
         FormSpecValidationError: if the data does not match the form spec
     """
-    form_spec = get_folder_slidein_schema()
+    form_spec = get_folder_slidein_schema(tree)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
     validation_errors = visitor.validate(data)
@@ -106,7 +110,7 @@ def save_folder_from_slidein_schema(
     disk_data = visitor.to_disk(data)
     parsed_data = _parse_fs(disk_data)
 
-    parent_folder = folder_tree().all_folders()[parsed_data.parent_folder]
+    parent_folder = tree.all_folders()[parsed_data.parent_folder]
     name = find_available_folder_name(parsed_data.title, parent_folder)
     folder = parent_folder.create_subfolder(
         name=name,

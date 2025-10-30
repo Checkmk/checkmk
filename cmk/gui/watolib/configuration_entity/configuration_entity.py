@@ -23,7 +23,7 @@ from cmk.gui.watolib.configuration_entity._password import (
     list_passwords,
     save_password_from_slidein_schema,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
     get_notification_parameter,
@@ -49,6 +49,7 @@ def save_configuration_entity(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
     data: object,
+    tree: FolderTree,
     user: LoggedInUser,
     object_id: EntityId | None,
     pprint_value: bool,
@@ -73,7 +74,7 @@ def save_configuration_entity(
             )
         case ConfigEntityType.folder:
             folder = save_folder_from_slidein_schema(
-                RawFrontendData(data), pprint_value=pprint_value, use_git=use_git
+                tree, RawFrontendData(data), pprint_value=pprint_value, use_git=use_git
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(folder.path), description=folder.title
@@ -92,13 +93,14 @@ def save_configuration_entity(
 def _get_configuration_fs(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
+    tree: FolderTree,
     user: LoggedInUser,
 ) -> FormSpec:
     match entity_type:
         case ConfigEntityType.notification_parameter:
             return notification_parameter_registry.form_spec(entity_type_specifier)
         case ConfigEntityType.folder:
-            return get_folder_slidein_schema()
+            return get_folder_slidein_schema(tree)
         case ConfigEntityType.passwordstore_password:
             return get_password_slidein_schema(user)
         case other:
@@ -113,9 +115,10 @@ class ConfigurationEntitySchema(NamedTuple):
 def get_configuration_entity_schema(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
+    tree: FolderTree,
     user: LoggedInUser,
 ) -> ConfigurationEntitySchema:
-    form_spec = _get_configuration_fs(entity_type, entity_type_specifier, user)
+    form_spec = _get_configuration_fs(entity_type, entity_type_specifier, tree, user)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     schema, default_values = visitor.to_vue(DEFAULT_VALUE)
     return ConfigurationEntitySchema(schema=schema, default_values=default_values)

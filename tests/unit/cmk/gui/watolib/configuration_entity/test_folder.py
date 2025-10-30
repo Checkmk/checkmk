@@ -13,15 +13,17 @@ from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
     save_folder_from_slidein_schema,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
 
 MAIN_FOLDER = ""
 SUB_FOLDER = "sub-folder"
 SUB_FOLDER_TITLE = "Sub Folder"
 
 
-@pytest.fixture(autouse=True)
-def create_folder_test_environment(with_admin_login: None, load_config: None) -> Iterator[None]:
+@pytest.fixture()
+def create_folder_test_environment(
+    with_admin_login: None, load_config: None
+) -> Iterator[FolderTree]:
     tree = folder_tree()
     tree.invalidate_caches()
 
@@ -29,16 +31,18 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
         name=SUB_FOLDER, title=SUB_FOLDER_TITLE, attributes={}, pprint_value=False, use_git=False
     )
 
-    yield
+    yield tree
 
     shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)
     os.makedirs(tree.root_folder().filesystem_path())
 
 
-def test_folder_save_returns_full_title(create_folder_test_environment: None) -> None:
+def test_folder_save_returns_full_title(create_folder_test_environment: FolderTree) -> None:
+    tree = create_folder_test_environment
+
     # GIVEN
     visitor = get_visitor(
-        get_folder_slidein_schema(), VisitorOptions(migrate_values=True, mask_values=False)
+        get_folder_slidein_schema(tree), VisitorOptions(migrate_values=True, mask_values=False)
     )
     _, data = visitor.to_vue(
         RawDiskData({"general": {"title": "foo", "parent_folder": SUB_FOLDER}})
@@ -46,7 +50,7 @@ def test_folder_save_returns_full_title(create_folder_test_environment: None) ->
 
     # WHEN
     description = save_folder_from_slidein_schema(
-        RawFrontendData(data), pprint_value=False, use_git=False
+        tree, RawFrontendData(data), pprint_value=False, use_git=False
     )
 
     # THEN
@@ -57,17 +61,21 @@ def test_folder_save_returns_full_title(create_folder_test_environment: None) ->
     "parent_folder",
     [MAIN_FOLDER, SUB_FOLDER],
 )
-def test_folder_save_roundtrip(create_folder_test_environment: None, parent_folder: str) -> None:
+def test_folder_save_roundtrip(
+    create_folder_test_environment: FolderTree, parent_folder: str
+) -> None:
+    tree = create_folder_test_environment
+
     # GIVEN
     visitor = get_visitor(
-        get_folder_slidein_schema(), VisitorOptions(migrate_values=True, mask_values=False)
+        get_folder_slidein_schema(tree), VisitorOptions(migrate_values=True, mask_values=False)
     )
     _, data = visitor.to_vue(
         RawDiskData({"general": {"title": "foo", "parent_folder": parent_folder}})
     )
 
     # WHEN
-    save_folder_from_slidein_schema(RawFrontendData(data), pprint_value=False, use_git=False)
+    save_folder_from_slidein_schema(tree, RawFrontendData(data), pprint_value=False, use_git=False)
 
     # THEN
     parent = folder_tree().all_folders()[parent_folder]

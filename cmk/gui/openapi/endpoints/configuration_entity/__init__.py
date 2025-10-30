@@ -41,6 +41,7 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_configuration_entity_schema,
     save_configuration_entity,
 )
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
@@ -105,6 +106,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type,
             entity_type_specifier,
             data,
+            folder_tree(),
             user,
             object_id=None,
             pprint_value=active_config.wato_pprint_config,
@@ -138,6 +140,7 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type,
             entity_type_specifier,
             data,
+            folder_tree(),
             user,
             object_id=entity_id,
             pprint_value=active_config.wato_pprint_config,
@@ -164,7 +167,7 @@ def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Res
     entity_type_specifier = params["entity_type_specifier"]
 
     schema, default_values = get_configuration_entity_schema(
-        entity_type, entity_type_specifier, user
+        entity_type, entity_type_specifier, folder_tree(), user
     )
 
     return serve_json(

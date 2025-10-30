@@ -1846,7 +1846,7 @@
         "usagesDigest": "08kH9jjVabmjH4pZe4CwkHoktWUZb/WfeLdICjLor2c=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "7aa29c5513d0033aaad7ff0a3b6f0b426a576e498664a9e0435970ae1bf692a1",
+          "@@//requirements_all_lock.txt": "b0fa6249912d9c2b150f3b627aac2766561e3e9d68708844c33e765538b08acb",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -1856,23 +1856,6 @@
           "RULES_PYTHON_REPO_DEBUG_VERBOSITY": null
         },
         "generatedRepoSpecs": {
-          "cmk_requirements_312_py": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@cmk_requirements//{name}:{target}",
-              "environment": {
-                "CC": "gcc-14"
-              },
-              "extra_pip_args": [
-                "--index-url",
-                "https://pypi.org/simple"
-              ],
-              "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
-              "repo": "cmk_requirements_312",
-              "requirement": "py==1.11.0     --hash=sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719     --hash=sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"
-            }
-          },
           "cmk_requirements_312_h11": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
@@ -1921,7 +1904,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "pbr==7.0.1     --hash=sha256:32df5156fbeccb6f8a858d1ebc4e465dcf47d6cc7a4895d5df9aa951c712fc35     --hash=sha256:3ecbcb11d2b8551588ec816b3756b1eb4394186c3b689b17e04850dfc20f7e57"
+              "requirement": "pbr==7.0.2     --hash=sha256:2a598b3d930f260576888932969b3b7dbcaa1d86505f9317dbd34b4a83eaf7ad     --hash=sha256:d0c48993f54253b2c95d433d3960c95dd56e19a5cf5a545980180e91165ba342"
             }
           },
           "cmk_requirements_312_ply": {
@@ -2738,23 +2721,6 @@
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
               "requirement": "redis==6.1.1     --hash=sha256:88c689325b5b41cedcbdbdfd4d937ea86cf6dab2222a83e86d8a466e4b3d2600     --hash=sha256:ed44d53d065bbe04ac6d76864e331cfe5c5353f86f6deccc095f8794fd15bb2e"
-            }
-          },
-          "cmk_requirements_312_retry": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@cmk_requirements//{name}:{target}",
-              "environment": {
-                "CC": "gcc-14"
-              },
-              "extra_pip_args": [
-                "--index-url",
-                "https://pypi.org/simple"
-              ],
-              "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
-              "repo": "cmk_requirements_312",
-              "requirement": "retry==0.9.2     --hash=sha256:ccddf89761fa2c726ab29391837d4327f819ea14d244c232a1d24c67a2f98606     --hash=sha256:f8bfa8b99b69c4506d6f5bd3b0aabf77f98cdb17f3c9fc3f5ca820033336fba4"
             }
           },
           "cmk_requirements_312_roman": {
@@ -5049,7 +5015,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "deprecated==1.2.18     --hash=sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d     --hash=sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec"
+              "requirement": "deprecated==1.3.1     --hash=sha256:597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f     --hash=sha256:b1b50e0ff0c1fddaa5708a2c6b0a6588bb09b892825ab2b214ac9ea9d92a5223"
             }
           },
           "cmk_requirements_312_feedparser": {
@@ -5287,7 +5253,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "trickkiste==0.2.2     --hash=sha256:17942721921b2df2d814a29c452b3951579238774e48bd9108f11c2863f2d6e6     --hash=sha256:3e9ffe162e84db20106fce0ad913694b3264471b210e0db3788488af90920c91"
+              "requirement": "trickkiste==0.3.4     --hash=sha256:468ea9dc180ac5b76e9d62ce4f8a6ba2748aaf7e82dc63263cac5ca60897b29f     --hash=sha256:d9168574d20f1d78b17fd2cc352943dcb930b9273bfd62d13c4e94aabcb1ca34"
             }
           },
           "cmk_requirements_312_types_cffi": {
@@ -5338,7 +5304,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "virtualenv==20.35.3     --hash=sha256:4f1a845d131133bdff10590489610c98c168ff99dc75d6c96853801f7f67af44     --hash=sha256:63d106565078d8c8d0b206d48080f938a8b25361e19432d2c9db40d2899c810a"
+              "requirement": "virtualenv==20.35.4     --hash=sha256:643d3914d73d3eeb0c552cbb12d7e82adf0e504dbf86a3182f8771a153a1971c     --hash=sha256:c21c9cede36c9753eeade68ba7d523529f228a403463376cf821eaae2b650f1b"
             }
           },
           "cmk_requirements_312_zope_event": {
@@ -7344,7 +7310,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "checkmk-dev-tools==1.0.3     --hash=sha256:a6e4468aa101797288912f581312482712f57cdd86147fd949dfeb307b74df43     --hash=sha256:e655f65d679677ca9d4e5cc393bd5490a7166169bcd1008ea2e5cd00eb03c006"
+              "requirement": "checkmk-dev-tools==1.0.4     --hash=sha256:9035bd94dbc475ac079ace6543c4bbb0c58cd2c8dcd5aefcbafca37af860f7fa     --hash=sha256:dd713d639dee6c91066c0926a36485c861bf4813cebef87fcb368cea6d3b355a"
             }
           },
           "cmk_requirements_312_lazy_object_proxy": {
@@ -9231,7 +9197,6 @@
             "attributes": {
               "repo_name": "cmk_requirements",
               "whl_map": {
-                "py": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_py\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "h11": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_h11\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "nh3": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_nh3\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pbr": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pbr\",\"target_platforms\":null,\"version\":\"3.12\"}]",
@@ -9283,7 +9248,6 @@
                 "pysmb": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pysmb\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "pysmi": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_pysmi\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "redis": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_redis\",\"target_platforms\":null,\"version\":\"3.12\"}]",
-                "retry": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_retry\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "roman": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_roman\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "smmap": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_smmap\",\"target_platforms\":null,\"version\":\"3.12\"}]",
                 "tomli": "[{\"config_setting\":\"//_config:is_python_3.12\",\"filename\":null,\"repo\":\"cmk_requirements_312_tomli\",\"target_platforms\":null,\"version\":\"3.12\"}]",

@@ -87,36 +87,39 @@ def page_create_view_dashlet(ctx: PageContext) -> None:
             owner,
             name,
             _("Copy existing view"),
-            _create_cloned_view_dashlet_spec,
+            _create_cloned_view_dashlet_spec(ctx.request),
             UserPermissions.from_config(ctx.config, permission_registry),
         )
 
 
-def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDashletConfig:
-    dashlet_spec = ViewDashletConfig(
-        {
-            "type": "view",
-            "datasource": "hosts",
-            "position": dashlet_registry["linked_view"].initial_position(),
-            "size": dashlet_registry["linked_view"].initial_size(),
-            "show_title": True,
-            "layout": "table",
-            "browser_reload": 30,
-            "num_columns": 1,
-            "column_headers": "pergroup",
-            "name": "",
-            "group_painters": [],
-            "painters": [],
-            "sorters": [],
-            "add_context_to_title": True,
-            "sort_index": 99,
-            "is_show_more": False,
-        }
-    )
+def _create_cloned_view_dashlet_spec(request: Request) -> Callable[[int, str], ViewDashletConfig]:
+    def create(dashlet_id: int, view_name: str) -> ViewDashletConfig:
+        dashlet_spec = ViewDashletConfig(
+            {
+                "type": "view",
+                "datasource": "hosts",
+                "position": dashlet_registry["linked_view"].initial_position(),
+                "size": dashlet_registry["linked_view"].initial_size(),
+                "show_title": True,
+                "layout": "table",
+                "browser_reload": 30,
+                "num_columns": 1,
+                "column_headers": "pergroup",
+                "name": "",
+                "group_painters": [],
+                "painters": [],
+                "sorters": [],
+                "add_context_to_title": True,
+                "sort_index": 99,
+                "is_show_more": False,
+            }
+        )
 
-    # save the original context and override the context provided by the view
-    copy_view_into_dashlet(dashlet_spec, dashlet_id, view_name)
-    return dashlet_spec
+        # save the original context and override the context provided by the view
+        copy_view_into_dashlet(request, dashlet_spec, dashlet_id, view_name)
+        return dashlet_spec
+
+    return create
 
 
 def page_create_view_dashlet_infos(ctx: PageContext) -> None:

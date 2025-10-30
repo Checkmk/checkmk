@@ -37,7 +37,7 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext
@@ -66,6 +66,7 @@ VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
 
 def copy_view_into_dashlet(
+    request: Request,
     dashlet: ViewDashletConfig,
     nr: int,
     view_name: str,
@@ -568,18 +569,20 @@ class ViewWidgetIFramePage(Page):
             1. Render an existing linked view, identified by its name
             2. Render a view that's embedded in the dashboard config, identified by its internal ID
         """
-        dashboard_name = request.get_ascii_input_mandatory("dashboard")
-        widget_id = request.get_ascii_input_mandatory("widget_id")
-        is_reload = request.var("display_options", request.var("_display_options")) is not None
-        is_debug = request.var("debug") == "1"
-        view_spec = self._get_view_spec(dashboard_name)
-        context = self._get_context()
+        dashboard_name = ctx.request.get_ascii_input_mandatory("dashboard")
+        widget_id = ctx.request.get_ascii_input_mandatory("widget_id")
+        is_reload = (
+            ctx.request.var("display_options", ctx.request.var("_display_options")) is not None
+        )
+        is_debug = ctx.request.var("debug") == "1"
+        view_spec = self._get_view_spec(request, dashboard_name)
+        context = self._get_context(request)
         widget_unique_name = f"{dashboard_name}_{widget_id}"
-        self._setup_display_and_painter_options(widget_unique_name, is_reload)
+        self._setup_display_and_painter_options(request, widget_unique_name, is_reload)
 
         # filled_in needs to be set in order for rows to be fetched, so we set it to a default here
-        if request.var("filled_in") is None:
-            request.set_var("filled_in", "filter")
+        if ctx.request.var("filled_in") is None:
+            ctx.request.set_var("filled_in", "filter")
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         view = View(
@@ -589,7 +592,7 @@ class ViewWidgetIFramePage(Page):
             user_permissions=user_permissions,
         )
         view.row_limit = get_limit(
-            request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
+            request_limit_mode=ctx.request.get_ascii_input_mandatory("limit", "soft"),
             soft_query_limit=ctx.config.soft_query_limit,
             may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
             hard_query_limit=ctx.config.hard_query_limit,
@@ -627,12 +630,12 @@ class ViewWidgetIFramePage(Page):
             html.close_div()
             html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
-    def _get_view_spec(self, dashboard_name: str) -> ViewSpec:
+    def _get_view_spec(self, request: Request, dashboard_name: str) -> ViewSpec:
         """Return the requested view spec, either embedded in the dashboard or a normal view."""
         if embedded_id := request.get_str_input("embedded_id"):
             view_spec = self._get_embedded_view_spec(dashboard_name, embedded_id)
         else:
-            view_spec = self._get_linked_view_spec()
+            view_spec = self._get_linked_view_spec(request)
 
         # Override some view widget specific options
         view_spec = view_spec.copy()
@@ -641,7 +644,7 @@ class ViewWidgetIFramePage(Page):
         return view_spec
 
     @staticmethod
-    def _get_linked_view_spec() -> ViewSpec:
+    def _get_linked_view_spec(request: Request) -> ViewSpec:
         view_name = request.get_ascii_input_mandatory("view_name")
         view_spec = get_permitted_views().get(view_name)
         if not view_spec:
@@ -664,7 +667,9 @@ class ViewWidgetIFramePage(Page):
         )
 
     @staticmethod
-    def _setup_display_and_painter_options(dashlet_name: str, is_reload: bool) -> None:
+    def _setup_display_and_painter_options(
+        request: Request, dashlet_name: str, is_reload: bool
+    ) -> None:
         if not is_reload:
             view_display_options = "HRSIXLW"
 
@@ -679,7 +684,7 @@ class ViewWidgetIFramePage(Page):
         painter_options.load(dashlet_name)
 
     @staticmethod
-    def _get_context() -> VisualContext:
+    def _get_context(request: Request) -> VisualContext:
         context = json.loads(request.get_ascii_input_mandatory("context"))
         return {
             filter_name: filter_values
@@ -752,20 +757,20 @@ class ViewWidgetEditPage(Page):
         """
         try:
             user.need_permission("general.edit_dashboards")
-            dashboard_name = request.get_ascii_input_mandatory("dashboard")
-            embedded_id = request.get_ascii_input_mandatory("embedded_id")
-            mode = self._get_mode()
-            owner = self._get_owner(mode)
+            dashboard_name = ctx.request.get_ascii_input_mandatory("dashboard")
+            embedded_id = ctx.request.get_ascii_input_mandatory("embedded_id")
+            mode = self._get_mode(ctx.request)
+            owner = self._get_owner(ctx.request, mode)
 
             dashboard = self._load_dashboard(owner, dashboard_name)
-            view_spec = self._get_view_spec(dashboard, embedded_id, mode)
+            view_spec = self._get_view_spec(ctx.request, dashboard, embedded_id, mode)
         except (MKUserError, MKAuthException) as e:
             # we can't render the view editor with invalid input, notify the parent window
             self._post_message(self.ConfigurationErrorMessage(message=str(e)))
             return  # nothing the user can do, stop rendering the rest
 
         error = None
-        if request.var("_save"):
+        if ctx.request.var("_save"):
             try:
                 self._save(dashboard, embedded_id, view_spec)
             except MKUserError as e:
@@ -822,14 +827,14 @@ class ViewWidgetEditPage(Page):
         # we accept that this might drift apart for now
 
     @staticmethod
-    def _get_mode() -> Mode:
+    def _get_mode(request: Request) -> Mode:
         mode = request.get_ascii_input_mandatory("mode")
         if mode not in get_args(ViewWidgetEditPage.Mode.__value__):
             raise MKUserError("mode", _("Invalid mode '%s'.") % mode)
         return cast(ViewWidgetEditPage.Mode, mode)
 
     @staticmethod
-    def _get_owner(mode: Mode) -> UserId:
+    def _get_owner(request: Request, mode: Mode) -> UserId:
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
         if owner_id != user.id:
             if mode == "edit":
@@ -843,7 +848,7 @@ class ViewWidgetEditPage(Page):
         return owner_id
 
     @staticmethod
-    def _get_datasource_from_request() -> str:
+    def _get_datasource_from_request(request: Request) -> str:
         datasource = request.get_ascii_input_mandatory("datasource")
         if datasource not in data_source_registry:
             raise MKUserError("datasource", _("The datasource '%s' does not exist.") % datasource)
@@ -851,7 +856,7 @@ class ViewWidgetEditPage(Page):
         return datasource
 
     @staticmethod
-    def _get_single_infos_from_request() -> SingleInfos:
+    def _get_single_infos_from_request(request: Request) -> SingleInfos:
         single_infos_str = request.get_str_input("single_infos")
         if not single_infos_str:
             return []
@@ -864,7 +869,7 @@ class ViewWidgetEditPage(Page):
         return single_infos
 
     @staticmethod
-    def _get_original_view_spec_from_request() -> ViewSpec:
+    def _get_original_view_spec_from_request(request: Request) -> ViewSpec:
         view_name = request.get_ascii_input_mandatory("view_name")
         return get_view_by_name(view_name)
 
@@ -884,13 +889,14 @@ class ViewWidgetEditPage(Page):
 
     def _get_view_spec(
         self,
+        request: Request,
         dashboard: DashboardConfig,
         embedded_id: str,
         mode: Mode,
     ) -> ViewSpec:
         view_name = f"{dashboard['name']}_{embedded_id}"
         if mode == "copy":
-            view_spec = self._get_original_view_spec_from_request().copy()
+            view_spec = self._get_original_view_spec_from_request(request).copy()
             view_spec["name"] = view_name
             return view_spec
 
@@ -898,8 +904,8 @@ class ViewWidgetEditPage(Page):
             return EmbeddedViewSpecManager.get_embedded_view_spec(dashboard, embedded_id, view_name)
 
         # create mode
-        datasource = self._get_datasource_from_request()
-        single_infos = self._get_single_infos_from_request()
+        datasource = self._get_datasource_from_request(request)
+        single_infos = self._get_single_infos_from_request(request)
         return self._create_new_view_spec(
             dashboard, embedded_id, view_name, datasource, single_infos
         )

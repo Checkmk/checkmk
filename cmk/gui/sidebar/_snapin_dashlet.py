@@ -12,7 +12,6 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import DashletConfig, IFrameDashlet
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext
@@ -120,7 +119,7 @@ class SnapinWidgetIFramePage(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         """Render a snapin for use in an iframe."""
-        snapin_name = request.get_ascii_input_mandatory("name")
+        snapin_name = ctx.request.get_ascii_input_mandatory("name")
         snapin_instance = self._get_snapin_instance(
             snapin_name, UserPermissions.from_config(ctx.config, permission_registry)
         )

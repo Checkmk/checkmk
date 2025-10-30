@@ -151,7 +151,7 @@ class VisualTypeDashboards(VisualType):
             # save the original context and override the context provided by the view
             context = dashlet_spec["context"]
             copy_view_into_dashlet(
-                dashlet_spec, len(dashboard["dashlets"]), view_name, add_context=context
+                request, dashlet_spec, len(dashboard["dashlets"]), view_name, add_context=context
             )
 
         elif add_type in ["pnpgraph", "custom_graph"]:

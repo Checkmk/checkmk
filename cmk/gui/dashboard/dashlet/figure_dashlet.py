@@ -16,7 +16,6 @@ from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import HTTPVariables, SingleInfos
@@ -33,17 +32,17 @@ __all__ = ["FigureDashletPage", "ABCFigureDashlet"]
 class FigureDashletPage(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        dashboard_name = request.get_ascii_input_mandatory("name")
-        dashboard_owner = request.get_validated_type_input_mandatory(UserId, "owner")
+        dashboard_name = ctx.request.get_ascii_input_mandatory("name")
+        dashboard_owner = ctx.request.get_validated_type_input_mandatory(UserId, "owner")
         try:
             dashboard = get_permitted_dashboards_by_owners()[dashboard_name][dashboard_owner]
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
         # Get context from the AJAX request body (not simply from the dashboard config) to include
         # potential dashboard context given via HTTP request variables
-        dashboard["context"] = json.loads(request.get_ascii_input_mandatory("context"))
+        dashboard["context"] = json.loads(ctx.request.get_ascii_input_mandatory("context"))
 
-        dashlet_id = request.get_integer_input_mandatory("id")
+        dashlet_id = ctx.request.get_integer_input_mandatory("id")
         try:
             dashlet_spec = dashboard["dashlets"][dashlet_id]
         except IndexError:

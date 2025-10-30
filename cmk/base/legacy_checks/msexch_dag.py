@@ -176,9 +176,17 @@ check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
 
 
 def inventory_msexch_dag_contentindex(info):
+    dbname = None
     for line in info:
         if line[0].strip() == "DatabaseName":
-            yield line[1].strip(), None
+            dbname = line[1].strip()
+        elif (
+            dbname is not None
+            and line[0].strip() == "ContentIndex"
+            and line[1].strip() != "NotApplicabe"
+        ):
+            yield dbname, None
+            dbname = None
 
 
 def check_msexch_dag_contentindex(item, _no_params, info):
@@ -189,6 +197,11 @@ def check_msexch_dag_contentindex(item, _no_params, info):
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == "ContentIndexState":
+                if val == "NotApplicable":
+                    return (
+                        0,
+                        "ContentIndex no longer available in recent Exchange versions. You can safely delete this Service.",
+                    )
                 if val == "Healthy":
                     state = 0
                 else:

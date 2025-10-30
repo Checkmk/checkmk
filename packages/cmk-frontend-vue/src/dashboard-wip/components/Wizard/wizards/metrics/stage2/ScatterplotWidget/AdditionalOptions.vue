@@ -6,10 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 
+import ColorSelector from '@/dashboard-wip/components/Wizard/components/ColorSelector/ColorSelector.vue'
 import type { DefaultOrColor } from '@/dashboard-wip/components/Wizard/types'
 
 const { _t } = usei18n()
@@ -23,40 +23,25 @@ const medianColor = defineModel<DefaultOrColor>('medianColor', { required: true 
   <div>
     <CmkLabel>{{ _t('Color of the scattered dots') }}</CmkLabel>
     <CmkIndent>
-      <CmkDropdown
-        :selected-option="metricColor"
-        :label="_t('Select option')"
-        :options="{
-          type: 'fixed',
-          suggestions: [{ name: 'default', title: _t('Default color') }]
-        }"
-        @update:selected-option="(value) => (metricColor = value || metricColor)"
+      <ColorSelector
+        v-model:color="metricColor"
+        :static-options="[{ name: 'default', title: _t('Default color') }]"
       />
     </CmkIndent>
 
     <CmkLabel>{{ _t('Color of the average') }}</CmkLabel>
     <CmkIndent>
-      <CmkDropdown
-        :selected-option="averageColor"
-        :label="_t('Select option')"
-        :options="{
-          type: 'fixed',
-          suggestions: [{ name: 'default', title: _t('Default color') }]
-        }"
-        @update:selected-option="(value) => (averageColor = value || averageColor)"
+      <ColorSelector
+        v-model:color="averageColor"
+        :static-options="[{ name: 'default', title: _t('Default color') }]"
       />
     </CmkIndent>
 
     <CmkLabel>{{ _t('Color of the median') }}</CmkLabel>
     <CmkIndent>
-      <CmkDropdown
-        :selected-option="medianColor"
-        :label="_t('Select option')"
-        :options="{
-          type: 'fixed',
-          suggestions: [{ name: 'default', title: _t('Default color') }]
-        }"
-        @update:selected-option="(value) => (medianColor = value || medianColor)"
+      <ColorSelector
+        v-model:color="medianColor"
+        :static-options="[{ name: 'default', title: _t('Default color') }]"
       />
     </CmkIndent>
   </div>

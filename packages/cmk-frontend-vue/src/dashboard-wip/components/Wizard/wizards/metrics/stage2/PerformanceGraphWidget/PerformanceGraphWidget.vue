@@ -103,7 +103,6 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:vertical-axis-width-mode="handler.verticalAxisWidthMode.value"
       v-model:fixed-vertical-axis-width="handler.fixedVerticalAxisWidth.value"
       v-model:font-size="handler.fontSize.value"
-      v-model:color="handler.color.value"
       v-model:timestamp="handler.timestamp.value"
       v-model:round-margin="handler.roundMargin.value"
       v-model:graph-legend="handler.graphLegend.value"

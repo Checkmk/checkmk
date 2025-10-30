@@ -75,9 +75,10 @@ export const useScatterplot = async (
       type: 'average_scatterplot',
       metric,
       time_range: generateTimeRangeSpec(),
-      metric_color: metricColor.value,
-      average_color: averageColor.value,
-      median_color: medianColor.value
+      metric_color: metricColor.value === 'default' ? 'default' : metricColor.value.toUpperCase(),
+      average_color:
+        averageColor.value === 'default' ? 'default' : averageColor.value.toUpperCase(),
+      median_color: medianColor.value === 'default' ? 'default' : medianColor.value.toUpperCase()
     }
   }
 

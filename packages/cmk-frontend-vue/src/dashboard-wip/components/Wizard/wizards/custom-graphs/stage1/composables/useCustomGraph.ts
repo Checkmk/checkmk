@@ -29,14 +29,12 @@ import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 const { _t } = usei18n()
-
 export interface UseCustomGraph
   extends UseValidate,
     UseGraphRenderOptions,
     UseWidgetVisualizationOptions {
   customGraph: Ref<string | null>
   customGraphValidationErrors: Ref<string[]>
-
   timeRange: Ref<GraphTimerange>
 
   widgetProps: Ref<WidgetProps | null>
@@ -72,7 +70,6 @@ export const useCustomGraph = async (
     verticalAxisWidthMode,
     fixedVerticalAxisWidth,
     fontSize,
-    color,
     timestamp,
     roundMargin,
     graphLegend,
@@ -164,7 +161,6 @@ export const useCustomGraph = async (
     verticalAxisWidthMode,
     fixedVerticalAxisWidth,
     fontSize,
-    color,
     timestamp,
     roundMargin,
     graphLegend,

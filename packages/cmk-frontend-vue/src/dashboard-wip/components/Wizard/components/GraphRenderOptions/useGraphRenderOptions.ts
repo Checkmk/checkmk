@@ -5,7 +5,7 @@
  */
 import { type Ref, computed, ref } from 'vue'
 
-import type { DefaultOrColor, GraphRenderOptions } from '@/dashboard-wip/components/Wizard/types'
+import type { GraphRenderOptions } from '@/dashboard-wip/components/Wizard/types'
 
 export interface UseGraphRenderOptions {
   horizontalAxis: Ref<boolean>
@@ -14,7 +14,6 @@ export interface UseGraphRenderOptions {
   fixedVerticalAxisWidth: Ref<number>
 
   fontSize: Ref<number>
-  color: Ref<DefaultOrColor>
   timestamp: Ref<boolean>
   roundMargin: Ref<boolean>
   graphLegend: Ref<boolean>
@@ -46,7 +45,6 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
   )
 
   const fontSize = ref<number>(data?.font_size_pt ?? 8)
-  const color = ref<DefaultOrColor>('default')
   const timestamp = ref<boolean>(data?.show_graph_time ?? false)
   const roundMargin = ref<boolean>(data?.show_margin ?? false)
   const graphLegend = ref<boolean>(data?.show_legend ?? false)
@@ -84,7 +82,6 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
     fixedVerticalAxisWidth,
 
     fontSize,
-    color,
     timestamp,
     roundMargin,
     graphLegend,

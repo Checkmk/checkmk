@@ -4,11 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
+import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
@@ -16,9 +19,16 @@ import FieldComponent from '@/dashboard-wip/components/Wizard/components/TableFo
 import FieldDescription from '@/dashboard-wip/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard-wip/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard-wip/components/Wizard/components/TableForm/TableFormRow.vue'
-import { type DefaultOrColor } from '@/dashboard-wip/components/Wizard/types'
+
+import ColorSelector from '../ColorSelector/ColorSelector.vue'
 
 const { _t } = usei18n()
+
+interface GraphRenderOptions {
+  colorOptions?: Suggestion[]
+}
+
+const { colorOptions = [] } = defineProps<GraphRenderOptions>()
 
 const horizontalAxis = defineModel<boolean>('horizontalAxis', { required: true })
 const verticalAxis = defineModel<boolean>('verticalAxis', { required: true })
@@ -28,7 +38,7 @@ const verticalAxisWidthMode = defineModel<'fixed' | 'absolute'>('verticalAxisWid
 const fixedVerticalAxisWidth = defineModel<number>('fixedVerticalAxisWidth', { required: true })
 
 const fontSize = defineModel<number>('fontSize', { required: true })
-const color = defineModel<DefaultOrColor>('color', { required: true })
+const color = defineModel<string>('color', { required: false, default: undefined })
 const timestamp = defineModel<boolean>('timestamp', { required: true })
 const roundMargin = defineModel<boolean>('roundMargin', { required: true })
 const graphLegend = defineModel<boolean>('graphLegend', { required: true })
@@ -36,6 +46,8 @@ const graphLegend = defineModel<boolean>('graphLegend', { required: true })
 const clickToPlacePin = defineModel<boolean>('clickToPlacePin', { required: true })
 const showBurgerMenu = defineModel<boolean>('showBurgerMenu', { required: true })
 const dontFollowTimerange = defineModel<boolean>('dontFollowTimerange', { required: true })
+
+const displayColorChooser = computed(() => color.value !== undefined && colorOptions.length > 0)
 </script>
 
 <template>
@@ -86,17 +98,10 @@ const dontFollowTimerange = defineModel<boolean>('dontFollowTimerange', { requir
           </CmkIndent>
         </div>
 
-        <div>
+        <div v-if="displayColorChooser">
           <CmkLabel>{{ _t('Color') }}</CmkLabel>
           <CmkIndent>
-            <CmkDropdown
-              v-model:selected-option="color as string"
-              :label="_t('Select option')"
-              :options="{
-                type: 'fixed',
-                suggestions: [{ name: 'default', title: _t('Default color') }]
-              }"
-            />
+            <ColorSelector v-model:color="color" :static-options="colorOptions" />
           </CmkIndent>
         </div>
         <div>

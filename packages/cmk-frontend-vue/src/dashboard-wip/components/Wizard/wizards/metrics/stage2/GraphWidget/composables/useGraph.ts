@@ -31,11 +31,14 @@ import {
 
 const { _t } = usei18n()
 
+const DEFAULT_COLOR_SCHEMAS = ['default_metric', 'default_theme']
+
 export interface UseGraph
   extends UseWidgetHandler,
     UseGraphRenderOptions,
     UseWidgetVisualizationOptions {
   timeRange: Ref<GraphTimerange>
+  color: Ref<string>
 }
 
 export const useGraph = async (
@@ -66,7 +69,6 @@ export const useGraph = async (
     verticalAxisWidthMode,
     fixedVerticalAxisWidth,
     fontSize,
-    color,
     timestamp,
     roundMargin,
     graphLegend,
@@ -75,6 +77,8 @@ export const useGraph = async (
     dontFollowTimerange,
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options)
+
+  const color = ref<string>(currentContent?.color ?? 'default_metric')
 
   const widgetProps = ref<WidgetProps>()
 
@@ -88,9 +92,7 @@ export const useGraph = async (
       metric,
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
-
-      //TODO: this should map to color reference
-      color: 'default_theme'
+      color: DEFAULT_COLOR_SCHEMAS.includes(color.value) ? color.value : color.value.toUpperCase()
     }
   }
 
@@ -108,7 +110,7 @@ export const useGraph = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, graphRenderOptions],
+    [timeRange, widgetGeneralSettings, graphRenderOptions, color],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),

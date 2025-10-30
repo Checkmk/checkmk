@@ -10,7 +10,6 @@ from typing import NamedTuple, override
 
 from livestatus import LivestatusResponse, MKLivestatusNotFoundError
 
-import cmk.gui.pages
 import cmk.utils.render
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb

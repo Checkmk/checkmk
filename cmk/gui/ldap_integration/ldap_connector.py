@@ -565,6 +565,13 @@ def _sync_ldap_user(
     ldap_user_connector_logger.info(cant_sync_msg)
 
 
+@dataclass
+class FetchedLDAPUser:
+    dn: str
+    ldap_user_name: LdapUsername
+    ldap_user_spec: LDAPUserSpec
+
+
 class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
@@ -578,7 +585,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id)
 
         self._num_queries = 0
-        self._user_cache: dict[LdapUsername, tuple[str, LdapUsername]] = {}
+        self._user_cache: dict[LdapUsername, FetchedLDAPUser] = {}
         self._group_cache: dict = {}
         self._group_search_cache: dict = {}
 
@@ -1151,8 +1158,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return UserId(user_id)
 
     def _get_user(
-        self, username: LdapUsername, no_escape: bool = False
-    ) -> tuple[str, LdapUsername] | None:
+        self,
+        username: LdapUsername,
+        no_escape: bool = False,
+    ) -> FetchedLDAPUser | None:
+        """Returns None when the user is not found in the LDAP instance
+        or is not uniq, else returns FetchedLDAPUser which includes the
+        distinguished name."""
+
         if username in self._user_cache:
             return self._user_cache[username]
 
@@ -1197,11 +1210,15 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         user_id = self._sanitize_user_id(raw_user_id)
         if user_id is None:
             return None
-        self._user_cache[username] = (dn, user_id)
 
-        if no_escape:
-            return (dn, user_id)
-        return (dn.replace("\\", "\\\\"), user_id)
+        fetched_ldap_user = FetchedLDAPUser(
+            dn=dn if no_escape else dn.replace("\\", "\\\\"),
+            ldap_user_name=LdapUsername(user_id),
+            ldap_user_spec=result[0][1],
+        )
+
+        self._user_cache[username] = fetched_ldap_user
+        return fetched_ldap_user
 
     def get_users(
         self, user_attributes: Sequence[tuple[str, UserAttribute]], add_filter: str = ""
@@ -1636,21 +1653,22 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         # Returns None when the user is not found or not uniq, else returns the
         # distinguished name and the ldap_user_id as tuple which are both needed for
         # the further login process.
-        fetch_user_result = self._get_user(ldap_user_id, True)
-        if not fetch_user_result:
+        fetched_ldap_user = self._get_user(ldap_user_id, True)
+        if fetched_ldap_user is None:
             # The user does not exist
             if enforce_this_connection:
                 return False  # Refuse login
             return None  # Try next connection (if available)
 
-        user_dn, ldap_user_id = fetch_user_result
-
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
-            self._bind(user_dn, ("password", password.raw))
+            self._bind(fetched_ldap_user.dn, ("password", password.raw))
             userid = self._get_matching_user_profile(
-                UserId(ldap_user_id), user_attributes, user_connections, default_user_profile
+                UserId(fetched_ldap_user.ldap_user_name),
+                user_attributes,
+                user_connections,
+                default_user_profile,
             )
             result: CheckCredentialsResult = False if userid is None else userid
         except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH) as e:

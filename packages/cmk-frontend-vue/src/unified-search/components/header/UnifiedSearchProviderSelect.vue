@@ -21,6 +21,11 @@ const searchUtils = getSearchUtils()
 const providerDropdownBtn = useTemplateRef('unified-search-provider-btn')
 const providerOptions = ref<ProviderOption[]>(availableProviderOptions)
 
+const props = defineProps<{
+  provider?: QueryProvider
+  openSearchOnChange?: boolean
+}>()
+
 const vClickOutside = useClickOutside()
 function handleOptionSelect(selected: ProviderOption): void {
   searchUtils.input.setProviderValue(selected)
@@ -35,6 +40,10 @@ function onSetProviderValue(
   if (!noSet && selected) {
     searchUtils.query.provider.value = selected.value
     searchUtils.input.setQuery(searchUtils.query.toQueryLike())
+  }
+
+  if (props.openSearchOnChange) {
+    searchUtils.openSearch()
   }
 
   hideProviderOptions()
@@ -119,7 +128,7 @@ const provideri18n: Record<QueryProvider, string> = {
       @keydown.enter.stop="toggleProviderOptions"
     >
       <span class="unified-search-provider-switch-selected">{{
-        provideri18n[searchUtils.query.provider.value]
+        provideri18n[provider ?? searchUtils.query.provider.value]
       }}</span>
       <DropDownIndicator
         class="unified-search-provider-switch-indicator"

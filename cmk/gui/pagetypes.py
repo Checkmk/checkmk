@@ -57,6 +57,7 @@ from cmk.gui.main_menu_types import (
     MainMenuItem,
     MainMenuTopic,
     MainMenuTopicEntries,
+    UnifiedSearch,
 )
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
@@ -201,7 +202,7 @@ def register(main_menu_registry_: MainMenuRegistry) -> None:
             sort_index=10,
             topics=_customize_menu_topics,
             hide=hide_customize_menu,
-            hint=_("Press Ctrl + K to trigger search"),
+            search=UnifiedSearch("customize_search", "unified-search-input-customize"),
         )
     )
 

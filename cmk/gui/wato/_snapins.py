@@ -19,7 +19,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, MainMenuRegistry
-from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic
+from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, UnifiedSearch
 from cmk.gui.permissions import permission_registry
 from cmk.gui.search import (
     ABCMatchItemGenerator,
@@ -132,7 +132,7 @@ MainMenuSetup = MainMenu(
     sort_index=15,
     topics=get_wato_menu_items,
     hide=_hide_menu,
-    hint=_("Press Ctrl + K to trigger search"),
+    search=UnifiedSearch("setup_search", "unified-search-input-setup"),
 )
 
 

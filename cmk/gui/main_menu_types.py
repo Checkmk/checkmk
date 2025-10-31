@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, override
 
 from cmk.gui.http import Request
 from cmk.gui.type_defs import Icon
@@ -92,4 +92,20 @@ class ABCMainMenuSearch(ABC):
         return 'cmk.popup_menu.focus_search_field("mk_side_search_field_%s");' % self.name
 
     @abstractmethod
+    def show_search_field(self) -> None: ...
+
+
+class UnifiedSearch(ABCMainMenuSearch):
+    """Search wrapper for proper menu handling of the unified search"""
+
+    def __init__(self, name: str, focus_id: str) -> None:
+        self._name = name
+        self._focus_id = focus_id
+
+    @override
+    @property
+    def onopen(self) -> str:
+        return f'cmk.popup_menu.focus_search_field("{self._focus_id}");'
+
+    @override
     def show_search_field(self) -> None: ...

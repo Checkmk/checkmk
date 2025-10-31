@@ -34,6 +34,7 @@ export const cmk_export = {
     quicksearch: quicksearch,
     visibility_detection: visibility_detection,
     valuespecs: valuespecs,
-    popup_menu: popup_menu
+    popup_menu: popup_menu,
+    handle_main_menu: main_menu_shortcut_handler.handle_main_menu
   }
 }

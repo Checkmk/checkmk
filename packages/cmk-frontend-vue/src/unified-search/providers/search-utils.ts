@@ -23,6 +23,8 @@ import type {
 } from './search-utils.types'
 import { topicIconMapping } from './topic-icon-mapping'
 
+declare const cmk: any
+
 const queryInput = ref<string>('')
 const queryProvider = ref<QueryProvider>('all')
 const queryFilters = ref<FilterOption[]>([])
@@ -143,6 +145,11 @@ function hideSuggestions() {
 
 function onHideSuggestions(cb: typeof hideSuggestions): string {
   return pushCallBack('hideSuggestions', cb)
+}
+
+function openSearch() {
+  cmk.popup_menu.close_popup()
+  cmk.handle_main_menu('search')
 }
 
 function resetSearch() {
@@ -330,6 +337,7 @@ export interface SearchInputUtils {
 }
 
 export interface InitSearchUtils {
+  openSearch: typeof openSearch
   resetSearch: typeof resetSearch
   onResetSearch: typeof onResetSearch
   closeSearch: typeof closeSearch
@@ -351,6 +359,7 @@ export const searchUtilsProvider = Symbol() as InjectionKey<SearchUtils>
 
 export function initSearchUtils(): SearchUtils {
   return {
+    openSearch,
     resetSearch,
     onResetSearch,
     closeSearch,

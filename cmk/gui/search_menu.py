@@ -5,14 +5,18 @@
 
 
 from dataclasses import dataclass
-from typing import override
 
 from cmk.ccc.version import edition
 from cmk.gui.http import Request
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.main_menu_types import ABCMainMenuSearch, MainMenu, MainMenuData, MainMenuVueApp
+from cmk.gui.main_menu_types import (
+    MainMenu,
+    MainMenuData,
+    MainMenuVueApp,
+    UnifiedSearch,
+)
 from cmk.gui.wato._snapins import _hide_menu
 from cmk.shared_typing.unified_search import Provider, Providers, UnifiedSearchConfig
 from cmk.utils import paths
@@ -42,22 +46,10 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
             icon="main_search",
             sort_index=1,
             topics=None,
-            search=UnifiedSearch("unified_search"),
+            search=UnifiedSearch("unified_search", "unified-search-input"),
             vue_app=MainMenuVueApp(
                 name="cmk-unified-search",
                 data=get_unified_search_config,
             ),
         )
     )
-
-
-class UnifiedSearch(ABCMainMenuSearch):
-    """Search wrapper for proper menu handling of the unified search"""
-
-    @override
-    @property
-    def onopen(self) -> str:
-        return 'cmk.popup_menu.focus_search_field("unified-search-input");'
-
-    @override
-    def show_search_field(self) -> None: ...

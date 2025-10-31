@@ -26,6 +26,7 @@ import {
 
 import DefaultPopup from '@/main-menu/changes/components/DefaultPopup.vue'
 
+import UnifiedSearchInputInjector from './components/UnifiedSearchInputInjector.vue'
 import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'
 import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
 import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
@@ -166,6 +167,7 @@ onMounted(() => {
     >
     </UnifiedSearchTabResults>
   </DefaultPopup>
+  <UnifiedSearchInputInjector :providers="searchProviderIdentifiers.map((p) => p.id)" />
 </template>
 
 <style scoped>

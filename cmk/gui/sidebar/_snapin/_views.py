@@ -17,7 +17,7 @@ from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.main_menu_types import MainMenu, MainMenuTopic
+from cmk.gui.main_menu_types import MainMenu, MainMenuTopic, UnifiedSearch
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
@@ -46,7 +46,7 @@ def register(
             icon="main_monitoring",
             sort_index=5,
             topics=view_menu_topics,
-            hint=_("Press Ctrl + K to trigger search"),
+            search=UnifiedSearch("monitoring_search", "unified-search-input-monitoring"),
         )
     )
 

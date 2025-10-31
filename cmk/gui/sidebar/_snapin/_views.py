@@ -21,12 +21,18 @@ from cmk.gui.main_menu_types import MainMenu, MainMenuTopic, UnifiedSearch
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 
 from ._base import SidebarSnapin
-from ._helpers import footnotelinks, make_main_menu, show_main_menu
+from ._helpers import (
+    footnotelinks,
+    is_menu_item_supported_visual,
+    make_main_menu,
+    show_main_menu,
+    VisualItem,
+    VisualMenuItem,
+)
 from ._registry import SnapinRegistry
 
 
@@ -97,11 +103,11 @@ def default_view_menu_topics(user_permissions: UserPermissions) -> list[MainMenu
     )
 
 
-def view_menu_items(user_permissions: UserPermissions) -> list[tuple[str, tuple[str, Visual]]]:
+def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
     # integrate them.
-    page_type_items: list[tuple[str, tuple[str, Visual]]] = []
+    page_type_items: list[VisualMenuItem] = []
     for page_type in pagetypes.all_page_types().values():
         if not issubclass(page_type, pagetypes.PageRenderer):
             continue
@@ -113,16 +119,25 @@ def view_menu_items(user_permissions: UserPermissions) -> list[tuple[str, tuple[
                 visual["icon"] = None  # Is currently not configurable for pagetypes
                 visual["main_menu_search_terms"] = []  # Is currently not configurable for pagetypes
 
-                page_type_items.append((page_type.type_name(), (page.name(), visual)))
+                visual_menu_type_name = page_type.type_name()
+                if is_menu_item_supported_visual(visual_menu_type_name):
+                    page_type_items.append(
+                        VisualMenuItem(visual_menu_type_name, VisualItem(page.name(), visual))
+                    )
+                else:
+                    raise TypeError(f"Unsupported visual menu type name: {visual_menu_type_name}")
 
     network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
     pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
 
-    visuals_to_show: list[tuple[str, tuple[str, Visual]]] = [
-        ("views", (k, v)) for k, v in get_permitted_views().items()
+    visuals_to_show: list[VisualMenuItem] = [
+        VisualMenuItem("views", VisualItem(k, v)) for k, v in get_permitted_views().items()
     ]
-    visuals_to_show += [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()]
-    visuals_to_show += [("pages", e) for e in pages_to_show]
+    visuals_to_show += [
+        VisualMenuItem("dashboards", VisualItem(k, v))
+        for k, v in get_permitted_dashboards().items()
+    ]
+    visuals_to_show += [VisualMenuItem("pages", VisualItem(*e)) for e in pages_to_show]
     visuals_to_show += page_type_items
 
     return visuals_to_show

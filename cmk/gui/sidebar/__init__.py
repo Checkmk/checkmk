@@ -70,6 +70,8 @@ from ._snapin import snapin_site_choice as snapin_site_choice
 from ._snapin import snapin_width as snapin_width
 from ._snapin import SnapinRegistry as SnapinRegistry
 from ._snapin import view_menu_items as view_menu_items
+from ._snapin import VisualItem as VisualItem
+from ._snapin import VisualMenuItem as VisualMenuItem
 from ._snapin import write_snapin_exception as write_snapin_exception
 from ._snapin._bookmarks import BookmarkList
 from ._snapin_dashlet import SnapinDashlet, SnapinWidgetIFramePage

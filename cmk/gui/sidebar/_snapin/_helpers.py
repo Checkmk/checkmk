@@ -7,6 +7,7 @@
 import json
 import traceback
 from collections.abc import Sequence
+from typing import assert_never, get_args, Literal, NamedTuple, TypeGuard
 
 from cmk.ccc.site import SiteId, url_prefix
 from cmk.gui import pagetypes
@@ -25,6 +26,30 @@ from cmk.gui.visuals import visual_title
 
 # Constants to be used in snap-ins
 snapin_width = 240
+
+VisualMenuItemType = Literal[
+    "views",
+    "dashboards",
+    "reports",
+    "pages",
+    "custom_graph",
+    "graph_collection",
+    "forecast_graph",
+]
+
+
+def is_menu_item_supported_visual(type_name: str) -> TypeGuard[VisualMenuItemType]:
+    return type_name in get_args(VisualMenuItemType)
+
+
+class VisualItem(NamedTuple):
+    name: str
+    visual: Visual
+
+
+class VisualMenuItem(NamedTuple):
+    type: VisualMenuItemType
+    item: VisualItem
 
 
 def render_link(
@@ -130,7 +155,7 @@ def _filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tu
 
 
 def make_main_menu(
-    visuals: Sequence[tuple[str, tuple[str, Visual]]], user_permissions: UserPermissions
+    visuals: Sequence[VisualMenuItem], user_permissions: UserPermissions
 ) -> list[MainMenuTopic]:
     topics = {
         p.name(): p
@@ -190,26 +215,23 @@ def make_main_menu(
     ]
 
 
-def _visual_url(visual_type_name: str, name: str, visual: Visual) -> str:
-    if visual_type_name == "views":
-        return f"view.py?view_name={name}"
-
-    if visual_type_name == "dashboards":
-        return f"dashboard.py?name={name}&owner={visual['owner']}"
-
-    # Note: This is no real visual type like the others here. This is just a hack to make top level
-    # pages work with this function.
-    if visual_type_name == "pages":
-        return name if name.endswith(".py") else f"{name}.py"
-
-    if visual_type_name == "reports":
-        return f"report.py?name={name}"
-
-    # Handle page types
-    if visual_type_name in ["custom_graph", "graph_collection", "forecast_graph"]:
-        return f"{visual_type_name}.py?name={name}"
-
-    raise NotImplementedError(f"Unknown visual type: {visual_type_name}")
+def _visual_url(visual_type_name: VisualMenuItemType, name: str, visual: Visual) -> str:
+    match visual_type_name:
+        case "views":
+            return f"view.py?view_name={name}"
+        case "dashboards":
+            return f"dashboard.py?name={name}&owner={visual['owner']}"
+        case "pages":
+            # Note: This is no real visual type like the others here. This is just a hack to make top level
+            # pages work with this function.
+            return name if name.endswith(".py") else f"{name}.py"
+        case "reports":
+            return f"report.py?name={name}"
+        case "custom_graph" | "graph_collection" | "forecast_graph":
+            # Handle page types
+            return f"{visual_type_name}.py?name={name}"
+        case other:
+            assert_never(other)
 
 
 def show_main_menu(treename: str, menu: list[MainMenuTopic], show_item_icons: bool = False) -> None:

@@ -12,7 +12,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 
 from ._base import SidebarSnapin
-from ._helpers import footnotelinks, make_main_menu, show_main_menu
+from ._helpers import footnotelinks, make_main_menu, show_main_menu, VisualItem, VisualMenuItem
 
 
 class Dashboards(SidebarSnapin):
@@ -45,6 +45,9 @@ class Dashboards(SidebarSnapin):
 
     def _get_dashboard_menu_items(self, user_permissions: UserPermissions) -> list[MainMenuTopic]:
         return make_main_menu(
-            [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()],
+            [
+                VisualMenuItem("dashboards", VisualItem(k, v))
+                for k, v in get_permitted_dashboards().items()
+            ],
             user_permissions,
         )

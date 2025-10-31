@@ -29,6 +29,8 @@ from ._helpers import render_link as render_link
 from ._helpers import show_main_menu as show_main_menu
 from ._helpers import snapin_site_choice as snapin_site_choice
 from ._helpers import snapin_width as snapin_width
+from ._helpers import VisualItem as VisualItem
+from ._helpers import VisualMenuItem as VisualMenuItem
 from ._helpers import write_snapin_exception as write_snapin_exception
 from ._master_control import MasterControlSnapin
 from ._performance import Performance

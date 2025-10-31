@@ -2870,8 +2870,8 @@ def main_update(
         ):
             sys.stdout.write(
                 f"{tty.bold}You have now upgraded your product to {to_ed.title}. If you have not "
-                f"applied a valid license yet, you are now starting your trial of {to_ed.title}. If you"
-                f" are intending to use Checkmk to monitor more than 750 services after 30 days, you "
+                f"applied a valid license yet, you will be in trial period in {to_ed.title}. If you"
+                f" are intending to use Checkmk to monitor more than 750 services after the trial period, you "
                 f"must purchase a license. In case you already have a license, please enter your "
                 f"license credentials on the product's licensing page "
                 f"(Setup > Maintenance > Licensing > Edit settings)..{tty.normal}\n"

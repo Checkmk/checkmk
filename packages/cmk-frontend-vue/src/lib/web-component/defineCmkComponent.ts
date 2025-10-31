@@ -5,11 +5,15 @@
  */
 import { type Component, defineCustomElement, h } from 'vue'
 
-import CmkApp from './CmkApp.vue'
+import CmkApp, { type CmkAppProps } from './CmkApp.vue'
 
 let appCount = 0
 
-export default function defineCmkComponent(componentName: string, component: Component) {
+export default function defineCmkComponent(
+  componentName: string,
+  component: Component,
+  options?: CmkAppProps
+) {
   if (componentName.startsWith('cmk-') === false) {
     throw new Error(`Element name "${componentName}" must start with "cmk-"`)
   }
@@ -25,7 +29,7 @@ export default function defineCmkComponent(componentName: string, component: Com
         return { appData }
       },
       render() {
-        return h(CmkApp, () => h(component, this.appData))
+        return h(CmkApp, options, () => h(component, this.appData))
       }
     },
     {

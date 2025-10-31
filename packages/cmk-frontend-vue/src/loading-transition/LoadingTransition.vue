@@ -8,8 +8,8 @@ import { type LoadingTransition } from 'cmk-shared-typing/typescript/loading_tra
 
 import CmkSkeleton from '@/components/CmkSkeleton.vue'
 
-import CatalogSkeleton from './components/CatalogSkeleton.vue'
-import TableSkeleton from './components/TableSkeleton.vue'
+import CatalogSkeleton from './CatalogSkeleton.vue'
+import TableSkeleton from './TableSkeleton.vue'
 
 defineProps<{
   template: LoadingTransition
@@ -17,23 +17,31 @@ defineProps<{
 </script>
 
 <template>
-  <div class="loading-transition__titlebar">
-    <CmkSkeleton type="h1" :width="'400px'" class="loading-transition__skel-title" />
-    <span class="loading-transition__skel-breadcrumbs">
-      <CmkSkeleton type="text" /> > <CmkSkeleton type="text" /> >
-      <CmkSkeleton type="text" :width="'100px'" />
-    </span>
+  <div class="loading-transition__container">
+    <div class="loading-transition__titlebar">
+      <CmkSkeleton type="h1" :width="'400px'" class="loading-transition__skel-title" />
+      <span class="loading-transition__skel-breadcrumbs">
+        <CmkSkeleton type="text" /> > <CmkSkeleton type="text" /> >
+        <CmkSkeleton type="text" :width="'100px'" />
+      </span>
+    </div>
+    <div class="loading-transition__page-menu-bar">
+      <CmkSkeleton type="text" :width="'80px'" class="loading-transition__bar-element" />
+      <CmkSkeleton type="text" class="loading-transition__bar-element" />
+      <CmkSkeleton type="text" :width="'100px'" class="loading-transition__bar-element" />
+    </div>
+    <TableSkeleton v-if="template === 'table'" />
+    <CatalogSkeleton v-else-if="template === 'catalog'" />
   </div>
-  <div class="loading-transition__page-menu-bar">
-    <CmkSkeleton type="text" :width="'80px'" class="loading-transition__bar-element" />
-    <CmkSkeleton type="text" class="loading-transition__bar-element" />
-    <CmkSkeleton type="text" :width="'100px'" class="loading-transition__bar-element" />
-  </div>
-  <TableSkeleton v-if="template === 'table'" />
-  <CatalogSkeleton v-else-if="template === 'catalog'" />
 </template>
 
 <style scoped>
+.loading-transition__container {
+  max-height: 100%;
+  overflow-y: hidden;
+  pointer-events: none;
+}
+
 .loading-transition__titlebar {
   display: flex;
   flex-direction: column;

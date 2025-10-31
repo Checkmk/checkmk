@@ -11,7 +11,6 @@
 import argparse
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -22,9 +21,9 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     _get_resource_health_sections,
     _parse_metrics_metadata,
     AzureResource,
+    AzureResourceGroup,
     AzureSubscription,
     filter_tags,
-    get_group_labels,
     get_resource_groups,
     get_resource_host_labels_section,
     GroupLabels,
@@ -64,10 +63,18 @@ Args = argparse.Namespace
                 subscription=fake_azure_subscription(),
             ),
             {
-                "burningman": {
-                    "my-resource-tag": "my-resource-value",
-                    "resource_group": "burningman",
-                }
+                "burningman": AzureResourceGroup(
+                    info={
+                        "tags": {
+                            "my-resource-tag": "my-resource-value",
+                            "resource_group": "burningman",
+                        },
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "burningman",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                )
             },
             (
                 [
@@ -78,74 +85,11 @@ Args = argparse.Namespace
                 ["MyVM"],
             ),
         ),
-        (
-            AzureResource(
-                {
-                    "id": "resource_id",
-                    "name": "my_resource",
-                    "type": "Microsoft.Network/loadBalancers",
-                    "location": "westeurope",
-                    "tags": {"my-unique-tag": "unique", "tag4all": "True"},
-                    "group": "resource_group_name",
-                },
-                TagsImportPatternOption.import_all,
-                subscription=AzureSubscription(
-                    id="mock_subscription_id",
-                    name="mock_subscription_name",
-                    tags={},
-                    safe_hostnames=False,
-                    tenant_id="tenant_id",
-                ),
-            ),
-            {
-                "resource_group_name": {
-                    "resource_group": "resource_group_name",
-                    "another_group_tag": "another_value",
-                }
-            },
-            (
-                [
-                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
-                    ' "subscription_id": "mock_subscription_id"}\n',
-                    '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
-                ],
-                ["my_resource"],
-            ),
-        ),
-        (
-            AzureResource(
-                {
-                    "id": "resource_id",
-                    "name": "my_resource",
-                    "type": "Microsoft.Network/loadBalancers",
-                    "location": "westeurope",
-                    "tags": {},
-                    "group": "resource_group_name",
-                },
-                TagsImportPatternOption.import_all,
-                subscription=AzureSubscription(
-                    id="mock_subscription_id",
-                    name="mock_subscription_name",
-                    tags={},
-                    safe_hostnames=False,
-                    tenant_id="tenant_id",
-                ),
-            ),
-            {"resource_group_name": {}},
-            (
-                [
-                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
-                    ' "subscription_id": "mock_subscription_id"}\n',
-                    "{}\n",
-                ],
-                ["my_resource"],
-            ),
-        ),
     ],
 )
 def test_get_resource_host_labels_section(
     resource: AzureResource,
-    group_tags: GroupLabels,
+    group_tags: Mapping[str, AzureResourceGroup],
     expected_result: tuple[Sequence[str], Sequence[str]],
 ) -> None:
     labels_section = get_resource_host_labels_section(resource, group_tags)
@@ -208,7 +152,7 @@ RESOURCE_GROUPS_RESPONSE = [
     ],
 )
 @pytest.mark.asyncio
-async def test_get_group_labels(
+async def test_group_labels(
     monitored_groups: Sequence[str],
     tag_key_pattern: TagsOption,
     expected_result: GroupLabels,
@@ -216,9 +160,14 @@ async def test_get_group_labels(
 ) -> None:
     mock_api_client.get_async.return_value = RESOURCE_GROUPS_RESPONSE
 
-    groups = await get_resource_groups(mock_api_client, monitored_groups)
-    group_tags = get_group_labels(groups, tag_key_pattern)
-    assert group_tags == expected_result
+    groups = await get_resource_groups(
+        mock_api_client, monitored_groups, fake_azure_subscription(), tag_key_pattern
+    )
+
+    len(groups) == len(expected_result)
+    for group_name, group in groups.items():
+        assert group_name in expected_result
+        assert group.tags == expected_result[group_name]
 
 
 @pytest.mark.parametrize(
@@ -226,57 +175,69 @@ async def test_get_group_labels(
     [
         pytest.param(
             ["resource_group_non_existent"],
-            [],
+            {},
             id="No groups monitored",
         ),
         pytest.param(
             ["resource_group_1"],
-            [
-                {
-                    "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1",
-                    "location": "eastus",
-                    "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/",
-                    "name": "resource_group_1",
-                    "properties": {
-                        "provisioningState": "Succeeded",
+            {
+                "resource_group_1": AzureResourceGroup(
+                    info={
+                        "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1",
+                        "location": "eastus",
+                        "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/",
+                        "name": "resource_group_1",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                        },
+                        "tags": {
+                            "group_tag_key_1": "group_tag_value_1",
+                        },
+                        "type": "Microsoft.Resources/resourceGroups",
                     },
-                    "tags": {
-                        "group_tag_key_1": "group_tag_value_1",
-                    },
-                    "type": "Microsoft.Resources/resourceGroups",
-                },
-            ],
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                ),
+            },
             id="One group monitored",
         ),
         pytest.param(
             ["resource_group_1", "resource_group_2"],
-            [
-                {
-                    "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1",
-                    "location": "eastus",
-                    "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/",
-                    "name": "resource_group_1",
-                    "properties": {
-                        "provisioningState": "Succeeded",
+            {
+                "resource_group_1": AzureResourceGroup(
+                    info={
+                        "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1",
+                        "location": "eastus",
+                        "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/",
+                        "name": "resource_group_1",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                        },
+                        "tags": {
+                            "group_tag_key_1": "group_tag_value_1",
+                        },
+                        "type": "Microsoft.Resources/resourceGroups",
                     },
-                    "tags": {
-                        "group_tag_key_1": "group_tag_value_1",
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                ),
+                "resource_group_2": AzureResourceGroup(
+                    info={
+                        "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2",
+                        "location": "westeurope",
+                        "name": "resource_group_2",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                        },
+                        "tags": {
+                            "group_tag_key_2": "group_tag_value_2",
+                        },
+                        "type": "Microsoft.Resources/resourceGroups",
                     },
-                    "type": "Microsoft.Resources/resourceGroups",
-                },
-                {
-                    "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2",
-                    "location": "westeurope",
-                    "name": "resource_group_2",
-                    "properties": {
-                        "provisioningState": "Succeeded",
-                    },
-                    "tags": {
-                        "group_tag_key_2": "group_tag_value_2",
-                    },
-                    "type": "Microsoft.Resources/resourceGroups",
-                },
-            ],
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                ),
+            },
             id="Multiple groups monitored",
         ),
     ],
@@ -285,12 +246,21 @@ async def test_get_group_labels(
 async def test_get_resource_groups(
     mock_api_client: AsyncMock,
     monitored_groups: Sequence[str],
-    expected_result: Sequence[Mapping[str, Any]],
+    expected_result: Mapping[str, AzureResourceGroup],
 ) -> None:
     mock_api_client.get_async.return_value = RESOURCE_GROUPS_RESPONSE
 
-    groups = await get_resource_groups(mock_api_client, monitored_groups)
-    assert groups == expected_result
+    groups = await get_resource_groups(
+        mock_api_client,
+        monitored_groups,
+        fake_azure_subscription(),
+        TagsImportPatternOption.import_all,
+    )
+    assert len(groups) == len(expected_result)
+    for group_name, group in groups.items():
+        assert group_name in expected_result
+        assert group.info == expected_result[group_name].info
+        assert group.tags == expected_result[group_name].tags
 
 
 @pytest.mark.asyncio
@@ -301,20 +271,25 @@ async def test_write_resource_groups_sections(
 ) -> None:
     mock_api_client.get_async.return_value = RESOURCE_GROUPS_RESPONSE
 
-    groups = await get_resource_groups(mock_api_client, ["resource_group_1", "resource_group_2"])
-    write_resource_groups_sections(groups, mock_azure_subscription)
+    groups = await get_resource_groups(
+        mock_api_client,
+        ["resource_group_1", "resource_group_2"],
+        mock_azure_subscription,
+        TagsImportPatternOption.import_all,
+    )
+    write_resource_groups_sections(groups)
     captured = capsys.readouterr()
     assert (
         captured.out
         == """<<<<resource_group_1>>>>
 <<<azure_v2_resourcegroups:sep(124)>>>
 Resource
-{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1", "name": "resource_group_1", "type": "Microsoft.Resources/resourceGroups", "location": "eastus", "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_1": "group_tag_value_1"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription": "subscripion_id", "group": "resource_group_1"}
+{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1", "name": "resource_group_1", "type": "Microsoft.Resources/resourceGroups", "location": "eastus", "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_1": "group_tag_value_1"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "group": "resource_group_1"}
 <<<<>>>>
 <<<<resource_group_2>>>>
 <<<azure_v2_resourcegroups:sep(124)>>>
 Resource
-{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2", "name": "resource_group_2", "type": "Microsoft.Resources/resourceGroups", "location": "westeurope", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_2": "group_tag_value_2"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription": "subscripion_id", "group": "resource_group_2"}
+{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2", "name": "resource_group_2", "type": "Microsoft.Resources/resourceGroups", "location": "westeurope", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_2": "group_tag_value_2"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "group": "resource_group_2"}
 <<<<>>>>
 """
     )
@@ -362,10 +337,20 @@ async def test_filter_tags(
 
 
 @pytest.mark.parametrize(
-    "monitored_groups, monitored_resources, group_tags, expected_result",
+    "monitored_groups, monitored_resources, expected_result",
     [
         (
-            ["burningman"],
+            {
+                "burningman": AzureResourceGroup(
+                    info={
+                        "tags": {"my-resource-tag": "my-resource-value"},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "burningman",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                )
+            },
             [
                 AzureResource(
                     {
@@ -380,7 +365,6 @@ async def test_filter_tags(
                     subscription=fake_azure_subscription(),
                 ),
             ],
-            {"burningman": {"my-resource-tag": "my-resource-value"}},
             "<<<<burningman>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
@@ -393,7 +377,26 @@ async def test_filter_tags(
             "<<<<>>>>\n",
         ),
         (
-            ["burningman", "resource_group_name"],
+            {
+                "burningman": AzureResourceGroup(
+                    info={
+                        "tags": {"my-resource-tag": "my-resource-value"},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "burningman",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                ),
+                "resource_group_name": AzureResourceGroup(
+                    info={
+                        "tags": {"my-resource-tag": "my-resource-value"},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "resource_group_name",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                ),
+            },
             [
                 AzureResource(
                     {
@@ -408,7 +411,11 @@ async def test_filter_tags(
                     subscription=fake_azure_subscription(),
                 ),
             ],
-            {"resource_group_name": {"my-resource-tag": "my-resource-value"}},
+            "<<<<burningman>>>>\n"
+            "<<<azure_v2_labels:sep(0)>>>\n"
+            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"my-resource-tag": "my-resource-value"}\n'
+            "<<<<>>>>\n"
             "<<<<resource_group_name>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "resource_group": "resource_group_name", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
@@ -423,9 +430,8 @@ async def test_filter_tags(
     ],
 )
 def test_write_group_info(
-    monitored_groups: Sequence[str],
+    monitored_groups: Mapping[str, AzureResourceGroup],
     monitored_resources: Sequence[AzureResource],
-    group_tags: GroupLabels,
     expected_result: Sequence[str],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -433,7 +439,6 @@ def test_write_group_info(
         monitored_groups,
         monitored_resources,
         fake_azure_subscription(),
-        group_tags,
     )
     captured = capsys.readouterr()
     assert captured.out == expected_result
@@ -491,7 +496,7 @@ RESOURCE_HEALTH_ENTRY = {
             [
                 MockAzureSection(
                     name="resource_health",
-                    piggytargets=["resource_group_1"],
+                    piggytargets=["VM-test-1"],
                     content=[
                         '{"id": "/subscriptions/subscription_id/resourcegroups/resource_group_1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", \
 "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", \
@@ -511,7 +516,7 @@ RESOURCE_HEALTH_ENTRY = {
             [
                 MockAzureSection(
                     name="resource_health",
-                    piggytargets=["resource_group_1"],
+                    piggytargets=["VM-test-1"],
                     content=[
                         '{"id": "/subscriptions/subscription_id/resourcegroups/resource_group_1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", \
 "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", \
@@ -766,7 +771,7 @@ async def test_process_redis(mock_azure_subscription: AzureSubscription) -> None
 class AzureResourceInfo:
     section: str
     info_group: str
-    piggytargets: Sequence[str]
+    piggytarget: str
     tags: dict[str, str]
 
 
@@ -834,31 +839,31 @@ RESOURCES_API_RESPONSE = [
                 AzureResourceInfo(
                     section="virtualnetworks",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="virtual_network_1",
                     tags={},
                 ),
                 AzureResourceInfo(
                     section="virtualnetworks",
                     info_group="resource_group_2",
-                    piggytargets=["resource_group_2"],
+                    piggytarget="virtual_network_2",
                     tags={},
                 ),
                 AzureResourceInfo(
                     section="virtualmachines",
                     info_group="resource_group_3",
-                    piggytargets=["resource_group_3"],
+                    piggytarget="virtual_machine_1",
                     tags={},
                 ),
                 AzureResourceInfo(
                     section="storageaccounts",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="storage_account_1",
                     tags={"ms-resource-usage": "azure-cloud-shell"},
                 ),
                 AzureResourceInfo(
                     section="redis",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="redis_cache_1",
                     tags={},
                 ),
             ],
@@ -882,31 +887,31 @@ RESOURCES_API_RESPONSE = [
                 AzureResourceInfo(
                     section="virtualnetworks",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="virtual_network_1",
                     tags={},
                 ),
                 AzureResourceInfo(
                     section="virtualnetworks",
                     info_group="resource_group_2",
-                    piggytargets=["resource_group_2"],
+                    piggytarget="virtual_network_2",
                     tags={},
                 ),
                 AzureResourceInfo(
                     section="virtualmachines",
                     info_group="resource_group_3",
-                    piggytargets=["resource_group_3"],
+                    piggytarget="virtual_machine_1",
                     tags={},
                 ),
                 AzureResourceInfo(
                     section="storageaccounts",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="storage_account_1",
                     tags={},
                 ),
                 AzureResourceInfo(
                     section="redis",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="redis_cache_1",
                     tags={},
                 ),
             ],
@@ -930,19 +935,19 @@ RESOURCES_API_RESPONSE = [
                 AzureResourceInfo(
                     section="virtualnetworks",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="virtual_network_1",
                     tags={},
                 ),
                 AzureResourceInfo(
                     section="storageaccounts",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="storage_account_1",
                     tags={"ms-resource-usage": "azure-cloud-shell"},
                 ),
                 AzureResourceInfo(
                     section="redis",
                     info_group="resource_group_1",
-                    piggytargets=["resource_group_1"],
+                    piggytarget="redis_cache_1",
                     tags={},
                 ),
             ],
@@ -971,7 +976,7 @@ async def test_collect_resources(
     for resource, expected in zip(result_resources, expected_resources):
         assert resource.section == expected.section, "Section mismatch"
         assert resource.info["group"] == expected.info_group, "Info group mismatch"
-        assert resource.piggytargets == expected.piggytargets, "Piggy targets mismatch"
+        assert resource.piggytarget == expected.piggytarget, "Piggy targets mismatch"
         assert resource.tags == expected.tags, "Tags mismatch"
 
     assert set(result_groups) == set(expected_monitored_groups), "Monitored groups mismatch"
@@ -997,7 +1002,7 @@ RESOURCE_DATA = {
             AzureResourceInfo(
                 section="storageaccounts",
                 info_group="resource_group_1",
-                piggytargets=["resource_group_1"],
+                piggytarget="storage_account_1",
                 tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
             ),
             id="Resource with imported tags",
@@ -1008,7 +1013,7 @@ RESOURCE_DATA = {
             AzureResourceInfo(
                 section="storageaccounts",
                 info_group="resource_group_1",
-                piggytargets=["resource_group_1"],
+                piggytarget="storage_account_1",
                 tags={},
             ),
             id="Resource without imported tags",
@@ -1019,7 +1024,7 @@ RESOURCE_DATA = {
             AzureResourceInfo(
                 section="storageaccounts",
                 info_group="resource_group_1",
-                piggytargets=["resource_group_1"],
+                piggytarget="storage_account_1",
                 tags={"tag_key_2": "tag_value_2"},
             ),
             id="Resource with filtered tags",
@@ -1036,7 +1041,7 @@ def test_azure_resource(
 
     assert resource.section == expected_resource.section, "Section mismatch"
     assert resource.info["group"] == expected_resource.info_group, "Info group mismatch"
-    assert resource.piggytargets == expected_resource.piggytargets, "Piggy targets mismatch"
+    assert resource.piggytarget == expected_resource.piggytarget, "Piggy targets mismatch"
     assert resource.tags == expected_resource.tags, "Tags mismatch"
 
 

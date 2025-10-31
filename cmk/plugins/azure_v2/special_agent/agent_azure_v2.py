@@ -30,7 +30,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Coroutine, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from enum import auto, Enum, StrEnum
+from enum import Enum
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Any, Final, Literal, Required, TypedDict, TypeVar
@@ -143,6 +143,30 @@ class AzureSubscription:
             if self._safe_hostnames
             else resource_name
         )
+
+
+class AzureResourceGroup:
+    def __init__(
+        self,
+        info: Mapping[str, Any],
+        tag_key_pattern: TagsOption,
+        subscription: AzureSubscription,
+    ) -> None:
+        self.tags = filter_tags(info.get("tags", {}), tag_key_pattern)
+        self.info = {
+            **info,
+            "tenant_id": subscription.tenant_id,
+            "subscription_name": subscription.name,
+            "subscription_id": subscription.id,
+            "group": info["name"].lower(),
+        }
+        self.section = info["type"].split("/")[-1].lower()
+        self.subscription = subscription
+
+    def dumpinfo(self) -> Sequence[tuple]:
+        # TODO: Hmmm, should the variable-length tuples actually be lists?
+        lines: list[tuple[str | int, ...]] = [("Resource",), (json.dumps(self.info),)]
+        return lines
 
 
 class TagsImportPatternOption(enum.Enum):
@@ -389,7 +413,7 @@ class ExplicitConfig:
     def is_configured(self, resource: AzureResource) -> bool:
         if self.fetchall:
             return True
-        group_config = self.groups.get(resource.info["group"].lower())
+        group_config = self.groups.get(resource.group)
         if group_config is None:
             return False
         if group_config.fetchall:
@@ -571,20 +595,12 @@ class AzureTenantLabelsSection(_AzureBaseLabelsSection):
         return super()._apply_default_label({"entity": "tenant", **labels})
 
 
-class HostTarget(StrEnum):
-    RESOURCE_NAME = auto()
-    PIGGYTARGETS = auto()
-
-
 class AzureResourceSection(AzureSection):
-    def __init__(
-        self, resource: AzureResource, host_target: HostTarget = HostTarget.RESOURCE_NAME
-    ) -> None:
+    # TODO
+    def __init__(self, resource: AzureResource | AzureResourceGroup) -> None:
         super().__init__(
             resource.section,
-            resource.piggytargets
-            if host_target == HostTarget.PIGGYTARGETS
-            else [resource.info["name"]],
+            [resource.info["name"]],
             subscription=resource.subscription,
         )
 
@@ -732,11 +748,11 @@ class AzureResource:
         self.info.update(get_attrs_from_uri(info["id"]))
         self.subscription = subscription
 
+        self.name = self.info["name"]
+        self.group = self.info["group"].lower()
         self.section = info["type"].split("/")[-1].lower()
-        self.piggytargets = []
-        if group := self.info.get("group"):
-            self.info["group"] = group.lower()
-            self.piggytargets.append(group.lower())
+
+        self.piggytarget = self.name  # TODO: implement safenames
         self.metrics: list = []
 
     def dumpinfo(self) -> Sequence[tuple]:
@@ -1291,15 +1307,13 @@ async def process_cosmosdb(
                 db_resource = AzureResource(
                     db_resource_info, TagsImportPatternOption.import_all, resource.subscription
                 )
-                # piggyback target to the database name
-                db_resource.piggytargets = [database_name]
                 db_resource.metrics.append(metric)
 
                 cosmosdb_databases[database_name] = db_resource
                 resources.append(db_resource)
 
     if err:
-        LOGGER.error("Errors occurred during cosmosdb metrics collection.")  # TODO: remove
+        LOGGER.error("Errors occurred during cosmosdb metrics collection.")
         agent_info_section = AzureSection("agent_info")
         agent_info_section.add(err.dumpinfo())
         agent_info_section.write()
@@ -1752,11 +1766,11 @@ async def _gather_metrics(
 
 
 def get_resource_host_labels_section(
-    resource: AzureResource, group_labels: GroupLabels
+    resource: AzureResource, monitored_groups: Mapping[str, AzureResourceGroup]
 ) -> AzureLabelsSection:
     subscription = resource.subscription
     labels = {
-        "resource_group": resource.info["group"],
+        "resource_group": resource.group,
         "entity": resource.section,
         "subscription_name": subscription.hostname,
         "subscription_id": subscription.id,
@@ -1765,25 +1779,22 @@ def get_resource_host_labels_section(
     if resource.info["type"] == "Microsoft.Compute/virtualMachines":
         labels["vm_instance"] = True
 
-    group_name = resource.info["group"]
     resource_tags = dict(resource.tags)
 
     # merge resource tags with group tags, resource tags have precedence
-    for tag_name, tag_value in group_labels[group_name].items():
-        if tag_name not in resource.tags:
-            resource_tags[tag_name] = tag_value
+    if group := monitored_groups.get(resource.group):
+        for tag_name, tag_value in group.tags.items():
+            if tag_name not in resource.tags:
+                resource_tags[tag_name] = tag_value
 
     return AzureLabelsSection(
         resource.info["name"], subscription, labels=labels, tags=resource_tags
     )
 
 
-def write_resource_groups_sections(
-    resource_groups: Sequence[Mapping[str, Any]], subscription: AzureSubscription
-):
-    # Fake a resource here for inventory purposes
-    for group in resource_groups:
-        resource = AzureResource(group, TagsImportPatternOption.import_all, subscription)
+def write_resource_groups_sections(resource_groups: Mapping[str, AzureResourceGroup]) -> None:
+    # for inventory purposes
+    for group_name, resource in resource_groups.items():
         section = AzureResourceSection(resource)
         section.add(resource.dumpinfo())
         section.write()
@@ -1792,50 +1803,45 @@ def write_resource_groups_sections(
 async def get_resource_groups(
     mgmt_client: BaseAsyncApiClient,
     monitored_groups: Sequence[str],
-) -> list[Mapping[str, Any]]:
+    subscription: AzureSubscription,
+    tag_key_pattern: TagsOption,
+) -> Mapping[str, AzureResourceGroup]:
     resource_groups = await mgmt_client.get_async(
         "resourcegroups", key="value", params={"api-version": "2019-05-01"}
     )
 
-    groups = []
+    groups = {}
     for group in resource_groups:
-        if (name := group["name"].lower()) and name in monitored_groups:
-            group["name"] = name
-            groups.append(group)
+        if (name := group["name"]) and name.lower() in monitored_groups:
+            groups[name.lower()] = AzureResourceGroup(
+                group,
+                tag_key_pattern,
+                subscription,
+            )
+
     return groups
 
 
-def get_group_labels(
-    resource_groups: Sequence[Mapping[str, Any]],
-    tag_key_pattern: TagsOption,
-) -> GroupLabels:
-    return {
-        group["name"].lower(): filter_tags(group.get("tags", {}), tag_key_pattern)
-        for group in resource_groups
-    }
-
-
 def write_group_info(
-    monitored_groups: Sequence[str],
+    monitored_groups: Mapping[str, AzureResourceGroup],
     monitored_resources: Sequence[AzureResource],
     subscription: AzureSubscription,
-    group_labels: GroupLabels,
 ) -> None:
-    for group_name, tags in group_labels.items():
+    for group_name, group in monitored_groups.items():
         AzureLabelsSection(
             group_name,
-            subscription,
+            subscription=subscription,
             labels={
                 "resource_group": group_name,
                 "subscription_name": subscription.hostname,
                 "subscription_id": subscription.id,
                 "entity": "resource_group",
             },
-            tags=tags,
+            tags=group.tags,
         ).write()
 
     section = AzureSection("agent_info", [subscription.hostname], subscription=subscription)
-    section.add(("monitored-groups", json.dumps(monitored_groups)))
+    section.add(("monitored-groups", json.dumps([*monitored_groups])))
     section.add(
         (
             "monitored-resources",
@@ -2005,7 +2011,7 @@ async def get_usage_data(
 
 def write_usage_section(
     usage_data: Sequence[dict[str, Any]],
-    monitored_groups: list[str],
+    monitored_groups: Mapping[str, AzureResourceGroup],
     subscription: AzureSubscription,
     tag_key_pattern: TagsOption,
 ) -> None:
@@ -2019,14 +2025,16 @@ def write_usage_section(
         ).write(write_empty=True)
 
     for usage in usage_data:
-        # fill "resource" mandatory information
+        # this is a made-up resource to fit in our model
         usage["type"] = "Microsoft.Consumption/usageDetails"
         usage["group"] = usage["properties"]["ResourceGroupName"]
 
         usage_resource = AzureResource(usage, tag_key_pattern, subscription)
-        piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [
-            subscription.hostname
-        ]
+
+        # usage data end up in both the resource group host and the subscription host
+        piggytargets = [subscription.hostname]
+        if (usage_group := usage["group"].lower()) in monitored_groups:
+            piggytargets += [usage_group]
 
         section = AzureSection(usage_resource.section, piggytargets, subscription=subscription)
         section.add(usage_resource.dumpinfo())
@@ -2037,7 +2045,7 @@ def write_usage_section(
 async def process_usage_details(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
-    monitored_groups: list[str],
+    monitored_groups: Mapping[str, AzureResourceGroup],
     args: argparse.Namespace,
 ) -> None:
     try:
@@ -2073,7 +2081,7 @@ async def process_resource_health(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
     monitored_resources: Mapping[ResourceId, AzureResource],
-    monitored_groups: Sequence[str],
+    monitored_groups: Mapping[str, AzureResourceGroup],
     debug: bool,
 ) -> Sequence[AzureSection]:
     multi_response = await asyncio.gather(
@@ -2214,7 +2222,7 @@ def _get_resource_health_sections(
     for group, values in health_section.items():
         section = AzureSection(
             "resource_health",
-            piggytargets=resource.piggytargets,
+            piggytargets=[resource.piggytarget],
             separator=0,
             subscription=subscription,
         )
@@ -2255,14 +2263,14 @@ async def _test_connection(args: argparse.Namespace) -> int:
 
 def _gather_sections_from_resources(
     resources: list[AzureResource],
-    group_labels: GroupLabels,
+    monitored_groups: Mapping[str, AzureResourceGroup],
 ) -> Sequence[AzureSection]:
     sections: list[AzureSection] = []
     for resource in resources:
         section = AzureResourceSection(resource)
         section.add(resource.dumpinfo())
         sections.append(section)
-        sections.append(get_resource_host_labels_section(resource, group_labels))
+        sections.append(get_resource_host_labels_section(resource, monitored_groups))
 
     return sections
 
@@ -2270,7 +2278,7 @@ def _gather_sections_from_resources(
 async def process_bulk_resources(
     mgmt_client: BaseAsyncApiClient,
     args: argparse.Namespace,
-    group_labels: GroupLabels,
+    monitored_groups: Mapping[str, AzureResourceGroup],
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
     subscription: AzureSubscription,
@@ -2296,7 +2304,7 @@ async def process_bulk_resources(
 
         processed_resources.extend(resources_async)
 
-    return _gather_sections_from_resources(processed_resources, group_labels)
+    return _gather_sections_from_resources(processed_resources, monitored_groups)
 
 
 # TODO: test
@@ -2304,7 +2312,7 @@ async def process_single_resources(
     mgmt_client: BaseAsyncApiClient,
     args: argparse.Namespace,
     subscription: AzureSubscription,
-    group_labels: GroupLabels,
+    monitored_groups: Mapping[str, AzureResourceGroup],
     monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureSection]:
     processed_resources: list[AzureResource] = []
@@ -2348,17 +2356,16 @@ async def process_single_resources(
             assert isinstance(resource_async, list)
             processed_resources.extend(resource_async)
 
-    return _gather_sections_from_resources(processed_resources, group_labels)
+    return _gather_sections_from_resources(processed_resources, monitored_groups)
 
 
 async def process_resources(
     mgmt_client: BaseAsyncApiClient,
     args: argparse.Namespace,
     subscription: AzureSubscription,
-    group_labels: GroupLabels,
     selected_resources: Sequence[AzureResource],
     monitored_services: set[str],
-    monitored_groups: Sequence[str],
+    monitored_groups: Mapping[str, AzureResourceGroup],
 ) -> None:
     # lower, because I've seen things like
     # Microsoft.DocumentDB/databaseAccounts AND
@@ -2381,13 +2388,13 @@ async def process_resources(
         process_bulk_resources(
             mgmt_client,
             args,
-            group_labels,
+            monitored_groups,
             monitored_services,
             monitored_resources_by_id,
             subscription,
         ),
         process_single_resources(
-            mgmt_client, args, subscription, group_labels, monitored_resources_by_id
+            mgmt_client, args, subscription, monitored_groups, monitored_resources_by_id
         ),
     }
 
@@ -2419,7 +2426,7 @@ async def _collect_resources(
     # -> I don't know if this is actually intended (we are populating the agent information `monitored-resources`
     #    with resources not really monitored), but the agent behaved like this before.
     selected_resources = [r for r in all_resources if selector.do_monitor(r)]
-    monitored_groups = sorted({r.info["group"] for r in selected_resources})
+    monitored_groups = sorted({r.group for r in selected_resources})
 
     return selected_resources, monitored_groups
 
@@ -2442,30 +2449,30 @@ async def main_subscription(
             client=args.client,
             secret=args.secret,
         ) as mgmt_client:
-            selected_resources, monitored_groups = await _collect_resources(
+            selected_resources, monitored_groups_list = await _collect_resources(
                 mgmt_client, subscription, args, selector
             )
 
-            resource_groups = await get_resource_groups(mgmt_client, monitored_groups)
-            group_labels = get_group_labels(resource_groups, args.tag_key_pattern)
-            write_group_info(monitored_groups, selected_resources, subscription, group_labels)
-            write_resource_groups_sections(resource_groups, subscription)
+            resource_groups = await get_resource_groups(
+                mgmt_client, monitored_groups_list, subscription, args.tag_key_pattern
+            )
+            write_group_info(resource_groups, selected_resources, subscription)
+            write_resource_groups_sections(resource_groups)
             write_subscription_info(subscription)
             write_subscription_section(subscription)
             write_tenant_info()
 
             tasks = {
-                process_usage_details(mgmt_client, subscription, monitored_groups, args)
+                process_usage_details(mgmt_client, subscription, resource_groups, args)
                 if "usage_details" in monitored_services
                 else None,
                 process_resources(
                     mgmt_client,
                     args,
                     subscription,
-                    group_labels,
                     selected_resources,
                     monitored_services,
-                    monitored_groups,
+                    resource_groups,
                 ),
             }
             tasks.discard(None)

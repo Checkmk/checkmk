@@ -66,6 +66,9 @@ def get_site_file_permission(site: Site) -> list[tuple[int, str]]:
 def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]) -> None:
     offenders: set[str] = set()
     for file_mode, rel_path in get_site_file_permission(site):
+        if site.edition.is_saas_edition() and rel_path == "tmp/run/mkeventd/events":
+            continue
+
         if (file_mode & mode) == 0:
             continue
 
@@ -79,10 +82,12 @@ def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]
     )
 
 
-@pytest.mark.skip_if_edition("saas")  # CMK-27131
 def test_world_accessible_files_parents(site: Site) -> None:
     """files which are supposed to be accessible need their parents to be also accessible"""
     for file in KNOWN_WORLD_WRITABLE_FILES | KNOWN_WORLD_READABLE_FILES:
+        if site.edition.is_saas_edition() and file == "tmp/run/mkeventd/events":
+            continue
+
         path = site.root / file
         assert path.exists()
         for parent in path.parents:

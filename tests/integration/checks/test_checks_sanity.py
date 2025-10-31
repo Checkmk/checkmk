@@ -22,7 +22,6 @@ from tests.testlib.agent import (
 )
 from tests.testlib.site import Site
 from tests.testlib.utils import ServiceInfo
-from tests.testlib.version import edition_from_env
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ def _host_services(
     site: Site, agent_ctl: Path, request: pytest.FixtureRequest
 ) -> Iterator[dict[str, ServiceInfo]]:
     active_mode = request.param
-    if active_mode and edition_from_env().is_saas_edition():
+    if active_mode and site.edition.is_saas_edition():
         pytest.skip("Active mode requires pull agent, which is not available in CSE")
     rule_id = None
     hostname = HostName(f"host-{request.node.callspec.id}")
@@ -73,7 +72,7 @@ def _host_services(
         if active_mode:
             site.reschedule_services(hostname)
         else:
-            if not edition_from_env().is_saas_edition():
+            if not site.edition.is_saas_edition():
                 # Reduce check interval to 3 seconds
                 rule_id = site.openapi.rules.create(
                     ruleset_name=RuleGroup.ExtraServiceConf("check_interval"),
@@ -130,13 +129,11 @@ def _runs_cmc(site: Site) -> bool:
     return site.omd("config", "show", "CORE", check=True).stdout.strip() == "cmc"
 
 
-@pytest.mark.skip_if_edition("saas")  # CMK-27131
 def test_shipped_ps_discovery(host_services: dict[str, ServiceInfo], site: Site) -> None:
     expected_ps_services = {  # compare cmk.gui.watolib.sample_config
         f"Process {site.id} agent receiver",
         f"Process {site.id} apache",
         f"Process {site.id} automation helpers",
-        f"Process {site.id} event console",
         # jaeger and piggyback-hub are not enabled in this test
         # f"Process {site.id} jaeger",
         # f"Process {site.id} piggyback hub",
@@ -144,6 +141,9 @@ def test_shipped_ps_discovery(host_services: dict[str, ServiceInfo], site: Site)
         f"Process {site.id} redis-server",
         f"Process {site.id} rrdcached",
     }
+
+    if not site.edition.is_saas_edition():
+        expected_ps_services.add(f"Process {site.id} event console")
 
     if _runs_cmc(site):
         expected_ps_services |= {

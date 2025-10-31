@@ -17,11 +17,17 @@ from tests.testlib.web_session import CMKWebSession
 @pytest.fixture
 def session(site: Site) -> Generator[CMKWebSession]:
     session = CMKWebSession(site)
-    session.login()
+
+    if not site.edition.is_saas_edition():
+        session.login()
+
     yield session
-    session.logout()
+
+    if not site.edition.is_saas_edition():
+        session.logout()
 
 
+@pytest.mark.skip_if_edition("saas")  # CMK-27131
 def test_result_counts_of_different_search_queries(session: CMKWebSession) -> None:
     client = _SearchClient(session)
 

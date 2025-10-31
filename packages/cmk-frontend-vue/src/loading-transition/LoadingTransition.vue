@@ -9,6 +9,7 @@ import { type LoadingTransition } from 'cmk-shared-typing/typescript/loading_tra
 import CmkSkeleton from '@/components/CmkSkeleton.vue'
 
 import CatalogSkeleton from './CatalogSkeleton.vue'
+import DashboardSkeleton from './DashboardSkeleton.vue'
 import TableSkeleton from './TableSkeleton.vue'
 
 defineProps<{
@@ -32,6 +33,7 @@ defineProps<{
     </div>
     <TableSkeleton v-if="template === 'table'" />
     <CatalogSkeleton v-else-if="template === 'catalog'" />
+    <DashboardSkeleton v-else />
   </div>
 </template>
 

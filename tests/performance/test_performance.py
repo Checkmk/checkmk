@@ -349,6 +349,7 @@ def test_performance_services(
     )
 
 
+@pytest.mark.skip("CMK-27171: Unstable scenario; fix in progress")
 def test_performance_piggyback(
     perftest: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:

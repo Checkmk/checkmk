@@ -3147,6 +3147,7 @@ class DropdownChoice(ValueSpec[T | None]):
             label=None,
             class_=[],
             size=1,
+            multiple=False,
             read_only=self._read_only,
             **self._html_attrs,
         )
@@ -3329,6 +3330,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
             class_=["ajax-vals", self._cssclass if self._cssclass else ""],
             data_autocompleter=json.dumps(self._autocompleter.config),
             size=1,
+            multiple=False,
             read_only=self._read_only,
             # kwargs following
             style="width: 250px;",
@@ -4282,7 +4284,7 @@ class DualListChoice(ListChoice):
                 [(str(k), v) for k, v in choices],
                 deflt="",
                 ordered=self._custom_order,
-                multiple="multiple",
+                multiple=True,
                 style=("height:auto" if self._autoheight else "height: %dpx" % (self._rows * 16)),
                 ondblclick=select_func if not self._instant_add else "",
                 onchange=onchange_func,

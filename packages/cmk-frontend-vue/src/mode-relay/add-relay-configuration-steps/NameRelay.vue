@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -21,6 +23,26 @@ const { _t } = usei18n()
 defineProps<CmkWizardStepProps>()
 
 const relayName = defineModel<string>({ default: '' })
+
+const displayErrors = ref(false)
+
+const getNameErrors = () => {
+  const errors: string[] = []
+  const name = relayName.value.trim()
+  if (name.length === 0) {
+    errors.push('A relay name is required')
+  }
+  return errors
+}
+
+const nameErrors = computed(() => {
+  return displayErrors.value ? getNameErrors() : []
+})
+
+async function validate(): Promise<boolean> {
+  displayErrors.value = true
+  return getNameErrors().length === 0
+}
 </script>
 
 <template>
@@ -38,7 +60,12 @@ const relayName = defineModel<string>({ default: '' })
           {{ _t('Relay display name') }}
           <CmkLabelRequired />
         </CmkLabel>
-        <CmkInput v-model="relayName" type="text" field-size="MEDIUM" />
+        <CmkInput
+          v-model="relayName"
+          type="text"
+          field-size="MEDIUM"
+          :external-errors="nameErrors"
+        />
       </div>
       <CmkAlertBox variant="info">
         {{
@@ -50,7 +77,7 @@ const relayName = defineModel<string>({ default: '' })
     </template>
 
     <template #actions>
-      <CmkWizardButton type="next" />
+      <CmkWizardButton type="next" :validation-cb="validate" />
       <CmkWizardButton type="previous" />
     </template>
   </CmkWizardStep>

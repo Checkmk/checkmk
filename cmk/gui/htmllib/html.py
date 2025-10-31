@@ -986,6 +986,7 @@ class HTMLGenerator(HTMLWriter):
         label: str | None = None,
         class_: CSSSpec | None = None,
         size: int = 1,
+        multiple: bool = False,
         read_only: bool = False,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
@@ -1018,9 +1019,16 @@ class HTMLGenerator(HTMLWriter):
         # selections like the dual list choice valuespec
         css_classes = (
             []
-            if "multiple" in attrs or (isinstance(class_, list) and "ajax-vals" in class_)
+            if multiple or (isinstance(class_, list) and "ajax-vals" in class_)
             else ["select2-enable"]
         )
+
+        attrs["size"] = str(size)
+        # Size must not be 1 for multiple select fields as chrome defaults to a dropdown then
+        # Ref: https://developer.chrome.com/release-notes/142?hl=en#mobile_and_desktop_parity_for_select_element_rendering_modes
+        if multiple:
+            attrs["size"] = "10"  # Actual value unused
+            attrs["multiple"] = ""
 
         if isinstance(class_, list):
             css_classes.extend(class_)
@@ -1028,7 +1036,11 @@ class HTMLGenerator(HTMLWriter):
             css_classes.append(class_)
 
         self.open_select(
-            name=varname, id_=varname, label=label, class_=css_classes, size=str(size), **attrs
+            name=varname,
+            id_=varname,
+            label=label,
+            class_=css_classes,
+            **attrs,
         )
 
         for group in grouped:

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 import ssl
 from pathlib import Path
 from typing import IO
@@ -162,16 +161,22 @@ def test_unsupported_tls_versions(
 ) -> None:
     with pytest.raises(CMKTLSError):
         tls_connect(
-            central_site.http_address, central_site.message_broker_port, broker_ca, tls_version
+            Path(central_site.package.version_path()) / "bin/openssl",
+            central_site.http_address,
+            central_site.message_broker_port,
+            broker_ca,
+            tls_version,
         )
 
 
 @pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS)
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") in ["almalinux-9", "almalinux-10", "debian-13"],
-    reason="CMK-27200: Requires investigation: Handshake failure, SSL alert number 40",
-)
 def test_supported_tls_versions(
     central_site: Site, broker_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:
-    tls_connect(central_site.http_address, central_site.message_broker_port, broker_ca, tls_version)
+    tls_connect(
+        Path(central_site.package.version_path()) / "bin/openssl",
+        central_site.http_address,
+        central_site.message_broker_port,
+        broker_ca,
+        tls_version,
+    )

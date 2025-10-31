@@ -11,7 +11,9 @@ from pathlib import Path
 class CMKTLSError(RuntimeError): ...
 
 
-def tls_connect(host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion) -> None:
+def tls_connect(
+    openssl_path: Path, host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion
+) -> None:
     """connect to a socket with a specific tls version"""
     if tls_version == ssl.TLSVersion.SSLv3:
         raise CMKTLSError("Not even openssl supports that")
@@ -25,7 +27,7 @@ def tls_connect(host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion
 
     openssl_call = subprocess.run(
         [
-            "openssl",
+            str(openssl_path),
             "s_client",
             "-connect",
             f"{host}:{port}",

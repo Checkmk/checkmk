@@ -58,7 +58,7 @@ class AddRuleDiskIOLevels(CmkPage):
 
     @property
     def description_text_field(self) -> Locator:
-        return self.main_area.get_input("options_p_description")
+        return self.main_area.get_input_by_id("cmk-vue-app-0-2")
 
     def _value_section(self, value_name: str) -> Locator:
         return self.main_area.locator(f"td[class='dictleft']:has(label:text-is('{value_name}'))")

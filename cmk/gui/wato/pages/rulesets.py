@@ -20,7 +20,6 @@ import abc
 import json
 import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
-from dataclasses import asdict
 from enum import auto, Enum
 from pprint import pformat
 from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
@@ -50,7 +49,8 @@ from cmk.gui.form_specs import (
     render_form_spec,
     VisitorOptions,
 )
-from cmk.gui.form_specs.unstable import LegacyValueSpec
+from cmk.gui.form_specs.unstable import CommentTextArea, LegacyValueSpec
+from cmk.gui.form_specs.unstable.catalog import Catalog, Topic, TopicElement
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -103,11 +103,9 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     DropdownChoices,
-    FixedValue,
     ListChoice,
     ListOfStrings,
     RegExp,
-    rule_option_elements,
     Transform,
     Tuple,
     ValueSpec,
@@ -175,7 +173,20 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.gui.watolib.utils import mk_eval, mk_repr
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice as BooleanChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    FieldSize as FieldSizeAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    FixedValue as FixedValueAPI,
+)
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1.form_specs import (
+    String as StringAPI,
+)
 from cmk.utils.labels import LabelGroups
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import (
@@ -2222,19 +2233,105 @@ class ABCEditRuleMode(WatoMode):
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> HTTPRedirect | None:
-        # Additional options
-        rule_options = self._vs_rule_options(self._rule).from_html_vars("options")
-        self._vs_rule_options(self._rule).validate_value(rule_options, "options")
-
-        self._rule.rule_options = RuleOptions(
-            disabled=rule_options["disabled"],
-            description=rule_options["description"],
-            comment=rule_options["comment"],
-            docu_url=rule_options["docu_url"],
+    def _create_rule_properties_catalog(self) -> Catalog:
+        elements = {
+            "description": TopicElement(
+                parameter_form=StringAPI(
+                    title=Title("Description"),
+                    field_size=FieldSizeAPI.LARGE,
+                ),
+                required=True,
+            ),
+            "comment": TopicElement(
+                parameter_form=CommentTextArea(
+                    title=Title("Comment"),
+                ),
+                required=True,
+            ),
+            "docu_url": TopicElement(
+                parameter_form=StringAPI(
+                    title=Title("Documentation URL"),
+                    field_size=FieldSizeAPI.LARGE,
+                ),
+                required=True,
+            ),
+            "disabled": TopicElement(
+                parameter_form=BooleanChoiceAPI(
+                    title=Title("Rule activation"),
+                    label=Label("Do not apply this rule"),
+                ),
+                required=True,
+            ),
+            "id": TopicElement(
+                parameter_form=FixedValueAPI(
+                    title=Title("Rule ID"),
+                    value=self._rule.id,
+                ),
+                required=True,
+            ),
+            "_name": TopicElement(
+                parameter_form=FixedValueAPI(
+                    title=Title("Ruleset name"),
+                    value=self._rule.ruleset.name,
+                ),
+                required=True,
+            ),
+        }
+        if is_locked_by_quick_setup(self._rule.locked_by, check_reference_exists=False):
+            elements.update(
+                {
+                    "source": TopicElement(
+                        parameter_form=FixedValueAPI(
+                            title=Title("Source"),
+                            value=self._rule.locked_by["instance_id"],
+                            label=Label("%s") % str(quick_setup_render_link(self._rule.locked_by)),
+                        )
+                    )
+                }
+            )
+        return Catalog(
+            elements={
+                "properties": Topic(
+                    title=Title("Rule properties"),
+                    elements=elements,
+                )
+            }
         )
 
-        # CONDITION
+    def _get_rule_options_from_catalog(self) -> RuleOptions:
+        if not isinstance(
+            raw_value := parse_data_from_field_id(
+                self._create_rule_properties_catalog(),
+                "_vue_rule_properties",
+            ),
+            dict,
+        ):
+            raise TypeError(raw_value)
+        raw_properties = raw_value["properties"]
+        return RuleOptions(
+            description=raw_properties["description"],
+            comment=raw_properties["comment"],
+            docu_url=raw_properties["docu_url"],
+            disabled=raw_properties["disabled"],
+        )
+
+    def _get_rule_properties_from_rule(self) -> RawDiskData:
+        return RawDiskData(
+            {
+                "properties": {
+                    "description": self._rule.rule_options.description,
+                    "comment": self._rule.rule_options.comment,
+                    "docu_url": self._rule.rule_options.docu_url,
+                    "disabled": self._rule.rule_options.disabled,
+                    "id": self._rule.id,
+                    "_name": self._rule.ruleset.name,
+                }
+            }
+        )
+
+    def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> HTTPRedirect | None:
+        self._rule.rule_options = self._get_rule_options_from_catalog()
+
         rule_conditions = self._get_rule_conditions_from_vars(folder_choices)
         if (
             is_locked_by_quick_setup(self._rule.locked_by)
@@ -2252,7 +2349,6 @@ class ABCEditRuleMode(WatoMode):
 
         self._rule.update_conditions(rule_conditions)
 
-        # VALUE
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         self._do_validate_on_render = True
         match render_mode:
@@ -2365,10 +2461,16 @@ class ABCEditRuleMode(WatoMode):
     def _page_form(self, tree: FolderTree, *, debug: bool) -> None:
         self._page_form_quick_setup_warning()
 
-        # Additional rule options
-        self._vs_rule_options(self._rule).render_input("options", asdict(self._rule.rule_options))
+        html.form_has_submit_button = True
+        html.prevent_password_auto_completion()
 
-        # Value
+        render_form_spec(
+            self._create_rule_properties_catalog(),
+            "_vue_rule_properties",
+            self._get_rule_properties_from_rule(),
+            self._should_validate_on_render(),
+        )
+
         try:
             title: str | None = localize_or_none(
                 self._ruleset.rulespec.form_spec.title, translate_to_current_language
@@ -2381,8 +2483,6 @@ class ABCEditRuleMode(WatoMode):
 
         forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
         forms.section()
-        html.form_has_submit_button = True
-        html.prevent_password_auto_completion()
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         try:
             match render_mode:
@@ -2426,7 +2526,6 @@ class ABCEditRuleMode(WatoMode):
         forms.end()
 
         html.hidden_fields()
-        self._vs_rule_options(self._rule).set_focus("options")
 
     def _show_conditions(self, folder_choices: DropdownChoices) -> None:
         locked = is_locked_by_quick_setup(self._rule.locked_by)
@@ -2548,57 +2647,6 @@ class ABCEditRuleMode(WatoMode):
     ) -> VSExplicitConditions:
         return VSExplicitConditions(
             rulespec=self._rulespec, folder_choices=folder_choices, render=render
-        )
-
-    def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
-        elements = rule_option_elements(disabling)
-        elements.extend(
-            (
-                (
-                    "id",
-                    FixedValue(
-                        value=rule.id,
-                        title=_("Rule ID"),
-                        help=_(
-                            "This ID uniquely identifies this rule in Checkmk. "
-                            "Use this ID when working with rules in Checkmk REST API "
-                            "calls, e.g., to show, modify or delete the rule."
-                        ),
-                    ),
-                ),
-                (
-                    "_name",
-                    FixedValue(
-                        value=rule.ruleset.name,
-                        title=_("Ruleset name"),
-                        help=_(
-                            "This name uniquely identifies the rule set in Checkmk. "
-                            "Use this name when working with rule sets and rules in "
-                            "Checkmk REST API calls, e.g. to create a new rule."
-                        ),
-                    ),
-                ),
-            )
-        )
-
-        if is_locked_by_quick_setup(rule.locked_by, check_reference_exists=False):
-            elements.append(
-                (
-                    "source",
-                    FixedValue(
-                        value=rule.locked_by["instance_id"],
-                        title=_("Source"),
-                        totext=quick_setup_render_link(rule.locked_by),
-                    ),
-                )
-            )
-
-        return Dictionary(
-            title=_("Rule properties"),
-            optional_keys=False,
-            render="form",
-            elements=elements,
-            show_more_keys=["id", "_name"],
         )
 
 

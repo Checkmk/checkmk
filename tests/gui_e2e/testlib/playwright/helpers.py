@@ -98,6 +98,9 @@ class LocatorHelper(ABC):
     def get_input(self, input_name: str) -> Locator:
         return self.locator(f'input[name="{input_name}"]')
 
+    def get_input_by_id(self, input_id: str) -> Locator:
+        return self.locator(f'input[id="{input_id}"]')
+
     def get_suggestion(self, suggestion: str) -> Locator:
         return self.locator("#suggestions .suggestion").filter(has_text=re.compile(suggestion))
 

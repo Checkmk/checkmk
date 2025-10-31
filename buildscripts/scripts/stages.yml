@@ -177,6 +177,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_PLUGIN_APIS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugin-apis/' || true"
 
+    - NAME: CHANGED_CMK_PLUGINS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-plugins/' || true"
+
     - NAME: CHANGED_CMK_RELAY_PROTOCOLS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-relay-protocols/' || true"
 
@@ -539,6 +542,14 @@ STAGES:
       COMMAND: "./run --unit-tests --lint=all &> ${RESULTS}/cmk-plugin-apis.txt"
       TEXT_ON_SKIP: "No cmk-plugin-apis files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-plugin-apis.txt"
+
+    - NAME: "Package cmk-plugins"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_PLUGINS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "packages/cmk-plugins"
+      BAZEL_LOCKS_AMOUNT: 1
+      COMMAND: "./run --unit-tests --lint=all &> ${RESULTS}/cmk-plugins.txt"
+      TEXT_ON_SKIP: "No cmk-plugins files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-plugins.txt"
 
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES

@@ -57,8 +57,7 @@ def _call_size_trend_with(args: ArgsDict) -> list[IgnoreResults | Metric | Resul
 
 
 def test_size_trend(args: ArgsDict) -> None:
-    # size_trend returns generator, but we need to evaluate it
-    # so the valuestore is written properly
+    # size_trend returns generator, consume it so the valuestore is written
     with suppress(GetRateError):
         _call_size_trend_with(args)
 

@@ -145,6 +145,7 @@ def main_parallel() {
                             no_remove_others: true, // do not delete other files in the dest dir
                             download: false,    // use copyArtifacts to avoid nested directories
                             print_html: false,  // do not update Jenkins Job page with infos like upstream build URLs or similar
+                            ignore_build_queue: true, // do not look into Jenkins build queue for a matching job: there is no workflow which would justify this lookup
                         );
                     } finally {
                         analyse_mapping["${item.NAME}"] = [

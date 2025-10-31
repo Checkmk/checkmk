@@ -69,7 +69,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	    check-mk-agent_$(CMK_VERSION)-1_all.deb \
 	    check-mk-agent-$(CMK_VERSION)-1.noarch.rpm \
 	    linux \
-	    windows/cfg_examples \
 	    windows/check_mk_agent.msi \
 	    windows/unsign-msi.patch \
 	    windows/python-3.cab \
@@ -77,8 +76,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	    windows/robotmk_ext.exe \
 	    windows/mk-sql.exe \
 	    windows/windows_files_hashes.txt \
-	    windows/mrpe \
-	    windows/plugins \
 	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/python3

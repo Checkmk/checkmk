@@ -146,6 +146,17 @@ pkg_files(
     prefix = "share/check_mk/agents/sap",
 )
 
+pkg_tar(
+    name = "agents_windows",
+    srcs = [
+        "//agents/windows:cfg_examples",
+        "//agents/windows:mrpe",
+        "//agents/windows/plugins",
+    ],
+    package_dir = "share/check_mk",
+    strip_prefix = ".",
+)
+
 pkg_files(
     name = "agents_z_os",
     srcs = ["//agents/z_os:srcs"],
@@ -235,6 +246,7 @@ pkg_files(
                "//packages/neb:neb_pkg",
                "//packages/cmk-shared-typing:pkg_tar",
                "//packages/unixcat:unixcat_tar",
+               ":agents_windows",
                ":license_info",
            ] + select({
                "@cmk//distro:almalinux": ["//omd/packages/xinetd"],

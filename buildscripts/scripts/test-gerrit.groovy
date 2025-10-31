@@ -180,6 +180,7 @@ def main() {
                             dest: "${artifacts_base_dir}",
                             no_raise: true,     // do not raise an exception
                             print_html: false,  // do not update Jenkins Job page with infos like upstream build URLs or similar
+                            ignore_build_queue: true, // do not look into Jenkins build queue for a matching job: there is no workflow which would justify this lookup
                         );
                     } finally {
                         analyse_mapping["${item.NAME}"] = [

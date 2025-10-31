@@ -125,6 +125,7 @@
   --icon-new: url('~cmk-frontend/themes/facelift/images/icon_new.svg');
   --icon-copied: url('~cmk-frontend/themes/facelift/images/icon_copied.svg');
   --icon-global-settings: url('~cmk-frontend/themes/facelift/images/icon_global_settings.svg');
+  --icon-relay-menu: url('~cmk-frontend/themes/facelift/images/icon_relay_menu.svg');
   --icon-topic-administration: url('~cmk-frontend/themes/facelift/images/icon_topic_administration.png');
   --icon-topic-agents: url('~cmk-frontend/themes/facelift/images/icon_topic_agents.png');
   --icon-topic-analyze: url('~cmk-frontend/themes/facelift/images/icon_topic_analyze.png');

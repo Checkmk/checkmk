@@ -14,13 +14,16 @@ import NameRelay from './add-relay-configuration-steps/NameRelay.vue'
 import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
 import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistration.vue'
 
-const props = defineProps<{ create_host_url: string }>()
+const props = defineProps<{ create_host_url: string; relay_overview_url: string }>()
 
 const currentStep = ref<number>(1)
 const relayName = ref<string>('')
 const openCreateHostPage = () => {
   const url = `${props.create_host_url}&relay=${relayName.value}&prefill=relay`
   window.location.href = url
+}
+const openRelayOverviewPage = () => {
+  window.location.href = props.relay_overview_url
 }
 </script>
 
@@ -35,6 +38,7 @@ const openCreateHostPage = () => {
         :index="4"
         :is-completed="() => currentStep > 4"
         @open-create-host-page="openCreateHostPage"
+        @open-relay-overview-page="() => openRelayOverviewPage()"
       />
     </CmkWizard>
   </div>

@@ -84,6 +84,7 @@ export const simpleIcons = [
   'new',
   'copied',
   'global-settings',
+  'relay-menu',
   'topic-administration',
   'topic-agents',
   'topic-analyze',

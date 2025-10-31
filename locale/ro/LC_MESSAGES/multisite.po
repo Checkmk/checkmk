@@ -6665,6 +6665,10 @@ msgstr "Cantitatea de fișiere din spool-ul de notificare"
 msgid "Amount of mails in queues"
 msgstr "Cantitatea de mailuri în cozi"
 
+#, fuzzy
+msgid "Amount of mails in queues (Secondary)"
+msgstr "Cantitatea de mailuri în cozi"
+
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "Un nume de regiune AWS, cum ar fi 'eu-central-1'"
 
@@ -11449,6 +11453,10 @@ msgstr "Resurse CPU: Spațiul de nume"
 msgid "CPU resources: StatefulSet"
 msgstr "Resurse CPU: StatefulSet"
 
+#, fuzzy
+msgid "CPU threads"
+msgstr "fire"
+
 msgid "CPU time"
 msgstr "Timp CPU"
 
@@ -11508,6 +11516,66 @@ msgstr "Utilizare CPU (percentila 95)"
 
 msgid "CPU utilization (99th percentile)"
 msgstr "Utilizare CPU (percentila 99)"
+
+#, fuzzy
+msgid "CPU utilization (Average)"
+msgstr "Utilizare CPU (medie)"
+
+#, fuzzy
+msgid "CPU utilization (Caching engine)"
+msgstr "Utilizare CPU (medie)"
+
+#, fuzzy
+msgid "CPU utilization (Last minutes)"
+msgstr "Utilizare CPU în ultimul minut"
+
+#, fuzzy
+msgid "CPU utilization (Percentiles)"
+msgstr "Utilizare CPU (percentila 50)"
+
+#, fuzzy
+msgid "CPU utilization (User, system)"
+msgstr "Utilizare CPU (medie)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait & levels)"
+msgstr "Utilizare CPU în ultimele 5 minute"
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait)"
+msgstr "Utilizare CPU (medie)"
+
+msgid "CPU utilization (User, system, IO wait, guest & levels)"
+msgstr ""
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait, guest)"
+msgstr "Utilizare CPU (medie)"
+
+msgid "CPU utilization (User, system, IO wait, guest, steal & levels)"
+msgstr ""
+
+msgid "CPU utilization (User, system, IO wait, guest, steal)"
+msgstr ""
+
+msgid "CPU utilization (User, system, IO wait, steal & levels)"
+msgstr ""
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait, steal)"
+msgstr "Utilizare CPU (medie)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, idle, IO wait)"
+msgstr "Utilizare CPU (percentila 50)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, idle, nice)"
+msgstr "Utilizarea CPU pentru dispozitive simple"
+
+#, fuzzy
+msgid "CPU utilization (User, system, interrupt)"
+msgstr "Utilizare CPU în ultimul minut"
 
 #, fuzzy
 msgid "CPU utilization (Windows)"
@@ -14682,6 +14750,10 @@ msgstr "Latență de scriere"
 msgid "Commit charge"
 msgstr "Angajarea taxei"
 
+#, fuzzy
+msgid "Commit charge (Absolute)"
+msgstr "Niveluri de taxă de angajament"
+
 msgid "Commit charge (averaged)"
 msgstr "Taxa de angajament (medie)"
 
@@ -15837,6 +15909,10 @@ msgstr "Tipul de conexiune"
 
 msgid "Connections"
 msgstr "Conexiuni"
+
+#, fuzzy
+msgid "Connections (Azure, Redis)"
+msgstr "Conexiuni deschise"
 
 #, fuzzy
 msgid "Connections closed rate"
@@ -20945,10 +21021,6 @@ msgstr "Latența discului"
 msgid "Disk Read Latency"
 msgstr "Latența de citire a discului"
 
-#, fuzzy
-msgid "Disk Usage"
-msgstr "Utilizarea discului"
-
 msgid "Disk Utilization"
 msgstr "Utilizarea discului"
 
@@ -21016,6 +21088,18 @@ msgstr "Debitul discului"
 
 msgid "Disk usage"
 msgstr "Utilizarea discului"
+
+#, fuzzy
+msgid "Disk usage (Podman containers)"
+msgstr "Numărul de containere"
+
+#, fuzzy
+msgid "Disk usage (Podman images)"
+msgstr "Numărul de noduri"
+
+#, fuzzy
+msgid "Disk usage (Podman volumes)"
+msgstr "Numărul de noduri"
 
 msgid "Disk utilization"
 msgstr "Utilizarea discului"
@@ -24391,6 +24475,13 @@ msgstr "Eroare: Unknown time period id '%s'"
 
 msgid "Errors"
 msgstr "Erori"
+
+#, fuzzy
+msgid "Errors (Detailed)"
+msgstr "Detalii gazdă"
+
+msgid "Errors (Discards)"
+msgstr ""
 
 #, python-format
 msgid "Errors on restoring snapshot:<br>%s"
@@ -39042,8 +39133,13 @@ msgstr "Vezi toate gazdele și serviciile"
 msgid "Licensed services"
 msgstr "Servicii licențiate"
 
-msgid "Licenses"
-msgstr "Licențe"
+#, fuzzy
+msgid "Licenses (Maximum)"
+msgstr "Clienți maxim"
+
+#, fuzzy
+msgid "Licenses (Total)"
+msgstr "Detalii licență"
 
 msgid "Licensing"
 msgstr "Licențiere"
@@ -42363,6 +42459,14 @@ msgstr "Membrii grupului de contact:"
 msgid "Memory"
 msgstr "Memorie"
 
+#, fuzzy
+msgid "Memory (Azure, Redis)"
+msgstr "cereri"
+
+#, fuzzy
+msgid "Memory (Kube)"
+msgstr "Memorie utilizată"
+
 msgid "Memory (RAM)"
 msgstr "Memorie (RAM)"
 
@@ -42551,6 +42655,14 @@ msgstr "Utilizarea memoriei (a 95-a percentila)"
 
 msgid "Memory utilization (99th percentile)"
 msgstr "Utilizarea memoriei (percentila 99)"
+
+#, fuzzy
+msgid "Memory utilization (Azure, Redis)"
+msgstr "Utilizarea memoriei"
+
+#, fuzzy
+msgid "Memory utilization (Percentiles)"
+msgstr "Utilizarea memoriei (percentila 50)"
 
 msgid "Memory utilization: Cluster"
 msgstr "Utilizarea memoriei: Cluster"
@@ -44895,6 +45007,10 @@ msgstr "Adresa de rețea"
 
 msgid "Network address:"
 msgstr "Adresa de rețea:"
+
+#, fuzzy
+msgid "Network connections"
+msgstr "Conexiuni noi"
 
 #, fuzzy
 msgid "Network containers"
@@ -51133,6 +51249,10 @@ msgstr "Cereri în așteptare"
 msgid "Pending changes"
 msgstr "Modificări în așteptare"
 
+#, fuzzy
+msgid "Pending changes reverted."
+msgstr "Modificări în așteptare"
+
 msgid "Pending create"
 msgstr "În curs de creare"
 
@@ -54124,6 +54244,10 @@ msgstr "RAID: stare sumară"
 msgid "RAM"
 msgstr "RAM"
 
+#, fuzzy
+msgid "RAM (Cached, buffers)"
+msgstr "Tampoane de refacere"
+
 msgid "RAM (averaged)"
 msgstr "RAM (în medie)"
 
@@ -56207,6 +56331,9 @@ msgstr "Introduceți codul de autentificare"
 
 msgid "Requests"
 msgstr "Cereri"
+
+msgid "Requests (Azure, CosmosDB)"
+msgstr ""
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Solicită date despre clusterele, nodurile și indicii Elasticsearch."
@@ -61708,7 +61835,12 @@ msgstr "Aici nu sunt permise ghilimelele simple."
 msgid "Single-Host Aggregations of Host"
 msgstr "Agregări de gazde unice de gazde"
 
-msgid "Single-request consumption"
+#, fuzzy
+msgid "Single-request consumption (AWS, DynamoDB read)"
+msgstr "Consum la o singură cerere"
+
+#, fuzzy
+msgid "Single-request consumption (AWS, DynamoDB write)"
 msgstr "Consum la o singură cerere"
 
 msgid "Siren"
@@ -61730,6 +61862,17 @@ msgstr "Site (executat)"
 
 msgid "Site Alias"
 msgstr "Aliasul site-ului"
+
+#, fuzzy
+msgid "Site DNS cache is already up to date."
+msgstr "Această modificare este deja activată"
+
+#, fuzzy, python-format
+msgid "Site DNS cache updated for %d hosts."
+msgstr "Perioada de service pentru gazde"
+
+msgid "Site DNS cache updated for 1 host."
+msgstr ""
 
 msgid "Site ID"
 msgstr "ID-ul sitului"
@@ -61945,6 +62088,10 @@ msgstr "Mărimea, vârsta și numărul de grupuri de fișiere"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Mărimea, vârsta și numărul de grupuri de fișiere (mk_filestats)"
+
+#, fuzzy
+msgid "Size, used and reserved space"
+msgstr "Dimensiunea și spațiul utilizat"
 
 #, fuzzy
 msgid "Skip SSL certificate verification"
@@ -65020,9 +65167,6 @@ msgstr "Ați eliminat cu succes gazdele %d."
 msgid "Successfully deleted the following user '%s'"
 msgstr "Ați eliminat cu succes gazdele %d."
 
-msgid "Successfully discarded all pending changes."
-msgstr "A eliminat cu succes toate modificările în așteptare."
-
 msgid "Successfully discovered hosts"
 msgstr "Gazde descoperite cu succes"
 
@@ -65040,10 +65184,6 @@ msgstr "A trimis cu succes comenzile %d."
 
 msgid "Successfully stored the report"
 msgstr "Raportul a fost stocat cu succes"
-
-#, python-format
-msgid "Successfully updated IP addresses of %d hosts."
-msgstr "Ați actualizat cu succes adresele IP ale gazdelor %d."
 
 msgid "Successfully updated user profile."
 msgstr "Profilul utilizatorului a fost actualizat cu succes."
@@ -76652,6 +76792,10 @@ msgid "Threads"
 msgstr "Fire"
 
 #, fuzzy
+msgid "Threads (Jenkins)"
+msgstr "Utilizarea firului"
+
+#, fuzzy
 msgid "Threads: active"
 msgstr "Utilizarea firului"
 
@@ -76762,6 +76906,17 @@ msgid "Throttling of 'Periodic notifications'"
 msgstr "Notificări periodice ale accelerației"
 
 msgid "Throughput"
+msgstr "Randament"
+
+#, fuzzy
+msgid "Throughput (Azure, CosmosDB container)"
+msgstr "Cereri ACL Web"
+
+msgid "Throughput (Azure, CosmosDB)"
+msgstr ""
+
+#, fuzzy
+msgid "Throughput (FC)"
 msgstr "Randament"
 
 msgid "Throughput levels"
@@ -93433,14 +93588,14 @@ msgstr "Opțiuni grafice"
 msgid "Service metric"
 msgstr "Metrici de servicii"
 
+#, fuzzy
+msgid "Must select an option"
+msgstr "Conexiuni respinse"
+
 # georgem ##############
 #, fuzzy
 msgid "Service graph"
 msgstr "Grafice de servicii"
-
-#, fuzzy
-msgid "Must select an option"
-msgstr "Conexiuni respinse"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -93557,47 +93712,6 @@ msgstr "Latență"
 msgid "Apply percentile (histograms)"
 msgstr ""
 
-#, fuzzy
-msgid "Graph metrics with all zero values"
-msgstr "Metrici cu toate valorile zero"
-
-#, fuzzy
-msgid "Use unit of first entry"
-msgstr "Intrarea în istoricul evenimentelor"
-
-#, fuzzy
-msgid "Decimal"
-msgstr "Decibel"
-
-#, fuzzy
-msgid "SI"
-msgstr "SID"
-
-msgid "IEC"
-msgstr ""
-
-#, fuzzy
-msgid "Standard scientific"
-msgstr "Teme standard"
-
-msgid "Engineering scientific"
-msgstr ""
-
-#, fuzzy
-msgid "Notation"
-msgstr "Notificare"
-
-#, fuzzy
-msgid "Precision"
-msgstr "Permisiune"
-
-#, fuzzy
-msgid "Rounding mode"
-msgstr "Poduri de rulare"
-
-msgid "Digits"
-msgstr ""
-
 msgid "Area"
 msgstr "Zona"
 
@@ -93653,6 +93767,47 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 msgid "Select one graph line to edit"
 msgstr "Vă rugăm să selectați cel puțin un element"
 
+#, fuzzy
+msgid "Graph metrics with all zero values"
+msgstr "Metrici cu toate valorile zero"
+
+#, fuzzy
+msgid "Use unit of first entry"
+msgstr "Intrarea în istoricul evenimentelor"
+
+#, fuzzy
+msgid "Decimal"
+msgstr "Decibel"
+
+#, fuzzy
+msgid "SI"
+msgstr "SID"
+
+msgid "IEC"
+msgstr ""
+
+#, fuzzy
+msgid "Standard scientific"
+msgstr "Teme standard"
+
+msgid "Engineering scientific"
+msgstr ""
+
+#, fuzzy
+msgid "Notation"
+msgstr "Notificare"
+
+#, fuzzy
+msgid "Precision"
+msgstr "Permisiune"
+
+#, fuzzy
+msgid "Rounding mode"
+msgstr "Poduri de rulare"
+
+msgid "Digits"
+msgstr ""
+
 msgid "Ctrl"
 msgstr ""
 
@@ -93662,6 +93817,10 @@ msgstr ""
 #, fuzzy
 msgid "Alt"
 msgstr "Alertă"
+
+#, fuzzy
+msgid "Loading content..."
+msgstr "Încărcare..."
 
 #, fuzzy
 msgid "Open full view"
@@ -94056,6 +94215,10 @@ msgstr "Afișarea stării site-urilor Checkmk\n"
 #, fuzzy
 msgid "Verify registration"
 msgstr "Ora de înregistrare"
+
+#, fuzzy
+msgid "Continue to add host"
+msgstr "Numărul de gazde degradate"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -94531,6 +94694,20 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Disk Usage"
+#~ msgstr "Utilizarea discului"
+
+#~ msgid "Licenses"
+#~ msgstr "Licențe"
+
+#~ msgid "Successfully discarded all pending changes."
+#~ msgstr "A eliminat cu succes toate modificările în așteptare."
+
+#, python-format
+#~ msgid "Successfully updated IP addresses of %d hosts."
+#~ msgstr "Ați actualizat cu succes adresele IP ale gazdelor %d."
 
 #, fuzzy
 #~ msgid "Edit relay configuration"

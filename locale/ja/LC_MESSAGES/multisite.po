@@ -6288,6 +6288,10 @@ msgstr "通知スプール内のファイルの量"
 msgid "Amount of mails in queues"
 msgstr "キュー内のメールの量"
 
+#, fuzzy
+msgid "Amount of mails in queues (Secondary)"
+msgstr "キュー内のメールの量"
+
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "'eu-central-1'などのAWSリージョン名"
 
@@ -10700,6 +10704,10 @@ msgstr "CPUリソース: 名前空間"
 msgid "CPU resources: StatefulSet"
 msgstr "CPUリソース: ステートフルセット"
 
+#, fuzzy
+msgid "CPU threads"
+msgstr "スレッド"
+
 msgid "CPU time"
 msgstr "CPU時間"
 
@@ -10757,6 +10765,66 @@ msgstr "CPU使用率(95パーセンタイル)"
 
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU使用率(99パーセンタイル)"
+
+#, fuzzy
+msgid "CPU utilization (Average)"
+msgstr "CPU使用率(平均)"
+
+#, fuzzy
+msgid "CPU utilization (Caching engine)"
+msgstr "CPU使用率(平均)"
+
+#, fuzzy
+msgid "CPU utilization (Last minutes)"
+msgstr "直前のCPU使用率"
+
+#, fuzzy
+msgid "CPU utilization (Percentiles)"
+msgstr "CPU使用率(50パーセンタイル)"
+
+#, fuzzy
+msgid "CPU utilization (User, system)"
+msgstr "CPU使用率(平均)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait & levels)"
+msgstr "過去5分間のCPU使用率"
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait)"
+msgstr "CPU使用率(平均)"
+
+msgid "CPU utilization (User, system, IO wait, guest & levels)"
+msgstr ""
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait, guest)"
+msgstr "CPU使用率(平均)"
+
+msgid "CPU utilization (User, system, IO wait, guest, steal & levels)"
+msgstr ""
+
+msgid "CPU utilization (User, system, IO wait, guest, steal)"
+msgstr ""
+
+msgid "CPU utilization (User, system, IO wait, steal & levels)"
+msgstr ""
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait, steal)"
+msgstr "CPU使用率(平均)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, idle, IO wait)"
+msgstr "CPU使用率(50パーセンタイル)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, idle, nice)"
+msgstr "単純なデバイスのCPU使用率"
+
+#, fuzzy
+msgid "CPU utilization (User, system, interrupt)"
+msgstr "直前のCPU使用率"
 
 msgid "CPU utilization (Windows)"
 msgstr "CPU使用率(Windows)"
@@ -13798,6 +13866,10 @@ msgstr "コミットレイテンシ"
 msgid "Commit charge"
 msgstr "コミットチャージ"
 
+#, fuzzy
+msgid "Commit charge (Absolute)"
+msgstr "コミットチャージレベル"
+
 msgid "Commit charge (averaged)"
 msgstr "コミットチャージ(平均)"
 
@@ -14892,6 +14964,10 @@ msgstr "接続タイプ"
 
 msgid "Connections"
 msgstr "接続"
+
+#, fuzzy
+msgid "Connections (Azure, Redis)"
+msgstr "接続開始"
 
 #, fuzzy
 msgid "Connections closed rate"
@@ -19714,9 +19790,6 @@ msgstr "ディスク遅延"
 msgid "Disk Read Latency"
 msgstr "ディスク読み取りレイテンシ"
 
-msgid "Disk Usage"
-msgstr "Disk 使用量"
-
 msgid "Disk Utilization"
 msgstr "ディスク使用率"
 
@@ -19782,6 +19855,18 @@ msgstr "ディスクスループット"
 
 msgid "Disk usage"
 msgstr "Disk 使用量"
+
+#, fuzzy
+msgid "Disk usage (Podman containers)"
+msgstr "Podmamコンテナの数"
+
+#, fuzzy
+msgid "Disk usage (Podman images)"
+msgstr "Podmanイメージの数"
+
+#, fuzzy
+msgid "Disk usage (Podman volumes)"
+msgstr "Podmanボリューム数"
 
 msgid "Disk utilization"
 msgstr "ディスク使用率"
@@ -22928,6 +23013,13 @@ msgstr "エラー:不明な期間ID '%s'"
 
 msgid "Errors"
 msgstr "エラー"
+
+#, fuzzy
+msgid "Errors (Detailed)"
+msgstr "ホストの詳細"
+
+msgid "Errors (Discards)"
+msgstr ""
 
 #, python-format
 msgid "Errors on restoring snapshot:<br>%s"
@@ -36574,8 +36666,13 @@ msgstr "ライセンス段階：サービスが多すぎます。"
 msgid "Licensed services"
 msgstr "ライセンス対象サービス"
 
-msgid "Licenses"
-msgstr "ライセンス"
+#, fuzzy
+msgid "Licenses (Maximum)"
+msgstr "最大クライアント数"
+
+#, fuzzy
+msgid "Licenses (Total)"
+msgstr "ライセンス詳細"
 
 msgid "Licensing"
 msgstr "ライセンス"
@@ -39749,6 +39846,14 @@ msgstr "連絡先グループのメンバー:"
 msgid "Memory"
 msgstr "記憶"
 
+#, fuzzy
+msgid "Memory (Azure, Redis)"
+msgstr "メモリストア Redis"
+
+#, fuzzy
+msgid "Memory (Kube)"
+msgstr "使用メモリ"
+
 msgid "Memory (RAM)"
 msgstr "メモリ(RAM)"
 
@@ -39925,6 +40030,14 @@ msgstr "メモリ使用率(95パーセンタイル)"
 
 msgid "Memory utilization (99th percentile)"
 msgstr "メモリ使用率(99パーセンタイル)"
+
+#, fuzzy
+msgid "Memory utilization (Azure, Redis)"
+msgstr "メモリ使用率"
+
+#, fuzzy
+msgid "Memory utilization (Percentiles)"
+msgstr "メモリ使用率(50パーセンタイル)"
 
 msgid "Memory utilization: Cluster"
 msgstr "メモリ使用率: クラスター"
@@ -42107,6 +42220,10 @@ msgstr "ネットワークアドレス"
 
 msgid "Network address:"
 msgstr "ネットワークアドレス:"
+
+#, fuzzy
+msgid "Network connections"
+msgstr "新しい接続"
 
 msgid "Network containers"
 msgstr "ネットワークコンテナ"
@@ -47831,6 +47948,10 @@ msgstr "保留中のDNS リクエスト"
 msgid "Pending changes"
 msgstr "保留中の変更"
 
+#, fuzzy
+msgid "Pending changes reverted."
+msgstr "保留中の変更"
+
 msgid "Pending create"
 msgstr "保留中の更新"
 
@@ -50600,6 +50721,10 @@ msgstr "RAID: 要約状態"
 msgid "RAM"
 msgstr "RAM"
 
+#, fuzzy
+msgid "RAM (Cached, buffers)"
+msgstr "バッファのやり直し"
+
 msgid "RAM (averaged)"
 msgstr "RAM（平均）"
 
@@ -52570,6 +52695,9 @@ msgstr "要求された認証コンテキスト"
 
 msgid "Requests"
 msgstr "リクエスト"
+
+msgid "Requests (Azure, CosmosDB)"
+msgstr ""
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr ""
@@ -57713,7 +57841,12 @@ msgstr "ここでは一重引用符は使用できません。"
 msgid "Single-Host Aggregations of Host"
 msgstr "ホストの単一ホスト集計"
 
-msgid "Single-request consumption"
+#, fuzzy
+msgid "Single-request consumption (AWS, DynamoDB read)"
+msgstr "単一リクエストの消費"
+
+#, fuzzy
+msgid "Single-request consumption (AWS, DynamoDB write)"
 msgstr "単一リクエストの消費"
 
 msgid "Siren"
@@ -57735,6 +57868,17 @@ msgstr "サイト(強制)"
 
 msgid "Site Alias"
 msgstr "サイトエイリアス"
+
+#, fuzzy
+msgid "Site DNS cache is already up to date."
+msgstr "この変更はすでにアクティベート済です"
+
+#, fuzzy, python-format
+msgid "Site DNS cache updated for %d hosts."
+msgstr "ホストのサービス期間"
+
+msgid "Site DNS cache updated for 1 host."
+msgstr ""
 
 msgid "Site ID"
 msgstr "サイトID"
@@ -57942,6 +58086,10 @@ msgstr "ファイルグループのサイズ、経過時間、数"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "ファイルグループのサイズ、経過時間、および数(mk_filestats)"
+
+#, fuzzy
+msgid "Size, used and reserved space"
+msgstr "サイズと使用スペース"
 
 msgid "Skip SSL certificate verification"
 msgstr "SSL証明書の検証をスキップする"
@@ -60821,9 +60969,6 @@ msgstr "%d ホストが正常に削除されました"
 msgid "Successfully deleted the following user '%s'"
 msgstr "%d ホストが正常に削除されました"
 
-msgid "Successfully discarded all pending changes."
-msgstr "保留中のすべての変更を正常に破棄しました。"
-
 msgid "Successfully discovered hosts"
 msgstr "ホストの検出に成功"
 
@@ -60840,10 +60985,6 @@ msgstr "%dコマンドを正常に送信しました。"
 
 msgid "Successfully stored the report"
 msgstr "レポートが正常に保存されました"
-
-#, python-format
-msgid "Successfully updated IP addresses of %d hosts."
-msgstr "%dホストのIPアドレスが正常に更新されました。"
 
 msgid "Successfully updated user profile."
 msgstr "ユーザープロファイルが正常に更新されました。"
@@ -71897,6 +72038,10 @@ msgstr "スレッドプール"
 msgid "Threads"
 msgstr "スレッド"
 
+#, fuzzy
+msgid "Threads (Jenkins)"
+msgstr "スレッド：デーモン"
+
 msgid "Threads: active"
 msgstr "スレッド：アクティブ"
 
@@ -71993,6 +72138,17 @@ msgid "Throttling of 'Periodic notifications'"
 msgstr "定期通知の帯域制御"
 
 msgid "Throughput"
+msgstr "スループット"
+
+#, fuzzy
+msgid "Throughput (Azure, CosmosDB container)"
+msgstr "Web ACLリクエスト"
+
+msgid "Throughput (Azure, CosmosDB)"
+msgstr ""
+
+#, fuzzy
+msgid "Throughput (FC)"
 msgstr "スループット"
 
 msgid "Throughput levels"
@@ -87394,12 +87550,12 @@ msgid "Service metric"
 msgstr "サービスメトリクス"
 
 #, fuzzy
-msgid "Service graph"
-msgstr "サービスグラフ"
-
-#, fuzzy
 msgid "Must select an option"
 msgstr "オプション選択"
+
+#, fuzzy
+msgid "Service graph"
+msgstr "サービスグラフ"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -87514,39 +87670,6 @@ msgstr "レイテンシーの適用"
 msgid "Apply percentile (histograms)"
 msgstr ""
 
-msgid "Graph metrics with all zero values"
-msgstr "すべての値がゼロのグラフメトリクス"
-
-msgid "Use unit of first entry"
-msgstr "最初の入力単位を使用する"
-
-msgid "Decimal"
-msgstr "デシマル"
-
-msgid "SI"
-msgstr "SI"
-
-msgid "IEC"
-msgstr "IEC"
-
-msgid "Standard scientific"
-msgstr "標準的で科学的な"
-
-msgid "Engineering scientific"
-msgstr "科学的エンジニアリング"
-
-msgid "Notation"
-msgstr "注記"
-
-msgid "Precision"
-msgstr "精度"
-
-msgid "Rounding mode"
-msgstr "丸めモード"
-
-msgid "Digits"
-msgstr "ディジット"
-
 msgid "Area"
 msgstr "範囲"
 
@@ -87596,6 +87719,39 @@ msgstr "編集するグラフの線を少なくとも１つ選択してくださ
 msgid "Select one graph line to edit"
 msgstr "編集するグラフの線を選択してください"
 
+msgid "Graph metrics with all zero values"
+msgstr "すべての値がゼロのグラフメトリクス"
+
+msgid "Use unit of first entry"
+msgstr "最初の入力単位を使用する"
+
+msgid "Decimal"
+msgstr "デシマル"
+
+msgid "SI"
+msgstr "SI"
+
+msgid "IEC"
+msgstr "IEC"
+
+msgid "Standard scientific"
+msgstr "標準的で科学的な"
+
+msgid "Engineering scientific"
+msgstr "科学的エンジニアリング"
+
+msgid "Notation"
+msgstr "注記"
+
+msgid "Precision"
+msgstr "精度"
+
+msgid "Rounding mode"
+msgstr "丸めモード"
+
+msgid "Digits"
+msgstr "ディジット"
+
 msgid "Ctrl"
 msgstr ""
 
@@ -87605,6 +87761,10 @@ msgstr ""
 #, fuzzy
 msgid "Alt"
 msgstr "アラート"
+
+#, fuzzy
+msgid "Loading content..."
+msgstr "読み込んでいます..."
 
 #, fuzzy
 msgid "Open full view"
@@ -87989,6 +88149,10 @@ msgstr "Checkmkサイトの状態を表示する\n"
 #, fuzzy
 msgid "Verify registration"
 msgstr "登録時刻"
+
+#, fuzzy
+msgid "Continue to add host"
+msgstr "デグレードしたホストの数"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -88453,6 +88617,19 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Disk Usage"
+#~ msgstr "Disk 使用量"
+
+#~ msgid "Licenses"
+#~ msgstr "ライセンス"
+
+#~ msgid "Successfully discarded all pending changes."
+#~ msgstr "保留中のすべての変更を正常に破棄しました。"
+
+#, python-format
+#~ msgid "Successfully updated IP addresses of %d hosts."
+#~ msgstr "%dホストのIPアドレスが正常に更新されました。"
 
 #, fuzzy
 #~ msgid "Edit relay configuration"

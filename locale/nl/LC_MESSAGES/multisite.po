@@ -6653,6 +6653,10 @@ msgstr "Aantal bestanden in kennisgevingsspool"
 msgid "Amount of mails in queues"
 msgstr "Aantal mails in wachtrijen"
 
+#, fuzzy
+msgid "Amount of mails in queues (Secondary)"
+msgstr "Aantal mails in wachtrijen"
+
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "Een AWS regio naam zoals \"eu-central-1"
 
@@ -11409,6 +11413,10 @@ msgstr "CPU-bronnen: Namespace"
 msgid "CPU resources: StatefulSet"
 msgstr "CPU-bronnen: StatefulSet"
 
+#, fuzzy
+msgid "CPU threads"
+msgstr "draden"
+
 msgid "CPU time"
 msgstr "CPU-tijd"
 
@@ -11468,6 +11476,66 @@ msgstr "CPU-gebruik (95e percentiel)"
 
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU-gebruik (99e percentiel)"
+
+#, fuzzy
+msgid "CPU utilization (Average)"
+msgstr "CPU-gebruik (gemiddeld)"
+
+#, fuzzy
+msgid "CPU utilization (Caching engine)"
+msgstr "CPU-gebruik (gemiddeld)"
+
+#, fuzzy
+msgid "CPU utilization (Last minutes)"
+msgstr "CPU gebruik laatste minuut"
+
+#, fuzzy
+msgid "CPU utilization (Percentiles)"
+msgstr "CPU-gebruik (50e percentiel)"
+
+#, fuzzy
+msgid "CPU utilization (User, system)"
+msgstr "CPU-gebruik (gemiddeld)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait & levels)"
+msgstr "CPU gebruik laatste 5 minuten"
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait)"
+msgstr "CPU-gebruik (gemiddeld)"
+
+msgid "CPU utilization (User, system, IO wait, guest & levels)"
+msgstr ""
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait, guest)"
+msgstr "CPU-gebruik (gemiddeld)"
+
+msgid "CPU utilization (User, system, IO wait, guest, steal & levels)"
+msgstr ""
+
+msgid "CPU utilization (User, system, IO wait, guest, steal)"
+msgstr ""
+
+msgid "CPU utilization (User, system, IO wait, steal & levels)"
+msgstr ""
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait, steal)"
+msgstr "CPU-gebruik (gemiddeld)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, idle, IO wait)"
+msgstr "CPU-gebruik (50e percentiel)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, idle, nice)"
+msgstr "CPU-gebruik voor eenvoudige apparaten"
+
+#, fuzzy
+msgid "CPU utilization (User, system, interrupt)"
+msgstr "CPU gebruik laatste minuut"
 
 #, fuzzy
 msgid "CPU utilization (Windows)"
@@ -14649,6 +14717,10 @@ msgid "Commit charge"
 msgstr "Vastleggen Last"
 
 #, fuzzy
+msgid "Commit charge (Absolute)"
+msgstr "Vastleggingsniveaus"
+
+#, fuzzy
 msgid "Commit charge (averaged)"
 msgstr "Vastleggingskrediet Gemiddelde"
 
@@ -15810,6 +15882,10 @@ msgstr "Type aansluiting"
 
 msgid "Connections"
 msgstr "Verbindingen"
+
+#, fuzzy
+msgid "Connections (Azure, Redis)"
+msgstr "Verbindingen geopend"
 
 #, fuzzy
 msgid "Connections closed rate"
@@ -20911,10 +20987,6 @@ msgstr "Schijflatentie"
 msgid "Disk Read Latency"
 msgstr "Schijf lees latentie"
 
-#, fuzzy
-msgid "Disk Usage"
-msgstr "Schijfgebruik"
-
 msgid "Disk Utilization"
 msgstr "Schijfgebruik"
 
@@ -20983,6 +21055,18 @@ msgstr "Schijfdoorvoer"
 
 msgid "Disk usage"
 msgstr "Schijfgebruik"
+
+#, fuzzy
+msgid "Disk usage (Podman containers)"
+msgstr "Aantal containers"
+
+#, fuzzy
+msgid "Disk usage (Podman images)"
+msgstr "Aantal knooppunten"
+
+#, fuzzy
+msgid "Disk usage (Podman volumes)"
+msgstr "Aantal knooppunten"
 
 msgid "Disk utilization"
 msgstr "Schijfgebruik"
@@ -24311,6 +24395,13 @@ msgstr "Fout: Onbekende tijdsperiode id '%s'"
 
 msgid "Errors"
 msgstr "Fouten"
+
+#, fuzzy
+msgid "Errors (Detailed)"
+msgstr "Gastheer Details"
+
+msgid "Errors (Discards)"
+msgstr ""
 
 #, python-format
 msgid "Errors on restoring snapshot:<br>%s"
@@ -38943,8 +39034,13 @@ msgstr "Bekijk alle hosts en diensten"
 msgid "Licensed services"
 msgstr "Vergunde diensten: %s"
 
-msgid "Licenses"
-msgstr "Licenties"
+#, fuzzy
+msgid "Licenses (Maximum)"
+msgstr "Cliënten maximum"
+
+#, fuzzy
+msgid "Licenses (Total)"
+msgstr "Licentiegegevens"
 
 msgid "Licensing"
 msgstr "Licentie"
@@ -42275,6 +42371,14 @@ msgstr "Leden van de contactgroep:"
 msgid "Memory"
 msgstr "Geheugen"
 
+#, fuzzy
+msgid "Memory (Azure, Redis)"
+msgstr "Geheugenopslag Redis"
+
+#, fuzzy
+msgid "Memory (Kube)"
+msgstr "Gebruikt geheugen"
+
 msgid "Memory (RAM)"
 msgstr "Geheugen (RAM)"
 
@@ -42465,6 +42569,14 @@ msgstr "Geheugengebruik (95e percentiel)"
 
 msgid "Memory utilization (99th percentile)"
 msgstr "Geheugengebruik (99e percentiel)"
+
+#, fuzzy
+msgid "Memory utilization (Azure, Redis)"
+msgstr "Geheugengebruik"
+
+#, fuzzy
+msgid "Memory utilization (Percentiles)"
+msgstr "Geheugengebruik (50e percentiel)"
 
 msgid "Memory utilization: Cluster"
 msgstr "Geheugengebruik: Cluster"
@@ -44783,6 +44895,10 @@ msgstr "Netwerkadres"
 
 msgid "Network address:"
 msgstr "Netwerkadres:"
+
+#, fuzzy
+msgid "Network connections"
+msgstr "Nieuwe verbindingen"
 
 #, fuzzy
 msgid "Network containers"
@@ -51037,6 +51153,10 @@ msgstr "Hangende aanvragen"
 msgid "Pending changes"
 msgstr "Hangende wijzigingen (%s)"
 
+#, fuzzy
+msgid "Pending changes reverted."
+msgstr "Hangende wijzigingen (%s)"
+
 msgid "Pending create"
 msgstr "In afwachting van creatie"
 
@@ -54017,6 +54137,10 @@ msgid "RAM"
 msgstr "RAM"
 
 #, fuzzy
+msgid "RAM (Cached, buffers)"
+msgstr "Redo buffers"
+
+#, fuzzy
 msgid "RAM (averaged)"
 msgstr "gemiddelde"
 
@@ -56100,6 +56224,9 @@ msgstr "VCenter-authenticatie"
 
 msgid "Requests"
 msgstr "Verzoeken"
+
+msgid "Requests (Azure, CosmosDB)"
+msgstr ""
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Vraagt gegevens op over Elasticsearch clusters, nodes en indexen."
@@ -61543,7 +61670,12 @@ msgstr "Enkele aanhalingstekens zijn hier niet toegestaan."
 msgid "Single-Host Aggregations of Host"
 msgstr "Single-Host Aggregaties van Hosts"
 
-msgid "Single-request consumption"
+#, fuzzy
+msgid "Single-request consumption (AWS, DynamoDB read)"
+msgstr "Verbruik bij één verzoek"
+
+#, fuzzy
+msgid "Single-request consumption (AWS, DynamoDB write)"
 msgstr "Verbruik bij één verzoek"
 
 msgid "Siren"
@@ -61565,6 +61697,17 @@ msgstr "Locatie (afgedwongen)"
 
 msgid "Site Alias"
 msgstr "Site Alias"
+
+#, fuzzy
+msgid "Site DNS cache is already up to date."
+msgstr "Deze regel ID wordt al gebruikt."
+
+#, fuzzy, python-format
+msgid "Site DNS cache updated for %d hosts."
+msgstr "Serviceperiode voor hosts"
+
+msgid "Site DNS cache updated for 1 host."
+msgstr ""
 
 msgid "Site ID"
 msgstr "Plaats ID"
@@ -61778,6 +61921,10 @@ msgstr "Grootte, leeftijd en aantal bestandsgroepen"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Grootte, leeftijd en aantal bestandsgroepen (mk_filestats)"
+
+#, fuzzy
+msgid "Size, used and reserved space"
+msgstr "Omvang en gebruikte ruimte"
 
 #, fuzzy
 msgid "Skip SSL certificate verification"
@@ -64816,9 +64963,6 @@ msgstr "Succesvol verwijderd %d hosts"
 msgid "Successfully deleted the following user '%s'"
 msgstr "Succesvol verwijderd %d hosts"
 
-msgid "Successfully discarded all pending changes."
-msgstr "Met succes alle hangende wijzigingen verwijderd."
-
 #, fuzzy
 msgid "Successfully discovered hosts"
 msgstr "Succesvol verwijderd %d hosts"
@@ -64837,10 +64981,6 @@ msgstr "Met succes %d commando's verzonden."
 
 msgid "Successfully stored the report"
 msgstr "Het rapport is succesvol opgeslagen"
-
-#, python-format
-msgid "Successfully updated IP addresses of %d hosts."
-msgstr "IP adressen van %d hosts succesvol bijgewerkt."
 
 msgid "Successfully updated user profile."
 msgstr "Gebruikersprofiel succesvol bijgewerkt."
@@ -76355,6 +76495,10 @@ msgid "Threads"
 msgstr "Draad"
 
 #, fuzzy
+msgid "Threads (Jenkins)"
+msgstr "Draad gebruik"
+
+#, fuzzy
 msgid "Threads: active"
 msgstr "Draad gebruik"
 
@@ -76465,6 +76609,17 @@ msgid "Throttling of 'Periodic notifications'"
 msgstr "Periodieke meldingen"
 
 msgid "Throughput"
+msgstr "Doorvoer"
+
+#, fuzzy
+msgid "Throughput (Azure, CosmosDB container)"
+msgstr "Web ACL Verzoeken"
+
+msgid "Throughput (Azure, CosmosDB)"
+msgstr ""
+
+#, fuzzy
+msgid "Throughput (FC)"
 msgstr "Doorvoer"
 
 msgid "Throughput levels"
@@ -93184,12 +93339,12 @@ msgid "Service metric"
 msgstr "Dienst Metriek"
 
 #, fuzzy
-msgid "Service graph"
-msgstr "Dienstgrafieken"
-
-#, fuzzy
 msgid "Must select an option"
 msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Service graph"
+msgstr "Dienstgrafieken"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -93305,47 +93460,6 @@ msgstr "Latency"
 msgid "Apply percentile (histograms)"
 msgstr ""
 
-#, fuzzy
-msgid "Graph metrics with all zero values"
-msgstr "Metriek met alle nulwaarden"
-
-#, fuzzy
-msgid "Use unit of first entry"
-msgstr "Invoer voorgeschiedenis"
-
-#, fuzzy
-msgid "Decimal"
-msgstr "Decibel"
-
-#, fuzzy
-msgid "SI"
-msgstr "SID"
-
-msgid "IEC"
-msgstr ""
-
-#, fuzzy
-msgid "Standard scientific"
-msgstr "Standaard onderwerpen"
-
-msgid "Engineering scientific"
-msgstr ""
-
-#, fuzzy
-msgid "Notation"
-msgstr "Kennisgeving"
-
-#, fuzzy
-msgid "Precision"
-msgstr "Toestemming"
-
-#, fuzzy
-msgid "Rounding mode"
-msgstr "Lopende pods"
-
-msgid "Digits"
-msgstr ""
-
 msgid "Area"
 msgstr "Gebied"
 
@@ -93401,6 +93515,47 @@ msgstr "Selecteer ten minste één element"
 msgid "Select one graph line to edit"
 msgstr "Selecteer ten minste één element"
 
+#, fuzzy
+msgid "Graph metrics with all zero values"
+msgstr "Metriek met alle nulwaarden"
+
+#, fuzzy
+msgid "Use unit of first entry"
+msgstr "Invoer voorgeschiedenis"
+
+#, fuzzy
+msgid "Decimal"
+msgstr "Decibel"
+
+#, fuzzy
+msgid "SI"
+msgstr "SID"
+
+msgid "IEC"
+msgstr ""
+
+#, fuzzy
+msgid "Standard scientific"
+msgstr "Standaard onderwerpen"
+
+msgid "Engineering scientific"
+msgstr ""
+
+#, fuzzy
+msgid "Notation"
+msgstr "Kennisgeving"
+
+#, fuzzy
+msgid "Precision"
+msgstr "Toestemming"
+
+#, fuzzy
+msgid "Rounding mode"
+msgstr "Lopende pods"
+
+msgid "Digits"
+msgstr ""
+
 msgid "Ctrl"
 msgstr ""
 
@@ -93410,6 +93565,10 @@ msgstr ""
 #, fuzzy
 msgid "Alt"
 msgstr "Waarschuwing"
+
+#, fuzzy
+msgid "Loading content..."
+msgstr "Laden..."
 
 #, fuzzy
 msgid "Open full view"
@@ -93803,6 +93962,10 @@ msgstr "De status van Checkmk-sites weergeven\n"
 #, fuzzy
 msgid "Verify registration"
 msgstr "Tijdstip van registratie"
+
+#, fuzzy
+msgid "Continue to add host"
+msgstr "Aantal gedegradeerde hosts"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -94275,6 +94438,20 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Disk Usage"
+#~ msgstr "Schijfgebruik"
+
+#~ msgid "Licenses"
+#~ msgstr "Licenties"
+
+#~ msgid "Successfully discarded all pending changes."
+#~ msgstr "Met succes alle hangende wijzigingen verwijderd."
+
+#, python-format
+#~ msgid "Successfully updated IP addresses of %d hosts."
+#~ msgstr "IP adressen van %d hosts succesvol bijgewerkt."
 
 #, fuzzy
 #~ msgid "Edit relay configuration"

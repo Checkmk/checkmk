@@ -6493,6 +6493,10 @@ msgstr "Anzahl der Dateien im Benachrichtigungs-Spooler"
 msgid "Amount of mails in queues"
 msgstr "Anzahl von Mails in den Mailqueues"
 
+#, fuzzy
+msgid "Amount of mails in queues (Secondary)"
+msgstr "Anzahl von Mails in den Mailqueues"
+
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "Name einer AWS-Region wie z.B. 'eu-central-1'"
 
@@ -10946,6 +10950,10 @@ msgstr "CPU-Ressourcen: Namespace"
 msgid "CPU resources: StatefulSet"
 msgstr "CPU-Ressourcen: StatefulSet"
 
+#, fuzzy
+msgid "CPU threads"
+msgstr "Threads"
+
 msgid "CPU time"
 msgstr "CPU-Zeit"
 
@@ -11002,6 +11010,66 @@ msgstr "CPU-Auslastung (95te Percentile)"
 
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU-Auslastung (99te Percentile)"
+
+#, fuzzy
+msgid "CPU utilization (Average)"
+msgstr "CPU-Auslastung (Durchschnitt)"
+
+#, fuzzy
+msgid "CPU utilization (Caching engine)"
+msgstr "CPU-Auslastung (Durchschnitt)"
+
+#, fuzzy
+msgid "CPU utilization (Last minutes)"
+msgstr "CPU-Auslastung in der letzten Minute"
+
+#, fuzzy
+msgid "CPU utilization (Percentiles)"
+msgstr "CPU-Auslastung (50te Percentile)"
+
+#, fuzzy
+msgid "CPU utilization (User, system)"
+msgstr "CPU-Auslastung (Durchschnitt)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait & levels)"
+msgstr "CPU-Auslastung in den letzten 5 Minuten"
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait)"
+msgstr "CPU-Auslastung (Durchschnitt)"
+
+msgid "CPU utilization (User, system, IO wait, guest & levels)"
+msgstr ""
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait, guest)"
+msgstr "CPU-Auslastung (Durchschnitt)"
+
+msgid "CPU utilization (User, system, IO wait, guest, steal & levels)"
+msgstr ""
+
+msgid "CPU utilization (User, system, IO wait, guest, steal)"
+msgstr ""
+
+msgid "CPU utilization (User, system, IO wait, steal & levels)"
+msgstr ""
+
+#, fuzzy
+msgid "CPU utilization (User, system, IO wait, steal)"
+msgstr "CPU-Auslastung (Durchschnitt)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, idle, IO wait)"
+msgstr "CPU-Auslastung (50te Percentile)"
+
+#, fuzzy
+msgid "CPU utilization (User, system, idle, nice)"
+msgstr "CPU-Auslastung für einfache Geräte"
+
+#, fuzzy
+msgid "CPU utilization (User, system, interrupt)"
+msgstr "CPU-Auslastung in der letzten Minute"
 
 msgid "CPU utilization (Windows)"
 msgstr "CPU-Auslastung (Windows)"
@@ -14113,6 +14181,10 @@ msgstr "Übertragungslatenz"
 msgid "Commit charge"
 msgstr "Commit Charge"
 
+#, fuzzy
+msgid "Commit charge (Absolute)"
+msgstr "Commit Charge Levels"
+
 msgid "Commit charge (averaged)"
 msgstr "Commit Charge (gemittelt)"
 
@@ -15251,6 +15323,10 @@ msgstr "Verbindungstyp"
 
 msgid "Connections"
 msgstr "Verbindungen"
+
+#, fuzzy
+msgid "Connections (Azure, Redis)"
+msgstr "Geöffnete Verbindungen"
 
 msgid "Connections closed rate"
 msgstr "Rate an geschlossenen Verbindungen"
@@ -20140,9 +20216,6 @@ msgstr "Plattenlatenz"
 msgid "Disk Read Latency"
 msgstr "Latenzzeit beim Lesen von Datenträgern"
 
-msgid "Disk Usage"
-msgstr "Festplattenauslastung"
-
 msgid "Disk Utilization"
 msgstr "Festplattenauslastung"
 
@@ -20208,6 +20281,18 @@ msgstr "Plattendurchsatz"
 
 msgid "Disk usage"
 msgstr "Festplattennutzung"
+
+#, fuzzy
+msgid "Disk usage (Podman containers)"
+msgstr "Anzahl der Podman-Container"
+
+#, fuzzy
+msgid "Disk usage (Podman images)"
+msgstr "Anzahl der Podman Images"
+
+#, fuzzy
+msgid "Disk usage (Podman volumes)"
+msgstr "Anzahl der Podman Volumes"
 
 msgid "Disk utilization"
 msgstr "Festplattenauslastung"
@@ -23446,6 +23531,13 @@ msgstr "Fehler: Unbekannte Zeitperioden-ID '%s'"
 
 msgid "Errors"
 msgstr "Fehler"
+
+#, fuzzy
+msgid "Errors (Detailed)"
+msgstr "Host-Details"
+
+msgid "Errors (Discards)"
+msgstr ""
 
 #, python-format
 msgid "Errors on restoring snapshot:<br>%s"
@@ -37383,8 +37475,13 @@ msgstr "Lizenzierte Phase: zu viele Services."
 msgid "Licensed services"
 msgstr "Lizenzierte Services"
 
-msgid "Licenses"
-msgstr "Lizenzen"
+#, fuzzy
+msgid "Licenses (Maximum)"
+msgstr "Kunden maximal"
+
+#, fuzzy
+msgid "Licenses (Total)"
+msgstr "Lizenzdetails"
 
 msgid "Licensing"
 msgstr "Lizenzierung"
@@ -40598,6 +40695,14 @@ msgstr "Mitglieder der Kontaktgruppe:"
 msgid "Memory"
 msgstr "Arbeitsspeicher (RAM)"
 
+#, fuzzy
+msgid "Memory (Azure, Redis)"
+msgstr "Speichersystem Redis"
+
+#, fuzzy
+msgid "Memory (Kube)"
+msgstr "Belegter Speicher"
+
 msgid "Memory (RAM)"
 msgstr "Arbeitsspeicher (RAM)"
 
@@ -40774,6 +40879,14 @@ msgstr "Speicherauslastung (95te Percentile)"
 
 msgid "Memory utilization (99th percentile)"
 msgstr "Speicherauslastung (99te Percentile)"
+
+#, fuzzy
+msgid "Memory utilization (Azure, Redis)"
+msgstr "Speicherauslastung"
+
+#, fuzzy
+msgid "Memory utilization (Percentiles)"
+msgstr "Speicherauslastung (50te Percentile)"
 
 msgid "Memory utilization: Cluster"
 msgstr "Speicherauslastung: Cluster"
@@ -42972,6 +43085,10 @@ msgstr "Netzwerkadresse"
 
 msgid "Network address:"
 msgstr "Netzwerkadresse:"
+
+#, fuzzy
+msgid "Network connections"
+msgstr "Neue Verbindungen"
 
 msgid "Network containers"
 msgstr "Netzwerk-Container"
@@ -48785,6 +48902,10 @@ msgstr "Ausstehende DNS-Anfragen"
 msgid "Pending changes"
 msgstr "Ausstehende Änderungen"
 
+#, fuzzy
+msgid "Pending changes reverted."
+msgstr "Ausstehende Änderungen"
+
 msgid "Pending create"
 msgstr "Erstellung ausstehend"
 
@@ -51621,6 +51742,10 @@ msgstr "RAID: Sammelzustand"
 msgid "RAM"
 msgstr "RAM"
 
+#, fuzzy
+msgid "RAM (Cached, buffers)"
+msgstr "Redo-Puffer"
+
 msgid "RAM (averaged)"
 msgstr "RAM (gemittelt)"
 
@@ -53588,6 +53713,9 @@ msgstr "Angeforderter Authentifizierungskontext"
 
 msgid "Requests"
 msgstr "Anfragen"
+
+msgid "Requests (Azure, CosmosDB)"
+msgstr ""
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Fordert Daten über Elasticsearch-Cluster, -Knoten und -Indizes an."
@@ -58835,7 +58963,12 @@ msgstr "Einfache Anführungszeichen sind hier nicht erlaubt."
 msgid "Single-Host Aggregations of Host"
 msgstr "Einzelhost-Aggregationen von Host"
 
-msgid "Single-request consumption"
+#, fuzzy
+msgid "Single-request consumption (AWS, DynamoDB read)"
+msgstr "Verbrauch bei Einzelanforderung"
+
+#, fuzzy
+msgid "Single-request consumption (AWS, DynamoDB write)"
 msgstr "Verbrauch bei Einzelanforderung"
 
 msgid "Siren"
@@ -58857,6 +58990,17 @@ msgstr "Instanz (erzwungen)"
 
 msgid "Site Alias"
 msgstr "Instanz Alias"
+
+#, fuzzy
+msgid "Site DNS cache is already up to date."
+msgstr "Diese Änderung wurde bereits aktiviert"
+
+#, fuzzy, python-format
+msgid "Site DNS cache updated for %d hosts."
+msgstr "Serviceperiode für Hosts"
+
+msgid "Site DNS cache updated for 1 host."
+msgstr ""
 
 msgid "Site ID"
 msgstr "Instanz-ID"
@@ -59061,6 +59205,10 @@ msgstr "Größe, Alter und Anzahl von Dateigruppen"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Größe, Alter und Anzahl von Dateigruppen (mk_filestats)"
+
+#, fuzzy
+msgid "Size, used and reserved space"
+msgstr "Größe und genutzter Speicherplatz"
 
 msgid "Skip SSL certificate verification"
 msgstr "SSL Zertifikatsverifizierung überspringen"
@@ -62034,9 +62182,6 @@ msgstr "Das folgende %s wurde erfolgreich gelöscht: %s"
 msgid "Successfully deleted the following user '%s'"
 msgstr "Der folgende Benutzer '%s' wurde erfolgreich gelöscht"
 
-msgid "Successfully discarded all pending changes."
-msgstr "Alle ausstehenden Änderungen wurden erfolgreich verworfen."
-
 msgid "Successfully discovered hosts"
 msgstr "Erfolgreich erkannte Hosts"
 
@@ -62053,10 +62198,6 @@ msgstr "Erfolgreich %d Befehle gesendet."
 
 msgid "Successfully stored the report"
 msgstr "Gespeicherten Bericht erfolgreich gespeichert"
-
-#, python-format
-msgid "Successfully updated IP addresses of %d hosts."
-msgstr "Die IP-Adressen von %d Hosts wurden erfolgreich aktualisiert."
 
 msgid "Successfully updated user profile."
 msgstr "Benutzerprofil erfolgreich aktualisiert."
@@ -73759,6 +73900,10 @@ msgstr "Threadpool"
 msgid "Threads"
 msgstr "Threads"
 
+#, fuzzy
+msgid "Threads (Jenkins)"
+msgstr "Threads: Daemon"
+
 msgid "Threads: active"
 msgstr "Threads: aktiv"
 
@@ -73853,6 +73998,17 @@ msgid "Throttling of 'Periodic notifications'"
 msgstr "Drosselung der 'periodischen Benachrichtigungen'"
 
 msgid "Throughput"
+msgstr "Durchsatz"
+
+#, fuzzy
+msgid "Throughput (Azure, CosmosDB container)"
+msgstr "Web ACL Anfragen"
+
+msgid "Throughput (Azure, CosmosDB)"
+msgstr ""
+
+#, fuzzy
+msgid "Throughput (FC)"
 msgstr "Durchsatz"
 
 msgid "Throughput levels"
@@ -89532,11 +89688,11 @@ msgstr "Graph (kombiniert)"
 msgid "Service metric"
 msgstr "Service-Metrik"
 
-msgid "Service graph"
-msgstr "Service-Graph"
-
 msgid "Must select an option"
 msgstr "Sie müssen eine Option auswählen"
+
+msgid "Service graph"
+msgstr "Service-Graph"
 
 msgid "Fixed data range"
 msgstr "Fester Datenbereich"
@@ -89632,39 +89788,6 @@ msgstr ""
 msgid "Apply percentile (histograms)"
 msgstr ""
 
-msgid "Graph metrics with all zero values"
-msgstr "Graph-Metriken mit allen Null-Werten"
-
-msgid "Use unit of first entry"
-msgstr "Einheit des ersten Eintrags verwenden"
-
-msgid "Decimal"
-msgstr "Dezimal"
-
-msgid "SI"
-msgstr "SI"
-
-msgid "IEC"
-msgstr "IEC"
-
-msgid "Standard scientific"
-msgstr "Standard-wissenschaftlich"
-
-msgid "Engineering scientific"
-msgstr "Technisch-wissenschaftlich"
-
-msgid "Notation"
-msgstr "Hinweis"
-
-msgid "Precision"
-msgstr "Genauigkeit"
-
-msgid "Rounding mode"
-msgstr "Rundungsmodus"
-
-msgid "Digits"
-msgstr "Ziffern"
-
 # Braucht Kontext
 msgid "Area"
 msgstr "Fläche"
@@ -89711,6 +89834,39 @@ msgstr "Wählen Sie mindestens zwei Graph-Linien zur Bearbeitung aus"
 msgid "Select one graph line to edit"
 msgstr "Wählen Sie eine Graph-Linie zur Bearbeitung aus"
 
+msgid "Graph metrics with all zero values"
+msgstr "Graph-Metriken mit allen Null-Werten"
+
+msgid "Use unit of first entry"
+msgstr "Einheit des ersten Eintrags verwenden"
+
+msgid "Decimal"
+msgstr "Dezimal"
+
+msgid "SI"
+msgstr "SI"
+
+msgid "IEC"
+msgstr "IEC"
+
+msgid "Standard scientific"
+msgstr "Standard-wissenschaftlich"
+
+msgid "Engineering scientific"
+msgstr "Technisch-wissenschaftlich"
+
+msgid "Notation"
+msgstr "Hinweis"
+
+msgid "Precision"
+msgstr "Genauigkeit"
+
+msgid "Rounding mode"
+msgstr "Rundungsmodus"
+
+msgid "Digits"
+msgstr "Ziffern"
+
 msgid "Ctrl"
 msgstr ""
 
@@ -89719,6 +89875,10 @@ msgstr ""
 
 msgid "Alt"
 msgstr "Alt"
+
+#, fuzzy
+msgid "Loading content..."
+msgstr "Lädt..."
 
 msgid "Open full view"
 msgstr "Vollbild öffnen"
@@ -90076,6 +90236,10 @@ msgstr "Registrieren Sie das Relais für Ihre Checkmk-Instanz"
 #, fuzzy
 msgid "Verify registration"
 msgstr "Zeitpunkt der Registrierung"
+
+#, fuzzy
+msgid "Continue to add host"
+msgstr "Anzahl degraded Hosts"
 
 msgid "Already installed the Checkmk agent?"
 msgstr "Ist der Checkmk-Agent bereits installiert?"
@@ -90485,6 +90649,19 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Disk Usage"
+#~ msgstr "Festplattenauslastung"
+
+#~ msgid "Licenses"
+#~ msgstr "Lizenzen"
+
+#~ msgid "Successfully discarded all pending changes."
+#~ msgstr "Alle ausstehenden Änderungen wurden erfolgreich verworfen."
+
+#, python-format
+#~ msgid "Successfully updated IP addresses of %d hosts."
+#~ msgstr "Die IP-Adressen von %d Hosts wurden erfolgreich aktualisiert."
 
 #~ msgid "Edit relay configuration"
 #~ msgstr "Relais-Konfiguration bearbeiten"

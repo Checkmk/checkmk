@@ -10,6 +10,13 @@ exports_files([
     "requirements.in",
 ])
 
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("pytest"),
+    ],
+)
+
 py_library(
     name = "lib",
     srcs = [
@@ -62,13 +69,6 @@ py_doc_test(
     size = "small",
     srcs = [":lib"],
     tags = ["no-mypy"],
-)
-
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("pytest"),
-    ],
 )
 
 py_test(

@@ -79,6 +79,11 @@ class Config(BaseModel):
     def helper_config_dir(self) -> Path:
         return self.omd_root / "var/check_mk/core/helper_config"
 
+    # TODO: This value is defined in cmk/utils/paths.py but it's not a bazel package yet
+    @property
+    def raw_data_socket(self) -> Path:
+        return self.omd_root / "tmp/run/raw-data"
+
 
 @cache
 def get_config() -> Config:

@@ -9,6 +9,7 @@ from typing import final
 import httpx
 from fastapi.testclient import TestClient
 
+from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequestSpec
 
 from .site_mock import User
@@ -83,3 +84,11 @@ class AgentReceiverClient:
 
     def activate_config(self) -> httpx.Response:
         return self.client.post(f"/{self.site_name}/relays/activate-config")
+
+    def forward_monitoring_data(
+        self, *, relay_id: str, host: str, monitoring_data: MonitoringData
+    ) -> httpx.Response:
+        return self.client.post(
+            f"/{self.site_name}/relays/{relay_id}/data/{host}",
+            json=monitoring_data.model_dump(mode="json"),
+        )

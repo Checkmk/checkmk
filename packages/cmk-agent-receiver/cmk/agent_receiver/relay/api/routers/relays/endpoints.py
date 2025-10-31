@@ -9,15 +9,22 @@ import fastapi
 from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
+    get_forward_monitoring_data_handler,
     get_register_relay_handler,
     get_unregister_relay_handler,
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import (
+    ForwardMonitoringDataHandler,
     RegisterRelayHandler,
     UnregisterRelayHandler,
 )
+from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
+    FailedToSendMonitoringDataError,
+)
+from cmk.agent_receiver.relay.lib.check_relay import check_relay
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
+from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
 
 router = fastapi.APIRouter()
@@ -92,4 +99,30 @@ async def unregister_relay(
 
     return fastapi.Response(
         status_code=fastapi.status.HTTP_200_OK, content="Relay unregistered successfully"
+    )
+
+
+@router.post(
+    "/{relay_id}/data/{host}",
+    status_code=fastapi.status.HTTP_200_OK,
+    dependencies=[fastapi.Depends(check_relay)],
+)
+async def forward_monitoring_data(
+    monitoring_data: MonitoringData,  # request payload
+    handler: Annotated[
+        ForwardMonitoringDataHandler, fastapi.Depends(get_forward_monitoring_data_handler)
+    ],
+) -> fastapi.Response:
+    """
+    Forward monitoring data to CMC for a specific relay and host.
+    """
+    try:
+        handler.process(payload=monitoring_data.payload)
+    except FailedToSendMonitoringDataError as e:
+        return fastapi.Response(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            content=f"Failed to forward monitoring data: {e}",
+        )
+    return fastapi.Response(
+        status_code=fastapi.status.HTTP_200_OK, content="Monitoring data forwarded successfully"
     )

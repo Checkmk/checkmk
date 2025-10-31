@@ -19,7 +19,7 @@ def test_single_message() -> None:
     """
     with create_socket() as ms:
         _connect_and_send(ms.socket_path, b"message1")
-    assert ms.data_queue.get() == b"message1"
+    assert ms.data_queue.get(timeout=TIMEOUT) == b"message1"
     assert ms.data_queue.qsize() == 0
 
 

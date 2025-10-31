@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
+    ForwardMonitoringDataHandler,
+)
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
 )
@@ -13,4 +16,5 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay impor
 __all__ = [
     "RegisterRelayHandler",
     "UnregisterRelayHandler",
+    "ForwardMonitoringDataHandler",
 ]

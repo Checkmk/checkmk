@@ -12,6 +12,7 @@ Host = Annotated[str, StringConstraints(pattern=REGEX_HOST_NAME)]
 
 
 class MonitoringData(BaseModel):
+    # TODO: Host may be not needed here as it's part of the endpoint path
     host: Host
     payload: Base64Bytes
     version: int = 1

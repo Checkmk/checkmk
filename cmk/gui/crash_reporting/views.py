@@ -7,12 +7,13 @@
 # mypy: disable-error-code="type-arg"
 
 import json
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any, Literal
 
 import livestatus
 from livestatus import MKLivestatusNotFoundError, OnlySites, Query, QuerySpecification
 
+from cmk.gui import query_filters
 from cmk.gui.config import Config
 from cmk.gui.data_source import (
     ABCDataSource,
@@ -40,8 +41,15 @@ from cmk.gui.views.command import (
     CommandGroupVarious,
     PERMISSION_SECTION_ACTION,
 )
-from cmk.gui.views.sorter import cmp_simple_number, cmp_simple_string, Sorter
-from cmk.gui.visuals.filter import Filter
+from cmk.gui.views.sorter import (
+    cmp_insensitive_string,
+    cmp_simple_number,
+    cmp_simple_string,
+    Sorter,
+)
+from cmk.gui.visuals import SiteFilter
+from cmk.gui.visuals._site_filters import default_site_filter_heading_info
+from cmk.gui.visuals.filter import Filter, FilterOption, FilterTime, InputTextFilter
 from cmk.livestatus_client.commands import (
     DeleteCrashReport,
 )
@@ -578,3 +586,207 @@ SorterCrashServiceName = Sorter(
     columns=["crash_service_name"],
     sort_function=_sort_crash_service_name,
 )
+
+
+def cmp_simple_string_columns(columns: Sequence[ColumnName], r1: Row, r2: Row) -> int:
+    v1 = " ".join([r1.get(column, "") for column in columns])
+    v2 = " ".join([r2.get(column, "") for column in columns])
+    return cmp_insensitive_string(v1, v2)
+
+
+def _sort_crash_exception(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string_columns(["crash_exception", "crash_exc_value"], r1, r2)
+
+
+SorterCrashException = Sorter(
+    ident="crash_exception",
+    title=_l("Crash exception"),
+    columns=["crash_exception", "crash_exc_value"],
+    sort_function=_sort_crash_exception,
+)
+
+
+def _sort_crash_ident(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_id", r1, r2)
+
+
+SorterCrashIdent = Sorter(
+    ident="crash_ident",
+    title=_("Crash ID"),
+    columns=["crash_id"],
+    sort_function=_sort_crash_ident,
+)
+
+
+def cmp_crash_source(column: ColumnName, r1: Row, r2: Row) -> int:
+    v1 = str(local_files_involved_in_crash(r1.get(column, [])))
+    v2 = str(local_files_involved_in_crash(r2.get(column, [])))
+    return cmp_insensitive_string(v1, v2)
+
+
+def _sort_crash_source(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_crash_source("crash_exc_traceback", r1, r2)
+
+
+SorterCrashSource = Sorter(
+    ident="crash_source",
+    title=_("Crash source"),
+    columns=["crash_exc_traceback"],
+    sort_function=_sort_crash_source,
+)
+
+
+def _sort_crash_type(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_type", r1, r2)
+
+
+SorterCrashType = Sorter(
+    ident="crash_type",
+    title=_("Crash type"),
+    columns=["crash_type"],
+    sort_function=_sort_crash_type,
+)
+
+
+def _sort_crash_version(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_version", r1, r2)
+
+
+SorterCrashVersion = Sorter(
+    ident="crash_version",
+    title=_("Crash version"),
+    columns=["crash_version"],
+    sort_function=_sort_crash_version,
+)
+
+
+FilterCrashSite = SiteFilter(
+    title=_l("Site"),
+    sort_index=100,
+    query_filter=query_filters.Query(
+        ident="siteopt",
+        request_vars=["site"],
+    ),
+    description=_l("Optional selection of a site"),
+    heading_info=default_site_filter_heading_info,
+)
+FilterCrashSite.info = "crash"
+
+
+class FilterCrashText(InputTextFilter):
+    def __init__(self, *, ident: str, title: str, sort_index: int) -> None:
+        super().__init__(
+            title=title,
+            sort_index=sort_index,
+            info="crash",
+            query_filter=query_filters.TableTextQuery(
+                ident=ident, row_filter=query_filters.filter_by_column_textregex
+            ),
+            show_heading=False,
+        )
+
+
+FilterCrashId = FilterCrashText(title="Crash ID", ident="crash_id", sort_index=110)
+FilterCrashHost = FilterCrashText(title="Crash host", ident="crash_host", sort_index=120)
+FilterCrashServiceName = FilterCrashText(
+    title="Crash service name",
+    ident="crash_service_name",
+    sort_index=130,
+)
+FilterCrashCheckType = FilterCrashText(
+    title="Crash check type", ident="crash_check_type", sort_index=140
+)
+FilterCrashItem = FilterCrashText(title="Crash item", ident="crash_item", sort_index=150)
+FilterCrashType = FilterCrashText(title="Crash type", ident="crash_type", sort_index=160)
+FilterCrashVersion = FilterCrashText(title="Crash version", ident="crash_version", sort_index=170)
+
+
+def crash_exception_row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
+    regex = query_filters.re_ignorecase(filtertext, column)
+    return lambda row: bool(
+        regex.search(str("{}: {}".format(row["crash_exc_type"], row["crash_exc_value"])))
+    )
+
+
+FilterCrashException = FilterCrashText(
+    title="Crash Exception", ident="crash_exception", sort_index=175
+)
+FilterCrashException.query_filter = query_filters.TableTextQuery(
+    ident=FilterCrashException.ident, row_filter=crash_exception_row_filter
+)
+
+
+def check_crash_source(selection: str, row: dict[str, Any]) -> bool:
+    is_extension = local_files_involved_in_crash(row["crash_exc_traceback"])
+
+    if selection == "built_in" and is_extension:
+        return False
+
+    if selection == "extension" and not is_extension:
+        return False
+
+    return True
+
+
+FilterCrashSource = FilterOption(
+    title="Crash source",
+    sort_index=180,
+    info="crash",
+    query_filter=query_filters.SingleOptionQuery(
+        ident="crash_source",
+        options=[
+            ("built_in", _("Built-in")),
+            ("extension", _("Extension")),
+            ("ignore", _("(ignore)")),
+        ],
+        filter_code=lambda x: "",
+        filter_row=check_crash_source,
+    ),
+)
+
+FilterCrashTime = FilterTime(
+    title=_("Crash time"),
+    sort_index=190,
+    info="crash",
+    query_filter=query_filters.TimeQuery(
+        ident="crash_time",
+        column="crash_time",
+    ),
+)
+
+FilterCrashTime.query_filter.filter_row = query_filters.column_value_in_range

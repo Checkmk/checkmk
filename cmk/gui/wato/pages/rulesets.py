@@ -21,7 +21,16 @@ import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pprint import pformat
-from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
+from typing import (
+    Any,
+    assert_never,
+    cast,
+    Final,
+    Literal,
+    NamedTuple,
+    overload,
+    TypedDict,
+)
 
 from livestatus import SiteConfiguration
 
@@ -50,7 +59,20 @@ from cmk.gui.form_specs import (
     validate_value_from_frontend,
     VisitorOptions,
 )
-from cmk.gui.form_specs.unstable import CommentTextArea, LegacyValueSpec
+from cmk.gui.form_specs.unstable import (
+    BinaryConditionChoices,
+    CommentTextArea,
+    ConditionChoices,
+    LegacyValueSpec,
+    not_empty,
+)
+from cmk.gui.form_specs.unstable import (
+    ListOfStrings as ListOfStringsAPI,
+)
+from cmk.gui.form_specs.unstable import (
+    SingleChoiceElementExtended as SingleChoiceElementExtendedAPI,
+)
+from cmk.gui.form_specs.unstable import SingleChoiceExtended as SingleChoiceExtendedAPI
 from cmk.gui.form_specs.unstable.catalog import Catalog, Topic, TopicElement
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
@@ -89,6 +111,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.labels import get_labels_from_core, LabelType
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -172,9 +195,24 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.gui.watolib.utils import mk_eval, mk_repr
-from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice as BooleanChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice as CascadingSingleChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoiceElement as CascadingSingleChoiceElementAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue as DefaultValueAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    DictElement as DictElementAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    Dictionary as DictionaryAPI,
 )
 from cmk.rulesets.v1.form_specs import (
     FieldSize as FieldSizeAPI,
@@ -182,18 +220,34 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs import (
     FixedValue as FixedValueAPI,
 )
+from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope
+from cmk.rulesets.v1.form_specs import MonitoredHost as MonitoredHostAPI
 from cmk.rulesets.v1.form_specs import (
-    FormSpec,
+    MultipleChoice as MultipleChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    MultipleChoiceElement as MultipleChoiceElementAPI,
+)
+from cmk.rulesets.v1.form_specs import RegularExpression as RegularExpressionAPI
+from cmk.rulesets.v1.form_specs import (
+    SingleChoice as SingleChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    SingleChoiceElement as SingleChoiceElementAPI,
 )
 from cmk.rulesets.v1.form_specs import (
     String as StringAPI,
+)
+from cmk.shared_typing.vue_formspec_components import (
+    BinaryCondition,
+    Condition,
+    ConditionGroup,
 )
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.labels import LabelGroups
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import (
     allow_host_label_conditions,
-    allow_label_conditions,
     allow_service_label_conditions,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
@@ -208,7 +262,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionOR,
 )
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.tags import GroupedTag, TagGroupID, TagID
+from cmk.utils.tags import AuxTag, GroupedTag, TagGroup, TagGroupID, TagID
 
 from ._rule_conditions import DictHostTagCondition
 
@@ -2021,6 +2075,108 @@ def _get_render_mode(rulespec: Rulespec) -> tuple[RenderMode, FormSpec | None]:
     return RenderMode.FRONTEND, rulespec.form_spec
 
 
+@request_memoize()
+def _get_cached_tags() -> Sequence[TagGroup | AuxTag]:
+    choices: list[TagGroup | AuxTag] = []
+    all_topics = active_config.tags.get_topic_choices()
+    tag_groups_by_topic = dict(active_config.tags.get_tag_groups_by_topic())
+    aux_tags_by_topic = dict(active_config.tags.get_aux_tags_by_topic())
+    for topic_id, _topic_title in all_topics:
+        for tag_group in tag_groups_by_topic.get(topic_id, []):
+            choices.append(tag_group)
+
+        for aux_tag in aux_tags_by_topic.get(topic_id, []):
+            choices.append(aux_tag)
+
+    return choices
+
+
+def _get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
+    choices: dict[str, ConditionGroup] = {}
+    for tag in _get_cached_tags():
+        match tag:
+            case TagGroup():
+                choices[tag.id] = ConditionGroup(
+                    title=tag.choice_title,
+                    conditions=[
+                        Condition(name=tag_id, title=tag_title)
+                        for tag_id, tag_title in tag.get_non_empty_tag_choices()
+                    ],
+                )
+            case AuxTag():
+                choices[tag.id] = ConditionGroup(
+                    title=tag.choice_title,
+                    conditions=[Condition(name=tag.id, title=tag.title)],
+                )
+            case other:
+                assert_never(other)
+    return choices
+
+
+def _create_binary_condition(id_: str, value: str) -> BinaryCondition:
+    name = f"{id_}:{value}"
+    return BinaryCondition(name=name, title=name)
+
+
+@request_memoize()
+def _get_cached_host_labels() -> Sequence[tuple[str, str]]:
+    return get_labels_from_core(LabelType.ALL, search_label="")
+
+
+def _get_host_label_groups_condition_choices() -> list[BinaryCondition]:
+    return [_create_binary_condition(id_, value) for id_, value in _get_cached_host_labels()]
+
+
+# TODO si-host-vs-service-labels: Both host_label_groups and service_label_groups used:
+#   LabelGroups > _sub_vs = _SingleLabel(world=Labels.World.CORE)
+#               > label_autocompleter
+#               > Labels.get_labels
+#               > get_labels_from_core(LabelType.ALL, search_label)
+# Why not: hosts    -> get_labels_from_core(LabelType.HOST, ...)
+#          services -> get_labels_from_core(LabelType.SERVICE, ...)
+# @request_memoize()
+# def _get_cached_service_labels() -> Sequence[tuple[str, str]]:
+#     return get_labels_from_config(LabelType.SERVICE, search_label="")
+#
+#
+# def _get_service_label_groups_condition_choices() -> list[BinaryCondition]:
+#     return [_create_binary_condition(id_, value) for id_, value in _get_cached_service_labels()]
+
+
+def _parse_explicit_hosts_or_services_for_conditions(
+    raw_value: object,
+) -> HostOrServiceConditions | None:
+    if raw_value is None:
+        return None
+    if not isinstance(raw_value, dict):
+        raise TypeError(raw_value)
+    values: HostOrServiceConditionsSimple = [
+        {"$regex": e[1:]} if e.startswith("~") else e for e in raw_value["value"]
+    ]
+    return {"$nor": values} if raw_value["negate"] else values
+
+
+class _ExplicitHostsOrServices(TypedDict):
+    value: Sequence[str]
+    negate: bool
+
+
+def _parse_explicit_hosts_or_services_for_vue(
+    value: HostOrServiceConditions,
+) -> _ExplicitHostsOrServices:
+    if isinstance(value, list):
+        return _ExplicitHostsOrServices(
+            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value],
+            negate=False,
+        )
+    if isinstance(value, dict):
+        return _ExplicitHostsOrServices(
+            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value["$nor"]],
+            negate=True,
+        )
+    raise TypeError(value)
+
+
 class ABCEditRuleMode(WatoMode):
     VAR_RULE_SPEC_NAME: Final = "varname"
     VAR_RULE_ID: Final = "rule_id"
@@ -2184,14 +2340,17 @@ class ABCEditRuleMode(WatoMode):
 
         tree = folder_tree()
         is_locked = is_locked_by_quick_setup(self._rule.locked_by)
-        if not (
-            self._rule_is_updated_from_vars(folder_choices=tree.folder_choices, is_locked=is_locked)
-        ):
+        if not self._rule_is_updated_from_vars(tree=tree, is_locked=is_locked):
             return redirect(self._back_url())
 
         # Check permissions on folders
         new_rule_folder = tree.folder(
-            self._get_rule_conditions_from_vars(tree.folder_choices).host_folder
+            self._get_rule_conditions_from_catalog_value(
+                parse_data_from_field_id(
+                    self._create_rule_conditions_catalog(tree),
+                    "_vue_edit_rule_conditions",
+                )
+            ).host_folder
         )
         self._check_folder_permissions()
         new_rule_folder.permissions.need_permission("write")
@@ -2323,6 +2482,178 @@ class ABCEditRuleMode(WatoMode):
             }
         )
 
+    def _create_explicit_rule_services_dict(self) -> DictElementAPI:
+        assert self._rulespec.item_name is not None
+        value_parameter_form = (
+            MultipleChoiceAPI(
+                elements=[
+                    MultipleChoiceElementAPI(name=n, title=Title("%s") % t) for n, t in item_enum
+                ],
+                custom_validate=[
+                    not_empty(error_msg=Message("Please add at least one service item.")),
+                ],
+            )
+            if (item_enum := self._rulespec.item_enum)
+            else ListOfStringsAPI(
+                string_spec=RegularExpressionAPI(
+                    predefined_help_text=MatchingScope.PREFIX,
+                ),
+                custom_validate=[
+                    not_empty(error_msg=Message("Please add at least one service item.")),
+                ],
+            )
+        )
+        return DictElementAPI(
+            parameter_form=DictionaryAPI(
+                title=Title("%s") % self._rulespec.item_name,
+                elements={
+                    "value": DictElementAPI(parameter_form=value_parameter_form, required=True),
+                    "negate": DictElementAPI(
+                        parameter_form=BooleanChoiceAPI(
+                            label=Label("Negate: make rule apply for all but the above entries")
+                        ),
+                        required=True,
+                    ),
+                },
+            ),
+        )
+
+    def _create_explicit_rule_conditions_dict(self, tree: FolderTree) -> DictionaryAPI:
+        elements: dict[str, DictElementAPI] = {
+            "folder_path": DictElementAPI(
+                parameter_form=SingleChoiceExtendedAPI[str](
+                    title=Title("Folder"),
+                    help_text=Help("Create the rule in the configured folder"),
+                    elements=[
+                        SingleChoiceElementExtendedAPI(name=n, title=Title("%s") % t)
+                        for n, t in tree.folder_choices()
+                    ],
+                    prefill=DefaultValueAPI(""),
+                ),
+                required=True,
+            ),
+            "host_tags": DictElementAPI(
+                parameter_form=ConditionChoices(
+                    title=Title("Host tags"),
+                    add_condition_group_label=Label("Add tag condition"),
+                    select_condition_group_to_add=Label("Select tag to add"),
+                    no_more_condition_groups_to_add=Label("No more tags to add"),
+                    get_conditions=_get_host_tags_condition_choices,
+                    custom_validate=[
+                        not_empty(error_msg=Message("Please add at least one tag condition."))
+                    ],
+                ),
+            ),
+            "host_label_groups": DictElementAPI(
+                parameter_form=BinaryConditionChoices(
+                    title=Title("Host labels"),
+                    help_text=Help(
+                        "Use this condition to select hosts based on the configured host labels."
+                    ),
+                    label=Label("Label"),
+                    get_conditions=(
+                        lambda: _get_host_label_groups_condition_choices()
+                        if allow_host_label_conditions(self._rulespec.name)
+                        else []
+                    ),
+                    custom_validate=[
+                        not_empty(error_msg=Message("Please add at least one host label."))
+                    ],
+                )
+            ),
+            "explicit_hosts": DictElementAPI(
+                parameter_form=DictionaryAPI(
+                    title=Title("Explicit hosts"),
+                    elements={
+                        "value": DictElementAPI(
+                            parameter_form=ListOfStringsAPI(
+                                string_spec=MonitoredHostAPI(),
+                                custom_validate=[
+                                    not_empty(error_msg=Message("Please add at least one host.")),
+                                ],
+                            ),
+                            required=True,
+                        ),
+                        "negate": DictElementAPI(
+                            parameter_form=BooleanChoiceAPI(
+                                label=Label(
+                                    "Negate: make rule apply for all but the above entries"
+                                ),
+                            ),
+                            required=True,
+                        ),
+                    },
+                ),
+            ),
+        }
+        if self._rulespec.item_type:
+            elements.update(
+                {
+                    "explicit_services": self._create_explicit_rule_services_dict(),
+                    "service_label_groups": DictElementAPI(
+                        parameter_form=BinaryConditionChoices(
+                            title=Title("Service labels"),
+                            help_text=Help(
+                                "Use this condition to select services based on the configured service labels."
+                            ),
+                            label=Label("Label"),
+                            get_conditions=(
+                                # TODO si-host-vs-service-labels: Why do we use host labels here?
+                                lambda: _get_host_label_groups_condition_choices()
+                                if allow_service_label_conditions(self._rulespec.name)
+                                else []
+                            ),
+                            custom_validate=[
+                                not_empty(
+                                    error_msg=Message("Please add at least one service label.")
+                                )
+                            ],
+                        )
+                    ),
+                }
+            )
+        return DictionaryAPI(elements=elements)
+
+    def _create_rule_conditions_catalog(self, tree: FolderTree) -> Catalog:
+        return Catalog(
+            elements={
+                "conditions": Topic(
+                    title=Title("Conditions"),
+                    elements={
+                        "type": TopicElement(
+                            parameter_form=CascadingSingleChoiceAPI(
+                                title=Title("Condition type"),
+                                elements=[
+                                    CascadingSingleChoiceElementAPI(
+                                        name="explicit",
+                                        title=Title("Explicit conditions"),
+                                        parameter_form=self._create_explicit_rule_conditions_dict(
+                                            tree
+                                        ),
+                                    ),
+                                    CascadingSingleChoiceElementAPI(
+                                        name="predefined",
+                                        title=Title("Predefined conditions"),
+                                        parameter_form=SingleChoiceAPI(
+                                            title=Title("Predefined condition"),
+                                            elements=[
+                                                SingleChoiceElementAPI(
+                                                    name=n, title=Title("%s") % t
+                                                )
+                                                for n, t in PredefinedConditionStore().choices()
+                                            ],
+                                        ),
+                                    ),
+                                ],
+                                prefill=DefaultValueAPI("explicit"),
+                            ),
+                            required=True,
+                        ),
+                    },
+                )
+            }
+        )
+
     def _get_rule_options_from_catalog_value(self, raw_value: object) -> RuleOptions:
         if not isinstance(raw_value, dict):
             raise TypeError(raw_value)
@@ -2338,6 +2669,32 @@ class ABCEditRuleMode(WatoMode):
         if not isinstance(raw_value.value, dict):
             raise TypeError(raw_value.value)
         return raw_value.value["value"]["value"]
+
+    def _get_rule_conditions_from_catalog_value(self, raw_value: object) -> RuleConditions:
+        if not isinstance(raw_value, dict):
+            raise TypeError(raw_value)
+
+        cond_type, raw_conditions = raw_value["conditions"]["type"]
+        match cond_type:
+            case "predefined":
+                store = PredefinedConditionStore()
+                store_entries = store.filter_usable_entries(store.load_for_reading())
+                return RuleConditions(**store_entries[raw_conditions]["conditions"])
+            case "explicit":
+                return RuleConditions(
+                    host_folder=raw_conditions["folder_path"],
+                    host_tags=raw_conditions.get("host_tags"),
+                    host_label_groups=raw_conditions.get("host_label_groups"),
+                    host_name=_parse_explicit_hosts_or_services_for_conditions(
+                        raw_conditions.get("explicit_hosts")
+                    ),
+                    service_description=_parse_explicit_hosts_or_services_for_conditions(
+                        raw_conditions.get("explicit_services")
+                    ),
+                    service_label_groups=raw_conditions.get("service_label_groups"),
+                )
+            case _:
+                raise ValueError(cond_type)
 
     def _get_rule_properties_from_rule(self) -> RawDiskData:
         return RawDiskData(
@@ -2360,9 +2717,34 @@ class ABCEditRuleMode(WatoMode):
             else RawDiskData({"value": {"value": self._rule.value}})
         )
 
-    def _rule_is_updated_from_vars(
-        self, *, folder_choices: DropdownChoices, is_locked: bool
-    ) -> bool:
+    def _get_rule_conditions_from_rule(self) -> RawDiskData:
+        if self._rule.rule_options.predefined_condition_id:
+            return RawDiskData(
+                {
+                    "conditions": {
+                        "type": ("predefined", self._rule.rule_options.predefined_condition_id)
+                    }
+                }
+            )
+
+        raw_explicit: dict[str, object] = {"folder_path": self._rule.conditions.host_folder}
+        if self._rule.conditions.host_tags:
+            raw_explicit["host_tags"] = self._rule.conditions.host_tags
+        if self._rule.conditions.host_label_groups:
+            raw_explicit["host_label_groups"] = self._rule.conditions.host_label_groups
+        if self._rule.conditions.host_name:
+            raw_explicit["explicit_hosts"] = _parse_explicit_hosts_or_services_for_vue(
+                self._rule.conditions.host_name
+            )
+        if self._rule.conditions.service_description is not None:
+            raw_explicit["explicit_services"] = _parse_explicit_hosts_or_services_for_vue(
+                self._rule.conditions.service_description
+            )
+        if self._rule.conditions.service_label_groups:
+            raw_explicit["service_label_groups"] = self._rule.conditions.service_label_groups
+        return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
+
+    def _rule_is_updated_from_vars(self, *, tree: FolderTree, is_locked: bool) -> bool:
         self._rule.rule_options = self._get_rule_options_from_catalog_value(
             parse_data_from_field_id(
                 self._create_rule_properties_catalog(is_locked=is_locked),
@@ -2370,17 +2752,18 @@ class ABCEditRuleMode(WatoMode):
             )
         )
 
-        rule_conditions = self._get_rule_conditions_from_vars(folder_choices)
+        rule_conditions = self._get_rule_conditions_from_catalog_value(
+            parse_data_from_field_id(
+                self._create_rule_conditions_catalog(tree),
+                "_vue_edit_rule_conditions",
+            )
+        )
         if is_locked and self._rule.conditions != rule_conditions:
             flash(
                 _("Cannot change rule conditions for rules managed by Quick setup."),
                 msg_type="error",
             )
             return False
-
-        if self._get_condition_type_from_vars() == "predefined":
-            condition_id = self._get_condition_id_from_vars()
-            self._rule.rule_options.predefined_condition_id = condition_id
 
         self._rule.update_conditions(rule_conditions)
 
@@ -2404,28 +2787,6 @@ class ABCEditRuleMode(WatoMode):
 
         return True
 
-    def _get_condition_type_from_vars(self) -> str | None:
-        condition_type = self._vs_condition_type().from_html_vars("condition_type")
-        self._vs_condition_type().validate_value(condition_type, "condition_type")
-        return condition_type
-
-    # TODO: refine type
-    def _get_condition_id_from_vars(self) -> Any:
-        condition_id = self._vs_predefined_condition_id().from_html_vars("predefined_condition_id")
-        self._vs_predefined_condition_id().validate_value(condition_id, "predefined_condition_id")
-        return condition_id
-
-    def _get_rule_conditions_from_vars(self, folder_choices: DropdownChoices) -> RuleConditions:
-        if self._get_condition_type_from_vars() == "predefined":
-            return self._get_predefined_rule_conditions(self._get_condition_id_from_vars())
-        return self._get_explicit_rule_conditions(folder_choices)
-
-    # TODO: refine type
-    def _get_predefined_rule_conditions(self, condition_id: Any) -> RuleConditions:
-        store = PredefinedConditionStore()
-        store_entries = store.filter_usable_entries(store.load_for_reading())
-        return RuleConditions(**store_entries[condition_id]["conditions"])
-
     @abc.abstractmethod
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None: ...
 
@@ -2441,13 +2802,6 @@ class ABCEditRuleMode(WatoMode):
             self._ruleset.title(),
             self._folder.alias_path(),
         )
-
-    # TODO: refine type
-    def _get_explicit_rule_conditions(self, folder_choices: DropdownChoices) -> Any:
-        vs = self._vs_explicit_conditions(folder_choices=folder_choices, render="normal")
-        conditions = vs.from_html_vars("explicit_conditions")
-        vs.validate_value(conditions, "explicit_conditions")
-        return conditions
 
     def _vue_field_id(self) -> str:
         # Note: this _underscore is critical because of the hidden vars special behaviour
@@ -2495,12 +2849,10 @@ class ABCEditRuleMode(WatoMode):
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
 
+        is_locked = is_locked_by_quick_setup(self._rule.locked_by)
+
         render_form_spec(
-            self._create_rule_properties_catalog(
-                is_locked=is_locked_by_quick_setup(
-                    self._rule.locked_by, check_reference_exists=False
-                )
-            ),
+            self._create_rule_properties_catalog(is_locked=is_locked),
             "_vue_edit_rule_properties",
             self._get_rule_properties_from_rule(),
             self._should_validate_on_render(),
@@ -2565,132 +2917,22 @@ class ABCEditRuleMode(WatoMode):
                         False,
                     )
 
-        self._show_conditions(tree.folder_choices)
-        forms.end()
-
-        html.hidden_fields()
-
-    def _show_conditions(self, folder_choices: DropdownChoices) -> None:
-        locked = is_locked_by_quick_setup(self._rule.locked_by)
-        forms.header(_("Conditions"), css="locked" if locked else None)
-        if locked:
+        # Rule conditions
+        if is_locked:
             forms.warning_message(
                 _("Conditions of rules managed by Quick setup cannot be changed.")
             )
-
-        condition_type = "predefined" if self._rule.predefined_condition_id() else "explicit"
-
-        forms.section(_("Condition type"))
-
-        render_hidden_if_locked(self._vs_condition_type(), "condition_type", condition_type, locked)
-        self._show_predefined_conditions(locked)
-        self._show_explicit_conditions(folder_choices, locked)
-
-        if not locked:
-            html.javascript('cmk.wato.toggle_rule_condition_type("condition_type")')
-
-    def _vs_condition_type(self) -> DropdownChoice[str]:
-        return DropdownChoice(
-            title=_("Condition type"),
-            help=_(
-                "You can either specify individual conditions for this rule, or use a set of "
-                "predefined conditions, which may be handy if you have to configure the "
-                "same conditions in different rulesets."
-            ),
-            choices=[
-                ("explicit", _("Explicit conditions")),
-                ("predefined", _("Predefined conditions")),
-            ],
-            on_change='cmk.wato.toggle_rule_condition_type("condition_type")',
-            encode_value=False,
-        )
-
-    def _show_predefined_conditions(self, locked: bool) -> None:
-        forms.section(_("Predefined condition"), css="condition predefined", hide=locked)
-        render_hidden_if_locked(
-            vs=self._vs_predefined_condition_id(),
-            varprefix="predefined_condition_id",
-            value=self._rule.predefined_condition_id(),
-            locked=locked,
-        )
-
-    def _vs_predefined_condition_id(self) -> DropdownChoice:
-        url = folder_preserving_link([("mode", "predefined_conditions")])
-        return DropdownChoice[str](
-            title=_("Predefined condition"),
-            choices=PredefinedConditionStore().choices(),
-            sorted=True,
-            invalid_choice="complain",
-            invalid_choice_title=_(
-                "Predefined condition '%s' does not exist or using not permitted"
-            ),
-            invalid_choice_error=_(
-                "The configured predefined condition has either be removed or you "
-                "are not permitted to use it. Please choose another one."
-            ),
-            empty_text=(
-                _("There are no elements defined for this selection yet.")
-                + " "
-                + _('You can create predefined conditions <a href="%s">here</a>.') % url
-            ),
-            validate=self._validate_predefined_condition,
-        )
-
-    # TODO: refine type
-    def _validate_predefined_condition(self, value: str | None, varprefix: str) -> None:
-        if allow_label_conditions(self._rulespec.name):
             return
 
-        conditions = self._get_predefined_rule_conditions(value)
-        if (
-            conditions.host_label_groups and not allow_host_label_conditions(self._rulespec.name)
-        ) or (
-            conditions.service_label_groups
-            and not allow_service_label_conditions(self._rulespec.name)
-        ):
-            raise MKUserError(
-                varprefix,
-                _(
-                    "This predefined condition can not be used with the "
-                    "current ruleset, because it defines the same label "
-                    "conditions as set by this rule."
-                ),
-            )
-
-    def _show_explicit_conditions(self, folder_choices: DropdownChoices, locked: bool) -> None:
-        if locked:
-            forms.section(_("Explicit condition"), css="condition explicit")
-        vs = self._vs_explicit_conditions(
-            folder_choices=folder_choices, render="normal" if locked else "form_part"
+        render_form_spec(
+            self._create_rule_conditions_catalog(tree),
+            "_vue_edit_rule_conditions",
+            self._get_rule_conditions_from_rule(),
+            self._should_validate_on_render(),
         )
-        value = self._rule.get_rule_conditions()
 
-        try:
-            vs.validate_datatype(value, "explicit_conditions")
-            render_hidden_if_locked(vs, "explicit_conditions", value, locked)
-        except Exception as e:
-            forms.section("", css="condition explicit")
-            html.show_warning(
-                _(
-                    "Unable to read current conditions of this rule. Falling back to "
-                    "default values. When saving this rule now, your previous settings "
-                    "will be overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>"
-                    "Such an issue may be caused by an inconsistent configuration, e.g. when "
-                    "rules refer to tag groups or tags that do not exist anymore."
-                )
-                % (e, value.to_config(UseHostFolder.HOST_FOLDER_FOR_UI))
-            )
-
-            # In case of validation problems render the input with default values
-            value = RuleConditions(host_folder=self._folder.path())
-            render_hidden_if_locked(vs, "explicit_conditions", value, locked)
-
-    def _vs_explicit_conditions(
-        self, folder_choices: DropdownChoices, render: Literal["normal", "form_part"]
-    ) -> VSExplicitConditions:
-        return VSExplicitConditions(
-            rulespec=self._rulespec, folder_choices=folder_choices, render=render
-        )
+        forms.end()
+        html.hidden_fields()
 
 
 class VSExplicitConditions(Transform):
@@ -3364,14 +3606,19 @@ class ModeNewRule(ABCEditRuleMode):
         else:
             # Submitting the create dialog
             try:
-                self._folder = tree.folder(self._get_folder_path_from_vars(tree.folder_choices))
+                self._folder = tree.folder(self._get_folder_path_from_vars(tree))
             except MKUserError:
                 # Folder can not be gathered from form if an error occurs
                 folder = mandatory_parameter("rule_folder", request.var("rule_folder"))
                 self._folder = tree.folder(folder)
 
-    def _get_folder_path_from_vars(self, folder_choices: DropdownChoices) -> str:
-        return self._get_rule_conditions_from_vars(folder_choices).host_folder
+    def _get_folder_path_from_vars(self, tree: FolderTree) -> str:
+        return self._get_rule_conditions_from_catalog_value(
+            parse_data_from_field_id(
+                self._create_rule_conditions_catalog(tree),
+                "_vue_edit_rule_conditions",
+            )
+        ).host_folder
 
     def _set_rule(self) -> None:
         host_name_conditions: HostOrServiceConditions | None = None

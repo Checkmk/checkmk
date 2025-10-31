@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 import time_machine
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.inv_esx_vsphere_hostsystem import inv_esx_vsphere_hostsystem
+from cmk.plugins.vsphere.agent_based.inv_esx_vsphere_hostsystem import inv_esx_vsphere_hostsystem
 
 section = OrderedDict(
     (

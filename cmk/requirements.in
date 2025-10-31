@@ -8,7 +8,6 @@ boto3
 botocore
 clickhouse-connect
 cryptography
-defusedxml
 docstring-parser
 exchangelib
 fastapi

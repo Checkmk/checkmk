@@ -181,6 +181,43 @@ py_test(
     ],
 )
 
+py_library(
+    name = "vsphere",
+    srcs = glob(["cmk/plugins/vsphere/**/*.py"]),
+    data = glob([
+        "cmk/plugins/vsphere/checkman/*",
+        "cmk/plugins/vsphere/libexec/*",
+    ]) + ["cmk/plugins/vsphere/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lib",
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("defusedxml"),
+        requirement("python-dateutil"),
+        requirement("requests"),
+        requirement("urllib3"),
+    ],
+)
+
+py_test(
+    name = "vsphere-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/vsphere/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":vsphere",
+        requirement("pytest"),
+        requirement("time-machine"),
+    ],
+)
+
 #   ____                           _   _                       _
 #  / ___| ___ _ __   ___ _ __ __ _| | | |_ __ _ _ __ __ _  ___| |_ ___
 # | |  _ / _ \ '_ \ / _ \ '__/ _` | | | __/ _` | '__/ _` |/ _ \ __/ __|

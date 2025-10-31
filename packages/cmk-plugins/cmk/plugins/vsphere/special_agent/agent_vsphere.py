@@ -8,8 +8,6 @@ Checkmk special agent for monitoring vSphere.
 """
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import argparse
@@ -1215,7 +1213,7 @@ class ESXConnection:
         self._perf_samples = max(1, int(delta / 20.0))
         return self._perf_samples
 
-    def login(self, user: str, password: Secret) -> None:
+    def login(self, user: str, password: Secret[str]) -> None:
         if (cookie := self._get_valid_stored_cookie()) is not None:
             self._session.headers["Cookie"] = cookie
             return
@@ -2042,6 +2040,7 @@ def fetch_data(connection: ESXConnection, opt: argparse.Namespace) -> list[str]:
     ###########################
     # Hostsystem
     ###########################
+    hostsystems_properties = dict[str, dict[str, Any]]()
     if "hostsystem" in opt.modules:
         hostsystems_properties, hostsystems_sensors = fetch_hostsystem_data(connection)
         output += get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors, opt)

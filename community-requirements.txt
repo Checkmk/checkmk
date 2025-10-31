@@ -1048,7 +1048,7 @@ defusedxml==0.7.1 \
     --hash=sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   exchangelib
     #   jira
     #   pysaml2
@@ -4478,6 +4478,7 @@ python-dateutil==2.9.0.post0 \
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crypto/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   arrow
     #   botocore
     #   bson
@@ -4831,6 +4832,7 @@ requests==2.32.5 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   azure-core
     #   docker
     #   exchangelib

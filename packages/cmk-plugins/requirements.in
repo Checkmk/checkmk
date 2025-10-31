@@ -1,5 +1,8 @@
 kubernetes
+defusedxml
 netapp-ontap
 pydantic
+python-dateutil
 redfish
+requests
 urllib3

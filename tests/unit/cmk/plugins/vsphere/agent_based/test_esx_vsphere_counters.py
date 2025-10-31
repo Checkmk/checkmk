@@ -458,8 +458,10 @@ def test_discovery_counters_diskio() -> None:
     ) == [Service(item="SUMMARY")]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_counters_diskio() -> None:
+def test_check_counters_diskio(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(esx_vsphere_counters, "get_value_store", dict)
     assert list(
         esx_vsphere_counters.check_esx_vsphere_counters_diskio(
             "SUMMARY",

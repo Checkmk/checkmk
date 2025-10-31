@@ -12,6 +12,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
+from cmk.plugins.vsphere.agent_based import esx_vsphere_hostsystem_cpu_usage as mocktarget
 from cmk.plugins.vsphere.agent_based.esx_vsphere_hostsystem_cpu_usage import (
     check_esx_vsphere_hostsystem_cpu_usage,
     cluster_check_esx_vsphere_hostsystem_cpu_usage,
@@ -96,7 +97,6 @@ def test_discover_esx_vsphere_hostsystem_cpu_usage(
     assert list(discover_esx_vsphere_hostsystem_cpu_usage(section, None)) == discovered_service
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, check_results",
     [
@@ -150,12 +150,15 @@ def test_discover_esx_vsphere_hostsystem_cpu_usage(
     ],
 )
 def test_check_esx_vsphere_hostsystem_cpu(
-    section: Section | None, params: Mapping[str, object], check_results: CheckResult
+    monkeypatch: pytest.MonkeyPatch,
+    section: Section | None,
+    params: Mapping[str, object],
+    check_results: CheckResult,
 ) -> None:
+    monkeypatch.setattr(mocktarget, "get_value_store", dict)
     assert list(check_esx_vsphere_hostsystem_cpu_usage(params, section, None)) == check_results
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, check_results",
     [
@@ -301,8 +304,12 @@ def test_check_esx_vsphere_hostsystem_cpu(
     ],
 )
 def test_cluster_check_esx_vsphere_hostsystem_cpu(
-    section: Mapping[str, Section | None], params: Mapping[str, object], check_results: CheckResult
+    monkeypatch: pytest.MonkeyPatch,
+    section: Mapping[str, Section | None],
+    params: Mapping[str, object],
+    check_results: CheckResult,
 ) -> None:
+    monkeypatch.setattr(mocktarget, "get_value_store", dict)
     assert (
         list(
             cluster_check_esx_vsphere_hostsystem_cpu_usage(

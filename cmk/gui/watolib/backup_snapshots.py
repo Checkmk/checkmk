@@ -24,7 +24,6 @@ from typing import IO, Literal, NotRequired, TypedDict, TypeVar
 
 import cmk.utils.paths
 from cmk import trace
-from cmk.ccc.archive import BaseSafeTarFile, CheckmkTarArchive
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
@@ -344,7 +343,7 @@ def get_snapshot_status(
         if "check_mk.tar.gz" not in status["files"]:
             return
 
-        cmk_tar = access_snapshot(lambda x: _get_file_content(x, "check_mk.tar.gz"))
+        cmk_tar = io.BytesIO(access_snapshot(lambda x: _get_file_content(x, "check_mk.tar.gz")))
         snapshot_cmc = _file_exists_in_tar(cmk_tar, "conf.d/microcore.mk")
         using_cmc = (cmk.utils.paths.omd_root / "etc/check_mk/conf.d/microcore.mk").exists()
         if using_cmc and not snapshot_cmc:
@@ -474,43 +473,41 @@ def get_snapshot_status(
 def _list_tar_content(the_tarfile: str | IO[bytes]) -> dict[str, FileInfo]:
     files: dict[str, FileInfo] = {}
     try:
-        if isinstance(the_tarfile, str):
-            context = CheckmkTarArchive.from_path(Path(the_tarfile), compression="*")
+        if not isinstance(the_tarfile, str):
+            the_tarfile.seek(0)
+            with tarfile.open("r", fileobj=the_tarfile) as tar:
+                for x in tar.getmembers():
+                    files.update({x.name: {"size": x.size}})
         else:
-            context = CheckmkTarArchive.from_buffer(the_tarfile, compression="*")
-
-        with context as archive:
-            for member in archive:
-                files[member.name] = {"size": member.size}
+            with tarfile.open(the_tarfile, "r") as tar:
+                for x in tar.getmembers():
+                    files.update({x.name: {"size": x.size}})
 
     except Exception:
         return {}
-
     return files
 
 
-def _file_exists_in_tar(the_tarfile: bytes, filename: str) -> bool:
+def _file_exists_in_tar(the_tarfile: IO[bytes], filename: str) -> bool:
     try:
-        with CheckmkTarArchive.from_bytes(the_tarfile, compression="*") as tar:
-            for member in tar:
-                if member.name == filename:
-                    return True
+        the_tarfile.seek(0)
+        with tarfile.open("r", fileobj=the_tarfile) as tar:
+            return any(member.name == filename for member in tar)
     except (tarfile.TarError, OSError, EOFError):
-        return False
-    else:
         return False
 
 
 def _get_file_content(the_tarfile: str | IO[bytes], filename: str) -> bytes:
-    if isinstance(the_tarfile, str):
-        context = CheckmkTarArchive.from_path(Path(the_tarfile), compression="*")
+    if not isinstance(the_tarfile, str):
+        the_tarfile.seek(0)
+        with tarfile.open("r", fileobj=the_tarfile) as tar:
+            if obj := tar.extractfile(filename):
+                return obj.read()
     else:
-        context = CheckmkTarArchive.from_buffer(the_tarfile, compression="*")
+        with tarfile.open(the_tarfile, "r") as tar:
+            if obj := tar.extractfile(filename):
+                return obj.read()
 
-    with context as archive:
-        obj = archive.extractfile_by_name(filename)
-    if obj:
-        return obj.read()
     raise MKGeneralException(_("Failed to extract %s") % filename)
 
 
@@ -534,7 +531,7 @@ def snapshot_secret() -> bytes:
 
 
 def extract_snapshot(
-    tar: BaseSafeTarFile,
+    tar: tarfile.TarFile,
     domains: dict[str, DomainSpec],
 ) -> None:
     """Used to restore a configuration snapshot for "discard changes"""

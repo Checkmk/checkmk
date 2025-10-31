@@ -168,14 +168,6 @@ py_library(
 )
 
 py_library(
-    name = "archive",
-    srcs = ["cmk/ccc/archive.py"],
-    imports = ["."],
-    visibility = ["//visibility:public"],
-    deps = ["_init"],
-)
-
-py_library(
     name = "version",
     srcs = [
         "cmk/ccc/general_version_infos.py",
@@ -210,7 +202,6 @@ py_library(
 )
 
 _ALL = [
-    "archive",
     "cleanup",
     "config-path",
     "cpu-tracking",
@@ -380,21 +371,6 @@ py_test(
     deps = [
         "__test__",
         "crash-reporting",
-        requirement("pytest"),
-    ],
-)
-
-py_test(
-    name = "archive-tests",
-    size = "small",
-    srcs = [
-        "__test__.py",
-        "tests/test_archive.py",
-    ],
-    main = "__test__.py",
-    deps = [
-        "__test__",
-        "archive",
         requirement("pytest"),
     ],
 )

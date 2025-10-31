@@ -1239,7 +1239,6 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
         "cmk.utils",
         "cmk.discover_plugins",
     ),
-    ModulePath("buildscripts/scripts/build-cmk-container.py"): _allow(*PACKAGE_CCC),
     ModulePath("buildscripts/scripts/assert_build_artifacts.py"): _allow(*PACKAGE_CCC),
     ModulePath("buildscripts/scripts/publish_cloud_images.py"): _allow(*PACKAGE_CCC),
     ModulePath("buildscripts/scripts/unpublish-container-image.py"): _allow(*PACKAGE_CCC),

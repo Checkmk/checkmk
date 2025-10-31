@@ -892,7 +892,6 @@ TEST(LogWatchEventTest, TestNotSendAll) {
     EXPECT_TRUE(!result.empty());
     EXPECT_TRUE(result.size() < 100000);
     EXPECT_TRUE(result.find("EventLog <GTEST>") != std::string::npos);
-    // printf("OUTPUT:\n%s\n", result.c_str());
 
     x[cfg::vars::kLogWatchEventSendall] = old;
 }
@@ -924,10 +923,59 @@ TEST(LogWatchEventTest, TestNotSendAllVista) {
     EXPECT_TRUE(!result.empty());
     EXPECT_TRUE(result.size() < 100000);
     EXPECT_TRUE(result.find("EventLog Vista <GTEST>") != std::string::npos);
-    // printf("OUTPUT:\n%s\n", result.c_str());
 
     x[cfg::vars::kLogWatchEventSendall] = old;
     x[cfg::vars::kLogWatchEventVistaApi] = old_vista;
+}
+
+TEST(LogWatchEventTest, TestFilter) {
+    constexpr const char stamp[] = "EventLog Vista <GTEST>";
+    constexpr const char config[] = R"(
+global:
+    enabled: yes
+    sections: logwatch
+logwatch:
+    enabled: yes
+    sendall: no
+    vista_api: yes
+    logfile: #
+        - 'Application': warn context # allowed <crit|warn|all|off> + [context|nocontext]
+        - '*': off nocontext # allowed crit, warn, all, off, do not remove this
+    logfile_ids:
+)";
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    {
+        ASSERT_TRUE(temp_fs->loadContent(config));
+        XLOG::l(XLOG::kEvent)(stamp);
+        LogWatchEvent lwe;
+        lwe.loadConfig();
+        lwe.generateContent();
+        XLOG::l(XLOG::kEvent)(stamp);
+        const auto result = lwe.generateContent();
+        EXPECT_TRUE(result.find(stamp) != std::string::npos);
+    }
+    {
+        ASSERT_TRUE(
+            temp_fs->loadContent(std::string(config) + "        - '*': ;;20"));
+        XLOG::l(XLOG::kEvent)(stamp);
+        LogWatchEvent lwe;
+        lwe.loadConfig();
+        lwe.generateContent();
+        XLOG::l(XLOG::kEvent)(stamp);
+        const auto result = lwe.generateContent();
+        EXPECT_FALSE(result.find(stamp) != std::string::npos);
+    }
+    {
+        ASSERT_TRUE(
+            temp_fs->loadContent(std::string(config) + "        - '*': 20;;"));
+        XLOG::l(XLOG::kEvent)(stamp);
+        LogWatchEvent lwe;
+        lwe.loadConfig();
+        lwe.generateContent();
+        XLOG::l(XLOG::kEvent)(stamp);
+        const auto result = lwe.generateContent();
+        EXPECT_FALSE(result.find(stamp) == std::string::npos);
+    }
 }
 
 TEST(LogWatchEventTest, TestSkip) {

@@ -324,7 +324,7 @@ void LogWatchEvent::processEventIds(const YAML::Node &log_ids) {
         const auto line = ObtainString(l);
         if (line.has_value()) {
             auto id = EventFilter(*line);
-            event_filters_.emplace_back(std::move(id));
+            event_filters_.emplace(id.name(), std::move(id));
         }
     }
 }
@@ -525,6 +525,8 @@ std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
     return {};
 }
 
+using StateFilterMap = std::unordered_map<std::string, const EventFilter *>;
+
 namespace {
 void PrintEvent(LogWatchLimits lwl, std::string &out,
                 const std::string_view str) {
@@ -561,10 +563,35 @@ bool TooLong(LogWatchLimits lwl,
     return false;
 }
 
+StateFilterMap BuildStateFilterMap(const StateVector &states,
+                                   const EventFilters &filters) {
+    StateFilterMap result;
+    result.reserve(states.size());
+
+    auto wildcard_pos = filters.find("*");
+    const EventFilter *wildcard =
+        wildcard_pos != filters.end() ? &wildcard_pos->second : nullptr;
+
+    for (const auto &s : states) {
+        if (const auto it = filters.find(s.name_); it != filters.end()) {
+            result.emplace(s.name_, &it->second);
+        } else if (wildcard) {
+            result.emplace(s.name_, wildcard);
+        }
+    }
+
+    return result;
+}
+
 bool RecordAllowed(const std::string_view name,
                    const evl::EventLogRecordBase *record,
-                   const EventFilters &filters) {
-    return false;
+                   const StateFilterMap &filters) {
+    if (const auto it = filters.find(std::string{name}); it != filters.end()) {
+        if (it->second != nullptr) {
+            return it->second->checkId(record->eventId());
+        }
+    }
+    return true;
 }
 
 }  // namespace
@@ -576,13 +603,16 @@ std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
     std::string out;
     int64_t count = 0;
     auto start = std::chrono::steady_clock::now();
+    const auto f = BuildStateFilterMap({state}, filters);
     auto pos = evl::PrintEventLog(
         log, state.pos_, state.level_, state.context_, lwl.skip,
         [&out, lwl, &count, start](const std::string &str) {
             PrintEvent(lwl, out, str);
             return !TooMuch(lwl, out, count) && !TooLong(lwl, start);
         },
-        [](const evl::EventLogRecordBase *record) { return true; });
+        [&f, &state](const evl::EventLogRecordBase *record) {
+            return RecordAllowed(state.name_, record, f);
+        });
 
     return {pos, out};
 }
@@ -701,10 +731,10 @@ std::vector<fs::path> LogWatchEvent::makeStateFilesTable() const {
 
 std::optional<EventFilter> FindIds(std ::string_view name,
                                    std::vector<EventFilter> &ids) {
-    for (const auto &i : ids) {
-        if (name == i.name()) {
-            return i;
-        }
+    if (auto it = rs::find_if(
+            ids, [name](const EventFilter &f) { return f.name() == name; });
+        it != ids.end()) {
+        return *it;  // copy
     }
     return std::nullopt;
 }

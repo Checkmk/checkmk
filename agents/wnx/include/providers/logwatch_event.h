@@ -205,7 +205,7 @@ private:
 enum class EvlType { classic, vista };
 
 using LogWatchEntries = std::vector<LogWatchEntry>;
-using EventFilters = std::vector<EventFilter>;
+using EventFilters = std::unordered_map<std::string, EventFilter>;
 
 class LogWatchEvent final : public Asynchronous {
 public:

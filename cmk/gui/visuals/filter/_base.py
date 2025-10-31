@@ -270,7 +270,7 @@ class FilterTime(Filter):
         *,
         title: str | LazyString,
         sort_index: int,
-        info: Literal["comment", "downtime", "event", "history", "host", "log", "service"],
+        info: Literal["comment", "crash", "downtime", "event", "history", "host", "log", "service"],
         query_filter: query_filters.TimeQuery,
         is_show_more: bool = False,
     ):

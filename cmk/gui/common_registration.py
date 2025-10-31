@@ -227,6 +227,7 @@ def register(
         command_registry,
         config_variable_group_registry,
         config_variable_registry,
+        filter_registry,
     )
     watolib_registration.register(
         edition(paths.omd_root),

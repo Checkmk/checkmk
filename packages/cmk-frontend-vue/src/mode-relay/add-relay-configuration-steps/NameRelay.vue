@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import { type Relay, getRelayCollection } from '@/lib/rest-api-client/relay/client'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
@@ -23,6 +24,7 @@ const { _t } = usei18n()
 defineProps<CmkWizardStepProps>()
 
 const relayName = defineModel<string>({ default: '' })
+const savedRelays = ref<Relay[]>([])
 
 const displayErrors = ref(false)
 
@@ -31,6 +33,8 @@ const getNameErrors = () => {
   const name = relayName.value.trim()
   if (name.length === 0) {
     errors.push('A relay name is required')
+  } else if (savedRelays.value.some((relay) => relay.alias === name)) {
+    errors.push('This relay name is already in use')
   }
   return errors
 }
@@ -41,6 +45,7 @@ const nameErrors = computed(() => {
 
 async function validate(): Promise<boolean> {
   displayErrors.value = true
+  savedRelays.value = await getRelayCollection()
   return getNameErrors().length === 0
 }
 </script>

@@ -3,22 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+import argparse
 from collections.abc import Mapping, Sequence
-from unittest.mock import Mock
 
 import pytest
 
 from cmk.plugins.vsphere.special_agent.agent_vsphere import (
+    ESXConnection,
     eval_multipath_info,
     fetch_virtual_machines,
     get_section_snapshot_summary,
 )
 
 
-def _build_id(lun_id):
+def _build_id(lun_id: str) -> str:
     # Taken from https://kb.vmware.com/s/article/2078730
     assert len(lun_id) == 32 or len(lun_id) == 0
     uuid_type = "02"
@@ -67,44 +66,50 @@ def test_eval_multipath_info(
     assert eval_multipath_info("", PROP_NAME, propset) == expected
 
 
-def test_cloning_vm_is_processed(mocker: Mock) -> None:
+class FakeConnection(ESXConnection):
+    """Encapsulates the API calls to the ESX system"""
+
+    def __init__(self) -> None:
+        pass
+
+    def query_server(self, method: str, **kwargs: str) -> str:
+        return (
+            # this is thinned out data
+            '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenc="http://schemas.xmlsoa'
+            'p.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="h'
+            'ttp://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap'
+            'env:Body><RetrievePropertiesExResponse xmlns="urn:vim25"><returnval><token>0</token><objects'
+            '><obj type="VirtualMachine">vm-111</obj><propSet><name>config.datastoreUrl</name><val xsi:ty'
+            'pe="ArrayOfVirtualMachineConfigInfoDatastoreUrlPair"><VirtualMachineConfigInfoDatastoreUrlPa'
+            'ir xsi:type="VirtualMachineConfigInfoDatastoreUrlPair"><name>Storage</name><url>/vmfs/volume'
+            "s/11111111-22222222-0000-000000000000</url></VirtualMachineConfigInfoDatastoreUrlPair></val>"
+            '</propSet><propSet><name>config.guestFullName</name><val xsi:type="xsd:string">Red Hat Enter'
+            "prise Linux 7 (64 Bit)</val></propSet><propSet><name>config.hardware.device</name><val xsi:t"
+            'ype="ArrayOfVirtualDevice"><VirtualDevice xsi:type="VirtualIDEController"><key>200</key><dev'
+            "iceInfo><label>IDE 0</label><summary>IDE 0</summary></deviceInfo><busNumber>0</busNumber></V"
+            'irtualDevice></val></propSet><propSet><name>config.hardware.memoryMB</name><val xsi:type="xs'
+            'd:int">33333</val></propSet><propSet><name>config.uuid</name><val xsi:type="xsd:string">1111'
+            "1111-2222-3333-4444-555555555555</val></propSet><propSet><name>guestHeartbeatStatus</name><v"
+            'al xsi:type="ManagedEntityStatus">green</val></propSet><propSet><name>name</name><val xsi:ty'
+            'pe="xsd:string">AAA-BBBBBBB</val></propSet><propSet><name>runtime.host</name><val type="Host'
+            'System" xsi:type="ManagedObjectReference">host-222</val></propSet></objects><objects><obj ty'
+            'pe="VirtualMachine">vm-888</obj><propSet><name>guestHeartbeatStatus</name><val xsi:type="Man'
+            'agedEntityStatus">gray</val></propSet><propSet><name>name</name><val xsi:type="xsd:string">A'
+            'AA-BBBB-CCCCC</val></propSet><propSet><name>runtime.powerState</name><val xsi:type="VirtualM'
+            'achinePowerState">poweredOff</val></propSet></objects></returnval></RetrievePropertiesExResp'
+            "onse></soapenv:Body></soapenv:Envelope>"
+        )
+
+
+def test_cloning_vm_is_processed() -> None:
     """
     VMs that are in the process of being cloned do not define runtime.host.
     Make sure that this does not lead to a KeyError.
     """
-    data = (
-        # this is thinned out data
-        '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenc="http://schemas.xmlsoa'
-        'p.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="h'
-        'ttp://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap'
-        'env:Body><RetrievePropertiesExResponse xmlns="urn:vim25"><returnval><token>0</token><objects'
-        '><obj type="VirtualMachine">vm-111</obj><propSet><name>config.datastoreUrl</name><val xsi:ty'
-        'pe="ArrayOfVirtualMachineConfigInfoDatastoreUrlPair"><VirtualMachineConfigInfoDatastoreUrlPa'
-        'ir xsi:type="VirtualMachineConfigInfoDatastoreUrlPair"><name>Storage</name><url>/vmfs/volume'
-        "s/11111111-22222222-0000-000000000000</url></VirtualMachineConfigInfoDatastoreUrlPair></val>"
-        '</propSet><propSet><name>config.guestFullName</name><val xsi:type="xsd:string">Red Hat Enter'
-        "prise Linux 7 (64 Bit)</val></propSet><propSet><name>config.hardware.device</name><val xsi:t"
-        'ype="ArrayOfVirtualDevice"><VirtualDevice xsi:type="VirtualIDEController"><key>200</key><dev'
-        "iceInfo><label>IDE 0</label><summary>IDE 0</summary></deviceInfo><busNumber>0</busNumber></V"
-        'irtualDevice></val></propSet><propSet><name>config.hardware.memoryMB</name><val xsi:type="xs'
-        'd:int">33333</val></propSet><propSet><name>config.uuid</name><val xsi:type="xsd:string">1111'
-        "1111-2222-3333-4444-555555555555</val></propSet><propSet><name>guestHeartbeatStatus</name><v"
-        'al xsi:type="ManagedEntityStatus">green</val></propSet><propSet><name>name</name><val xsi:ty'
-        'pe="xsd:string">AAA-BBBBBBB</val></propSet><propSet><name>runtime.host</name><val type="Host'
-        'System" xsi:type="ManagedObjectReference">host-222</val></propSet></objects><objects><obj ty'
-        'pe="VirtualMachine">vm-888</obj><propSet><name>guestHeartbeatStatus</name><val xsi:type="Man'
-        'agedEntityStatus">gray</val></propSet><propSet><name>name</name><val xsi:type="xsd:string">A'
-        'AA-BBBB-CCCCC</val></propSet><propSet><name>runtime.powerState</name><val xsi:type="VirtualM'
-        'achinePowerState">poweredOff</val></propSet></objects></returnval></RetrievePropertiesExResp'
-        "onse></soapenv:Body></soapenv:Envelope>"
-    )
 
-    connection = mocker.Mock()
-    connection.query_server = mocker.Mock(return_value=data)
-    opt = mocker.Mock()
-    opt.skip_placeholder_vm = False
+    opt = argparse.Namespace(skip_placeholder_vm=False, vm_piggyname=None, spaces="underscore")
 
-    result = fetch_virtual_machines(connection, hostsystems={}, datastores={}, opt=opt)
+    result = fetch_virtual_machines(FakeConnection(), hostsystems={}, datastores={}, opt=opt)
 
     assert result == (
         {

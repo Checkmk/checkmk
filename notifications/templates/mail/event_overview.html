@@ -39,7 +39,13 @@
         <td style="padding: 5px 0;
                    margin: 0;
                    line-height: 1.4;
-                   mso-line-height-rule: exactly">{{ data.SHORTDATETIME }}</td>
+                   mso-line-height-rule: exactly">
+            {% if service_notification %}
+               {{ data.LASTSERVICESTATECHANGE | timestamp() if data.get('LASTSERVICESTATECHANGE') else 'N/A'}}
+            {% else %}
+               {{ data.LASTHOSTSTATECHANGE | timestamp() if data.get('LASTHOSTSTATECHANGE') else 'N/A'}}
+            {% endif %}
+        </td>
     </tr>
     <tr>
         <td width="100"

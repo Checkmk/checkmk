@@ -446,13 +446,17 @@ class Section:
     def _formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + "\n"
 
-    def add(self, info):
+    def add(self, info: str | Sequence[object] | Sequence[Sequence[object]]) -> None:
         if not info:
             return
-        if isinstance(info[0], list | tuple):  # we got a list of lines
+        if isinstance(info, str):
+            self._cont.append(info + "\n")
+            return
+
+        if isinstance(info[0], list | tuple):  # we got a list of list of lines
             for row in info:
                 self._cont.append(self._formatline(row))
-        else:  # assume one single line
+        else:  # we got a list of lines
             self._cont.append(self._formatline(info))
 
     def write(self, write_empty: bool = False) -> None:
@@ -510,10 +514,10 @@ class AzureSection(Section):
 
 class _AzureBaseLabelsSection(AzureSection):
     def _initialize_data(self, labels: Mapping[str, str], tags: Mapping[str, str]) -> None:
-        super().add((json.dumps(labels),))  # first line: labels
-        super().add((json.dumps(tags),))  # second line: tags
+        super().add(json.dumps(labels))  # first line: labels
+        super().add(json.dumps(tags))  # second line: tags
 
-    def add(self, info):
+    def add(self, info: str | Sequence[object] | Sequence[Sequence[object]]) -> None:
         raise NotImplementedError("Use constructor to add labels and tags")
 
 

@@ -1260,7 +1260,9 @@ async def process_cosmosdb(
                 db_resource_info = {
                     "id": database_name,  # id = name of the database
                     "name": database_name,
-                    "type": "Microsoft.DocumentDB/databaseAccounts/cosmosdb_databases",  # fake type to fake the section (last part after /)
+                    # fake type to fake the section (last part after /),
+                    # this will also be the label "entity"
+                    "type": "Microsoft.DocumentDB/databaseAccounts/cosmos_database",
                     # data from cosmos account:
                     "location": resource.info.get("location"),
                     "group": resource.info.get("group"),

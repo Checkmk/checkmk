@@ -5,6 +5,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -21,3 +22,14 @@ def loading_transition(template: LoadingTransition, delay_ms: int = 1000) -> Gen
             HTML(output_funnel.drain(), False),
             onclick=f"cmk.utils.makeLoadingTransition('{template.value}', {delay_ms});",
         )
+
+
+def with_loading_transition(
+    content: HTML,
+    template: LoadingTransition,
+    delay_ms: int = 1000,
+) -> HTML:
+    return HTMLWriter.render_span(
+        content,
+        onclick=f"cmk.utils.makeLoadingTransition('{template.value}', {delay_ms});",
+    )

@@ -24,6 +24,7 @@ from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
+from cmk.gui.utils.loading_transition import LoadingTransition, with_loading_transition
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.utils.html import replace_state_markers
 from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources
@@ -206,10 +207,11 @@ def query_limit_exceeded_warn(limit: int | None, user_config: LoggedInUser) -> N
     """Compare query reply against limits, warn in the GUI about incompleteness"""
     text = HTML.with_escaping(_("Your query produced more than %d results. ") % limit)
 
+    ignore_limit_link = None
     if request.get_ascii_input("limit", "soft") == "soft" and user_config.may(
         "general.ignore_soft_limit"
     ):
-        text += HTMLWriter.render_a(
+        ignore_limit_link = HTMLWriter.render_a(
             _("Repeat query and allow more results."),
             target="_self",
             href=makeuri(request, [("limit", "hard")]),
@@ -217,11 +219,14 @@ def query_limit_exceeded_warn(limit: int | None, user_config: LoggedInUser) -> N
     elif request.get_ascii_input("limit") == "hard" and user_config.may(
         "general.ignore_hard_limit"
     ):
-        text += HTMLWriter.render_a(
+        ignore_limit_link = HTMLWriter.render_a(
             _("Repeat query without limit."),
             target="_self",
             href=makeuri(request, [("limit", "none")]),
         )
+
+    if ignore_limit_link is not None:
+        text += with_loading_transition(ignore_limit_link, template=LoadingTransition.table)
 
     text += escaping.escape_to_html_permissive(
         " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")

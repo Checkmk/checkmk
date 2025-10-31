@@ -114,14 +114,10 @@ charset-normalizer==3.4.1 \
     --hash=sha256:fd4ec41f914fa74ad1b8304bbc634b3de73d2a0889bd32076342a573e0779e00 \
     --hash=sha256:ffc9202a29ab3920fa812879e95a9e78b2465fd10be7fcbd042899695d75e616
     # via requests
-checkmk-dev-tools==1.0.2 \
-    --hash=sha256:246f36b21e4b03563bafa09cb21713111468f0d7ee37220a8ed26c0c0ce93849 \
-    --hash=sha256:e39ae7befef017f350a6fb90cb6b0111338b720708c8723ec89374ca95bc1182
+checkmk-dev-tools==1.1.0 \
+    --hash=sha256:883fa35f96fa0d8d53f22b81615348929e136f3e604f14269065c86fe45ab744 \
+    --hash=sha256:96105cfad2149dfa0bdde93f0e146b0e273786f37127db1ecf5520dcf35d9a85
     # via -r omd/requirements.txt
-decorator==5.2.1 \
-    --hash=sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360 \
-    --hash=sha256:d316bb415a2d9e2d2b3abcc4084c6502fc09240e292cd76a76afc106a1c8e04a
-    # via retry
 docutils==0.20.1 \
     --hash=sha256:96f387a2c5562db4476f09f13bbab2192e764cac08ebbf3a34a95d9b1e4a59d6 \
     --hash=sha256:f08a4e276c3a1583a86dce3e34aba3fe04d02bba2dd51ed16106244e8a923e3b
@@ -226,10 +222,6 @@ pbr==6.1.0 \
     --hash=sha256:788183e382e3d1d7707db08978239965e8b9e4e5ed42669bf4758186734d5f24 \
     --hash=sha256:a776ae228892d8013649c0aeccbb3d5f99ee15e005a4cbb7e61d55a067b28a2a
     # via python-jenkins
-py==1.11.0 \
-    --hash=sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719 \
-    --hash=sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378
-    # via retry
 pydantic==2.10.4 \
     --hash=sha256:597e135ea68be3a37552fb524bc7d0d66dcf93d395acd93a00682f1efcb8ee3d \
     --hash=sha256:82f12e9723da6de4fe2ba888b5971157b3be7ad914267dea8f05f82b28254f06
@@ -363,10 +355,6 @@ requests==2.32.3 \
     # via
     #   python-jenkins
     #   sphinx
-retry==0.9.2 \
-    --hash=sha256:ccddf89761fa2c726ab29391837d4327f819ea14d244c232a1d24c67a2f98606 \
-    --hash=sha256:f8bfa8b99b69c4506d6f5bd3b0aabf77f98cdb17f3c9fc3f5ca820033336fba4
-    # via checkmk-dev-tools
 rich==13.9.4 \
     --hash=sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098 \
     --hash=sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90
@@ -427,9 +415,9 @@ sphinxcontrib-serializinghtml==2.0.0 \
     --hash=sha256:6e2cb0eef194e10c27ec0023bfeb25badbbb5868244cf5bc5bdc04e4464bf331 \
     --hash=sha256:e9d912827f872c029017a53f0ef2180b327c3f7fd23c87229f7a8e8b70031d4d
     # via sphinx
-trickkiste==0.2.2 \
-    --hash=sha256:17942721921b2df2d814a29c452b3951579238774e48bd9108f11c2863f2d6e6 \
-    --hash=sha256:3e9ffe162e84db20106fce0ad913694b3264471b210e0db3788488af90920c91
+trickkiste==0.3.4 \
+    --hash=sha256:468ea9dc180ac5b76e9d62ce4f8a6ba2748aaf7e82dc63263cac5ca60897b29f \
+    --hash=sha256:d9168574d20f1d78b17fd2cc352943dcb930b9273bfd62d13c4e94aabcb1ca34
     # via checkmk-dev-tools
 typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \

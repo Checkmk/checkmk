@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
-from collections.abc import Sequence
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -22,10 +20,9 @@ from cmk.plugins.vsphere.agent_based.esx_vsphere_snapshot import (
 )
 from cmk.plugins.vsphere.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
 from cmk.plugins.vsphere.lib.esx_vsphere import SectionESXVm
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
-def test_parse_esx_vsphere_snapshots():
+def test_parse_esx_vsphere_snapshots() -> None:
     assert parse_esx_vsphere_snapshots(
         [['{"time": 0, "systime": null, "state": "On", "name": "foo", "vm": "bar"}']]
     ) == [Snapshot(time=0, systime=None, state="On", name="foo", vm="bar")]
@@ -91,7 +88,19 @@ def test_check_snapshots() -> None:
     assert list(
         check_snapshots(
             {},
-            _esx_vm_section(["871", "1605626114", "poweredOn", "Snapshotname"], "1606089600"),
+            SectionESXVm(
+                mounted_devices=(),
+                snapshots=["871", "1605626114", "poweredOn", "Snapshotname"],
+                status=None,
+                power_state=None,
+                memory=None,
+                cpu=None,
+                datastores=(),
+                heartbeat=None,
+                host=None,
+                name="test_vm_name",
+                systime="1606089600",
+            ),
         )
     ) == [
         Result(state=State.OK, summary="Count: 1"),
@@ -123,16 +132,14 @@ def test_check_multi_snapshots() -> None:
         ]
     )
     assert parsed is not None
-    assert list(check_snapshots({}, _esx_vm_section(parsed.snapshots, parsed.systime))) == [
+    assert list(check_snapshots({}, parsed)) == [
         Result(state=State.OK, summary="Count: 2"),
-        Result(state=State.OK, summary="Powered on: test_vm_name/LinuxI Testsnapshot"),
-        Result(
-            state=State.OK, summary="Latest: test_vm_name/LinuxI Testsnapshot 2014-10-22 11:37:07"
-        ),
+        Result(state=State.OK, summary="Powered on: LinuxI Testsnapshot"),
+        Result(state=State.OK, summary="Latest: LinuxI Testsnapshot 2014-10-22 11:37:07"),
         Result(state=State.OK, notice="Age of latest: 6 years 34 days"),
         Result(
             state=State.OK,
-            summary="Oldest: test_vm_name/20130318_105600_snapshot_LinuxI 2013-03-18 08:52:14",
+            summary="Oldest: 20130318_105600_snapshot_LinuxI 2013-03-18 08:52:14",
         ),
         Result(state=State.OK, notice="Age of oldest: 7 years 252 days"),
     ]
@@ -158,19 +165,15 @@ def test_check_one_snapshot() -> None:
         ]
     )
     assert parsed is not None
-    assert list(
-        check_snapshots(
-            {"age_oldest": (30, 3600)}, _esx_vm_section(parsed.snapshots, parsed.systime)
-        )
-    ) == [
+    assert list(check_snapshots({"age_oldest": (30, 3600)}, parsed)) == [
         Result(state=State.OK, summary="Count: 1"),
         Result(
             state=State.OK,
-            summary="Powered on: test_vm_name/VM-Snapshot 12.06.2019 10:56 UTC+02:00",
+            summary="Powered on: VM-Snapshot 12.06.2019 10:56 UTC+02:00",
         ),
         Result(
             state=State.OK,
-            summary="Latest: test_vm_name/VM-Snapshot 12.06.2019 10:56 UTC+02:00 2019-06-12 06:57:55",
+            summary="Latest: VM-Snapshot 12.06.2019 10:56 UTC+02:00 2019-06-12 06:57:55",
         ),
         Result(state=State.OK, notice="Age of latest: 10 days 7 hours"),
         Result(
@@ -195,12 +198,12 @@ def test_time_reference_snapshot() -> None:
     assert list(
         check_snapshots(
             {"age": (86400, 172800), "age_oldest": (86400, 172800)},
-            _esx_vm_section(parsed.snapshots, parsed.systime),
+            parsed,
         )
     ) == [
         Result(state=State.OK, summary="Count: 1"),
-        Result(state=State.OK, summary="Powered on: test_vm_name/FransTeil2"),
-        Result(state=State.OK, summary="Latest: test_vm_name/FransTeil2 2020-07-06 13:23:08"),
+        Result(state=State.OK, summary="Powered on: FransTeil2"),
+        Result(state=State.OK, summary="Latest: FransTeil2 2020-07-06 13:23:08"),
         Result(
             state=State.CRIT,
             summary="Age of latest: 1 year 350 days (warn/crit at 1 day 0 hours/2 days 0 hours)",
@@ -212,7 +215,3 @@ def test_time_reference_snapshot() -> None:
         ),
         Metric("age_oldest", 61814212.0, levels=(86400.0, 172800.0), boundaries=(0.0, None)),
     ]
-
-
-def _esx_vm_section(snapshots: Sequence[str], systime: str | None) -> SectionESXVm:
-    return esx_vm_section(snapshots=snapshots, systime=systime, name="test_vm_name")

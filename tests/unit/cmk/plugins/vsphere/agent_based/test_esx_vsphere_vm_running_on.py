@@ -9,7 +9,6 @@
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_running_on
 from cmk.plugins.vsphere.lib.esx_vsphere import SectionESXVm
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
 def test_parse_esx_vsphere_running_on_host():
@@ -42,4 +41,16 @@ def test_check_running_on_host_missing() -> None:
 
 
 def _esx_vm_section(host: str | None) -> SectionESXVm:
-    return esx_vm_section(host=host)
+    return SectionESXVm(
+        mounted_devices=(),
+        snapshots=(),
+        status=None,
+        power_state=None,
+        memory=None,
+        cpu=None,
+        datastores=(),
+        heartbeat=None,
+        host=host,
+        name=None,
+        systime=None,
+    )

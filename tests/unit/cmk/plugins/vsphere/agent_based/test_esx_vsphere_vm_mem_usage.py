@@ -11,7 +11,6 @@ import pytest
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_mem_usage
 from cmk.plugins.vsphere.lib import esx_vsphere
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
 @pytest.mark.parametrize(
@@ -56,22 +55,35 @@ def test_parse_esx_vsphere_memory(
     vm_values: Mapping[str, Sequence[str]],
     expected_result: esx_vsphere.ESXMemory,
 ) -> None:
-    assert esx_vsphere_vm._parse_esx_memory_section(vm_values) == expected_result
+    assert esx_vsphere_vm.parse_esx_memory_section(vm_values) == expected_result
 
 
 @pytest.mark.parametrize(
     ["section", "expected_result"],
     [
         pytest.param(
-            esx_vm_section(
-                memory=None,
+            esx_vsphere.SectionESXVm(
+                mounted_devices=(),
+                snapshots=(),
+                status=None,
                 power_state="poweredOff",
+                memory=None,
+                cpu=None,
+                datastores=(),
+                heartbeat=None,
+                host=None,
+                name=None,
+                systime=None,
             ),
             [],
             id="off",
         ),
         pytest.param(
-            esx_vm_section(
+            esx_vsphere.SectionESXVm(
+                mounted_devices=(),
+                snapshots=(),
+                status=None,
+                power_state="poweredOn",
                 memory=esx_vsphere.ESXMemory(
                     host_usage=1,
                     guest_usage=1,
@@ -79,7 +91,12 @@ def test_parse_esx_vsphere_memory(
                     private=1,
                     shared=1,
                 ),
-                power_state="poweredOn",
+                cpu=None,
+                datastores=(),
+                heartbeat=None,
+                host=None,
+                name=None,
+                systime=None,
             ),
             [
                 Service(),
@@ -98,9 +115,18 @@ def test_discovery_mem_usage(
     ["section", "expected_result"],
     [
         pytest.param(
-            esx_vm_section(
-                memory=None,
+            esx_vsphere.SectionESXVm(
+                mounted_devices=(),
+                snapshots=(),
+                status=None,
                 power_state="poweredOff",
+                memory=None,
+                cpu=None,
+                datastores=(),
+                heartbeat=None,
+                host=None,
+                name=None,
+                systime=None,
             ),
             [
                 Result(state=State.OK, summary="VM is poweredOff, skipping this check"),
@@ -108,7 +134,11 @@ def test_discovery_mem_usage(
             id="off",
         ),
         pytest.param(
-            esx_vm_section(
+            esx_vsphere.SectionESXVm(
+                mounted_devices=(),
+                snapshots=(),
+                status=None,
+                power_state="poweredOn",
                 memory=esx_vsphere.ESXMemory(
                     host_usage=1,
                     guest_usage=1,
@@ -116,7 +146,12 @@ def test_discovery_mem_usage(
                     private=1,
                     shared=1,
                 ),
-                power_state="poweredOn",
+                cpu=None,
+                datastores=(),
+                heartbeat=None,
+                host=None,
+                name=None,
+                systime=None,
             ),
             [
                 Result(state=State.OK, summary="Host: 1 B"),
@@ -133,7 +168,11 @@ def test_discovery_mem_usage(
             id="data from vCenter",
         ),
         pytest.param(
-            esx_vm_section(
+            esx_vsphere.SectionESXVm(
+                mounted_devices=(),
+                snapshots=(),
+                status=None,
+                power_state="poweredOn",
                 memory=esx_vsphere.ESXMemory(
                     host_usage=1,
                     guest_usage=1,
@@ -141,7 +180,12 @@ def test_discovery_mem_usage(
                     private=None,
                     shared=0,
                 ),
-                power_state="poweredOn",
+                cpu=None,
+                datastores=(),
+                heartbeat=None,
+                host=None,
+                name=None,
+                systime=None,
             ),
             [
                 Result(state=State.OK, summary="Host: 1 B"),

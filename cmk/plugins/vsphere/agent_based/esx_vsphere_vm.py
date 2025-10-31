@@ -32,13 +32,13 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionESXVm | None:
         mounted_devices=grouped_values.get("config.hardware.device", []),
         snapshots=grouped_values.get("snapshot.rootSnapshotList", []),
         status=_parse_vm_status(grouped_values),
-        heartbeat=_parse_esx_vm_heartbeat_status(grouped_values),
+        heartbeat=parse_esx_vm_heartbeat_status(grouped_values),
         power_state=_parse_esx_power_state(grouped_values),
-        memory=_parse_esx_memory_section(grouped_values),
-        cpu=_parse_esx_cpu_section(grouped_values),
-        datastores=_parse_esx_datastore_section(grouped_values),
+        memory=parse_esx_memory_section(grouped_values),
+        cpu=parse_esx_cpu_section(grouped_values),
+        datastores=parse_esx_datastore_section(grouped_values),
         host=_parse_esx_vm_running_on_host(grouped_values),
-        name=_parse_esx_vm_name(grouped_values),
+        name=parse_esx_vm_name(grouped_values),
         systime=_parse_esx_systime(grouped_values),
     )
 
@@ -49,7 +49,7 @@ def _parse_vm_status(vm_values: Mapping[str, Sequence[str]]) -> ESXStatus | None
     return ESXStatus(vm_values["guest.toolsVersionStatus"][0])
 
 
-def _parse_esx_vm_name(vm_values: Mapping[str, Sequence[str]]) -> str | None:
+def parse_esx_vm_name(vm_values: Mapping[str, Sequence[str]]) -> str | None:
     if "name" not in vm_values:
         return None
 
@@ -63,7 +63,7 @@ def _parse_esx_systime(vm_values: Mapping[str, Sequence[str]]) -> str | None:
     return vm_values["systime"][0]
 
 
-def _parse_esx_vm_heartbeat_status(vm_values: Mapping[str, Sequence[str]]) -> HeartBeat | None:
+def parse_esx_vm_heartbeat_status(vm_values: Mapping[str, Sequence[str]]) -> HeartBeat | None:
     if "guestHeartbeatStatus" not in vm_values:
         return None
 
@@ -89,7 +89,7 @@ def _parse_esx_power_state(vm_values: Mapping[str, Sequence[str]]) -> str | None
     return vm_values["runtime.powerState"][0]
 
 
-def _parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemory | None:
+def parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemory | None:
     """Parse memory specific values from ESX VSphere VM agent output"""
     entries_mandatory = {
         "hostMemoryUsage": "host_usage",
@@ -121,7 +121,7 @@ def _parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemo
     return ESXMemory.model_validate(memory_values)
 
 
-def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | None:
+def parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | None:
     """Parse cpu specific values from ESX VSphere VM agent output"""
     try:
         return ESXCpu(
@@ -133,7 +133,7 @@ def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | N
         return None
 
 
-def _parse_esx_datastore_section(
+def parse_esx_datastore_section(
     vm_values: Mapping[str, Sequence[str]],
 ) -> list[ESXDataStore] | None:
     """Parse datastores specific values

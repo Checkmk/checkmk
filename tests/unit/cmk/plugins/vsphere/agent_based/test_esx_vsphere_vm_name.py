@@ -3,25 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Result, State
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_name
 from cmk.plugins.vsphere.lib.esx_vsphere import SectionESXVm
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
-def test_parse_esx_vsphere_name():
-    name = esx_vsphere_vm._parse_esx_vm_name({"name": ["scwagprc01.widag.local"]})
+def test_parse_esx_vsphere_name() -> None:
+    name = esx_vsphere_vm.parse_esx_vm_name({"name": ["scwagprc01.widag.local"]})
     assert name == "scwagprc01.widag.local"
 
 
 def test_check_name() -> None:
-    name = "host"
-    check_result = list(esx_vsphere_vm_name.check_name(_esx_vm_section(name)))
+    section = SectionESXVm(
+        mounted_devices=(),
+        snapshots=(),
+        status=None,
+        power_state=None,
+        memory=None,
+        cpu=None,
+        datastores=(),
+        heartbeat=None,
+        host=None,
+        name=(name := "host"),
+        systime=None,
+    )
+    check_result = list(esx_vsphere_vm_name.check_name(section))
     results = [r for r in check_result if isinstance(r, Result)]
     assert len(results) == 1
     assert results[0].state == State.OK
@@ -29,10 +38,18 @@ def test_check_name() -> None:
 
 
 def test_check_name_missing() -> None:
-    name = None
+    section = SectionESXVm(
+        mounted_devices=(),
+        snapshots=(),
+        status=None,
+        power_state=None,
+        memory=None,
+        cpu=None,
+        datastores=(),
+        heartbeat=None,
+        host=None,
+        name=None,
+        systime=None,
+    )
     with pytest.raises(IgnoreResultsError):
-        list(esx_vsphere_vm_name.check_name(_esx_vm_section(name)))
-
-
-def _esx_vm_section(name: str | None) -> SectionESXVm:
-    return esx_vm_section(name=name)
+        list(esx_vsphere_vm_name.check_name(section))

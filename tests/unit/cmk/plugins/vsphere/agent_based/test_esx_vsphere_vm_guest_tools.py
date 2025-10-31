@@ -9,7 +9,6 @@ import pytest
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_guest_tools
 from cmk.plugins.vsphere.lib.esx_vsphere import ESXStatus, SectionESXVm
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
 def test_parse_esx_vsphere_guest_tools() -> None:
@@ -56,4 +55,16 @@ def test_check_guest_tools_with_params() -> None:
 
 
 def _esx_vm_section(status: ESXStatus | None) -> SectionESXVm:
-    return esx_vm_section(status=status)
+    return SectionESXVm(
+        mounted_devices=(),
+        snapshots=(),
+        status=status,
+        power_state=None,
+        memory=None,
+        cpu=None,
+        datastores=(),
+        heartbeat=None,
+        host=None,
+        name=None,
+        systime=None,
+    )

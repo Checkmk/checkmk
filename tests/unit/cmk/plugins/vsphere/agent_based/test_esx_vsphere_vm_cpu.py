@@ -3,24 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
-
-from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import Metric, Result
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_cpu
 from cmk.plugins.vsphere.lib import esx_vsphere
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
-class ESXCpuFactory(ModelFactory):
-    __model__ = esx_vsphere.ESXCpu
-
-
-def test_parse_esx_vsphere_cpu():
-    parsed_section = esx_vsphere_vm._parse_esx_cpu_section(
+def test_parse_esx_vsphere_cpu() -> None:
+    parsed_section = esx_vsphere_vm.parse_esx_cpu_section(
         {
             "summary.quickStats.overallCpuUsage": ["1000"],
             "config.hardware.numCPU": ["1"],
@@ -32,19 +22,47 @@ def test_parse_esx_vsphere_cpu():
     )
 
 
-def test_check_cpu():
-    cpu_section = ESXCpuFactory.build(overall_usage=1000, cpus_count=1)
-    check_result = list(esx_vsphere_vm_cpu.check_cpu(_esx_vm_section(cpu_section)))
+def test_check_cpu() -> None:
+    section = esx_vsphere.SectionESXVm(
+        mounted_devices=(),
+        snapshots=(),
+        status=None,
+        power_state=None,
+        memory=None,
+        cpu=esx_vsphere.ESXCpu(
+            overall_usage=1000,
+            cpus_count=1,
+            cores_per_socket=0,
+        ),
+        datastores=(),
+        heartbeat=None,
+        host=None,
+        name=None,
+        systime=None,
+    )
+    check_result = list(esx_vsphere_vm_cpu.check_cpu(section))
     results = [r for r in check_result if isinstance(r, Result)]
     assert [r.summary for r in results] == ["demand is 1.000 Ghz, 1 virtual CPUs"]
 
 
-def test_check_cpu_usage_metrics():
-    cpu_section = ESXCpuFactory.build()
-    check_result = list(esx_vsphere_vm_cpu.check_cpu(_esx_vm_section(cpu_section)))
+def test_check_cpu_usage_metrics() -> None:
+    section = esx_vsphere.SectionESXVm(
+        mounted_devices=(),
+        snapshots=(),
+        status=None,
+        power_state=None,
+        memory=None,
+        cpu=esx_vsphere.ESXCpu(
+            overall_usage=0,
+            cpus_count=0,
+            cores_per_socket=0,
+        ),
+        datastores=(),
+        heartbeat=None,
+        host=None,
+        name=None,
+        systime=None,
+    )
+    check_result = list(esx_vsphere_vm_cpu.check_cpu(section))
     metrics = [r for r in check_result if isinstance(r, Metric)]
     assert [m.name for m in metrics] == ["demand"]
-
-
-def _esx_vm_section(cpu: esx_vsphere.ESXCpu) -> esx_vsphere.SectionESXVm:
-    return esx_vm_section(cpu=cpu)

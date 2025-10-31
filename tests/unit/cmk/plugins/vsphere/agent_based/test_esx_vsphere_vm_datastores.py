@@ -7,18 +7,13 @@
 # mypy: disable-error-code="type-arg"
 
 
-from collections.abc import Sequence
-
-from polyfactory.factories.pydantic_factory import ModelFactory
-
 from cmk.agent_based.v2 import Result
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_datastores
 from cmk.plugins.vsphere.lib import esx_vsphere
-from tests.unit.cmk.plugins.vsphere.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 
-def test_parse_esx_vsphere_datastore():
-    parsed_section = esx_vsphere_vm._parse_esx_datastore_section(
+def test_parse_esx_vsphere_datastore() -> None:
+    parsed_section = esx_vsphere_vm.parse_esx_datastore_section(
         {
             "config.datastoreUrl": [
                 "maintenanceMode",
@@ -42,31 +37,53 @@ def test_parse_esx_vsphere_datastore():
     ]
 
 
-class ESXDatastoreFactory(ModelFactory):
-    __model__ = esx_vsphere.ESXDataStore
-
-
-def test_check_datastore():
-    datastore = ESXDatastoreFactory.build(
-        free_space=20938787651584.0,
-        capacity=31686121226240.0,
+def test_check_datastore() -> None:
+    section = esx_vsphere.SectionESXVm(
+        mounted_devices=(),
+        snapshots=(),
+        status=None,
+        power_state=None,
+        memory=None,
+        cpu=None,
+        datastores=[
+            esx_vsphere.ESXDataStore(
+                name="datastore1",
+                free_space=20938787651584.0,
+                capacity=31686121226240.0,
+            )
+        ],
+        heartbeat=None,
+        host=None,
+        name=None,
+        systime=None,
     )
-    check_result = list(esx_vsphere_vm_datastores.check_datastores(_esx_vm_section([datastore])))
+    check_result = list(esx_vsphere_vm_datastores.check_datastores(section))
     results = [r for r in check_result if isinstance(r, Result)]
     assert len(results) == 1
     assert results[0].summary.endswith("(28.8 TiB/66.1% free)")
 
 
-def test_check_datastore_with_no_capacity():
-    datastore = ESXDatastoreFactory.build(
-        free_space=100.0,
-        capacity=0.0,
+def test_check_datastore_with_no_capacity() -> None:
+    section = esx_vsphere.SectionESXVm(
+        mounted_devices=(),
+        snapshots=(),
+        status=None,
+        power_state=None,
+        memory=None,
+        cpu=None,
+        datastores=[
+            esx_vsphere.ESXDataStore(
+                name="datastore1",
+                free_space=20938787651584.0,
+                capacity=0.0,
+            )
+        ],
+        heartbeat=None,
+        host=None,
+        name=None,
+        systime=None,
     )
-    check_result = list(esx_vsphere_vm_datastores.check_datastores(_esx_vm_section([datastore])))
+    check_result = list(esx_vsphere_vm_datastores.check_datastores(section))
     results = [r for r in check_result if isinstance(r, Result)]
     assert len(results) == 1
     assert results[0].summary.endswith("(0 B/0.0% free)")
-
-
-def _esx_vm_section(datastores: Sequence[esx_vsphere.ESXDataStore]) -> esx_vsphere.SectionESXVm:
-    return esx_vm_section(datastores=datastores)

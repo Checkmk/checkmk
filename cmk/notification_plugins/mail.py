@@ -15,6 +15,7 @@
 import socket
 import sys
 from collections.abc import Callable, Sequence
+from datetime import datetime
 from email.message import Message
 from typing import NoReturn
 
@@ -268,6 +269,13 @@ class TemplateRenderer:
             loader=FileSystemLoader(omd_root / "share/check_mk/notifications/templates/mail"),
             autoescape=True,
         )
+
+        self.env.filters["timestamp"] = self.format_timestamp
+
+    @staticmethod
+    def format_timestamp(value: str) -> str:
+        timestamp = int(value)
+        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
     def render_template(self, template_file: str, data: dict[str, object]) -> str:
         template = self.env.get_template(template_file)

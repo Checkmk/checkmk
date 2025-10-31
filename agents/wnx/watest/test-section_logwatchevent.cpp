@@ -324,7 +324,7 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
     EXPECT_EQ(pos, 3);
 
     auto ids_node = cfg::GetNode(cfg::groups::kLogWatchEvent,
-                                 cfg::vars::kLogWatchEventLogFileIds);
+                                 cfg::vars::kLogWatchEventFilterIds);
     ASSERT_TRUE(ids_node.IsSequence());
     EXPECT_EQ(ids_node.size(), LogWatchSections_Ids);
     pos = 0;
@@ -941,7 +941,7 @@ logwatch:
     logfile: #
         - 'Application': warn context # allowed <crit|warn|all|off> + [context|nocontext]
         - '*': off nocontext # allowed crit, warn, all, off, do not remove this
-    logfile_ids:
+    filter_ids:
 )";
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     {

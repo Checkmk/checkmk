@@ -222,7 +222,7 @@ void LogWatchEvent::loadConfig() {
         count = processLogEntryArray(*log_array);
         setupDefaultEntry();
         XLOG::d.t("Loaded [{}] entries in LogWatch", count);
-        auto log_ids = readLogEntryArray(cfg::vars::kLogWatchEventLogFileIds);
+        auto log_ids = readLogEntryArray(cfg::vars::kLogWatchEventFilterIds);
         if (log_ids.has_value()) {
             processEventIds(*log_ids);
         }

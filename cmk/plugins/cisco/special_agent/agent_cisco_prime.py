@@ -17,8 +17,8 @@ from collections.abc import Sequence
 import requests
 import urllib3
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.utils.password_store import replace_passwords
 
 API_PATH = "webacs/api/v1/data/"
 REQUESTS = {
@@ -27,13 +27,21 @@ REQUESTS = {
     "wlan_controller": "WlanControllers.json?.full=true",
 }
 
+PASSWORD_OPTION = "password"
+
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     """Parse arguments needed to construct an URL and for connection conditions"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--hostname", required=True, help="Host to query")
     parser.add_argument("--port", "-p", type=int, help="IPv4 port to connect to")
-    parser.add_argument("--basic-auth", "-u", type=str, help="username:password for basic_auth")
+    parser.add_argument("--user", help="Username for basic auth")
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
+        help="Password for basic auth",
+        required=False,
+    )
     parser.add_argument("--no-tls", action="store_true", help="Use http instead of https")
     parser.add_argument("--no-cert-check", action="store_true")
     parser.add_argument(
@@ -73,11 +81,12 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
         """
         logging.info("fetch data from url=%r", url)
 
-        if args.basic_auth:
-            username, password = args.basic_auth.split(":")
-            auth = (username, password)
-        else:
-            auth = None
+        auth = (
+            (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
+            if args.user
+            else None
+        )
+
         response = requests.get(
             url=url,
             auth=auth,
@@ -129,7 +138,6 @@ def main(argv: Sequence[str] | None = None) -> None:
     """Just replace password placeholders in command line args and call
     write_section_from_get_request()"""
     if argv is None:
-        replace_passwords()
         argv = sys.argv[1:]
 
     write_section_from_get_request(argv)

@@ -22,7 +22,7 @@ REQUESTS = (
 
 
 @pytest.fixture(name="accept_requests")
-def fixture_accept_requests(return_code):
+def fixture_accept_requests(return_code: int) -> None:
     for req in REQUESTS:
         responses.add(
             responses.GET,
@@ -42,7 +42,7 @@ def test_wrong_arguments(capsys: pytest.CaptureFixture[str]) -> None:
 @responses.activate
 @pytest.mark.parametrize("return_code", [200])
 def test_agent_output(capsys: pytest.CaptureFixture[str]) -> None:
-    main(["--debug", "--hostname", HOST, "-u", "%s:%s" % AUTH])
+    main(["--debug", "--hostname", HOST, "--user", AUTH[0], "--password", AUTH[1]])
     assert capsys.readouterr() == (
         "<<<cisco_prime_wifi_access_points:sep(0)>>>\n"
         '{"authenticated": true, "user": "user"}\n'

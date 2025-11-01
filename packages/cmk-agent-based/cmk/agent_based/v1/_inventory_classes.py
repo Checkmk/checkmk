@@ -53,7 +53,14 @@ class _AttributesTuple(NamedTuple):
 
 
 class Attributes(_AttributesTuple):
-    """Attributes to be written at a node in the HW/SW Inventory"""
+    """
+    Attributes to be written at a node in the HW/SW Inventory
+
+    Args:
+        path: List of node names leading to a node where these key-value pairs will be inserted.
+        inventory_attributes: Key-value pairs containing static data
+        status_attributes: Key-value pairs containing live/monitoring data
+    """
 
     def __new__(
         cls,
@@ -102,7 +109,15 @@ class _TableRowTuple(NamedTuple):
 
 
 class TableRow(_TableRowTuple):
-    """TableRow to be written into a Table at a node in the HW/SW Inventory"""
+    """
+    TableRow to be written into a Table at a node in the HW/SW Inventory
+
+    Args:
+        path: List of node names leading to a node where these column-value pairs will be inserted.
+        key_columns: Column-value pairs containing static data which are also used to identify a row
+        inventory_columns: Column-value pairs containing static data
+        status_columns: Column-value pairs containing live/monitoring data
+    """
 
     def __new__(
         cls,

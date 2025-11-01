@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -16,7 +14,7 @@
 import abc
 import re
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, cast, Literal, NamedTuple
 
@@ -832,7 +830,7 @@ class RulespecGroupEnforcedServices(RulespecGroup):
         return _("Enforced services")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _(
             "Rules to set up [wato_services#enforced_services|enforced services]. Services set "
             "up in this way do not depend on the service discovery. This is useful if you want "
@@ -1281,7 +1279,7 @@ class CheckTypeGroupSelection(ElementSelection):
         )
         self._checkgroup = checkgroup
 
-    def get_elements(self):
+    def get_elements(self) -> Mapping[str, str]:
         checks = get_check_information_cached(debug=active_config.debug)
         elements = {
             str(cn): "{} - {}".format(cn, c["title"])

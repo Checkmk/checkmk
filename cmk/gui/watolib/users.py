@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -387,7 +384,7 @@ def _validate_user_attributes(
         attr.valuespec().validate_value(value, "ua_" + name)
 
 
-def get_vs_user_idle_timeout():
+def get_vs_user_idle_timeout() -> Alternative:
     return Alternative(
         title=_("Session idle timeout"),
         elements=[
@@ -425,7 +422,7 @@ def vs_idle_timeout_duration() -> Age:
     )
 
 
-def notification_script_title(name):
+def notification_script_title(name: str) -> str:
     return user_script_title("notifications", name)
 
 

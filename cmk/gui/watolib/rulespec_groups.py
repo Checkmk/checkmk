@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 """Defining built-in rule spec groups"""
 
 from cmk.gui.i18n import _
@@ -74,7 +72,7 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
         return _("Service monitoring rules")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _(
             "Rules to configure existing services in the monitoring. For "
             "example, threshold values can be set, the execution time for "
@@ -107,7 +105,7 @@ class RulespecGroupHostsMonitoringRules(RulespecGroup):
         return _("Host monitoring rules")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _("Rules to configure the behavior of monitored hosts.")
 
 
@@ -191,7 +189,7 @@ class RulespecGroupAgent(RulespecGroup):
         return _("Access to agents")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _("Settings concerning the connection to the Checkmk and SNMP agents")
 
 
@@ -205,7 +203,7 @@ class RulespecGroupAgentSNMP(RulespecGroup):
         return _("SNMP rules")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _("Configure SNMP related settings using rule sets")
 
 
@@ -219,7 +217,7 @@ class RulespecGroupMonitoringAgents(RulespecGroup):
         return _("Agent rules")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _("Configuration of monitoring agents for Linux, Windows and Unix")
 
 
@@ -345,7 +343,7 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
         return _("Service discovery rules")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _(
             "Rules that influence the discovery of services. These rules "
             "allow, for example, the execution of a periodic service "
@@ -492,7 +490,7 @@ class RulespecGroupVMCloudContainer(RulespecGroup):
         return _("VM, cloud, container")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _("Integrate with VM, cloud or container platforms")
 
     @property
@@ -518,7 +516,7 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
         return _("Other integrations")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _("Integrate platforms using special agents, e.g. SAP R/3")
 
 
@@ -630,7 +628,7 @@ class RulespecGroupIntegrateOtherServices(RulespecGroup):
         return _("Other services")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _(
             "These services are provided by so called active checks. "
             "You can also integrate custom Nagios plug-ins."
@@ -647,7 +645,7 @@ class RulespecGroupActiveChecks(RulespecGroup):
         return _("HTTP, TCP, email, ...")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _(
             "Rules to add [active_checks|network services] like HTTP and TCP to the "
             "monitoring. The services are provided by so called active checks that allow "

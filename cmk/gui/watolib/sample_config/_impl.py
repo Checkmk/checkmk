@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 import os
 import uuid
 from datetime import datetime
@@ -77,7 +74,7 @@ def init_wato_datastructures(with_wato_lock: bool = False) -> None:
         logger.log(VERBOSE, "No need to create the sample config")
         return
 
-    def init():
+    def init() -> None:
         if not os.path.exists(ConfigDomainCACertificates.trusted_cas_file):
             ConfigDomainCACertificates().activate()
         _create_sample_config()

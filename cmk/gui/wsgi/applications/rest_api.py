@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
 
@@ -752,5 +751,5 @@ class APICrashReport(ABCCrashReport[RestAPIDetails]):
     """API specific crash reporting class."""
 
     @classmethod
-    def type(cls):
+    def type(cls) -> str:
         return "rest_api"

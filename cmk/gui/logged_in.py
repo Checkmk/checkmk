@@ -327,7 +327,7 @@ class LoggedInUser:
             self._tree_states = self.load_file("treestates", {})
         return self._tree_states
 
-    def get_tree_states(self, tree):
+    def get_tree_states(self, tree: str) -> dict:
         return self.tree_states.get(tree, {})
 
     def get_tree_state(self, treename: str, id_: str, isopen: bool) -> bool:
@@ -338,13 +338,13 @@ class LoggedInUser:
             isopen = tree_state[id_] == "on"
         return isopen
 
-    def set_tree_state(self, tree, key, val):
+    def set_tree_state(self, tree: str, key: str, val: Any) -> None:
         if tree not in self.tree_states:
             self.tree_states[tree] = {}
 
         self.tree_states[tree][key] = val
 
-    def set_tree_states(self, tree, val):
+    def set_tree_states(self, tree: str, val: dict) -> None:
         self.tree_states[tree] = val
 
     def save_tree_states(self) -> None:

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Common code for reading and offering notification scripts and alert handlers.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example header of a notification script:
 
 #!/usr/bin/env python3
@@ -108,5 +106,5 @@ def user_script_choices(what: str) -> list[tuple[str, str]]:
     return choices
 
 
-def user_script_title(what, name):
+def user_script_title(what: str, name: str) -> str:
     return dict(user_script_choices(what)).get(name, name)

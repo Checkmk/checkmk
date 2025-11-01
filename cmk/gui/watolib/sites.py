@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -103,7 +101,7 @@ def register(config_file_registry: ConfigFileRegistry) -> None:
 
 class SiteManagement:
     @classmethod
-    def connection_method_valuespec(cls):
+    def connection_method_valuespec(cls) -> CascadingDropdown:
         return CascadingDropdown(
             title=_("Connection"),
             orientation="horizontal",
@@ -119,7 +117,7 @@ class SiteManagement:
         )
 
     @classmethod
-    def livestatus_proxy_valuespec(cls):
+    def livestatus_proxy_valuespec(cls) -> FixedValue:
         return FixedValue(
             value=None,
             title=_("Use Livestatus proxy daemon"),
@@ -127,8 +125,8 @@ class SiteManagement:
         )
 
     @classmethod
-    def _connection_choices(cls):
-        conn_choices = [
+    def _connection_choices(cls) -> list[tuple[str, str, ValueSpec]]:
+        conn_choices: list[tuple[str, str, ValueSpec]] = [
             (
                 "local",
                 _("Connect to the local site"),
@@ -160,7 +158,7 @@ class SiteManagement:
         return conn_choices
 
     @classmethod
-    def _tcp_socket_valuespec(cls, ipv6):
+    def _tcp_socket_valuespec(cls, ipv6: bool) -> Dictionary:
         return Dictionary(
             elements=[
                 (
@@ -191,7 +189,7 @@ class SiteManagement:
         )
 
     @classmethod
-    def _tls_valuespec(cls):
+    def _tls_valuespec(cls) -> CascadingDropdown:
         return CascadingDropdown(
             title=_("Encryption"),
             choices=[
@@ -669,7 +667,7 @@ class LivestatusViaTCP(Dictionary):
         )
 
 
-def _create_nagvis_backends(sites_config):
+def _create_nagvis_backends(sites_config: SiteConfigurations) -> None:
     cfg = [
         "; MANAGED BY CHECK_MK Setup - Last Update: %s" % time.strftime("%Y-%m-%d %H:%M:%S"),
     ]
@@ -686,11 +684,12 @@ def _create_nagvis_backends(sites_config):
             'socket="%s"' % socket,
         ]
 
-        if site.get("status_host"):
-            cfg.append('statushost="%s:%s"' % site["status_host"])
+        if status_host := site.get("status_host"):
+            cfg.append('statushost="%s:%s"' % status_host)
 
         if site["proxy"] is None and is_livestatus_encrypted(site):
-            address_spec = site["socket"][1]
+            assert isinstance(site["socket"], tuple) and site["socket"][0] in ["tcp", "tcp6"]
+            address_spec = cast(NetworkSocketDetails, site["socket"][1])
             tls_settings = address_spec["tls"][1]
             cfg.append("verify_tls_peer=%d" % tls_settings["verify"])
             cfg.append("verify_tls_ca_path=%s" % ConfigDomainCACertificates.trusted_cas_file)
@@ -751,7 +750,7 @@ def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration
     return is_replication_enabled(site) or site_is_local(site)
 
 
-def _delete_distributed_wato_file():
+def _delete_distributed_wato_file() -> None:
     p = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
     # We do not delete the file but empty it. That way
     # we do not need write permissions to the conf.d

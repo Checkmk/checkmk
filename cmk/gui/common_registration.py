@@ -20,7 +20,6 @@ from cmk.gui import (
     help_menu,
     hooks,
     inventory,
-    login,
     logwatch,
     main,
     message,
@@ -288,7 +287,6 @@ def register(
     valuespec.register(page_registry)
     autocompleters.register(page_registry, autocompleter_registry)
     werks.register(page_registry)
-    login.register(page_registry)
     message.register(page_registry, cron_job_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)

@@ -12,7 +12,6 @@ from typing import final
 from wsgiref.types import StartResponse, WSGIEnvironment
 
 import cmk.ccc.store
-import cmk.ccc.version as cmk_version
 import cmk.gui.auth
 import cmk.gui.session
 import cmk.utils.paths
@@ -25,7 +24,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedE
 from cmk.gui.http import Request, request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
-from cmk.gui.pages import PageContext
+from cmk.gui.pages import get_page_handler, PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.theme.current_theme import theme
@@ -207,17 +206,9 @@ def _handle_not_authenticated(ctx: PageContext) -> Response:
     # This either displays the login page or validates the information submitted
     # to the login form. After successful login a http redirect to the originally
     # requested page is performed.
-    if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
-        from cmk.gui.cse.userdb.cognito.pages import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-            SingleSignOn,
-        )
-
-        saas_login_page = SingleSignOn()
-        saas_login_page.handle_page(ctx)
-    else:
-        login_page = login.LoginPage()
-        login_page.set_no_html_output(plain_error())
-        login_page.handle_page(ctx)
+    login_page = get_page_handler("login")
+    assert login_page is not None
+    login_page(ctx)
 
     return response
 

@@ -60,13 +60,8 @@ from cmk.utils.urls import is_allowed_url
 
 
 def register(page_registry: PageRegistry) -> None:
-    # TODO: only overwrite this in cse specific files
-    if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
-        page_registry.register(PageEndpoint("login", SaasLoginPage()))
-        page_registry.register(PageEndpoint("logout", SaasLogoutPage()))
-    else:
-        page_registry.register(PageEndpoint("login", LoginPage()))
-        page_registry.register(PageEndpoint("logout", LogoutPage()))
+    page_registry.register(PageEndpoint("login", LoginPage()))
+    page_registry.register(PageEndpoint("logout", LogoutPage()))
 
 
 @contextlib.contextmanager
@@ -113,18 +108,6 @@ def del_auth_cookie(request: Request) -> None:
     response.unset_http_cookie(cookie_name)
 
 
-class SaasLoginPage(Page):
-    @override
-    def page(self, ctx: PageContext) -> None:
-        raise HTTPRedirect("cognito_sso.py")
-
-
-class SaasLogoutPage(Page):
-    @override
-    def page(self, ctx: PageContext) -> None:
-        raise HTTPRedirect("cognito_logout.py")
-
-
 # TODO: Needs to be cleaned up. When using HTTP header auth or web server auth it is not
 # ensured that a user exists after letting the user in. This is a problem for the following
 # code! We need to define a point where the following code can rely on an existing user
@@ -138,12 +121,8 @@ class SaasLogoutPage(Page):
 class LoginPage(Page):
     def __init__(self) -> None:
         super().__init__()
-        self._no_html_output = False
         self._username_varname = "_username"
         self._password_varname = "_password"
-
-    def set_no_html_output(self, no_html_output: bool) -> None:
-        self._no_html_output = no_html_output
 
     @override
     def page(self, ctx: PageContext) -> None:
@@ -153,7 +132,7 @@ class LoginPage(Page):
 
         self._do_login(ctx.request, ctx.config)
 
-        if self._no_html_output:
+        if ctx.request.has_var("_plain_error"):
             raise MKAuthException(_("Invalid login credentials."))
 
         if is_mobile(ctx.request, response):

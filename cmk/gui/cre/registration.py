@@ -7,7 +7,7 @@
 
 import cmk.gui.wato._notification_parameter._mail as mail
 from cmk.ccc.version import Edition
-from cmk.gui import nagvis, sidebar, visuals
+from cmk.gui import login, nagvis, sidebar, visuals
 from cmk.gui.background_job import job_registry
 from cmk.gui.backup.registration import backup_register
 from cmk.gui.common_registration import register as common_registration
@@ -133,6 +133,7 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
     roles.register(mode_registry)
+    login.register(page_registry)
     common_registration(
         main_menu_registry,
         job_registry,

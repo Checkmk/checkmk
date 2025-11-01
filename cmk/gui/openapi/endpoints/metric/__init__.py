@@ -10,6 +10,7 @@ REST-API.
 
 # mypy: disable-error-code="no-untyped-def"
 
+import cmk.product_telemetry.collectors.grafana as grafana_collector
 from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -20,6 +21,8 @@ from cmk.gui.graphing import (
     metric_backend_registry,
     metrics_from_api,
 )
+from cmk.gui.http import request
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.openapi.endpoints.metric.common import (
@@ -51,6 +54,10 @@ def get_graph(params):
 
     This endpoint retrieves a predefined graph (consisting of multiple metrics) or a single metric.
     """
+    grafana_collector.store_usage_data(
+        headers=request.headers, var_dir=paths.var_dir, logger=logger
+    )
+
     body = params["body"]
 
     try:

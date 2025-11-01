@@ -71,6 +71,7 @@ pkg_files(
         ":cmk-passwordstore",
         ":cmk-piggyback",
         ":cmk-piggyback-hub",
+        ":cmk-telemetry",
         ":cmk-transform-inventory-trees",
         ":cmk-ui-job-scheduler",
         ":cmk-ui-job-scheduler-health",
@@ -99,6 +100,7 @@ pkg_tar(
         ":bin_750",
         ":bin_755",
         ":cmk-passwordstore",
+        ":cmk-telemetry",
         ":cmk_link",
     ],
     visibility = ["//visibility:public"],
@@ -111,4 +113,13 @@ pkg_files(
         mode = "0755",
     ),
     renames = {"//cmk:utils/password_store/cli.py": "bin/cmk-passwordstore"},
+)
+
+pkg_files(
+    name = "cmk-telemetry",
+    srcs = ["//cmk:product_telemetry/cmk_telemetry_cli.py"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    renames = {"//cmk:product_telemetry/cmk_telemetry_cli.py": "bin/cmk-telemetry"},
 )

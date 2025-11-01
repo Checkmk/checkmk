@@ -31,10 +31,7 @@ from redfish.rest.v1 import (
 )
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes
-from cmk.special_agents.v0_unstable.argument_parsing import (
-    create_default_argument_parser,
-)
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
 __version__ = "2.5.0b1"
 
@@ -46,7 +43,24 @@ PASSWORD_OPTION = "password"
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     """Parse arguments needed to construct an URL and for connection conditions"""
 
-    parser = create_default_argument_parser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.formatter_class = argparse.RawTextHelpFormatter
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug mode (keep some exceptions unhandled)",
+    )
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument(
+        "--vcrtrace",
+        "--tracefile",
+        default=False,
+        action=vcrtrace(
+            # this depends very much on the caller.
+            filter_headers=[("authorization", "****")],
+        ),
+    )
     # required
     parser.add_argument(
         "-u", "--user", default=None, help="Username for Redfish Login", required=True

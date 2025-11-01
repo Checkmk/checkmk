@@ -33,8 +33,6 @@ from redfish.rest.v1 import (
 from cmk.plugins.redfish.lib import REDFISH_SECTIONS
 from cmk.special_agents.v0_unstable.agent_common import (
     CannotRecover,
-    SectionManager,
-    SectionWriter,
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import (
@@ -44,34 +42,14 @@ from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
 
 
-class CachedSectionWriter(SectionManager):
-    """
-    >>> with SectionWriter("foo") as writer:
-    ...   writer.append("str")
-    ...   writer.append(char for char in "ab")
-    ...   writer.append_json({"some": "dict"})
-    ...   writer.append_json(char for char in "ab")
-    <<<foo:sep(0)>>>
-    str
-    a
-    b
-    {"some": "dict"}
-    "a"
-    "b"
-    """
-
-    def __init__(
-        self,
-        section_name: str,
-        separator: str | None = "\0",
-        cachetime: int | None = None,
-        validity: int | None = None,
-    ) -> None:
-        super().__init__()
-        self.append(
-            f"<<<{section_name}{f':sep({ord(separator)})' if separator else ''}"
-            f"{f':cached({cachetime},{validity})' if cachetime else ''}>>>"
-        )
+def _make_section_header(
+    name: str, separator: str | None, cachetime: int | None, validity: int | None
+) -> str:
+    sepstr = f":sep({ord(separator)})" if separator else ""
+    # Note: we assume that we always have both cachetime and validity or none.
+    # Refactor to ensure this architecturally.
+    cachestr = f":cached({cachetime},{validity})" if cachetime and validity else ""
+    return f"<<<{name}{sepstr}{cachestr}>>>"
 
 
 @dataclass
@@ -429,25 +407,17 @@ def fetch_extra_data(
 def process_result(redfishobj: RedfishData) -> None:
     """process and output a fetched result set"""
     result = redfishobj.section_data
-    for element in list(result.keys()):
-        if cachetime := redfishobj.cache_timestamp_per_section.get(element):
-            with CachedSectionWriter(
-                f"redfish_{element.lower()}",
-                cachetime=cachetime,
-                validity=redfishobj.cache_per_section.get(element),
-            ) as w:
-                if isinstance(result.get(element), list):
-                    for entry in result[element]:
-                        w.append_json(entry)
-                else:
-                    w.append_json(result.get(element))
-        else:
-            with SectionWriter(f"redfish_{element.lower()}") as w:
-                if isinstance(result.get(element), list):
-                    for entry in result[element]:
-                        w.append_json(entry)
-                else:
-                    w.append_json(result.get(element))
+    for element, el_result in result.items():
+        section_header = _make_section_header(
+            f"redfish_{element.lower()}",
+            separator="\0",
+            cachetime=redfishobj.cache_timestamp_per_section.get(element),
+            validity=redfishobj.cache_per_section.get(element),
+        )
+        content = el_result if isinstance(el_result, list) else [el_result]
+        sys.stdout.write(f"{section_header}\n")
+        for entry in content:
+            sys.stdout.write(f"{json.dumps(entry, sort_keys=True)}\n")
 
 
 def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
@@ -590,11 +560,11 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:
                         redfishobj.section_data.setdefault("FirmwareInventory", firmwares)
 
     if manager_data:
-        with SectionWriter("redfish_manager") as w:
-            w.append_json(manager_data)
+        sys.stdout.write("<<<redfish_manager:sep(0)>>> \n")
+        sys.stdout.write(f"{json.dumps(manager_data, sort_keys=True)}\n")
 
-    with SectionWriter("redfish_system") as w:
-        w.append_json(systems_data)
+    sys.stdout.write("<<<redfish_system:sep(0)>>> \n")
+    sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
 
     systems_sections = list(
         {
@@ -673,8 +643,9 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:
     # fetch chassis
     chassis_col = fetch_data(redfishobj.redfish_connection, chassis_url, "Chassis")
     chassis_data = fetch_collection(redfishobj.redfish_connection, chassis_col, "Chassis")
-    with SectionWriter("redfish_chassis") as w:
-        w.append_json(chassis_data)
+    sys.stdout.write("<<<redfish_chassis:sep(0)>>> \n")
+    sys.stdout.write(f"{json.dumps(chassis_data, sort_keys=True)}\n")
+
     chassis_sections = [
         "NetworkAdapters",
         "Power",

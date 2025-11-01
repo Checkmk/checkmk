@@ -32,7 +32,6 @@ from redfish.rest.v1 import (
 )
 
 from cmk.special_agents.v0_unstable.agent_common import (
-    SectionWriter,
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import (
@@ -197,12 +196,10 @@ def process_result(
 ) -> None:
     """process and output a fetched result set"""
     for key, value in result.items():
-        with SectionWriter(f"redfish_{key.lower()}") as w:
-            if isinstance(value, list):
-                for entry in value:
-                    w.append_json(entry)
-            else:
-                w.append_json(value)
+        content = value if isinstance(value, list) else [value]
+        sys.stdout.write(f"<<<redfish_{key.lower()}:sep(0)>>> \n")
+        for entry in content:
+            sys.stdout.write(f"{json.dumps(entry, sort_keys=True)}\n")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -296,11 +293,11 @@ def get_information(redfishobj):
     systems_data = list([fetch_data(redfishobj, systems_url, "PowerEquipment")])
 
     if manager_data:
-        with SectionWriter("redfish_manager") as w:
-            w.append_json(manager_data)
+        sys.stdout.write("<<<redfish_manager:sep(0)>>> \n")
+        sys.stdout.write(f"{json.dumps(manager_data, sort_keys=True)}\n")
 
-    with SectionWriter("redfish_system") as w:
-        w.append_json(systems_data)
+    sys.stdout.write("<<<redfish_system:sep(0)>>> \n")
+    sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
 
     resulting_sections: tuple[SectionName, ...] = ("RackPDUs",)
     for system in systems_data:

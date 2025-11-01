@@ -1085,6 +1085,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("tests.integration"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MKP_TOOL,
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.base.config",
+        "cmk.checkengine",
+        "cmk.discover_plugins",
+        "cmk.plugins",
+        "cmk.server_side_calls_backend",
         "cmk.utils",
     ),
     Component("tests.integration_redfish"): _allow(

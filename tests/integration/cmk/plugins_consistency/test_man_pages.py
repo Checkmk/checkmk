@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import os
 from collections.abc import Mapping, Sequence
@@ -123,7 +122,7 @@ def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
     assert "enterasys_powersupply" in out
 
 
-def man_page_catalog_titles():
+def man_page_catalog_titles() -> None:
     assert man_pages.CATALOG_TITLES["hw"]
     assert man_pages.CATALOG_TITLES["os"]
 

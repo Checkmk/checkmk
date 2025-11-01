@@ -128,6 +128,11 @@ def _allow(
     return _is_allowed
 
 
+_CLEAN_PLUGIN_FAMILIES = {
+    "netapp",
+}
+
+
 _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     "aws": (
         "cmk.agent_based.v1",  # FIXME
@@ -794,6 +799,15 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_MESSAGING,
         "cmk.utils.paths",
     ),
+    # These are ready to be moved to a package.
+    # PLEASE DO NOT INTRODUCE NEW DEPENDENCIES!
+    **{
+        Component(f"cmk.plugins.{family}"): _allow(
+            *PACKAGE_PLUGIN_APIS,
+            "cmk.plugins.lib",
+        )
+        for family in _CLEAN_PLUGIN_FAMILIES
+    },
     **{  # some plugin families that refuse to play by the rules:
         Component(f"cmk.plugins.{family}"): _allow(
             *PACKAGE_PLUGIN_APIS,

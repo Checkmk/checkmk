@@ -130,6 +130,7 @@ def _allow(
 
 _CLEAN_PLUGIN_FAMILIES = {
     "netapp",
+    "redfish",
 }
 
 
@@ -253,12 +254,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.otel_collector",
         "cmk.shared_typing.vue_formspec_components",
         "cmk.metric_backend",
-        "cmk.utils.paths",
-    ),
-    "redfish": (
-        "cmk.plugins.lib.elphase",
-        "cmk.plugins.lib.humidity",
-        "cmk.plugins.lib.temperature",
         "cmk.utils.paths",
     ),
     "robotmk": ("cmk.nonfree.pro.robotmk",),

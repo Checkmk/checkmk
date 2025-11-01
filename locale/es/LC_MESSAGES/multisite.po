@@ -908,6 +908,10 @@ msgstr "(0 es el período actual)"
 msgid "(1 more item)"
 msgstr "(sin entrada)"
 
+#, fuzzy
+msgid "(Do not impose levels, always be OK)"
+msgstr "No imponer niveles, siempre estan bien"
+
 msgid "(Edit presets)"
 msgstr "(Editar preajustes)"
 
@@ -22134,9 +22138,6 @@ msgstr "No realice ninguna acción, abandone este mensaje, deje de procesar"
 
 msgid "Do not perform periodic service discovery check"
 msgstr "No realizar la comprobación periódica de la detección de servicios"
-
-msgid "Do not regard required mirror space as free space"
-msgstr "No considere el espacio de réplica necesario como espacio libre"
 
 msgid "Do not remove anything"
 msgstr "No quite nada"
@@ -63619,9 +63620,6 @@ msgstr ""
 "Especifique el nombre de un almacén (Se trata de un buzón o una carpeta "
 "pública)"
 
-msgid "Specify the name of the ASM Disk Group "
-msgstr "Especifique el nombre del grupo de discos ASM "
-
 msgid "Specify the name of the Nimble volume."
 msgstr "Especifique el nombre del volumen Nimble."
 
@@ -91062,6 +91060,10 @@ msgstr "configuración"
 msgid "configure"
 msgstr "configure"
 
+#, fuzzy
+msgid "connect"
+msgstr "desconectado"
+
 msgid "connection"
 msgstr "conexión"
 
@@ -91355,6 +91357,10 @@ msgstr "inscripciones (máx. 50)"
 msgid "entry number"
 msgstr "Número de serie"
 
+#, fuzzy
+msgid "established"
+msgstr "Conexiones establecidas"
+
 msgid "estimated duration"
 msgstr "duración estimada"
 
@@ -91501,6 +91507,9 @@ msgstr ""
 
 msgid "h"
 msgstr "h"
+
+msgid "halted"
+msgstr ""
 
 msgid "handles"
 msgstr "maneja"
@@ -91656,6 +91665,9 @@ msgstr "%s tráfico"
 
 msgid "icon not found"
 msgstr "icono no encontrado"
+
+msgid "idle"
+msgstr ""
 
 msgid "idle connections"
 msgstr "conexiones inactivas"
@@ -92251,6 +92263,14 @@ msgstr "Abrir"
 
 msgid "open - Linux OpenIPMI Interface (default)"
 msgstr ""
+
+#, fuzzy
+msgid "openconfirm"
+msgstr "Confirmar"
+
+#, fuzzy
+msgid "opensent"
+msgstr "no está presente"
 
 msgid "optional"
 msgstr "opcional"
@@ -93059,6 +93079,51 @@ msgid "There is %{ n } apple"
 msgid_plural "There are %{ n } apples"
 msgstr[0] ""
 msgstr[1] ""
+
+#, fuzzy
+msgid "Continue with AI?"
+msgstr "Seguir buscando"
+
+#, fuzzy
+msgid "Do not ask again"
+msgstr "No mostrar el título"
+
+#, fuzzy
+msgid "Confirm & proceed"
+msgstr "Confirmar sobreescritura"
+
+#, fuzzy
+msgid "Decline"
+msgstr "Dispositivo en línea"
+
+#, fuzzy
+msgid "Generating response..."
+msgstr "Generación de informes..."
+
+#, fuzzy
+msgid "Analyzing data..."
+msgstr "Identificación inválida"
+
+msgid ""
+"For a comprehensive analysis, the following data will be shared with our AI "
+"model. "
+msgstr ""
+
+#, fuzzy
+msgid "Shared data:"
+msgstr "Datos mapeados"
+
+#, fuzzy
+msgid "Short summary"
+msgstr "Resumen"
+
+#, fuzzy
+msgid "Detected problem"
+msgstr "Problemas con DaemonSet"
+
+#, fuzzy
+msgid "Potential solutions"
+msgstr "Fijar la resolución"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -94636,10 +94701,17 @@ msgstr ""
 "Especifica en qué periodo de tiempo se creará un nuevo archivo para el "
 "historial de eventos."
 
+msgid "Deploy the relay to your environment"
+msgstr ""
+
 msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
 msgstr ""
+
+#, fuzzy
+msgid "Name the relay"
+msgstr "Nombre del Proxy"
 
 #, fuzzy
 msgid "Provide a display name for your Relay."
@@ -94649,6 +94721,10 @@ msgid ""
 "The name you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+#, fuzzy
+msgid "Register the relay with your Checkmk site"
+msgstr "Visualización del estado de los sitios Checkmk\n"
 
 #, fuzzy
 msgid ""
@@ -94668,6 +94744,10 @@ msgstr "Esta norma"
 msgid " for more details."
 msgstr "Haga clic aquí para ver los detalles."
 
+#, fuzzy
+msgid "Verify registration"
+msgstr "Hora de inscripción"
+
 msgid ""
 "After the registration is triggered, verify the registration between the "
 "Relay and Checkmk site."
@@ -94683,21 +94763,6 @@ msgstr "Registro realizado con éxito"
 
 msgid "Registration failed and Relay couldn't be saved."
 msgstr ""
-
-msgid "Deploy the relay to your environment"
-msgstr ""
-
-#, fuzzy
-msgid "Name the relay"
-msgstr "Nombre del Proxy"
-
-#, fuzzy
-msgid "Register the relay with your Checkmk site"
-msgstr "Visualización del estado de los sitios Checkmk\n"
-
-#, fuzzy
-msgid "Verify registration"
-msgstr "Hora de inscripción"
 
 #, fuzzy
 msgid "Continue to add host"
@@ -95175,6 +95240,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Do not regard required mirror space as free space"
+#~ msgstr "No considere el espacio de réplica necesario como espacio libre"
+
+#~ msgid "Specify the name of the ASM Disk Group "
+#~ msgstr "Especifique el nombre del grupo de discos ASM "
 
 #, fuzzy
 #~ msgid "Disk Usage"
@@ -96572,10 +96643,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Update service params"
 #~ msgstr "Coincidir con las labels de servicio"
-
-#, fuzzy
-#~ msgid "connectee"
-#~ msgstr "desconectado"
 
 #, fuzzy
 #~ msgid "connecter"

@@ -898,6 +898,10 @@ msgstr "(0は現在の期間です)"
 msgid "(1 more item)"
 msgstr "もう１つの項目"
 
+#, fuzzy
+msgid "(Do not impose levels, always be OK)"
+msgstr "レベルを課さないでください、常に大丈夫です"
+
 msgid "(Edit presets)"
 msgstr "(プリセットを編集する)"
 
@@ -20663,9 +20667,6 @@ msgstr "アクションを実行せず、このメッセージをドロップし
 
 msgid "Do not perform periodic service discovery check"
 msgstr "定期的なサービス検出チェックを実行しないでください"
-
-msgid "Do not regard required mirror space as free space"
-msgstr "必要なミラースペースを空きスペースと見なさないでください"
 
 msgid "Do not remove anything"
 msgstr "何も削除しないでください"
@@ -59194,9 +59195,6 @@ msgstr ""
 "ストアの名前を指定します(これはメールボックスまたはパブリックフォルダーのいず"
 "れかです)。"
 
-msgid "Specify the name of the ASM Disk Group "
-msgstr "ASMディスクグループの名前を指定します "
-
 msgid "Specify the name of the Nimble volume."
 msgstr "Nimbleボリュームの名前を指定します。"
 
@@ -84646,6 +84644,10 @@ msgstr "構成"
 msgid "configure"
 msgstr "設定"
 
+#, fuzzy
+msgid "connect"
+msgstr "切断されました"
+
 msgid "connection"
 msgstr "接続"
 
@@ -84924,6 +84926,10 @@ msgstr "エントリー数 (最大50)"
 msgid "entry number"
 msgstr "エントリナンバー"
 
+#, fuzzy
+msgid "established"
+msgstr "確立された接続"
+
 msgid "estimated duration"
 msgstr "推定期間"
 
@@ -85067,6 +85073,9 @@ msgstr "ガイド"
 msgid "h"
 msgstr "h"
 
+msgid "halted"
+msgstr ""
+
 msgid "handles"
 msgstr "ハンドルする"
 
@@ -85207,6 +85216,9 @@ msgstr "iSCSIトラフィック"
 
 msgid "icon not found"
 msgstr "アイコンが見つかりません"
+
+msgid "idle"
+msgstr ""
 
 msgid "idle connections"
 msgstr "アイドル接続"
@@ -85781,6 +85793,14 @@ msgstr "開いた"
 
 msgid "open - Linux OpenIPMI Interface (default)"
 msgstr "open - Linux OpenIPMI インターフェース (デフォルト)"
+
+#, fuzzy
+msgid "openconfirm"
+msgstr "確認"
+
+#, fuzzy
+msgid "opensent"
+msgstr "現在ではない"
 
 msgid "optional"
 msgstr "オプション"
@@ -86557,6 +86577,51 @@ msgstr "こんにちは %{name}!"
 msgid "There is %{ n } apple"
 msgid_plural "There are %{ n } apples"
 msgstr[0] ""
+
+#, fuzzy
+msgid "Continue with AI?"
+msgstr "成長を続ける"
+
+#, fuzzy
+msgid "Do not ask again"
+msgstr "二度は表示しない"
+
+#, fuzzy
+msgid "Confirm & proceed"
+msgstr "上書きを確認する"
+
+#, fuzzy
+msgid "Decline"
+msgstr "オンラインデバイス"
+
+#, fuzzy
+msgid "Generating response..."
+msgstr "レポートを生成しています..."
+
+#, fuzzy
+msgid "Analyzing data..."
+msgstr "無効なデータ"
+
+msgid ""
+"For a comprehensive analysis, the following data will be shared with our AI "
+"model. "
+msgstr ""
+
+#, fuzzy
+msgid "Shared data:"
+msgstr "データ送信"
+
+#, fuzzy
+msgid "Short summary"
+msgstr "概要"
+
+#, fuzzy
+msgid "Detected problem"
+msgstr "デーモンセットの問題"
+
+#, fuzzy
+msgid "Potential solutions"
+msgstr "解像度を設定する"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -88087,10 +88152,17 @@ msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 msgid "Select the folder your host(s) will be created in."
 msgstr "ホストが作成される場所を指定してください。"
 
+msgid "Deploy the relay to your environment"
+msgstr ""
+
 msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
 msgstr ""
+
+#, fuzzy
+msgid "Name the relay"
+msgstr "プロキシの名前"
 
 #, fuzzy
 msgid "Provide a display name for your Relay."
@@ -88100,6 +88172,10 @@ msgid ""
 "The name you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+#, fuzzy
+msgid "Register the relay with your Checkmk site"
+msgstr "Checkmkサイトの状態を表示する\n"
 
 #, fuzzy
 msgid ""
@@ -88119,6 +88195,10 @@ msgstr "このルール"
 msgid " for more details."
 msgstr "詳細はこちらをクリックしてください。"
 
+#, fuzzy
+msgid "Verify registration"
+msgstr "登録時刻"
+
 msgid ""
 "After the registration is triggered, verify the registration between the "
 "Relay and Checkmk site."
@@ -88134,21 +88214,6 @@ msgstr "登録完了"
 
 msgid "Registration failed and Relay couldn't be saved."
 msgstr ""
-
-msgid "Deploy the relay to your environment"
-msgstr ""
-
-#, fuzzy
-msgid "Name the relay"
-msgstr "プロキシの名前"
-
-#, fuzzy
-msgid "Register the relay with your Checkmk site"
-msgstr "Checkmkサイトの状態を表示する\n"
-
-#, fuzzy
-msgid "Verify registration"
-msgstr "登録時刻"
 
 #, fuzzy
 msgid "Continue to add host"
@@ -88617,6 +88682,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Do not regard required mirror space as free space"
+#~ msgstr "必要なミラースペースを空きスペースと見なさないでください"
+
+#~ msgid "Specify the name of the ASM Disk Group "
+#~ msgstr "ASMディスクグループの名前を指定します "
 
 #~ msgid "Disk Usage"
 #~ msgstr "Disk 使用量"
@@ -90005,10 +90076,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Update service params"
 #~ msgstr "サービスラベルと一致する"
-
-#, fuzzy
-#~ msgid "connectee"
-#~ msgstr "切断されました"
 
 #, fuzzy
 #~ msgid "connecter"

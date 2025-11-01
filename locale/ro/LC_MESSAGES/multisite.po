@@ -919,6 +919,10 @@ msgstr "(0 reprezintă perioada curentă)"
 msgid "(1 more item)"
 msgstr "(nici o intrare)"
 
+#, fuzzy
+msgid "(Do not impose levels, always be OK)"
+msgstr "Nu impuneți niveluri, fiți întotdeauna OK"
+
 msgid "(Edit presets)"
 msgstr "(Editare preselecții)"
 
@@ -22015,9 +22019,6 @@ msgstr ""
 
 msgid "Do not perform periodic service discovery check"
 msgstr "Nu efectuați verificarea periodică a descoperirii serviciilor"
-
-msgid "Do not regard required mirror space as free space"
-msgstr "Nu considerați spațiul în oglindă necesar ca spațiu liber"
 
 msgid "Do not remove anything"
 msgstr "Nu îndepărtați nimic"
@@ -63267,9 +63268,6 @@ msgstr ""
 "Specificați numele unui magazin (acesta este fie o căsuță poștală, fie un "
 "dosar public)"
 
-msgid "Specify the name of the ASM Disk Group "
-msgstr "Specificați numele grupului de discuri ASM "
-
 msgid "Specify the name of the Nimble volume."
 msgstr "Specificați numele volumului Nimble."
 
@@ -90579,6 +90577,10 @@ msgstr "configurare"
 msgid "configure"
 msgstr "configurați"
 
+#, fuzzy
+msgid "connect"
+msgstr "deconectat"
+
 msgid "connection"
 msgstr "conexiune"
 
@@ -90868,6 +90870,10 @@ msgstr "intrări (max. 50)"
 msgid "entry number"
 msgstr "Numărul de serie"
 
+#, fuzzy
+msgid "established"
+msgstr "Conexiuni stabilite"
+
 msgid "estimated duration"
 msgstr "durata estimată"
 
@@ -91015,6 +91021,9 @@ msgstr ""
 
 msgid "h"
 msgstr "h"
+
+msgid "halted"
+msgstr ""
 
 msgid "handles"
 msgstr "mânere"
@@ -91170,6 +91179,9 @@ msgstr "%s trafic"
 
 msgid "icon not found"
 msgstr "pictograma nu a fost găsită"
+
+msgid "idle"
+msgstr ""
 
 msgid "idle connections"
 msgstr "conexiuni inactive"
@@ -91760,6 +91772,14 @@ msgstr "deschis"
 
 msgid "open - Linux OpenIPMI Interface (default)"
 msgstr ""
+
+#, fuzzy
+msgid "openconfirm"
+msgstr "Confirmați"
+
+#, fuzzy
+msgid "opensent"
+msgstr "nu este prezent"
 
 msgid "optional"
 msgstr "opțional"
@@ -92571,6 +92591,51 @@ msgid_plural "There are %{ n } apples"
 msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
+
+#, fuzzy
+msgid "Continue with AI?"
+msgstr "Continuați creșterea aici"
+
+#, fuzzy
+msgid "Do not ask again"
+msgstr "Nu afișați titlul"
+
+#, fuzzy
+msgid "Confirm & proceed"
+msgstr "Confirmați suprascrierea"
+
+#, fuzzy
+msgid "Decline"
+msgstr "Dispozitiv online"
+
+#, fuzzy
+msgid "Generating response..."
+msgstr "Generarea de rapoarte..."
+
+#, fuzzy
+msgid "Analyzing data..."
+msgstr "Identificator invalid"
+
+msgid ""
+"For a comprehensive analysis, the following data will be shared with our AI "
+"model. "
+msgstr ""
+
+#, fuzzy
+msgid "Shared data:"
+msgstr "Parola"
+
+#, fuzzy
+msgid "Short summary"
+msgstr "Rezumat"
+
+#, fuzzy
+msgid "Detected problem"
+msgstr "Probleme cu DaemonSet"
+
+#, fuzzy
+msgid "Potential solutions"
+msgstr "Setați rezoluția"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -94153,10 +94218,17 @@ msgstr ""
 "Specificați la ce perioadă de timp va fi creat un nou fișier pentru "
 "istoricul evenimentelor."
 
+msgid "Deploy the relay to your environment"
+msgstr ""
+
 msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
 msgstr ""
+
+#, fuzzy
+msgid "Name the relay"
+msgstr "Numele reprezentantului"
 
 #, fuzzy
 msgid "Provide a display name for your Relay."
@@ -94166,6 +94238,10 @@ msgid ""
 "The name you enter here will be automatically inserted into the terminal "
 "code in the next step."
 msgstr ""
+
+#, fuzzy
+msgid "Register the relay with your Checkmk site"
+msgstr "Afișarea stării site-urilor Checkmk\n"
 
 #, fuzzy
 msgid ""
@@ -94185,6 +94261,10 @@ msgstr "Această regulă"
 msgid " for more details."
 msgstr "Click aici pentru detalii."
 
+#, fuzzy
+msgid "Verify registration"
+msgstr "Ora de înregistrare"
+
 msgid ""
 "After the registration is triggered, verify the registration between the "
 "Relay and Checkmk site."
@@ -94200,21 +94280,6 @@ msgstr "Înregistrare reușită"
 
 msgid "Registration failed and Relay couldn't be saved."
 msgstr ""
-
-msgid "Deploy the relay to your environment"
-msgstr ""
-
-#, fuzzy
-msgid "Name the relay"
-msgstr "Numele reprezentantului"
-
-#, fuzzy
-msgid "Register the relay with your Checkmk site"
-msgstr "Afișarea stării site-urilor Checkmk\n"
-
-#, fuzzy
-msgid "Verify registration"
-msgstr "Ora de înregistrare"
 
 #, fuzzy
 msgid "Continue to add host"
@@ -94694,6 +94759,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Do not regard required mirror space as free space"
+#~ msgstr "Nu considerați spațiul în oglindă necesar ca spațiu liber"
+
+#~ msgid "Specify the name of the ASM Disk Group "
+#~ msgstr "Specificați numele grupului de discuri ASM "
 
 #, fuzzy
 #~ msgid "Disk Usage"
@@ -96094,10 +96165,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Update service params"
 #~ msgstr "Actualizarea etichetelor de serviciu"
-
-#, fuzzy
-#~ msgid "connectee"
-#~ msgstr "deconectat"
 
 #, fuzzy
 #~ msgid "connecter"

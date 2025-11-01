@@ -32,16 +32,19 @@ from redfish.rest.v1 import (
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.redfish.lib import REDFISH_SECTIONS
-from cmk.special_agents.v0_unstable.agent_common import (
-    CannotRecover,
-    special_agent_main,
-)
+from cmk.server_side_programs.v1_unstable import report_agent_crashes
 from cmk.special_agents.v0_unstable.argument_parsing import (
     create_default_argument_parser,
 )
 from cmk.utils.paths import tmp_dir
 
+__version__ = "2.5.0b1"
+
 PASSWORD_OPTION = "password"
+
+
+class CannotRecover(RuntimeError):
+    pass
 
 
 def _make_section_header(
@@ -769,9 +772,15 @@ def agent_redfish_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes("redfish", __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_redfish_main)
+    args = parse_arguments(sys.argv[1:])
+    try:
+        return agent_redfish_main(args)
+    except CannotRecover as e:
+        sys.stderr.write(f"{e}\n")
+        return 1
 
 
 if __name__ == "__main__":

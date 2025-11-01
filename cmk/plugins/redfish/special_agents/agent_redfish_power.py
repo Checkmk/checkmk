@@ -31,12 +31,12 @@ from redfish.rest.v1 import (
 )
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.special_agents.v0_unstable.agent_common import (
-    special_agent_main,
-)
+from cmk.server_side_programs.v1_unstable import report_agent_crashes
 from cmk.special_agents.v0_unstable.argument_parsing import (
     create_default_argument_parser,
 )
+
+__version__ = "2.5.0b1"
 
 SectionName = Literal["RackPDUs", "Mains", "Outlets", "Sensors"]
 
@@ -357,9 +357,11 @@ def agent_redfish_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes("redfish_power", __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_redfish_main)
+    args = parse_arguments(sys.argv[1:])
+    return agent_redfish_main(args)
 
 
 if __name__ == "__main__":

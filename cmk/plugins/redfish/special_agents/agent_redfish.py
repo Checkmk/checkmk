@@ -30,6 +30,7 @@ from redfish.rest.v1 import (
     ServerDownOrUnreachableError,
 )
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.redfish.lib import REDFISH_SECTIONS
 from cmk.special_agents.v0_unstable.agent_common import (
     CannotRecover,
@@ -38,8 +39,9 @@ from cmk.special_agents.v0_unstable.agent_common import (
 from cmk.special_agents.v0_unstable.argument_parsing import (
     create_default_argument_parser,
 )
-from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
+
+PASSWORD_OPTION = "password"
 
 
 def _make_section_header(
@@ -147,17 +149,12 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "-u", "--user", default=None, help="Username for Redfish Login", required=True
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-s",
-        "--password",
-        default=None,
-        help="""Password for Redfish Login. Preferred over --password-id""",
-    )
-    group.add_argument(
-        "--password-id",
-        default=None,
-        help="""Password store reference to the password for Redfish login""",
+    parser_add_secret_option(
+        parser,
+        short="-s",
+        long=f"--{PASSWORD_OPTION}",
+        help="Password for Redfish Login",
+        required=True,
     )
     # optional
     parser.add_argument(
@@ -719,11 +716,6 @@ def get_session(args: argparse.Namespace) -> RedfishData:
     """create a Redfish session with given arguments"""
     try:
         redfish_host = f"{args.proto}://{args.host}:{args.port}"
-        if args.password_id:
-            pw_id, pw_path = args.password_id.split(":")
-        else:
-            pw_id = None
-            pw_path = None
         # Create a Redfish client object
         redfishobj = RedfishData(
             hostname=f"{args.host}_{args.port}",
@@ -732,11 +724,7 @@ def get_session(args: argparse.Namespace) -> RedfishData:
                 redfish_client(
                     base_url=redfish_host,
                     username=args.user,
-                    password=(
-                        args.password
-                        if args.password is not None
-                        else password_store_lookup(Path(pw_path), pw_id)
-                    ),
+                    password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
                     cafile="",
                     default_prefix="/redfish/v1",
                     timeout=args.timeout,

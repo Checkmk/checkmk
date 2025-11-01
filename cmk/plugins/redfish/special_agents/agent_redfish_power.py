@@ -18,7 +18,6 @@ import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Literal
 
 import urllib3
@@ -31,15 +30,17 @@ from redfish.rest.v1 import (
     ServerDownOrUnreachableError,
 )
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.special_agents.v0_unstable.agent_common import (
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import (
     create_default_argument_parser,
 )
-from cmk.utils.password_store import lookup as password_store_lookup
 
 SectionName = Literal["RackPDUs", "Mains", "Outlets", "Sensors"]
+
+PASSWORD_OPTION = "password"
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -50,24 +51,19 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "-u", "--user", default=None, help="Username for Redfish Login", required=True
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-s",
-        "--password",
-        default=None,
-        help="""Password for Redfish Login. Preferred over --password-id""",
-    )
-    group.add_argument(
-        "--password-id",
-        default=None,
-        help="""Password store reference to the password for Redfish login""",
+    parser_add_secret_option(
+        parser,
+        short="-s",
+        long=f"--{PASSWORD_OPTION}",
+        help="Password for Redfish Login",
+        required=True,
     )
     # optional
     parser.add_argument(
         "-P",
         "--proto",
         default="https",
-        help="""Use 'http' or 'https' (default=https)""",
+        help="Use 'http' or 'https' (default=https)",
     )
     parser.add_argument(
         "-p",
@@ -318,17 +314,11 @@ def get_session(args: argparse.Namespace) -> HttpClient:
     """create a Redfish session with given arguments"""
     try:
         redfish_host = f"{args.proto}://{args.host}:{args.port}"
-        if args.password_id:
-            pw_id, pw_path = args.password_id.split(":")
         # Create a Redfish client object
         redfishobj = redfish_client(
             base_url=redfish_host,
             username=args.user,
-            password=(
-                args.password
-                if args.password is not None
-                else password_store_lookup(Path(pw_path), pw_id)
-            ),
+            password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
             cafile="",
             default_prefix="/redfish/v1",
             timeout=args.timeout,

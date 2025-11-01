@@ -18,7 +18,6 @@ from cmk.discover_plugins import discover_all_plugins, discover_families, Plugin
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils import man_pages
 from tests.testlib.common.repo import repo_path
-from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
@@ -172,7 +171,6 @@ def test_cmk_plugins_families_manpages() -> None:
 
 def test_man_page_consistency(
     agent_based_plugins: AgentBasedPlugins,
-    fix_plugin_legacy: FixPluginLegacy,
     all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     """Make sure we have one man page per plugin, and no additional ones"""

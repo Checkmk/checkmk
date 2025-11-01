@@ -16,7 +16,6 @@ import sys
 import time
 from collections.abc import Collection, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Final, Literal, Self
 
 import urllib3
@@ -32,10 +31,11 @@ from redfish.rest.v1 import (
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.redfish.lib import REDFISH_SECTIONS
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.utils.paths import tmp_dir
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
 
 __version__ = "2.5.0b1"
+
+AGENT = "redfish"
 
 PASSWORD_OPTION = "password"
 
@@ -67,8 +67,6 @@ class Vendor:
 class ClientSession:
     """Client session data"""
 
-    DIR = tmp_dir / "agents/agent_redfish"
-
     def __init__(self, location: str, session: str) -> None:
         self.location: Final = location
         self.session: Final = session
@@ -76,18 +74,16 @@ class ClientSession:
     @classmethod
     def loadf(cls, hostname: str) -> Self | None:
         """Load session data from file"""
-        try:
-            raw = (cls.DIR / f"{hostname}.json").read_text()
-        except FileNotFoundError:
+        storage = Storage(AGENT, hostname)
+        if (raw := storage.read("session", None)) is None:
             return None
         raw_json = json.loads(raw)
         return cls(location=str(raw_json["location"]), session=str(raw_json["session"]))
 
     def savef(self, hostname: str) -> None:
         """Save session data to file"""
-        self.DIR.mkdir(parents=True, exist_ok=True)
-        (self.DIR / f"{hostname}.json").write_text(
-            json.dumps({"location": self.location, "session": self.session})
+        Storage(AGENT, hostname).write(
+            "session", json.dumps({"location": self.location, "session": self.session})
         )
 
 
@@ -489,9 +485,9 @@ def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
     return Vendor(name="Generic")
 
 
-def get_information(redfishobj: RedfishData) -> Literal[0]:
+def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     """get a the information from the Redfish management interface"""
-    load_section_data(redfishobj)
+    load_section_data(storage, redfishobj)
     redfishobj.base_data = fetch_data(redfishobj.redfish_connection, "/redfish/v1", "Base")
 
     redfishobj.vendor_data = (vendor_data := detect_vendor(redfishobj.base_data))
@@ -676,15 +672,11 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:
     for chassis in chassis_data:
         fetch_sections(redfishobj, resulting_sections, redfishobj.sections, chassis)
     process_result(redfishobj)
-    store_section_data(redfishobj)
+    store_section_data(storage, redfishobj)
     return 0
 
 
-def _make_cached_section_path(hostname: str, section: str) -> Path:
-    return tmp_dir / "agents" / "agent_redfish" / f"{hostname}_{section}.json"
-
-
-def store_section_data(redfishobj: RedfishData) -> None:
+def store_section_data(storage: Storage, redfishobj: RedfishData) -> None:
     """save section data to file"""
     for section in redfishobj.section_data.keys():
         if not redfishobj.cache_per_section.get(section):
@@ -692,38 +684,32 @@ def store_section_data(redfishobj: RedfishData) -> None:
         if redfishobj.cache_timestamp_per_section.get(section):
             continue
 
-        store_path = _make_cached_section_path(redfishobj.hostname, section)
-        store_path.parent.mkdir(parents=True, exist_ok=True)
-
-        store_path.write_text(
+        storage.write(
+            section,
             json.dumps(
                 {
                     "timestamp": int(time.time()),
                     "data": redfishobj.section_data.get(section),
                 }
-            )
+            ),
         )
 
 
-def load_section_data(redfishobj: RedfishData) -> RedfishData:
+def load_section_data(storage: Storage, redfishobj: RedfishData) -> RedfishData:
     """load section data from file"""
     timestamps = {}
     for key, value in redfishobj.cache_per_section.items():
-        store_path = _make_cached_section_path(redfishobj.hostname, key)
-        try:
-            raw = store_path.read_text()
-        except FileNotFoundError:
-            pass
-        else:
-            store_data = json.loads(raw)
-            current_time = int(time.time())
-            if store_data["timestamp"] + value < current_time:
-                continue
-            if key not in redfishobj.sections:
-                continue
-            timestamps[key] = store_data["timestamp"]
-            redfishobj.section_data.setdefault(key, store_data["data"])
-            redfishobj.sections.remove(key)
+        if (raw := storage.read(key, None)) is None:
+            continue
+        store_data = json.loads(raw)
+        current_time = int(time.time())
+        if store_data["timestamp"] + value < current_time:
+            continue
+        if key not in redfishobj.sections:
+            continue
+        timestamps[key] = store_data["timestamp"]
+        redfishobj.section_data.setdefault(key, store_data["data"])
+        redfishobj.sections.remove(key)
 
     redfishobj.cache_timestamp_per_section = timestamps
     return redfishobj
@@ -778,7 +764,7 @@ def agent_redfish_main(args: argparse.Namespace) -> int:
         n: int(m) for n, m, *_ in (element.split("-") for element in args.cached_sections)
     }
     redfishobj.sections = {n for n in args.sections if n not in args.disabled_sections}
-    get_information(redfishobj)
+    get_information(Storage(AGENT, args.host), redfishobj)
     # logout not needed anymore if no problem - session saved to file
     # logout is done if some query fails
     # REDFISHOBJ.logout()
@@ -786,7 +772,7 @@ def agent_redfish_main(args: argparse.Namespace) -> int:
     return 0
 
 
-@report_agent_crashes("redfish", __version__)
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
     args = parse_arguments(sys.argv[1:])

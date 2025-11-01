@@ -17,11 +17,6 @@ version_path = os.path.dirname(os.path.dirname(sys.executable))
 site.addsitedir(version_path + "/lib/python3")
 
 
-# Set the site cloud python module directory.
-# This is the place for extension modules shipped with the CCE only.
-sys.path.insert(0, version_path + "/lib/python3/cloud")
-
-
 # Regular use case: When "omd" is being executed as root, we don't know
 # anything about the site -> Only set the version specific directory.
 omd_root = os.environ.get("OMD_ROOT")

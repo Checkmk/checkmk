@@ -15,8 +15,9 @@ from typing import NamedTuple
 
 import requests
 
+from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 class Section(NamedTuple):
@@ -33,7 +34,26 @@ def main() -> int:
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     sections = ["instance", "jobs", "nodes", "queue", "system_metrics"]
 
-    parser = create_default_argument_parser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug mode (keep some exceptions unhandled)",
+    )
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument(
+        "--vcrtrace",
+        "--tracefile",
+        default=False,
+        action=vcrtrace(
+            # This is the result of a refactoring.
+            # I did not check if it makes sense for this special agent.
+            filter_headers=[("authorization", "****")],
+        ),
+    )
 
     parser.add_argument("-u", "--user", default=None, help="Username for jenkins login")
     parser.add_argument("-s", "--password", default=None, help="Password for jenkins login")

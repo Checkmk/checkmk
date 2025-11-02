@@ -9,6 +9,7 @@
 # TODO: once this agent can be used on a 2.x live system, it should be checked for functionality
 #       and against known exceptions
 
+import argparse
 import datetime as dt
 import logging
 import sys
@@ -20,8 +21,9 @@ from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 
 import cmk.utils.paths
+from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 AnyGenerator = Generator[Any]
 ResultFn = Callable[..., AnyGenerator]
@@ -213,7 +215,26 @@ SECTIONS: Sequence[tuple[str, ResultFn]] = (
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
-    parser = create_default_argument_parser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug mode (keep some exceptions unhandled)",
+    )
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument(
+        "--vcrtrace",
+        "--tracefile",
+        default=False,
+        action=vcrtrace(
+            # This is the result of a refactoring.
+            # I did not check if it makes sense for this special agent.
+            filter_headers=[("authorization", "****")],
+        ),
+    )
     parser.add_argument("user", metavar="USER", help="""Username for Observer Role""")
     parser.add_argument("password", metavar="PASSWORD", help="""Password for Observer Role""")
     parser.add_argument(

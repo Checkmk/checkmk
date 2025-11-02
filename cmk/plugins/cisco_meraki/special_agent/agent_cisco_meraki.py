@@ -20,12 +20,13 @@ from typing import Final, TypedDict
 
 import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
+from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
@@ -368,7 +369,26 @@ def _write_sections(sections: Iterable[Section]) -> None:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
-    parser = create_default_argument_parser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug mode (keep some exceptions unhandled)",
+    )
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument(
+        "--vcrtrace",
+        "--tracefile",
+        default=False,
+        action=vcrtrace(
+            # This is the result of a refactoring.
+            # I did not check if it makes sense for this special agent.
+            filter_headers=[("authorization", "****")],
+        ),
+    )
 
     parser.add_argument("hostname")
 

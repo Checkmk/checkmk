@@ -5,14 +5,16 @@
 
 # mypy: disable-error-code="possibly-undefined"
 
+import argparse
 import sys
 from collections.abc import Mapping, Sequence
 
 import pydantic
 import requests
 
+from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 def agent_elasticsearch_main(args: Args) -> int:
@@ -67,7 +69,26 @@ def agent_elasticsearch_main(args: Args) -> int:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
-    parser = create_default_argument_parser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug mode (keep some exceptions unhandled)",
+    )
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument(
+        "--vcrtrace",
+        "--tracefile",
+        default=False,
+        action=vcrtrace(
+            # This is the result of a refactoring.
+            # I did not check if it makes sense for this special agent.
+            filter_headers=[("authorization", "****")],
+        ),
+    )
 
     parser.add_argument("-u", "--user", default=None, help="Username for elasticsearch login")
     parser.add_argument("-s", "--password", default=None, help="Password for easticsearch login")

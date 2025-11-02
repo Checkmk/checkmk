@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Sequence
@@ -10,13 +11,33 @@ from typing import Literal
 
 from requests.auth import HTTPBasicAuth
 
+from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 
 def parse_arguments(args: Sequence[str] | None) -> Args:
-    parser = create_default_argument_parser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug mode (keep some exceptions unhandled)",
+    )
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument(
+        "--vcrtrace",
+        "--tracefile",
+        default=False,
+        action=vcrtrace(
+            # This is the result of a refactoring.
+            # I did not check if it makes sense for this special agent.
+            filter_headers=[("authorization", "****")],
+        ),
+    )
     parser.add_argument(
         "servername",
         type=str,

@@ -13,6 +13,8 @@ import { useAPILoader } from './useAPILoader'
 
 const API = 'api/internal/domain-types/view/collections/all'
 
+export type UseViewsCollection = ReturnType<typeof useViewsCollection>
+
 export function useViewsCollection() {
   const loader = useAPILoader<ViewCollectionModel>({
     fetcher: () => fetchRestAPI(API, 'GET')
@@ -34,6 +36,7 @@ export function useViewsCollection() {
   })
 
   return {
+    lastLoadedAt: loader.lastLoadedAt,
     isLoading: loader.isLoading,
     error: loader.error,
 

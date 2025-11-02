@@ -12,8 +12,15 @@ from collections.abc import Mapping, Sequence
 import pydantic
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter
+
+__version__ = "2.5.0b1"
+
+AGENT = "elasticsearch"
+
+SECRET_OPTION = "secret"
 
 
 def agent_elasticsearch_main(args: argparse.Namespace) -> int:
@@ -48,7 +55,11 @@ def agent_elasticsearch_main(args: argparse.Namespace) -> int:
                     else f"{url_base}{section_url}"
                 )
 
-                auth = (args.user, args.password) if args.user and args.password else None
+                auth = (
+                    (args.user, resolve_secret_option(args, SECRET_OPTION).reveal())
+                    if args.user and args.password
+                    else None
+                )
                 certcheck = not args.no_cert_check
                 try:
                     response = requests.get(url, auth=auth, verify=certcheck, timeout=900)
@@ -67,7 +78,7 @@ def agent_elasticsearch_main(args: argparse.Namespace) -> int:
     return 0
 
 
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -90,7 +101,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
 
     parser.add_argument("-u", "--user", default=None, help="Username for elasticsearch login")
-    parser.add_argument("-s", "--password", default=None, help="Password for easticsearch login")
+    parser_add_secret_option(
+        parser, long=f"--{SECRET_OPTION}", help="Password for elasticsearch login"
+    )
     parser.add_argument(
         "-P",
         "--proto",
@@ -179,6 +192,7 @@ def handle_stats(response: Mapping[str, object]) -> None:
         writer.append_json(response["indices"])
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_elasticsearch_main)
+    return agent_elasticsearch_main(parse_arguments(sys.argv[1:]))

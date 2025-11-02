@@ -36,7 +36,7 @@ def _agent_elasticsearch_arguments(
         args.extend(["-u", str(params["user"])])
     if "password" in params:
         assert isinstance(secret := params["password"], Secret)
-        args.extend(["-s", secret.unsafe()])
+        args.extend(["--secret-id", secret])
     if "port" in params:
         args.extend(["-p", str(params["port"])])
     if params.get("no_cert_check", False):

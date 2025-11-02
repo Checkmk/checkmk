@@ -41,7 +41,7 @@ HACK_AGENTS = {
     "couchbase": True,
     "datadog": True,
     "ddn_s2a": True,
-    "elasticsearch": True,
+    "elasticsearch": False,
     "fritzbox": False,  # needs no secret
     "gcp_status": False,  # needs no secret
     "gcp": True,

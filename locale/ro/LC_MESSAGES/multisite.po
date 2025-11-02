@@ -649,6 +649,10 @@ msgstr "%s Previzualizare a raportului terminat"
 msgid "%s Retrieve created dump file"
 msgstr "%s Preluare fișier de vidare creat"
 
+#, fuzzy, python-format
+msgid "%s all ids"
+msgstr "Pe toate site-urile"
+
 #, python-format
 msgid "%s by host"
 msgstr "%s de către gazdă"
@@ -727,6 +731,10 @@ msgstr "%s etichete corespunzătoare: %s"
 #, fuzzy, python-format
 msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%s ar putea să lipsească, dacă nu trebuie să fie gol dacă este setat."
+
+#, python-format
+msgid "%s messages with ids:"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "%s notification %s (%d global %s, %d user %s)"
@@ -3970,6 +3978,10 @@ msgstr "Adaugă Contoar"
 msgid "Add Counter Object"
 msgstr "Adăugați obiectul contor"
 
+#, fuzzy
+msgid "Add Event Id or Event Id range"
+msgstr "Adăugați un nou interval IP"
+
 msgid "Add Exception"
 msgstr "Adaugă Excepție"
 
@@ -4165,6 +4177,10 @@ msgid "Add files to be monitored"
 msgstr "Adăugați fișierele care urmează să fie monitorizate"
 
 msgid "Add filter"
+msgstr "Adaugă filtre"
+
+#, fuzzy
+msgid "Add filter rule"
 msgstr "Adaugă filtre"
 
 msgid "Add folder"
@@ -29240,6 +29256,10 @@ msgstr ""
 "Aici puteți configura nivelurile de utilizare, de utilizare a cererilor, de "
 "utilizare a limitelor și, respectiv, de utilizare a nodurilor."
 
+#, fuzzy
+msgid "Here you can configure messages filtering parameters"
+msgstr "Aici puteți configura setările de temporizare."
+
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr ""
@@ -32876,6 +32896,11 @@ msgstr "Icoane"
 msgid "Icons and Actions"
 msgstr "%d pictograme și acțiuni"
 
+msgid ""
+"Id entryField smay contain either numeric event id or pair of numeric event "
+"ids separated by dash."
+msgstr ""
+
 msgid "Ideas Portal"
 msgstr ""
 
@@ -35475,6 +35500,10 @@ msgstr "Mesaje primite"
 
 msgid "Incident"
 msgstr "Incident"
+
+#, fuzzy
+msgid "Include"
+msgstr "Excludeți"
 
 msgid "Include Pattern"
 msgstr "Includeți modelul"
@@ -50882,6 +50911,10 @@ msgstr "Parametrii pentru %s"
 #, python-format
 msgid "Parameters for %s"
 msgstr "Parametrii pentru %s"
+
+#, fuzzy
+msgid "Parameters for event filtering"
+msgstr "Parametrii pentru latențe"
 
 msgid "Parameters for input phases of UPSs and PDUs"
 msgstr "Parametrii pentru fazele de intrare ale UPS-urilor și PDU-urilor"

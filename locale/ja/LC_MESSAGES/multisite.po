@@ -626,6 +626,10 @@ msgstr "%s レポートのプレビューが終了しました"
 msgid "%s Retrieve created dump file"
 msgstr "%s 作成されたダンプファイルを取得します"
 
+#, fuzzy, python-format
+msgid "%s all ids"
+msgstr "すべてのサイトで"
+
 #, python-format
 msgid "%s by host"
 msgstr "ホスト別の %s"
@@ -703,6 +707,10 @@ msgstr "%s 一致するラベル: "
 #, python-format
 msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%sは、設定されている場合、空であってはならない。"
+
+#, python-format
+msgid "%s messages with ids:"
+msgstr ""
 
 #, python-format
 msgid "%s notification %s (%d global %s, %d user %s)"
@@ -3761,6 +3769,10 @@ msgstr "カウンターを追加"
 msgid "Add Counter Object"
 msgstr "カウンターオブジェクトの追加"
 
+#, fuzzy
+msgid "Add Event Id or Event Id range"
+msgstr "新しいIP範囲を追加する"
+
 msgid "Add Exception"
 msgstr "例外を追加"
 
@@ -3947,6 +3959,10 @@ msgid "Add files to be monitored"
 msgstr "監視するファイルを追加する"
 
 msgid "Add filter"
+msgstr "フィルタを追加"
+
+#, fuzzy
+msgid "Add filter rule"
 msgstr "フィルタを追加"
 
 msgid "Add folder"
@@ -27569,6 +27585,10 @@ msgstr ""
 "ここでは、使用量、リクエスト使用率、制限使用率、ノード使用率のレベルをそれぞ"
 "れ設定することができます。"
 
+#, fuzzy
+msgid "Here you can configure messages filtering parameters"
+msgstr "ここで、タイムアウト設定を構成できます。"
+
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr "ここでは、各シャーシの3.3Vおよび12Vの電圧レベルを構成できます。"
@@ -30759,6 +30779,11 @@ msgstr "アイコン"
 msgid "Icons and Actions"
 msgstr "アイコンとアクション"
 
+msgid ""
+"Id entryField smay contain either numeric event id or pair of numeric event "
+"ids separated by dash."
+msgstr ""
+
 msgid "Ideas Portal"
 msgstr "アイディアポータル"
 
@@ -33208,6 +33233,10 @@ msgstr "インバウンドメッセージ"
 
 msgid "Incident"
 msgstr "インシデント"
+
+#, fuzzy
+msgid "Include"
+msgstr "除外する"
 
 msgid "Include Pattern"
 msgstr "パターンを含める"
@@ -47595,6 +47624,10 @@ msgstr "パラメータ"
 #, python-format
 msgid "Parameters for %s"
 msgstr "%sのパラメータ"
+
+#, fuzzy
+msgid "Parameters for event filtering"
+msgstr "レイテンシーのパラメータ"
 
 msgid "Parameters for input phases of UPSs and PDUs"
 msgstr "UPSおよびPDUの入力フェーズのパラメーター"

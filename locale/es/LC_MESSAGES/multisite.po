@@ -641,6 +641,10 @@ msgstr "%s vista previa del reporte finalizada"
 msgid "%s Retrieve created dump file"
 msgstr "%s Recuperar archivo dump creado"
 
+#, fuzzy, python-format
+msgid "%s all ids"
+msgstr "En todos los sitios"
+
 #, python-format
 msgid "%s by host"
 msgstr "%s por host"
@@ -719,6 +723,10 @@ msgstr "%s etiquetas coincidentes: %s"
 #, fuzzy, python-format
 msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%s podría faltar, no debe estar vacío si está configurado."
+
+#, python-format
+msgid "%s messages with ids:"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "%s notification %s (%d global %s, %d user %s)"
@@ -3972,6 +3980,10 @@ msgstr "Añadir contador"
 msgid "Add Counter Object"
 msgstr "Añadir objeto de contador"
 
+#, fuzzy
+msgid "Add Event Id or Event Id range"
+msgstr "Añadir un nuevo rango de IP"
+
 msgid "Add Exception"
 msgstr "Añadir excepción"
 
@@ -4169,6 +4181,10 @@ msgid "Add files to be monitored"
 msgstr "Añadir archivos a supervisar"
 
 msgid "Add filter"
+msgstr "Añadir filtro"
+
+#, fuzzy
+msgid "Add filter rule"
 msgstr "Añadir filtro"
 
 msgid "Add folder"
@@ -29400,6 +29416,10 @@ msgstr ""
 "Aquí puede configurar los niveles de uso, utilización de solicitudes, "
 "utilización de límites y utilización de nodos, respectivamente."
 
+#, fuzzy
+msgid "Here you can configure messages filtering parameters"
+msgstr "Aquí puede configurar los ajustes de tiempo de espera."
+
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr ""
@@ -33054,6 +33074,11 @@ msgstr "Iconos"
 msgid "Icons and Actions"
 msgstr "%d íconos y acciones"
 
+msgid ""
+"Id entryField smay contain either numeric event id or pair of numeric event "
+"ids separated by dash."
+msgstr ""
+
 msgid "Ideas Portal"
 msgstr ""
 
@@ -35630,6 +35655,10 @@ msgstr "Mensajes de entrada"
 
 msgid "Incident"
 msgstr "Incidente"
+
+#, fuzzy
+msgid "Include"
+msgstr "Excluye"
 
 msgid "Include Pattern"
 msgstr "Incluir patrón"
@@ -51169,6 +51198,10 @@ msgstr "Parámetros para %s"
 #, python-format
 msgid "Parameters for %s"
 msgstr "Parámetros para %s"
+
+#, fuzzy
+msgid "Parameters for event filtering"
+msgstr "Parámetros para las latencias"
 
 msgid "Parameters for input phases of UPSs and PDUs"
 msgstr "Parámetros para las fases de entrada de los SAIs y PDUs"

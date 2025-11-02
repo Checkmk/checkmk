@@ -644,6 +644,10 @@ msgstr "%s Voorbeeld van rapport afgerond"
 msgid "%s Retrieve created dump file"
 msgstr "%s Ophalen heeft een dump bestand gemaakt"
 
+#, fuzzy, python-format
+msgid "%s all ids"
+msgstr "Op alle sites"
+
 #, python-format
 msgid "%s by host"
 msgstr "%s door host"
@@ -721,6 +725,10 @@ msgstr "%s overeenkomende labels: %s"
 #, fuzzy, python-format
 msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%s mag ontbreken, het mag niet leeg zijn indien het gezet is."
+
+#, python-format
+msgid "%s messages with ids:"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "%s notification %s (%d global %s, %d user %s)"
@@ -3953,6 +3961,10 @@ msgstr "Teller toevoegen"
 msgid "Add Counter Object"
 msgstr "Teller object toevoegen"
 
+#, fuzzy
+msgid "Add Event Id or Event Id range"
+msgstr "Nieuwe IP-reeks toevoegen"
+
 msgid "Add Exception"
 msgstr "Uitzondering toevoegen"
 
@@ -4149,6 +4161,10 @@ msgid "Add files to be monitored"
 msgstr "Bestanden toevoegen die moeten worden bewaakt"
 
 msgid "Add filter"
+msgstr "Filter toevoegen"
+
+#, fuzzy
+msgid "Add filter rule"
 msgstr "Filter toevoegen"
 
 msgid "Add folder"
@@ -29175,6 +29191,10 @@ msgstr ""
 "Hier kunt u niveaus configureren voor respectievelijk gebruik, requests "
 "gebruik, limieten gebruik en node gebruik."
 
+#, fuzzy
+msgid "Here you can configure messages filtering parameters"
+msgstr "Hier kunt u de time-out instellingen configureren."
+
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr ""
@@ -32807,6 +32827,11 @@ msgstr "Pictogrammen"
 msgid "Icons and Actions"
 msgstr "%d iconen en acties"
 
+msgid ""
+"Id entryField smay contain either numeric event id or pair of numeric event "
+"ids separated by dash."
+msgstr ""
+
 msgid "Ideas Portal"
 msgstr ""
 
@@ -35359,6 +35384,10 @@ msgstr "Inkomende berichten"
 
 msgid "Incident"
 msgstr "Incident"
+
+#, fuzzy
+msgid "Include"
+msgstr "Exclusief"
 
 msgid "Include Pattern"
 msgstr "Patroon opnemen"
@@ -50783,6 +50812,10 @@ msgstr "Parameters voor %s"
 #, python-format
 msgid "Parameters for %s"
 msgstr "Parameters voor %s"
+
+#, fuzzy
+msgid "Parameters for event filtering"
+msgstr "Parameters voor de latenties"
 
 msgid "Parameters for input phases of UPSs and PDUs"
 msgstr "Parameters voor ingangsfasen van UPS-systemen en PDU's"

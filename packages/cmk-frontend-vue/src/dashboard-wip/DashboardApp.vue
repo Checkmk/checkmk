@@ -29,6 +29,7 @@ import type {
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
+import { useProvideVisualInfos } from '@/dashboard-wip/composables/useProvideVisualInfos'
 import {
   type ContentResponsiveGrid,
   type DashboardGeneralSettings,
@@ -66,6 +67,8 @@ const widgetToEdit = ref<string | null>(null)
 
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
+
+useProvideVisualInfos()
 
 // So far, this is only needed and used by the DashboardContentNtop component
 provide('urlParams', props.url_params)

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -25,7 +25,7 @@ import type {
   ConfiguredValues
 } from '@/dashboard-wip/components/filter/types.ts'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
-import { useVisualInfoCollection } from '@/dashboard-wip/composables/api/useVisualInfoCollection.ts'
+import { useInjectVisualInfos } from '@/dashboard-wip/composables/useProvideVisualInfos'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
@@ -57,7 +57,7 @@ const emit = defineEmits<{
   (e: 'goNext', selectedView: ViewSelection): void
 }>()
 
-const { byId, ensureLoaded } = useVisualInfoCollection()
+const visualInfosById = useInjectVisualInfos()
 const filterDefinitions = useFilterDefinitions()
 
 const selectedDatasource = defineModel<string | null>('selectedDatasource', { default: '' })
@@ -100,10 +100,6 @@ const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
   default: ViewSelectionMode.NEW
 })
 
-onMounted(async () => {
-  await ensureLoaded()
-})
-
 watch(contextInfos, () => {
   emit('reset-all-filters')
 })
@@ -132,7 +128,7 @@ watch(restrictedToSingleInfos, (newList, oldList) => {
 })
 
 const getVisual = (objectType: ObjectType) => {
-  return byId.value[objectType]
+  return visualInfosById.value[objectType]
 }
 
 const configuredFiltersByObjectType = computed(() => {

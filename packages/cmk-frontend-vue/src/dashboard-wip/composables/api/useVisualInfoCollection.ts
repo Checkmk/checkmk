@@ -13,6 +13,8 @@ import { useAPILoader } from './useAPILoader'
 
 const API = 'api/internal/objects/constant/visual_info/collections/all'
 
+export type UseVisualInfoCollection = ReturnType<typeof useVisualInfoCollection>
+
 export function useVisualInfoCollection() {
   const loader = useAPILoader<VisualInfoCollectionModel>({
     fetcher: () => fetchRestAPI<VisualInfoCollectionModel>(API, 'GET')

@@ -47,8 +47,10 @@ def command_function(params: _Params, host_config: HostConfig) -> Iterable[Speci
     yield SpecialAgentCommand(
         command_arguments=[
             host_config.primary_ip_config.address,
+            "--user",
             options.username,
-            options.password.unsafe(),
+            "--password-id",
+            options.password,
             ipmi_command,
             options.privilege_lvl,
             *(

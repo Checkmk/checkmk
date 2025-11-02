@@ -18,8 +18,11 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Literal
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+
+PASSWORD_OPTION = "password"
 
 
 @dataclass(frozen=True)
@@ -157,17 +160,13 @@ def _parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Host name or IP address",
     )
     parser.add_argument(
-        "user",
+        "--user",
         type=str,
-        metavar="USER",
+        required=True,
         help="Username",
     )
-    parser.add_argument(
-        "password",
-        type=str,
-        metavar="PASSWORD",
-        help="Password",
-    )
+    parser_add_secret_option(parser, long=f"--{PASSWORD_OPTION}", help="Password", required=True)
+
     ipmi_cmd_subparsers = parser.add_subparsers(
         required=True,
         dest="ipmi_cmd",
@@ -224,7 +223,7 @@ def _prepare_freeipmi_call(
         "-u",
         args.user,
         "-p",
-        args.password,
+        resolve_secret_option(args, PASSWORD_OPTION).reveal(),
         "-l",
         args.privilege_lvl,
         *_freeipmi_additional_args(args),
@@ -249,7 +248,7 @@ def _prepare_ipmitool_call(
         "-U",
         args.user,
         "-P",
-        args.password,
+        resolve_secret_option(args, PASSWORD_OPTION).reveal(),
         "-L",
         args.privilege_lvl,
         *_ipmitool_additional_args(args),

@@ -34,8 +34,10 @@ HOST_CONFIG = HostConfig(
             SpecialAgentCommand(
                 command_arguments=[
                     "1.2.3.4",
+                    "--user",
                     "user",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(23),
                     "freeipmi",
                     "user",
                     "--output_sensor_state",
@@ -61,8 +63,10 @@ HOST_CONFIG = HostConfig(
             SpecialAgentCommand(
                 command_arguments=[
                     "1.2.3.4",
+                    "--user",
                     "user",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(23),
                     "freeipmi",
                     "user",
                     "--driver",
@@ -88,8 +92,10 @@ HOST_CONFIG = HostConfig(
             SpecialAgentCommand(
                 command_arguments=[
                     "1.2.3.4",
+                    "--user",
                     "user",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(23),
                     "ipmitool",
                     "administrator",
                     "--intf",

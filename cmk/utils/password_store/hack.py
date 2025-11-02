@@ -52,7 +52,7 @@ HACK_AGENTS = {
     "hp_msa": True,
     "ibmsvc": False,  # needs no secret
     "innovaphone": True,
-    "ipmi_sensors": True,
+    "ipmi_sensors": False,
     "jenkins": True,
     "jira": True,
     "jolokia": True,

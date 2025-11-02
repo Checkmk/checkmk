@@ -6,6 +6,8 @@ import dataclasses
 import socket
 from pathlib import Path
 
+SOCKET_TIMEOUT = 5.0
+
 
 class FailedToSendMonitoringDataError(Exception):
     pass
@@ -37,7 +39,14 @@ class ForwardMonitoringDataHandler:
         """
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+                sock.settimeout(SOCKET_TIMEOUT)
                 sock.connect(str(self._data_socket))
                 sock.sendall(data)
+
+                # See https://docs.python.org/3/library/socket.html#socket.socket.close
+                # Note: close() releases the resource associated with a connection
+                # but does not necessarily close the connection immediately.
+                # If you want to close the connection in a timely fashion, call shutdown() before close().
+                sock.shutdown(socket.SHUT_RDWR)
         except OSError as e:
             raise FailedToSendMonitoringDataError(str(e)) from e

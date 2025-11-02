@@ -26,7 +26,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
@@ -458,14 +457,14 @@ def _need_devices(section_names: Sequence[str]) -> bool:
     )
 
 
-def _make_secret(args: Args) -> str:
+def _make_secret(args: argparse.Namespace) -> str:
     if args.apikey:
         return args.apikey
     pw_id, pw_file = args.apikey_reference.split(":", 1)
     return password_store_lookup(Path(pw_file), pw_id)
 
 
-def agent_cisco_meraki_main(args: Args) -> int:
+def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
     config = MerakiConfig(
         dashboard=_configure_meraki_dashboard(
             _make_secret(args),

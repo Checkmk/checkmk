@@ -23,7 +23,6 @@ import urllib3
 
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
 
@@ -81,7 +80,7 @@ _SECTIONS = [
 ]
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -274,7 +273,7 @@ def _filter_applicable_sections(
         yield spec
 
 
-def agent_pure_storage_fa(args: Args) -> int:
+def agent_pure_storage_fa(args: argparse.Namespace) -> int:
     pure_storage_fa = PureStorageFlashArray(
         args.server,
         args.cert_server_name or not args.no_cert_check,

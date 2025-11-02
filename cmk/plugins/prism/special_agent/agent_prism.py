@@ -22,7 +22,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 LOGGING = logging.getLogger("agent_prism")
 
@@ -83,7 +82,7 @@ def _is_ahv_exclusive(hosts_obj: Mapping[str, Iterable[Mapping[str, str]]]) -> b
     )
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -223,7 +222,7 @@ def output_entities(entities: dict[str, Any], target_name: str) -> None:
         w.append_json(entities)
 
 
-def agent_prism_main(args: Args) -> int:
+def agent_prism_main(args: argparse.Namespace) -> int:
     """Establish a connection to a Prism server and process containers, alerts, clusters and
     storage_pools"""
     try:

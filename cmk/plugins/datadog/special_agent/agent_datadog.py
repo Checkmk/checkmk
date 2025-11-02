@@ -32,7 +32,6 @@ import cmk.ec.export as ec
 from cmk.ccc.store import load_text_from_file, save_text_to_file
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.paths import omd_root, tmp_dir
 
@@ -52,7 +51,7 @@ class LogMessageElement:
         return cls(name, key)
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -710,7 +709,7 @@ def _forward_logs_to_ec(
 
 def _monitors_section(
     datadog_api: DatadogAPI,
-    args: Args,
+    args: argparse.Namespace,
 ) -> None:
     LOGGER.debug("Querying monitors")
     with SectionWriter("datadog_monitors") as writer:
@@ -721,7 +720,7 @@ def _monitors_section(
             writer.append_json(monitor)
 
 
-def _events_section(datadog_api: DatadogAPI, args: Args) -> None:
+def _events_section(datadog_api: DatadogAPI, args: argparse.Namespace) -> None:
     LOGGER.debug("Querying events")
     events = list(
         EventsQuerier(
@@ -742,7 +741,7 @@ def _events_section(datadog_api: DatadogAPI, args: Args) -> None:
         writer.append(len(events))
 
 
-def _logs_section(datadog_api: DatadogAPI, args: Args) -> None:
+def _logs_section(datadog_api: DatadogAPI, args: argparse.Namespace) -> None:
     LOGGER.debug("Querying logs")
     logs = list(
         LogsQuerier(
@@ -763,7 +762,7 @@ def _logs_section(datadog_api: DatadogAPI, args: Args) -> None:
         writer.append(len(logs))
 
 
-def agent_datadog_main(args: Args) -> int:
+def agent_datadog_main(args: argparse.Namespace) -> int:
     datadog_api = ImplDatadogAPI(
         args.api_host,
         args.api_key,

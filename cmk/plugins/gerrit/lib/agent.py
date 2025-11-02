@@ -14,7 +14,6 @@ from cmk.plugins.gerrit.lib import collectors, storage
 from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.utils.password_store import lookup as password_store_lookup
 
 
@@ -70,7 +69,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def run_agent(args: Args) -> int:
+def run_agent(args: argparse.Namespace) -> int:
     api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
     auth = (args.user, get_password_from_args(args))
 
@@ -85,7 +84,7 @@ def run_agent(args: Args) -> int:
     return 0
 
 
-def get_password_from_args(args: Args) -> str:
+def get_password_from_args(args: argparse.Namespace) -> str:
     if args.password:
         return args.password
 

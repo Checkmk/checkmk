@@ -20,7 +20,6 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable import agent_common
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 class DiscoveryParam(pydantic.BaseModel):
@@ -50,7 +49,7 @@ def _health_serializer(section: AgentOutput) -> None:
         w.append(section.model_dump_json())
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -87,7 +86,9 @@ def _health_info() -> str:
     return "{}"
 
 
-def write_section(args: Args, health_info: typing.Callable[[], str] = _health_info) -> int:
+def write_section(
+    args: argparse.Namespace, health_info: typing.Callable[[], str] = _health_info
+) -> int:
     response = health_info()
     section = AgentOutput(
         discovery_param=DiscoveryParam.model_validate(vars(args)),

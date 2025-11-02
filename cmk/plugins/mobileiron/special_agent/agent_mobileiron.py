@@ -34,7 +34,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
@@ -93,7 +92,7 @@ def _get_partition_list(opt_string: str) -> list[str]:
     return opt_string.split(",")
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -278,7 +277,7 @@ class MobileironAPI:
         return self._all_devices
 
 
-def agent_mobileiron_main(args: Args) -> int:
+def agent_mobileiron_main(args: argparse.Namespace) -> int:
     """Fetches and writes selected information formatted as agent output to stdout.
     Standard out with sections and piggyback example:
     <<<mobileiron_statistics>>>

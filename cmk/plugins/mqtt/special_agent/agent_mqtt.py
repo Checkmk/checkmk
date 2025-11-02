@@ -32,7 +32,6 @@ import paho.mqtt.client as mqtt
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 LOGGER = logging.getLogger("agent_mqtt")
 
@@ -83,7 +82,7 @@ class ReceivedData:
     remaining_topics: set[str] = field(default_factory=lambda: set(EXPECTED_SYS_TOPICS))
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -153,7 +152,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def agent_mqtt_main(args: Args) -> int:
+def agent_mqtt_main(args: argparse.Namespace) -> int:
     try:
         received = receive_from_mqtt(args)
     except RuntimeError as e:
@@ -167,7 +166,7 @@ def agent_mqtt_main(args: Args) -> int:
     return 0
 
 
-def receive_from_mqtt(args: Args) -> ReceivedData:
+def receive_from_mqtt(args: argparse.Namespace) -> ReceivedData:
     received = ReceivedData()
 
     # Have a look at https://github.com/eclipse/paho.mqtt.python for an API description

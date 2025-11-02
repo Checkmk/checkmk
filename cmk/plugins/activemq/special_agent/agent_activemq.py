@@ -13,11 +13,10 @@ from requests.auth import HTTPBasicAuth
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 
-def parse_arguments(args: Sequence[str] | None) -> Args:
+def parse_arguments(args: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -92,7 +91,7 @@ def _parse_api_url(
     return f"{address}/admin/xml/"
 
 
-def agent_activemq_main(args: Args) -> int:
+def agent_activemq_main(args: argparse.Namespace) -> int:
     api_url = _parse_api_url(
         server_address=args.servername,
         port=args.port,

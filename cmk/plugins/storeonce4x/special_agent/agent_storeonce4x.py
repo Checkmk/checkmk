@@ -23,7 +23,6 @@ from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 import cmk.utils.paths
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 AnyGenerator = Generator[Any]
 ResultFn = Callable[..., AnyGenerator]
@@ -214,7 +213,7 @@ SECTIONS: Sequence[tuple[str, ResultFn]] = (
 )
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -246,7 +245,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def agent_storeonce4x_main(args: Args) -> int:
+def agent_storeonce4x_main(args: argparse.Namespace) -> int:
     if not args.verify_ssl:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

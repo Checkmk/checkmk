@@ -15,7 +15,6 @@ import requests
 
 import cmk.utils.password_store
 from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 class InnovaphoneConnection:
@@ -143,7 +142,7 @@ def _get_element(text: str) -> etree.Element | None:
     return None
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )

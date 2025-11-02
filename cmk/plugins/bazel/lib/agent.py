@@ -22,7 +22,6 @@ import urllib3
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
 from cmk.utils.semantic_version import SemanticVersion
@@ -80,7 +79,7 @@ class VersionCache(DataCache):
         return None
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -132,7 +131,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def agent_bazel_cache_main(args: Args) -> int:
+def agent_bazel_cache_main(args: argparse.Namespace) -> int:
     endpoints = [
         Endpoint(
             name="status",
@@ -154,7 +153,7 @@ def agent_bazel_cache_main(args: Args) -> int:
     return 0
 
 
-def handle_requests(args: Args, endpoints: list[Endpoint]) -> int:
+def handle_requests(args: argparse.Namespace, endpoints: list[Endpoint]) -> int:
     base_url = f"{args.protocol}://{args.host}:{args.port}"
     auth = (args.user, args.password) if args.user and args.password else None
 
@@ -198,7 +197,7 @@ def _camel_to_snake(name: str) -> str:
     return CAMEL_PATTERN.sub("_", name).lower()
 
 
-def _process_data(res: requests.Response, endpoint: Endpoint, args: Args) -> None:
+def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Namespace) -> None:
     if endpoint.data_format == "json":
         data = {_camel_to_snake(key): value for key, value in res.json().items()}
         if endpoint.name == "status" and "git_commit" in data:

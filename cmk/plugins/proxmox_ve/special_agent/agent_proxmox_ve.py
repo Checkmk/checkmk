@@ -44,12 +44,11 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     """parse command line arguments and return argument object"""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
@@ -117,7 +116,7 @@ def find_storage_for_vmid(
     return storage_links
 
 
-def agent_proxmox_ve_main(args: Args) -> int:
+def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
     """Fetches and writes selected information formatted as agent output to stdout"""
     with ProxmoxVeAPI(
         host=args.hostname,

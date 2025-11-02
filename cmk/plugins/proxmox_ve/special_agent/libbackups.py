@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="misc"
 
+import argparse
 import json
 import logging
 import re
@@ -27,7 +28,6 @@ from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
     TaskInfo,
 )
 from cmk.server_side_programs.v1_unstable import Storage
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.utils.paths import tmp_dir
 
 LOGGER = logging.getLogger("agent_proxmox_ve.backups")
@@ -409,7 +409,7 @@ def collect_vm_backup_info(backup_tasks: Iterable[BackupTask]) -> Mapping[str, B
 
 
 def fetch_backup_data(
-    args: Args,
+    args: argparse.Namespace,
     session: "ProxmoxVeAPI",
     nodes: Iterable[Mapping[str, Any]],
 ) -> Mapping[str, BackupInfo]:

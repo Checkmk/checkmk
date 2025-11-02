@@ -18,7 +18,6 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 _DEFAULT_TIMEOUT = 10
 
@@ -81,7 +80,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv if argv is not None else sys.argv[1:])
 
 
-def _fetch_and_output_data(args: Args) -> int:
+def _fetch_and_output_data(args: argparse.Namespace) -> int:
     url = f"http://{args.host}/xml/sensordata.xml"
     try:
         response = requests.get(

@@ -18,7 +18,6 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable import agent_common
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 Seconds = typing.NewType("Seconds", float)
 
@@ -44,7 +43,7 @@ class AgentOutput(pydantic.BaseModel):
     rss_str: str
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -78,7 +77,9 @@ def _get_rss() -> requests.Response:
     return requests.get("https://status.aws.amazon.com/rss/all.rss", timeout=900)
 
 
-def write_section(args: Args, get_rss: typing.Callable[[], requests.Response] = _get_rss) -> int:
+def write_section(
+    args: argparse.Namespace, get_rss: typing.Callable[[], requests.Response] = _get_rss
+) -> int:
     response = get_rss()
     section = AgentOutput(
         discovery_param=DiscoveryParam.model_validate(vars(args)),

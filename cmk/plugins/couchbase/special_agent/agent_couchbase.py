@@ -17,7 +17,6 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +126,7 @@ SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
 #
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -369,7 +368,7 @@ def sections_buckets(bucket_list: Sequence[tuple[str, Mapping[str, Sequence[floa
                 section_writer.append_json(_get_dump(name, data, filter_keys, _average))
 
 
-def couchbase_main(args: Args) -> int:
+def couchbase_main(args: argparse.Namespace) -> int:
     set_up_logging(args.verbose)
 
     client = CouchbaseClient(

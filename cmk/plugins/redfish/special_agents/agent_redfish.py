@@ -9,6 +9,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
+import argparse
 import json
 import logging
 import sys
@@ -37,7 +38,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import (
-    Args,
     create_default_argument_parser,
 )
 from cmk.utils.password_store import lookup as password_store_lookup
@@ -160,7 +160,7 @@ class RedfishData:
     section_data: dict[str, Any] = field(default_factory=dict)
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     """Parse arguments needed to construct an URL and for connection conditions"""
     sections = [s.name for s in REDFISH_SECTIONS]
 
@@ -744,7 +744,7 @@ def load_section_data(redfishobj: RedfishData) -> RedfishData:
     return redfishobj
 
 
-def get_session(args: Args) -> RedfishData:
+def get_session(args: argparse.Namespace) -> RedfishData:
     """create a Redfish session with given arguments"""
     try:
         redfish_host = f"{args.proto}://{args.host}:{args.port}"
@@ -783,7 +783,7 @@ def get_session(args: Args) -> RedfishData:
     return redfishobj
 
 
-def agent_redfish_main(args: Args) -> int:
+def agent_redfish_main(args: argparse.Namespace) -> int:
     """main function for the special agent"""
 
     if not args.verify_ssl:

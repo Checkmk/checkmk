@@ -36,7 +36,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = GoogleAggregation.Aligner
@@ -1249,7 +1248,7 @@ SERVICES = {
 PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -1312,7 +1311,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def _test_connection(args: Args) -> int:
+def _test_connection(args: argparse.Namespace) -> int:
     try:
         client = Client(json.loads(args.credentials), args.project, args.date)
         request = asset_v1.ListAssetsRequest(
@@ -1341,7 +1340,7 @@ def _test_connection(args: Args) -> int:
     return 0
 
 
-def agent_gcp_main(args: Args) -> int:
+def agent_gcp_main(args: argparse.Namespace) -> int:
     if args.connection_test:
         return _test_connection(args)
 

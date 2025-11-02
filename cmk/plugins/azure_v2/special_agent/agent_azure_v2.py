@@ -62,7 +62,6 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
 )
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.password_store import replace_passwords
@@ -158,7 +157,7 @@ def _chunks(list_: Sequence[T], length: int = 50) -> Sequence[Sequence[T]]:
     return [list_[i : i + length] for i in range(0, len(list_), length)]
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -427,7 +426,7 @@ class TagBasedConfig:
 
 
 class Selector:
-    def __init__(self, args: Args) -> None:
+    def __init__(self, args: argparse.Namespace) -> None:
         super().__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
         self._tag_based_config = TagBasedConfig(args.require_tag, args.require_tag_value)
@@ -1163,7 +1162,7 @@ def _collect_async_metrics_tasks(
     resource_ids: Sequence[str],
     resource_type: str,
     api_client: BaseAsyncApiClient,
-    args: Args,
+    args: argparse.Namespace,
     err: IssueCollector,
 ) -> set[Coroutine]:
     grouped_metrics: defaultdict[
@@ -1217,7 +1216,7 @@ async def process_cosmosdb(
     api_client: BaseAsyncApiClient,
     resource: AzureResource,
     subscription: AzureSubscription,
-    args: Args,
+    args: argparse.Namespace,
 ) -> list[AzureResource]:
     resources = [resource]  # always include the main cosmosdb account resource
 
@@ -1684,7 +1683,7 @@ async def process_metrics(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
     monitored_resources: Mapping[ResourceId, AzureResource],
-    args: Args,
+    args: argparse.Namespace,
 ) -> None:
     errors = await _gather_metrics(mgmt_client, subscription, monitored_resources, args)
 
@@ -1701,7 +1700,7 @@ async def _gather_metrics(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
     monitored_resources: Mapping[str, AzureResource],
-    args: Args,
+    args: argparse.Namespace,
 ) -> IssueCollector:
     """
     Gather metrics for all monitored resources.
@@ -1915,7 +1914,7 @@ def write_exception_to_agent_info_section(
     write_to_agent_info_section(msg, subscription, component, 2)
 
 
-async def main_graph_client(args: Args, monitored_services: set[str]) -> None:
+async def main_graph_client(args: argparse.Namespace, monitored_services: set[str]) -> None:
     tasks_map = {
         "users_count": process_users,
         "ad_connect": process_organization,
@@ -1974,7 +1973,7 @@ def _process_query_id(columns, rows, common_metadata):
 
 
 async def get_usage_data(
-    client: BaseAsyncApiClient, subscription: AzureSubscription, args: Args
+    client: BaseAsyncApiClient, subscription: AzureSubscription, args: argparse.Namespace
 ) -> Sequence[dict[str, Any]]:
     NO_CONSUMPTION_API = (
         "offer MS-AZR-0145P",
@@ -2039,7 +2038,7 @@ async def process_usage_details(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
     monitored_groups: list[str],
-    args: Args,
+    args: argparse.Namespace,
 ) -> None:
     try:
         usage_data = await get_usage_data(mgmt_client, subscription, args)
@@ -2226,7 +2225,7 @@ def _get_resource_health_sections(
     return sections
 
 
-async def _test_connection(args: Args) -> int:
+async def _test_connection(args: argparse.Namespace) -> int:
     """We test the connection only via the Management API client, not via the Graph API client.
     The Graph API client is used for three specific services, which are disabled in the default
     setup when configured via the UI.
@@ -2270,7 +2269,7 @@ def _gather_sections_from_resources(
 
 async def process_bulk_resources(
     mgmt_client: BaseAsyncApiClient,
-    args: Args,
+    args: argparse.Namespace,
     group_labels: GroupLabels,
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
@@ -2303,7 +2302,7 @@ async def process_bulk_resources(
 # TODO: test
 async def process_single_resources(
     mgmt_client: BaseAsyncApiClient,
-    args: Args,
+    args: argparse.Namespace,
     subscription: AzureSubscription,
     group_labels: GroupLabels,
     monitored_resources: Mapping[ResourceId, AzureResource],
@@ -2354,7 +2353,7 @@ async def process_single_resources(
 
 async def process_resources(
     mgmt_client: BaseAsyncApiClient,
-    args: Args,
+    args: argparse.Namespace,
     subscription: AzureSubscription,
     group_labels: GroupLabels,
     selected_resources: Sequence[AzureResource],
@@ -2403,7 +2402,10 @@ async def process_resources(
 
 
 async def _collect_resources(
-    mgmt_client: BaseAsyncApiClient, subscription: AzureSubscription, args: Args, selector: Selector
+    mgmt_client: BaseAsyncApiClient,
+    subscription: AzureSubscription,
+    args: argparse.Namespace,
+    selector: Selector,
 ) -> tuple[Sequence[AzureResource], list[str]]:
     resources = await mgmt_client.get_async(
         "resources", key="value", params={"api-version": "2019-05-01"}
@@ -2427,7 +2429,10 @@ def write_tenant_info() -> None:
 
 
 async def main_subscription(
-    args: Args, selector: Selector, subscription: AzureSubscription, monitored_services: set[str]
+    args: argparse.Namespace,
+    selector: Selector,
+    subscription: AzureSubscription,
+    monitored_services: set[str],
 ) -> None:
     try:
         async with SharedSessionApiClient(
@@ -2474,7 +2479,7 @@ async def main_subscription(
         write_exception_to_agent_info_section(exc, "Management client", subscription)
 
 
-async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
+async def _get_subscriptions(args: argparse.Namespace) -> set[AzureSubscription]:
     if args.no_subscriptions:
         LOGGER.info("No subscriptions selected")
         return set()
@@ -2545,7 +2550,7 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
 
 
 async def collect_info(
-    args: Args, selector: Selector, subscriptions: set[AzureSubscription]
+    args: argparse.Namespace, selector: Selector, subscriptions: set[AzureSubscription]
 ) -> None:
     monitored_services = set(args.services)
     await asyncio.gather(
@@ -2557,7 +2562,7 @@ async def collect_info(
     )
 
 
-async def main_async(args: Args, selector: Selector) -> int:
+async def main_async(args: argparse.Namespace, selector: Selector) -> int:
     if args.connection_test:
         return await _test_connection(args)
 
@@ -2583,7 +2588,7 @@ def _setup_logging(verbose: int) -> None:
         logging.getLogger("requests_oauthlib").setLevel(logging.WARNING)
 
 
-def _debug_args(args: Args) -> None:
+def _debug_args(args: argparse.Namespace) -> None:
     # debug args
     # secret is required, so no risks in adding it here if not present
     args_dict = vars(args) | {"secret": "****"}
@@ -2591,7 +2596,7 @@ def _debug_args(args: Args) -> None:
         LOGGER.debug("argparse: %s = %r", key, value)
 
 
-def agent_azure_main(args: Args) -> int:
+def agent_azure_main(args: argparse.Namespace) -> int:
     selector = Selector(args)
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)

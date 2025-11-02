@@ -14,10 +14,9 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
-def agent_elasticsearch_main(args: Args) -> int:
+def agent_elasticsearch_main(args: argparse.Namespace) -> int:
     for host in args.hosts:
         url_base = "%s://%s:%d" % (args.proto, host, args.port)
 
@@ -68,7 +67,7 @@ def agent_elasticsearch_main(args: Args) -> int:
     return 0
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )

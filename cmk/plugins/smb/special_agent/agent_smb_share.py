@@ -23,7 +23,6 @@ from smb.SMBConnection import SMBConnection
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 class SMBShareAgentError(Exception): ...
@@ -43,7 +42,7 @@ class File(NamedTuple):
         return hash(self.path)
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -241,7 +240,7 @@ def connect(
         conn.close()
 
 
-def smb_share_agent(args: Args) -> int:
+def smb_share_agent(args: argparse.Namespace) -> int:
     try:
         with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
             all_files = get_all_shared_files(conn, args.hostname, args.patterns, args.recursive)

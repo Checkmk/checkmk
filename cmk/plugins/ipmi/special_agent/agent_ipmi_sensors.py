@@ -20,7 +20,6 @@ from typing import Literal
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 @dataclass(frozen=True)
@@ -130,7 +129,7 @@ def _add_ipmitool_args(subparsers: _SubParsersAction) -> None:
     )
 
 
-def _parse_arguments(argv: Sequence[str] | None) -> Args:
+def _parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -181,7 +180,7 @@ def _parse_arguments(argv: Sequence[str] | None) -> Args:
 
 
 def _freeipmi_additional_args(
-    args: Args,
+    args: argparse.Namespace,
 ) -> Iterable[str]:
     yield from chain.from_iterable(
         (freeipmi_opt, value)
@@ -216,7 +215,7 @@ def _freeipmi_additional_args(
 
 
 def _prepare_freeipmi_call(
-    args: Args,
+    args: argparse.Namespace,
 ) -> Sequence[str]:
     return [
         "ipmi-sensors",
@@ -233,7 +232,7 @@ def _prepare_freeipmi_call(
 
 
 def _ipmitool_additional_args(
-    args: Args,
+    args: argparse.Namespace,
 ) -> Iterable[str]:
     if iface := getattr(args, "intf"):
         yield "-I"
@@ -241,7 +240,7 @@ def _ipmitool_additional_args(
 
 
 def _prepare_ipmitool_call(
-    args: Args,
+    args: argparse.Namespace,
 ) -> Sequence[str]:
     return [
         "ipmitool",
@@ -268,7 +267,7 @@ def _filter_output(
     ]
 
 
-def _main(args: Args) -> int:
+def _main(args: argparse.Namespace) -> int:
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
     match args.ipmi_cmd:

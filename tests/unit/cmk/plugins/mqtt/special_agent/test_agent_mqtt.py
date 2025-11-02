@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 from pathlib import Path
 
 import pytest
 
 from cmk.plugins.mqtt.special_agent import agent_mqtt
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.utils import password_store
 
 
@@ -66,7 +66,7 @@ def test_parse_password_store(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
         ],
     )
 
-    def test_main(args: Args) -> None:
+    def test_main(args: argparse.Namespace) -> None:
         assert args.password == "blablu"
 
     monkeypatch.setattr(agent_mqtt, "agent_mqtt_main", test_main)

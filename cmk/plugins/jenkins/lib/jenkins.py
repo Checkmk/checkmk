@@ -17,7 +17,6 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 class Section(NamedTuple):
@@ -84,7 +83,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def agent_jenkins_main(args: Args) -> int:
+def agent_jenkins_main(args: argparse.Namespace) -> int:
     # Add new queries here
     sections = [
         Section(

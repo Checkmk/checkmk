@@ -66,7 +66,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import DataCache, datetime_serializer
 from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
@@ -300,7 +299,7 @@ class AWSConfig:
     def __init__(
         self,
         hostname: str,
-        sys_argv: Args,
+        sys_argv: argparse.Namespace,
         overall_tags: OverallTags,
         piggyback_naming_convention: NamingConvention,
         tags_option: TagsOption = TagsImportPatternOption.import_all,
@@ -343,7 +342,7 @@ class AWSConfig:
         self.service_config.setdefault(key, value)
 
     @staticmethod
-    def _compute_config_hash(sys_argv: Args) -> str:
+    def _compute_config_hash(sys_argv: argparse.Namespace) -> str:
         filtered_sys_argv = dict(
             filter(lambda el: el[0] not in ["debug", "verbose", "no_cache"], vars(sys_argv).items())
         )
@@ -7274,7 +7273,7 @@ AWSServices = [
 ]
 
 
-def parse_arguments(argv: Sequence[str] | None) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -7612,7 +7611,7 @@ def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     return None
 
 
-def _configure_aws(args: Args) -> AWSConfig:
+def _configure_aws(args: argparse.Namespace) -> AWSConfig:
     aws_config = AWSConfig(
         args.hostname,
         args,
@@ -7679,7 +7678,7 @@ def _configure_aws(args: Args) -> AWSConfig:
 
 
 def _create_session_from_args(
-    args: Args, region: str, config: botocore.config.Config | None
+    args: argparse.Namespace, region: str, config: botocore.config.Config | None
 ) -> boto3.session.Session:
     secret_access_key = None
     if args.secret_access_key:
@@ -7701,7 +7700,7 @@ def _create_session_from_args(
     return _create_session(args.access_key_id, secret_access_key, region, config=config)
 
 
-def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
+def _get_account_id(args: argparse.Namespace, config: botocore.config.Config | None) -> str:
     session = _create_session_from_args(args, args.global_service_region, config)
     try:
         account_id = session.client("sts", config=config).get_caller_identity()["Account"]
@@ -7714,7 +7713,7 @@ def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
     return account_id
 
 
-def _test_connection(args: Args, proxy_config: botocore.config.Config | None) -> int:
+def _test_connection(args: argparse.Namespace, proxy_config: botocore.config.Config | None) -> int:
     try:
         _get_account_id(args, proxy_config)
     except AwsAccessError as ae:
@@ -7724,7 +7723,7 @@ def _test_connection(args: Args, proxy_config: botocore.config.Config | None) ->
     return 0
 
 
-def agent_aws_main(args: Args) -> int:
+def agent_aws_main(args: argparse.Namespace) -> int:
     _setup_logging(args.debug, args.verbose)
 
     proxy_config = _get_proxy(args)

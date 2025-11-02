@@ -28,8 +28,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 command_arguments=[
                     "-u",
                     "testID",
-                    "-p",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password-id",
+                    Secret(1),
                     "1.2.3.4",
                     "appName",
                 ],
@@ -52,8 +52,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 command_arguments=[
                     "-u",
                     "testID",
-                    "-p",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password-id",
+                    Secret(1),
                     "-P",
                     "8090",
                     "-t",

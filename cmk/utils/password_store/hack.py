@@ -28,7 +28,7 @@ HACK_AGENTS = {
     "activemq": False,
     "alertmanager": False,
     "allnet_ip_sensoric": False,  # needs no secret
-    "appdynamics": True,
+    "appdynamics": False,
     "aws": False,
     "aws_status": False,  # needs no secret
     "azure_status": False,  # needs no secret

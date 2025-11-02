@@ -15,7 +15,12 @@ from http.client import HTTPConnection
 from pathlib import Path
 from typing import Any
 
-from cmk.utils.password_store import replace_passwords
+from cmk.password_store.v1_unstable import dereference_secret
+from cmk.server_side_programs.v1_unstable import report_agent_crashes
+
+__version__ = "2.5.0b1"
+
+AGENT = "appdynamics"
 
 _SECTION_HEADER_MAP = {
     "app": "<<<appdynamics_app:sep(124)>>>",
@@ -25,7 +30,7 @@ _SECTION_HEADER_MAP = {
 }
 
 
-def usage():
+def usage() -> None:
     sys.stderr.write(
         """Check_MK AppDynamics special agent
 
@@ -48,15 +53,15 @@ OPTIONS:
     )
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        replace_passwords()
-        sys_argv = sys.argv[1:]
+@report_agent_crashes(AGENT, __version__)
+def main() -> int:
+    sys_argv = sys.argv[1:]
 
     short_options = "u:p:P:t:f:hv"
     long_options = [
         "username=",
         "password=",
+        "password-id=",
         "port=",
         "timeout=",
         "filename=",
@@ -82,11 +87,13 @@ def main(sys_argv=None):
     for o, a in opts:
         if o in ["-h", "--help"]:
             usage()
-            sys.exit(0)
+            return 0
         elif o in ["-u", "--username"]:
             opt_username = a
         elif o in ["-p", "--password"]:
             opt_password = a
+        elif o in ["--password-id"]:
+            opt_password = dereference_secret(a).reveal()
         elif o in ["-f", "--filename"]:
             opt_filename = a
         elif o in ["-P", "--port"]:
@@ -204,4 +211,4 @@ def main(sys_argv=None):
                                 output_items.append(f"{name}:{value}")
                         sys.stdout.write("|".join(output_items) + "\n")
     sys.stdout.write("<<<<>>>>\n")
-    return None
+    return 0

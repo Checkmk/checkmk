@@ -25,8 +25,8 @@ def _commands_function(
     args: list[str | Secret] = [
         "-u",
         params.username,
-        "-p",
-        params.password.unsafe(),
+        "--password-id",
+        params.password,
     ]
 
     if params.port is not None:

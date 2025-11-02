@@ -14,7 +14,7 @@ import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentS
 import SingleInfosSpecifier from '@/dashboard-wip/components/Wizard/wizards/view/stage1/components/SingleInfosSpecifier.vue'
 import SelectorView from '@/dashboard-wip/components/selectors/SelectorView.vue'
 import { useDataSourcesCollection } from '@/dashboard-wip/composables/api/useDataSourcesCollection.ts'
-import { useViewsCollection } from '@/dashboard-wip/composables/api/useViewsCollection.ts'
+import { useInjectViews } from '@/dashboard-wip/composables/useProvideViews'
 import { RestrictedToSingle } from '@/dashboard-wip/types/shared.ts'
 
 const { _t } = usei18n()
@@ -24,12 +24,11 @@ const contextInfos = defineModel<string[]>('contextInfos', { default: [] })
 const restrictedToSingleInfos = defineModel<string[]>('restrictedToSingleInfos', { default: [] })
 const singleInfosMode = ref<RestrictedToSingle>(RestrictedToSingle.NO)
 
-const { byId: byViewId, ensureLoaded: ensureViewsLoaded } = useViewsCollection()
+const byViewId = useInjectViews()
 const { byId: byDatasourceId, ensureLoaded: ensureDataSourcesLoaded } = useDataSourcesCollection()
 
 onMounted(async () => {
   await ensureDataSourcesLoaded()
-  await ensureViewsLoaded()
 })
 
 watch(
@@ -45,8 +44,8 @@ watch(
       return
     }
 
-    // Make sure data sources and views are loaded when referencedView is already set (for edit)
-    await Promise.all([ensureDataSourcesLoaded(), ensureViewsLoaded()])
+    // Make sure data sources are loaded when referencedView is already set (for edit)
+    await ensureDataSourcesLoaded()
     if (cancelled) {
       return
     }

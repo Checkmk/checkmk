@@ -17,7 +17,6 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
-    CannotRecover,
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
@@ -55,21 +54,8 @@ class SessionManager:
             self._session.mount(base_url, HostnameValidationAdapter(cert_check))
 
     def get(self, url: str, params: dict[str, str] | None = None) -> Any:
-        try:
-            resp = self._session.get(url, params=params, verify=self._verify, timeout=self._timeout)
-        except requests.exceptions.ReadTimeout as e:
-            LOGGING.error("Timeout: %s", e)
-            raise CannotRecover(f"Connection timed out after {self._timeout} seconds.")
-        except requests.exceptions.ConnectionError as e:
-            LOGGING.error("Connection failed: %s", e)
-            raise e
-
-        try:
-            resp.raise_for_status()
-        except requests.exceptions.HTTPError as e:
-            LOGGING.error("HTTP error: %s", e)
-            raise e
-
+        resp = self._session.get(url, params=params, verify=self._verify, timeout=self._timeout)
+        resp.raise_for_status()
         return resp.json()
 
 
@@ -234,7 +220,12 @@ def agent_prism_main(args: argparse.Namespace) -> int:
             timeout=args.timeout,
             cert_check=args.cert_server_name or not args.no_cert_check,
         )
-    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
+    except (
+        requests.exceptions.ReadTimeout,
+        requests.exceptions.HTTPError,
+        requests.exceptions.ConnectionError,
+    ) as e:
+        LOGGING.error("Error fetching data from gateway: %s", e)
         return 1
 
     output_entities(gateway_objs["containers"], "containers")

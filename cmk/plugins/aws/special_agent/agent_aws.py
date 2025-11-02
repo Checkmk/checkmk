@@ -62,8 +62,6 @@ from cmk.plugins.aws.constants import (
 )
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
-    ConditionalPiggybackSection,
-    SectionWriter,
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.misc import DataCache, datetime_serializer
@@ -6631,18 +6629,15 @@ class AWSSections(abc.ABC):
                     host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels)
         return host_labels
 
-    def _write_labels_section(self, host_labels: Mapping[str, str]) -> None:
-        with SectionWriter("labels") as w:
-            w.append(json.dumps(host_labels))
-
     def _write_host_labels(self, results: Results) -> None:
         static_host_labels = self._collect_static_host_labels()
-        self._write_labels_section(static_host_labels)
+        sys.stdout.write(f"<<<labels:sep(0)>>>\n{json.dumps(static_host_labels)}\n")
 
         piggyback_host_labels = self._collect_piggyback_host_labels(results, static_host_labels)
         for hostname, host_labels in piggyback_host_labels.items():
-            with ConditionalPiggybackSection(hostname):
-                self._write_labels_section(host_labels)
+            sys.stdout.write(
+                f"<<<<{hostname}>>>>\n<<<labels:sep(0)>>>\n{json.dumps(host_labels)}\n<<<<>>>>\n"
+            )
 
     def _safe_exception(self, exception: Exception) -> str:
         """

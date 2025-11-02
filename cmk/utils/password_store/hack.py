@@ -25,7 +25,7 @@ HACK_AGENTS = {
     # Make sure to have *all* special agent plugins listed here, so we
     # can test for it
     "acme_sbc": False,  # needs no secret
-    "activemq": True,
+    "activemq": False,
     "alertmanager": False,
     "allnet_ip_sensoric": False,  # needs no secret
     "appdynamics": True,

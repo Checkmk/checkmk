@@ -31,8 +31,8 @@ def _commands_function(
         [
             "--username",
             params.basicauth.username,
-            "--password",
-            params.basicauth.password.unsafe(),
+            "--password-id",
+            params.basicauth.password,
         ]
         if params.basicauth
         else []

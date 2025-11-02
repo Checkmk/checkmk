@@ -11,9 +11,12 @@ from typing import Literal
 
 from requests.auth import HTTPBasicAuth
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 from cmk.special_agents.v0_unstable.request_helper import ApiSession
+
+PASSWORD_OPTION = "password"
 
 
 def parse_arguments(args: Sequence[str] | None) -> argparse.Namespace:
@@ -68,11 +71,8 @@ def parse_arguments(args: Sequence[str] | None) -> argparse.Namespace:
         metavar="USERNAME",
         help="Username for authenticating at the server",
     )
-    parser.add_argument(
-        "--password",
-        type=str,
-        metavar="PASSWORD",
-        help="Password for authenticating at the server",
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", help="Password for authenticating at the server"
     )
     return parser.parse_args(args)
 
@@ -100,7 +100,7 @@ def agent_activemq_main(args: argparse.Namespace) -> int:
 
     auth = None
     if args.username:
-        auth = HTTPBasicAuth(args.username, args.password)
+        auth = HTTPBasicAuth(args.username, resolve_secret_option(args, PASSWORD_OPTION).reveal())
 
     session = ApiSession(api_url, auth=auth)
 
@@ -151,4 +151,5 @@ def main() -> int:
     return special_agent_main(
         parse_arguments,
         agent_activemq_main,
+        apply_password_store_hack=False,
     )

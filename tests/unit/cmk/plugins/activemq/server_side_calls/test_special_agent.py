@@ -51,8 +51,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "http",
                     "--username",
                     "user",
-                    "--password",
-                    Secret(0).unsafe(),
+                    "--password-id",
+                    Secret(0),
                 ]
             ),
             id="with credentials",

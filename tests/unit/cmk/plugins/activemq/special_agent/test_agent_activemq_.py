@@ -23,6 +23,6 @@ def test_parse_arguments() -> None:
     assert args.servername == "myserver"
     assert args.port == 8161
     assert args.username == "abc"
-    assert args.password == "123"
+    assert args.password.reveal() == "123"
     assert args.piggyback is True
     assert args.protocol == "https"

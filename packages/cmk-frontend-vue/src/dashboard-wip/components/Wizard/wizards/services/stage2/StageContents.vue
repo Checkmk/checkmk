@@ -114,7 +114,29 @@ const availableWidgets: WidgetItemList = [
   { id: Graph.SERVICE_STATISTICS, label: _t('Service statistics'), icon: 'single-metric' }
 ]
 
-const selectedWidget = ref<Graph | null>(enabledWidgets[0] ?? null)
+function getDefaultSelectedWidget(): Graph | null {
+  if (props.editWidgetSpec) {
+    switch (props.editWidgetSpec.content.type) {
+      case 'service_state':
+        if (enabledWidgets.includes(Graph.SERVICE_STATE)) {
+          return Graph.SERVICE_STATE
+        }
+        break
+      case 'service_state_summary':
+        if (enabledWidgets.includes(Graph.SERVICE_STATE_SUMMARY)) {
+          return Graph.SERVICE_STATE_SUMMARY
+        }
+        break
+      case 'service_stats':
+        if (enabledWidgets.includes(Graph.SERVICE_STATISTICS)) {
+          return Graph.SERVICE_STATISTICS
+        }
+        break
+    }
+  }
+  return enabledWidgets[0] ?? null
+}
+const selectedWidget = ref<Graph | null>(getDefaultSelectedWidget())
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   [Graph.SERVICE_STATE]: await useServiceState(

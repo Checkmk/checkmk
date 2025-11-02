@@ -10,10 +10,28 @@ import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
+import AddFilters from '@/dashboard-wip/components/Wizard/components/AddFilters/AddFilters.vue'
+import { useAddFilter } from '@/dashboard-wip/components/Wizard/components/AddFilters/composables/useAddFilters'
+import CloseButton from '@/dashboard-wip/components/Wizard/components/CloseButton.vue'
+import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
+import FiltersRecap from '@/dashboard-wip/components/Wizard/components/FiltersRecap/FiltersRecap.vue'
+import {
+  parseContextConfiguredFilters,
+  squashFilters
+} from '@/dashboard-wip/components/Wizard/components/FiltersRecap/utils'
+import StepsHeader from '@/dashboard-wip/components/Wizard/components/StepsHeader.vue'
+import WizardContainer from '@/dashboard-wip/components/Wizard/components/WizardContainer.vue'
+import WizardStageContainer from '@/dashboard-wip/components/Wizard/components/WizardStageContainer.vue'
+import WizardStepsContainer from '@/dashboard-wip/components/Wizard/components/WizardStepsContainer.vue'
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
+import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
+import {
+  getConfiguredFilters,
+  getInitialElementSelection
+} from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
-// Local components
+import { useInjectVisualInfos } from '@/dashboard-wip/composables/useProvideVisualInfos'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
@@ -26,18 +44,6 @@ import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
 import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
-import AddFilters from '../../components/AddFilters/AddFilters.vue'
-import { useAddFilter } from '../../components/AddFilters/composables/useAddFilters'
-import CloseButton from '../../components/CloseButton.vue'
-import ContentSpacer from '../../components/ContentSpacer.vue'
-import FiltersRecap from '../../components/FiltersRecap/FiltersRecap.vue'
-import { parseContextConfiguredFilters, squashFilters } from '../../components/FiltersRecap/utils'
-import StepsHeader from '../../components/StepsHeader.vue'
-import WizardContainer from '../../components/WizardContainer.vue'
-import WizardStageContainer from '../../components/WizardStageContainer.vue'
-import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
-import { ElementSelection } from '../../types'
-import { getConfiguredFilters } from '../../utils'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -68,12 +74,34 @@ const emit = defineEmits<{
 
 const filterDefinitions = useFilterDefinitions()
 
-const widgetFilterManager = useWidgetFilterManager({}, filterDefinitions)
+const widgetFilterManager = useWidgetFilterManager(
+  props.editWidgetSpec?.filter_context.filters ?? {},
+  filterDefinitions
+)
 
 const addFilters = useAddFilter()
 
-const hostFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
-const serviceFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
+const visualInfos = useInjectVisualInfos()
+const hostFilterType = ref<ElementSelection>(
+  getInitialElementSelection(
+    props.dashboardConstants,
+    filterDefinitions,
+    visualInfos,
+    null,
+    props.editWidgetSpec,
+    'host'
+  )
+)
+const serviceFilterType = ref<ElementSelection>(
+  getInitialElementSelection(
+    props.dashboardConstants,
+    filterDefinitions,
+    visualInfos,
+    null,
+    props.editWidgetSpec,
+    'service'
+  )
+)
 
 const wizardHandler = useWizard(2)
 const wizardStages: QuickSetupStageSpec[] = [

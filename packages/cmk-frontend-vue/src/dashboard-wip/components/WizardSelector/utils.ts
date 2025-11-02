@@ -34,6 +34,12 @@ export function widgetTypeToSelectorMatcher(
       return 'host_site_overview'
     }
 
+    case 'service_state':
+    case 'service_state_summary':
+    case 'service_stats': {
+      return 'service_overview'
+    }
+
     case 'event_stats': {
       return 'event_stats'
     }

@@ -16,8 +16,11 @@ from collections.abc import Mapping, Sequence
 
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+
+__version__ = "2.5.0b1"
+
+AGENT = "allnet_ip_sensoric"
 
 _DEFAULT_TIMEOUT = 10
 
@@ -43,7 +46,7 @@ def parse_response_data(contents: str) -> Mapping[str, Mapping[str, str]]:
     return parsed
 
 
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -77,7 +80,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         ),
     )
     parser.add_argument("host", help="Host name or IP address of your ALLNET IP-Sensoric")
-    return parser.parse_args(argv if argv is not None else sys.argv[1:])
+    return parser.parse_args(argv)
 
 
 def _fetch_and_output_data(args: argparse.Namespace) -> int:
@@ -107,5 +110,6 @@ def _fetch_and_output_data(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(parse_arguments, _fetch_and_output_data)
+    return _fetch_and_output_data(parse_arguments(sys.argv[1:]))

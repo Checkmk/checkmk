@@ -23,7 +23,7 @@ import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
 import HwSwInventoryWizard from '../Wizard/wizards/hw_sw_inventory/HwSwInventoryWizard.vue'
 import MetricsWizard from '../Wizard/wizards/metrics/MetricsWizard.vue'
 import ServicesOverviewWizard from '../Wizard/wizards/services/ServicesOverviewWizard.vue'
-import ViewWizard from '../Wizard/wizards/view/ViewWizard.vue'
+import ViewWizardWrapper from '../Wizard/wizards/view/ViewWizardWrapper.vue'
 
 interface AllWizardsProps {
   isOpen: boolean
@@ -128,11 +128,10 @@ const handleAddEditWidget = (
         @add-widget="handleAddEditWidget"
       />
 
-      <ViewWizard
+      <ViewWizardWrapper
         v-if="selectedWizard === 'views'"
         :dashboard-name="dashboardName"
         :dashboard-owner="dashboardOwner"
-        :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"

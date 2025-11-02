@@ -1,0 +1,59 @@
+<!--
+Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import CmkIcon from '@/components/CmkIcon'
+
+import type { ContentProps } from '@/dashboard-wip/components/DashboardContent/types'
+import ViewWizardInner from '@/dashboard-wip/components/Wizard/wizards/view/ViewWizardInner.vue'
+import { useProvideViews } from '@/dashboard-wip/composables/useProvideViews'
+import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
+import type {
+  WidgetContent,
+  WidgetFilterContext,
+  WidgetGeneralSettings
+} from '@/dashboard-wip/types/widget'
+
+const { byId, ready } = useProvideViews()
+
+interface ViewWizardProps {
+  dashboardName: string
+  dashboardOwner: string
+  contextFilters: ContextFilters
+  editWidget?: ContentProps | null
+}
+
+const { editWidget } = withDefaults(defineProps<ViewWizardProps>(), {
+  editWidget: null
+})
+defineEmits<{
+  goBack: []
+  addWidget: [
+    content: WidgetContent,
+    generalSettings: WidgetGeneralSettings,
+    filterContext: WidgetFilterContext
+  ]
+}>()
+</script>
+
+<template>
+  <template v-if="ready">
+    <ViewWizardInner
+      :dashboard-name="dashboardName"
+      :dashboard-owner="dashboardOwner"
+      :views-by-id="byId"
+      :context-filters="contextFilters"
+      :edit-widget="editWidget"
+      @go-back="$emit('goBack')"
+      @add-widget="
+        (content, generalSettings, filterContext) =>
+          $emit('addWidget', content, generalSettings, filterContext)
+      "
+    />
+  </template>
+  <template v-else>
+    <CmkIcon name="load-graph" size="xxlarge" />
+  </template>
+</template>

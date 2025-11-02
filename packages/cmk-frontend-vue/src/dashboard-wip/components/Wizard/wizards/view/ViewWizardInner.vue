@@ -18,7 +18,7 @@ import {
 import { useWidgetVisualizationProps } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { ViewModel } from '@/dashboard-wip/types/api'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   EffectiveWidgetFilterContext,
@@ -49,7 +49,7 @@ const { _t } = usei18n()
 interface ViewWizardProps {
   dashboardName: string
   dashboardOwner: string
-  dashboardConstants: DashboardConstants
+  viewsById: Record<string, ViewModel>
   contextFilters: ContextFilters
   editWidget?: ContentProps | null
 }
@@ -82,8 +82,15 @@ function getDefaultDatasource(): string | null {
 }
 
 function getDefaultRestrictedToSingle(): string[] {
-  if (props.editWidget && props.editWidget.content.type === 'embedded_view') {
-    return props.editWidget.content.restricted_to_single
+  if (props.editWidget) {
+    if (props.editWidget.content.type === 'linked_view') {
+      const view = props.viewsById[props.editWidget.content.view_name]
+      if (view) {
+        return view.extensions.restricted_to_single
+      }
+    } else if (props.editWidget.content.type === 'embedded_view') {
+      return props.editWidget.content.restricted_to_single
+    }
   }
   return []
 }
@@ -219,8 +226,7 @@ const effectiveFilterContext = computed<EffectiveWidgetFilterContext>(() => {
       parseContextConfiguredFilters(props.contextFilters),
       widgetFilterManager.getConfiguredFilters()
     ),
-    restricted_to_single:
-      props.dashboardConstants.widgets['embedded_view']!.filter_context.restricted_to_single
+    restricted_to_single: restrictedToSingleInfos.value
   } as EffectiveWidgetFilterContext
 })
 

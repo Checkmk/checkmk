@@ -19,6 +19,7 @@ from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
     load_all_pluginX,
 )
 from cmk.ccc import debug
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
     ActiveCheckResult,
 )
@@ -32,11 +33,17 @@ from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violat
     InventoryPluginName,
 )
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
+from cmk.gui.form_specs import (  # pylint: disable=cmk-module-layer-violation
+    get_visitor,
+    RawDiskData,
+    VisitorOptions,
+)
 from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils import get_failed_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.rule_specs.loader import RuleSpec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
+    FormSpecNotImplementedError,
     rulespec_registry,
 )
 from cmk.rulesets.v1 import entry_point_prefixes
@@ -131,12 +138,14 @@ def _validate_rule_spec_form_creation() -> ActiveCheckResult:
     with gui_context():
         for loaded_rule_spec in rulespec_registry.values():
             try:
-                _ = loaded_rule_spec.valuespec
+                try:
+                    _ = loaded_rule_spec.form_spec
+                except FormSpecNotImplementedError:
+                    _ = loaded_rule_spec.valuespec
             except Exception as e:
                 if debug.enabled():
                     raise e
                 errors.append(f"{type(loaded_rule_spec).__name__} '{loaded_rule_spec.name}': {e}")
-
     return to_result(ValidationStep.RULE_SPEC_FORMS, errors)
 
 
@@ -174,8 +183,16 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
         params = default_params
 
     try:
-        rule_spec.valuespec.validate_datatype(params, "")
-        rule_spec.valuespec.validate_value(params, "")
+        try:
+            visitor = get_visitor(
+                rule_spec.form_spec, VisitorOptions(mask_values=True, migrate_values=True)
+            )
+            validation_errors = visitor.validate(RawDiskData(params))
+            if validation_errors:
+                raise MKGeneralException(f"Validation Error {validation_errors}")
+        except FormSpecNotImplementedError:
+            rule_spec.valuespec.validate_datatype(params, "")
+            rule_spec.valuespec.validate_value(params, "")
     except Exception as e:
         if debug.enabled():
             raise e

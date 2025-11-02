@@ -513,6 +513,7 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
     "Capacity usage": {"capacity_usage_2", "capacity_usage"},
     "Packets": {"packets_1", "packets_2", "packets_3"},
+    "Throughput": {"azure_redis_throughput", "azure_natgateways_throughput_in_out"},
 }
 
 

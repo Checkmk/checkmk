@@ -25,7 +25,6 @@ from cmk.plugins.prometheus.lib import (
     generate_api_session,
     get_api_url,
 )
-from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 
@@ -95,9 +94,12 @@ def alertmanager_rules_section(
     if not rule_groups.get("groups"):
         return
     parsed_data = parse_rule_data(rule_groups["groups"], config["ignore_alerts"])
-    with ConditionalPiggybackSection(config["hostname"]):
-        with SectionWriter("alertmanager") as writer:
-            writer.append_json(parsed_data)
+
+    sys.stdout.write(
+        f"<<<<{config['hostname']}>>>>\n"  # could be empty, that's ok.
+        "<<<alertmanager:sep(0)>>>\n"
+        f"{json.dumps(parsed_data, sort_keys=True)}\n"
+    )
 
 
 def retrieve_rule_data(api_client: AlertmanagerAPI) -> dict[str, Any]:

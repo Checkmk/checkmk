@@ -37,7 +37,7 @@ from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, Storag
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
-from cmk.plugins.proxmox_ve.special_agent.libproxmox import ProxmoxVeAPI
+from cmk.plugins.proxmox_ve.special_agent.libproxmox import CannotRecover, ProxmoxVeAPI
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
@@ -422,7 +422,11 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
 
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_proxmox_ve_main)
+    try:
+        return special_agent_main(parse_arguments, agent_proxmox_ve_main)
+    except CannotRecover as e:
+        sys.stderr.write(f"{e}\n")
+        return 1
 
 
 if __name__ == "__main__":

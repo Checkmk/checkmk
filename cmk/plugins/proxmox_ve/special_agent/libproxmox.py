@@ -12,8 +12,6 @@ from typing import Any
 
 import requests
 
-from cmk.special_agents.v0_unstable.agent_common import CannotRecover
-
 LOGGER = logging.getLogger("agent_proxmox_ve.lib")
 
 RequestStructure = Sequence[Mapping[str, Any]] | Mapping[str, Any]
@@ -21,7 +19,10 @@ TaskInfo = Mapping[str, Any]
 LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 
 
-class ProxmoxVeSession:
+class CannotRecover(RuntimeError): ...
+
+
+class _ProxmoxVeSession:
     """Session"""
 
     class HTTPAuth(requests.auth.AuthBase):
@@ -167,7 +168,7 @@ class ProxmoxVeAPI:
     ) -> None:
         try:
             LOGGER.info("Establish connection to Proxmox VE host %r", host)
-            self._session = ProxmoxVeSession(
+            self._session = _ProxmoxVeSession(
                 endpoint=(host, port),
                 credentials=credentials,
                 timeout=timeout,

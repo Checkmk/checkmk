@@ -7,7 +7,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.fields import String
 from cmk.gui.fields import HostField, SiteField

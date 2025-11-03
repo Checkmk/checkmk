@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="mutable-override"
-
 # mypy: disable-error-code="no-any-return"
 
 import typing
 
 from marshmallow import ValidationError
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.gui.fields.base import BaseSchema

@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from typing import Any, cast, Literal, TYPE_CHECKING, TypedDict
 
 from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.gui import fields as gui_fields

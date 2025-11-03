@@ -10,7 +10,7 @@ import re
 from typing import Any, get_args
 
 from marshmallow import post_load, pre_load, ValidationError
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 from urllib3.util import parse_url
 
 from cmk import fields

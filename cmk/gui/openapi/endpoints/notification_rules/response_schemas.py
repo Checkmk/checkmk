@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from typing import Any, cast, get_args
 
 from marshmallow import post_dump
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.gui.fields import (

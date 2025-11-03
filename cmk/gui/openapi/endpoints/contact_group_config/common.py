@@ -6,11 +6,10 @@
 # mypy: disable-error-code="mutable-override"
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
 
 from typing import Any, Literal, TypedDict
 
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.gui.fields.base import BaseSchema

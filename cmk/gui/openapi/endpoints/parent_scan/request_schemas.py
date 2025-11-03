@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="mutable-override"
 
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.gui.fields.base import BaseSchema

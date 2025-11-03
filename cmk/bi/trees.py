@@ -17,7 +17,7 @@ from collections.abc import Sequence
 from typing import Any, Literal, NamedTuple, NotRequired, override, TypedDict
 
 from marshmallow import pre_dump
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema

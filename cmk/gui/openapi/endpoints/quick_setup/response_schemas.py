@@ -7,7 +7,7 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.gui.fields.utils import BaseSchema

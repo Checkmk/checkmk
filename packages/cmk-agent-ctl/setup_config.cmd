@@ -9,7 +9,7 @@ set worker_exe_name=cmk-agent-ctl.exe
 set worker_root_dir=%cd%\..\..
 :: Rust
 set worker_target=i686-pc-windows-msvc
-set worker_toolchain=1.87
+set worker_toolchain=1.90
 :: Elevation
 set worker_need_elevation=1
 

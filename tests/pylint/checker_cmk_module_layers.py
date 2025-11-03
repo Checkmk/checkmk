@@ -1079,7 +1079,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         "cmk.otel_collector.constants",
     ),
-    Component("tests.integration.relay"): _allow(
+    Component("tests.integration.nonfree.ultimate.relay"): _allow(
         *PACKAGE_RELAY_PROTOCOLS,
         "cmk.agent_receiver.certs",
     ),

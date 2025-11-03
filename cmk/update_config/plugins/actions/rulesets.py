@@ -9,8 +9,10 @@ from typing import override
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
+from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
 from cmk.update_config.lib import ExpiryVersion, format_warning
 from cmk.update_config.plugins.lib.rulesets import load_and_transform, SKIP_ACTION
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -33,16 +35,27 @@ def validate_rule_values(
         if ruleset.name in SKIP_ACTION:
             continue
 
+        # Note: the rule values in these rulesets are already transformed
+        # "thanks" to the load_and_transform call from above..
         for folder, index, rule in ruleset.get_rules():
             try:
-                ruleset.rulespec.valuespec.validate_datatype(
-                    rule.value,
-                    "",
-                )
-                ruleset.rulespec.valuespec.validate_value(
-                    rule.value,
-                    "",
-                )
+                try:
+                    visitor = get_visitor(
+                        ruleset.rulespec.form_spec,
+                        VisitorOptions(migrate_values=False, mask_values=True),
+                    )
+                    validation_errors = visitor.validate(RawDiskData(rule.value))
+                    if validation_errors:
+                        raise ValueError(f"Validation errors: {validation_errors}")
+                except FormSpecNotImplementedError:
+                    ruleset.rulespec.valuespec.validate_datatype(
+                        rule.value,
+                        "",
+                    )
+                    ruleset.rulespec.valuespec.validate_value(
+                        rule.value,
+                        "",
+                    )
             except MKUserError as excpt:
                 n_invalid += 1
                 logger.warning(

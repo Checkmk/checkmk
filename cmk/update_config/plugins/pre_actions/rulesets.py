@@ -13,12 +13,14 @@ from typing import override
 
 from cmk.ccc import version
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.groups import GroupSpec
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.valuespec.definitions import RegexFutureWarning
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
+from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.lib.rulesets import SKIP_PREACTION
@@ -57,7 +59,8 @@ class PreUpdateRulesets(PreUpdateAction):
             )
             for ruleset in rulesets.get_rulesets().values():
                 try:
-                    ruleset.rulespec.valuespec
+                    # Returns and instance of valuespec or form spec
+                    ruleset.rulespec.value_model
                 except Exception:
                     logger.error(
                         "ERROR: Failed to load Ruleset: %s. "
@@ -133,15 +136,24 @@ def _validate_rule_values(
             logger.log(VERBOSE, f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'")
             with warnings.catch_warnings(action="error", category=RegexFutureWarning):
                 try:
-                    transformed_value = ruleset.rulespec.valuespec.transform_value(rule.value)
-                    ruleset.rulespec.valuespec.validate_datatype(
-                        transformed_value,
-                        "",
-                    )
-                    ruleset.rulespec.valuespec.validate_value(
-                        transformed_value,
-                        "",
-                    )
+                    try:
+                        visitor = get_visitor(
+                            ruleset.rulespec.form_spec,
+                            VisitorOptions(migrate_values=True, mask_values=True),
+                        )
+                        validation_errors = visitor.validate(RawDiskData(rule.value))
+                        if validation_errors:
+                            raise ValueError(f"Validation errors: {validation_errors}")
+                    except FormSpecNotImplementedError:
+                        transformed_value = ruleset.rulespec.valuespec.transform_value(rule.value)
+                        ruleset.rulespec.valuespec.validate_datatype(
+                            transformed_value,
+                            "",
+                        )
+                        ruleset.rulespec.valuespec.validate_value(
+                            transformed_value,
+                            "",
+                        )
 
                 except RegexFutureWarning as e:
                     error_messages = [

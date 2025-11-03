@@ -13,6 +13,7 @@ from typing import Final
 
 from cmk.base import config
 from cmk.ccc import debug
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -21,6 +22,7 @@ from cmk.gui.watolib.rulesets import (
     RuleConditions,
     RulesetCollection,
 )
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName, TagCondition
@@ -211,7 +213,7 @@ def transform_wato_rulesets_params(
     migrated_rulesets = set()
     for ruleset in all_rulesets.get_rulesets().values():
         try:
-            valuespec = ruleset.rulespec.valuespec
+            value_model = ruleset.rulespec.value_model
         except Exception:
             logger.error(
                 "ERROR: Failed to load Ruleset: %s. "
@@ -222,7 +224,13 @@ def transform_wato_rulesets_params(
             continue
         for folder, folder_index, rule in ruleset.get_rules():
             try:
-                rule.value = valuespec.transform_value(rule.value)
+                if isinstance(value_model, FormSpec):
+                    visitor = get_visitor(
+                        value_model, VisitorOptions(migrate_values=True, mask_values=False)
+                    )
+                    rule.value = visitor.to_disk(RawDiskData(rule.value))
+                else:
+                    rule.value = value_model.transform_value(rule.value)
                 migrated_rulesets.add(ruleset.name)
             except Exception as e:
                 if raise_errors:

@@ -3,22 +3,28 @@ Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
+<script setup generic="IconName extends CmkMultitoneIconNames" lang="ts">
 import { ref } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
 import { cmkMultitoneIconVariants, oneColorIcons, twoColorIcons } from './icons.constants.ts'
 import type {
+  CmkIconSize,
   CmkMultitoneIconColor,
   CmkMultitoneIconNames,
-  CmkMultitoneIconProps,
   OneColorIcons,
   TwoColorIcons
 } from './types.ts'
 
-const props = defineProps<CmkMultitoneIconProps>()
-
+const props = defineProps<{
+  name: IconName
+  primaryColor: CmkMultitoneIconColor
+  secondaryColor?: IconName extends OneColorIcons ? never : CmkMultitoneIconColor
+  size?: CmkIconSize | undefined
+  title?: string | undefined
+  rotate?: number | undefined
+}>()
 function getTransformRotate(): string {
   return `rotate(${props.rotate || 0}deg)`
 }

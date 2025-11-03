@@ -13,7 +13,6 @@ export type OneColorIcons = (typeof oneColorIcons)[number]
 export type TwoColorIcons = (typeof twoColorIcons)[number]
 
 export type CmkMultitoneIconNames = OneColorIcons | TwoColorIcons
-export type CmkMultitoneIconProps = OneColorIconProps | TwoColorIconProps
 export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
 
 export type CmkIconSize = VariantProps<typeof cmkIconVariants>['size']
@@ -37,21 +36,4 @@ export interface CmkIconProps {
 
   /** @property {undefined | string} title - Title to be displayed on hover */
   title?: string | undefined
-}
-
-export interface OneColorIconProps {
-  name: OneColorIcons
-  primaryColor: CmkMultitoneIconColor
-  size?: CmkIconSize | undefined
-  title?: string | undefined
-  rotate?: number | undefined
-}
-
-export interface TwoColorIconProps {
-  name: TwoColorIcons
-  primaryColor: CmkMultitoneIconColor
-  secondaryColor: CmkMultitoneIconColor
-  size?: CmkIconSize | undefined
-  title?: string | undefined
-  rotate?: number | undefined
 }

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import { computed } from 'vue'
 
-import CmkIcon from '@/components/CmkIcon'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 const propsCva = cva('', {
   variants: {
@@ -36,20 +36,33 @@ const props = withDefaults(defineProps<CmkAlertBoxProps>(), {
 const alertIconName = computed(() => {
   switch (props.variant) {
     case 'error':
-      return 'alert-crit'
+      return 'error'
     case 'warning':
-      return 'alert-warn'
+      return 'warning'
     case 'success':
-      return 'alert-up'
+      return 'success'
     default:
-      return 'about-checkmk'
+      return 'help'
+  }
+})
+
+const alertIconColor = computed(() => {
+  switch (props.variant) {
+    case 'error':
+      return 'danger'
+    case 'warning':
+      return 'warning'
+    case 'success':
+      return 'success'
+    default:
+      return 'info'
   }
 })
 </script>
 
 <template>
   <div class="cmk-alert-box" :class="propsCva({ variant })">
-    <CmkIcon :name="alertIconName" variant="inline" size="large" />
+    <CmkMultitoneIcon :name="alertIconName" :primary-color="alertIconColor" size="large" />
     <div class="content">
       <slot />
     </div>

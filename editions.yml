@@ -9,6 +9,7 @@ common: &common
     - "almalinux-10"
     - "sles-15sp5"
     - "sles-15sp6"
+    - "sles-15sp7"
 
 # A reduced set of distros for the daily builds
 # Containing only the latest version of each supported OS
@@ -18,8 +19,8 @@ daily_reduced: &daily_reduced
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "debian-12"
-    - "sles-15sp5"
     - "sles-15sp6"
+    - "sles-15sp7"
 
 daily_saas: &daily_saas
     - "ubuntu-22.04"
@@ -54,7 +55,7 @@ editions:
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*common]
         weekly: [*common, *cma_distros]
-        testbuild: ["ubuntu-24.04", "sles-15sp6", "cma-4"]
+        testbuild: ["ubuntu-24.04", "sles-15sp7", "cma-4"]
     ultimate:
         release: [*common, *cma_distros]
         daily: *daily_reduced

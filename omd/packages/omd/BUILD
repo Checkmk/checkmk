@@ -47,6 +47,7 @@ pkg_files(
     "scp",
     "pdftoppm",
     "curl",
+    "zypper",
 ]]
 
 genrule(
@@ -245,6 +246,7 @@ pkg_tar(
             ":wrapper_pdftoppm",
             ":wrapper_scp",
             ":wrapper_ssh",
+            ":wrapper_zypper",
         ],
         "@cmk//distro:debian-13": [
             ":wrapper_curl",

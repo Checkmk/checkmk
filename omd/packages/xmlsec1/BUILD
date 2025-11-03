@@ -86,6 +86,7 @@ filter_directory(
         (
             "@cmk//distro:sles-15sp5",
             "@cmk//distro:sles-15sp6",
+            "@cmk//distro:sles-15sp7",
             "@cmk//distro:almalinux-8",
             "@cmk//distro:almalinux-9",
             "@cmk//distro:almalinux-10",
@@ -142,6 +143,7 @@ pkg_files(
             "@cmk//distro:almalinux-9",
             "@cmk//distro:sles-15sp5",
             "@cmk//distro:sles-15sp6",
+            "@cmk//distro:sles-15sp7",
         ): [],
         "//conditions:default": [
             "lib_symlink_gnutls",

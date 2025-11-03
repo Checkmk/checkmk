@@ -1223,10 +1223,6 @@ async def process_virtual_net_gw(
     return resource
 
 
-async def process_redis(resource: AzureResource) -> AzureResource:
-    return resource
-
-
 def _collect_async_metrics_tasks(
     metrics_definitions: Sequence[AzureMetric],
     subscription: AzureSubscription,
@@ -1908,6 +1904,7 @@ def write_group_info(
     section.write()
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
+    # ! TODO: Shoud this be .write(write_empty=True)?
     AzureSection("agent_info", [*monitored_groups, subscription.piggytarget]).write()
 
 
@@ -2375,8 +2372,6 @@ async def process_single_resources(
             tasks.add(process_vault(mgmt_client, resource))
         elif resource_type == FetchedResource.virtual_network_gateways.type:
             tasks.add(process_virtual_net_gw(mgmt_client, resource))
-        elif resource_type == FetchedResource.redis.type:
-            tasks.add(process_redis(resource))
         elif resource_type.lower() == FetchedResource.cosmosdb.type.lower():
             tasks.add(process_cosmosdb(mgmt_client, resource, subscription, args))
         else:

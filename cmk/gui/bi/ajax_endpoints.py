@@ -7,7 +7,6 @@
 
 from cmk.bi.computer import BIAggregationFilter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 
@@ -24,10 +23,10 @@ from .view import convert_tree_to_frozen_diff_tree
 
 
 def ajax_set_assumption(ctx: PageContext) -> None:
-    site = request.get_str_input("site")
-    host = request.get_str_input("host")
-    service = request.get_str_input("service")
-    state = request.var("state")
+    site = ctx.request.get_str_input("site")
+    host = ctx.request.get_str_input("host")
+    service = ctx.request.get_str_input("service")
+    state = ctx.request.var("state")
     if state == "none":
         del user.bi_assumptions[get_state_assumption_key(site, host, service)]
     elif state is not None:
@@ -38,28 +37,28 @@ def ajax_set_assumption(ctx: PageContext) -> None:
 
 
 def ajax_save_treestate(ctx: PageContext) -> None:
-    path_id = request.get_str_input_mandatory("path")
+    path_id = ctx.request.get_str_input_mandatory("path")
     current_ex_level_str, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level_str)
 
     if user.bi_expansion_level != current_ex_level:
         user.set_tree_states("bi", {})
-    user.set_tree_state("bi", path, request.var("state") == "open")
+    user.set_tree_state("bi", path, ctx.request.var("state") == "open")
     user.save_tree_states()
 
     user.bi_expansion_level = current_ex_level
 
 
 def ajax_render_tree(ctx: PageContext) -> None:
-    aggr_group = request.get_str_input("group")
-    aggr_title = request.get_str_input("title")
-    omit_root = bool(request.var("omit_root"))
-    only_problems = bool(request.var("only_problems"))
-    show_frozen_difference = bool(request.var("show_frozen_difference"))
+    aggr_group = ctx.request.get_str_input("group")
+    aggr_title = ctx.request.get_str_input("title")
+    omit_root = bool(ctx.request.var("omit_root"))
+    only_problems = bool(ctx.request.var("only_problems"))
+    show_frozen_difference = bool(ctx.request.var("show_frozen_difference"))
 
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
-    aggregation_id = request.get_str_input_mandatory("aggregation_id")
+    aggregation_id = ctx.request.get_str_input_mandatory("aggregation_id")
     bi_aggregation_filter = BIAggregationFilter(
         [],
         [],
@@ -73,7 +72,7 @@ def ajax_render_tree(ctx: PageContext) -> None:
         row, _aggregations_are_equal = convert_tree_to_frozen_diff_tree(row)
 
     # TODO: Cleanup the renderer to use a class registry for lookup
-    renderer_class_name = request.var("renderer")
+    renderer_class_name = ctx.request.var("renderer")
     if renderer_class_name == "FoldableTreeRendererTree":
         renderer_cls: type[ABCFoldableTreeRenderer] = FoldableTreeRendererTree
     elif renderer_class_name == "FoldableTreeRendererBoxes":

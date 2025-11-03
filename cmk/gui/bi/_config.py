@@ -1538,12 +1538,12 @@ class AjaxBIRulePreview(AjaxPage):
 
         # Create preview rule
         vs = ModeBIEditRule.valuespec(rule_id=None)
-        varprefix = request.get_str_input_mandatory("varprefix")
+        varprefix = ctx.request.get_str_input_mandatory("varprefix")
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_rule = BIRule(preview_config)
 
         mapped_example_arguments = {}
-        example_arguments = json.loads(request.get_str_input_mandatory("example_arguments"))
+        example_arguments = json.loads(ctx.request.get_str_input_mandatory("example_arguments"))
         for idx, name in enumerate(preview_bi_rule.params.arguments):
             if idx >= len(example_arguments):
                 break
@@ -1580,7 +1580,7 @@ class AjaxBIAggregationPreview(AjaxPage):
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview aggr
-        varprefix = request.get_str_input_mandatory("varprefix")
+        varprefix = ctx.request.get_str_input_mandatory("varprefix")
         vs = BIModeEditAggregation.get_vs_aggregation(aggregation_id=None)
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_aggr = BIAggregation(

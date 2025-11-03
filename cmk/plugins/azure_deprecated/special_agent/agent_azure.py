@@ -36,9 +36,9 @@ from typing import Any, Literal, NamedTuple, TypeVar
 import msal
 import requests
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
-from cmk.utils import password_store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 from cmk.utils.paths import tmp_dir
 
@@ -46,9 +46,14 @@ T = TypeVar("T")
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
 
+
 LOGGER = logging.getLogger()  # root logger for now
 
-AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure"
+AGENT = "azure"
+
+AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / f"agent_{AGENT}"
+
+SECRET_OPTION = "secret"
 
 NOW = datetime.datetime.now(tz=datetime.UTC)
 
@@ -288,7 +293,9 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     # REQUIRED
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser_add_secret_option(
+        parser, long=f"--{SECRET_OPTION}", help="Azure authentication secret", required=True
+    )
     parser.add_argument(
         "--cache-id",
         required=True,
@@ -1780,7 +1787,9 @@ def main_graph_client(args: Args) -> None:
         deserialize_http_proxy_config(args.proxy),
     )
     try:
-        graph_client.login(args.tenant, args.client, args.secret)
+        graph_client.login(
+            args.tenant, args.client, resolve_secret_option(args, SECRET_OPTION).reveal()
+        )
         write_section_ad(graph_client, AzureSection("ad"), args)
         write_section_app_registrations(graph_client, args)
     except (ApiLoginFailed, ApiErrorAuthorizationRequestDenied) as exc:
@@ -1935,7 +1944,9 @@ def test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
         subscription,
     )
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
+        mgmt_client.login(
+            args.tenant, args.client, resolve_secret_option(args, SECRET_OPTION).reveal()
+        )
     except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Connection failed with: {exc}\n"
         sys.stdout.write(error_msg)
@@ -1990,7 +2001,6 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
 
 def main(argv=None):
     if argv is None:
-        password_store.replace_passwords()
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)

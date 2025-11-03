@@ -81,8 +81,8 @@ def agent_azure_arguments(
         params.tenant,
         "--client",
         params.client,
-        "--secret",
-        params.secret.unsafe(),
+        "--secret-id",
+        params.secret,
     ]
     if params.authority:
         args += [

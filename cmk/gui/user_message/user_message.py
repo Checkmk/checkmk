@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import time
 from collections.abc import Iterator
 from typing import override
@@ -22,7 +23,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageContext
+from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -231,3 +232,32 @@ def ajax_acknowledge_user_message(ctx: PageContext) -> None:
     check_csrf_token()
     msg_id = request.get_str_input_mandatory("id")
     message.acknowledge_gui_message(msg_id)
+
+
+class AjaxUserMessageAction(AjaxPage):
+    @classmethod
+    def ident(cls) -> str:
+        return "ajax_user_message_action"
+
+    @override
+    def page(self, ctx: PageContext) -> PageResult:
+        request_body = json.loads(request.get_ascii_input_mandatory("request"))
+        msg_id = request_body.get("msg_id")
+        match request_body.get("action_type"):
+            case "acknowledge":
+                message.acknowledge_gui_message(msg_id)
+            case "delete":
+                message.delete_gui_message(msg_id)
+            case _:
+                pass
+        return {}
+
+
+class AjaxGetUserMessages(AjaxPage):
+    @classmethod
+    def ident(cls) -> str:
+        return "ajax_get_user_messages"
+
+    @override
+    def page(self, ctx: PageContext) -> PageResult:
+        return sorted(message.get_gui_messages(), key=lambda e: e["time"], reverse=True)

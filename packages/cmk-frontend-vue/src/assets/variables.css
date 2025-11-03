@@ -184,6 +184,7 @@
   --icon-widget-edit: url('~cmk-frontend/themes/facelift/images/icon_widget_edit.svg');
   --icon-widget-clone: url('~cmk-frontend/themes/facelift/images/icon_widget_clone.svg');
   --icon-widget-delete: url('~cmk-frontend/themes/facelift/images/icon_widget_delete.svg');
+  --icon-werk-ack: url('~cmk-frontend/themes/facelift/images/icon_werk_ack.png');
 }
 
 @layer theme {

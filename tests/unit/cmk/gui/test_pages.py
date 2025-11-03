@@ -20,7 +20,6 @@ from cmk.utils import paths
 def test_registered_pages() -> None:
     expected_pages = [
         "add_bookmark",
-        "ajax_acknowledge_user_message",
         "ajax_figure_dashlet_data",
         "ajax_bi_rule_preview",
         "ajax_bi_aggregation_preview",
@@ -30,7 +29,10 @@ def test_registered_pages() -> None:
         "ajax_backup_job_state",
         "ajax_background_job_details",
         "ajax_dashlet_pos",
+        "ajax_acknowledge_user_message",
         "ajax_delete_user_message",
+        "ajax_get_user_messages",
+        "ajax_user_message_action",
         "ajax_dict_host_tag_condition_get_choice",
         "ajax_fetch_ca",
         "ajax_inv_render_tree",

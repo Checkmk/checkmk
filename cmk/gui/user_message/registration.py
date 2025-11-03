@@ -8,7 +8,13 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
 from .api import register_endpoints
-from .user_message import ajax_acknowledge_user_message, ajax_delete_user_message, PageUserMessage
+from .user_message import (
+    ajax_acknowledge_user_message,
+    ajax_delete_user_message,
+    AjaxGetUserMessages,
+    AjaxUserMessageAction,
+    PageUserMessage,
+)
 
 
 def register(
@@ -23,6 +29,8 @@ def register(
     page_registry.register(
         PageEndpoint("ajax_acknowledge_user_message", ajax_acknowledge_user_message)
     )
+    page_registry.register(PageEndpoint(AjaxGetUserMessages.ident(), AjaxGetUserMessages()))
+    page_registry.register(PageEndpoint(AjaxUserMessageAction.ident(), AjaxUserMessageAction()))
     register_endpoints(
         endpoint_family_registry,
         versioned_endpoint_registry,

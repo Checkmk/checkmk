@@ -28,8 +28,8 @@ export class AjaxResponseError extends CmkError {
   }
 }
 
-export async function cmkAjax<OutputType>(method: string, body: object): Promise<OutputType> {
-  const response = await cmkFetch(method, {
+export async function cmkAjax<OutputType>(url: string, body: object): Promise<OutputType> {
+  const response = await cmkFetch(url, {
     method: 'POST',
     headers: {
       'Content-type': 'application/x-www-form-urlencoded'

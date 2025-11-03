@@ -4,10 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
+import { type Ref, onMounted, ref } from 'vue'
 
-import { cmkFetch } from '@/lib/cmkFetch'
-import { CmkError } from '@/lib/error'
+import { cmkAjax } from '@/lib/ajax'
 import usei18n from '@/lib/i18n'
 
 import CmkHtml from '@/components/CmkHtml.vue'
@@ -26,8 +25,6 @@ const headers: string[] = [_t('Actions'), _t('Message'), _t('Sent on'), _t('Expi
 
 defineProps<ContentProps>()
 
-// TODO: once we have an api endpoint for getting the user messages -> call that endpoint here
-//       ticket: https://jira.lan.tribe29.com/browse/CMK-25699
 type UserMessage = {
   id: string
   text: {
@@ -39,54 +36,26 @@ type UserMessage = {
   acknowledged: boolean
   security: boolean
 }
-const messages: UserMessage[] = []
+
+const messages: Ref<UserMessage[]> = ref([])
+const fetchData = async (): Promise<void> => {
+  messages.value = await cmkAjax(`ajax_get_user_messages.py`, {})
+}
+
+onMounted(async () => {
+  await fetchData()
+})
 
 const acknowledgedMsgIds: Ref<string[]> = ref([])
 const deletedMsgIds: Ref<string[]> = ref([])
 
-// TODO: remove duplicates of MaybeApiError and AjaxResponseError (other Vue files) and consolidate
-//       them in one place
-interface MaybeApiError {
-  result?: string
-  result_code?: number
-  severity?: 'error'
-}
-
-class AjaxResponseError extends CmkError {
-  response: MaybeApiError
-
-  constructor(message: string, response: MaybeApiError) {
-    super(message, null)
-    this.response = response
-  }
-
-  override getContext(): string {
-    if (this.response.result_code !== 0 && this.response.result && this.response.severity) {
-      return `${this.response.severity}: ${this.response.result}`
-    }
-    return ''
-  }
-}
-
 async function postUserMessageAction(actionType: string, msg: UserMessage): Promise<void> {
   const csrfToken = global_csrf_token
-  const response = await cmkFetch(`ajax_user_message_action.py`, {
-    method: 'POST',
-    headers: {
-      'Content-type': 'application/x-www-form-urlencoded'
-    },
-    body: `request=${JSON.stringify({
-      action_type: actionType,
-      msg_id: msg.id,
-      _csrf_token: csrfToken
-    })}`
+  await cmkAjax(`ajax_user_message_action.py`, {
+    action_type: actionType,
+    msg_id: msg.id,
+    _csrf_token: csrfToken
   })
-  await response.raiseForStatus()
-
-  const ajaxResponse = (await response.json()) as MaybeApiError
-  if (ajaxResponse.result_code !== 0) {
-    throw new AjaxResponseError('Endpoint returned an error.', ajaxResponse as MaybeApiError)
-  }
 
   switch (actionType) {
     case 'acknowledge':

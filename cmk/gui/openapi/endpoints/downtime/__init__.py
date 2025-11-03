@@ -67,39 +67,6 @@ DowntimeType = Literal[
 
 FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
 
-SERVICE_DESCRIPTION_SHOW = {
-    "service_description": fields.String(
-        description="The service name. No exception is raised when the specified service "
-        "description does not exist. This parameter can be combined with the host_name parameter "
-        "to only filter for service downtimes of on a specific host. Cannot be used "
-        "together with the query parameter.",
-        example="Memory",
-        required=False,
-    )
-}
-
-HOST_NAME_SHOW = {
-    "host_name": gui_fields.HostField(
-        description="The host name. No exception is raised when the specified host name does not "
-        "exist. Using this parameter only will filter for host downtimes only. Cannot "
-        "be used together with the query parameter.",
-        should_exist=None,  # we do not care
-        example="example.com",
-        required=False,
-    )
-}
-
-DOWNTIME_TYPE = {
-    "downtime_type": fields.String(
-        description="The type of the downtime to be listed. Only filters the result when using "
-        "the host_name or service_description parameter.",
-        enum=["host", "service", "both"],
-        example="host",
-        load_default="both",
-        required=False,
-    )
-}
-
 PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
@@ -325,10 +292,36 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
     method="get",
     tag_group="Monitoring",
     query_params=[
-        HOST_NAME_SHOW,
-        SERVICE_DESCRIPTION_SHOW,
+        {
+            "service_description": fields.String(
+                description=(
+                    "The service name. Matches service descriptions that contain the given value. "
+                    "No exception is raised when the specified service description does not exist. "
+                    "This parameter can be combined with the host_name parameter to filter for "
+                    "service downtimes of a specific host."
+                ),
+                example="Memory",
+                required=False,
+            ),
+            "host_name": gui_fields.HostField(
+                description=(
+                    "The host name. No exception is raised when the specified host name does not "
+                    "exist. Unless otherwise restricted, the results will contain both host and "
+                    "service downtimes for the given host."
+                ),
+                should_exist=None,  # we do not care
+                example="example.com",
+                required=False,
+            ),
+            "downtime_type": fields.String(
+                description="The type of the downtimes to be listed.",
+                enum=["host", "service", "both"],
+                example="host",
+                load_default="both",
+                required=False,
+            ),
+        },
         DowntimeParameter,
-        DOWNTIME_TYPE,
         {
             "site_id": gui_fields.SiteField(
                 description="An existing site id",

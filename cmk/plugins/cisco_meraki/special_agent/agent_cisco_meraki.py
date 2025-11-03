@@ -12,6 +12,7 @@ from __future__ import annotations
 import abc
 import argparse
 import logging
+import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
@@ -21,20 +22,23 @@ from typing import Final, TypedDict
 import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
-    special_agent_main,
 )
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
 
-_LOGGER = logging.getLogger("agent_cisco_meraki")
+__version__ = "2.5.0b1"
+
+AGENT = "cisco_meraki"
+
+_LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 APIKEY_OPTION_NAME: Final = "apikey"
 
-_BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / "agent_cisco_meraki"
+_BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / f"agent_{AGENT}"
 
 _API_NAME_ORGANISATION_ID: Final = "id"
 _API_NAME_ORGANISATION_NAME: Final = "name"
@@ -369,7 +373,7 @@ def _write_sections(sections: Iterable[Section]) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -478,7 +482,7 @@ def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(
-        parse_arguments, agent_cisco_meraki_main, apply_password_store_hack=False
-    )
+    args = parse_arguments(sys.argv[1:])
+    return agent_cisco_meraki_main(args)

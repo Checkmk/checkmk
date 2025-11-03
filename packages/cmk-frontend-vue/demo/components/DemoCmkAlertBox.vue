@@ -11,12 +11,25 @@ defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>
+  Variants:
   <ul>
-    <li><CmkAlertBox variant="success">success</CmkAlertBox></li>
-    <li><CmkAlertBox variant="info">info</CmkAlertBox></li>
-    <li><CmkAlertBox variant="warning">warning</CmkAlertBox></li>
-    <li><CmkAlertBox variant="error">error</CmkAlertBox></li>
+    <li><CmkAlertBox variant="success">This is the success variant</CmkAlertBox></li>
+    <li><CmkAlertBox variant="info">This is the info variant</CmkAlertBox></li>
+    <li><CmkAlertBox variant="warning">This is the warning variant</CmkAlertBox></li>
+    <li><CmkAlertBox variant="error">This is the error variant</CmkAlertBox></li>
   </ul>
+  Simple text heading:
+  <CmkAlertBox variant="error" heading="Error occurred"> Something went wrong... </CmkAlertBox>
+  Rich content heading via slot:
+  <CmkAlertBox variant="warning">
+    <template #heading> <strong>Warning:</strong> <em>Please review</em> </template>
+    Content here...
+  </CmkAlertBox>
+  Long text:
+  <CmkAlertBox variant="success"
+    >Very long message in order to showcase the text wrapping and the final position of the text and
+    the icon</CmkAlertBox
+  >
 </template>
 
 <style scoped>

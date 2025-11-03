@@ -11,6 +11,7 @@ Since this endpoint is public, no authentication is required.
 """
 
 import argparse
+import json
 import re
 import sys
 from collections.abc import Sequence
@@ -22,7 +23,6 @@ import urllib3
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
 from cmk.utils.semantic_version import SemanticVersion
@@ -220,13 +220,15 @@ def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Nam
                 version_data = version_cache.get_data(data["git_commit"])
 
                 if version_data is not None:
-                    with SectionWriter("bazel_cache_version") as writer:
-                        writer.append_json(version_data)
+                    sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
+                    sys.stdout.write(f"{json.dumps(version_data)}\n")
+
             except requests.exceptions.RequestException:
                 pass
 
-        with SectionWriter(f"bazel_cache_{endpoint.name}") as writer:
-            writer.append_json(data)
+        sys.stdout.write(f"<<<bazel_cache_{endpoint.name}:sep(0)>>>\n")
+        sys.stdout.write(f"{json.dumps(data)}\n")
+
     else:
         _process_txt_data(res=res, section_name=endpoint.name)
 
@@ -258,14 +260,16 @@ def _process_txt_data(res: requests.Response, section_name: str) -> None:
             else:
                 data[key] = splitted_line[-1]
 
-    with SectionWriter(f"bazel_cache_{section_name}") as writer:
-        writer.append_json(data)
-    with SectionWriter(f"bazel_cache_{section_name}_go") as writer:
-        writer.append_json(data_go)
-    with SectionWriter(f"bazel_cache_{section_name}_grpc") as writer:
-        writer.append_json(data_grpc)
-    with SectionWriter(f"bazel_cache_{section_name}_http") as writer:
-        writer.append_json(data_http)
+    sys.stdout.write(
+        f"<<<bazel_cache_{section_name}:sep(0)>>>\n"
+        f"{json.dumps(data)}\n"
+        f"<<<bazel_cache_{section_name}_go:sep(0)>>>\n"
+        f"{json.dumps(data_go)}\n"
+        f"<<<bazel_cache_{section_name}_grpc:sep(0)>>>\n"
+        f"{json.dumps(data_grpc)}\n"
+        f"<<<bazel_cache_{section_name}_http:sep(0)>>>\n"
+        f"{json.dumps(data_http)}\n"
+    )
 
 
 @report_agent_crashes(AGENT, __version__)

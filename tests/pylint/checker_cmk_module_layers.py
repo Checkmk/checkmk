@@ -697,9 +697,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.gui.graphing.nonfree.ultimate"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_METRIC_BACKEND,
         "cmk.gui",
-        "cmk.metric_backend",
-        "cmk.utils.paths",
+        "cmk.nonfree.ultimate.metric_backend.gui",
     ),
     Component("cmk.gui"): _allow(
         *PACKAGE_CCC,

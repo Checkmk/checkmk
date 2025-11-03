@@ -24,65 +24,65 @@ HACK_AGENTS = {
     # if we have to apply the password store hack.
     # Make sure to have *all* special agent plugins listed here, so we
     # can test for it
+    "acme_sbc": False,  # needs no secret
+    "activemq": True,
+    "alertmanager": False,
+    "allnet_ip_sensoric": False,  # needs no secret
+    "appdynamics": True,
     "aws": False,
     "aws_status": False,  # needs no secret
+    "azure_status": False,  # needs no secret
     "azure": True,
     "azure_v2": True,
-    "azure_status": False,  # needs no secret
     "bazel_cache": True,
     "bi": False,  # needs no secret
     "cisco_meraki": True,
     "cisco_prime": True,
+    "couchbase": True,
     "datadog": True,
+    "ddn_s2a": True,
     "elasticsearch": True,
     "fritzbox": False,  # needs no secret
+    "gcp_status": False,  # needs no secret
     "gcp": True,
     "gerrit": False,
-    "jenkins": True,
-    "mobileiron": True,
-    "netapp_ontap": False,
-    "prism": True,
-    "proxmox_ve": True,
-    "pure_storage_fa": True,
-    "three_par": True,
-    "rabbitmq": True,
-    "redfish": False,
-    "redfish_power": False,
-    "tinkerforge": False,  # needs no secret
-    "couchbase": True,
-    "zerto": True,
-    "siemens_plc": False,  # needs no secret
-    "acme_sbc": False,  # needs no secret
-    "activemq": True,
-    "alertmanager": False,
-    "prometheus": False,
-    "allnet_ip_sensoric": False,  # needs no secret
     "graylog": True,
-    "storeonce": True,
-    "appdynamics": True,
-    "ddn_s2a": True,
-    "gcp_status": False,  # needs no secret
     "hivemanager_ng": True,
     "hivemanager": True,
     "hp_msa": True,
     "ibmsvc": False,  # needs no secret
     "innovaphone": True,
-    "storeonce4x": True,
-    "vsphere": False,
-    "jolokia": True,
-    "random": False,  # needs no secret
-    "mqtt": True,
-    "splunk": True,
-    "vnx_quotas": True,
-    "ucs_bladecenter": True,
-    "smb_share": True,
-    "jira": True,
-    "salesforce": False,  # needs no secret
     "ipmi_sensors": True,
-    "ruckus_spot": True,
+    "jenkins": True,
+    "jira": True,
+    "jolokia": True,
     "kube": False,
-    "otel": False,  # needs no secret
     "metric_backend_custom_query": False,  # needs no secret
+    "mobileiron": True,
+    "mqtt": True,
+    "netapp_ontap": False,
+    "otel": False,  # needs no secret
+    "prism": True,
+    "prometheus": False,
+    "proxmox_ve": True,
+    "pure_storage_fa": True,
+    "rabbitmq": True,
+    "random": False,  # needs no secret
+    "redfish": False,
+    "redfish_power": False,
+    "ruckus_spot": True,
+    "salesforce": False,  # needs no secret
+    "siemens_plc": False,  # needs no secret
+    "smb_share": True,
+    "splunk": True,
+    "storeonce4x": True,
+    "storeonce": True,
+    "three_par": True,
+    "tinkerforge": False,  # needs no secret
+    "ucs_bladecenter": True,
+    "vnx_quotas": True,
+    "vsphere": False,
+    "zerto": True,
 }
 
 

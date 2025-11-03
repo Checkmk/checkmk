@@ -6,7 +6,6 @@
 import traceback
 from collections.abc import Iterable, Mapping
 from logging import Logger
-from pathlib import Path
 from typing import Any
 
 import pyasn1.error
@@ -29,7 +28,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.render import Age
 
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
-from .settings import Settings
+from .settings import Paths, Settings
 
 VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
 VarBinds = Iterable[VarBind]
@@ -249,14 +248,14 @@ class SNMPTrapTranslator:
             case (True, {**extra}) if not extra:  # matches empty dict
                 self._mib_resolver = self._construct_resolver(
                     self._logger,
-                    settings.paths.compiled_mibs_dir.value,
+                    settings.paths,
                     load_texts=False,
                 )
                 self.translate = self._translate_via_mibs
             case (True, {"add_description": True}):
                 self._mib_resolver = self._construct_resolver(
                     self._logger,
-                    settings.paths.compiled_mibs_dir.value,
+                    settings.paths,
                     load_texts=True,
                 )
                 self.translate = self._translate_via_mibs
@@ -265,7 +264,7 @@ class SNMPTrapTranslator:
 
     @staticmethod
     def _construct_resolver(
-        logger: Logger, mibs_dir: Path, *, load_texts: bool
+        logger: Logger, paths: Paths, *, load_texts: bool
     ) -> pysnmp.smi.view.MibViewController | None:
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
@@ -275,7 +274,8 @@ class SNMPTrapTranslator:
                 cmk.utils.paths.local_mib_dir,
                 cmk.utils.paths.mib_dir,
                 "/usr/share/snmp/mibs",
-                str(mibs_dir),
+                str(paths.compiled_mibs_dir.value),
+                str(paths.checkmk_compiled_mibs_dir.value),
             ]:
                 builder.addMibSources(*[pysnmp.smi.builder.DirMibSource(source)])
 

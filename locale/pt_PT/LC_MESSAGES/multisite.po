@@ -17646,6 +17646,10 @@ msgstr "Actualmente, existe uma alteração pendente que ainda não foi activada
 msgid "Custom Action"
 msgstr "Ação Personalizada"
 
+#, fuzzy
+msgid "Custom CA certificate"
+msgstr "certificado do AC"
+
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Desenho GUI personalizado de %s"
@@ -22039,6 +22043,10 @@ msgstr "Não use um prefixo de namespace"
 
 msgid "Do not use absolute levels"
 msgstr "Não usar níveis absolutos"
+
+#, fuzzy
+msgid "Do not validate TLS certificates"
+msgstr "Certificado inválido"
 
 msgid "Do not validate server certificate during port query"
 msgstr "Não validar o certificado do servidor durante a consulta do porto"
@@ -51022,6 +51030,10 @@ msgstr ""
 msgid "Path to a CA certificate"
 msgstr "Caminho para um certificado CA"
 
+#, fuzzy
+msgid "Path to a custom CA certificate file to use for TLS connections."
+msgstr "Opções de tempo do certificado de roteador SAP"
+
 msgid "Path to categories"
 msgstr "Caminho para as categorias"
 
@@ -58044,6 +58056,10 @@ msgid "SSL"
 msgstr "SSL"
 
 msgid "SSL certificate checking"
+msgstr "verificação do certificado SSL"
+
+#, fuzzy
+msgid "SSL certificate revocation checks"
 msgstr "verificação do certificado SSL"
 
 msgid "SSL certificate validation"
@@ -65590,6 +65606,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "A autenticação TLS sem TLS não é possível"
+
+#, fuzzy
+msgid "TLS certificate revocation checks"
+msgstr "verificação do certificado SSL"
 
 #, fuzzy
 msgid "TLS certificate validation"
@@ -84554,6 +84574,10 @@ msgid "Validate server certificate during port query"
 msgstr "Validar o certificado do servidor durante a consulta do porto"
 
 #, fuzzy
+msgid "Validate with custom certificate authority (CA)"
+msgstr "Validar o certificado do servidor durante a consulta do porto"
+
+#, fuzzy
 msgid "Validity"
 msgstr "Válido até"
 
@@ -84761,6 +84785,10 @@ msgstr "Verificar certificados"
 
 #, fuzzy
 msgid "Verify SSL certificate (not verifying is insecure)"
+msgstr "Ignorar erros de certificado (inseguro)"
+
+#, fuzzy
+msgid "Verify SSL certificates for HTTPS requests."
 msgstr "Ignorar erros de certificado (inseguro)"
 
 #, fuzzy

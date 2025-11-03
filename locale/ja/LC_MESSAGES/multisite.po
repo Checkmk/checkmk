@@ -16650,6 +16650,10 @@ msgstr "現在、有効化されていない保留中の変更が1つありま�
 msgid "Custom Action"
 msgstr "カスタムアクション"
 
+#, fuzzy
+msgid "Custom CA certificate"
+msgstr "CA証明書"
+
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "カスタムGUIデザイン %s"
@@ -20734,6 +20738,10 @@ msgstr "接頭辞は使用しないでください"
 
 msgid "Do not use absolute levels"
 msgstr "絶対レベルを使用しないでください"
+
+#, fuzzy
+msgid "Do not validate TLS certificates"
+msgstr "TLS証明書を検証する"
 
 msgid "Do not validate server certificate during port query"
 msgstr "ポート照会時にサーバー証明書を検証しない"
@@ -47856,6 +47864,10 @@ msgstr "PostGreSQLバイナリへのパス"
 msgid "Path to a CA certificate"
 msgstr "CA証明書へのパス"
 
+#, fuzzy
+msgid "Path to a custom CA certificate file to use for TLS connections."
+msgstr "接続 '%s' 用の SAML カスタム署名証明書"
+
 msgid "Path to categories"
 msgstr "カテゴリのパス"
 
@@ -54404,6 +54416,10 @@ msgstr "SSL"
 
 msgid "SSL certificate checking"
 msgstr "SSL証明書のチェック"
+
+#, fuzzy
+msgid "SSL certificate revocation checks"
+msgstr "SSL証明書の検証"
 
 msgid "SSL certificate validation"
 msgstr "SSL証明書の検証"
@@ -61561,6 +61577,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLSなしでの認証は不可"
+
+#, fuzzy
+msgid "TLS certificate revocation checks"
+msgstr "TLS 証明書の検証"
 
 msgid "TLS certificate validation"
 msgstr "TLS 証明書の検証"
@@ -79201,6 +79221,10 @@ msgstr "TLS証明書を検証する"
 msgid "Validate server certificate during port query"
 msgstr "ポート照会時にサーバ証明書を検証する"
 
+#, fuzzy
+msgid "Validate with custom certificate authority (CA)"
+msgstr "ポート照会時にサーバ証明書を検証する"
+
 msgid "Validity"
 msgstr "有効性"
 
@@ -79401,6 +79425,11 @@ msgid "Verify Certificates"
 msgstr "証明書の検証"
 
 msgid "Verify SSL certificate (not verifying is insecure)"
+msgstr ""
+"SSL証明書を確認する（確認しない場合はセキュリティ上のリスクがあります）"
+
+#, fuzzy
+msgid "Verify SSL certificates for HTTPS requests."
 msgstr ""
 "SSL証明書を確認する（確認しない場合はセキュリティ上のリスクがあります）"
 

@@ -17676,6 +17676,10 @@ msgstr ""
 msgid "Custom Action"
 msgstr "Acțiune personalizată"
 
+#, fuzzy
+msgid "Custom CA certificate"
+msgstr "Certificat CA"
+
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Proiectare GUI personalizată de %s"
@@ -22088,6 +22092,10 @@ msgstr "Nu utilizați un prefix"
 
 msgid "Do not use absolute levels"
 msgstr "Nu utilizați niveluri absolute"
+
+#, fuzzy
+msgid "Do not validate TLS certificates"
+msgstr "Certificat invalid"
 
 msgid "Do not validate server certificate during port query"
 msgstr "Nu validați certificatul serverului în timpul interogării portului"
@@ -51155,6 +51163,10 @@ msgstr ""
 msgid "Path to a CA certificate"
 msgstr "Cale de acces la un certificat CA"
 
+#, fuzzy
+msgid "Path to a custom CA certificate file to use for TLS connections."
+msgstr "Setări de timp pentru certificatul routerului SAP"
+
 msgid "Path to categories"
 msgstr "Calea către categorii"
 
@@ -58160,6 +58172,10 @@ msgstr "SSL"
 
 msgid "SSL certificate checking"
 msgstr "Verificarea certificatelor SSL"
+
+#, fuzzy
+msgid "SSL certificate revocation checks"
+msgstr "Verificarea certificatului SSL"
 
 msgid "SSL certificate validation"
 msgstr "Validarea certificatului SSL"
@@ -65791,6 +65807,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS Autentificarea fără TLS nu este posibilă"
+
+#, fuzzy
+msgid "TLS certificate revocation checks"
+msgstr "Verificarea certificatului SSL"
 
 #, fuzzy
 msgid "TLS certificate validation"
@@ -84847,6 +84867,10 @@ msgid "Validate server certificate during port query"
 msgstr "Validarea certificatului serverului în timpul interogării portului"
 
 #, fuzzy
+msgid "Validate with custom certificate authority (CA)"
+msgstr "Validarea certificatului serverului în timpul interogării portului"
+
+#, fuzzy
 msgid "Validity"
 msgstr "Valabil până la"
 
@@ -85056,6 +85080,10 @@ msgstr "Verificarea certificatelor"
 
 #, fuzzy
 msgid "Verify SSL certificate (not verifying is insecure)"
+msgstr "Ignoră erorile de certificat (nesigur)"
+
+#, fuzzy
+msgid "Verify SSL certificates for HTTPS requests."
 msgstr "Ignoră erorile de certificat (nesigur)"
 
 #, fuzzy

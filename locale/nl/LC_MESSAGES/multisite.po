@@ -17648,6 +17648,10 @@ msgstr ""
 msgid "Custom Action"
 msgstr "Aangepaste actie"
 
+#, fuzzy
+msgid "Custom CA certificate"
+msgstr "CA-certificaat"
+
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Aangepast GUI ontwerp van %s"
@@ -22037,6 +22041,10 @@ msgstr "Gebruik geen namespace voorvoegsel"
 
 msgid "Do not use absolute levels"
 msgstr "Gebruik geen absolute niveaus"
+
+#, fuzzy
+msgid "Do not validate TLS certificates"
+msgstr "Ongeldig certificaat"
 
 msgid "Do not validate server certificate during port query"
 msgstr "Servercertificaat niet valideren tijdens poortverzoek"
@@ -51058,6 +51066,10 @@ msgstr ""
 msgid "Path to a CA certificate"
 msgstr "Pad naar een CA-certificaat"
 
+#, fuzzy
+msgid "Path to a custom CA certificate file to use for TLS connections."
+msgstr "SAP router certificaat tijd instellingen"
+
 msgid "Path to categories"
 msgstr "Pad naar categorieën"
 
@@ -58052,6 +58064,10 @@ msgstr "SSL"
 
 msgid "SSL certificate checking"
 msgstr "SSL-certificaat controleren"
+
+#, fuzzy
+msgid "SSL certificate revocation checks"
+msgstr "SSL-certificaat verificatie"
 
 msgid "SSL certificate validation"
 msgstr "SSL-certificaat validatie"
@@ -65597,6 +65613,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS-authenticatie zonder TLS is niet mogelijk"
+
+#, fuzzy
+msgid "TLS certificate revocation checks"
+msgstr "SSL-certificaat verificatie"
 
 #, fuzzy
 msgid "TLS certificate validation"
@@ -84618,6 +84638,10 @@ msgid "Validate server certificate during port query"
 msgstr "Servercertificaat valideren tijdens poortverzoek"
 
 #, fuzzy
+msgid "Validate with custom certificate authority (CA)"
+msgstr "Servercertificaat valideren tijdens poortverzoek"
+
+#, fuzzy
 msgid "Validity"
 msgstr "Geldig tot"
 
@@ -84826,6 +84850,10 @@ msgstr "Certificaten verifiëren"
 
 #, fuzzy
 msgid "Verify SSL certificate (not verifying is insecure)"
+msgstr "Negeer certificaatfouten (onveilig)"
+
+#, fuzzy
+msgid "Verify SSL certificates for HTTPS requests."
 msgstr "Negeer certificaatfouten (onveilig)"
 
 #, fuzzy

@@ -17038,6 +17038,10 @@ msgstr ""
 msgid "Custom Action"
 msgstr "Angepasste Aktion"
 
+#, fuzzy
+msgid "Custom CA certificate"
+msgstr "CA-Zertifikat"
+
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Benutzerdefiniertes GUI-Design von %s"
@@ -21180,6 +21184,10 @@ msgstr "Kein Präfix verwenden"
 
 msgid "Do not use absolute levels"
 msgstr "Keine absoluten Levels benutzen"
+
+#, fuzzy
+msgid "Do not validate TLS certificates"
+msgstr "TLS-Zertifikate validieren"
 
 msgid "Do not validate server certificate during port query"
 msgstr "Serverzertifikat bei Portabfrage nicht validieren"
@@ -48808,6 +48816,10 @@ msgstr "Pfad zur PostGreSQL-Binärdatei"
 msgid "Path to a CA certificate"
 msgstr "CA-Zertifikat hinzufügen"
 
+#, fuzzy
+msgid "Path to a custom CA certificate file to use for TLS connections."
+msgstr "Benutzerdefiniertes SAML-Signaturzertifikat für die Verbindung '%s'"
+
 msgid "Path to categories"
 msgstr "Pfad zu den Kategorien"
 
@@ -55446,6 +55458,10 @@ msgstr "SSL"
 
 msgid "SSL certificate checking"
 msgstr "Überprüfung von SSL-Zertifikaten"
+
+#, fuzzy
+msgid "SSL certificate revocation checks"
+msgstr "SSL Zertifikatsverifizierung"
 
 msgid "SSL certificate validation"
 msgstr "SSL Zertifikats Überprüfung"
@@ -62779,6 +62795,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS-Authentifizierung ohne TLS ist nicht möglich"
+
+#, fuzzy
+msgid "TLS certificate revocation checks"
+msgstr "Verifizierung des TLS-Zertifikats"
 
 msgid "TLS certificate validation"
 msgstr "TLS-Zertifikatsüberprüfung"
@@ -81183,6 +81203,10 @@ msgstr "TLS-Zertifikate validieren"
 msgid "Validate server certificate during port query"
 msgstr "Serverzertifikat bei Portabfrage validieren"
 
+#, fuzzy
+msgid "Validate with custom certificate authority (CA)"
+msgstr "Serverzertifikat bei Portabfrage validieren"
+
 msgid "Validity"
 msgstr "Gültigkeit"
 
@@ -81388,6 +81412,11 @@ msgid "Verify Certificates"
 msgstr "Zertifikate verifizieren"
 
 msgid "Verify SSL certificate (not verifying is insecure)"
+msgstr ""
+"Überprüfen Sie das SSL-Zertifikat (eine Nicht-Überprüfung ist unsicher)"
+
+#, fuzzy
+msgid "Verify SSL certificates for HTTPS requests."
 msgstr ""
 "Überprüfen Sie das SSL-Zertifikat (eine Nicht-Überprüfung ist unsicher)"
 

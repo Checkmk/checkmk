@@ -18,6 +18,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp5 sles12sp5 \
     enchant-devel \
     git \
     make \
+    libmpfr4 \
     python \
     python-devel \
     python-pyOpenSSL \

@@ -61,6 +61,7 @@ RUN apt-get update \
     libldap2-dev \
     libltdl-dev \
     libmcrypt-dev \
+    libmpfr-dev \
     libncurses5-dev \
     libpango1.0-dev \
     libpcap-dev \

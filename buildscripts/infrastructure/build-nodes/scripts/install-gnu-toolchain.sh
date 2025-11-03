@@ -12,6 +12,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # Fast mirror located nearby, see https://www.gnu.org/prep/ftp.en.html
 MIRROR_URL="https://ftpmirror.gnu.org/"
 
+case "$DISTRO" in
+    sles-12*)
+        echo "sles-12* is missing a recent version of mpfr to build gdb 16.3"
+        BUILD_GDB=false
+        ;;
+    *)
+        BUILD_GDB=true
+        ;;
+esac
+
 GCC_MAJOR=$(get_version "$SCRIPT_DIR" GCC_VERSION_MAJOR)
 GCC_MINOR=$(get_version "$SCRIPT_DIR" GCC_VERSION_MINOR)
 GCC_PATCHLEVEL=$(get_version "$SCRIPT_DIR" GCC_VERSION_PATCHLEVEL)
@@ -23,7 +33,7 @@ BINUTILS_VERSION="2.43.1"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
 BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="13.2"
+GDB_VERSION="16.1"
 GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
@@ -39,7 +49,10 @@ download_sources() {
     # Get the sources from nexus or upstream
     mirrored_download "${BINUTILS_ARCHIVE_NAME}" "${BINUTILS_URL}"
     mirrored_download "${GCC_ARCHIVE_NAME}" "${GCC_URL}"
-    mirrored_download "${GDB_ARCHIVE_NAME}" "${GDB_URL}"
+    if [ "${BUILD_GDB}" = true ]; then
+        log "GDB build enabled"
+        mirrored_download "${GDB_ARCHIVE_NAME}" "${GDB_URL}"
+    fi
 
     # Some GCC dependency download optimization
     local FILE_NAME="gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
@@ -155,7 +168,9 @@ build_package() {
     download_sources
     build_binutils
     build_gcc
-    build_gdb
+    if [ "${BUILD_GDB}" = true ]; then
+        build_gdb
+    fi
 
     cd "$TARGET_DIR"
     rm -rf "$TARGET_DIR/src"
@@ -183,4 +198,6 @@ set_symlinks
 
 test_packages
 test_package "/usr/bin/gcc --version" "$GCC_VERSION"
-test_package "/usr/bin/gdb --version" "$GDB_VERSION"
+if [ "${BUILD_GDB}" = true ]; then
+    test_package "/usr/bin/gdb --version" "$GDB_VERSION"
+fi

@@ -59,6 +59,7 @@ RUN apt-get update \
     libfreeradius-dev \
     libgd-dev \
     libglib2.0-dev \
+    libgmp-dev \
     libgnutls28-dev \
     libgsf-1-dev \
     libkrb5-dev \
@@ -77,6 +78,7 @@ RUN apt-get update \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
+    libmpfr-dev \
     openssh-client \
     patch \
     rpcbind \

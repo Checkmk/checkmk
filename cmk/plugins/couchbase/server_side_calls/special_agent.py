@@ -39,8 +39,8 @@ def _commands_function(
             *args,
             "--username",
             params.authentication.username,
-            "--password",
-            params.authentication.password.unsafe(),
+            "--password-id",
+            params.authentication.password,
         ]
 
     yield SpecialAgentCommand(

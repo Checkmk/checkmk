@@ -38,7 +38,7 @@ HACK_AGENTS = {
     "bi": False,  # needs no secret
     "cisco_meraki": True,
     "cisco_prime": False,
-    "couchbase": True,
+    "couchbase": False,
     "datadog": False,
     "ddn_s2a": False,
     "elasticsearch": False,

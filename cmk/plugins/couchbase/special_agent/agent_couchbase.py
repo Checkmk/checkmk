@@ -9,14 +9,22 @@ Special agent for monitoring Couchbase servers with Checkmk
 # mypy: disable-error-code="no-any-return"
 
 import argparse
+import json
 import logging
+import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any, TypeVar
 
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter
+
+__version__ = "2.5.0b1"
+
+AGENT = "couchbase"
+PASSWORD_OPTION = "password"
 
 LOGGER = logging.getLogger(__name__)
 
@@ -167,8 +175,11 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "-u", "--username", default=None, help="The username for authentication at the API."
     )
-    parser.add_argument(
-        "-p", "--password", default=None, help="The password for authentication at the API."
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
+        required=False,
+        help="The password for authentication at the API.",
     )
     parser.add_argument("hostname", help="Host or ip address to contact.")
 
@@ -363,9 +374,9 @@ def sections_buckets(bucket_list: Sequence[tuple[str, Mapping[str, Sequence[floa
             SECTION_KEYS_B_ITEMS,
         ),
     ]:
-        with SectionWriter(section_name) as section_writer:
-            for name, data in bucket_list:
-                section_writer.append_json(_get_dump(name, data, filter_keys, _average))
+        sys.stdout.write(f"<<<{section_name}:sep(0)>>>\n")
+        for name, data in bucket_list:
+            sys.stdout.write(f"{json.dumps(_get_dump(name, data, filter_keys, _average))}\n")
 
 
 def couchbase_main(args: argparse.Namespace) -> int:
@@ -378,9 +389,9 @@ def couchbase_main(args: argparse.Namespace) -> int:
         credentials=(
             (
                 args.username,
-                args.password,
+                resolve_secret_option(args, PASSWORD_OPTION).reveal(),
             )
-            if args.username and args.password
+            if args.username
             else None
         ),
     )
@@ -397,5 +408,6 @@ def couchbase_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(parse_arguments, couchbase_main)
+    return couchbase_main(parse_arguments(sys.argv[1:]))

@@ -53,8 +53,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "8091",
                     "--username",
                     "user",
-                    "--password",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password-id",
+                    Secret(1),
                     "1.2.3.4",
                 ]
             ),

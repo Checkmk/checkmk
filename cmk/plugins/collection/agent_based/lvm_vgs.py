@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -19,8 +20,21 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 
 
-def parse_lvm_vgs(string_table: StringTable) -> StringTable:
-    return string_table
+@dataclass
+class VolumeGroup:
+    name: str
+    size: int
+    free: int
+
+
+type Section = Sequence[VolumeGroup]
+
+
+def parse_lvm_vgs(string_table: StringTable) -> Section:
+    return [
+        VolumeGroup(vg, int(size), int(free))
+        for vg, _pvs, _lvs, _sns, _attr, size, free in string_table
+    ]
 
 
 agent_section_lvm_vgs = AgentSection(
@@ -29,18 +43,18 @@ agent_section_lvm_vgs = AgentSection(
 )
 
 
-def discover_lvm_vgs(section: StringTable) -> DiscoveryResult:
-    for line in section:
-        yield Service(item=line[0])
+def discover_lvm_vgs(section: Section) -> DiscoveryResult:
+    for vg in section:
+        yield Service(item=vg.name)
 
 
-def check_lvm_vgs(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
-    vglist = []
-    for vg, _pvs, _lvs, _sns, _attr, size, free in section:
-        size_mb = int(size) // 1024**2
-        avail_mb = int(free) // 1024**2
-        vglist.append((vg, size_mb, avail_mb, 0))
-    yield from df_check_filesystem_list(get_value_store(), item, params, vglist)
+def check_lvm_vgs(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from df_check_filesystem_list(
+        value_store=get_value_store(),
+        item=item,
+        params=params,
+        fslist_blocks=[(vg.name, vg.size // 1024**2, vg.free // 1024**2, 0) for vg in section],
+    )
 
 
 check_plugin_lvm_vgs = CheckPlugin(

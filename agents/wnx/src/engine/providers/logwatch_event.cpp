@@ -241,6 +241,37 @@ std::optional<LogWatchEntry> LoadFromString(std::string_view line) {
         return std::nullopt;
     }
 }
+namespace {
+std::vector<IdsFilter> ProcessEventIds(std::optional<YAML::Node> &log_ids) {
+    if (!log_ids.has_value()) {
+        return {};
+    }
+    std::vector<IdsFilter> filters;
+    for (const auto &l : *log_ids) {
+        const auto line = ObtainString(l);
+        if (line.has_value()) {
+            auto id = IdsFilter(*line);
+            filters.emplace_back(std::move(id));
+        }
+    }
+    return filters;
+}
+
+std::vector<TagsFilter> ProcessEventTags(std::optional<YAML::Node> &log_tags) {
+    if (!log_tags.has_value()) {
+        return {};
+    }
+    std::vector<TagsFilter> filters;
+    for (const auto &l : *log_tags) {
+        const auto line = ObtainString(l);
+        if (line.has_value()) {
+            auto tag = TagsFilter(*line);
+            filters.emplace_back(std::move(tag));
+        }
+    }
+    return filters;
+}
+}  // namespace
 
 void LogWatchEvent::loadConfig() {
     loadSectionParameters();
@@ -253,9 +284,19 @@ void LogWatchEvent::loadConfig() {
         count = processLogEntryArray(*log_array);
         setupDefaultEntry();
         XLOG::d.t("Loaded [{}] entries in LogWatch", count);
-        auto log_ids = readLogEntryArray(cfg::vars::kLogWatchEventFilterIds);
-        if (log_ids.has_value()) {
-            processEventIds(*log_ids);
+        event_filters_.id.clear();
+        auto filter_ids = readLogEntryArray(cfg::vars::kLogWatchEventFilterIds);
+        auto ids = ProcessEventIds(filter_ids);
+        for (const auto &i : ids) {
+            event_filters_.id.insert_or_assign(i.name(), i);
+        }
+
+        event_filters_.source.clear();
+        auto filter_sources =
+            readLogEntryArray(cfg::vars::kLogWatchEventFilterSources);
+        auto sources = ProcessEventTags(filter_sources);
+        for (const auto &s : sources) {
+            event_filters_.source.insert_or_assign(s.name(), s);
         }
 
     } catch (const std::exception &e) {
@@ -347,17 +388,6 @@ size_t LogWatchEvent::processLogEntryArray(const YAML::Node &log_array) {
     }
 
     return count;
-}
-
-void LogWatchEvent::processEventIds(const YAML::Node &log_ids) {
-    event_filters_.clear();
-    for (const auto &l : log_ids) {
-        const auto line = ObtainString(l);
-        if (line.has_value()) {
-            auto id = IdsFilter(*line);
-            event_filters_.emplace(id.name(), std::move(id));
-        }
-    }
 }
 
 namespace {
@@ -556,8 +586,6 @@ std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
     return {};
 }
 
-using StateFilterMap = std::unordered_map<std::string, const IdsFilter *>;
-
 namespace {
 void PrintEvent(LogWatchLimits lwl, std::string &out,
                 const std::string_view str) {
@@ -594,37 +622,41 @@ bool TooLong(LogWatchLimits lwl,
     return false;
 }
 
-StateFilterMap BuildStateFilterMap(const StateVector &states,
-                                   const EventFilters &filters) {
-    StateFilterMap result;
-    result.reserve(states.size());
-
-    auto wildcard_pos = filters.find("*");
-    const IdsFilter *wildcard =
-        wildcard_pos != filters.end() ? &wildcard_pos->second : nullptr;
-
-    for (const auto &s : states) {
-        if (const auto it = filters.find(s.name_); it != filters.end()) {
-            result.emplace(s.name_, &it->second);
-        } else if (wildcard) {
-            result.emplace(s.name_, wildcard);
-        }
+template <typename T>
+std::optional<T> findWithDefault(const std::unordered_map<std::string, T> &m,
+                                 std::string_view key) {
+    auto it = m.find(std::string{key});
+    if (it != m.end()) {
+        return it->second;
     }
-
-    return result;
+    return key == "*" ? std::nullopt : findWithDefault(m, "*");
 }
 
 bool RecordAllowed(const std::string_view name,
                    const evl::EventLogRecordBase *record,
-                   const StateFilterMap &filters) {
-    if (const auto it = filters.find(std::string{name}); it != filters.end()) {
-        if (it->second != nullptr) {
-            return it->second->checkId(record->eventId());
+                   const EventFilters &filters) {
+    {
+        const auto &id = filters.id;
+        auto ret = findWithDefault(id, name);
+        if (ret.has_value()) {
+            if (!ret->checkId(record->eventId())) {
+                return false;
+            }
         }
     }
+
+    {
+        const auto &source = filters.source;
+        auto ret = findWithDefault(source, name);
+        if (ret.has_value()) {
+            if (!ret->checkTag(record->source())) {
+                return false;
+            }
+        }
+    }
+
     return true;
 }
-
 }  // namespace
 
 std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
@@ -634,15 +666,14 @@ std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
     std::string out;
     int64_t count = 0;
     auto start = std::chrono::steady_clock::now();
-    const auto f = BuildStateFilterMap({state}, filters);
     auto pos = evl::PrintEventLog(
         log, state.pos_, state.level_, state.context_, lwl.skip,
         [&out, lwl, &count, start](const std::string &str) {
             PrintEvent(lwl, out, str);
             return !TooMuch(lwl, out, count) && !TooLong(lwl, start);
         },
-        [&f, &state](const evl::EventLogRecordBase *record) {
-            return RecordAllowed(state.name_, record, f);
+        [&filters, &state](const evl::EventLogRecordBase *record) {
+            return RecordAllowed(state.name_, record, filters);
         });
 
     return {pos, out};

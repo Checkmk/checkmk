@@ -928,7 +928,16 @@ TEST(LogWatchEventTest, TestNotSendAllVista) {
     x[cfg::vars::kLogWatchEventVistaApi] = old_vista;
 }
 
-TEST(LogWatchEventTest, TestFilter) {
+std::string WriteStampReadEventLog(const char *stamp) {
+    XLOG::l(XLOG::kEvent)(stamp);
+    LogWatchEvent lwe;
+    lwe.loadConfig();
+    lwe.generateContent();
+    XLOG::l(XLOG::kEvent)(stamp);
+    return lwe.generateContent();
+}
+
+TEST(LogWatchEventTest, TestFilterIds) {
     constexpr const char stamp[] = "EventLog Vista <GTEST>";
     constexpr const char config[] = R"(
 global:
@@ -946,34 +955,90 @@ logwatch:
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     {
         ASSERT_TRUE(temp_fs->loadContent(config));
-        XLOG::l(XLOG::kEvent)(stamp);
-        LogWatchEvent lwe;
-        lwe.loadConfig();
-        lwe.generateContent();
-        XLOG::l(XLOG::kEvent)(stamp);
-        const auto result = lwe.generateContent();
+        const auto result = WriteStampReadEventLog(stamp);
         EXPECT_TRUE(result.find(stamp) != std::string::npos);
     }
     {
         ASSERT_TRUE(
             temp_fs->loadContent(std::string(config) + "        - '*': ;;20"));
-        XLOG::l(XLOG::kEvent)(stamp);
-        LogWatchEvent lwe;
-        lwe.loadConfig();
-        lwe.generateContent();
-        XLOG::l(XLOG::kEvent)(stamp);
-        const auto result = lwe.generateContent();
+        const auto result = WriteStampReadEventLog(stamp);
         EXPECT_FALSE(result.find(stamp) != std::string::npos);
     }
     {
         ASSERT_TRUE(
             temp_fs->loadContent(std::string(config) + "        - '*': 20;;"));
-        XLOG::l(XLOG::kEvent)(stamp);
-        LogWatchEvent lwe;
-        lwe.loadConfig();
-        lwe.generateContent();
-        XLOG::l(XLOG::kEvent)(stamp);
-        const auto result = lwe.generateContent();
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_FALSE(result.find(stamp) == std::string::npos);
+    }
+    {
+        ASSERT_TRUE(temp_fs->loadContent(std::string(config) +
+                                         "        - 'Application': ;;20"));
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_FALSE(result.find(stamp) != std::string::npos);
+    }
+    {
+        ASSERT_TRUE(temp_fs->loadContent(std::string(config) +
+                                         "        - 'Application': 20;;"));
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_FALSE(result.find(stamp) == std::string::npos);
+    }
+    {
+        ASSERT_TRUE(temp_fs->loadContent(std::string(config) +
+                                         "        - 'NonExisting': ;;20"));
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_FALSE(result.find(stamp) == std::string::npos);
+    }
+}
+
+TEST(LogWatchEventTest, TestFilterSources) {
+    constexpr const char stamp[] = "EventLog Vista <GTEST>";
+    constexpr const char config[] = R"(
+global:
+    enabled: yes
+    sections: logwatch
+logwatch:
+    enabled: yes
+    sendall: no
+    vista_api: yes
+    logfile: #
+        - 'Application': warn context # allowed <crit|warn|all|off> + [context|nocontext]
+        - '*': off nocontext # allowed crit, warn, all, off, do not remove this
+    filter_sources:
+)";
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    {
+        ASSERT_TRUE(temp_fs->loadContent(config));
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_TRUE(result.find(stamp) != std::string::npos);
+    }
+    {
+        ASSERT_TRUE(temp_fs->loadContent(std::string(config) +
+                                         "        - '*': ;;checkmk;x"));
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_FALSE(result.find(stamp) != std::string::npos);
+    }
+    {
+        ASSERT_TRUE(temp_fs->loadContent(std::string(config) +
+                                         "        - '*': xx;checkmk;;"));
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_FALSE(result.find(stamp) == std::string::npos);
+    }
+    {
+        ASSERT_TRUE(temp_fs->loadContent(
+            std::string(config) + "        - 'Application': ;;checkmk;x"));
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_FALSE(result.find(stamp) != std::string::npos);
+    }
+    {
+        ASSERT_TRUE(temp_fs->loadContent(
+            std::string(config) + "        - 'Application': checkmk;a;;"));
+        const auto result = WriteStampReadEventLog(stamp);
+        EXPECT_FALSE(result.find(stamp) == std::string::npos);
+    }
+    {
+        ASSERT_TRUE(temp_fs->loadContent(
+            std::string(config) + "        - 'NonExisting': ;;checkmk;b"));
+        const auto result = WriteStampReadEventLog(stamp);
         EXPECT_FALSE(result.find(stamp) == std::string::npos);
     }
 }

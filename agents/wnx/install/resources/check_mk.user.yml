@@ -241,7 +241,13 @@ logwatch:
         # - '*': warn nocontext         # This is default params for not missing entries
 
     filter_ids: # to filter event log by id
-        # - '*': 20-1000;1010;;30-40       # include [20,1000], 1010 and exclude [30-40], all INCLUSIVE
+        # - 'Application': ;;              # do not filter Application log by id
+        # - '*': 20-1000;1010;;30-40       # include [20,1000], 1010 and exclude [30-40], all INCLUSIVE from all logs with exception of Application
+
+    filter_sources: # to filter event log by source
+        # - 'Application': ;;SAP           # exclude SAP from Application log
+        # - '*': checkmk;ibm;;Microsoft    # include checkmk and ibm, exclude Microsoft from all logs with exception of Application
+
 
 plugins:
     # enabled: yes

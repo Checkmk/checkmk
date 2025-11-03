@@ -132,6 +132,7 @@ const char *const kLogWatchEventTimeout = "timeout";                // int
 const char *const kLogWatchEventMaxLineLength = "max_line_length";  // int
 const char *const kLogWatchEventLogFile = "logfile";                // string
 const char *const kLogWatchEventFilterIds = "filter_ids";           // string
+const char *const kLogWatchEventFilterSources = "filter_sources";   // string
 
 constexpr uint32_t kExtensionDefaultCheckPeriod = 60;  // seconds
 

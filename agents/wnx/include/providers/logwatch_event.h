@@ -240,6 +240,9 @@ class TagsFilter {
 public:
     explicit TagsFilter(std::string_view line);
 
+    [[nodiscard]] bool checkTag(std::wstring_view tag) const noexcept {
+        return tag_dual_collection_.check(wtools::ToUtf8(tag));
+    }
     [[nodiscard]] bool checkTag(std::string_view tag) const noexcept {
         return tag_dual_collection_.check(tag);
     }
@@ -256,7 +259,10 @@ private:
 enum class EvlType { classic, vista };
 
 using LogWatchEntries = std::vector<LogWatchEntry>;
-using EventFilters = std::unordered_map<std::string, IdsFilter>;
+struct EventFilters {
+    std::unordered_map<std::string, IdsFilter> id;
+    std::unordered_map<std::string, TagsFilter> source;
+};
 
 class LogWatchEvent final : public Asynchronous {
 public:
@@ -295,7 +301,6 @@ private:
     static std::optional<YAML::Node> readLogEntryArray(std::string_view name);
     /// returns count of found entries
     size_t processLogEntryArray(const YAML::Node &log_array);
-    void processEventIds(const YAML::Node &log_ids);
 
     void setupDefaultEntry();
     size_t addDefaultEntry();

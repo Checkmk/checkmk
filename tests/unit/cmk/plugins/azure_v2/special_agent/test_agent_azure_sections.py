@@ -12,7 +12,6 @@ import pytest
 from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     _Section,
     AzureLabelsSection,
-    AzureSubscription,
     AzureTenantLabelsSection,
 )
 
@@ -87,29 +86,12 @@ def test_section(
     assert section_stdout[2:-2] == expected_section
 
 
-AZURE_SUBSCRIPTION = AzureSubscription(
-    id="test-subscription-id-12345678",
-    name="test-subscription",
-    tags={"subscription-tag": "sub-value"},
-    safe_hostnames=False,
-    tenant_id="test-tenant-id",
-)
-AZURE_SUBSCRIPTION_SAFEHOSTNAME = AzureSubscription(
-    id="test-subscription-id-12345678",
-    name="test-subscription",
-    tags={"subscription-tag": "sub-value"},
-    safe_hostnames=True,
-    tenant_id="test-tenant-id",
-)
-
-
 @pytest.mark.parametrize(
     "labels_section, section_result",
     [
         pytest.param(
             AzureLabelsSection(
                 piggytarget="test-resource",
-                subscription=AZURE_SUBSCRIPTION,
                 labels={},
                 tags={},
             ),
@@ -125,7 +107,6 @@ AZURE_SUBSCRIPTION_SAFEHOSTNAME = AzureSubscription(
         pytest.param(
             AzureLabelsSection(
                 piggytarget="test-resource",
-                subscription=AZURE_SUBSCRIPTION,
                 labels={"key1": "value1", "key2": "value2"},
                 tags={"tag1": "tagvalue1", "tag2": "tagvalue2"},
             ),
@@ -137,22 +118,6 @@ AZURE_SUBSCRIPTION_SAFEHOSTNAME = AzureSubscription(
                 "<<<<>>>>",
             ],
             id="basic test",
-        ),
-        pytest.param(
-            AzureLabelsSection(
-                piggytarget="test-resource",
-                subscription=AZURE_SUBSCRIPTION_SAFEHOSTNAME,
-                labels={"key1": "value1", "key2": "value2"},
-                tags={"tag1": "tagvalue1", "tag2": "tagvalue2"},
-            ),
-            [
-                "<<<<azr-test-resource-12345678>>>>",
-                "<<<azure_v2_labels:sep(0)>>>",
-                '{"cloud": "azure", "key1": "value1", "key2": "value2"}',
-                '{"tag1": "tagvalue1", "tag2": "tagvalue2"}',
-                "<<<<>>>>",
-            ],
-            id="basic test with safe hostnames",
         ),
     ],
 )

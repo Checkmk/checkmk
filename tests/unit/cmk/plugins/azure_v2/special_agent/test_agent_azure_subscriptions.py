@@ -15,70 +15,37 @@ Args = argparse.Namespace
 
 
 @pytest.mark.parametrize(
-    "azure_subscription, expected_hostname, expected_safe_hostname",
+    "azure_subscription, expected_hostname, expected_piggytarget",
     [
         (
             AzureSubscription(
                 id="subscription_id_12345678",
                 name="subscription name",
                 tags={},
-                safe_hostnames=False,
+                use_safe_names=False,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "subscription_name",
-            "resource_name",
+            "subscription_name",
         ),
         (
             AzureSubscription(
                 id="subscription_id_12345678",
                 name="subscription:name",
                 tags={},
-                safe_hostnames=True,
+                use_safe_names=True,
                 tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
             ),
             "subscription_name",
-            "azr-resource_name-12345678",
+            "subscription_name-7828a502",
         ),
     ],
 )
 def test_azuresubscription_hostname(
-    azure_subscription: AzureSubscription, expected_hostname: str, expected_safe_hostname: str
+    azure_subscription: AzureSubscription, expected_hostname: str, expected_piggytarget: str
 ) -> None:
     assert azure_subscription.hostname == expected_hostname
-    assert azure_subscription.get_safe_hostname("resource_name") == expected_safe_hostname
-
-
-@pytest.mark.parametrize(
-    "azure_subscription, resource_name, expected_resource_hostname",
-    [
-        (
-            AzureSubscription(
-                id="subscription_id_12345678",
-                name="subscription name",
-                tags={},
-                safe_hostnames=False,
-                tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
-            ),
-            "resource_name",
-            "resource_name",
-        ),
-        (
-            AzureSubscription(
-                id="subscription_id_12345678",
-                name="subscription:name",
-                tags={},
-                safe_hostnames=True,
-                tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
-            ),
-            "resource_name",
-            "azr-resource_name-12345678",
-        ),
-    ],
-)
-def test_resource_hostname(
-    azure_subscription: AzureSubscription, resource_name: str, expected_resource_hostname: str
-) -> None:
-    assert azure_subscription.get_safe_hostname(resource_name) == expected_resource_hostname
+    assert azure_subscription.piggytarget == expected_piggytarget
 
 
 RESOURCE_GROUPS_RESPONSE = {

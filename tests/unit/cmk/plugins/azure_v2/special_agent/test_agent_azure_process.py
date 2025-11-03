@@ -26,10 +26,8 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     filter_tags,
     get_resource_groups,
     get_resource_host_labels_section,
-    GroupLabels,
     process_app_registrations,
     process_organization,
-    process_redis,
     process_users,
     ResourceHealth,
     Selector,
@@ -61,6 +59,7 @@ Args = argparse.Namespace
                 },
                 TagsImportPatternOption.import_all,
                 subscription=fake_azure_subscription(),
+                use_safe_names=False,
             ),
             {
                 "burningman": AzureResourceGroup(
@@ -74,6 +73,7 @@ Args = argparse.Namespace
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 )
             },
             (
@@ -85,6 +85,72 @@ Args = argparse.Namespace
                 ["MyVM"],
             ),
         ),
+        # TODO:
+        # (
+        #     AzureResource(
+        #         {
+        #             "id": "resource_id",
+        #             "name": "my_resource",
+        #             "type": "Microsoft.Network/loadBalancers",
+        #             "location": "westeurope",
+        #             "tags": {"my-unique-tag": "unique", "tag4all": "True"},
+        #             "group": "resource_group_name",
+        #         },
+        #         TagsImportPatternOption.import_all,
+        #         subscription=AzureSubscription(
+        #             id="mock_subscription_id",
+        #             name="mock_subscription_name",
+        #             tags={},
+        #             safe_hostnames=False,
+        #             tenant_id="tenant_id",
+        #         ),
+        # safe_hostnames=False,
+        #     ),
+        #     {
+        #         "resource_group_name": {
+        #             "resource_group": "resource_group_name",
+        #             "another_group_tag": "another_value",
+        #         }
+        #     },
+        #     (
+        #         [
+        #             '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+        #             ' "subscription_id": "mock_subscription_id"}\n',
+        #             '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
+        #         ],
+        #         ["my_resource"],
+        #     ),
+        # ),
+        # (
+        #     AzureResource(
+        #         {
+        #             "id": "resource_id",
+        #             "name": "my_resource",
+        #             "type": "Microsoft.Network/loadBalancers",
+        #             "location": "westeurope",
+        #             "tags": {},
+        #             "group": "resource_group_name",
+        #         },
+        #         TagsImportPatternOption.import_all,
+        #         subscription=AzureSubscription(
+        #             id="mock_subscription_id",
+        #             name="mock_subscription_name",
+        #             tags={},
+        #             safe_hostnames=False,
+        #             tenant_id="tenant_id",
+        #         ),
+        # safe_hostnames=False,
+        #     ),
+        #     {"resource_group_name": {}},
+        #     (
+        #         [
+        #             '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+        #             ' "subscription_id": "mock_subscription_id"}\n',
+        #             "{}\n",
+        #         ],
+        #         ["my_resource"],
+        #     ),
+        # ),
     ],
 )
 def test_get_resource_host_labels_section(
@@ -120,48 +186,78 @@ RESOURCE_GROUPS_RESPONSE = [
 
 
 @pytest.mark.parametrize(
-    "monitored_groups, tag_key_pattern, expected_result",
+    "monitored_groups, args, expected_result",
     [
         pytest.param(
             ["resource_group_non_existent"],
-            TagsImportPatternOption.import_all,
+            Args(
+                tag_key_pattern=TagsImportPatternOption.import_all,
+                safe_hostnames=False,
+            ),
             {},
             id="No labels monitored",
         ),
         pytest.param(
             ["resource_group_1"],
-            TagsImportPatternOption.import_all,
+            Args(
+                tag_key_pattern=TagsImportPatternOption.import_all,
+                safe_hostnames=False,
+            ),
             {"resource_group_1": {"group_tag_key_1": "group_tag_value_1"}},
             id="Labels monitored, import all tags",
         ),
         pytest.param(
             ["resource_group_1", "resource_group_2"],
-            TagsImportPatternOption.ignore_all,
+            Args(
+                tag_key_pattern=TagsImportPatternOption.ignore_all,
+                safe_hostnames=False,
+            ),
             {"resource_group_1": {}, "resource_group_2": {}},
             id="Labels monitored, ignore tags",
         ),
         pytest.param(
             ["resource_group_1", "resource_group_2"],
-            "group_tag",
+            Args(
+                tag_key_pattern="group_tag",
+                safe_hostnames=False,
+            ),
             {
                 "resource_group_1": {"group_tag_key_1": "group_tag_value_1"},
                 "resource_group_2": {"group_tag_key_2": "group_tag_value_2"},
             },
             id="Labels monitored with pattern for tags",
         ),
+        pytest.param(
+            ["resource_group_1", "resource_group_2"],
+            Args(
+                tag_key_pattern="groups_tag",
+                safe_hostnames=False,
+            ),
+            {"resource_group_1": {}, "resource_group_2": {}},
+            id="Labels monitored with not matching pattern for tags",
+        ),
+        pytest.param(
+            ["resource_group_1"],
+            Args(
+                tag_key_pattern=TagsImportPatternOption.import_all,
+                safe_hostnames=True,
+            ),
+            {"resource_group_1": {"group_tag_key_1": "group_tag_value_1"}},
+            id="Labels monitored, import all tags, safe names",
+        ),
     ],
 )
 @pytest.mark.asyncio
 async def test_group_labels(
     monitored_groups: Sequence[str],
-    tag_key_pattern: TagsOption,
-    expected_result: GroupLabels,
+    args: Args,
+    expected_result: Mapping[str, Mapping[str, str]],
     mock_api_client: AsyncMock,
 ) -> None:
     mock_api_client.get_async.return_value = RESOURCE_GROUPS_RESPONSE
 
     groups = await get_resource_groups(
-        mock_api_client, monitored_groups, fake_azure_subscription(), tag_key_pattern
+        mock_api_client, monitored_groups, fake_azure_subscription(), args
     )
 
     len(groups) == len(expected_result)
@@ -197,6 +293,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 ),
             },
             id="One group monitored",
@@ -220,6 +317,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 ),
                 "resource_group_2": AzureResourceGroup(
                     info={
@@ -236,6 +334,7 @@ async def test_group_labels(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 ),
             },
             id="Multiple groups monitored",
@@ -254,7 +353,10 @@ async def test_get_resource_groups(
         mock_api_client,
         monitored_groups,
         fake_azure_subscription(),
-        TagsImportPatternOption.import_all,
+        Args(
+            tag_key_pattern=TagsImportPatternOption.import_all,
+            safe_hostnames=False,
+        ),
     )
     assert len(groups) == len(expected_result)
     for group_name, group in groups.items():
@@ -275,7 +377,10 @@ async def test_write_resource_groups_sections(
         mock_api_client,
         ["resource_group_1", "resource_group_2"],
         mock_azure_subscription,
-        TagsImportPatternOption.import_all,
+        Args(
+            tag_key_pattern=TagsImportPatternOption.import_all,
+            safe_hostnames=False,
+        ),
     )
     write_resource_groups_sections(groups)
     captured = capsys.readouterr()
@@ -349,6 +454,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 )
             },
             [
@@ -363,6 +469,7 @@ async def test_filter_tags(
                     },
                     TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 ),
             ],
             "<<<<burningman>>>>\n"
@@ -386,6 +493,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 ),
                 "resource_group_name": AzureResourceGroup(
                     info={
@@ -395,6 +503,7 @@ async def test_filter_tags(
                     },
                     tag_key_pattern=TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 ),
             },
             [
@@ -409,6 +518,7 @@ async def test_filter_tags(
                     },
                     TagsImportPatternOption.import_all,
                     subscription=fake_azure_subscription(),
+                    use_safe_names=False,
                 ),
             ],
             "<<<<burningman>>>>\n"
@@ -462,9 +572,10 @@ _monitored_vm_resource = lambda tag_pattern_option: {
             id="mock_subscription_id",
             name="mock_subscription_name",
             tags={},
-            safe_hostnames=False,
+            use_safe_names=False,
             tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
         ),
+        use_safe_names=False,
     )
 }
 
@@ -735,38 +846,6 @@ async def test_process_organization(
     assert result_section == expected_section, "Section not as expected"
 
 
-@pytest.mark.asyncio
-@pytest.mark.skip(reason="Probably make sense to just test _gather_sections_from_resources?")
-async def test_process_redis(mock_azure_subscription: AzureSubscription) -> None:
-    resource = AzureResource(
-        {
-            "id": "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/gemdev/providers/Microsoft.Cache/Redis/rickcmktest",
-            "name": "rickcmktest",
-            "type": "Microsoft.Cache/Redis",
-            "location": "centralus",
-            "tags": {},
-            "subscription": "ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
-            "group": "gemdev",
-            "provider": "Microsoft.Cache",
-        },
-        TagsImportPatternOption.import_all,
-        mock_azure_subscription,
-    )
-
-    result_section = await process_redis(resource)
-
-    expected_section = MockAzureSection(
-        "redis",
-        content=[
-            "Resource\n",
-            '{"id": "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/gemdev/providers/Microsoft.Cache/Redis/rickcmktest", "name": "rickcmktest", "type": "Microsoft.Cache/Redis", "location": "centralus", "tags": {}, "subscription": "ba9f74ff-6a4c-41e0-ab55-15c7fe79632f", "group": "gemdev", "provider": "Microsoft.Cache"}\n',
-        ],
-        piggytargets=["rickcmktest"],
-    )
-
-    assert result_section == expected_section, "Section not as expected"
-
-
 @dataclass
 class AzureResourceInfo:
     section: str
@@ -834,6 +913,7 @@ RESOURCES_API_RESPONSE = [
                 require_tag_value=[],
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                safe_hostnames=False,
             ),
             [
                 AzureResourceInfo(
@@ -882,6 +962,7 @@ RESOURCES_API_RESPONSE = [
                 require_tag_value=[],
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.ignore_all,
+                safe_hostnames=False,
             ),
             [
                 AzureResourceInfo(
@@ -930,6 +1011,7 @@ RESOURCES_API_RESPONSE = [
                 require_tag_value=[],
                 debug=False,
                 tag_key_pattern=TagsImportPatternOption.import_all,
+                safe_hostnames=False,
             ),
             [
                 AzureResourceInfo(
@@ -994,11 +1076,12 @@ RESOURCE_DATA = {
 
 
 @pytest.mark.parametrize(
-    "resource_data, tags_pattern, expected_resource",
+    "resource_data, tags_pattern, safe_hostname, expected_resource",
     [
         pytest.param(
             RESOURCE_DATA,
             TagsImportPatternOption.import_all,
+            False,
             AzureResourceInfo(
                 section="storageaccounts",
                 info_group="resource_group_1",
@@ -1010,6 +1093,7 @@ RESOURCE_DATA = {
         pytest.param(
             RESOURCE_DATA,
             TagsImportPatternOption.ignore_all,
+            False,
             AzureResourceInfo(
                 section="storageaccounts",
                 info_group="resource_group_1",
@@ -1021,6 +1105,7 @@ RESOURCE_DATA = {
         pytest.param(
             RESOURCE_DATA,
             "key_2",
+            False,
             AzureResourceInfo(
                 section="storageaccounts",
                 info_group="resource_group_1",
@@ -1029,15 +1114,30 @@ RESOURCE_DATA = {
             ),
             id="Resource with filtered tags",
         ),
+        pytest.param(
+            RESOURCE_DATA,
+            TagsImportPatternOption.import_all,
+            True,
+            AzureResourceInfo(
+                section="storageaccounts",
+                info_group="resource_group_1",
+                piggytarget="storage_account_1-0790b75a",
+                tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+            ),
+            id="Resource with imported tags, safe hostname",
+        ),
     ],
 )
 def test_azure_resource(
     resource_data: Mapping,
     expected_resource: AzureResourceInfo,
+    safe_hostname: bool,
     tags_pattern: TagsOption,
     mock_azure_subscription: AzureSubscription,
 ) -> None:
-    resource = AzureResource(resource_data, tags_pattern, mock_azure_subscription)
+    resource = AzureResource(
+        dict(resource_data), tags_pattern, mock_azure_subscription, safe_hostname
+    )
 
     assert resource.section == expected_resource.section, "Section mismatch"
     assert resource.info["group"] == expected_resource.info_group, "Info group mismatch"
@@ -1055,6 +1155,22 @@ async def test_write_subscription_section(
     assert (
         captured.out
         == """<<<<mock_subscription_name>>>>
+<<<azure_v2_subscription:sep(124)>>>
+Resource
+{"name": "mock_subscription_name", "tags": {}, "id": "mock_subscription_id", "type": "subscription", "group": "", "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name"}
+<<<<>>>>
+"""
+    )
+
+
+@pytest.mark.asyncio
+async def test_write_subscription_section_safe_hostname(capsys: pytest.CaptureFixture[str]) -> None:
+    subscription = fake_azure_subscription(use_safe_names=True)
+    write_subscription_section(subscription)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == """<<<<mock_subscription_name-3d63024c>>>>
 <<<azure_v2_subscription:sep(124)>>>
 Resource
 {"name": "mock_subscription_name", "tags": {}, "id": "mock_subscription_id", "type": "subscription", "group": "", "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name"}

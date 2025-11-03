@@ -116,8 +116,7 @@ if _webauthn_json_mapping := getattr(fido2.features, "webauthn_json_mapping", No
     _webauthn_json_mapping.enabled = True
 
 
-def make_fido2_server(request: Request) -> Fido2Server:
-    rp_id = request.host
+def make_fido2_server(rp_id: str) -> Fido2Server:
     logger.debug("Using %r as relaying party ID", rp_id)
     # apparently the browsers allow localhost as a secure domain, but the
     # Fido2Server does not. We do not really care if the rp_id is also the
@@ -139,13 +138,13 @@ def _log_event_usermanagement(event: TwoFactorEventType) -> None:
     )
 
 
-def _log_event_auth(request: Request, two_factor_method: str) -> None:
+def _log_event_auth(remote_ip: str | None, two_factor_method: str) -> None:
     log_security_event(
         TwoFAFailureEvent(
             user_error="Failed two factor authentication",
             two_fa_method=two_factor_method,
             username=user.id,
-            remote_ip=request.remote_ip,
+            remote_ip=remote_ip,
         )
     )
 
@@ -1103,7 +1102,7 @@ class UserWebAuthnRegisterBegin(JsonPage):
         ):
             user.need_permission("general.manage_2fa")
 
-        registration_data, state = make_fido2_server(ctx.request).register_begin(
+        registration_data, state = make_fido2_server(ctx.request.host).register_begin(
             PublicKeyCredentialUserEntity(
                 name=user.id,
                 id=user.id.encode("utf-8"),
@@ -1139,7 +1138,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         logger.debug("Attestation object: %r", data.attestation_object)
 
         try:
-            auth_data = make_fido2_server(ctx.request).register_complete(
+            auth_data = make_fido2_server(ctx.request.host).register_complete(
                 state=session.session_info.webauthn_action_state,
                 response={  # TODO: Passing a RegistrationResponse would be nicer here.
                     "client_data": data.client_data,
@@ -1341,7 +1340,7 @@ class UserLoginTwoFactor(Page):
                     ):
                         _handle_success_auth(user.id)
                         raise redirect(request.get_url_input("_origtarget", "index.py"))
-                _log_event_auth(request, "Authenticator application (TOTP)")
+                _log_event_auth(request.remote_ip, "Authenticator application (TOTP)")
                 _handle_failed_auth(
                     user.id,
                     user.attributes,
@@ -1366,7 +1365,7 @@ class UserLoginTwoFactor(Page):
                             )
                         )
                     raise redirect(request.get_url_input("_origtarget", "index.py"))
-                _log_event_auth(request, "Backup code")
+                _log_event_auth(request.remote_ip, "Backup code")
                 _handle_failed_auth(
                     user.id,
                     user.attributes,
@@ -1449,7 +1448,7 @@ class UserWebAuthnLoginBegin(JsonPage):
 
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
-        auth_data, state = make_fido2_server(ctx.request).authenticate_begin(
+        auth_data, state = make_fido2_server(ctx.request.host).authenticate_begin(
             [
                 AttestedCredentialData.unpack_from(v["credential_data"])[0]
                 for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
@@ -1475,7 +1474,7 @@ class UserWebAuthnLoginComplete(JsonPage):
         logger.debug("AuthenticatorData: %r", data.authenticator_data)
 
         try:
-            make_fido2_server(ctx.request).authenticate_complete(
+            make_fido2_server(ctx.request.host).authenticate_complete(
                 state=session.session_info.webauthn_action_state,
                 credentials=[
                     AttestedCredentialData.unpack_from(v["credential_data"])[0]
@@ -1489,7 +1488,7 @@ class UserWebAuthnLoginComplete(JsonPage):
                 },
             )
         except BaseException:
-            _log_event_auth(ctx.request, "Webauthn")
+            _log_event_auth(ctx.request.remote_ip, "Webauthn")
             _handle_failed_auth(
                 user.id,
                 user.attributes,

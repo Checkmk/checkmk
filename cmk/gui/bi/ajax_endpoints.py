@@ -28,16 +28,16 @@ from .view import convert_tree_to_frozen_diff_tree
 
 @dataclasses.dataclass(frozen=True)
 class _RequestVarsAssumption:
-    site: str | None
-    host: str | None
+    site: str
+    host: str
     service: str | None
     state: str | None
 
     @classmethod
     def build(cls, request: Request) -> Self:
         return cls(
-            site=request.get_str_input("site"),
-            host=request.get_str_input("host"),
+            site=request.get_str_input_mandatory("site"),
+            host=request.get_str_input_mandatory("host"),
             service=request.get_str_input("service"),
             state=request.var("state"),
         )

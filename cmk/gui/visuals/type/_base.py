@@ -8,6 +8,7 @@
 import abc
 from collections.abc import Iterator
 
+from cmk.gui.http import Request
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import Choices, HTTPVariables, Rows, SingleInfos, Visual, VisualContext
 from cmk.gui.utils.roles import UserPermissions
@@ -56,6 +57,7 @@ class VisualType(abc.ABC):
     @abc.abstractmethod
     def add_visual_handler(
         self,
+        request: Request,
         target_visual_name: str,
         add_type: str,
         context: VisualContext | None,

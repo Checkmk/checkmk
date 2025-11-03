@@ -12,4 +12,4 @@ from cmk.gui.visuals.info import visual_info_registry
 
 
 def page_create_dashboard(ctx: PageContext) -> None:
-    visuals.page_create_visual("dashboards", list(visual_info_registry.keys()))
+    visuals.page_create_visual(ctx.request, "dashboards", list(visual_info_registry.keys()))

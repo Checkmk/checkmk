@@ -13,7 +13,7 @@ from cmk.gui import forms
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu
 from cmk.gui.type_defs import SingleInfos, VisualTypeName
@@ -26,7 +26,7 @@ from ._breadcrumb import visual_page_breadcrumb
 
 
 def page_create_visual(
-    what: VisualTypeName, info_keys: SingleInfos, next_url: str | None = None
+    request: Request, what: VisualTypeName, info_keys: SingleInfos, next_url: str | None = None
 ) -> None:
     visual_name = visual_type_registry[what]().title
     title = _("Create %s") % visual_name

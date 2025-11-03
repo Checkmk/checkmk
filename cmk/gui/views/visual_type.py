@@ -16,6 +16,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.inventory import get_raw_status_data_via_livestatus, load_latest_delta_tree, load_tree
 from cmk.gui.page_menu import PageMenuEntry
@@ -82,6 +83,7 @@ class VisualTypeViews(VisualType):
     @override
     def add_visual_handler(
         self,
+        request: Request,
         target_visual_name: str,
         add_type: str,
         context: VisualContext | None,

@@ -118,26 +118,27 @@ def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDas
 
 
 def page_create_view_dashlet_infos(ctx: PageContext) -> None:
-    ds_name = request.get_str_input_mandatory("datasource")
+    ds_name = ctx.request.get_str_input_mandatory("datasource")
     if ds_name not in data_source_registry:
         raise MKUserError("datasource", _("The given datasource is not supported"))
 
     # Create a new view by choosing the datasource and the single object types
     visuals.page_create_visual(
+        ctx.request,
         "views",
         data_source_registry[ds_name]().infos,
         next_url=makeuri_contextless(
-            request,
+            ctx.request,
             [
-                ("name", request.var("name")),
+                ("name", ctx.request.var("name")),
                 ("type", "view"),
                 ("datasource", ds_name),
-                ("back", makeuri(request, [])),
+                ("back", makeuri(ctx.request, [])),
                 (
                     "next",
                     makeuri_contextless(
-                        request,
-                        [("name", request.var("name")), ("edit", "1")],
+                        ctx.request,
+                        [("name", ctx.request.var("name")), ("edit", "1")],
                         "dashboard.py",
                     ),
                 ),

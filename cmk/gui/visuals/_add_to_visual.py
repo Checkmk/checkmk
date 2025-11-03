@@ -173,6 +173,7 @@ def ajax_add_visual(ctx: PageContext) -> None:
     create_info = request.get_model_mandatory(CreateInfoModel, "create_info")
 
     visual_type.add_visual_handler(
+        ctx.request,
         visual_name,
         element_type,
         create_info.context,

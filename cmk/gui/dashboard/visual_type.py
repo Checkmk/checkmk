@@ -18,7 +18,7 @@ from cmk.gui.graphing import (
     parse_raw_graph_specification,
     TemplateGraphSpecification,
 )
-from cmk.gui.http import response
+from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
@@ -94,6 +94,7 @@ class VisualTypeDashboards(VisualType):
     @override
     def add_visual_handler(
         self,
+        request: Request,
         target_visual_name: str,
         add_type: str,
         context: VisualContext | None,

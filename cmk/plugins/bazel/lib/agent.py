@@ -21,11 +21,15 @@ import requests
 import urllib3
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
 from cmk.utils.semantic_version import SemanticVersion
+
+__version__ = "2.5.0b1"
+
+AGENT = "bazel_cache"
 
 CAMEL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 DEFAULT_VERSION_CACHE_INTERVAL = 8 * 3600
@@ -81,7 +85,7 @@ class VersionCache(DataCache):
         return None
 
 
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -264,10 +268,10 @@ def _process_txt_data(res: requests.Response, section_name: str) -> None:
         writer.append_json(data_http)
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(
-        parse_arguments, agent_bazel_cache_main, apply_password_store_hack=False
-    )
+    args = parse_arguments(sys.argv[1:])
+    return agent_bazel_cache_main(args)
 
 
 if __name__ == "__main__":

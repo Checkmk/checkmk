@@ -268,6 +268,9 @@ class HTMLWriter:
             case "message":
                 cls = "success"
                 prefix = _("MESSAGE")
+            case "waiting":
+                cls = "waiting"
+                prefix = _("PLEASE WAIT")
             case "warning":
                 cls = "warning"
                 prefix = _("WARNING")

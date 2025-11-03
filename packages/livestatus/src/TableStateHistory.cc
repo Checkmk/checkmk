@@ -68,17 +68,17 @@ void TableStateHistory::addColumns(Table *table, const ICore &core,
         prefix + "state",
         "The state of the host or service in question - OK(0) / WARNING(1) / CRITICAL(2) / UNKNOWN(3) / UNMONITORED(-1)",
         offsets, [](const row_type &row) { return row._state; }));
-    table->addColumn(std::make_unique<IntColumn<row_type>>(
+    table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "host_down", "Shows if the host of this service is down",
         offsets, [](const row_type &row) { return row._host_down; }));
-    table->addColumn(std::make_unique<IntColumn<row_type>>(
+    table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "in_downtime", "Shows if the host or service is in downtime",
         offsets, [](const row_type &row) { return row._in_downtime; }));
-    table->addColumn(std::make_unique<IntColumn<row_type>>(
+    table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "in_host_downtime",
         "Shows if the host of this service is in downtime", offsets,
         [](const row_type &row) { return row._in_host_downtime; }));
-    table->addColumn(std::make_unique<IntColumn<row_type>>(
+    table->addColumn(std::make_unique<BoolColumn<row_type>>(
         prefix + "is_flapping", "Shows if the host or service is flapping",
         offsets, [](const row_type &row) { return row._is_flapping; }));
     table->addColumn(std::make_unique<IntColumn<row_type>>(
@@ -663,10 +663,10 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         // Set absent state
         hss._state = -1;
         hss._debug_info = "UNMONITORED";
-        hss._in_downtime = 0;
+        hss._in_downtime = false;
         hss._in_notification_period = 0;
         hss._in_service_period = 0;
-        hss._is_flapping = 0;
+        hss._is_flapping = false;
         hss._log_output = "";
         hss._long_log_output = "";
 
@@ -703,16 +703,16 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                         abort_query_ = processor.process(hss);
                     }
                     hss._state = entry->state();
-                    hss._host_down = static_cast<int>(entry->state() > 0);
+                    hss._host_down = entry->state() > 0;
                     hss._debug_info = "HOST STATE";
                 } else {
                     state_changed = ModificationStatus::unchanged;
                 }
-            } else if (hss._host_down != static_cast<int>(entry->state() > 0)) {
+            } else if (hss._host_down != (entry->state() > 0)) {
                 if (!only_update) {
                     abort_query_ = processor.process(hss);
                 }
-                hss._host_down = static_cast<int>(entry->state() > 0);
+                hss._host_down = entry->state() > 0;
                 hss._debug_info = "SVC HOST STATE";
             }
             break;
@@ -730,8 +730,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             break;
         }
         case LogEntryKind::downtime_alert_host: {
-            const int downtime_active =
-                entry->state_type().starts_with("STARTED") ? 1 : 0;
+            const bool downtime_active =
+                entry->state_type().starts_with("STARTED");
 
             if (hss._in_host_downtime != downtime_active) {
                 if (!only_update) {
@@ -749,8 +749,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             break;
         }
         case LogEntryKind::downtime_alert_service: {
-            const int downtime_active =
-                entry->state_type().starts_with("STARTED") ? 1 : 0;
+            const bool downtime_active =
+                entry->state_type().starts_with("STARTED");
             if (hss._in_downtime != downtime_active) {
                 if (!only_update) {
                     abort_query_ = processor.process(hss);
@@ -762,8 +762,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         }
         case LogEntryKind::flapping_host:
         case LogEntryKind::flapping_service: {
-            const int flapping_active =
-                entry->state_type().starts_with("STARTED") ? 1 : 0;
+            const bool flapping_active =
+                entry->state_type().starts_with("STARTED");
             if (hss._is_flapping != flapping_active) {
                 if (!only_update) {
                     abort_query_ = processor.process(hss);

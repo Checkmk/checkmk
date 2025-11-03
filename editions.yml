@@ -14,7 +14,7 @@ common: &common
 # Containing only the latest version of each supported OS
 # ubuntu-22.04 is used as internal base image
 daily_reduced: &daily_reduced
-    - "almalinux-9"
+    - "almalinux-10"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "debian-12"

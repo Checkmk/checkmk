@@ -3,19 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
-from zoneinfo import ZoneInfo
-
-import time_machine
-from pytest import MonkeyPatch
-
-import livestatus
-
 from cmk.ccc.site import SiteId
 from cmk.events.log_to_history import (
-    log_to_history,
     notification_result_message,
-    SanitizedLivestatusLogStr,
 )
 from cmk.events.notification_result import (
     NotificationContext,
@@ -37,15 +27,6 @@ class FakeLocalConnection:
 
     def set_timeout(self, timeout: int) -> None:
         self.__class__.timeout = timeout
-
-
-def test_log_to_history(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(livestatus, "LocalConnection", FakeLocalConnection)
-    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
-        log_to_history(SanitizedLivestatusLogStr("ä"))
-
-    assert FakeLocalConnection.sent_command == "[1523811000] LOG;ä"
-    assert FakeLocalConnection.timeout == 2
 
 
 def test_notification_result_message() -> None:

@@ -122,6 +122,6 @@ cc_test(
     deps = [
         ":dummy_nagios",
         ":test_utilities",
-        "@gtest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

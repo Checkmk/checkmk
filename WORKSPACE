@@ -224,13 +224,6 @@ load("//omd/packages/httplib:httplib_http.bzl", "httplib_workspace")
 
 httplib_workspace()
 
-http_archive(
-    name = "gtest",
-    sha256 = "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c",
-    strip_prefix = "googletest-1.17.0",
-    url = "https://github.com/google/googletest/releases/download/v1.17.0/googletest-1.17.0.tar.gz",
-)
-
 load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")
 
 jaeger_workspace()

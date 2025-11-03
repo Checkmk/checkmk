@@ -66,7 +66,7 @@ cc_test(
     srcs = glob(["test/*.cc"]),
     deps = [
         ":livestatus_base",
-        "@gtest//:gtest_main",
+        "@googletest//:gtest_main",
         "@re2",
     ],
 )

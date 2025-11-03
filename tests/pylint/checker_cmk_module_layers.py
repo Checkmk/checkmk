@@ -1150,6 +1150,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.inventory",
         "cmk.livestatus_client",
         "cmk.notification_plugins",
+        "cmk.metric_backend",
         "cmk.otel_collector",
         "cmk.piggyback",
         "cmk.plugins",

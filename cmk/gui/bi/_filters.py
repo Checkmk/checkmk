@@ -5,8 +5,8 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-
 import re
+import warnings
 from collections.abc import Iterable
 
 from cmk.gui import query_filters
@@ -24,6 +24,7 @@ from cmk.gui.visuals.filter.components import (
     HorizontalGroup,
     TextInput,
 )
+from cmk.utils.regex import RegexFutureWarning
 
 from ._compiler import is_part_of_aggregation
 from ._packs import aggregation_group_choices, get_aggregation_group_trees
@@ -282,7 +283,13 @@ class BITextFilter(Filter):
             return rows
         if self.how == "regex":
             try:
+                with warnings.catch_warnings(action="error", category=FutureWarning):
+                    reg = re.compile(val.lower())
+
+            except FutureWarning as e:
+                warnings.warn(f"{e} in {val.lower()}", RegexFutureWarning)
                 reg = re.compile(val.lower())
+
             except re.error as e:
                 user_errors.add(
                     MKUserError(self.htmlvars[0], _("Invalid regular expression: %s") % e)

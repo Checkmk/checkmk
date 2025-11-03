@@ -122,6 +122,7 @@ from cmk.gui.view_utils import render_labels
 from cmk.utils import dateutils
 from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
+from cmk.utils.regex import RegexFutureWarning
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
 
@@ -130,9 +131,6 @@ seconds_per_day = 86400
 
 class Sentinel:
     pass
-
-
-class RegexFutureWarning(FutureWarning): ...
 
 
 # Some arbitrary object for checking whether or not default_value was set

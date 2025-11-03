@@ -17,7 +17,6 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.groups import GroupSpec
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.valuespec.definitions import RegexFutureWarning
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
@@ -33,6 +32,7 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
+from cmk.utils.regex import RegexFutureWarning
 
 
 class PreUpdateRulesets(PreUpdateAction):

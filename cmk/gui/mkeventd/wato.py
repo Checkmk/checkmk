@@ -7,7 +7,6 @@
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-
 import abc
 import ast
 import io
@@ -15,6 +14,7 @@ import re
 import socket
 import sys
 import time
+import warnings
 import zipfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -193,6 +193,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     String,
 )
+from cmk.utils.regex import RegexFutureWarning
 from cmk.utils.rulesets.definition import RuleGroup
 
 from ._rulespecs import RulespecLogwatchEC
@@ -2919,9 +2920,14 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                             _("A rule with this ID already exists in rule pack <b>%s</b>.")
                             % pack["title"],
                         )
-
         try:
+            with warnings.catch_warnings(action="error", category=FutureWarning):
+                num_groups = re.compile(rule["match"]).groups
+
+        except FutureWarning as e:
+            warnings.warn(f"{e} in {rule['match']}", RegexFutureWarning)
             num_groups = re.compile(rule["match"]).groups
+
         except Exception:
             raise MKUserError("rule_p_match", _("Invalid regular expression"))
         if num_groups > 9:

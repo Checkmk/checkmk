@@ -56,12 +56,14 @@ RUN apt-get install -y --fix-missing \
     libfreeradius-dev \
     libgd-dev \
     libglib2.0-dev \
+    libgmp-dev \
     libgnutls28-dev \
     libgsf-1-dev \
     libkrb5-dev \
     libldap2-dev \
     libltdl-dev \
     libmcrypt-dev \
+    libmpfr-dev \
     libmysqlclient-dev \
     libncurses5-dev \
     libpango1.0-dev \

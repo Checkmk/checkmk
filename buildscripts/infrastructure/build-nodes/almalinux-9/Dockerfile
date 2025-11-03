@@ -39,6 +39,7 @@ RUN yum -y makecache \
     freeradius-devel \
     gd-devel \
     gettext \
+    gmp-devel \
     gtk-doc \
     httpd-devel \
     kernel-headers \

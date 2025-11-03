@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -554,5 +552,5 @@ class RenameHostBackgroundJob(RenameHostsBackgroundJob):
         super().__init__()
         self._host = host
 
-    def _back_url(self):
+    def _back_url(self) -> str:
         return self._host.folder().url()

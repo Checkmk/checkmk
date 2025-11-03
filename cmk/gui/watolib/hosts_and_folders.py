@@ -8,8 +8,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
@@ -2830,21 +2828,21 @@ class Folder(FolderProtocol):
         for subfolder in self.subfolders():
             subfolder.recursively_save_hosts(pprint_value=pprint_value)
 
-    def _add_host(self, host):
+    def _add_host(self, host: Host) -> None:
         self._load_hosts_on_demand()
         assert self._hosts is not None
         self._hosts[host.name()] = host
         host._folder = self
         self._num_hosts = len(self._hosts)
 
-    def _remove_host(self, host):
+    def _remove_host(self, host: Host) -> None:
         self._load_hosts_on_demand()
         assert self._hosts is not None
         del self._hosts[host.name()]
-        host._folder = None
+        # host._folder = None
         self._num_hosts = len(self._hosts)
 
-    def _add_all_sites_to_set(self, site_ids):
+    def _add_all_sites_to_set(self, site_ids: set[SiteId]) -> None:
         site_ids.add(self.site_id())
         for host in self.hosts().values():
             site_ids.add(host.site_id())
@@ -3041,7 +3039,7 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Folder]):
         )
 
 
-def validate_host_uniqueness(varname, host_name):
+def validate_host_uniqueness(varname: str, host_name: HostName) -> None:
     host = Host.host(host_name)
     if host:
         raise MKUserError(

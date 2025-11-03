@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """A host attribute is something that is inherited from folders to
@@ -558,7 +557,7 @@ def sorted_host_attributes_by_topic(
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
-    def sort_host_attributes(a, b):
+    def sort_host_attributes(a: ABCHostAttribute, b: ABCHostAttribute) -> int:
         if a.name() == "tag_address_family":
             return -1
         return 0

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 
@@ -282,12 +281,12 @@ class RuleConditions:
 
     # Compatibility code for pre 1.6 Setup code
     @property
-    def host_list(self):
+    def host_list(self) -> tuple[list[str], bool] | None:
         return self._condition_list(self.host_name, is_service=False)
 
     # Compatibility code for pre 1.6 Setup code
     @property
-    def item_list(self):
+    def item_list(self) -> tuple[list[str], bool] | None:
         return self._condition_list(self.service_description, is_service=True)
 
     def _condition_list(
@@ -691,7 +690,7 @@ class Ruleset:
         # Temporary needed during search result processing
         self.search_matching_rules: list[Rule] = []
 
-    def clone(self):
+    def clone(self) -> Ruleset:
         cloned = Ruleset(self.name, self.rulespec)
         for folder, _rule_index, rule in self.get_rules():
             cloned.append_rule(folder, rule)
@@ -1191,7 +1190,7 @@ class Ruleset:
         return None, []  # No match
 
     @property
-    def rules(self):
+    def rules(self) -> dict[FolderPath, list[Rule]]:
         return self._rules
 
 

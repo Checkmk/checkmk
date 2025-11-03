@@ -3,15 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 import copy
 import re
 from collections.abc import Callable
 from typing import Any, Literal
 
 import cmk.ccc.version as cmk_version
+from cmk import fields
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui import hooks
 from cmk.gui.config import Config
@@ -385,7 +384,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             }
         )
 
-    def paint(self, value, hostname):
+    def paint(self, value: HostContactGroupSpec, hostname: HostName) -> tuple[str, str | HTML]:
         texts: list[HTML] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
@@ -412,7 +411,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             )
         return "", result
 
-    def render_input(self, varprefix: str, value: Any) -> None:
+    def render_input(self, varprefix: str, value: HostContactGroupSpec) -> None:
         # If we're just editing a host, then some of the checkboxes will be missing.
         # This condition is not very clean, but there is no other way to savely determine
         # the context.
@@ -476,7 +475,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             ),
         )
 
-    def load_data(self):
+    def load_data(self) -> None:
         # Make cache valid only during this HTTP request
         if self._loaded_at == id(html):
             return
@@ -496,14 +495,16 @@ class HostAttributeContactGroups(ABCHostAttribute):
             "recurse_use": html.get_checkbox(varprefix + self.name() + "_recurse_use"),
         }
 
-    def filter_matches(self, crit, value, hostname):
+    def filter_matches(
+        self, crit: HostContactGroupSpec, value: HostContactGroupSpec, hostname: HostName
+    ) -> bool:
         # Just use the contact groups for searching
         for contact_group in crit["groups"]:
             if contact_group not in value["groups"]:
                 return False
         return True
 
-    def _vs_contactgroups(self):
+    def _vs_contactgroups(self) -> DualListChoice:
         if self._contactgroups is None:  # conditional caused by horrible API
             raise Exception("invalid contact groups")
         cg_choices = sorted(
@@ -515,15 +516,14 @@ class HostAttributeContactGroups(ABCHostAttribute):
         )
         return DualListChoice(choices=cg_choices, rows=20, size=100)
 
-    def validate_input(self, value, varprefix):
+    def validate_input(self, value: HostContactGroupSpec, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(self.name(), "Unknown format.")
         self.load_data()
         self._vs_contactgroups().validate_value(value.get("groups", []), varprefix)
 
-    def openapi_field(self):
+    def openapi_field(self) -> fields.Nested:
         # FIXME: due to cyclical imports which, when fixed, expose even more cyclical imports.
-        from cmk import fields
         from cmk.gui import fields as gui_fields
 
         return fields.Nested(

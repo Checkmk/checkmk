@@ -1,5 +1,25 @@
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 
+# TODO: Re-work this with edition_deps + check for duplicate in cmk/BUILD
+edition_python_deps = {
+    "cre": [],
+    "cce": [
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+    ],
+    "cee": [
+        "//non-free/packages/cmk-mknotifyd",
+    ],
+    "cme": [
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+    ],
+    "cse": [
+        "//non-free/packages/cmk-mknotifyd",
+        "//non-free/packages/cmk-otel-collector",
+    ],
+}
+
 edition_deps = {
     "cre": [],
     "cce": [

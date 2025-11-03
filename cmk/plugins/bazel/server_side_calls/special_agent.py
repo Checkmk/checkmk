@@ -26,7 +26,7 @@ def generate_bazel_cache_command(
     if params.user is not None:
         args += ["--user", params.user]
     if params.password is not None:
-        args += ["--password", params.password.unsafe()]
+        args += ["--password-id", params.password]
     if params.port is not None:
         args += ["--port", str(params.port)]
     if params.protocol is not None:

@@ -244,7 +244,7 @@ def test_parse_all_arguments() -> None:
         ]
     )
     assert args.user == "harry"
-    assert args.password == "hirsch"
+    assert args.password.reveal() == "hirsch"
     assert args.host == "bazel-cache.tld"
     assert args.port == 8081
     assert args.protocol == "http"

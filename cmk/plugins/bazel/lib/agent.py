@@ -20,6 +20,7 @@ from typing import Any, NamedTuple
 import requests
 import urllib3
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.misc import DataCache
@@ -28,6 +29,7 @@ from cmk.utils.semantic_version import SemanticVersion
 
 CAMEL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 DEFAULT_VERSION_CACHE_INTERVAL = 8 * 3600
+PASSWORD_OPTION = "password"
 
 
 class Endpoint(NamedTuple):
@@ -102,7 +104,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
 
     parser.add_argument("-u", "--user", help="Username for Bazel Cache login")
-    parser.add_argument("-p", "--password", help="Password for Bazel Cache login")
+    parser_add_secret_option(
+        parser, short="-p", long=f"--{PASSWORD_OPTION}", help="Bazel Cache password", required=False
+    )
     parser.add_argument(
         "--no-cert-check",
         action="store_true",
@@ -155,7 +159,11 @@ def agent_bazel_cache_main(args: argparse.Namespace) -> int:
 
 def handle_requests(args: argparse.Namespace, endpoints: list[Endpoint]) -> int:
     base_url = f"{args.protocol}://{args.host}:{args.port}"
-    auth = (args.user, args.password) if args.user and args.password else None
+    try:
+        password = resolve_secret_option(args, PASSWORD_OPTION)
+    except TypeError:
+        password = None
+    auth = (args.user, password.reveal()) if args.user and password else None
 
     if args.no_cert_check:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -257,7 +265,9 @@ def _process_txt_data(res: requests.Response, section_name: str) -> None:
 
 
 def main() -> int:
-    return special_agent_main(parse_arguments, agent_bazel_cache_main)
+    return special_agent_main(
+        parse_arguments, agent_bazel_cache_main, apply_password_store_hack=False
+    )
 
 
 if __name__ == "__main__":

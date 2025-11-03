@@ -35,6 +35,14 @@ def parser_add_secret_option(
 
 
 def resolve_secret_option(args: argparse.Namespace, option_name: str) -> Secret[str]:
+    """Resolves a secret option from the argument parser namespace.
+
+    Depending what "long" option you used in `parser_add_secret_option`, this function
+    will either dereference the secret given by "--<LONG>-id" or use the explicit secret
+    given by "--<LONG>".
+
+    If neither is given, a TypeError is raised.
+    """
     if (secret_id := getattr(args, f"{option_name}_id", None)) is not None:
         return dereference_secret(secret_id)
 

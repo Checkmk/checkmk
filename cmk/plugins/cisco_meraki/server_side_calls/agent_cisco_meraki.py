@@ -35,7 +35,7 @@ def agent_cisco_meraki_arguments(
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
         host_config.name,
-        "--apikey-reference",
+        "--apikey-id",
         params.api_key,
     ]
 

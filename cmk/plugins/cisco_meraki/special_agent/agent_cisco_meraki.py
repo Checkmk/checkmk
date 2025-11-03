@@ -20,6 +20,7 @@ from typing import Final, TypedDict
 
 import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
@@ -27,10 +28,11 @@ from cmk.special_agents.v0_unstable.agent_common import (
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.misc import DataCache
-from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
 
 _LOGGER = logging.getLogger("agent_cisco_meraki")
+
+APIKEY_OPTION_NAME: Final = "apikey"
 
 _BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / "agent_cisco_meraki"
 
@@ -391,13 +393,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
     parser.add_argument("hostname")
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--apikey-reference",
-        help="Password store reference to the API key for the Meraki API dashboard access.",
-    )
-    group.add_argument(
-        "--apikey",
+    parser_add_secret_option(
+        parser,
+        long=f"--{APIKEY_OPTION_NAME}",
+        required=True,
         help="API key for the Meraki API dashboard access.",
     )
 
@@ -457,17 +456,10 @@ def _need_devices(section_names: Sequence[str]) -> bool:
     )
 
 
-def _make_secret(args: argparse.Namespace) -> str:
-    if args.apikey:
-        return args.apikey
-    pw_id, pw_file = args.apikey_reference.split(":", 1)
-    return password_store_lookup(Path(pw_file), pw_id)
-
-
 def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
     config = MerakiConfig(
         dashboard=_configure_meraki_dashboard(
-            _make_secret(args),
+            resolve_secret_option(args, APIKEY_OPTION_NAME).reveal(),
             args.debug,
             args.proxy,
         ),

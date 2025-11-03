@@ -49,13 +49,13 @@ public:
     double _duration_part_unknown{};
 
     // State information
-    int _host_down{};  // used if service
-    int _state{};      // -1/0/1/2/3
-    int _in_notification_period{};
-    int _in_service_period{};
-    int _in_downtime{};
-    int _in_host_downtime{};
-    int _is_flapping{};
+    bool _host_down{};              // used if service
+    int _state{};                   // -1/0/1/2/3
+    int _in_notification_period{};  // TODO(sp): int TimePeriodTransition::to()
+    int _in_service_period{};       // TODO(sp): int TimePeriodTransition::to()
+    bool _in_downtime{};
+    bool _in_host_downtime{};
+    bool _is_flapping{};
 
     // Service information
     HostServices _services;

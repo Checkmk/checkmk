@@ -4,9 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkIndent from '@/components/CmkIndent.vue'
+import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
@@ -14,8 +18,17 @@ import FieldComponent from '../TableForm/FieldComponent.vue'
 import FieldDescription from '../TableForm/FieldDescription.vue'
 import TableForm from '../TableForm/TableForm.vue'
 import TableFormRow from '../TableForm/TableFormRow.vue'
+import LinkContent from './LinkContent.vue'
 
 const { _t } = usei18n()
+
+interface WidgetVisualizationProps {
+  linkValidation?: TranslatedString[]
+  linkOptions?: Suggestion[]
+  targetOptions?: Suggestion[]
+}
+
+defineProps<WidgetVisualizationProps>()
 
 const title = defineModel<string>('title', { required: true })
 const titleUrlEnabled = defineModel<boolean>('titleUrlEnabled', { required: true })
@@ -26,6 +39,13 @@ const titleUrlValidationErrors = defineModel<string[]>('titleUrlValidationErrors
 const showTitle = defineModel<boolean>('showTitle', { required: true })
 const showTitleBackground = defineModel<boolean>('showTitleBackground', { required: true })
 const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { required: true })
+
+const linkType = defineModel<string | null>('linkType', { required: false, default: undefined })
+const linkTarget = defineModel<string | null>('linkTarget', { required: false, default: undefined })
+
+const displayLinkContent = computed(
+  () => linkType.value !== undefined || linkTarget.value !== undefined
+)
 </script>
 
 <template>
@@ -33,15 +53,17 @@ const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { requ
     <TableFormRow>
       <FieldDescription>{{ _t('Title') }}</FieldDescription>
       <FieldComponent>
-        <div class="field-component__item">
-          <CmkInput
-            :model-value="title"
-            type="text"
-            field-size="MEDIUM"
-            @update:model-value="(value) => (title = value ?? title)"
-          />
-        </div>
-
+        <CmkInput
+          :model-value="title"
+          type="text"
+          field-size="MEDIUM"
+          @update:model-value="(value) => (title = value ?? title)"
+        />
+      </FieldComponent>
+    </TableFormRow>
+    <TableFormRow>
+      <FieldDescription>{{ _t('Interaction') }}</FieldDescription>
+      <FieldComponent>
         <div class="field-component__item">
           <CmkCheckbox v-model="titleUrlEnabled" :label="_t('Link title to')" />
           <CmkIndent v-if="titleUrlEnabled">
@@ -54,9 +76,17 @@ const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { requ
             />
           </CmkIndent>
         </div>
+        <div v-if="displayLinkContent" class="field-component__item">
+          <LinkContent
+            v-model:link-type="linkType"
+            v-model:link-target="linkTarget"
+            :link-validation="linkValidation || []"
+            :link-options="linkOptions || []"
+            :target-options="targetOptions || []"
+          />
+        </div>
       </FieldComponent>
     </TableFormRow>
-
     <TableFormRow>
       <FieldDescription>{{ _t('Appearance') }}</FieldDescription>
       <FieldComponent>

@@ -6,22 +6,32 @@
 import { type Ref, ref, watch } from 'vue'
 
 import {
+  type UseLinkContent,
+  useLinkContent
+} from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useLinkContent'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type {
   InventoryContent,
+  InventoryLinkType,
   UseValidate,
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
-import { generateWidgetProps } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 type ToggleFunction = (value: boolean) => void
 
-export interface UseInventory extends UseWidgetHandler, UseWidgetVisualizationOptions, UseValidate {
+export interface UseInventory
+  extends UseWidgetHandler,
+    UseWidgetVisualizationOptions,
+    UseLinkContent,
+    UseValidate {
   toggleTitleUrl: ToggleFunction
 
   //Inventory
@@ -31,10 +41,11 @@ export interface UseInventory extends UseWidgetHandler, UseWidgetVisualizationOp
   titleUrlValidationErrors: Ref<string[]>
 }
 
-export const useInventory = (
+export const useInventory = async (
   filters: ConfiguredFilters,
+  dashboardConstants: DashboardConstants,
   editWidget: WidgetProps | null = null
-): UseInventory => {
+): Promise<UseInventory> => {
   const content = editWidget?.content as InventoryContent | undefined
   const {
     title,
@@ -45,32 +56,68 @@ export const useInventory = (
     titleUrl,
 
     titleUrlValidationErrors,
-    validate,
+    validate: validateTitle,
 
-    widgetGeneralSettings,
-    generateTitleSpec
+    widgetGeneralSettings
   } = useWidgetVisualizationProps('Inventory', editWidget?.general_settings)
 
   const inventoryPath = ref<string | null>(content?.path ?? null)
 
-  const _generateWidgetProps = (): WidgetProps => {
+  const {
+    linkType,
+    linkTarget,
+    linkValidationError,
+    linkTargetSuggestions,
+    validate: validateLinkContent
+  } = useLinkContent()
+
+  const widgetProps = ref<WidgetProps>()
+
+  const validate = (): boolean => {
+    const isTitleValid = validateTitle()
+    const isLinkValid = validateLinkContent()
+
+    return isTitleValid && isLinkValid
+  }
+
+  const _generateContent = (): InventoryContent => {
     const content: InventoryContent = {
       type: 'inventory',
       path: inventoryPath.value ?? ''
     }
 
-    return generateWidgetProps(generateTitleSpec(), content, filters)
+    if (linkType.value && linkTarget.value) {
+      content.link_spec = {
+        type: linkType.value as InventoryLinkType,
+        name: linkTarget.value
+      }
+    }
+
+    return content
   }
 
-  const widgetProps = ref<WidgetProps>(_generateWidgetProps())
+  const _updateWidgetProps = async () => {
+    const content = _generateContent()
+    widgetProps.value = {
+      general_settings: widgetGeneralSettings.value,
+      content,
+      effective_filter_context: await determineWidgetEffectiveFilterContext(
+        content,
+        filters,
+        dashboardConstants
+      )
+    }
+  }
 
   watch(
-    [widgetGeneralSettings, inventoryPath],
+    [widgetGeneralSettings, inventoryPath, linkType, linkTarget],
     useDebounceFn(() => {
-      widgetProps.value = _generateWidgetProps()
+      void _updateWidgetProps()
     }, 300),
     { deep: true }
   )
+
+  await _updateWidgetProps()
 
   const toggleTitleUrl = (value: boolean) => {
     titleUrl.value = ''
@@ -89,9 +136,14 @@ export const useInventory = (
 
     inventoryPath,
 
+    linkType,
+    linkTarget,
+    linkValidationError,
+    linkTargetSuggestions,
+
     titleUrlValidationErrors,
     validate,
 
-    widgetProps
+    widgetProps: widgetProps as Ref<WidgetProps>
   }
 }

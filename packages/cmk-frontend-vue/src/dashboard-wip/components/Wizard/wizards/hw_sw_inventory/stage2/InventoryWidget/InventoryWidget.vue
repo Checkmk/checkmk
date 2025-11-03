@@ -66,6 +66,14 @@ onBeforeMount(async () => {
       v-model:title-url="handler.titleUrl.value"
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
+      v-model:link-type="handler.linkType.value"
+      v-model:link-target="handler.linkTarget.value"
+      :link-validation="handler.linkValidationError.value"
+      :link-options="[
+        { name: 'dashboards', title: _t('Dashboards') },
+        { name: 'views', title: _t('Views') }
+      ]"
+      :target-options="handler.linkTargetSuggestions.value"
     />
   </CollapsibleContent>
 

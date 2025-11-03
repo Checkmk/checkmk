@@ -181,14 +181,21 @@ const handleAddWidget = (
           (objectType) => widgetFilterManager.resetFilterValuesOfObjectType(objectType)
         "
       />
-      <Stage2
-        v-if="wizardHandler.stage.value === 1"
-        :dashboard-name="dashboardName"
-        :filters="appliedFilters"
-        :edit-widget="editWidget"
-        @go-prev="wizardHandler.prev"
-        @add-widget="handleAddWidget"
-      />
+      <Suspense>
+        <Stage2
+          v-if="wizardHandler.stage.value === 1"
+          :dashboard-name="dashboardName"
+          :filters="appliedFilters"
+          :edit-widget="editWidget"
+          :dashboard-constants="dashboardConstants"
+          @go-prev="wizardHandler.prev"
+          @add-widget="handleAddWidget"
+        />
+
+        <template #fallback>
+          <div>{{ _t('Loading widget visualization settings...') }}</div>
+        </template>
+      </Suspense>
     </WizardStageContainer>
   </WizardContainer>
 </template>

@@ -11,6 +11,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import DashboardPreviewContent from '@/dashboard-wip/components/DashboardPreviewContent.vue'
 import type { WidgetProps } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings } from '@/dashboard-wip/types/widget'
 
 import ActionBar from '../../../components/ActionBar.vue'
@@ -24,6 +25,7 @@ const { _t } = usei18n()
 interface Stage2Props {
   filters: ConfiguredFilters
   dashboardName: string
+  dashboardConstants: DashboardConstants
   editWidget: WidgetProps | null
 }
 
@@ -59,7 +61,11 @@ const gotoPrevStage = () => {
 }
 
 // Pass the editWidget prop to the composable for state hydration
-const inventoryHandler = useInventory(props.filters, props.editWidget)
+const inventoryHandler = await useInventory(
+  props.filters,
+  props.dashboardConstants,
+  props.editWidget
+)
 </script>
 
 <template>
@@ -92,6 +98,5 @@ const inventoryHandler = useInventory(props.filters, props.editWidget)
   />
 
   <ContentSpacer />
-
   <InventoryWidget v-model:handler="inventoryHandler" />
 </template>

@@ -130,3 +130,4 @@ export type HostState = components['schemas']['HostState']
 export type CombinedGraphContentPresentation =
   components['schemas']['CombinedGraphContent']['presentation']
 export type ForStates = components['schemas']['ForStates']
+export type InventoryLinkType = components['schemas']['ApiVisualLink']['type']

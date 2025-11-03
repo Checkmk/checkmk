@@ -105,11 +105,13 @@ class FakeDashboard:
         (
             [],
             [
+                "<<<<>>>>",
                 "<<<cisco_meraki_org_licenses_overview:sep(0)>>>",
                 '[{"expirationDate": "Jan 1, 2020 UTC", "licensedDeviceCounts": {"MS": 100}, '
                 '"organisation_id": "123", "organisation_name": "org-name1", "status": "OK"}, '
                 '{"expirationDate": "Jan 2, 2020 UTC", "licensedDeviceCounts": {"MS": 200}, '
                 '"organisation_id": "456", "organisation_name": "org-name2", "status": "OK"}]',
+                "<<<<>>>>",
                 "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
                 '[{"lanIp": "1.2.3.4", "name": "dev1", "organisation_id": "123", '
@@ -136,11 +138,13 @@ class FakeDashboard:
                 "licenses-overview",
             ],
             [
+                "<<<<>>>>",
                 "<<<cisco_meraki_org_licenses_overview:sep(0)>>>",
                 '[{"expirationDate": "Jan 1, 2020 UTC", "licensedDeviceCounts": {"MS": 100}, '
                 '"organisation_id": "123", "organisation_name": "org-name1", "status": "OK"}, '
                 '{"expirationDate": "Jan 2, 2020 UTC", "licensedDeviceCounts": {"MS": 200}, '
                 '"organisation_id": "456", "organisation_name": "org-name2", "status": "OK"}]',
+                "<<<<>>>>",
             ],
         ),
         (

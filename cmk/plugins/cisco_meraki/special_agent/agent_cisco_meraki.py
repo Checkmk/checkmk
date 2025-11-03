@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import abc
 import argparse
+import json
 import logging
 import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
@@ -23,10 +24,6 @@ import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import (
-    ConditionalPiggybackSection,
-    SectionWriter,
-)
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
 
@@ -356,10 +353,12 @@ def _write_sections(sections: Iterable[Section]) -> None:
         ).append(section.data)
 
     for piggyback, pb_section in sections_by_piggyback.items():
-        with ConditionalPiggybackSection(piggyback):
-            for section_name, section_data in pb_section.items():
-                with SectionWriter(section_name) as writer:
-                    writer.append_json(section_data)
+        sys.stdout.write(f"<<<<{piggyback or ''}>>>>\n")
+        for section_name, section_data in pb_section.items():
+            sys.stdout.write(
+                f"<<<{section_name}:sep(0)>>>\n{json.dumps(section_data, sort_keys=True)}\n"
+            )
+        sys.stdout.write("<<<<>>>>\n")
 
 
 # .

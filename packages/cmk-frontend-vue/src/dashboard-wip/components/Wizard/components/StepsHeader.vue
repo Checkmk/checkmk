@@ -21,8 +21,8 @@ defineProps<BackButtonProps>()
 </script>
 
 <template>
-  <div class="back-button__container">
-    <div v-if="!hideBackButton" class="back-button__icon">
+  <div class="db-steps-header__container">
+    <div v-if="!hideBackButton" class="db-steps-header__icon">
       <CmkIconButton
         name="back"
         variant="plain"
@@ -31,27 +31,30 @@ defineProps<BackButtonProps>()
         @click="() => emit('back')"
       />
     </div>
-    <div class="back-button__label">
-      <CmkLabel variant="title">{{ title }}</CmkLabel>
+    <div class="db-steps-header__label">
+      <div class="db-steps-header__title-block">
+        <CmkLabel variant="title">{{ title }}</CmkLabel>
+      </div>
       <CmkLabel v-if="subtitle" variant="subtitle">{{ subtitle }}</CmkLabel>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.back-button__icon {
+.db-steps-header__title-block {
+  break-after: always;
+}
+
+.db-steps-header__icon {
   position: relative;
   left: -3px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.back-button__container {
+.db-steps-header__container {
   display: flex;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.back-button__label {
+.db-steps-header__label {
   padding-left: var(--spacing);
 }
 </style>

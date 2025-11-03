@@ -226,9 +226,9 @@ httplib_workspace()
 
 http_archive(
     name = "gtest",
-    sha256 = "4911bfedea2a94cbf50ea328b2e9b3bcb0bd03cdc28c3492cc810f77e44b2746",
-    strip_prefix = "googletest-57e107a10ea4ff5d8d31df9e4833f80b414b0dd2",
-    url = "https://github.com/google/googletest/archive/57e107a10ea4ff5d8d31df9e4833f80b414b0dd2.tar.gz",
+    sha256 = "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c",
+    strip_prefix = "googletest-1.17.0",
+    url = "https://github.com/google/googletest/releases/download/v1.17.0/googletest-1.17.0.tar.gz",
 )
 
 load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")

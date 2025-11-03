@@ -9,7 +9,7 @@
 
 import json
 from collections.abc import Iterator
-from typing import cast
+from typing import cast, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -43,29 +43,36 @@ from .type_defs import (
 
 class VisualTypeDashboards(VisualType):
     @property
+    @override
     def ident(self) -> str:
         return "dashboards"
 
     @property
+    @override
     def title(self) -> str:
         return _("dashboard")
 
     @property
+    @override
     def plural_title(self):
         return _("dashboards")
 
     @property
+    @override
     def ident_attr(self):
         return "name"
 
     @property
+    @override
     def multicontext_links(self):
         return False
 
     @property
+    @override
     def show_url(self):
         return "dashboard.py"
 
+    @override
     def page_menu_add_to_entries(
         self, add_type: str, user_permissions: UserPermissions
     ) -> Iterator[PageMenuEntry]:
@@ -84,6 +91,7 @@ class VisualTypeDashboards(VisualType):
                 ),
             )
 
+    @override
     def add_visual_handler(
         self,
         target_visual_name: str,
@@ -158,9 +166,11 @@ class VisualTypeDashboards(VisualType):
         # to the AJAX request
         response.set_data("OK dashboard.py?name=" + target_visual_name + "&edit=1")
 
+    @override
     def visuals(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
         return get_all_dashboards()
 
+    @override
     def permitted_visuals(
         self,
         visuals: dict[tuple[UserId, DashboardName], DashboardConfig],

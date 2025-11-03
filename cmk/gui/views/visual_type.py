@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
+from typing import override
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
@@ -43,34 +44,42 @@ class VisualTypeViews(VisualType):
     """Register the views as a visual type"""
 
     @property
+    @override
     def ident(self) -> str:
         return "views"
 
     @property
+    @override
     def title(self) -> str:
         return _("view")
 
     @property
+    @override
     def plural_title(self) -> str:
         return _("views")
 
     @property
+    @override
     def ident_attr(self) -> str:
         return "view_name"
 
     @property
+    @override
     def multicontext_links(self) -> bool:
         return False
 
     @property
+    @override
     def show_url(self) -> str:
         return "view.py"
 
+    @override
     def page_menu_add_to_entries(
         self, add_type: str, user_permissions: UserPermissions
     ) -> Iterator[PageMenuEntry]:
         return iter(())
 
+    @override
     def add_visual_handler(
         self,
         target_visual_name: str,
@@ -81,14 +90,17 @@ class VisualTypeViews(VisualType):
     ) -> None:
         return None
 
+    @override
     def visuals(self) -> AllViewSpecs:
         return get_all_views()
 
+    @override
     def permitted_visuals(
         self, visuals: AllViewSpecs, user_permissions: UserPermissions
     ) -> PermittedViewSpecs:
         return get_permitted_views()
 
+    @override
     def link_from(
         self,
         linking_view_single_infos: SingleInfos,

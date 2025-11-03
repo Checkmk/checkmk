@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+import warnings
 from typing import Any
+
+from cmk.utils.regex import RegexFutureWarning
 
 from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
@@ -249,17 +252,17 @@ class _BIFrozenAggregations(Filter):
             if compiled_aggregation.frozen_info:
                 if show_frozen:
                     new_rows.append(row)
-            else:
-                # dynamic aggregation
-                if show_dynamic:
-                    new_rows.append(row)
+
+            # dynamic aggregation
+            elif show_dynamic:
+                new_rows.append(row)
 
         return new_rows
 
 
 # how is either "regex" or "exact"
 class BITextFilter(Filter):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         *,
         ident: str,
@@ -297,7 +300,13 @@ class BITextFilter(Filter):
             return rows
         if self.how == "regex":
             try:
+                with warnings.catch_warnings(action="error", category=FutureWarning):
+                    reg = re.compile(val.lower())
+
+            except FutureWarning as e:
+                warnings.warn(f"{e} in {val.lower()}", RegexFutureWarning)
                 reg = re.compile(val.lower())
+
             except re.error as e:
                 user_errors.add(
                     MKUserError(self.htmlvars[0], _("Invalid regular expression: %s") % e)

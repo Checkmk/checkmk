@@ -6,6 +6,7 @@
 
 import contextlib
 import re
+import warnings
 from typing import Final
 
 from cmk.utils.exceptions import MKGeneralException
@@ -39,6 +40,9 @@ WATO_FOLDER_PATH_NAME_REGEX: Final = f"^[{WATO_FOLDER_PATH_NAME_CHARS}]*\\Z"
 GROUP_NAME_PATTERN: Final = r"^(?!\.\.$|\.$)[-a-zA-Z0-9_\.]*\Z"
 
 GLOBAL_MODIFIER_PATTERN: Final = r"^\(\?([aiLmsux]*)\)"
+
+
+class RegexFutureWarning(FutureWarning): ...
 
 
 def _extract_global_modifiers(pattern: str) -> tuple[str, str]:
@@ -79,8 +83,15 @@ def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
     (compiling is a CPU consuming process. We cache compiled regexes)."""
     with contextlib.suppress(KeyError):
         return g_compiled_regexes[(pattern, flags)]
+
     try:
+        with warnings.catch_warnings(action="error", category=FutureWarning):
+            reg = re.compile(pattern, flags=flags)
+
+    except FutureWarning as e:
+        warnings.warn(f"{e} in {pattern}", RegexFutureWarning)
         reg = re.compile(pattern, flags=flags)
+
     except Exception as e:
         raise MKGeneralException(_("Invalid regular expression '%s': %s") % (pattern, e))
 

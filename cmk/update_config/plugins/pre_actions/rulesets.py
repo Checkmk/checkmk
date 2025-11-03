@@ -11,14 +11,13 @@ from logging import Logger
 from cmk.utils import version
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
-from cmk.utils.regex import is_regex
+from cmk.utils.regex import is_regex, RegexFutureWarning
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec, load_contact_group_information
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.valuespec import RegexFutureWarning
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
@@ -39,7 +38,7 @@ class PreUpdateRulesets(PreUpdateAction):
     * validate host conditions
     """
 
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:  # noqa: C901
         try:
             with disable_redis(), gui_context(), SuperUserContext():
                 set_global_vars()

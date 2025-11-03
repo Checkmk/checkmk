@@ -11,6 +11,7 @@ import re
 import socket
 import sys
 import time
+import warnings
 import zipfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
@@ -34,10 +35,11 @@ from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.render
-import cmk.utils.store as store
 import cmk.utils.translations
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.regex import RegexFutureWarning
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.version import Edition, edition
@@ -45,11 +47,8 @@ from cmk.utils.version import Edition, edition
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.forms as forms
-import cmk.gui.hooks as hooks
-import cmk.gui.log as log
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import forms, hooks, log, watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
@@ -193,7 +192,7 @@ from .livestatus import execute_command
 from .permission_section import PermissionSectionEventConsole
 
 
-def register(
+def register(  # noqa: PLR0913, PLR0915
     permission_registry: PermissionRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
     mode_registry: ModeRegistry,
@@ -1794,7 +1793,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches  # noqa: C901, PLR0912, PLR0915
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
@@ -1911,7 +1910,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rule_packs = answer["rules"]
         save_mkeventd_rules(rule_packs)
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:  # pylint: disable=too-many-branches  # noqa: C901, PLR0912, PLR0915
         self._verify_ec_enabled()
         rep_mode = replication_mode()
         if rep_mode in ["sync", "takeover"]:
@@ -2300,7 +2299,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             ],
         )
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches # noqa: C901, PLR0912, PLR0915
         check_csrf_token()
 
         if not transactions.check_transaction():
@@ -2404,7 +2403,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         else:
             self._show_table(event, found_rules)
 
-    def _show_table(  # pylint: disable=too-many-branches
+    def _show_table(  # pylint: disable=too-many-branches # noqa: C901, PLR0912, PLR0915
         self, event: ec.Event | None, found_rules: list[ec.Rule]
     ) -> None:
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
@@ -2722,11 +2721,10 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         elif isinstance(rp := self._rule_packs[self._edit_nr], ec.MkpRulePackProxy):
             rp.rule_pack = self._rule_pack
             export_mkp_rule_pack(self._rule_pack)
+        elif self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
+            self._rule_packs[self._edit_nr] = self._rule_pack
         else:
-            if self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
-                self._rule_packs[self._edit_nr] = self._rule_pack
-            else:
-                self._rule_packs[self._edit_nr] = self._rule_pack
+            self._rule_packs[self._edit_nr] = self._rule_pack
 
         save_mkeventd_rules(self._rule_packs)
 
@@ -2836,7 +2834,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:  # pylint: disable=too-many-branches
+    def action(self) -> ActionResult:  # pylint: disable=too-many-branches # noqa: C901, PLR0912, PLR0915
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
@@ -2859,12 +2857,18 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                             _("A rule with this ID already exists in rule pack <b>%s</b>.")
                             % pack["title"],
                         )
-
         try:
+            with warnings.catch_warnings(action="error", category=FutureWarning):
+                num_groups = re.compile(self._rule["match"]).groups
+
+        except FutureWarning as e:
+            warnings.warn(f"{e} in {self._rule['match']}", RegexFutureWarning)
             num_groups = re.compile(self._rule["match"]).groups
+
         except Exception:
             raise MKUserError("rule_p_match", _("Invalid regular expression"))
-        if num_groups > 9:
+
+        if num_groups > 9:  # noqa: PLR2004
             raise MKUserError(
                 "rule_p_match",
                 _(

@@ -26,7 +26,7 @@ function goToSearch(e: Event, provider: UnifiedSearchProviderIdentifier) {
 
   if (input instanceof HTMLInputElement) {
     searchUtils.input.setInputValue(input.value)
-    // input.value = ''
+    input.value = ''
   }
 
   searchUtils.input.setProviderValue(
@@ -43,7 +43,7 @@ function goToSearch(e: Event, provider: UnifiedSearchProviderIdentifier) {
     :key="provider"
     :to="`#main_menu_${provider}>div>div`"
   >
-    <div class="unified-search-input-injector__root" @click.stop="goToSearch($event, provider)">
+    <div class="unified-search-input-injector__root">
       <UnifiedSearchProviderSelect
         :provider="provider"
         :open-search-on-change="true"
@@ -53,8 +53,8 @@ function goToSearch(e: Event, provider: UnifiedSearchProviderIdentifier) {
         :id="`unified-search-input-${provider}`"
         role="search"
         class="unified-search-input-injector__input"
-        :aria-label="_t(`Click to search in ${provider}`)"
-        :placeholder="_t(`Click to search in ${provider}`)"
+        :aria-label="_t(`Search in ${provider}`)"
+        :placeholder="_t(`Search in ${provider}`)"
         @input="goToSearch($event, provider)"
       />
     </div>

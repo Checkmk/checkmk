@@ -125,6 +125,40 @@ private:
     Intervals excludes_;
 };
 
+class TagDualCollection {
+public:
+    using TagCollection = std::optional<std::vector<std::string>>;
+    TagDualCollection() = default;
+
+    explicit TagDualCollection(TagCollection includes,
+                               TagCollection excludes = std::nullopt)
+        : includes_(std::move(includes)), excludes_(std::move(excludes)) {}
+
+    bool check(std::string_view name) const {
+        // skip if present _and_ list contains id
+        if (excludes_ &&
+            std::ranges::any_of(*excludes_, [name](const auto &exclude) {
+                return name == exclude;
+            })) {
+            return false;
+        }
+
+        // if includes is present, then check it and return
+        if (includes_) {
+            return std::ranges::any_of(*includes_, [name](const auto &include) {
+                return name == include;
+            });
+        }
+
+        // either not in excludes and no includes - all good
+        return true;
+    }
+
+private:
+    TagCollection includes_;
+    TagCollection excludes_;
+};
+
 struct LogWatchLimits {
     int64_t max_size;
     int64_t max_line_length;
@@ -185,9 +219,9 @@ private:
     cfg::EventContext context_{cfg::EventContext::hide};
 };
 
-class EventFilter {
+class IdsFilter {
 public:
-    explicit EventFilter(std::string_view line);
+    explicit IdsFilter(std::string_view line);
 
     [[nodiscard]] bool checkId(uint64_t id) const noexcept {
         return intervals_.check(id);
@@ -202,10 +236,27 @@ private:
     EventIdIntervals intervals_;
 };
 
+class TagsFilter {
+public:
+    explicit TagsFilter(std::string_view line);
+
+    [[nodiscard]] bool checkTag(std::string_view tag) const noexcept {
+        return tag_dual_collection_.check(tag);
+    }
+    [[nodiscard]] std::string name() const noexcept { return name_; }
+    [[nodiscard]] TagDualCollection tag_dual_collection() const noexcept {
+        return tag_dual_collection_;
+    }
+
+private:
+    std::string name_;
+    TagDualCollection tag_dual_collection_;
+};
+
 enum class EvlType { classic, vista };
 
 using LogWatchEntries = std::vector<LogWatchEntry>;
-using EventFilters = std::unordered_map<std::string, EventFilter>;
+using EventFilters = std::unordered_map<std::string, IdsFilter>;
 
 class LogWatchEvent final : public Asynchronous {
 public:

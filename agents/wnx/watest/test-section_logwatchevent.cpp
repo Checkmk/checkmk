@@ -336,7 +336,7 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
         emit << line;
         auto l = std::string(emit.c_str());
         EXPECT_EQ(l, "\"*\": ;;");
-        const auto ids = EventFilter(l);
+        const auto ids = IdsFilter(l);
         EXPECT_EQ(ids.name(), "*");
         EXPECT_TRUE(ids.intervals().check(0));
         pos++;
@@ -1133,12 +1133,12 @@ TEST(LogWatchEventTest, TestIds) {
 
 TEST(LogWatchEventTest, TestIdsFromString) {
     {
-        const auto ids = EventFilter("\"*\" :   ;;");
+        const auto ids = IdsFilter("\"*\" :   ;;");
         EXPECT_EQ(ids.name(), "*");
         EXPECT_TRUE(ids.intervals().check(0));
     }
     {
-        const auto ids = EventFilter("\"*\" :   ;;0;2-3");
+        const auto ids = IdsFilter("\"*\" :   ;;0;2-3");
         EXPECT_EQ(ids.name(), "*");
         EXPECT_FALSE(ids.intervals().check(0));
         EXPECT_TRUE(ids.intervals().check(1));
@@ -1147,7 +1147,7 @@ TEST(LogWatchEventTest, TestIdsFromString) {
         EXPECT_TRUE(ids.intervals().check(4));
     }
     {
-        const auto ids = EventFilter("\"*\" :   0;3-4;;");
+        const auto ids = IdsFilter("\"*\" :   0;3-4;;");
         EXPECT_EQ(ids.name(), "*");
         EXPECT_TRUE(ids.intervals().check(0));
         EXPECT_FALSE(ids.intervals().check(1));
@@ -1155,12 +1155,41 @@ TEST(LogWatchEventTest, TestIdsFromString) {
         EXPECT_TRUE(ids.intervals().check(4));
     }
     {
-        const auto ids = EventFilter("\"*\" :   0;3-4;;3-4;0");
+        const auto ids = IdsFilter("\"*\" :   0;3-4;;3-4;0");
         EXPECT_EQ(ids.name(), "*");
         EXPECT_FALSE(ids.intervals().check(0));
         EXPECT_FALSE(ids.intervals().check(1));
         EXPECT_FALSE(ids.intervals().check(3));
         EXPECT_FALSE(ids.intervals().check(4));
+    }
+}
+
+TEST(LogWatchEventTest, TestTagsFromString) {
+    {
+        const auto tags = TagsFilter("\"*\" :   ;;");
+        EXPECT_EQ(tags.name(), "*");
+        EXPECT_TRUE(tags.checkTag("anything"));
+    }
+    {
+        const auto tags = TagsFilter("\"*\" :   ;;Au;Ba");
+        EXPECT_EQ(tags.name(), "*");
+        EXPECT_FALSE(tags.checkTag("Au"));
+        EXPECT_FALSE(tags.checkTag("Ba"));
+        EXPECT_TRUE(tags.checkTag("anything"));
+    }
+    {
+        const auto tags = TagsFilter("\"*\" :   Au;Ba;;");
+        EXPECT_EQ(tags.name(), "*");
+        EXPECT_TRUE(tags.checkTag("Au"));
+        EXPECT_TRUE(tags.checkTag("Ba"));
+        EXPECT_FALSE(tags.checkTag("anything"));
+    }
+    {
+        const auto tags = TagsFilter("\"*\" :   Au;Ba;;Au");
+        EXPECT_EQ(tags.name(), "*");
+        EXPECT_FALSE(tags.checkTag("Au"));
+        EXPECT_TRUE(tags.checkTag("Ba"));
+        EXPECT_FALSE(tags.checkTag("anything"));
     }
 }
 

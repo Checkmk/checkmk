@@ -129,7 +129,7 @@ std::optional<Interval<uint64_t>> ParseIdRange(std::string_view range) {
 }
 }  // namespace
 
-EventFilter::EventFilter(std::string_view line) {
+IdsFilter::IdsFilter(std::string_view line) {
     if (line.data() == nullptr || line.empty()) {
         XLOG::t("Skipping logwatch filter with empty name");
         return;
@@ -163,6 +163,37 @@ EventFilter::EventFilter(std::string_view line) {
     } catch (const std::exception &e) {
         XLOG::l(
             "Failed to load logwatch ids entry '{}' exception: '{}' in file '{}'",
+            std::string(line), e.what(),
+            wtools::ToUtf8(cfg::GetPathOfLoadedConfig()));
+    }
+}
+
+TagsFilter::TagsFilter(std::string_view line) {
+    if (line.data() == nullptr || line.empty()) {
+        XLOG::t("Skipping logwatch filter with empty name");
+        return;
+    }
+
+    try {
+        const auto [name, body] = ParseLine(line);
+        if (name.empty() || !body.contains(";;")) {
+            return;
+        }
+        name_ = name;
+
+        auto table = tools::SplitString(std::string(body), ";;", 2);
+        auto i = tools::SplitString(table[0], ";");
+        TagDualCollection::TagCollection includes =
+            i.empty() ? std::nullopt : std::optional{i};
+        auto e = table.size() > 1 ? tools::SplitString(table[1], ";")
+                                  : std::vector<std::string>{};
+        TagDualCollection::TagCollection excludes =
+            e.empty() ? std::nullopt : std::optional{e};
+        tag_dual_collection_ = TagDualCollection(includes, excludes);
+
+    } catch (const std::exception &e) {
+        XLOG::l(
+            "Failed to load logwatch tags entry '{}' exception: '{}' in file '{}'",
             std::string(line), e.what(),
             wtools::ToUtf8(cfg::GetPathOfLoadedConfig()));
     }
@@ -323,7 +354,7 @@ void LogWatchEvent::processEventIds(const YAML::Node &log_ids) {
     for (const auto &l : log_ids) {
         const auto line = ObtainString(l);
         if (line.has_value()) {
-            auto id = EventFilter(*line);
+            auto id = IdsFilter(*line);
             event_filters_.emplace(id.name(), std::move(id));
         }
     }
@@ -525,7 +556,7 @@ std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
     return {};
 }
 
-using StateFilterMap = std::unordered_map<std::string, const EventFilter *>;
+using StateFilterMap = std::unordered_map<std::string, const IdsFilter *>;
 
 namespace {
 void PrintEvent(LogWatchLimits lwl, std::string &out,
@@ -569,7 +600,7 @@ StateFilterMap BuildStateFilterMap(const StateVector &states,
     result.reserve(states.size());
 
     auto wildcard_pos = filters.find("*");
-    const EventFilter *wildcard =
+    const IdsFilter *wildcard =
         wildcard_pos != filters.end() ? &wildcard_pos->second : nullptr;
 
     for (const auto &s : states) {
@@ -729,10 +760,10 @@ std::vector<fs::path> LogWatchEvent::makeStateFilesTable() const {
     return statefiles;
 }
 
-std::optional<EventFilter> FindIds(std ::string_view name,
-                                   std::vector<EventFilter> &ids) {
+std::optional<IdsFilter> FindIds(std ::string_view name,
+                                 std::vector<IdsFilter> &ids) {
     if (auto it = rs::find_if(
-            ids, [name](const EventFilter &f) { return f.name() == name; });
+            ids, [name](const IdsFilter &f) { return f.name() == name; });
         it != ids.end()) {
         return *it;  // copy
     }

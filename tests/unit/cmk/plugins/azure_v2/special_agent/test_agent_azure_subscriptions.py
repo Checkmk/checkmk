@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     _get_subscriptions,
     AzureResource,
@@ -305,10 +306,11 @@ RESOURCE_GROUPS_RESPONSE = {
     [
         (
             Args(
+                debug=True,
                 proxy="",
                 tenant="tenant",
                 client="",
-                secret="",
+                secret=Secret(""),
                 authority="global",
                 no_subscriptions=True,
                 all_subscriptions=False,
@@ -321,10 +323,11 @@ RESOURCE_GROUPS_RESPONSE = {
         ),
         (
             Args(
+                debug=True,
                 proxy="",
                 tenant="tenant",
                 client="",
-                secret="",
+                secret=Secret(""),
                 authority="global",
                 no_subscriptions=False,
                 all_subscriptions=True,
@@ -341,10 +344,11 @@ RESOURCE_GROUPS_RESPONSE = {
         ),
         (
             Args(
+                debug=True,
                 proxy="",
                 tenant="tenant",
                 client="",
-                secret="",
+                secret=Secret(""),
                 authority="global",
                 no_subscriptions=False,
                 all_subscriptions=False,
@@ -363,10 +367,11 @@ RESOURCE_GROUPS_RESPONSE = {
         ),
         (
             Args(
+                debug=True,
                 proxy="",
                 tenant="tenant",
                 client="",
-                secret="",
+                secret=Secret(""),
                 authority="global",
                 no_subscriptions=False,
                 all_subscriptions=False,
@@ -381,10 +386,11 @@ RESOURCE_GROUPS_RESPONSE = {
         ),
         (
             Args(
+                debug=True,
                 proxy="",
                 tenant="tenant",
                 client="",
-                secret="",
+                secret=Secret(""),
                 authority="global",
                 no_subscriptions=False,
                 all_subscriptions=False,
@@ -418,10 +424,11 @@ async def test_get_subscriptions(
 @pytest.mark.asyncio
 async def test_get_subscriptions_wrong_subscription(mock_api_client: AsyncMock) -> None:
     args = Args(
+        debug=True,
         proxy="",
         tenant="tenant",
         client="",
-        secret="",
+        secret=Secret(""),
         authority="global",
         no_subscriptions=False,
         all_subscriptions=False,

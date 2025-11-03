@@ -41,6 +41,7 @@ import requests
 from pydantic import BaseModel, RootModel
 
 from cmk.ccc.hostaddress import HostAddress
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     ApiError,
     ApiErrorAuthorizationRequestDenied,
@@ -62,21 +63,25 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     Intervals,
     OPTIONAL_METRICS,
 )
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.password_store import replace_passwords
 from cmk.utils.paths import tmp_dir
 
 T = TypeVar("T")
 type ResourceId = str
 
-LOGGER = logging.getLogger("agent_azure_v2")
+__version__ = "2.5.0b1"
 
-AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure_v2"
+AGENT = "auzure_v2"
+
+LOGGER = logging.getLogger(f"agent_{AGENT}")
+
+AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / f"agent_{AGENT}"
 
 NOW = datetime.datetime.now(tz=datetime.UTC)
+
+SECRET_OPTION = "secret"
 
 SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES = frozenset(
     {
@@ -244,7 +249,7 @@ def _chunks(list_: Sequence[T], length: int = 50) -> Sequence[Sequence[T]]:
     return [list_[i : i + length] for i in range(0, len(list_), length)]
 
 
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -317,7 +322,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     # REQUIRED
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser_add_secret_option(
+        parser, long=f"--{SECRET_OPTION}", help="Azure authentication secret", required=True
+    )
     parser.add_argument(
         "--cache-id",
         required="--connection-test" not in sys.argv,
@@ -410,11 +417,6 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Run a connection test through the Management API only. No further agent code is "
         "executed.",
     )
-
-    # I'm not sure this is still needed
-    if argv is None:
-        replace_passwords()
-        argv = sys.argv[1:]
 
     args = parser.parse_args(argv)
     return args
@@ -1989,7 +1991,8 @@ async def main_graph_client(args: argparse.Namespace, monitored_services: set[st
             deserialize_http_proxy_config(args.proxy),
             tenant=args.tenant,
             client=args.client,
-            secret=args.secret,
+            # revealing later would be better, but I'm keeping this simple for now
+            secret=resolve_secret_option(args, SECRET_OPTION).reveal(),
         ) as graph_client:
             tasks = {
                 task_call(graph_client)
@@ -2294,7 +2297,8 @@ async def _test_connection(args: argparse.Namespace) -> int:
             deserialize_http_proxy_config(args.proxy),
             tenant=args.tenant,
             client=args.client,
-            secret=args.secret,
+            # revealing later would be better, but I'm keeping this simple for now
+            secret=resolve_secret_option(args, SECRET_OPTION).reveal(),
         ):
             # we just need to authenticate
             ...
@@ -2495,7 +2499,8 @@ async def main_subscription(
             deserialize_http_proxy_config(args.proxy),
             tenant=args.tenant,
             client=args.client,
-            secret=args.secret,
+            # revealing later would be better, but I'm keeping this simple for now
+            secret=resolve_secret_option(args, SECRET_OPTION).reveal(),
         ) as mgmt_client:
             selected_resources, monitored_groups_list = await _collect_resources(
                 mgmt_client, subscription, args, selector
@@ -2545,7 +2550,8 @@ async def _get_subscriptions(args: argparse.Namespace) -> set[AzureSubscription]
             deserialize_http_proxy_config(args.proxy),
             args.tenant,
             args.client,
-            args.secret,
+            # revealing later would be better, but I'm keeping this simple for now
+            resolve_secret_option(args, SECRET_OPTION).reveal(),
         ) as api_client:
             response = await api_client.request_async(
                 method="GET",
@@ -2644,10 +2650,8 @@ def _setup_logging(verbose: int) -> None:
 
 
 def _debug_args(args: argparse.Namespace) -> None:
-    # debug args
-    # secret is required, so no risks in adding it here if not present
-    args_dict = vars(args) | {"secret": "****"}
-    for key, value in args_dict.items():
+    # secret is looking after itself.
+    for key, value in vars(args).items():
         LOGGER.debug("argparse: %s = %r", key, value)
 
 
@@ -2663,8 +2667,9 @@ def agent_azure_main(args: argparse.Namespace) -> int:
     return asyncio.run(main_async(args, selector))
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(parse_arguments, agent_azure_main)
+    return agent_azure_main(parse_arguments(sys.argv[1:]))
 
 
 if __name__ == "__main__":

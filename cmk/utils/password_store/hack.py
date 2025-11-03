@@ -33,7 +33,7 @@ HACK_AGENTS = {
     "aws_status": False,  # needs no secret
     "azure_status": False,  # needs no secret
     "azure": False,
-    "azure_v2": True,
+    "azure_v2": False,
     "bazel_cache": False,
     "bi": False,  # needs no secret
     "cisco_meraki": True,

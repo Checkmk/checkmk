@@ -51,7 +51,7 @@ def check_netapp_api_systemtime(item, params, parsed):
         human_readable_func=render.datetime,
     )
     yield check_levels(
-        entry.agent_time - entry.system_time,
+        abs(entry.agent_time - entry.system_time),
         "time_difference",
         params.get("levels", (None, None)),
         infoname="Time difference",

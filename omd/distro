@@ -70,6 +70,10 @@ then
             echo "ALMALINUX${SEP}9"
             exit 0
         fi
+        if [[ "${VERSION:0:21}" =~ "AlmaLinux release 10" ]]; then
+            echo "ALMALINUX${SEP}10"
+            exit 0
+        fi
     fi
 fi
 

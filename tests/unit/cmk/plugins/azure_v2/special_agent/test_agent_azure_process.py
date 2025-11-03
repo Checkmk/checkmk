@@ -1074,6 +1074,24 @@ RESOURCE_DATA = {
     "tags": {"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
 }
 
+RESOURCE_DATA_DIFFERENT_GROUP = {
+    "id": "/subscriptions/subscription_id/resourceGroups/resource_group_2/...normal_data_has_something_here...",
+    "name": "storage_account_1",
+    "type": "Microsoft.Storage/storageAccounts",
+    "sku": {"name": "Standard_LRS", "tier": "Standard"},
+    "kind": "StorageV2",
+    "location": "westeurope",
+    "tags": {"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+}
+
+RESOURCE_DATA_DIFFERENT_TYPE = {
+    "id": "/subscriptions/subscription_id/resourceGroups/resource_group_1/...normal_data_has_something_here...",
+    "name": "storage_account_1",
+    "type": "Microsoft.Compute/virtualMachines",
+    "location": "westeurope",
+    "tags": {"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+}
+
 
 @pytest.mark.parametrize(
     "resource_data, tags_pattern, safe_hostname, expected_resource",
@@ -1125,6 +1143,30 @@ RESOURCE_DATA = {
                 tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
             ),
             id="Resource with imported tags, safe hostname",
+        ),
+        pytest.param(
+            RESOURCE_DATA_DIFFERENT_GROUP,
+            TagsImportPatternOption.import_all,
+            True,
+            AzureResourceInfo(
+                section="storageaccounts",
+                info_group="resource_group_2",
+                piggytarget="storage_account_1-3a72c916",
+                tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+            ),
+            id="Resource with safe hostname, ensures resource group uniqueness",
+        ),
+        pytest.param(
+            RESOURCE_DATA_DIFFERENT_TYPE,
+            TagsImportPatternOption.import_all,
+            True,
+            AzureResourceInfo(
+                section="virtualmachines",
+                info_group="resource_group_1",
+                piggytarget="storage_account_1-f349a2bf",
+                tags={"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"},
+            ),
+            id="Resource with safe hostname, ensures resource type uniqueness 2",
         ),
     ],
 )

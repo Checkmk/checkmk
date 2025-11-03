@@ -40,6 +40,7 @@ class Paths(NamedTuple):
     event_server_profile: AnnotatedPath
     local_mibs_dir: AnnotatedPath
     checkmk_mibs_dir: AnnotatedPath
+    checkmk_compiled_mibs_dir: AnnotatedPath
     system_mibs_dir: AnnotatedPath
     compiled_mibs_dir: AnnotatedPath
     mongodb_config_file: AnnotatedPath
@@ -78,6 +79,9 @@ def create_paths(omd_root: Path) -> Paths:
         ),
         local_mibs_dir=AnnotatedPath("custom MIB directory", omd_root / "local/share/snmp/mibs"),
         checkmk_mibs_dir=AnnotatedPath("Checkmk MIB directory", omd_root / "share/snmp/mibs"),
+        checkmk_compiled_mibs_dir=AnnotatedPath(
+            "Checkmk Compiled MIB directory", omd_root / "share/snmp/compiled_mibs"
+        ),
         system_mibs_dir=AnnotatedPath("system MIB directory", Path("/usr/share/snmp/mibs")),
         compiled_mibs_dir=AnnotatedPath(
             "compiled MIBs directory", omd_root / "local/share/check_mk/compiled_mibs"

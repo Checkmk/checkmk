@@ -281,6 +281,7 @@ class SNMPTrapTranslator:
                 paths.checkmk_mibs_dir,
                 paths.system_mibs_dir,
                 paths.compiled_mibs_dir,
+                paths.checkmk_compiled_mibs_dir,
             ]:
                 builder.addMibSources(pysnmp.smi.builder.DirMibSource(source.value))
 

@@ -170,9 +170,8 @@ def inventory_as_check(
 
     fetcher = CMKFetcher(
         config_cache,
-        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
-        factory=config_cache.fetcher_factory(
+        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hostname)),
+        config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
             service_name_config,
@@ -191,7 +190,7 @@ def inventory_as_check(
                 ),
             ),
         ),
-        plugins=plugins,
+        plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

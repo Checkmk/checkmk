@@ -17,7 +17,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.base import sources
-from cmk.base.config import ConfigCache, get_metric_backend_fetcher, get_relay_id
+from cmk.base.config import ConfigCache, get_metric_backend_fetcher
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
@@ -276,9 +276,6 @@ def dump_host(
                         # NOTE: we can't ignore these, they're an API promise.
                         cmk.utils.paths.local_special_agents_dir,
                         cmk.utils.paths.special_agents_dir,
-                        strip_prefix=None
-                        if get_relay_id(label_manager.labels_of_host(hostname)) is None
-                        else cmk.utils.paths.omd_root,
                     ),
                 ),
                 agent_connection_mode=config_cache.agent_connection_mode(hostname),

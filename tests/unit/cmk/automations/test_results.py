@@ -177,7 +177,6 @@ class TestDiagSpecialAgentInput:
         host_config=DiagSpecialAgentHostConfig(
             host_name=HostName("test-host"),
             host_alias="test-host",
-            relay_id=None,
             ip_address=None,
             ip_stack_config=IPStackConfig.NO_IP,
             host_attrs={},

@@ -26,21 +26,9 @@ def test_executable_finder_local(tmp_path: Path) -> None:
     binary_name = "execthis"
     shipped_file = tmp_path / "shipped" / binary_name
     local_file = tmp_path / "local" / binary_name
-    finder = ExecutableFinder(local_file.parent, shipped_file.parent, strip_prefix=None)
+    finder = ExecutableFinder(local_file.parent, shipped_file.parent)
 
     with _with_file(shipped_file):
         assert finder(binary_name, None) == str(shipped_file)
         with _with_file(local_file):
             assert finder(binary_name, None) == str(local_file)
-
-
-def test_executable_finder_local_with_stripping(tmp_path: Path) -> None:
-    binary_name = "execthis"
-    shipped_file = tmp_path / "shipped" / binary_name
-    local_file = tmp_path / "local" / binary_name
-    finder = ExecutableFinder(local_file.parent, shipped_file.parent, strip_prefix=tmp_path)
-
-    with _with_file(shipped_file):
-        assert finder(binary_name, None) == f"shipped/{binary_name}"
-        with _with_file(local_file):
-            assert finder(binary_name, None) == f"local/{binary_name}"

@@ -1514,9 +1514,8 @@ def test_commandline_discovery(
     )
     fetcher = CMKFetcher(
         config_cache,
-        get_relay_id=lambda hn: None,
-        make_trigger=lambda hn: PlainFetcherTrigger(),
-        factory=config_cache.fetcher_factory(
+        lambda hn: PlainFetcherTrigger(),
+        config_cache.fetcher_factory(
             config_cache.make_service_configurer({}, service_name_config),
             ip_lookup=lambda *a: HostAddress(""),
             service_name_config=service_name_config,
@@ -1533,7 +1532,7 @@ def test_commandline_discovery(
                 caching_config=lambda host_name: {},
             ),
         ),
-        plugins=agent_based_plugins,
+        agent_based_plugins,
         default_address_family=lambda *a: socket.AddressFamily.AF_INET,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

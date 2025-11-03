@@ -2360,9 +2360,7 @@ class ConfigCache:
             passwords,
             password_store_file,
             ExecutableFinder(
-                cmk.utils.paths.local_nagios_plugins_dir,
-                cmk.utils.paths.nagios_plugins_dir,
-                strip_prefix=None,
+                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
         )
@@ -3635,18 +3633,17 @@ def get_relay_id(labels: Labels) -> str | None:
 
 def make_fetcher_trigger(
     edition: cmk_version.Edition,
-    relay_id: str | None,
+    host_labels: Labels,
 ) -> FetcherTrigger:
-    if relay_id is None:
-        return PlainFetcherTrigger()
-
     match edition:
         case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
-            from cmk.relay_fetcher_trigger.trigger import (
-                RelayFetcherTrigger,  # type: ignore[import-not-found, unused-ignore]
-            )
+            if (relay_id := get_relay_id(host_labels)) is not None:
+                from cmk.relay_fetcher_trigger.trigger import (  # type: ignore[import-not-found, unused-ignore]
+                    RelayFetcherTrigger,
+                )
 
-            return RelayFetcherTrigger(relay_id=relay_id, omd_root=cmk.utils.paths.omd_root)
+                return RelayFetcherTrigger(relay_id=relay_id, omd_root=cmk.utils.paths.omd_root)
+            return PlainFetcherTrigger()
         case cmk_version.Edition.CEE | cmk_version.Edition.CRE:
             return PlainFetcherTrigger()
 

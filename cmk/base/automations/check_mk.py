@@ -386,9 +386,8 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-            make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
-            factory=config_cache.fetcher_factory(
+            lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
+            config_cache.fetcher_factory(
                 service_configurer,
                 ip_address_of,
                 service_name_config,
@@ -407,7 +406,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                     ),
                 ),
             ),
-            plugins=plugins,
+            plugins,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             default_address_family=ip_lookup_config.default_address_family,
             file_cache_options=file_cache_options,
@@ -616,9 +615,8 @@ class AutomationDiscoveryPreview(Automation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-            make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
-            factory=config_cache.fetcher_factory(
+            lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
+            config_cache.fetcher_factory(
                 service_configurer,
                 ip_address_of_with_fallback,
                 service_name_config,
@@ -645,7 +643,7 @@ class AutomationDiscoveryPreview(Automation):
                     relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                 ),
             ),
-            plugins=plugins,
+            plugins,
             default_address_family=ip_lookup_config.default_address_family,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
@@ -1122,9 +1120,8 @@ def _execute_autodiscovery(
     )
     fetcher = CMKFetcher(
         config_cache,
-        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
-        factory=config_cache.fetcher_factory(
+        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
+        config_cache.fetcher_factory(
             service_configurer,
             slightly_different_ip_address_of,
             passive_service_name_config,
@@ -1145,7 +1142,7 @@ def _execute_autodiscovery(
                 relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
             ),
         ),
-        plugins=ab_plugins,
+        ab_plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -3049,7 +3046,6 @@ def get_special_agent_commandline(
             # NOTE: we can't ignore these, they're an API promise.
             cmk.utils.paths.local_special_agents_dir,
             cmk.utils.paths.special_agents_dir,
-            strip_prefix=None if host_config.relay_id is None else cmk.utils.paths.omd_root,
         ),
     )
 
@@ -3454,10 +3450,7 @@ class AutomationDiagHost(Automation):
         state, output = 0, ""
         pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
         passwords = cmk.utils.password_store.load(pending_passwords_file)
-
-        host_labels = label_manager.labels_of_host(host_name)
-        host_relay_id = config.get_relay_id(host_labels)
-        trigger = config.make_fetcher_trigger(edition, host_relay_id)
+        trigger = config.make_fetcher_trigger(edition, label_manager.labels_of_host(host_name))
         for source in sources.make_sources(
             plugins,
             host_name,
@@ -3523,7 +3516,6 @@ class AutomationDiagHost(Automation):
                     # NOTE: we can't ignore these, they're an API promise.
                     cmk.utils.paths.local_special_agents_dir,
                     cmk.utils.paths.special_agents_dir,
-                    strip_prefix=None if host_relay_id is None else cmk.utils.paths.omd_root,
                 ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
@@ -4003,10 +3995,7 @@ class AutomationGetAgentOutput(Automation):
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
-
-        host_labels = label_manager.labels_of_host(hostname)
-        relay_id = config.get_relay_id(host_labels)
-        trigger = config.make_fetcher_trigger(edition, relay_id)
+        trigger = config.make_fetcher_trigger(edition, label_manager.labels_of_host(hostname))
 
         success = True
         output = ""
@@ -4096,7 +4085,6 @@ class AutomationGetAgentOutput(Automation):
                             # NOTE: we can't ignore these, they're an API promise.
                             cmk.utils.paths.local_special_agents_dir,
                             cmk.utils.paths.special_agents_dir,
-                            strip_prefix=None if relay_id is None else cmk.utils.paths.omd_root,
                         ),
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),

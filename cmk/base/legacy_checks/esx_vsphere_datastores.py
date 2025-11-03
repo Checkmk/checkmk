@@ -3,21 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
-
-
-# mypy: disable-error-code="var-annotated"
 
 from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any, NotRequired, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render, StringTable
-from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-
-check_info = {}
+from cmk.agent_based.v1 import (
+    check_levels as check_levels_v1,  # we can only use v2 after migrating the ruleset!
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
 # Example output from agent:
 # [zmucvm99-lds]
@@ -58,12 +65,13 @@ def parse_esx_vsphere_datastores(string_table: StringTable) -> Section:
     return stores
 
 
-# types will improve soon
-def check_esx_vsphere_datastores(item: str, params: Mapping[str, Any], parsed: Section) -> Any:
-    if not (data := parsed.get(item)):
+def check_esx_vsphere_datastores(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
     if not data["accessible"]:
-        yield 2, "inaccessible"
+        yield Result(state=State.CRIT, summary="inaccessible")
 
     mib = 1024.0**2
     size_bytes = data.get("capacity")
@@ -71,58 +79,56 @@ def check_esx_vsphere_datastores(item: str, params: Mapping[str, Any], parsed: S
     if not size_bytes or avail_bytes is None:
         return
 
-    yield df_check_filesystem_single(
-        item, size_bytes / mib, avail_bytes / mib, 0, None, None, params
-    )  # fixed: true-division
+    yield from df_check_filesystem_single(
+        get_value_store(), item, size_bytes / mib, avail_bytes / mib, 0, None, None, params
+    )
 
     uncommitted_bytes = data.get("uncommitted")
-    if uncommitted_bytes is None:
+    if not isinstance(uncommitted_bytes, int):
         return
 
-    text_uncommitted = "Uncommitted: %s" % render.bytes(uncommitted_bytes)
-    yield 0, text_uncommitted, [("uncommitted", uncommitted_bytes / mib)]  # fixed: true-division
+    yield Result(state=State.OK, summary=f"Uncommitted: {render.bytes(uncommitted_bytes)}")
+    yield Metric("uncommitted", uncommitted_bytes / mib)
 
     used_bytes = size_bytes - avail_bytes
     prov_bytes = used_bytes + uncommitted_bytes
     prov_percent = (prov_bytes * 100.0) / size_bytes if size_bytes != 0 else 0
 
     warn, crit = params.get("provisioning_levels", (None, None))
-    yield check_levels(
+    yield from check_levels_v1(
         prov_percent,
-        None,
-        (warn, crit),
-        human_readable_func=render.percent,
-        infoname="Provisioning",
+        levels_upper=(warn, crit),
+        render_func=render.percent,
+        label="Provisioning",
     )
 
     if prov_bytes > size_bytes:
         prov_used = used_bytes / prov_bytes * 100.0
-        yield 0, f"{render.percent(prov_used)} provisioned space used"
+        yield Result(state=State.OK, summary=f"{render.percent(prov_used)} provisioned space used")
 
     if warn is not None:
         # convert percent to abs MiB
-        scale = (size_bytes / mib) / 100.0  # fixed: true-division
-        yield (
-            0,
-            "",
-            [("overprovisioned", prov_bytes / mib, scale * warn, scale * crit)],
-        )  # fixed: true-division
+        scale = (size_bytes / mib) / 100.0
+        yield Metric("overprovisioned", prov_bytes / mib, levels=(scale * warn, scale * crit))
     else:
-        yield 0, "", [("overprovisioned", prov_bytes / mib)]  # fixed: true-division
+        yield Metric("overprovisioned", prov_bytes / mib)
 
 
-def discover_esx_vsphere_datastores(section: Section) -> Any:
-    yield from ((item, {}) for item in section)
+def discover_esx_vsphere_datastores(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["esx_vsphere_datastores"] = LegacyCheckDefinition(
+agent_section_esx_vsphere_datastores = AgentSection(
     name="esx_vsphere_datastores",
     parse_function=parse_esx_vsphere_datastores,
+)
+
+
+check_plugin_esx_vsphere_datastores = CheckPlugin(
+    name="esx_vsphere_datastores",
     service_name="Filesystem %s",
     discovery_function=discover_esx_vsphere_datastores,
     check_function=check_esx_vsphere_datastores,
     check_ruleset_name="esx_vsphere_datastores",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
-
-# .

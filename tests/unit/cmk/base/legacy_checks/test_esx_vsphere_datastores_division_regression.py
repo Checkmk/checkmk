@@ -3,20 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-# NOTE: This file has been created by an LLM (from something that was worse).
-# It mostly serves as test to ensure we don't accidentally break anything.
-# If you encounter something weird in here, do not hesitate to replace this
-# test by something more appropriate.
-
 from typing import Final
 
-from cmk.base.legacy_checks.esx_vsphere_datastores import (
-    check_esx_vsphere_datastores,
-    discover_esx_vsphere_datastores,
-    parse_esx_vsphere_datastores,
-)
+import pytest
+
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.base.legacy_checks import esx_vsphere_datastores as esxds
 
 _STRING_TABLE: Final = [
     ["[backup_day_esx_blade_nfs_nfs32]"],
@@ -48,22 +40,24 @@ _STRING_TABLE: Final = [
 
 def test_discover_esx_vsphere_datastores_division_regression() -> None:
     """Test discovery function for ESX vSphere datastores."""
-    result = list(discover_esx_vsphere_datastores(parse_esx_vsphere_datastores(_STRING_TABLE)))
-    # Discovery should include accessible datastores (note: order may vary)
-    discovered_items = sorted([item for item, _ in result])
-    expected_items = [
-        "backup_day_esx_blade_nfs_nfs32",
-        "datastore01",
-        "storage_iso",
-        "system01_20100701",
+    assert list(
+        esxds.discover_esx_vsphere_datastores(esxds.parse_esx_vsphere_datastores(_STRING_TABLE))
+    ) == [
+        Service(item="backup_day_esx_blade_nfs_nfs32"),
+        Service(item="datastore01"),
+        Service(item="system01_20100701"),
+        Service(item="storage_iso"),
     ]
-    assert discovered_items == sorted(expected_items)
 
 
 def test_check_esx_vsphere_datastores_division_regression_basic(
     initialised_item_state: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function basic functionality with value store initialized."""
+    monkeypatch.setattr(
+        esxds, "get_value_store", lambda: {"system01_20100701.delta": (1761719533.031466, 0)}
+    )
     params = {
         "levels": (80.0, 90.0),
         "magic_normsize": 20,
@@ -72,16 +66,19 @@ def test_check_esx_vsphere_datastores_division_regression_basic(
         "trend_perfdata": True,
     }
 
-    result = list(
-        check_esx_vsphere_datastores(
-            "system01_20100701", params, parse_esx_vsphere_datastores(_STRING_TABLE)
+    # Should have at least a filesystem check result
+    result = next(
+        r
+        for r in esxds.check_esx_vsphere_datastores(
+            "system01_20100701",
+            params,
+            esxds.parse_esx_vsphere_datastores(_STRING_TABLE),
         )
+        if isinstance(r, Result)
     )
 
-    # Should have at least a filesystem check result
-    assert len(result) >= 1
     # First result should be state OK (0) for low usage
-    assert result[0][0] == 0
+    assert result == Result(state=State.OK, summary="Used: 0.21% - 974 MiB of 458 GiB")
 
 
 def test_check_esx_vsphere_datastores_division_regression_inaccessible(
@@ -96,16 +93,16 @@ def test_check_esx_vsphere_datastores_division_regression_inaccessible(
         ["type", "VMFS"],
         ["uncommitted", "0"],
     ]
-    parsed = parse_esx_vsphere_datastores(string_table)
+    parsed = esxds.parse_esx_vsphere_datastores(string_table)
     # Provide basic parameters required for filesystem checks
     params = {"levels": (80.0, 90.0)}
-    result = list(check_esx_vsphere_datastores("inaccessible_store", params, parsed))
-
     # Should return multiple results including inaccessible state
-    assert len(result) >= 1
+    result, *_ = esxds.check_esx_vsphere_datastores("inaccessible_store", params, parsed)
+
     # First result should be critical state for inaccessible datastore
-    assert result[0][0] == 2  # Critical state
-    assert "inaccessible" in result[0][1].lower()
+    assert isinstance(result, Result)
+    assert result.state is State.CRIT
+    assert "inaccessible" in result.summary.lower()
 
 
 def test_check_esx_vsphere_datastores_division_regression_missing_data() -> None:
@@ -118,11 +115,12 @@ def test_check_esx_vsphere_datastores_division_regression_missing_data() -> None
         ["type", "VMFS"],
         ["uncommitted", "0"],
     ]
-    parsed = parse_esx_vsphere_datastores(string_table)
-    result = list(check_esx_vsphere_datastores("missing_store", {}, parsed))
-
     # Should return empty result for missing datastores
-    assert len(result) == 0
+    assert not list(
+        esxds.check_esx_vsphere_datastores(
+            "missing_store", {}, esxds.parse_esx_vsphere_datastores(string_table)
+        )
+    )
 
 
 def test_check_esx_vsphere_datastores_division_regression_zero_capacity(
@@ -137,9 +135,9 @@ def test_check_esx_vsphere_datastores_division_regression_zero_capacity(
         ["type", "VMFS"],
         ["uncommitted", "0"],
     ]
-    parsed = parse_esx_vsphere_datastores(string_table)
+    parsed = esxds.parse_esx_vsphere_datastores(string_table)
     # Zero capacity datastores are not discovered, so no check results expected
-    result = list(check_esx_vsphere_datastores("zero_capacity_store", {}, parsed))
+    result = list(esxds.check_esx_vsphere_datastores("zero_capacity_store", {}, parsed))
 
     # Zero capacity datastores should return empty results (no check performed)
     assert len(result) == 0
@@ -157,22 +155,17 @@ def test_check_esx_vsphere_datastores_division_regression_provisioning(
         ["type", "VMFS"],
         ["uncommitted", "5368709120"],  # 5 GB uncommitted
     ]
-    parsed = parse_esx_vsphere_datastores(string_table)
+    parsed = esxds.parse_esx_vsphere_datastores(string_table)
     # Provide basic parameters required for filesystem checks
     params = {"levels": (80.0, 90.0)}
-    result = list(check_esx_vsphere_datastores("provisioned_store", params, parsed))
+    result = list(esxds.check_esx_vsphere_datastores("provisioned_store", params, parsed))
 
     # Should include provisioning information
-    provisioning_results = [r for r in result if "provisioning" in r[1].lower()]
-    assert len(provisioning_results) >= 1
+    assert any("provisioning" in r.summary.lower() for r in result if isinstance(r, Result))
 
     # Should have overprovisioned metric - check results with at least 3 elements
-    metric_results = [
-        r
-        for r in result
-        if len(r) >= 3 and r[2] and any("overprovisioned" in str(metric) for metric in r[2])
-    ]
-    assert len(metric_results) >= 1
+    metrics = [r for r in result if isinstance(r, Metric)]
+    assert any(m.name == "overprovisioned" for m in metrics)
 
 
 def test_parse_esx_vsphere_datastores_division_regression_valid_values() -> None:
@@ -187,7 +180,7 @@ def test_parse_esx_vsphere_datastores_division_regression_valid_values() -> None
     ]
 
     # Should parse valid values correctly
-    result = parse_esx_vsphere_datastores(string_table)
+    result = esxds.parse_esx_vsphere_datastores(string_table)
     assert "test_store" in result
     assert result["test_store"]["accessible"] is True
     assert result["test_store"]["capacity"] == 1000000
@@ -206,7 +199,7 @@ def test_parse_esx_vsphere_datastores_division_regression_missing_uncommitted() 
         # No uncommitted field
     ]
 
-    result = parse_esx_vsphere_datastores(string_table)
+    result = esxds.parse_esx_vsphere_datastores(string_table)
     assert "minimal_store" in result
     # Should handle missing uncommitted field gracefully
     assert result["minimal_store"]["accessible"] is True

@@ -194,6 +194,7 @@
       padding-bottom: $mainmenu-spacing-bottom;
       background-color: $popup-trigger-active-bg-color;
       border-right: $popup-border;
+      z-index: 2000;
 
       &.min {
         left: 48px;

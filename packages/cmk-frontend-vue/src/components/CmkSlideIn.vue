@@ -9,6 +9,7 @@ import { nextTick, ref, watch } from 'vue'
 
 export interface CmkSlideInProps {
   open: boolean
+  isIndexPage?: boolean | undefined // will be removed after the removal of the iframe
 }
 
 const props = defineProps<CmkSlideInProps>()
@@ -28,8 +29,8 @@ watch(
 </script>
 
 <template>
-  <DialogRoot :open="open">
-    <DialogPortal>
+  <DialogRoot :open="open" :modal="!!isIndexPage">
+    <DialogPortal :to="isIndexPage ? '#content_area' : 'body'">
       <!-- @vue-ignore @click is not a property of DialogOverlay -->
       <DialogOverlay class="cmk-slide-in__overlay" @click="emit('close')" />
       <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
@@ -54,7 +55,7 @@ watch(
   max-width: 1024px;
   display: flex;
   flex-direction: column;
-  position: fixed;
+  position: absolute;
   z-index: var(--z-index-modal);
   top: 0;
   right: 0;
@@ -105,7 +106,7 @@ watch(
 
 .cmk-slide-in__overlay {
   backdrop-filter: blur(1.5px);
-  position: fixed;
+  position: absolute;
   inset: 0;
   animation: cmk-slide-in__overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }

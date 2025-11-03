@@ -18,6 +18,7 @@ const { _t } = usei18n()
 
 export interface CmkSlideInDialogProps {
   open: boolean
+  isIndexPage?: boolean | undefined // will be removed after the removal of the iframe
   header?: {
     title: string
     icon?: CmkIconProps | undefined
@@ -29,7 +30,7 @@ const emit = defineEmits(['close'])
 </script>
 
 <template>
-  <CmkSlideIn :open="open" @close="emit('close')">
+  <CmkSlideIn :open="open" :is-index-page="isIndexPage" @close="emit('close')">
     <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">
       <CmkHeading type="h1" class="cmk-slide-in-dialog__title-header">
         <CmkIcon v-if="header.icon" v-bind="header.icon" />

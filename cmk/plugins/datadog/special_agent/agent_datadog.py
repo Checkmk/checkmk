@@ -17,6 +17,7 @@ import datetime
 import json
 import logging
 import re
+import sys
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -31,14 +32,18 @@ from dateutil import parser as dateutil_parser
 import cmk.ec.export as ec
 from cmk.ccc.store import load_text_from_file, save_text_to_file
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.paths import omd_root, tmp_dir
 
 Tags = Sequence[str]
 
-LOGGER = logging.getLogger("agent_datadog")
+__version__ = "2.5.0b1"
+
+AGENT = "datadog"
+
+LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 
 APIKEY_OPTION = "apikey"
@@ -776,6 +781,7 @@ def agent_datadog_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_datadog_main, apply_password_store_hack=False)
+    return agent_datadog_main(parse_arguments(sys.argv[1:]))

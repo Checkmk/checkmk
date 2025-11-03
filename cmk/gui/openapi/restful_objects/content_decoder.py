@@ -6,12 +6,15 @@
 # mypy: disable-error-code="no-any-return"
 
 import http.client
-import io
-import tarfile
 from typing import Any
 
 from marshmallow import Schema
 
+from cmk.ccc.archive import (
+    CheckmkTarArchive,
+    SecurityViolation,
+    UnpackedArchiveTooLargeError,
+)
 from cmk.gui.http import Request
 from cmk.gui.openapi.utils import (
     RestAPIRequestContentTypeException,
@@ -37,33 +40,16 @@ def binary_decoder(request: Request) -> bytes | None:
 
 
 def gzip_decoder(request: Request, request_schema: type[Schema] | None) -> Any:
-    """
-    Please note that operating with .tar.gz archives may result in a security risk.
-    Never extract files from untrusted sources without prior inspection. It is possible
-    that the contained files have absolute paths (starting with `/`) or relative paths
-    (starting with `..`) that escape the target directory.
-
-    It must be verified prior to extraction that none of the following paths point
-    outside the target directory:
-    * Absolute paths
-    * Relative paths
-    * Symbolic links
-
-    It is also possible that a malicious small .tar.gz file can become a very large tar
-    file that could excess RAM or disk-space.
-
-    Read more:
-    CVE-2007-4559 - python: tarfile module directory traversal
-    https://bugzilla.redhat.com/show_bug.cgi?id=263261
-
-    """
     tgz = binary_decoder(request)
-
     try:
         assert isinstance(tgz, bytes)
-        with tarfile.open(fileobj=io.BytesIO(tgz), mode="r:gz"):
-            ...
+        CheckmkTarArchive.validate_bytes(tgz)
 
+    except (UnpackedArchiveTooLargeError, SecurityViolation) as err:
+        raise RestAPIRequestDataValidationException(
+            title=http.client.responses[400],
+            detail=str(err),
+        )
     except Exception:
         raise RestAPIRequestDataValidationException(
             title=http.client.responses[400],

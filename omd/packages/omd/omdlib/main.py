@@ -136,6 +136,12 @@ from omdlib.version import (
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc import tty
+from cmk.ccc.archive import (
+    ArchiveSettings,
+    CheckmkTarArchive,
+    SafeIndexedTarFile,
+    SafeStreamedTarFile,
+)
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
@@ -3153,7 +3159,7 @@ def main_su(
 
 
 def _process_backup_tar_and_setup_env(
-    tar: tarfile.TarFile,
+    tar: SafeIndexedTarFile | SafeStreamedTarFile,
     verbose: bool,
     options: CommandOptions,
     old_site_name: str,
@@ -3184,8 +3190,7 @@ def _process_backup_tar_and_setup_env(
                     )
                 tarinfo.linkname = new_linkname
 
-        tar.extract(tarinfo, path=site_home)
-
+        tar.extract(tarinfo, path=site_home, tar_filter="fully_trusted")
     # give new user all files
     chown_tree(site_home, new_site.name)
 
@@ -3221,7 +3226,7 @@ def _process_backup_tar_and_setup_env(
 
 def _restore_backup_from_tar(
     *,
-    tar: tarfile.TarFile,
+    tar: SafeIndexedTarFile | SafeStreamedTarFile,
     options: CommandOptions,
     global_opts: GlobalOptions,
     version_info: VersionInfo,
@@ -3295,25 +3300,20 @@ def main_restore(
     source_descr = "stdin" if source == "-" else source
     new_site_name = args[0] if len(args) == 2 else None
 
-    name = None
-    fileobj = None
-
-    mode: Literal["r|*", "r:*"]
+    archive_settings = ArchiveSettings(
+        allow_symlinks=True, compression="*", size_limit_bytes=1024**3 * 3
+    )  # 3 GB
     if source == "-":
-        fileobj = sys.stdin.buffer
-        mode = "r|*"
+        tar_reader = CheckmkTarArchive.from_buffer(
+            sys.stdin.buffer, streaming=False, **archive_settings
+        )
     elif (source_path := Path(source)).exists():
-        name = source_path
-        mode = "r:*"
+        tar_reader = CheckmkTarArchive.from_path(source_path, streaming=False, **archive_settings)
     else:
         sys.exit("The backup archive does not exist.")
 
     try:
-        with tarfile.open(
-            name=name,
-            fileobj=fileobj,
-            mode=mode,
-        ) as tar:
+        with tar_reader as tar:
             _restore_backup_from_tar(
                 tar=tar,
                 options=options,

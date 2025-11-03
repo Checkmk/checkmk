@@ -18,6 +18,7 @@ from pydantic import BaseModel
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult
+from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -897,12 +898,11 @@ def _join_sub_tars(tarfile_paths: Sequence[str]) -> str:
     tarfile_path = _create_file_path()
     with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
         for filepath in tarfile_paths:
-            with tarfile.open(name=filepath, mode="r:gz") as sub_tar:
-                sub_tar_members = [m for m in sub_tar.getmembers() if m.name != ""]
-                dest_members = [m.name for m in dest.getmembers() if m.name != ""]
-                for member in sub_tar_members:
+            with CheckmkTarArchive.from_path(Path(filepath)) as sub_tar:
+                dest_members = [m.name for m in dest.getmembers()]
+                for member in sub_tar:
                     if member.name not in dest_members:
-                        dest.addfile(member, sub_tar.extractfile(member))
+                        dest.addfile(member, sub_tar.extractmember(member))
     return tarfile_path
 
 

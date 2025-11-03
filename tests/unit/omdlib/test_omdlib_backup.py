@@ -12,6 +12,8 @@ import pytest
 import omdlib
 import omdlib.backup
 
+from cmk.ccc.archive import CheckmkTarArchive
+
 
 def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.3.3i7.cee")
@@ -30,9 +32,11 @@ def test_backup_site_to_tarfile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         )
 
     with tar_path.open("rb") as backup_tar:
-        with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
-            backup_site_name, version = omdlib.backup.get_site_and_version_from_backup(tar)
-            names = [tarinfo.name for tarinfo in tar]
+        with CheckmkTarArchive.from_buffer(
+            backup_tar, streaming=False, compression="*", allow_symlinks=True
+        ) as safe_tar:
+            backup_site_name, version = omdlib.backup.get_site_and_version_from_backup(safe_tar)
+            names = [tarinfo.name for tarinfo in safe_tar]
     assert backup_site_name == site_name
     assert version == "1.3.3i7.cee"
     assert f"{site_name}/test123" in names
@@ -44,6 +48,7 @@ def test_backup_site_to_tarfile_broken_link(
     monkeypatch.setattr(omdlib, "__version__", "1.3.3i7.cee")
     site_name = "site"
     site_home = tmp_path / site_name
+
     site_home.mkdir(parents=True, exist_ok=True)
     (site_home / "version").symlink_to("../versions/%s" % omdlib.__version__)
     Path(site_home, "link").symlink_to("agag")
@@ -55,10 +60,12 @@ def test_backup_site_to_tarfile_broken_link(
         )
 
     with tar_path.open("rb") as backup_tar:
-        with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:
-            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
+        with CheckmkTarArchive.from_buffer(
+            backup_tar, streaming=False, compression="*", allow_symlinks=True
+        ) as safe_tar:
+            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(safe_tar)
 
-            link = tar.getmember(f"{site_name}/link")
+            link = safe_tar.getmember(f"{site_name}/link")
         assert link.linkname == "agag"
 
 
@@ -94,5 +101,7 @@ def test_backup_site_to_tarfile_vanishing_files(
     assert not test_file.exists()  # check that the monkeypatch worked
 
     with tar_path.open("rb") as backup_tar_r:
-        with tarfile.open(fileobj=backup_tar_r, mode="r:*") as tar:
-            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
+        with CheckmkTarArchive.from_buffer(
+            backup_tar_r, streaming=False, compression="*", allow_symlinks=True
+        ) as safe_tar:
+            _sitename, _version = omdlib.backup.get_site_and_version_from_backup(safe_tar)

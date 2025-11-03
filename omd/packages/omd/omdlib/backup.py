@@ -24,6 +24,8 @@ from omdlib.global_options import GlobalOptions
 from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
 
+from cmk.ccc.archive import BaseSafeTarFile
+
 
 def _try_backup_site_to_tarfile(
     tar: tarfile.TarFile,
@@ -352,11 +354,12 @@ def _tar_add(
         )
 
 
-def get_site_and_version_from_backup(tar: tarfile.TarFile) -> tuple[str, str]:
+def get_site_and_version_from_backup(tar: BaseSafeTarFile) -> tuple[str, str]:
     """Get the first file of the tar archive. Expecting <site>/version symlink
     for validation reasons."""
-    site_tarinfo = tar.next()
-    if site_tarinfo is None:
+    try:
+        site_tarinfo = next(tar)
+    except StopIteration:
         raise Exception("Failed to detect version of backed up site.")
 
     try:

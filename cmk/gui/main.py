@@ -7,7 +7,7 @@ from cmk.ccc.site import omd_site
 from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
@@ -24,14 +24,16 @@ def register(page_registry: PageRegistry) -> None:
 
 def page_index(ctx: PageContext) -> None:
     # Redirect to mobile GUI if we are a mobile device and the index is requested
-    if is_mobile(request, response):
-        raise HTTPRedirect(makeuri(request, [], filename="mobile.py"))
+    if is_mobile(ctx.request, response):
+        raise HTTPRedirect(makeuri(ctx.request, [], filename="mobile.py"))
 
     SidebarRenderer().show(
         config=ctx.config,
         user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
         title=get_page_heading(ctx.config),
-        content=HTMLWriter.render_iframe("", src=_get_start_url(ctx.config), name="main"),
+        content=HTMLWriter.render_iframe(
+            "", src=_get_start_url(ctx.request, ctx.config), name="main"
+        ),
         sidebar_config=ctx.config.sidebar,
         screenshot_mode=ctx.config.screenshotmode,
         sidebar_notify_interval=ctx.config.sidebar_notify_interval,
@@ -41,7 +43,7 @@ def page_index(ctx: PageContext) -> None:
     )
 
 
-def _get_start_url(config: Config) -> str:
+def _get_start_url(request: Request, config: Config) -> str:
     default_start_url = user.start_url or config.start_url
     if not is_allowed_url(default_start_url):
         default_start_url = "dashboard.py"

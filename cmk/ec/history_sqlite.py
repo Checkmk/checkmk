@@ -174,7 +174,7 @@ def _unix_temp_file_dir(logger: Logger) -> Path | None:
                 and stat.S_ISDIR(os.stat(path_candidate).st_mode)
                 and os.access(path_candidate, os.W_OK | os.X_OK)
             ):
-                logger.info(f"assuming {path_candidate} for SQLite's temporary directory")
+                logger.log(VERBOSE, f"assuming {path_candidate} for SQLite's temporary directory")
                 return Path(path_candidate)
         except OSError:
             pass

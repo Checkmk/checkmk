@@ -446,7 +446,7 @@ class Selector:
         return "\n".join(lines)
 
 
-class Section:
+class _Section:
     LOCK = Lock()
 
     def __init__(
@@ -501,7 +501,7 @@ class Section:
         )
 
     def __eq__(self, value):
-        if not isinstance(value, Section):
+        if not isinstance(value, _Section):
             return False
         return (
             self._title == value._title
@@ -511,7 +511,7 @@ class Section:
         )
 
 
-class AzureSection(Section):
+class AzureSection(_Section):
     def __init__(
         self,
         name: str,

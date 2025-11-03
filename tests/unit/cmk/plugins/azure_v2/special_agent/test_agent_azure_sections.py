@@ -10,10 +10,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
+    _Section,
     AzureLabelsSection,
     AzureSubscription,
     AzureTenantLabelsSection,
-    Section,
 )
 
 
@@ -29,7 +29,7 @@ def test_piggytarget_header(
     expected_piggytarget_header: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    section = Section("testsection", piggytarget, 1, ["myopts"])
+    section = _Section("testsection", piggytarget, 1, ["myopts"])
     section.add(["section data"])
     section.write()
     section_stdout = capsys.readouterr().out.split("\n")
@@ -48,7 +48,7 @@ def test_section_header(
     expected_section_header: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    section = Section(section_name, [""], 1, ["myopts"])
+    section = _Section(section_name, [""], 1, ["myopts"])
     section.add(["section data"])
     section.write()
     section_stdout = capsys.readouterr().out.split("\n")
@@ -80,7 +80,7 @@ def test_section(
     expected_section: Sequence[str],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    section = Section(section_name, [""], separator, ["myopts"])
+    section = _Section(section_name, [""], separator, ["myopts"])
     section.add(section_data)
     section.write()
     section_stdout = capsys.readouterr().out.split("\n")

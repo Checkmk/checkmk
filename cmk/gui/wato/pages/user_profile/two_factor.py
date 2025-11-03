@@ -49,7 +49,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
@@ -116,7 +116,7 @@ if _webauthn_json_mapping := getattr(fido2.features, "webauthn_json_mapping", No
     _webauthn_json_mapping.enabled = True
 
 
-def make_fido2_server() -> Fido2Server:
+def make_fido2_server(request: Request) -> Fido2Server:
     rp_id = request.host
     logger.debug("Using %r as relaying party ID", rp_id)
     # apparently the browsers allow localhost as a secure domain, but the
@@ -139,7 +139,7 @@ def _log_event_usermanagement(event: TwoFactorEventType) -> None:
     )
 
 
-def _log_event_auth(two_factor_method: str) -> None:
+def _log_event_auth(request: Request, two_factor_method: str) -> None:
     log_security_event(
         TwoFAFailureEvent(
             user_error="Failed two factor authentication",
@@ -198,11 +198,15 @@ def _sec_notification_event_from_2fa_event(
 
 
 def _handle_revoke_all_backup_codes(
-    user: LoggedInUser, credentials: TwoFactorCredentials, site_configs: SiteConfigurations
+    request: Request,
+    user: LoggedInUser,
+    credentials: TwoFactorCredentials,
+    site_configs: SiteConfigurations,
 ) -> None:
     credentials["backup_codes"] = []
     flash(_("All backup codes have been deleted"))
     _save_credentials_all_sites(
+        request,
         user,
         "user_two_factor_overview.py",
         credentials,
@@ -212,6 +216,7 @@ def _handle_revoke_all_backup_codes(
 
 
 def _save_credentials_all_sites(
+    request: Request,
     user: LoggedInUser,
     origtarget: str,
     credentials: TwoFactorCredentials,
@@ -258,7 +263,7 @@ class UserTwoFactorOverview(Page):
     def _page_title(self) -> str:
         return _("Two-factor authentication")
 
-    def _action(self, config: Config) -> None:
+    def _action(self, request: Request, config: Config) -> None:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
 
@@ -267,6 +272,7 @@ class UserTwoFactorOverview(Page):
                 del credentials["webauthn_credentials"][credential_id]
                 flash(_("Selected credential has been deleted"))
                 _save_credentials_all_sites(
+                    request,
                     user,
                     "user_two_factor_overview.py",
                     credentials,
@@ -277,6 +283,7 @@ class UserTwoFactorOverview(Page):
                 del credentials["totp_credentials"][credential_id]
                 flash(_("Selected credential has been deleted"))
                 _save_credentials_all_sites(
+                    request,
                     user,
                     "user_two_factor_overview.py",
                     credentials,
@@ -288,16 +295,17 @@ class UserTwoFactorOverview(Page):
             if not is_two_factor_login_enabled(user.id):
                 session.session_info.two_factor_completed = False
                 if credentials["backup_codes"]:
-                    _handle_revoke_all_backup_codes(user, credentials, config.sites)
+                    _handle_revoke_all_backup_codes(request, user, credentials, config.sites)
 
         if request.has_var("_delete_codes"):
-            _handle_revoke_all_backup_codes(user, credentials, config.sites)
+            _handle_revoke_all_backup_codes(request, user, credentials, config.sites)
 
         if request.has_var("_backup_codes"):
             codes = make_two_factor_backup_codes()
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
             flash(self.flash_new_backup_codes(codes))
             _save_credentials_all_sites(
+                request,
                 user,
                 "user_two_factor_overview.py",
                 credentials,
@@ -332,7 +340,7 @@ class UserTwoFactorOverview(Page):
         )
         return HTML.empty().join([header_msg, message1, codesdiv, message2, copy_button])
 
-    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def _page_menu(self, request: Request, breadcrumb: Breadcrumb) -> PageMenu:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
         registered_credentials = list(credentials["webauthn_credentials"].keys()) + list(
@@ -422,6 +430,7 @@ class UserTwoFactorOverview(Page):
 
     def _render_credentials_table_rows(
         self,
+        request: Request,
         credentials: dict[str, TotpCredential] | dict[str, WebAuthnCredential],
         what: Literal["totp", "webauthn"],
         table: Table,
@@ -431,7 +440,7 @@ class UserTwoFactorOverview(Page):
 
         table.groupheader(title + (f" ({len(credentials)})" if credentials else ""))
         if credentials:
-            self._show_registered_credentials(credentials, what, table)
+            self._show_registered_credentials(request, credentials, what, table)
         else:
             table.row()
             table.cell(
@@ -444,7 +453,7 @@ class UserTwoFactorOverview(Page):
             )
 
     def _render_backup_codes_table_rows(
-        self, backup_codes: list[PasswordHash], table: Table
+        self, request: Request, backup_codes: list[PasswordHash], table: Table
     ) -> None:
         table.groupheader(
             _("Backup codes") + (f" ({len(backup_codes)}/10)" if backup_codes else "")
@@ -497,7 +506,7 @@ class UserTwoFactorOverview(Page):
             + (invalidate_codes_button if backup_codes else ""),
         )
 
-    def _show_form(self, config: Config) -> None:
+    def _show_form(self, request: Request, config: Config) -> None:
         assert user.id is not None
 
         if is_distributed_setup_remote_site(config.sites):
@@ -521,18 +530,22 @@ class UserTwoFactorOverview(Page):
         html.open_div(class_="two_factor_overview")
 
         with table_element(sortable=False, omit_headers=not bool(totp_credentials)) as table:
-            self._render_credentials_table_rows(totp_credentials, "totp", table)
+            self._render_credentials_table_rows(request, totp_credentials, "totp", table)
             if totp_credentials and webauthn_credentials:  # render both in one table
-                self._render_credentials_table_rows(webauthn_credentials, "webauthn", table)
+                self._render_credentials_table_rows(
+                    request, webauthn_credentials, "webauthn", table
+                )
 
         if not (totp_credentials and webauthn_credentials):
             with table_element(
                 sortable=False, omit_headers=(not bool(webauthn_credentials))
             ) as table:
-                self._render_credentials_table_rows(webauthn_credentials, "webauthn", table)
+                self._render_credentials_table_rows(
+                    request, webauthn_credentials, "webauthn", table
+                )
 
         with table_element(sortable=False, omit_headers=True) as table:
-            self._render_backup_codes_table_rows(backup_codes, table)
+            self._render_backup_codes_table_rows(request, backup_codes, table)
 
         html.close_div()
         html.footer()
@@ -546,11 +559,11 @@ class UserTwoFactorOverview(Page):
         )
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
-        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
+        make_header(html, title, breadcrumb, self._page_menu(ctx.request, breadcrumb))
 
         if transactions.check_transaction():
             try:
-                self._action(ctx.config)
+                self._action(ctx.request, ctx.config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -559,11 +572,12 @@ class UserTwoFactorOverview(Page):
 
         html.show_user_errors()
 
-        self._show_form(ctx.config)
+        self._show_form(ctx.request, ctx.config)
 
     @classmethod
     def _show_registered_credentials(
         cls,
+        request: Request,
         two_factor_credentials: (dict[str, TotpCredential] | dict[str, WebAuthnCredential]),
         what: Literal["totp", "webauthn"],
         table: Table,
@@ -767,7 +781,7 @@ class RegisterTotpSecret(Page):
         )
         return menu
 
-    def _action(self, config: Config) -> None:
+    def _action(self, request: Request, config: Config) -> None:
         auth_code_vs = TextInput(allow_empty=False)
         auth_code = auth_code_vs.from_html_vars("auth_code")
         auth_code_vs.validate_value(auth_code, "auth_code")
@@ -802,6 +816,7 @@ class RegisterTotpSecret(Page):
             session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
             _save_credentials_all_sites(
+                request,
                 user,
                 origtarget,
                 credentials,
@@ -891,7 +906,7 @@ class RegisterTotpSecret(Page):
 
         if transactions.check_transaction():
             try:
-                self._action(ctx.config)
+                self._action(ctx.request, ctx.config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -928,7 +943,7 @@ class EditCredentialAlias(Page):
         )
         return menu
 
-    def _action(self, config: Config) -> None:
+    def _action(self, request: Request, config: Config) -> None:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id, lock=True)
 
@@ -950,6 +965,7 @@ class EditCredentialAlias(Page):
 
         flash(_("Successfully changed the credential."))
         _save_credentials_all_sites(
+            request,
             user,
             "user_two_factor_overview.py",
             credentials,
@@ -959,7 +975,7 @@ class EditCredentialAlias(Page):
 
         raise redirect("user_two_factor_overview.py")
 
-    def _show_form(self) -> None:
+    def _show_form(self, request: Request) -> None:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
 
@@ -1004,7 +1020,7 @@ class EditCredentialAlias(Page):
 
         if transactions.check_transaction():
             try:
-                self._action(ctx.config)
+                self._action(ctx.request, ctx.config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -1013,7 +1029,7 @@ class EditCredentialAlias(Page):
 
         html.show_user_errors()
 
-        self._show_form()
+        self._show_form(ctx.request)
 
     def _display_time(self, epoch_time: int) -> str:
         return time.strftime(
@@ -1087,7 +1103,7 @@ class UserWebAuthnRegisterBegin(JsonPage):
         ):
             user.need_permission("general.manage_2fa")
 
-        registration_data, state = make_fido2_server().register_begin(
+        registration_data, state = make_fido2_server(ctx.request).register_begin(
             PublicKeyCredentialUserEntity(
                 name=user.id,
                 id=user.id.encode("utf-8"),
@@ -1116,14 +1132,14 @@ class UserWebAuthnRegisterComplete(JsonPage):
         ):
             user.need_permission("general.manage_2fa")
 
-        raw_data = request.get_data()
+        raw_data = ctx.request.get_data()
         logger.debug("Raw request: %r", raw_data)
         data = AuthenticatorAttestationResponse.from_dict(json.loads(raw_data))
         logger.debug("Client data: %r", data.client_data)
         logger.debug("Attestation object: %r", data.attestation_object)
 
         try:
-            auth_data = make_fido2_server().register_complete(
+            auth_data = make_fido2_server(ctx.request).register_complete(
                 state=session.session_info.webauthn_action_state,
                 response={  # TODO: Passing a RegistrationResponse would be nicer here.
                     "client_data": data.client_data,
@@ -1170,7 +1186,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
 
 class UserLoginTwoFactor(Page):
     @classmethod
-    def _render_backup_link(cls, origtarget: str) -> None:
+    def _render_backup_link(cls, request: Request, origtarget: str) -> None:
         html.open_div(class_="button_text")
         html.a(
             _("Use backup code"),
@@ -1179,7 +1195,7 @@ class UserLoginTwoFactor(Page):
         html.close_div()
 
     @classmethod
-    def _render_totp_link(cls, origtarget: str) -> None:
+    def _render_totp_link(cls, request: Request, origtarget: str) -> None:
         html.open_div(class_="button_text")
         html.a(
             _("Use authenticator app"),
@@ -1188,7 +1204,7 @@ class UserLoginTwoFactor(Page):
         html.close_div()
 
     @classmethod
-    def _render_totp(cls, available_methods: set[str]) -> None:
+    def _render_totp(cls, request: Request, available_methods: set[str]) -> None:
         html.p(_("Enter the six-digit code from your authenticator app to log in."))
         with html.form_context(
             "totp_login",
@@ -1212,12 +1228,12 @@ class UserLoginTwoFactor(Page):
             html.close_div()
 
             if "backup_codes" in available_methods:
-                cls._render_backup_link(origtarget)
+                cls._render_backup_link(request, origtarget)
 
             html.hidden_fields()
 
     @classmethod
-    def _render_backup(cls, available_methods: set[str]) -> None:
+    def _render_backup(cls, request: Request, available_methods: set[str]) -> None:
         html.p(_("Use one of your backup codes to sign in."))
         with html.form_context(
             "backup_code_login",
@@ -1241,12 +1257,12 @@ class UserLoginTwoFactor(Page):
             html.close_div()
 
             if "totp_credentials" in available_methods:
-                cls._render_totp_link(origtarget)
+                cls._render_totp_link(request, origtarget)
 
             html.hidden_fields()
 
     @classmethod
-    def _render_webauthn(cls, available_methods: set[str]) -> None:
+    def _render_webauthn(cls, request: Request, available_methods: set[str]) -> None:
         html.p(_("Please follow your browser's instructions for authentication."))
         html.prevent_password_auto_completion()
         html.hidden_field(
@@ -1265,12 +1281,12 @@ class UserLoginTwoFactor(Page):
             )
             html.close_div()
         if "totp_credentials" in available_methods:
-            cls._render_totp_link(origtarget)
+            cls._render_totp_link(request, origtarget)
 
         html.hidden_fields()
 
     @classmethod
-    def _render_multiple_methods(cls, available_methods: set[str]) -> None:
+    def _render_multiple_methods(cls, request: Request, available_methods: set[str]) -> None:
         html.p(
             _(
                 "You have multiple methods enabled. Please select the security method you want "
@@ -1298,13 +1314,14 @@ class UserLoginTwoFactor(Page):
             )
             html.close_div()
         if "backup_codes" in available_methods:
-            cls._render_backup_link(origtarget)
+            cls._render_backup_link(request, origtarget)
 
         html.hidden_fields()
 
     @classmethod
     def _check_totp_and_backup(
         cls,
+        request: Request,
         available_methods: set[str],
         credentials: TwoFactorCredentials,
         site_configs: SiteConfigurations,
@@ -1324,7 +1341,7 @@ class UserLoginTwoFactor(Page):
                     ):
                         _handle_success_auth(user.id)
                         raise redirect(request.get_url_input("_origtarget", "index.py"))
-                _log_event_auth("Authenticator application (TOTP)")
+                _log_event_auth(request, "Authenticator application (TOTP)")
                 _handle_failed_auth(
                     user.id,
                     user.attributes,
@@ -1349,7 +1366,7 @@ class UserLoginTwoFactor(Page):
                             )
                         )
                     raise redirect(request.get_url_input("_origtarget", "index.py"))
-                _log_event_auth("Backup code")
+                _log_event_auth(request, "Backup code")
                 _handle_failed_auth(
                     user.id,
                     user.attributes,
@@ -1367,7 +1384,7 @@ class UserLoginTwoFactor(Page):
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
         make_header(html, _("Two-factor authentication"), Breadcrumb())
-        mode = request.get_url_input("_mode", "")
+        mode = ctx.request.get_url_input("_mode", "")
 
         html.open_div(id_="login")
 
@@ -1394,18 +1411,19 @@ class UserLoginTwoFactor(Page):
             and "totp_credentials" in available_methods
             and not mode
         ):
-            self._render_multiple_methods(available_methods)
+            self._render_multiple_methods(ctx.request, available_methods)
         # TOTP
         elif "totp_credentials" in available_methods and (mode == "totp" or not mode):
-            self._render_totp(available_methods)
+            self._render_totp(ctx.request, available_methods)
         # WebAuthn
         elif "webauthn_credentials" in available_methods and (mode == "webauthn" or not mode):
-            self._render_webauthn(available_methods)
+            self._render_webauthn(ctx.request, available_methods)
         # Backup
         elif "backup_codes" in available_methods and (mode == "backup" or not mode):
-            self._render_backup(available_methods)
+            self._render_backup(ctx.request, available_methods)
 
         self._check_totp_and_backup(
+            ctx.request,
             available_methods,
             credentials,
             ctx.config.sites,
@@ -1431,7 +1449,7 @@ class UserWebAuthnLoginBegin(JsonPage):
 
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
-        auth_data, state = make_fido2_server().authenticate_begin(
+        auth_data, state = make_fido2_server(ctx.request).authenticate_begin(
             [
                 AttestedCredentialData.unpack_from(v["credential_data"])[0]
                 for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
@@ -1452,12 +1470,12 @@ class UserWebAuthnLoginComplete(JsonPage):
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
 
-        data = AuthenticatorAssertionResponse.from_dict(json.loads(request.get_data()))
+        data = AuthenticatorAssertionResponse.from_dict(json.loads(ctx.request.get_data()))
         logger.debug("ClientData: %r", data.client_data)
         logger.debug("AuthenticatorData: %r", data.authenticator_data)
 
         try:
-            make_fido2_server().authenticate_complete(
+            make_fido2_server(ctx.request).authenticate_complete(
                 state=session.session_info.webauthn_action_state,
                 credentials=[
                     AttestedCredentialData.unpack_from(v["credential_data"])[0]
@@ -1471,7 +1489,7 @@ class UserWebAuthnLoginComplete(JsonPage):
                 },
             )
         except BaseException:
-            _log_event_auth("Webauthn")
+            _log_event_auth(ctx.request, "Webauthn")
             _handle_failed_auth(
                 user.id,
                 user.attributes,

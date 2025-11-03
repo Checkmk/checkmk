@@ -9,7 +9,6 @@ from collections.abc import Callable
 from typing import override
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
@@ -190,6 +189,7 @@ class ModeAjaxCycleThemes(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         themes = [theme for theme, _title in theme_choices()]
+        # TODO: avoid global theme if possible
         current_theme = theme.get()
         try:
             theme_index = themes.index(current_theme)
@@ -225,12 +225,12 @@ class ModeAjaxSetStartURL(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         try:
             check_csrf_token()
-            if request.var("name"):
-                name = request.get_str_input_mandatory("name")
+            if ctx.request.var("name"):
+                name = ctx.request.get_str_input_mandatory("name")
                 if name == "welcome.py":
                     set_user_attribute("start_url", repr(name))
                 else:
-                    url = makeuri_contextless(request, [("name", name)], "dashboard.py")
+                    url = makeuri_contextless(ctx.request, [("name", name)], "dashboard.py")
                     validate_start_url(url, "")
                     set_user_attribute("start_url", repr(url))
             else:

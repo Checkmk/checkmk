@@ -9,7 +9,7 @@ from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -25,7 +25,7 @@ def register(page_registry: PageRegistry) -> None:
 
 
 class UserProfileReplicate(Page):
-    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def _page_menu(self, request: Request, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Profile"), breadcrumb, form_name="profile", button_name="_save"
         )
@@ -45,10 +45,10 @@ class UserProfileReplicate(Page):
 
         title = _("Replicate user profile")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), title)
-        make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
+        make_header(html, title, breadcrumb, self._page_menu(ctx.request, breadcrumb))
 
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously
         user_profile_async_replication_page(
-            back_url=request.get_url_input("back", "user_profile.py")
+            back_url=ctx.request.get_url_input("back", "user_profile.py")
         )

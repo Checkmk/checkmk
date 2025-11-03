@@ -35,12 +35,10 @@ class ModeAjaxProfileReplication(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
-        ajax_request = ctx.request.get_request()
 
-        site_id_val = ajax_request.get("site")
-        if not site_id_val:
+        if not (site_id_val := ctx.request.var("site")):
             raise MKUserError(None, "The site_id is missing")
-        site_id = site_id_val
+        site_id = SiteId(site_id_val)
         if site_id not in ctx.config.sites:
             raise MKUserError(None, _("The requested site does not exist"))
 

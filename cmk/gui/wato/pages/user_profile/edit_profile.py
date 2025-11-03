@@ -16,7 +16,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, response
 from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -51,7 +51,7 @@ class UserProfile(Page):
     def _page_title(self) -> str:
         return _("Edit profile")
 
-    def _action(self, config: Config) -> None:
+    def _action(self, request: Request, config: Config) -> None:
         assert user.id is not None
 
         users = userdb.load_users(lock=True)
@@ -126,7 +126,7 @@ class UserProfile(Page):
 
         if transactions.check_transaction():
             try:
-                self._action(ctx.config)
+                self._action(ctx.request, ctx.config)
             except MKUserError as e:
                 user_errors.add(e)
 

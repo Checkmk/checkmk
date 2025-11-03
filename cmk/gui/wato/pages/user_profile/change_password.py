@@ -15,7 +15,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -63,7 +63,7 @@ class UserChangePasswordPage(Page):
     def _repeat_pw_field(cls) -> str:
         return "_password2"
 
-    def _action(self, config: Config) -> None:
+    def _action(self, request: Request, config: Config) -> None:
         assert user.id is not None
 
         users = userdb.load_users(lock=True)
@@ -183,7 +183,7 @@ class UserChangePasswordPage(Page):
 
         if transactions.check_transaction():
             try:
-                self._action(ctx.config)
+                self._action(ctx.request, ctx.config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -192,9 +192,11 @@ class UserChangePasswordPage(Page):
 
         html.show_user_errors()
 
-        self._show_form(get_user_attributes(ctx.config.wato_user_attrs))
+        self._show_form(ctx.request, get_user_attributes(ctx.config.wato_user_attrs))
 
-    def _show_form(self, user_attributes: Sequence[tuple[str, UserAttribute]]) -> None:
+    def _show_form(
+        self, request: Request, user_attributes: Sequence[tuple[str, UserAttribute]]
+    ) -> None:
         assert user.id is not None
 
         users = userdb.load_users()

@@ -344,7 +344,8 @@ class CMKFetcher:
     def __init__(
         self,
         config_cache: ConfigCache,
-        make_trigger: Callable[[HostName], FetcherTrigger],
+        get_relay_id: Callable[[HostName], str | None],
+        make_trigger: Callable[[str | None], FetcherTrigger],
         factory: FetcherFactory,
         plugins: AgentBasedPlugins,
         *,
@@ -365,6 +366,7 @@ class CMKFetcher:
         max_cachefile_age: MaxAge | None = None,
     ) -> None:
         self.config_cache: Final = config_cache
+        self.get_relay_id: Final = get_relay_id
         self.make_trigger: Final = make_trigger
         self.default_address_family: Final = default_address_family
         self.factory: Final = factory
@@ -432,8 +434,9 @@ class CMKFetcher:
             site_crt=Path(cmk.utils.paths.site_cert_file),
         )
         passwords = password_store.load(self.password_store_file)
+        relay_id = self.get_relay_id(host_name)
         return _fetch_all(
-            self.make_trigger(host_name),
+            self.make_trigger(relay_id),
             itertools.chain.from_iterable(
                 make_sources(
                     self.plugins,
@@ -473,6 +476,7 @@ class CMKFetcher:
                             # NOTE: we can't ignore these, they're an API promise.
                             cmk.utils.paths.local_special_agents_dir,
                             cmk.utils.paths.special_agents_dir,
+                            strip_prefix=None if relay_id is None else cmk.utils.paths.omd_root,
                         ),
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(

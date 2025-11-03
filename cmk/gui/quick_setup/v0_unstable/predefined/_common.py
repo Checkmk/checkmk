@@ -8,7 +8,7 @@
 import re
 import socket
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, cast
+from typing import cast
 
 from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgentInput
 from cmk.ccc.hostaddress import HostName
@@ -70,6 +70,7 @@ def collect_passwords_from_form_data(
 def create_diag_special_agent_input(
     rulespec_name: str,
     host_name: str | None,
+    relay_id: str | None,
     passwords: Mapping[str, str],
     params: Mapping[str, object],
 ) -> DiagSpecialAgentInput:
@@ -77,6 +78,7 @@ def create_diag_special_agent_input(
         host_config=DiagSpecialAgentHostConfig(
             host_name=HostName(host_name or ""),
             host_alias=host_name or "",
+            relay_id=relay_id,
             ip_address=None,
             ip_stack_config=IPStackConfig.NO_IP,
             host_attrs={},
@@ -91,7 +93,7 @@ def create_diag_special_agent_input(
     )
 
 
-def find_id_in_form_data(form_data: Any, target_key: str) -> None | str:
+def find_id_in_form_data(form_data: object, target_key: str) -> None | str:
     if isinstance(form_data, dict):
         for key, value in form_data.items():
             if key == target_key:

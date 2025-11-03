@@ -10,7 +10,7 @@ from livestatus import SiteConfiguration
 from cmk.automations.results import SpecialAgentDiscoveryPreviewResult
 from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.discovery import CheckPreviewEntry
-from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName, QSSiteSelection
+from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName, QSRelayId, QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _match_service_interest,
     collect_passwords_from_form_data,
@@ -42,6 +42,8 @@ def get_service_discovery_preview(
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     site_id = find_id_in_form_data(all_stages_form_data, QSSiteSelection)
+    # not sure is this is even supported yet, adding it for consistency
+    relay_id = find_id_in_form_data(all_stages_form_data, QSRelayId)
     host_name = find_id_in_form_data(all_stages_form_data, QSHostName)
     progress_logger.update_progress_step_status("parse_config", StepStatus.COMPLETED)
     progress_logger.log_new_progress_step(
@@ -50,7 +52,11 @@ def get_service_discovery_preview(
     service_discovery_result = special_agent_discovery_preview(
         make_automation_config(site_configs[SiteId(site_id) if site_id else omd_site()]),
         create_diag_special_agent_input(
-            rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
+            rulespec_name=rulespec_name,
+            host_name=host_name,
+            relay_id=relay_id,
+            passwords=passwords,
+            params=params,
         ),
         debug=debug,
     )

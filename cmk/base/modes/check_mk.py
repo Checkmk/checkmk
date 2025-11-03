@@ -663,7 +663,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     )
 
     host_labels = label_manager.labels_of_host(hostname)
-    fetcher_trigger = config.make_fetcher_trigger(edition, host_labels)
+    relay_id = config.get_relay_id(host_labels)
+    fetcher_trigger = config.make_fetcher_trigger(edition, relay_id)
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
@@ -756,6 +757,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     # NOTE: we can't ignore these, they're an API promise.
                     cmk.utils.paths.local_special_agents_dir,
                     cmk.utils.paths.special_agents_dir,
+                    strip_prefix=None if relay_id is None else cmk.utils.paths.omd_root,
                 ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
@@ -2212,8 +2214,9 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
-        config_cache.fetcher_factory(
+        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
             service_name_config,
@@ -2232,7 +2235,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
                 ),
             ),
         ),
-        plugins,
+        plugins=plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2576,8 +2579,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
-        config_cache.fetcher_factory(
+        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
             service_name_config,
@@ -2602,7 +2606,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
                 ),
             ),
         ),
-        plugins,
+        plugins=plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2826,8 +2830,9 @@ def run_checking(
     logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
-        config_cache.fetcher_factory(
+        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        factory=config_cache.fetcher_factory(
             service_configurer,
             ip_address_of,
             service_name_config,
@@ -2852,7 +2857,7 @@ def run_checking(
                 ),
             ),
         ),
-        plugins,
+        plugins=plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -3122,8 +3127,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
-        config_cache.fetcher_factory(
+        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
             service_name_config,
@@ -3148,7 +3154,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                 ),
             ),
         ),
-        plugins,
+        plugins=plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -3432,8 +3438,9 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
-        config_cache.fetcher_factory(
+        get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        factory=config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
             service_name_config,
@@ -3452,7 +3459,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
                 ),
             ),
         ),
-        plugins,
+        plugins=plugins,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

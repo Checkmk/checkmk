@@ -35,9 +35,11 @@ from cmk.plugins.datadog.special_agent.agent_datadog import (
 def test_parse_arguments() -> None:
     parse_arguments(
         [
-            "testhost",
+            "--apikey-id",
             "12345",
+            "--appkey-id",
             "powerg",
+            "testhost",
             "api.datadoghq.eu",
             "--monitor_tags",
             "t1",

@@ -30,6 +30,7 @@ from dateutil import parser as dateutil_parser
 
 import cmk.ec.export as ec
 from cmk.ccc.store import load_text_from_file, save_text_to_file
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
@@ -38,6 +39,10 @@ from cmk.utils.paths import omd_root, tmp_dir
 Tags = Sequence[str]
 
 LOGGER = logging.getLogger("agent_datadog")
+
+
+APIKEY_OPTION = "apikey"
+APPKEY_OPTION = "appkey"
 
 
 @dataclass(frozen=True)
@@ -81,17 +86,11 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
             "the timestamp of the last event)"
         ),
     )
-    parser.add_argument(
-        "api_key",
-        type=str,
-        metavar="KEY",
-        help="Datatog API key",
+    parser_add_secret_option(
+        parser, long=f"--{APIKEY_OPTION}", help="Datadog API key", required=True
     )
-    parser.add_argument(
-        "app_key",
-        type=str,
-        metavar="KEY",
-        help="Datadog application key",
+    parser_add_secret_option(
+        parser, long=f"--{APPKEY_OPTION}", help="Datadog application key", required=True
     )
     parser.add_argument(
         "api_host",
@@ -765,8 +764,8 @@ def _logs_section(datadog_api: DatadogAPI, args: argparse.Namespace) -> None:
 def agent_datadog_main(args: argparse.Namespace) -> int:
     datadog_api = ImplDatadogAPI(
         args.api_host,
-        args.api_key,
-        args.app_key,
+        resolve_secret_option(args, APIKEY_OPTION).reveal(),
+        resolve_secret_option(args, APPKEY_OPTION).reveal(),
         proxy=args.proxy,
     )
     for section in args.sections:
@@ -779,4 +778,4 @@ def agent_datadog_main(args: argparse.Namespace) -> int:
 
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_datadog_main)
+    return special_agent_main(parse_arguments, agent_datadog_main, apply_password_store_hack=False)

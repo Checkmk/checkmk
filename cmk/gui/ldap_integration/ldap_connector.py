@@ -293,18 +293,18 @@ class SyncUsersResult:
 
 
 def _load_copy_of_existing_user(
-    user_id: UserId,
+    ldap_user_name: LdapUsername,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
 ) -> tuple[UserId, UserSpec] | None:
     """Will return the matching user_id and a copy of the user if it exists for the connector,
     else it will return None."""
 
-    if users.get(user_id, {}).get("connector") == ldap_user_connector.id:
-        return user_id, copy.deepcopy(users[user_id])
+    if users.get(UserId(ldap_user_name), {}).get("connector") == ldap_user_connector.id:
+        return UserId(ldap_user_name), copy.deepcopy(users[UserId(ldap_user_name)])
 
     if ldap_user_connector.has_suffix():
-        userid_with_suffix = ldap_user_connector.add_suffix(user_id)
+        userid_with_suffix = ldap_user_connector.add_suffix(ldap_user_name)
         if (
             userid_with_suffix in users
             and users[userid_with_suffix].get("connector") == ldap_user_connector.id
@@ -340,7 +340,7 @@ def _create_checkmk_user_for_this_ldap_connection(
 
 
 def _create_new_user_spec(
-    ldap_user_id: UserId,
+    ldap_user_name: LdapUsername,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
     default_user_profile: UserSpec,
@@ -350,16 +350,16 @@ def _create_new_user_spec(
     new user spec using the user_id + the suffix. If this is also already taken, None
     will be returned."""
 
-    if ldap_user_id not in users:
-        return ldap_user_id, _create_checkmk_user_for_this_ldap_connection(
-            new_user_id=ldap_user_id,
+    if UserId(ldap_user_name) not in users:
+        return UserId(ldap_user_name), _create_checkmk_user_for_this_ldap_connection(
+            new_user_id=UserId(ldap_user_name),
             existing_users=users,
             ldap_connector_id=ldap_user_connector.id,
             ldap_connector_customer_id=ldap_user_connector.customer_id,
             default_user_profile=default_user_profile,
         )
 
-    user_id_with_suffix = ldap_user_connector.add_suffix(ldap_user_id)
+    user_id_with_suffix = ldap_user_connector.add_suffix(ldap_user_name)
     if ldap_user_connector.has_suffix() and user_id_with_suffix not in users:
         return (
             user_id_with_suffix,
@@ -418,7 +418,7 @@ def _identify_user_modifications(
 def _sync_existing_user(
     checkmk_user_id: UserId,
     only_username: UserId | None,
-    ldap_user: LDAPUserSpec,
+    ldap_user_spec: LDAPUserSpec,
     checkmk_user_copy: UserSpec,
     users: Users,
     sync_user_result: SyncUsersResult,
@@ -429,7 +429,10 @@ def _sync_existing_user(
         return
 
     ldap_user_connector.execute_active_sync_plugins(
-        checkmk_user_id, ldap_user, checkmk_user_copy, user_attributes
+        checkmk_user_id,
+        ldap_user_spec,
+        checkmk_user_copy,
+        user_attributes,
     )
 
     if checkmk_user_copy == users[checkmk_user_id]:
@@ -461,7 +464,7 @@ def _sync_existing_user(
 def _sync_new_user(
     checkmk_user_id: UserId,
     only_username: UserId | None,
-    ldap_user: LDAPUserSpec,
+    ldap_user_spec: LDAPUserSpec,
     new_checkmk_user: UserSpec,
     users: Users,
     sync_user_result: SyncUsersResult,
@@ -481,7 +484,10 @@ def _sync_new_user(
         return
 
     ldap_user_connector.execute_active_sync_plugins(
-        checkmk_user_id, ldap_user, new_checkmk_user, user_attributes
+        checkmk_user_id,
+        ldap_user_spec,
+        new_checkmk_user,
+        user_attributes,
     )
 
     users[checkmk_user_id] = new_checkmk_user
@@ -501,22 +507,21 @@ def _sync_new_user(
 
 
 def _sync_ldap_user(
-    ldap_user_id: UserId,
+    fetched_ldap_user: FetchedLDAPUser,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
     ldap_user_connector_logger: Logger,
     only_username: UserId | None,
-    ldap_user: LDAPUserSpec,
     sync_users_result: SyncUsersResult,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     default_user_profile: UserSpec,
 ) -> None:
-    """Will attempt to find a user spec for the given ldap_user_id. If it doesn't exist, it
+    """Will attempt to find a user spec for the given ldap_user_name. If it doesn't exist, it
     will attempt to create a new one. If it can't find or create a user spec, we just log a
     'skip sync' message"""
     if (
         userid_and_user := _load_copy_of_existing_user(
-            user_id=ldap_user_id,
+            ldap_user_name=fetched_ldap_user.ldap_user_name,
             users=users,
             ldap_user_connector=ldap_user_connector,
         )
@@ -525,7 +530,7 @@ def _sync_ldap_user(
         _sync_existing_user(
             checkmk_user_id=existing_user_id,
             only_username=only_username,
-            ldap_user=ldap_user,
+            ldap_user_spec=fetched_ldap_user.ldap_user_spec,
             checkmk_user_copy=copied_user_spec,
             users=users,
             sync_user_result=sync_users_result,
@@ -536,7 +541,7 @@ def _sync_ldap_user(
 
     if (
         userid_and_new_user := _create_new_user_spec(
-            ldap_user_id=ldap_user_id,
+            ldap_user_name=fetched_ldap_user.ldap_user_name,
             users=users,
             ldap_user_connector=ldap_user_connector,
             default_user_profile=default_user_profile,
@@ -546,7 +551,7 @@ def _sync_ldap_user(
         _sync_new_user(
             checkmk_user_id=new_user_id,
             only_username=only_username,
-            ldap_user=ldap_user,
+            ldap_user_spec=fetched_ldap_user.ldap_user_spec,
             new_checkmk_user=new_user_spec,
             users=users,
             sync_user_result=sync_users_result,
@@ -557,7 +562,7 @@ def _sync_ldap_user(
         return
 
     cant_sync_msg = (
-        f'  SKIP SYNC "{ldap_user_id}" name conflict with user from '
+        f'  SKIP SYNC "{fetched_ldap_user.ldap_user_name}" name conflict with user from '
         f'"{ldap_user_connector.id}" connector.'
     )
     if not ldap_user_connector.has_suffix():
@@ -1221,8 +1226,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return fetched_ldap_user
 
     def get_users(
-        self, user_attributes: Sequence[tuple[str, UserAttribute]], add_filter: str = ""
-    ) -> dict[UserId, LDAPUserSpec]:
+        self,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        add_filter: str = "",
+    ) -> dict[LdapUsername, FetchedLDAPUser]:
         user_id_attr = self._user_id_attr()
 
         columns = [
@@ -1256,7 +1263,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         if add_filter:
             filt = f"(&{filt}{add_filter})"
 
-        result = {}
+        fetched_ldap_users = {}
         for dn, ldap_user in self._ldap_search(
             self._get_user_dn(), filt, columns, self._config["user_scope"]
         ):
@@ -1273,10 +1280,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 continue
 
             if user_id:
-                result[user_id] = ldap_user
-                result[user_id]["dn"] = [dn]  # also add the DN
+                ldap_user["dn"] = [dn]
+                fetched_ldap_users[LdapUsername(user_id)] = FetchedLDAPUser(
+                    dn=dn,
+                    ldap_user_name=LdapUsername(user_id),
+                    ldap_user_spec=ldap_user,
+                )
 
-        return result
+        return fetched_ldap_users
 
     def get_groups(self, specific_dn: DistinguishedName | None = None) -> SearchResult:
         filt = self._ldap_filter("groups")
@@ -1722,7 +1733,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
         self,
         users: Users,
-        ldap_users: dict[UserId, LDAPUserSpec],
+        ldap_users: dict[LdapUsername, FetchedLDAPUser],
     ) -> list[str]:
         changes = []
         for user_id, user in list(users.items()):
@@ -1784,24 +1795,23 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         start_time = time.time()
 
-        ldap_users: dict[UserId, LDAPUserSpec] = self.get_users(user_attributes)
+        fetched_ldap_users = self.get_users(user_attributes)
         users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
         sync_users_result = SyncUsersResult(
             changes=self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
                 users=users,
-                ldap_users=ldap_users,
+                ldap_users=fetched_ldap_users,
             ),
         )
 
-        for ldap_user_id, ldap_user in ldap_users.items():
+        for fetched_ldap_user in fetched_ldap_users.values():
             _sync_ldap_user(
-                ldap_user_id=ldap_user_id,
+                fetched_ldap_user=fetched_ldap_user,
                 users=users,
                 ldap_user_connector=self,
                 ldap_user_connector_logger=self._logger,
                 only_username=only_username,
-                ldap_user=ldap_user,
                 sync_users_result=sync_users_result,
                 user_attributes=user_attributes,
                 default_user_profile=default_user_profile,

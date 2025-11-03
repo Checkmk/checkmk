@@ -20,7 +20,7 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
-from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
+from cmk.gui.ldap_integration.ldap_connector import FetchedLDAPUser, LDAPUserConnector
 from cmk.gui.type_defs import Users
 from cmk.gui.user_connection_config_types import (
     Fixed,
@@ -148,7 +148,14 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
         ("user2", {"uid": [b"USER2_ID#"]}),  # user with invalid user ID
     ]
     # note that the key is lower-cased due to 'lower_user_ids'
-    expected_result = {"user1_id": {"dn": ["user1"], "uid": ["USER1_ID"]}}
+    expected_result = {
+        "user1_id": FetchedLDAPUser(
+            dn="user1",
+            ldap_user_name="user1_id",
+            ldap_user_spec={"dn": ["user1"], "uid": ["USER1_ID"]},
+        )
+    }
+
     add_filter = "my(*)filter"
     expected_filter = f"(&(objectclass=person){add_filter})"
 

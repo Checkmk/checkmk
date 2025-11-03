@@ -397,6 +397,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "entersekt_soaperrors",
         "entersekt_certexpiry",
         "epson_beamer_lamp",
+        "esx_vsphere_datastores",
         "etherbox2_temp",
         "f5_bigip_apm",
         "f5_bigip_chassis_temp",

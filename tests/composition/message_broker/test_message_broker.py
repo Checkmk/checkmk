@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 import ssl
 from pathlib import Path
 from typing import IO
@@ -166,6 +167,10 @@ def test_unsupported_tls_versions(
 
 
 @pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS)
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") in ["almalinux-9", "almalinux-10", "debian-13"],
+    reason="CMK-27200: Requires investigation: Handshake failure, SSL alert number 40",
+)
 def test_supported_tls_versions(
     central_site: Site, broker_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:

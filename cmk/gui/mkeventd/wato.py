@@ -11,6 +11,7 @@ import re
 import socket
 import sys
 import time
+import warnings
 import zipfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
@@ -41,6 +42,7 @@ import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.translations
 from cmk.utils.hostaddress import HostName
+from cmk.utils.regex import RegexFutureWarning
 from cmk.utils.rulesets.definition import RuleGroup
 
 # It's OK to import centralized config load logic
@@ -2872,9 +2874,14 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                             _("A rule with this ID already exists in rule pack <b>%s</b>.")
                             % pack["title"],
                         )
-
         try:
+            with warnings.catch_warnings(action="error", category=FutureWarning):
+                num_groups = re.compile(rule["match"]).groups
+
+        except FutureWarning as e:
+            warnings.warn(f"{e} in {rule['match']}", RegexFutureWarning)
             num_groups = re.compile(rule["match"]).groups
+
         except Exception:
             raise MKUserError("rule_p_match", _("Invalid regular expression"))
         if num_groups > 9:

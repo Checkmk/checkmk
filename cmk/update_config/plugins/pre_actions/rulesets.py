@@ -13,12 +13,12 @@ from cmk.ccc import version
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
+from cmk.utils.regex import RegexFutureWarning
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpec
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.valuespec.definitions import RegexFutureWarning
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars

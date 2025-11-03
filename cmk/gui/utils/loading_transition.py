@@ -9,9 +9,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.shared_typing.loading_transition import LoadingTransition as _LoadingTransition
-
-LoadingTransition = _LoadingTransition
+from cmk.shared_typing.loading_transition import LoadingTransition as LoadingTransition
 
 
 @contextmanager

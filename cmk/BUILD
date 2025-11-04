@@ -224,7 +224,7 @@ CMK_PACKAGES = [
     "//packages/cmk-werks",
 ] + select({
     "@//:gpl_repo": [],
-    "@//:gpl+enterprise_repo": [
+    "@//:gpl+nonfree_repo": [
         "//non-free/packages/cmk-core-helpers:check-helper-protocol",
         "//non-free/packages/cmk-core-helpers:fetcher-helper",
         "//non-free/packages/cmk-core-helpers:inline-snmp",
@@ -303,7 +303,7 @@ py_library(
         "//agents/plugins:mk_jolokia",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": CMC_PROTO_DEPS,
+        "@//:gpl+nonfree_repo": CMC_PROTO_DEPS,
     }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
 

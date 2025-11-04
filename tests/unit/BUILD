@@ -94,7 +94,7 @@ py_test(
         exclude = ["**/*.py"],
     ) + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": glob(
+        "@//:gpl+nonfree_repo": glob(
             [
                 "**/*.xml",
                 "**/*.pem",
@@ -124,7 +124,7 @@ py_test(
         "//tests/unit:conftest",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": [
+        "@//:gpl+nonfree_repo": [
             requirement("python-multipart"),
             "//non-free/packages/cmk-mknotifyd",
         ],

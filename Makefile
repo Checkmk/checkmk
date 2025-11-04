@@ -197,7 +197,7 @@ ifeq ($(EDITION),raw)
     # See discussion under https://github.com/bazelbuild/bazel/issues/11458
     PYTHON_REQUIREMENTS_TEST = //:py_requirements_test_gpl
 else
-    PYTHON_REQUIREMENTS_TEST = //:py_requirements_test_enterprise
+    PYTHON_REQUIREMENTS_TEST = //:py_requirements_test_nonfree
 endif
 
 check_python_requirements:

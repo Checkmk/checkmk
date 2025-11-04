@@ -91,7 +91,7 @@ py_library(
         "//packages/cmk-crypto",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": [
+        "@//:gpl+nonfree_repo": [
             "//non-free/packages/cmk-core-helpers:inline-snmp",
         ],
     }),

@@ -48,7 +48,7 @@ config_setting(
 
 config_setting(
     # We really mean the license here, editions are handled differently!
-    name = "gpl+enterprise_repo",
+    name = "gpl+nonfree_repo",
     flag_values = {":repo_license": "gpl+enterprise"},
     visibility = ["//:__subpackages__"],
 )
@@ -88,7 +88,7 @@ compile_requirements_in(
         "//packages:python_requirements",
         "//packages:dev_python_requirements",
     ] + select({
-        "@//:gpl+enterprise_repo": [
+        "@//:gpl+nonfree_repo": [
             "//non-free/packages:python_requirements",
             "//non-free/packages:dev_python_requirements",
         ],
@@ -136,7 +136,7 @@ compile_requirements_in(
         "//cmk:requirements.in",
         "//packages:python_requirements",
     ] + select({
-        "@//:gpl+enterprise_repo": ["//non-free/packages:python_requirements"],
+        "@//:gpl+nonfree_repo": ["//non-free/packages:python_requirements"],
         "@//:gpl_repo": [],
     }),
 )
@@ -161,7 +161,7 @@ multirun(
 )
 
 test_suite(
-    name = "py_requirements_test_enterprise",
+    name = "py_requirements_test_nonfree",
     tests = [
         ":raw_requirements_test",
         ":requirements_test",
@@ -198,7 +198,7 @@ write_file(
         "",
         "add_packages(repo_path)",
     ] + select({
-        "@//:gpl+enterprise_repo": [
+        "@//:gpl+nonfree_repo": [
             "add_packages(repo_path.joinpath('non-free'))",
             # needed for composition tests: they want to 'import cmk_update_agent' via the .venv
             "sys.path.insert(0, str(repo_path.joinpath('non-free/packages/cmk-update-agent')))",
@@ -211,7 +211,7 @@ create_venv(
     name = "create_venv",
     destination_folder = ".venv",
     requirements_txt = select({
-        "@//:gpl+enterprise_repo": ":requirements.txt",
+        "@//:gpl+nonfree_repo": ":requirements.txt",
         "@//:gpl_repo": ":raw-requirements.txt",
     }),
     site_packages_extra_files = [":sitecustomize.py"],
@@ -221,7 +221,7 @@ create_venv(
         "//packages/cmk-werks:wheel_entrypoint_only",
         "//packages/cmk-mkp-tool:wheel_entrypoint_only",
     ] + select({
-        "@//:gpl+enterprise_repo": [
+        "@//:gpl+nonfree_repo": [
             "//non-free/packages/cmc-protocols:wheel",
         ],
         "@//:gpl_repo": [],

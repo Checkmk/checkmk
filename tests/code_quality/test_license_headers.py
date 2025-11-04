@@ -82,7 +82,6 @@ enterprise_names = [
     "cce",
     "cse",
     "cmc",
-    "cee.py",
 ]
 
 

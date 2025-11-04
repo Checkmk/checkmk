@@ -15,7 +15,6 @@ def REPO_PATCH_RULES = [\
         "enterprise", \
         "pro", \
         "cee", \
-        "cee.py", \
         "managed", \
         "ultimatemt", \
         "cme", \
@@ -234,7 +233,6 @@ def delete_non_cre_files() {
         "cme",
         "cce",
         "cse",
-        "cee.py",
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ");
     // Do not remove files in .git, .venv, .mypy_cache directories

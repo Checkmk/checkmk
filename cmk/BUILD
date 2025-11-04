@@ -124,7 +124,6 @@ ULTIMATE_PY = glob(
 PRO_PY = glob(
     [
         "**/cee/**/*.py",
-        "**/cee.py",
     ],
     allow_empty = True,
 )

@@ -38,8 +38,7 @@ EDITION_EXCLUDE=
 ifeq ($(EDITION),raw)
 	EDITION_EXCLUDE += \
 	    --exclude "enterprise" \
-	    --exclude "cee" \
-	    --exclude "cee.py"
+	    --exclude "cee"
 endif
 ifneq ($(EDITION),managed)
 	EDITION_EXCLUDE += \

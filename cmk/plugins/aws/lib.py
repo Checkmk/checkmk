@@ -182,11 +182,14 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
 
 def is_expected_metric(row_id: str, expected_metric_name: str) -> bool:
     expected_metric_name_lower = expected_metric_name.lower()
-    return (
-        row_id.startswith(expected_metric_name_lower)
-        or row_id.endswith(expected_metric_name_lower)
-        or expected_metric_name == row_id.split("_", 2)[-1]
-    )
+    row_id_lower = row_id.lower()
+
+    if row_id_lower.endswith(expected_metric_name_lower):
+        # Differentiate between e.g. 'CPUUtilization' and 'EngineCPUUtilization'
+        if row_id_lower.replace(expected_metric_name_lower, "").endswith("_"):
+            return True
+
+    return row_id_lower.startswith(expected_metric_name_lower)
 
 
 def extract_metric_value(row_values: list, convert_sum_stats_to_rate: bool) -> Any | None:

@@ -338,6 +338,7 @@ public:
     }
 
     [[nodiscard]] std::wstring source() const override { return source_; }
+    [[nodiscard]] PSID sid() const override { return nullptr; }
 
     [[nodiscard]] Level eventLevel() const override { return event_level_; }
 

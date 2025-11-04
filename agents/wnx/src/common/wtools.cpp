@@ -3896,6 +3896,23 @@ std::optional<std::tm> GetTimeAsTm(
     return buf;
 }
 
+std::wstring FindUserName(const PSID sid) {
+    if (sid == nullptr) {
+        return {};
+    }
+    WCHAR name[256];
+    WCHAR domain[256];
+    DWORD cchName = 256;
+    DWORD cchDomain = 256;
+    SID_NAME_USE use;
+    if (LookupAccountSidW(nullptr, sid, name, &cchName, domain, &cchDomain,
+                          &use)) {
+        return name;
+    }
+
+    return {};
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

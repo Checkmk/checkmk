@@ -128,13 +128,16 @@ void RenderValues(EVT_HANDLE context, EVT_HANDLE fragment,
         return nullptr;
     }
 
-    std::vector fields{L"/Event/System/Provider/@Name",
-                       L"/Event/System/EventID",
-                       L"/Event/System/EventID/@Qualifiers",
-                       L"/Event/System/EventRecordID",
-                       L"/Event/System/Level",
-                       L"/Event/System/TimeCreated/@SystemTime",
-                       L"/Event/EventData/Data"};
+    std::vector fields{
+        L"/Event/System/Provider/@Name",
+        L"/Event/System/EventID",
+        L"/Event/System/EventID/@Qualifiers",
+        L"/Event/System/EventRecordID",
+        L"/Event/System/Level",
+        L"/Event/System/TimeCreated/@SystemTime",
+        L"/Event/EventData/Data",
+        L"/Event/System/Security/@UserID",  // User (SID)
+    };
 
     return g_evt.createRenderContext(static_cast<DWORD>(fields.size()),
                                      fields.data(), EvtRenderContextValues);
@@ -287,7 +290,9 @@ public:
         kEventQualifiers = 2,
         kRecordId = 3,
         kLevel = 4,
-        kTimeGenerated = 5
+        kTimeGenerated = 5,
+        kData = 6,
+        kUserSID = 7
 
     };
 
@@ -337,6 +342,10 @@ public:
 
     [[nodiscard]] std::wstring source() const override {
         return getValByType(kSource).StringVal;
+    }
+
+    [[nodiscard]] PSID sid() const override {
+        return getValByType(kUserSID).SidVal;
     }
 
     [[nodiscard]] Level eventLevel() const override {

@@ -41,6 +41,7 @@ public:
     [[nodiscard]] virtual uint16_t eventQualifiers() const = 0;
     [[nodiscard]] virtual time_t timeGenerated() const = 0;
     [[nodiscard]] virtual std::wstring source() const = 0;
+    [[nodiscard]] virtual PSID sid() const = 0;
     [[nodiscard]] virtual Level eventLevel() const = 0;
     [[nodiscard]] virtual std::wstring makeMessage() const = 0;
 

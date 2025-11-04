@@ -156,6 +156,19 @@ public:
         return {reinterpret_cast<LPCWSTR>(record_ + 1)};
     }
 
+    [[nodiscard]] PSID sid() const override {
+        if (record_->UserSidLength > 0) {
+            return (reinterpret_cast<char *>(record_) + record_->UserSidOffset);
+        }
+        return nullptr;
+        auto buf = std::make_unique<char[]>(record_->UserSidLength);
+        std::memcpy(
+            buf.get(),
+            (reinterpret_cast<char *>(record_) + record_->UserSidOffset),
+            record_->UserSidLength);
+        return {};
+    }
+
     [[nodiscard]] Level eventLevel() const override {
         switch (record_->EventType) {
             case EVENTLOG_ERROR_TYPE:

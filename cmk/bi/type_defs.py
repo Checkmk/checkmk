@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any, Literal, NotRequired, TypedDict
 
-from cmk.utils.labels import AndOrNotLiteral, LabelGroups
+from cmk.utils.labels import LabelGroups
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 
@@ -97,25 +97,3 @@ class HostConditions(TypedDict):
 class HostServiceConditions(HostConditions):
     service_regex: str
     service_label_groups: LabelGroups
-
-
-ReferToType = Literal["host", "child", "parent", "child_with"]
-
-
-class ReferTo(TypedDict):
-    type: ReferToType
-
-
-class ReferToChildWith(TypedDict):
-    conditions: HostConditions
-    host_choice: HostChoice
-
-
-class LabelCondition(TypedDict):
-    operator: AndOrNotLiteral
-    label: str
-
-
-class LabelGroupCondition(TypedDict):
-    operator: AndOrNotLiteral
-    label_group: Sequence[LabelCondition]

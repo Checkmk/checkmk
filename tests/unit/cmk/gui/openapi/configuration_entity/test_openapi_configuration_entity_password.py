@@ -241,3 +241,106 @@ def test_create_password_as_admin(clients: ClientRegistry, with_admin: tuple[str
     assert (
         lookup(password_store_path(), "test_admin_password_id") == "my-very-secret-admin-password"
     )
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+@pytest.mark.parametrize(
+    ["owner"],
+    [pytest.param("protected", id="different owner"), pytest.param(None, id="same owner")],
+)
+def test_cannot_overwrite_existing_password(
+    owner: str | None, clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    # GIVEN
+    password_store_content = {
+        "existing_password_id": Password(
+            title="Existing title",
+            comment="Existing comment",
+            docu_url="Existing docu url",
+            password="PasswordCannotBeOverwritten",
+            owned_by=owner,
+            shared_with=[],
+        ),
+    }
+    password_store.PasswordStore().save(password_store_content, pprint_value=False)
+
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    # WHEN
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.passwordstore_password.value,
+            "entity_type_specifier": "xyz",
+            "data": {
+                "general_props": {
+                    "id": "existing_password_id",
+                    "title": "My test password overwrite attempt",
+                    "comment": "Created by a unit test",
+                    "docu_url": "",
+                },
+                "password_props": {
+                    "password": ["wont-be-able-to-save-this", False],
+                    "owned_by": ("admins", None),
+                    "share_with": [],
+                },
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 422, resp.json
+    assert (
+        "This ID is already in use. Please choose another one."
+        in resp.json["ext"]["validation_errors"][0]["message"]
+    )
+    assert lookup(password_store_path(), "existing_password_id") == "PasswordCannotBeOverwritten"
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_create_password_existing_passwords_still_exist(
+    clients: ClientRegistry, with_admin: tuple[str, str]
+) -> None:
+    # GIVEN
+    password_store_content = {
+        "existing_password_id": Password(
+            title="Existing title",
+            comment="Existing comment",
+            docu_url="Existing docu url",
+            password="ShouldStillExist",
+            owned_by="protected",
+            shared_with=[],
+        ),
+    }
+    password_store.PasswordStore().save(password_store_content, pprint_value=False)
+
+    clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+    # WHEN
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.passwordstore_password.value,
+            "entity_type_specifier": "xyz",
+            "data": {
+                "general_props": {
+                    "id": "test_admin_password_id",
+                    "title": "My admin test password",
+                    "comment": "Created by a unit test",
+                    "docu_url": "",
+                },
+                "password_props": {
+                    "password": ["my-very-secret-admin-password", False],
+                    "owned_by": ("admins", None),
+                    "share_with": [],
+                },
+            },
+        }
+    )
+
+    # THEN
+    assert resp.status_code == 200, resp.json
+    assert resp.json["title"] == "My admin test password"
+    assert (
+        lookup(password_store_path(), "test_admin_password_id") == "my-very-secret-admin-password"
+    )
+    assert lookup(password_store_path(), "existing_password_id") == "ShouldStillExist"

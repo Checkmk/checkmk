@@ -227,6 +227,10 @@ def save_password_from_slidein_schema(
     disk_data = visitor.to_disk(data)
     parsed_data = _parse_fs(disk_data)
 
+    # should already be validated by the form spec, but make sure here
+    if password_exists(parsed_data.general_props.id):
+        raise ValueError(_("This ID is already in use. Please choose another one."))
+
     owned_by = None
     match parsed_data.password_props.owned_by:
         case ("admins", None):

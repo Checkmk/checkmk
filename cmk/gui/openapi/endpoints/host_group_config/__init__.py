@@ -86,7 +86,7 @@ def create(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     name = body["name"]
     group_details = {"alias": body["alias"]}
-    if version.edition(paths.omd_root) is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.ULTIMATEMT:
         group_details = update_customer_info(group_details, body["customer"])
     groups.add_group(
         name,

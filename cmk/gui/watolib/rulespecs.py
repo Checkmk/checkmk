@@ -98,7 +98,7 @@ class RulespecAllowList:
 
 
 def get_rulespec_allow_list() -> RulespecAllowList | AllowAll:
-    if edition(paths.omd_root) is not Edition.CSE:
+    if edition(paths.omd_root) is not Edition.CLOUD:
         return AllowAll()
     return RulespecAllowList.from_config()
 
@@ -463,7 +463,7 @@ class Rulespec(abc.ABC):
         if self._is_deprecated:
             return "{}: {}".format(_("Deprecated"), plain_title)
         if self._is_cloud_and_managed_edition_only:
-            return mark_edition_only(plain_title, [Edition.CME, Edition.CCE])
+            return mark_edition_only(plain_title, [Edition.ULTIMATEMT, Edition.ULTIMATE])
         return plain_title
 
     @property

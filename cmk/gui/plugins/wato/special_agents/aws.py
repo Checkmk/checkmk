@@ -561,7 +561,7 @@ def _migrate(value: object) -> dict[str, object]:
 
 def _valuespec_special_agents_aws() -> Migrate:
     valuespec_builder = AWSSpecialAgentValuespecBuilder(
-        edition(cmk.utils.paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE)
+        edition(cmk.utils.paths.omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.CLOUD)
     )
     global_services = valuespec_builder.get_global_services()
     regional_services = valuespec_builder.get_regional_services()

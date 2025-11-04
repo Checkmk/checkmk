@@ -172,7 +172,7 @@ def test_registered_pages() -> None:
         "gui_timings",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_pages += [
             "ajax_host_overview_tooltip",
             "ajax_pagetype_add_element",
@@ -248,7 +248,7 @@ def test_registered_pages() -> None:
             "ajax_fetch_metric_types",
         ]
 
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:
         expected_pages += [
             "ajax_saas_onboarding_button_toggle",
             "noauth:cognito_sso",

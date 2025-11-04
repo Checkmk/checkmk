@@ -66,6 +66,6 @@ from cmk.rulesets.v1.rule_specs import CheckParameters
     ],
 )
 def test_azure_storageaccounts_ruleset(rulespec: CheckParameters, rule: dict[str, object]) -> None:
-    valuespec = convert_to_legacy_rulespec(rulespec, Edition.CRE, lambda x: x).valuespec
+    valuespec = convert_to_legacy_rulespec(rulespec, Edition.COMMUNITY, lambda x: x).valuespec
     valuespec.validate_datatype(rule, "")
     valuespec.validate_value(rule, "")

@@ -121,6 +121,6 @@ class Theme:
         See CMESnapshotDataCollector._update_customer_sidebar_top.
         """
         return (
-            self._edition is Edition.CME
+            self._edition is Edition.ULTIMATEMT
             and self.base_dir().joinpath("images", f"{logo_name}.png").exists()
         )

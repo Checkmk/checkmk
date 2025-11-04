@@ -62,7 +62,7 @@ def _instantiate_ruleset(
                 },
                 **(
                     {}
-                    if edition(paths.omd_root) is Edition.CRE
+                    if edition(paths.omd_root) is Edition.COMMUNITY
                     else {RuleGroup.ExtraServiceConf("_sla_config"): "i am skipped"}
                 ),
             },

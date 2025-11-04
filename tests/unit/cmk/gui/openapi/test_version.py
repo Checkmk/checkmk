@@ -9,5 +9,5 @@ from cmk.ccc import version
 from cmk.utils import paths
 
 managedtest = pytest.mark.skipif(
-    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+    version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT, reason="see #7213"
 )

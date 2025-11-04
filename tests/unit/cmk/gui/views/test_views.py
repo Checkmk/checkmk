@@ -287,7 +287,7 @@ def test_registered_commands() -> None:
         },
     }
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected.update(
             {
                 "edit_downtimes": {

@@ -21,7 +21,7 @@ class _AgentConnectionField(fields.String):
     }
 
     def __init__(self, **kwargs: Any):
-        self._supported_editions = {version.Edition.CME, version.Edition.CCE}
+        self._supported_editions = {version.Edition.ULTIMATEMT, version.Edition.ULTIMATE}
         kwargs["description"] = edition_field_description(
             description=kwargs["description"],
             supported_editions=self._supported_editions,

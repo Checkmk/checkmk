@@ -246,7 +246,7 @@ class PageMenuEntry:
 @dataclass
 class PageMenuEntryCEEOnly(PageMenuEntry):
     def __post_init__(self) -> None:
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
             self.is_enabled = False
             self.disabled_tooltip = _("Enterprise feature")
 

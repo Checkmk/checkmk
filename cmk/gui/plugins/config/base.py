@@ -557,7 +557,7 @@ class CREConfig:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    mkeventd_enabled: bool = edition(paths.omd_root) is not Edition.CSE  # disabled in CSE
+    mkeventd_enabled: bool = edition(paths.omd_root) is not Edition.CLOUD  # disabled in CSE
     mkeventd_pprint_rules: bool = False
     mkeventd_notify_contactgroup: str = ""
     mkeventd_notify_facility: int = 16

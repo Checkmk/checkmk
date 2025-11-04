@@ -22,161 +22,161 @@ from cmk.utils.licensing.handler import LicenseState
     "central_edition, central_license_state, remote_edition, remote_license_state, expected_compatibility",
     [
         pytest.param(
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CRE-CRE",
         ),
         pytest.param(
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CRE-CEE",
         ),
         pytest.param(
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CRE-CCE",
         ),
         pytest.param(
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
             LicenseStateIncompatible("Remote site in license state free is not allowed"),
             id="CRE-CCE-free",
         ),
         pytest.param(
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             EditionsIncompatible("Mix of CME and non-CME is not allowed."),
             id="CRE-CME",
         ),
         pytest.param(
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CEE-CRE",
         ),
         pytest.param(
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CEE-CEE",
         ),
         pytest.param(
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CEE-CCE",
         ),
         pytest.param(
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
             LicenseStateIncompatible("Remote site in license state free is not allowed"),
             id="CEE-CCE-free",
         ),
         pytest.param(
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             EditionsIncompatible("Mix of CME and non-CME is not allowed."),
             id="CEE-CME",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-trial-CRE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-trial-CEE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CCE-trial-CCE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
             LicenseStateIncompatible("Remote site in license state free is not allowed"),
             id="CCE-CCE-free",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-trial-CME",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-licensed-CRE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-licensed-CEE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CCE-licensed-CCE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-licensed-CME",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.UNLICENSED,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
@@ -184,9 +184,9 @@ from cmk.utils.licensing.handler import LicenseState
             id="CCE-unlicensed-CRE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.UNLICENSED,
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
@@ -194,9 +194,9 @@ from cmk.utils.licensing.handler import LicenseState
             id="CCE-unlicensed-CEE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.UNLICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
@@ -204,9 +204,9 @@ from cmk.utils.licensing.handler import LicenseState
             id="CCE-unlicensed-CCE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.UNLICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
@@ -214,9 +214,9 @@ from cmk.utils.licensing.handler import LicenseState
             id="CCE-unlicensed-CME",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
@@ -224,9 +224,9 @@ from cmk.utils.licensing.handler import LicenseState
             id="CCE-free-CRE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
@@ -234,9 +234,9 @@ from cmk.utils.licensing.handler import LicenseState
             id="CCE-free-CEE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
@@ -244,9 +244,9 @@ from cmk.utils.licensing.handler import LicenseState
             id="CCE-free-CCE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
@@ -254,41 +254,41 @@ from cmk.utils.licensing.handler import LicenseState
             id="CCE-free-CME",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
             EditionsIncompatible("Mix of CME and non-CME is not allowed."),
             id="CME-CRE",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
             EditionsIncompatible("Mix of CME and non-CME is not allowed."),
             id="CME-CEE",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
             EditionsIncompatible("Mix of CME and non-CME is not allowed."),
             id="CME-CCE",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
             LicenseStateIncompatible("Remote site in license state free is not allowed"),
             id="CME-CCE-free",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             LicensingCompatible(),
             id="CME-CME",
@@ -316,190 +316,190 @@ def test_license_compatibility_distributed_setup(
     "central_edition, central_license_state, remote_edition, expected_compatibility",
     [
         pytest.param(
-            Edition.CRE, LicenseState.LICENSED, Edition.CRE, LicensingCompatible(), id="CRE-CRE"
+            Edition.COMMUNITY, LicenseState.LICENSED, Edition.COMMUNITY, LicensingCompatible(), id="CRE-CRE"
         ),
         pytest.param(
-            Edition.CRE, LicenseState.LICENSED, Edition.CEE, LicensingCompatible(), id="CRE-CEE"
+            Edition.COMMUNITY, LicenseState.LICENSED, Edition.PRO, LicensingCompatible(), id="CRE-CEE"
         ),
         pytest.param(
-            Edition.CRE, LicenseState.LICENSED, Edition.CCE, LicensingCompatible(), id="CRE-CCE"
+            Edition.COMMUNITY, LicenseState.LICENSED, Edition.ULTIMATE, LicensingCompatible(), id="CRE-CCE"
         ),
         pytest.param(
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseState.LICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicensingCompatible(),
             id="CRE-CME",
         ),
         pytest.param(
-            Edition.CEE, LicenseState.LICENSED, Edition.CRE, LicensingCompatible(), id="CEE-CRE"
+            Edition.PRO, LicenseState.LICENSED, Edition.COMMUNITY, LicensingCompatible(), id="CEE-CRE"
         ),
         pytest.param(
-            Edition.CEE, LicenseState.LICENSED, Edition.CEE, LicensingCompatible(), id="CEE-CEE"
+            Edition.PRO, LicenseState.LICENSED, Edition.PRO, LicensingCompatible(), id="CEE-CEE"
         ),
         pytest.param(
-            Edition.CEE, LicenseState.LICENSED, Edition.CCE, LicensingCompatible(), id="CEE-CCE"
+            Edition.PRO, LicenseState.LICENSED, Edition.ULTIMATE, LicensingCompatible(), id="CEE-CCE"
         ),
         pytest.param(
-            Edition.CEE,
+            Edition.PRO,
             LicenseState.LICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicensingCompatible(),
             id="CEE-CME",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
-            Edition.CRE,
+            Edition.COMMUNITY,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-trial-CRE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
-            Edition.CEE,
+            Edition.PRO,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-trial-CEE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicensingCompatible(),
             id="CCE-trial-CCE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.TRIAL,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-trial-CME",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CRE,
+            Edition.COMMUNITY,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-licensed-CRE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CEE,
+            Edition.PRO,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-licensed-CEE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicensingCompatible(),
             id="CCE-licensed-CCE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.LICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             EditionsIncompatible("Only CCE remote sites can be added to CCE central site"),
             id="CCE-licensed-CME",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.UNLICENSED,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
             id="CCE-unlicensed-CRE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.UNLICENSED,
-            Edition.CEE,
+            Edition.PRO,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
             id="CCE-unlicensed-CEE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.UNLICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
             id="CCE-unlicensed-CCE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.UNLICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state unlicensed"
             ),
             id="CCE-unlicensed-CME",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
             id="CCE-free-CRE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
-            Edition.CEE,
+            Edition.PRO,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
             id="CCE-free-CEE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
             id="CCE-free-CCE",
         ),
         pytest.param(
-            Edition.CCE,
+            Edition.ULTIMATE,
             LicenseState.FREE,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseStateIncompatible(
                 "Remote sites are not allowed when central site in license state free"
             ),
             id="CCE-free-CME",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CRE,
+            Edition.COMMUNITY,
             LicensingCompatible(),
             id="CME-CRE",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CEE,
+            Edition.PRO,
             LicensingCompatible(),
             id="CME-CEE",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CCE,
+            Edition.ULTIMATE,
             EditionsIncompatible("Mix of CME and non-CME is not allowed."),
             id="CME-CCE",
         ),
         pytest.param(
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicenseState.LICENSED,
-            Edition.CME,
+            Edition.ULTIMATEMT,
             LicensingCompatible(),
             id="CME-CME",
         ),

@@ -65,7 +65,7 @@ def _expected_visual_types():
         },
     }
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_visual_types.update(
             {
                 "reports": {
@@ -296,7 +296,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "service",
         "servicegroup",
     ]
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         expected += ["customer"]
 
     assert {r[0] for r in result} == set(expected)

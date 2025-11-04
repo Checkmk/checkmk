@@ -118,7 +118,7 @@ def has_customer(
     cust_api: ABCCustomerAPI,
     user_spec: UserSpec,
 ) -> str | None:
-    if edition(paths.omd_root) is not Edition.CME:
+    if edition(paths.omd_root) is not Edition.ULTIMATEMT:
         return None
 
     if isinstance(user_cxn, LDAPUserConnector):
@@ -140,7 +140,7 @@ class ModeUsers(WatoMode):
         super().__init__()
         self._job = UserSyncBackgroundJob()
         self._job_snapshot = UserSyncBackgroundJob().get_status_snapshot()
-        self._can_create_and_delete_users = edition(paths.omd_root) != Edition.CSE
+        self._can_create_and_delete_users = edition(paths.omd_root) != Edition.CLOUD
 
     def title(self) -> str:
         return _("Users")
@@ -773,7 +773,7 @@ class ModeEditUser(WatoMode):
 
         self._vs_customer = customer_api().vs_customer()
 
-        self._can_edit_users = edition(paths.omd_root) != Edition.CSE
+        self._can_edit_users = edition(paths.omd_root) != Edition.CLOUD
 
     def _from_vars(self) -> None:
         # TODO: Should we turn the both fields below into UserId | None?
@@ -975,7 +975,7 @@ class ModeEditUser(WatoMode):
         # Pager
         user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
 
-        if edition(paths.omd_root) is Edition.CME:
+        if edition(paths.omd_root) is Edition.ULTIMATEMT:
             customer = self._vs_customer.from_html_vars("customer")
             self._vs_customer.validate_value(customer, "customer")
 
@@ -1109,7 +1109,7 @@ class ModeEditUser(WatoMode):
         self._handle_auth_attributes(user_attrs, password_policy)
 
         # Roles
-        if edition(paths.omd_root) != Edition.CSE:
+        if edition(paths.omd_root) != Edition.CLOUD:
             user_attrs["roles"] = [
                 role for role in self._roles.keys() if html.get_checkbox("role_" + role)
             ]
@@ -1299,7 +1299,7 @@ class ModeEditUser(WatoMode):
         self._lockable_input("pager", "")
         html.help(_("The pager address is optional "))
 
-        if edition(paths.omd_root) is Edition.CME:
+        if edition(paths.omd_root) is Edition.ULTIMATEMT:
             forms.section(self._vs_customer.title())
             self._vs_customer.render_input("customer", customer_api().get_customer_id(self._user))
 

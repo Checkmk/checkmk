@@ -261,7 +261,7 @@ def _convert_to_legacy_check_parameter_rulespec(
             create_manual_check=False,
             # weird field since the CME, as well as the CSE is based on a CCE, but we currently only
             # want to mark rulespecs that are available in both the CCE and CME as such
-            is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+            is_cloud_and_managed_edition_only=edition_only is Edition.ULTIMATE,
             form_spec_definition=FormSpecDefinition(
                 to_convert.parameter_form, lambda: item_form_spec
             ),
@@ -277,7 +277,7 @@ def _convert_to_legacy_check_parameter_rulespec(
             convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
         create_manual_check=False,
-        is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+        is_cloud_and_managed_edition_only=edition_only is Edition.ULTIMATE,
         form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
@@ -317,7 +317,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         is_deprecated=False,
         match_type="all",
         item_spec=item_spec,
-        is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+        is_cloud_and_managed_edition_only=edition_only is Edition.ULTIMATE,
         form_spec_definition=None
         if to_convert.parameter_form is None
         else FormSpecDefinition(to_convert.parameter_form, item_form_spec),

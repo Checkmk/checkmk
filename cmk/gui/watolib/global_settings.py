@@ -46,7 +46,7 @@ def save_global_settings(
     get_global_settings_config: Callable[[], GlobalConfig] = get_global_config,
     skip_cse_edition_check: bool = False,
 ) -> None:
-    if not skip_cse_edition_check and edition(paths.omd_root) is Edition.CSE:
+    if not skip_cse_edition_check and edition(paths.omd_root) is Edition.CLOUD:
         global_settings_config = get_global_settings_config().global_settings
         current_global_settings = dict(load_configuration_settings())
         vars_ = {

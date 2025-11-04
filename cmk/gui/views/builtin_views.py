@@ -5330,7 +5330,7 @@ builtin_views["cmk_servers"] = {
 
 def cmk_sites_painters() -> Sequence[ColumnSpec]:
     service_painters: list[Any] = []
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         service_painters += [
             ColumnSpec(name="invcmksites_cmc"),
             ColumnSpec(name="invcmksites_dcd"),
@@ -5351,7 +5351,7 @@ def cmk_sites_painters() -> Sequence[ColumnSpec]:
         ColumnSpec(name="invcmksites_stunnel"),
     ]
 
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         service_painters += [
             ColumnSpec(name="invcmksites_npcd"),
         ]

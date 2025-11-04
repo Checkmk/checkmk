@@ -103,7 +103,7 @@ def test_test_rule_spec_cisco_prime_migrate(
 )
 def test_rule_spec_cisco_prime(rule: dict[str, object]) -> None:
     validating_rule_spec = convert_to_legacy_rulespec(
-        rule_spec_cisco_prime, Edition.CRE, lambda x: x
+        rule_spec_cisco_prime, Edition.COMMUNITY, lambda x: x
     )
     validating_rule_spec.valuespec.validate_datatype(rule, "")
     validating_rule_spec.valuespec.validate_value(rule, "")

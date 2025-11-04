@@ -800,7 +800,7 @@ class PainterSvcMetrics(Painter):
                 ),
                 class_="value",
             )
-            if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
+            if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
                 html.td(
                     html.render_popup_trigger(
                         html.render_icon(

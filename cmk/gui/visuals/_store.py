@@ -318,7 +318,7 @@ def _get_packaged_visuals(
 def get_installed_packages(what: VisualTypeName) -> dict[str, PackageName | None]:
     return (
         {}
-        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.COMMUNITY
         or not user.may("wato.manage_mkps")
         else id_to_mkp(
             Installer(cmk.utils.paths.installed_packages_dir),

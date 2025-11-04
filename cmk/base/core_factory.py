@@ -19,7 +19,7 @@ from cmk.utils.timeperiod import get_all_timeperiods
 
 
 def get_licensing_handler_type() -> type[LicensingHandler]:
-    if edition(paths.omd_root) is Edition.CRE:
+    if edition(paths.omd_root) is Edition.COMMUNITY:
         from cmk.utils.licensing.registry import get_available_licensing_handler_type
     else:
         from cmk.utils.nonfree.pro.licensing.registry import (  # type: ignore[import,unused-ignore,no-redef]
@@ -41,9 +41,6 @@ def create_core(
 ) -> MonitoringCore:
     match loaded_config.monitoring_core:
         case "cmc":
-            from cmk.base.nonfree.pro.precompute_timeperiods import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-                precompute_timeperiods,
-            )
             from cmk.base.configlib.nonfree.pro.microcore import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 make_cmc_config,
                 make_fetcher_config_writer,
@@ -52,6 +49,9 @@ def create_core(
             from cmk.base.core.nonfree.pro.cmc import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 CmcPb,
                 ConfigWriterInterface,
+            )
+            from cmk.base.nonfree.pro.precompute_timeperiods import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+                precompute_timeperiods,
             )
 
             statehist_cache = make_statehist_cache_config(loaded_config)
@@ -71,7 +71,7 @@ def create_core(
                 )
             ]
 
-            if edition in (Edition.CCE, Edition.CME, Edition.CSE):
+            if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD):
                 from cmk.base.configlib.nonfree.ultimate.relay import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                     make_relay_config_writers,
                 )

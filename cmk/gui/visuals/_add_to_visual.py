@@ -106,7 +106,7 @@ def page_menu_dropdown_add_to_visual(
 
     if (
         add_type == "pnpgraph"
-        and cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE
+        and cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY
     ):
         visual_topics.append(
             PageMenuTopic(
@@ -198,7 +198,7 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
             )
         ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         entries.append(
             PageMenuEntry(
                 title=_("Add to report"),

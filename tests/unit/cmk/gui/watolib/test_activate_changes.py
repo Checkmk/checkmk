@@ -158,7 +158,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
     ]
 
-    if edition is not cmk_version.Edition.CRE:
+    if edition is not cmk_version.Edition.COMMUNITY:
         expected += [
             ReplicationPath.make(
                 ty=ReplicationPathType.DIR,
@@ -206,7 +206,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
     ]
 
-    if edition is cmk_version.Edition.CME:
+    if edition is cmk_version.Edition.ULTIMATEMT:
         expected += [
             ReplicationPath.make(
                 ty=ReplicationPathType.FILE,
@@ -250,7 +250,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if is_enterprise_repo() and edition is cmk_version.Edition.CRE:
+    if is_enterprise_repo() and edition is cmk_version.Edition.COMMUNITY:
         # CEE paths are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
@@ -282,7 +282,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ),
         ]
 
-    if is_managed_repo() and edition is not cmk_version.Edition.CME:
+    if is_managed_repo() and edition is not cmk_version.Edition.ULTIMATEMT:
         # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [

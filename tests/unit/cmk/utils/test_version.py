@@ -292,12 +292,12 @@ class TestEdition:
     @pytest.mark.parametrize(
         "omd_version_str, expected",
         [
-            ("1.4.0i1.cre", cmk_version.Edition.CRE),
-            ("1.4.0i1.cee", cmk_version.Edition.CEE),
-            ("2016.09.22.cee", cmk_version.Edition.CEE),
-            ("2.1.0p3.cme", cmk_version.Edition.CME),
-            ("2.1.0p3.cce", cmk_version.Edition.CCE),
-            ("2.1.0p3.cse", cmk_version.Edition.CSE),
+            ("1.4.0i1.cre", cmk_version.Edition.COMMUNITY),
+            ("1.4.0i1.cee", cmk_version.Edition.PRO),
+            ("2016.09.22.cee", cmk_version.Edition.PRO),
+            ("2.1.0p3.cme", cmk_version.Edition.ULTIMATEMT),
+            ("2.1.0p3.cce", cmk_version.Edition.ULTIMATE),
+            ("2.1.0p3.cse", cmk_version.Edition.CLOUD),
         ],
     )
     def test_from_version_string(self, omd_version_str: str, expected: cmk_version.Edition) -> None:

@@ -20,7 +20,7 @@ def test_post_processor_registrations() -> None:
         "inventory_row_post_processor",
         "join_service_row_post_processor",
     ]
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected.append("sla_row_post_processor")
     assert sorted(names) == sorted(expected)
 

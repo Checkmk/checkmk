@@ -21,7 +21,7 @@ def test_migrate_raw() -> None:
         "monitored-objects": ["deployments"],
     }
     # Act
-    migrated = _migrate_and_transform(value, Edition.CRE)
+    migrated = _migrate_and_transform(value, Edition.COMMUNITY)
     # Assert
     assert migrated == {
         "cluster_name": "asdf",

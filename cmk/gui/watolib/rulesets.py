@@ -582,7 +582,7 @@ class AllRulesets(RulesetCollection):
 
 
 def visible_rulesets(rulesets: Mapping[RulesetName, Ruleset]) -> Mapping[RulesetName, Ruleset]:
-    if edition(paths.omd_root) is not Edition.CSE:
+    if edition(paths.omd_root) is not Edition.CLOUD:
         return rulesets
 
     allow_list = RulespecAllowList.from_config()
@@ -594,7 +594,7 @@ def visible_rulesets(rulesets: Mapping[RulesetName, Ruleset]) -> Mapping[Ruleset
 
 
 def visible_ruleset(rulespec_name: str) -> bool:
-    if edition(paths.omd_root) is not Edition.CSE:
+    if edition(paths.omd_root) is not Edition.CLOUD:
         return True
 
     return RulespecAllowList.from_config().is_visible(rulespec_name)

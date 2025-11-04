@@ -79,7 +79,7 @@ def _azure_service_name_to_valid_formspec(azure_service_name: str) -> str:
 
 
 def get_azure_services() -> Sequence[tuple[str, Title]]:
-    if edition(omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
+    if edition(omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.CLOUD):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
     return RAW_AZURE_SERVICES
 

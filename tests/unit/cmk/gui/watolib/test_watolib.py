@@ -31,19 +31,19 @@ def test_registered_config_domains() -> None:
         "rrdcached",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_config_domains += [
             "dcd",
             "mknotifyd",
         ]
 
-    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.CCE, cmk_version.Edition.CME]:
+    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.ULTIMATE, cmk_version.Edition.ULTIMATEMT]:
         expected_config_domains.append("otel_collector")
 
     if cmk_version.edition(paths.omd_root) in {
-        cmk_version.Edition.CCE,
-        cmk_version.Edition.CME,
-        cmk_version.Edition.CSE,
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
+        cmk_version.Edition.CLOUD,
     }:
         expected_config_domains.append("metric_backend")
 
@@ -82,7 +82,7 @@ def test_registered_automation_commands() -> None:
         "fetch-quick-setup-stage-action-result",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_automation_commands += [
             "execute-dcd-command",
             "get-agent-requests",
@@ -228,7 +228,7 @@ def test_registered_configvars() -> None:
         "site_trace_receive",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_vars += [
             "agent_bakery_logging",
             "agent_deployment_enabled",
@@ -302,9 +302,9 @@ def test_registered_configvars() -> None:
         ]
 
     if cmk_version.edition(paths.omd_root) in {
-        cmk_version.Edition.CCE,
-        cmk_version.Edition.CME,
-        cmk_version.Edition.CSE,
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
+        cmk_version.Edition.CLOUD,
     }:
         expected_vars += [
             "metric_backend_instance",
@@ -332,7 +332,7 @@ def test_registered_configvar_groups() -> None:
         "Developer Tools",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_groups += [
             "Dynamic configuration",
             "Automatic agent updates",

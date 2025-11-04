@@ -734,7 +734,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
 @pytest.fixture()
 def make_cme(monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig) -> Generator[None]:
     monkeypatch.setattr(cmk.ccc.version, "omd_version", lambda: "2.0.0i1.cme")
-    assert cmk.ccc.version.edition(cmk.utils.paths.omd_root) is cmk.ccc.version.Edition.CME
+    assert cmk.ccc.version.edition(cmk.utils.paths.omd_root) is cmk.ccc.version.Edition.ULTIMATEMT
 
     with set_config(current_customer="test-customer"):
         # Fix CRE mypy tests that do not have this attribute defined

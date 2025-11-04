@@ -89,7 +89,7 @@ CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 
 
 def all_documented_builtin_host_labels() -> set[str]:
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         return CRE_DOCUMENTED_BUILTIN_HOST_LABELS
     return CEE_DOCUMENTED_BUILTIN_HOST_LABELS | CRE_DOCUMENTED_BUILTIN_HOST_LABELS
 

@@ -44,7 +44,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 managedtest = pytest.mark.skipif(
-    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+    version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT, reason="see #7213"
 )
 
 
@@ -1804,11 +1804,11 @@ class TestHostsFilters:
 
 def test_openapi_built_in_host_attributes_in_sync() -> None:
     known_exceptions = ["meta_data", "network_scan_result"]
-    if version.edition(paths.omd_root) is version.Edition.CRE:
+    if version.edition(paths.omd_root) is version.Edition.COMMUNITY:
         known_exceptions.append("bake_agent_package")
     if version.edition(paths.omd_root) not in [
-        version.Edition.CME,
-        version.Edition.CCE,
+        version.Edition.ULTIMATEMT,
+        version.Edition.ULTIMATE,
     ]:
         known_exceptions.append("cmk_agent_connection")
 

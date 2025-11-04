@@ -37,7 +37,7 @@ def test_rule_spec_tcp_connections(
     value = ("netstat", "foobar", rule)
 
     valuespec = convert_to_legacy_rulespec(
-        rule_spec_tcp_connections, Edition.CRE, lambda x: x
+        rule_spec_tcp_connections, Edition.COMMUNITY, lambda x: x
     ).valuespec
 
     # FYI: We want to test the validation of the specific rule content, not the generic check-plugin

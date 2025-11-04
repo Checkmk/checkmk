@@ -187,17 +187,17 @@ def _load_plugins(logger: logging.Logger) -> None:
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
         (
             []
-            if edition(paths.omd_root) is Edition.CRE
+            if edition(paths.omd_root) is Edition.COMMUNITY
             else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.actions")
         ),
         (
             load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.actions")
-            if edition(paths.omd_root) in (Edition.CCE, Edition.CME, Edition.CSE)
+            if edition(paths.omd_root) in (Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD)
             else []
         ),
         (
             load_plugins_with_exceptions("cmk.update_config.nonfree.ultimatemt.plugins.actions")
-            if edition(paths.omd_root) is Edition.CME
+            if edition(paths.omd_root) is Edition.ULTIMATEMT
             else []
         ),
     ):
@@ -211,7 +211,7 @@ def _load_pre_plugins() -> None:
         load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
         (
             []
-            if edition(paths.omd_root) is Edition.CRE
+            if edition(paths.omd_root) is Edition.COMMUNITY
             else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.pre_actions")
         ),
     ):

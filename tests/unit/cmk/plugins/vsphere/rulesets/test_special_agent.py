@@ -39,7 +39,7 @@ def test_rule_spec_vsphere(partial_value: Mapping[str, object]) -> None:
         **partial_value,
     }
     valuespec = convert_to_legacy_rulespec(
-        rule_spec_special_agent_vsphere, Edition.CRE, lambda x: x
+        rule_spec_special_agent_vsphere, Edition.COMMUNITY, lambda x: x
     ).valuespec
     valuespec.validate_datatype(value, "")
     valuespec.validate_value(value, "")

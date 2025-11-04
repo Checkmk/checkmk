@@ -113,7 +113,7 @@ def edit_group(
 
     _set_group(all_groups, group_type, name, extra_info, pprint_value)
     customer = customer_api()
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         old_customer = customer.get_customer_id(old_group_backup)
         new_customer = customer.get_customer_id(extra_info)
         if old_customer != new_customer:

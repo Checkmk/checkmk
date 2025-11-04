@@ -44,7 +44,7 @@ from cmk.utils import paths
     request_schema=request_schemas.GetSchema,
     response_schema=response_schemas.GraphCollectionSchema,
     sort=0,
-    supported_editions={Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME},
+    supported_editions={Edition.COMMUNITY, Edition.PRO, Edition.ULTIMATE, Edition.ULTIMATEMT},
 )
 def get_graph(params):
     """Get metrics

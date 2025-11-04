@@ -1913,7 +1913,7 @@ def test_host_label_rules_default() -> None:
 
 def test_labels(monkeypatch: MonkeyPatch) -> None:
     additional_labels = {}
-    if edition(cmk.utils.paths.omd_root) is Edition.CME:
+    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
         additional_labels = {"cmk/customer": {"value": "provider", "source": "discovered"}}
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
@@ -1960,7 +1960,7 @@ def test_labels(monkeypatch: MonkeyPatch) -> None:
 
 def test_site_labels(monkeypatch: MonkeyPatch) -> None:
     additional_labels = {}
-    if edition(cmk.utils.paths.omd_root) is Edition.CME:
+    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
         additional_labels = {"cmk/customer": {"value": "provider", "source": "discovered"}}
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
@@ -1980,7 +1980,7 @@ def test_site_labels(monkeypatch: MonkeyPatch) -> None:
 
 def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     additional_labels = {}
-    if edition(cmk.utils.paths.omd_root) is Edition.CME:
+    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
         additional_labels = {"cmk/customer": {"value": "provider", "source": "discovered"}}
     test_host = HostName("test-host")
     ts = Scenario()

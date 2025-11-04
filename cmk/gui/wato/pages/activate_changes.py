@@ -540,7 +540,7 @@ class ModeActivateChanges(WatoMode):
         return True
 
     def _license_allows_activation(self):
-        if edition(paths.omd_root) in (Edition.CME, Edition.CCE):
+        if edition(paths.omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE):
             # TODO: move to CCE handler to avoid is_cloud_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity

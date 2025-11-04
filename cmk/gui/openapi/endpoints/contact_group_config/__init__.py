@@ -200,7 +200,7 @@ def create(params: Mapping[str, Any]) -> Response:
         "alias": body["alias"],
         "inventory_paths": _inventory_paths_from_api(body.get("inventory_paths")),
     }
-    if version.edition(paths.omd_root) is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.ULTIMATEMT:
         group_details = update_customer_info(group_details, body["customer"])
     add_group(
         name,

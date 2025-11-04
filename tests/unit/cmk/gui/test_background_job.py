@@ -56,7 +56,7 @@ def test_registered_background_jobs() -> None:
         "QuickSetupActionBackgroundJob",
     ]
 
-    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_jobs += [
             "BakeAgentsBackgroundJob",
             "SignAgentsBackgroundJob",

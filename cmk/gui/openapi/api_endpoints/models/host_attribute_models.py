@@ -162,23 +162,23 @@ class BaseHostAttributeModel:
     )
 
     bake_agent_package: Annotated[
-        bool | ApiOmitted, RestrictEditions(excluded_editions={Edition.CRE})
+        bool | ApiOmitted, RestrictEditions(excluded_editions={Edition.COMMUNITY})
     ] = api_field(
         description=edition_field_description(
             "Bake agent packages for this folder even if it is empty.",
-            excluded_editions={Edition.CRE},
+            excluded_editions={Edition.COMMUNITY},
         ),
         default_factory=ApiOmitted,
     )
     cmk_agent_connection: Annotated[
         Literal["push-agent", "pull-agent"] | ApiOmitted,
-        RestrictEditions(excluded_editions={Edition.CRE}),
+        RestrictEditions(excluded_editions={Edition.COMMUNITY}),
     ] = api_field(
         description=edition_field_description(
             "This configures the communication direction of this host.\n"
             f" * `{HostAgentConnectionMode.PULL.value}` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
             f" * `{HostAgentConnectionMode.PUSH.value}` - the host is expected to send the data to the monitoring server without being triggered\n",
-            excluded_editions={Edition.CRE},
+            excluded_editions={Edition.COMMUNITY},
         ),
         default_factory=ApiOmitted,
     )
@@ -190,7 +190,7 @@ class BaseHostAttributeModel:
 
     metrics_association: Annotated[
         MetricsAssociationModel | ApiOmitted,
-        RestrictEditions(supported_editions={Edition.CCE, Edition.CME, Edition.CSE}),
+        RestrictEditions(supported_editions={Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD}),
     ] = api_field(
         description="Configuration for associating OpenTelemetry metrics with this host.",
         default_factory=ApiOmitted,

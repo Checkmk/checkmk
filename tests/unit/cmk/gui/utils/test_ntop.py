@@ -24,7 +24,7 @@ from cmk.utils import paths
 
 @pytest.mark.usefixtures("load_config")
 def test_is_ntop_available() -> None:
-    assert is_ntop_available() != (cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE)
+    assert is_ntop_available() != (cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY)
 
 
 @pytest.mark.usefixtures("load_config")
@@ -68,7 +68,7 @@ def test_is_ntop_configured_and_reason(
     answer: bool,
     reason: str,
 ) -> None:
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         assert not is_ntop_configured()
         assert get_ntop_misconfiguration_reason() == "ntopng integration is only available in CEE"
     else:

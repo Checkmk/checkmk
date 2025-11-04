@@ -21,7 +21,7 @@ from cmk.plugins.ibm_informix.rulesets.informix_dbspaces import rule_spec_inform
 )
 def test_rule_spec_informix_dbspaces(rule: dict[str, object]) -> None:
     valuespec = convert_to_legacy_rulespec(
-        rule_spec_informix_dbspaces, Edition.CRE, lambda x: x
+        rule_spec_informix_dbspaces, Edition.COMMUNITY, lambda x: x
     ).valuespec
 
     valuespec.validate_datatype(rule, "")

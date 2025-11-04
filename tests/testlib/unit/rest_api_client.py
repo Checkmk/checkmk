@@ -1865,7 +1865,7 @@ class GroupConfig(RestApiClient):
         body: dict[str, Any] = {"name": name, "alias": alias}
         if inventory_paths:
             body["inventory_paths"] = inventory_paths
-        if version.edition(paths.omd_root) is version.Edition.CME:
+        if version.edition(paths.omd_root) is version.Edition.ULTIMATEMT:
             body["customer"] = customer
 
         return self.request(

@@ -60,13 +60,13 @@ def bulk_create_host_v1(
     body: BulkCreateHostModel,
     bake_agent: Annotated[
         bool | ApiOmitted,
-        RestrictEditions(excluded_editions={Edition.CRE}),
+        RestrictEditions(excluded_editions={Edition.COMMUNITY}),
         QueryParam(
             description=edition_field_description(
                 "Tries to bake the agents for the just created hosts. This process is started in the "
                 "background after configuring the host. Please note that the baking may take some "
                 "time and might block subsequent API calls.",
-                excluded_editions={Edition.CRE},
+                excluded_editions={Edition.COMMUNITY},
             ),
             example="True",
         ),

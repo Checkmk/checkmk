@@ -75,10 +75,10 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
-    cmk_version.Edition.CEE,
-    cmk_version.Edition.CME,
-    cmk_version.Edition.CCE,
-    cmk_version.Edition.CSE,
+    cmk_version.Edition.PRO,
+    cmk_version.Edition.ULTIMATEMT,
+    cmk_version.Edition.ULTIMATE,
+    cmk_version.Edition.CLOUD,
 ]:
     from cmk.base.nonfree.pro.diagnostics import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
         cmc_specific_attrs,  # type: ignore[import,unused-ignore]
@@ -198,7 +198,7 @@ class DiagnosticsDump:
             CMAJSONDiagnosticsElement(),
         ]
 
-        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
             fixed_elements.append(DCDDiagnosticsElement())
 
         return fixed_elements
@@ -254,7 +254,7 @@ class DiagnosticsDump:
             optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
 
         # CEE options
-        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
             rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
             if rel_checkmk_core_files:
                 optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))

@@ -167,7 +167,7 @@ def user_exists_according_to_profile(username: UserId) -> bool:
 
 
 def is_customer_user_allowed_to_login(user_id: UserId, user_spec: UserSpec) -> bool:
-    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CME:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.ULTIMATEMT:
         return True
 
     if customer_api().is_global(user_spec.get("customer")):

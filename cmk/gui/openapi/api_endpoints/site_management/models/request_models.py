@@ -32,13 +32,13 @@ class BasicSettingsBaseModel:
     )
     customer: Annotated[
         Annotated[str, AfterValidator(CustomerConverter().should_exist)] | ApiOmitted,
-        RestrictEditions(supported_editions={Edition.CME}, required_if_supported=True),
+        RestrictEditions(supported_editions={Edition.ULTIMATEMT}, required_if_supported=True),
     ] = api_field(
         example="provider",
         description=edition_field_description(
             "By specifying a customer, you configure on which sites the user object will be "
             "available. 'global' will make the object available on all sites.",
-            supported_editions={Edition.CME},
+            supported_editions={Edition.ULTIMATEMT},
             field_required=True,
         ),
         default_factory=ApiOmitted,

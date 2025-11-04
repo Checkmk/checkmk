@@ -60,7 +60,7 @@ def test_builtin_icons_and_actions() -> None:
         "wato",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_icons_and_actions += [
             "agent_deployment",
             "deployment_status",

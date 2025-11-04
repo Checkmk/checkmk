@@ -188,7 +188,7 @@ def render_connections_page(
             table.cell(_("ID"), connection_id)
             table.cell(_("Name"), connection.get("name", connection_id))
 
-            if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+            if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
                 table.cell(_("Customer"), customer.get_customer_name(connection))
 
             table.cell(_("Description"))
@@ -215,7 +215,7 @@ def add_change(*, action_name: str, text: LogMessage, sites: list[SiteId], use_g
 def get_affected_sites(
     site_configs: SiteConfigurations, connection: ConfigurableUserConnectionSpec
 ) -> list[SiteId]:
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         # TODO CMK-14203
         _customer_api = customer_api()
         customer: str | None = connection.get("customer", SCOPE_GLOBAL)

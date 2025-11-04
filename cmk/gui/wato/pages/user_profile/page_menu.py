@@ -48,7 +48,7 @@ def page_menu_dropdown_user_related(
 def _page_menu_entries_related(
     page_name: str, show_shortcuts: bool = True
 ) -> Iterator[PageMenuEntry]:
-    is_cse_edition = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CSE
+    is_cse_edition = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CLOUD
 
     must_change_password = request.get_ascii_input("reason") in ("expired", "enforced")
 

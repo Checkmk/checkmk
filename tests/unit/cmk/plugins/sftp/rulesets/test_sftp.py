@@ -24,7 +24,7 @@ def test_rule_spec_active_check_sftp__migrated_2_3__values_pass_validation() -> 
         },
     )
     validating_rule_spec = convert_to_legacy_rulespec(
-        rule_spec_active_check_sftp, Edition.CRE, lambda x: x
+        rule_spec_active_check_sftp, Edition.COMMUNITY, lambda x: x
     )
     validating_rule_spec.valuespec.validate_datatype(rule_2_3, "")
     validating_rule_spec.valuespec.validate_value(rule_2_3, "")

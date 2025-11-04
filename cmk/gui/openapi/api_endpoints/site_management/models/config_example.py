@@ -59,7 +59,7 @@ def default_config_example() -> SiteConfigAPISpec:
         },
     )
 
-    if version.edition(paths.omd_root) is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.ULTIMATEMT:
         r["basic_settings"]["customer"] = "provider"
 
     return r

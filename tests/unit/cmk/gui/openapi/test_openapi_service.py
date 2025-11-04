@@ -12,7 +12,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 managedtest = pytest.mark.skipif(
-    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+    version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT, reason="see #7213"
 )
 
 

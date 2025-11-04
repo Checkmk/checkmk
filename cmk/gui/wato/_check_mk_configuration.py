@@ -470,7 +470,7 @@ def _web_log_level_elements():
         ),
     ]
 
-    if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
+    if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
         loggers.extend(
             [
                 (
@@ -2725,7 +2725,7 @@ ConfigVariableChooseSNMPBackend = ConfigVariable(
     valuespec=lambda context: Transform(
         valuespec=DropdownChoice(
             title=cmk_version.mark_edition_only(
-                _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+                _("Choose SNMP backend"), [cmk_version.Edition.ULTIMATEMT, cmk_version.Edition.PRO]
             ),
             choices=[
                 (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
@@ -3247,7 +3247,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
             ),
         ),
     ]
-    if edition(cmk.utils.paths.omd_root) is Edition.CSE:
+    if edition(cmk.utils.paths.omd_root) is Edition.CLOUD:
         return choices
 
     choices.append(
@@ -4653,7 +4653,7 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                     filename="wato.py",
                 )
             )
-            if edition(cmk.utils.paths.omd_root) in (Edition.CME, Edition.CCE)
+            if edition(cmk.utils.paths.omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE)
             else ""
         ),
         sorted=False,
@@ -5179,7 +5179,7 @@ SnmpBackendHosts = HostRulespec(
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
     title=lambda: cmk_version.mark_edition_only(
-        _("Hosts using a specific SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+        _("Hosts using a specific SNMP Backend"), [cmk_version.Edition.ULTIMATEMT, cmk_version.Edition.PRO]
     ),
 )
 

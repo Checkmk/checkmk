@@ -199,7 +199,7 @@ def _additional_info(
     rule_value: object,
     contact_groups: GroupSpec,
 ) -> _AdditionalInfo:
-    if version.edition(paths.omd_root) is not version.Edition.CME:
+    if version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT:
         return _AdditionalInfo(messages=[], skip_user_input=False)
     if ruleset.name not in (
         "host_contactgroups",

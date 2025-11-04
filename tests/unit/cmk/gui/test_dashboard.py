@@ -88,7 +88,7 @@ def test_dashlet_registry_plugins() -> None:
         "snapin",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_plugins += [
             "alerts_bar_chart",
             "alert_overview",
@@ -131,7 +131,7 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
         ("linked_view", False),
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected += [
             ("custom_graph", 60),
             ("combined_graph", 60),

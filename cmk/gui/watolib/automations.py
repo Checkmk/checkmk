@@ -596,7 +596,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str, *, debug
         raise MKAutomationException(response)
     if isinstance(eval_response, dict):
         if (
-            cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
+            cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT
             and eval_response["edition_short"] != "cme"
         ):
             raise MKUserError(

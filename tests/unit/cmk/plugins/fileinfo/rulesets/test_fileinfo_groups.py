@@ -76,7 +76,7 @@ from cmk.plugins.fileinfo.rulesets.fileinfo_groups import rule_spec_fileinfo_gro
 )
 def test_rule_spec_fileinfo_groups_migration_validation(rule: dict[str, object]) -> None:
     validating_rule_spec = convert_to_legacy_rulespec(
-        rule_spec_fileinfo_groups_checking, Edition.CRE, lambda x: x
+        rule_spec_fileinfo_groups_checking, Edition.COMMUNITY, lambda x: x
     )
     validating_rule_spec.valuespec.validate_datatype(rule, "")
     validating_rule_spec.valuespec.validate_value(rule, "")

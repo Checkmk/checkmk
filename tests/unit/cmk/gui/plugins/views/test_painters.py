@@ -874,7 +874,7 @@ def test_registered_painters() -> None:
         "wato_folder_rel",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_painters += [
             "svc_metrics_forecast",
             "svc_metrics_hist",
@@ -894,7 +894,7 @@ def test_registered_painters() -> None:
             "downtime_recurring",
         ]
 
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         expected_painters += [
             "host_customer",
             "customer_id",

@@ -2793,7 +2793,7 @@ class ConfigCache:
     def _is_inline_backend_supported() -> bool:
         return (
             "netsnmp" in sys.modules
-            and cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE
+            and cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY
         )
 
     def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
@@ -3213,7 +3213,7 @@ class ConfigCache:
         if actions := self.icons_and_actions(hostname):
             attrs["_ACTIONS"] = ",".join(actions)
 
-        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
             attrs["_CUSTOMER"] = current_customer  # type: ignore[name-defined,unused-ignore]
 
         return attrs
@@ -3641,13 +3641,13 @@ def make_fetcher_trigger(
         return PlainFetcherTrigger()
 
     match edition:
-        case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
+        case cmk_version.Edition.ULTIMATE | cmk_version.Edition.ULTIMATEMT | cmk_version.Edition.CLOUD:
             from cmk.relay_fetcher_trigger.trigger import (  # type: ignore[import-not-found, unused-ignore]
                 RelayFetcherTrigger,
             )
 
             return RelayFetcherTrigger(relay_id=relay_id, omd_root=cmk.utils.paths.omd_root)
-        case cmk_version.Edition.CEE | cmk_version.Edition.CRE:
+        case cmk_version.Edition.PRO | cmk_version.Edition.COMMUNITY:
             return PlainFetcherTrigger()
 
 

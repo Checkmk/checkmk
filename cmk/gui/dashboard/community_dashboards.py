@@ -19,7 +19,7 @@ def register_builtin_dashboards(builtin: dict[DashboardName, DashboardConfig]) -
 
     # CEE uses specific "main" dashboard with new CEE specific dashlets.
     # CRE should use the problem dashboard as main dashboard
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         main_dashboard = builtin["main"] = builtin.pop("problems")
         main_dashboard["title"] = _l("Main dashboard")
         main_dashboard["icon"] = "dashboard_main"

@@ -38,7 +38,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 from cmk.utils.paths import omd_root
 
-OPENSHIFT_EDITIONS = (Edition.CME, Edition.CCE, Edition.CEE)
+OPENSHIFT_EDITIONS = (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.PRO)
 
 
 def _tcp_timeouts() -> Dictionary:

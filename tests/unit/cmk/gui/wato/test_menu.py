@@ -17,7 +17,7 @@ from cmk.utils import paths
 def expected_items() -> dict[str, list[str]]:
     agents_items = []
 
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         agents_items += [
             "download_agents_linux",
             "download_agents_windows",
@@ -31,7 +31,7 @@ def expected_items() -> dict[str, list[str]]:
         "download_agents",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         agents_items.append("agent_registration")
 
     agents_items += [
@@ -48,12 +48,12 @@ def expected_items() -> dict[str, list[str]]:
         "mkeventd_rule_packs",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         events_items.append("alert_handlers")
 
     maintenance_items = ["backup"]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         maintenance_items.append("licensing")
         maintenance_items.append("mkps")
 
@@ -70,7 +70,7 @@ def expected_items() -> dict[str, list[str]]:
         "tags",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         hosts_items.append("dcd_connections")
 
     hosts_items += [
@@ -80,15 +80,15 @@ def expected_items() -> dict[str, list[str]]:
     ]
 
     if cmk_version.edition(paths.omd_root) in [
-        cmk_version.Edition.CCE,
-        cmk_version.Edition.CME,
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
     ]:
         hosts_items.append("otel_collectors_receivers")
         hosts_items.append("otel_collectors_prom_scrapes")
         hosts_items.append("relays")
 
     users_items = []
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         users_items.append("customer_management")
     users_items.extend(
         [
@@ -98,7 +98,7 @@ def expected_items() -> dict[str, list[str]]:
             "ldap_config",
         ]
     )
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         users_items.append("saml_config")
     users_items.append("user_attrs")
 
@@ -137,7 +137,7 @@ def expected_items() -> dict[str, list[str]]:
         "users": users_items,
     }
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_items_dict.update(
             {
                 "exporter": ["influxdb_connections"],

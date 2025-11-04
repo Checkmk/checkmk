@@ -33,7 +33,7 @@ from cmk.plugins.lvm.rulesets.lvs_pools import rule_spec_lvm_lvs_pools
 )
 def test_rule_spec_lvm_lvs_pools(rule: dict[str, object]) -> None:
     validating_rule_spec = convert_to_legacy_rulespec(
-        rule_spec_lvm_lvs_pools, Edition.CRE, lambda x: x
+        rule_spec_lvm_lvs_pools, Edition.COMMUNITY, lambda x: x
     )
     validating_rule_spec.valuespec.validate_datatype(rule, "")
     validating_rule_spec.valuespec.validate_value(rule, "")

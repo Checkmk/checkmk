@@ -2295,7 +2295,7 @@ class BIModeAggregations(ABCBIMode):
 
                 table.cell(_("ID"), aggregation_id)
 
-                if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+                if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
                     table.cell(_("Customer"))
                     if bi_aggregation.customer:
                         html.write_text_permissive(

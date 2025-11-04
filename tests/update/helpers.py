@@ -263,7 +263,7 @@ class BaseVersions:
     if edition_from_env().is_saas_edition():
         base_packages = [
             CMKPackageInfo(
-                CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"), CMKEdition(CMKEdition.CSE)
+                CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"), CMKEdition(CMKEdition.CLOUD)
             )
         ]
     else:

@@ -25,7 +25,7 @@ def test_registered_jobs() -> None:
         "execute_deprecation_tests_and_notify_users",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected += [
             "execute_host_registration_job",
             "execute_discover_registered_hosts_job",

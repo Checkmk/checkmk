@@ -72,7 +72,7 @@ def page_handler(ctx: PageContext) -> None:
     # chance to configure a backup for remote sites.
     # config.current_customer can not be checked with CRE repos
     if (
-        cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
+        cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT
         and not customer_api().is_provider(ctx.config.current_customer)
         and not current_mode.startswith(("backup", "edit_backup"))
     ):

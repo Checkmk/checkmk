@@ -70,7 +70,7 @@ class TestPageAutomation:
 
     @pytest.fixture(name="patch_edition")
     def patch_edition_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: cmk_version.Edition.CEE)
+        monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: cmk_version.Edition.PRO)
 
     @pytest.fixture(name="fix_secret_checking")
     def patch_distributed_setup_secret(self, monkeypatch: pytest.MonkeyPatch) -> None:

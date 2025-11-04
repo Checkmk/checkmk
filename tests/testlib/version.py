@@ -38,7 +38,7 @@ class TypeCMKEdition:
     to the test code.
 
     Usage:
-    - `edition = CMKEdition.CCE/CEE/CME/CRE/CSE`
+    - `edition = CMKEdition.ULTIMATE/PRO/ULTIMATEMT/COMMUNITY/CLOUD`
     - `pkg_edition = CMKEdition(edition)`
     - `pkg_edition = CMKEdition.edition_from_text("cloud")`
     - `pkg_edition = CMKEdition.from_version_string("2.4.0.cee")`
@@ -50,11 +50,11 @@ class TypeCMKEdition:
     as 'enum.Enum' with existing members must not be subclassed.
     """
 
-    CRE = Edition.CRE
-    CEE = Edition.CEE
-    CCE = Edition.CCE
-    CSE = Edition.CSE
-    CME = Edition.CME
+    COMMUNITY = Edition.COMMUNITY
+    PRO = Edition.PRO
+    ULTIMATE = Edition.ULTIMATE
+    ULTIMATEMT = Edition.ULTIMATEMT
+    CLOUD = Edition.CLOUD
 
     def __init__(self, edition: Edition | None = None) -> None:
         self._edition_data: type[Edition] | Edition
@@ -84,7 +84,7 @@ class TypeCMKEdition:
             return self._edition_data
         raise AttributeError(
             "An `edition` has not been assigned to the object!\n"
-            "Use `CMKEdition(CMKEdition.CCE/CEE/...)` to initialize the object with an edition."
+            "Use `CMKEdition(CMKEdition.ULTIMATE/PRO/...)` to initialize the object with an edition."
         )
 
     @property
@@ -103,19 +103,19 @@ class TypeCMKEdition:
         return self.edition_data.title
 
     def is_managed_edition(self) -> bool:
-        return self.edition_data is self.CME
+        return self.edition_data is self.ULTIMATEMT
 
     def is_enterprise_edition(self) -> bool:
-        return self.edition_data is self.CEE
+        return self.edition_data is self.PRO
 
     def is_raw_edition(self) -> bool:
-        return self.edition_data is self.CRE
+        return self.edition_data is self.COMMUNITY
 
     def is_cloud_edition(self) -> bool:
-        return self.edition_data is self.CCE
+        return self.edition_data is self.ULTIMATE
 
     def is_saas_edition(self) -> bool:
-        return self.edition_data is self.CSE
+        return self.edition_data is self.CLOUD
 
     def edition_from_text(self, value: str) -> "TypeCMKEdition":
         """Parse Checkmk edition from short or long form of Checkmk edition texts.
@@ -373,7 +373,7 @@ def version_from_env(
     )
 
 
-def edition_from_env(fallback: TypeCMKEdition = CMKEdition(CMKEdition.CEE)) -> TypeCMKEdition:
+def edition_from_env(fallback: TypeCMKEdition = CMKEdition(CMKEdition.PRO)) -> TypeCMKEdition:
     value = os.getenv("EDITION", "")
     try:
         edition = CMKEdition.edition_from_text(value)

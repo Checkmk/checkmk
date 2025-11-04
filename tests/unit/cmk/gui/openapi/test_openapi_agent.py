@@ -15,7 +15,7 @@ from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
 @pytest.mark.skipif(
-    cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE,
+    cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY,
     reason="No agent deployment in raw edition",
 )
 def test_deploy_agent(wsgi_app: WebTestAppForCMK) -> None:
@@ -54,7 +54,7 @@ def test_download_agent_shipped_with_checkmk(
 
 
 @pytest.mark.skipif(
-    cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE,
+    cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY,
     reason="endpoint not available in raw edition",
 )
 def test_openapi_agent_key_id_above_zero_regression(clients: ClientRegistry) -> None:

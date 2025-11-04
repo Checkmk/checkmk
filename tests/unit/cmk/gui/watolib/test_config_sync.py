@@ -120,7 +120,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
         f.write("DUMMY_PWD_ENTRY \n")
 
     with monkeypatch.context() as m:
-        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
             m.setattr(
                 active_config,
                 "customers",
@@ -267,7 +267,7 @@ def _generate_sync_snapshot(
 ) -> config_sync.SnapshotSettings:
     snapshot_data_collector_class = (
         "CMESnapshotDataCollector"
-        if edition is cmk_version.Edition.CME
+        if edition is cmk_version.Edition.ULTIMATEMT
         else "CRESnapshotDataCollector"
     )
 
@@ -352,7 +352,7 @@ def _get_expected_paths(
         "etc/rabbitmq/definitions.d/definitions.next.json",
     ]
 
-    if edition is not cmk_version.Edition.CRE:
+    if edition is not cmk_version.Edition.COMMUNITY:
         expected_paths += [
             "etc/check_mk/dcd.d/wato/distributed.mk",
             "etc/check_mk/dcd.d",
@@ -364,12 +364,12 @@ def _get_expected_paths(
             "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
         ]
 
-    if edition is not cmk_version.Edition.CME:
+    if edition is not cmk_version.Edition.ULTIMATEMT:
         expected_paths += ["etc/omd/site.conf"]
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
-    if edition is not cmk_version.Edition.CME:
+    if edition is not cmk_version.Edition.ULTIMATEMT:
         expected_paths += [
             "etc/check_mk/mkeventd.d/mkp",
             "etc/check_mk/mkeventd.d/mkp/rule_packs",
@@ -382,7 +382,7 @@ def _get_expected_paths(
         ]
 
     # TODO: Shouldn't we clean up these subtle differences?
-    if edition is cmk_version.Edition.CME:
+    if edition is cmk_version.Edition.ULTIMATEMT:
         expected_paths += [
             "etc/check_mk/conf.d/customer.mk",
             "etc/check_mk/conf.d/wato/groups.mk",
@@ -418,7 +418,7 @@ def _get_expected_paths(
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
-    if edition not in (cmk_version.Edition.CRE, cmk_version.Edition.CME):
+    if edition not in (cmk_version.Edition.COMMUNITY, cmk_version.Edition.ULTIMATEMT):
         expected_paths += [
             "etc/check_mk/liveproxyd.d",
             "etc/check_mk/liveproxyd.d/wato",
@@ -429,7 +429,7 @@ def _get_expected_paths(
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if is_enterprise_repo() and edition is cmk_version.Edition.CRE:
+    if is_enterprise_repo() and edition is cmk_version.Edition.COMMUNITY:
         # CEE paths are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected_paths += [
@@ -444,7 +444,7 @@ def _get_expected_paths(
             "etc/check_mk/liveproxyd.d/wato",
         ]
 
-    if is_managed_repo() and edition is not cmk_version.Edition.CME:
+    if is_managed_repo() and edition is not cmk_version.Edition.ULTIMATEMT:
         # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected_paths += [
@@ -459,8 +459,8 @@ def _get_expected_paths(
             "local/share/check_mk/web/htdocs/themes/modern-dark/images",
         ]
 
-    if (is_cloud_repo() and edition is cmk_version.Edition.CCE) or (
-        is_managed_repo() and edition is cmk_version.Edition.CME
+    if (is_cloud_repo() and edition is cmk_version.Edition.ULTIMATE) or (
+        is_managed_repo() and edition is cmk_version.Edition.ULTIMATEMT
     ):
         expected_paths += [
             "etc/check_mk/otel_collector.d",
@@ -471,9 +471,9 @@ def _get_expected_paths(
 
     if any(
         [
-            (is_cloud_repo() and edition is cmk_version.Edition.CCE),
-            (is_managed_repo() and edition is cmk_version.Edition.CME),
-            (is_saas_repo() and edition is cmk_version.Edition.CSE),
+            (is_cloud_repo() and edition is cmk_version.Edition.ULTIMATE),
+            (is_managed_repo() and edition is cmk_version.Edition.ULTIMATEMT),
+            (is_saas_repo() and edition is cmk_version.Edition.CLOUD),
         ]
     ):
         expected_paths += [

@@ -449,7 +449,7 @@ def _generate_spec(
 ) -> dict[str, Any]:
     undocumented_tag_groups = set("Undocumented Endpoint")
 
-    if cmk_version.edition(omd_root) == cmk_version.Edition.CSE:
+    if cmk_version.edition(omd_root) == cmk_version.Edition.CLOUD:
         undocumented_tag_groups.add("Checkmk Internal")
 
     populate_spec(version, spec, target, undocumented_tag_groups, str(omd_site()))

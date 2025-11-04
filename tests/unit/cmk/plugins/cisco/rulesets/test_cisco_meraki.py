@@ -35,7 +35,7 @@ from cmk.plugins.cisco_meraki.rulesets.agent_cisco_meraki import rule_spec_cisco
 )
 def test_rule_spec_cisco_prime_migration_validation(rule: dict[str, object]) -> None:
     validating_rule_spec = convert_to_legacy_rulespec(
-        rule_spec_cisco_meraki, Edition.CRE, lambda x: x
+        rule_spec_cisco_meraki, Edition.COMMUNITY, lambda x: x
     )
     validating_rule_spec.valuespec.validate_datatype(rule, "")
     validating_rule_spec.valuespec.validate_value(rule, "")

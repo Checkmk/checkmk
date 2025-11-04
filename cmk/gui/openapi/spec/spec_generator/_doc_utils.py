@@ -48,13 +48,13 @@ class DefaultStatusCodeDescription(enum.Enum):
 
 def format_endpoint_supported_editions(editions: set[Edition]) -> Sequence[EditionLabel]:
     colors: Mapping[Edition, str] = {
-        Edition.CEE: "#74ebdd",
-        Edition.CRE: "#afb9c2",
-        Edition.CCE: "#586aa2",
-        Edition.CSE: "#7e96f3",
-        Edition.CME: "#70a8db",
+        Edition.PRO: "#74ebdd",
+        Edition.COMMUNITY: "#afb9c2",
+        Edition.ULTIMATE: "#586aa2",
+        Edition.CLOUD: "#7e96f3",
+        Edition.ULTIMATEMT: "#70a8db",
     }
-    ordered_editions = (Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME, Edition.CSE)
+    ordered_editions = (Edition.COMMUNITY, Edition.PRO, Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD)
     edition_labels: list[EditionLabel] = []
     for edition in ordered_editions:
         if edition in editions:

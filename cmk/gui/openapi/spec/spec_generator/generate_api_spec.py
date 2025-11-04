@@ -89,7 +89,7 @@ def _import_cre_endpoints() -> None:
             register as community_registration,
         )
 
-        community_registration(Edition.CRE, ignore_duplicate_endpoints=True)
+        community_registration(Edition.COMMUNITY, ignore_duplicate_endpoints=True)
 
 
 def _import_cee_endpoints() -> None:
@@ -98,7 +98,7 @@ def _import_cee_endpoints() -> None:
             register as cee_registration,
         )
 
-        cee_registration(Edition.CEE, ignore_duplicate_endpoints=True)
+        cee_registration(Edition.PRO, ignore_duplicate_endpoints=True)
 
 
 def _import_cce_endpoints() -> None:
@@ -107,7 +107,7 @@ def _import_cce_endpoints() -> None:
             register as cce_registration,
         )
 
-        cce_registration(Edition.CCE, ignore_duplicate_endpoints=True)
+        cce_registration(Edition.ULTIMATE, ignore_duplicate_endpoints=True)
 
 
 def _import_cme_endpoints() -> None:
@@ -116,7 +116,7 @@ def _import_cme_endpoints() -> None:
             register as cme_registration,
         )
 
-        cme_registration(Edition.CME, ignore_duplicate_endpoints=True)
+        cme_registration(Edition.ULTIMATEMT, ignore_duplicate_endpoints=True)
 
 
 def _import_cse_endpoints() -> None:
@@ -125,7 +125,7 @@ def _import_cse_endpoints() -> None:
             register as cse_registration,
         )
 
-        cse_registration(Edition.CSE, ignore_duplicate_endpoints=True)
+        cse_registration(Edition.CLOUD, ignore_duplicate_endpoints=True)
 
 
 def process_version(args: argparse.Namespace) -> None:

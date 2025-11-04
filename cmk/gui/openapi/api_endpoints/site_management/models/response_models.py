@@ -43,13 +43,13 @@ class BasicSettingsModel:
     )
     customer: Annotated[
         str | ApiOmitted,
-        RestrictEditions(supported_editions={Edition.CME}, required_if_supported=True),
+        RestrictEditions(supported_editions={Edition.ULTIMATEMT}, required_if_supported=True),
     ] = api_field(
         example="provider",
         description=edition_field_description(
             "By specifying a customer, you configure on which sites the user object will be "
             "available. 'global' will make the object available on all sites.",
-            supported_editions={Edition.CME},
+            supported_editions={Edition.ULTIMATEMT},
             field_required=True,
         ),
         default_factory=ApiOmitted,
@@ -61,7 +61,7 @@ class BasicSettingsModel:
             site_id=site_configuration["id"],
             alias=site_configuration["alias"],
         )
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
             model.customer = site_configuration.get("customer", "global")
         return model
 

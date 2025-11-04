@@ -25,12 +25,14 @@ from cmk.gui import log, utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.config.base import (
+    CREConfig,  # pylint: disable=cmk-module-layer-violation
+)
 from cmk.gui.type_defs import Key, RoleName
 from cmk.utils import paths
 from cmk.utils.experimental_config import load_experimental_config
 
-if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
     from cmk.gui.nonfree.pro.plugins.config.cee import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CEEConfig,
     )
@@ -41,9 +43,9 @@ else:
 
 
 if cmk_version.edition(paths.omd_root) in {
-    cmk_version.Edition.CCE,
-    cmk_version.Edition.CME,
-    cmk_version.Edition.CSE,
+    cmk_version.Edition.ULTIMATE,
+    cmk_version.Edition.ULTIMATEMT,
+    cmk_version.Edition.CLOUD,
 }:
     from cmk.gui.nonfree.ultimate.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CCEConfig,
@@ -54,7 +56,7 @@ else:
         pass
 
 
-if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
     from cmk.gui.nonfree.ultimatemt.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CMEConfig,
     )

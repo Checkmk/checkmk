@@ -9,7 +9,7 @@ import datetime
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator
 
 from .markup import markdown_to_html, nowiki_to_markdown
 
@@ -17,11 +17,12 @@ from .markup import markdown_to_html, nowiki_to_markdown
 class Edition(Enum):
     # would love to use cmk.ccc.version.Edition
     # but pydantic does not understand it.
-    CRE = "cre"
-    CSE = "cse"
-    CEE = "cee"
-    CCE = "cce"
-    CME = "cme"
+    # TODO change values
+    COMMUNITY = "cre"
+    PRO = "cee"
+    ULTIMATE = "cce"
+    ULTIMATEMT = "cme"
+    CLOUD = "cse"
 
 
 class Level(Enum):

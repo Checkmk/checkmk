@@ -736,7 +736,7 @@ def test_update_url_prefix_400(clients: ClientRegistry) -> None:
 
 def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
     config = _default_config()
-    if version.edition(paths.omd_root) is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.ULTIMATEMT:
         r = clients.SiteManagement.create(site_config=config)
         assert "customer" in r.json["extensions"]["basic_settings"]
         del config["basic_settings"]["customer"]
@@ -776,7 +776,7 @@ def test_validation_layer_min_config(clients: ClientRegistry) -> None:
             "is_trusted": False,
         },
     }
-    if version.edition(paths.omd_root) is version.Edition.CME:
+    if version.edition(paths.omd_root) is version.Edition.ULTIMATEMT:
         r["basic_settings"]["customer"] = "provider"
 
     clients.SiteManagement.create(site_config=r)

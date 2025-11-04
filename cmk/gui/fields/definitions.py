@@ -1039,7 +1039,7 @@ class _CustomerField(base.String):
         self._allow_global = allow_global
         self._required = required
         description = edition_field_description(
-            description, supported_editions={version.Edition.CME}, field_required=required
+            description, supported_editions={version.Edition.ULTIMATEMT}, field_required=required
         )
         super().__init__(
             example=example,
@@ -1051,7 +1051,7 @@ class _CustomerField(base.String):
 
     @override
     def _validate(self, value: str | None) -> None:
-        if version.edition(paths.omd_root) is not version.Edition.CME:
+        if version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT:
             raise self.make_error("edition_not_supported")
 
         if self._required and not self._allow_global and not value:
@@ -1102,13 +1102,13 @@ class _BakeAgentField(Boolean):
     ) -> None:
         description = edition_field_description(
             description=description,
-            excluded_editions={version.Edition.CRE},
+            excluded_editions={version.Edition.COMMUNITY},
         )
         super().__init__(description=description, **kwargs)
 
     @override
     def _validate(self, value: bool) -> None:
-        if version.edition(paths.omd_root) is version.Edition.CRE:
+        if version.edition(paths.omd_root) is version.Edition.COMMUNITY:
             raise self.make_error("edition_not_supported")
 
         super()._validate(value)

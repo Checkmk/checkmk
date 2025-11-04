@@ -283,7 +283,7 @@ def test_format_nagios_object() -> None:
 def test_create_nagios_host_spec(
     hostname_str: str, result: dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         result = result.copy()
         result["_CUSTOMER"] = "provider"
         result["__LABELSOURCE_cmk/customer"] = "discovered"

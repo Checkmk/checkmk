@@ -164,6 +164,6 @@ from cmk.plugins.collection.rulesets.httpv1 import rule_spec_http
     ],
 )
 def test_rule_spec_http_migration_validation(rule: dict[str, object]) -> None:
-    validating_rule_spec = convert_to_legacy_rulespec(rule_spec_http, Edition.CRE, lambda x: x)
+    validating_rule_spec = convert_to_legacy_rulespec(rule_spec_http, Edition.COMMUNITY, lambda x: x)
     validating_rule_spec.valuespec.validate_datatype(rule, "")
     validating_rule_spec.valuespec.validate_value(rule, "")

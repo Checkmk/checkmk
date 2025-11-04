@@ -18,7 +18,7 @@ class GlobalSettings(BaseModel):
     is_activate: set[str]
 
     def is_activated(self, varname: str) -> bool:
-        return edition(paths.omd_root) is not Edition.CSE or varname in self.is_activate
+        return edition(paths.omd_root) is not Edition.CLOUD or varname in self.is_activate
 
 
 class RuleSetGroup(BaseModel):
@@ -41,7 +41,7 @@ def load_global_config() -> GlobalConfig:
         with open(path, encoding="utf-8") as file:
             return GlobalConfig.model_validate_json(file.read())
     except Exception as e:
-        if edition(paths.omd_root) is not Edition.CSE:
+        if edition(paths.omd_root) is not Edition.CLOUD:
             LOGGER.debug("Failed to load config from %s: %s", path, e)
         return GlobalConfig(
             global_settings=GlobalSettings(is_activate=set[str]()),

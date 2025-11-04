@@ -32,13 +32,13 @@ def test_registered_snapins() -> None:
         "wato_foldertree",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_snapins += [
             "cmc_stats",
             "reports",
         ]
 
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         expected_snapins += [
             "customers",
         ]
@@ -59,7 +59,7 @@ def test_refresh_snapins() -> None:
         "time",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_refresh_snapins += [
             "cmc_stats",
         ]

@@ -117,7 +117,7 @@ EXPECTED_PARAMS_WITH_DEFAULTS = {
         "piggyback_naming_convention": "ip_region_instance",
         "access": {},
         "global_services": (
-            CRE_GLOBAL_SERVICES if edition(paths.omd_root) is Edition.CRE else ALL_GLOBAL_SERVICES
+            CRE_GLOBAL_SERVICES if edition(paths.omd_root) is Edition.COMMUNITY else ALL_GLOBAL_SERVICES
         ),
     },
 }

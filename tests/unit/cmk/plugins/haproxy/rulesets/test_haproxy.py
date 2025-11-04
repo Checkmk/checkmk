@@ -25,7 +25,7 @@ from cmk.plugins.haproxy.rulesets.haproxy import (
 )
 def test_rulesepc_frontend(value: Mapping[str, int]) -> None:
     valuespec = convert_to_legacy_rulespec(
-        rule_spec_haproxy_frontend, Edition.CRE, lambda x: x
+        rule_spec_haproxy_frontend, Edition.COMMUNITY, lambda x: x
     ).valuespec
     valuespec.validate_datatype(value, "")
     valuespec.validate_value(value, "")
@@ -36,7 +36,7 @@ def test_rulesepc_frontend(value: Mapping[str, int]) -> None:
 )
 def test_rulespec_server(value: Mapping[str, int]) -> None:
     valuespec = convert_to_legacy_rulespec(
-        rule_spec_haproxy_server, Edition.CRE, lambda x: x
+        rule_spec_haproxy_server, Edition.COMMUNITY, lambda x: x
     ).valuespec
     valuespec.validate_datatype(value, "")
     valuespec.validate_value(value, "")

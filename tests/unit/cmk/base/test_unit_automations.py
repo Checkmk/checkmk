@@ -63,7 +63,7 @@ def test_registered_automations() -> None:
         "find-unknown-check-parameter-rule-sets",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         needed_automations += [
             "bake-agents",
         ]
@@ -76,7 +76,7 @@ def test_registered_automations() -> None:
 def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
     additional_labels: dict[str, str] = {}
     additional_label_sources: dict[str, LabelSource] = {}
-    if edition(paths.omd_root) is Edition.CME:
+    if edition(paths.omd_root) is Edition.ULTIMATEMT:
         additional_labels = {"cmk/customer": "provider"}
         additional_label_sources = {"cmk/customer": "discovered"}
 

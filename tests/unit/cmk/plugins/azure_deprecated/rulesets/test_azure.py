@@ -70,7 +70,7 @@ AZURE_FS_RULESET_VALUE: Final = {
 
 def test_vs_to_fs_update() -> None:
     valuespec = convert_to_legacy_rulespec(
-        azure_ruleset.rule_spec_azure, Edition.CRE, lambda x: x
+        azure_ruleset.rule_spec_azure, Edition.COMMUNITY, lambda x: x
     ).valuespec
 
     value = valuespec.transform_value(AZURE_VS_RULESET_VALUE)

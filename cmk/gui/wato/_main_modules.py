@@ -46,7 +46,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleHostCustomAttributes)
     main_module_registry.register(MainModuleServiceGroups)
     main_module_registry.register(MainModuleUsers)
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CSE:  # disabled in CSE
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CLOUD:  # disabled in CSE
         main_module_registry.register(MainModuleRoles)
         main_module_registry.register(MainModuleLDAP)
         main_module_registry.register(MainModuleSites)
@@ -73,7 +73,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
 
     # Register the built-in agent download page on the top level of Setup only when the Agent Bakery
     # does not exist (e.g. when using CRE)
-    if cmk_version.edition(paths.omd_root) in (cmk_version.Edition.CRE,):
+    if cmk_version.edition(paths.omd_root) in (cmk_version.Edition.COMMUNITY,):
         main_module_registry.register(MainModuleAgentsWindows)
         main_module_registry.register(MainModuleAgentsLinux)
 

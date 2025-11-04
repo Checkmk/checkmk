@@ -51,7 +51,7 @@ def make_site_version_info(
     edition_short: str | None,
     license_state: LicenseState | None,
 ) -> str:
-    if edition_short == cmk_version.Edition.CRE.short:
+    if edition_short == cmk_version.Edition.COMMUNITY.short:
         # No licensing in CRE, information not necessary
         return _("Version: %s, Edition: %s") % (
             version,
@@ -71,7 +71,7 @@ def is_distributed_setup_compatible_for_licensing(
     remote_edition: cmk_version.Edition,
     remote_license_state: LicenseState | None,
 ) -> LicensingCompatibility:
-    if central_edition is cmk_version.Edition.CSE or remote_edition is cmk_version.Edition.CSE:
+    if central_edition is cmk_version.Edition.CLOUD or remote_edition is cmk_version.Edition.CLOUD:
         return EditionsIncompatible(_("CSE is not allowed in distributed monitoring."))
 
     if remote_license_state is LicenseState.FREE:
@@ -89,8 +89,8 @@ def is_distributed_setup_compatible_for_licensing(
     ):
         return compatibility
 
-    if (central_edition is cmk_version.Edition.CME) is not (
-        remote_edition is cmk_version.Edition.CME
+    if (central_edition is cmk_version.Edition.ULTIMATEMT) is not (
+        remote_edition is cmk_version.Edition.ULTIMATEMT
     ):
         return EditionsIncompatible(_("Mix of CME and non-CME is not allowed."))
     return LicensingCompatible()
@@ -101,7 +101,7 @@ def is_distributed_monitoring_compatible_for_licensing(
     central_license_state: LicenseState | None,
     remote_edition: cmk_version.Edition,
 ) -> LicensingCompatibility:
-    if central_edition is cmk_version.Edition.CSE:
+    if central_edition is cmk_version.Edition.CLOUD:
         return EditionsIncompatible(_("CSE is not allowed in distributed monitoring."))
     if not isinstance(
         compatibility := _common_is_compatible_for_licensing(
@@ -113,7 +113,7 @@ def is_distributed_monitoring_compatible_for_licensing(
     ):
         return compatibility
 
-    if central_edition is cmk_version.Edition.CME and remote_edition is cmk_version.Edition.CCE:
+    if central_edition is cmk_version.Edition.ULTIMATEMT and remote_edition is cmk_version.Edition.ULTIMATE:
         return EditionsIncompatible(_("Mix of CME and non-CME is not allowed."))
     return LicensingCompatible()
 
@@ -123,24 +123,24 @@ def _common_is_compatible_for_licensing(
     central_license_state: LicenseState | None,
     remote_edition: cmk_version.Edition,
 ) -> LicensingCompatibility:
-    if central_edition in [cmk_version.Edition.CRE, cmk_version.Edition.CEE] and remote_edition in [
-        cmk_version.Edition.CRE,
-        cmk_version.Edition.CEE,
-        cmk_version.Edition.CCE,
+    if central_edition in [cmk_version.Edition.COMMUNITY, cmk_version.Edition.PRO] and remote_edition in [
+        cmk_version.Edition.COMMUNITY,
+        cmk_version.Edition.PRO,
+        cmk_version.Edition.ULTIMATE,
     ]:
         return LicensingCompatible()
 
-    if central_edition is cmk_version.Edition.CCE:
+    if central_edition is cmk_version.Edition.ULTIMATE:
         if central_license_state in [LicenseState.UNLICENSED, LicenseState.FREE]:
             return LicenseStateIncompatible(
                 _("Remote sites are not allowed when central site in license state %s")
                 % central_license_state.readable
             )
-        if remote_edition is not cmk_version.Edition.CCE:
+        if remote_edition is not cmk_version.Edition.ULTIMATE:
             return EditionsIncompatible(_("Only CCE remote sites can be added to CCE central site"))
         return LicensingCompatible()
 
-    if central_edition is cmk_version.Edition.CME and remote_edition is cmk_version.Edition.CME:
+    if central_edition is cmk_version.Edition.ULTIMATEMT and remote_edition is cmk_version.Edition.ULTIMATEMT:
         return LicensingCompatible()
 
     return LicensingCompatible()

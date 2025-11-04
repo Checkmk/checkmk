@@ -36,7 +36,7 @@ def form_spec_mail() -> DictionaryExtended:
     # TODO register CSE specific version
     return DictionaryExtended(
         title=Title("HTML Email parameters"),
-        elements=_parameter_elements(is_cse=edition(paths.omd_root) == Edition.CSE),
+        elements=_parameter_elements(is_cse=edition(paths.omd_root) == Edition.CLOUD),
         ignored_elements=("no_floating_graphs",),
     )
 
@@ -68,7 +68,7 @@ def _url_prefix_setting(is_cse: bool) -> dict[str, DictElement[Any]]:
 def form_spec_asciimail() -> DictionaryExtended:
     return DictionaryExtended(
         title=Title("ASCII Email parameters"),
-        elements=_elements_ascii(is_cse=edition(paths.omd_root) == Edition.CSE),
+        elements=_elements_ascii(is_cse=edition(paths.omd_root) == Edition.CLOUD),
     )
 
 

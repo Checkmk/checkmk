@@ -17,7 +17,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import SetConfig
 
 managedtest = pytest.mark.skipif(
-    version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
+    version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT, reason="see #7213"
 )
 
 _DOWNTIME_COLUMNS = (

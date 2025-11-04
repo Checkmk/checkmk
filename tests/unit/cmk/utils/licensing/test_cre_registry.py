@@ -10,6 +10,6 @@ from cmk.utils.licensing.registry import licensing_handler_registry, register_cr
 
 def test_licensing_handler_registry_cre() -> None:
     register_cre_licensing_handler()
-    handler_class = licensing_handler_registry[Edition.CRE]
+    handler_class = licensing_handler_registry[Edition.COMMUNITY]
     assert handler_class.__name__ == "CRELicensingHandler"
     assert issubclass(handler_class, LicensingHandler)

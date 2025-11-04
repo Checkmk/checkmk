@@ -19,7 +19,7 @@ def test_registered_generators() -> None:
         "ec_sample_rule_pack",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_generators += [
             "cee_agent_bakery",
             "cee_rrd_config",
@@ -35,7 +35,7 @@ def test_get_sorted_generators() -> None:
         "create_local_site_connection",
     ]
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected += [
             "cee_rrd_config",
             "cee_agent_bakery",

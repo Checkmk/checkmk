@@ -372,7 +372,7 @@ class PermissionsHandler:
 
     @staticmethod
     def _permission_global_setting(url: str, config: Config) -> bool:
-        if edition(paths.omd_root) is not Edition.CSE:
+        if edition(paths.omd_root) is not Edition.CLOUD:
             return True
         _, query_vars = file_name_and_query_vars_from_url(url)
         return get_global_config().global_settings.is_activated(query_vars["varname"][0])

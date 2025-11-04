@@ -46,7 +46,7 @@ notification_plugin_timeout = 60
 # "both"   - Asynchronous local delivery plus remote forwarding
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
-if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
     notification_spooling: bool | Literal["local", "remote", "both", "off"] = "off"
 else:
     notification_spooling = "local"

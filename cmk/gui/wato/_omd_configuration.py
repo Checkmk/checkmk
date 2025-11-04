@@ -125,7 +125,7 @@ ConfigVariableSiteCore = ConfigVariable(
 
 def _monitoring_core_choices(edition: Edition) -> list[DropdownChoiceEntry[str]]:
     cores = []
-    if edition is not Edition.CRE:
+    if edition is not Edition.COMMUNITY:
         cores.append(("cmc", _("Checkmk Micro Core")))
 
     cores += [

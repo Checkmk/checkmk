@@ -314,7 +314,7 @@ def _load_copy_of_existing_user(
 
 
 def _set_customer_for_user(user: UserSpec, customer_id: str | None) -> None:
-    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         user["customer"] = (
             customer_api().default_customer_id() if customer_id is None else customer_id
         )

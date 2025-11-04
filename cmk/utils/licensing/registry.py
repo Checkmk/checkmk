@@ -37,7 +37,7 @@ licensing_handler_registry = LicensingHandlerRegistry()
 
 
 def get_available_licensing_handler_type() -> type[LicensingHandler]:
-    if (ed := edition(paths.omd_root)) is Edition.CRE:
+    if (ed := edition(paths.omd_root)) is Edition.COMMUNITY:
         return CRELicensingHandler
     raise ValueError(ed)
 
@@ -98,6 +98,6 @@ def get_licensing_notification_handler() -> NotificationHandler:
 def register_cre_licensing_handler() -> None:
     # There is no license management planned for the CRE -> Always licensed
     licensing_handler_registry.register(
-        cmk_edition=Edition.CRE,
+        cmk_edition=Edition.COMMUNITY,
         licensing_handler=CRELicensingHandler,
     )

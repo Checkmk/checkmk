@@ -22,7 +22,7 @@ def test_theme_loading_and_setting(tmp_path: Path) -> None:
     )
 
     theme = Theme(
-        edition=Edition.CRE,
+        edition=Edition.COMMUNITY,
         web_dir=tmp_path,
         local_web_dir=tmp_path / "local",
     )
@@ -53,4 +53,4 @@ def test_has_custom_logo(tmp_path: Path, edition: Edition, with_logo: bool) -> N
         logo.touch()
     elif logo.exists():
         logo.unlink()
-    assert theme.has_custom_logo("login_logo") is (edition is Edition.CME and with_logo)
+    assert theme.has_custom_logo("login_logo") is (edition is Edition.ULTIMATEMT and with_logo)

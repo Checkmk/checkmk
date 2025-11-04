@@ -185,7 +185,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
             "navigation_embedding_page": makeuri_contextless(request, [], filename="index.py"),
         },
         "available_layouts": ["relative_grid"]
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY
         else ["relative_grid", "responsive_grid"],
     }
     html.vue_component("cmk-dashboard", data=page_properties)
@@ -207,7 +207,7 @@ def _get_default_dashboard_name() -> str:
     They will see the dashboard that has been built for operators and is built to show only the host
     and service problems that are relevant for the user.
     """
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         return "main"  # problems = main in raw edition
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
@@ -635,7 +635,7 @@ def _page_menu(
 
 
 def _page_menu_dashboards(name: DashboardName) -> Iterable[PageMenuTopic]:
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         linked_dashboards = ["main", "checkmk"]  # problems = main in raw edition
     else:
         linked_dashboards = ["main", "problems", "checkmk"]

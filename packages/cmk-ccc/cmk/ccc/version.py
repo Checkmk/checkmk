@@ -34,11 +34,17 @@ class _EditionValue(NamedTuple):
 
 
 class Edition(enum.Enum):
-    CRE = _EditionValue("cre", "community", "Checkmk Community (formerly Raw)")
-    CEE = _EditionValue("cee", "pro", "Checkmk Pro (formerly Enterprise)")
-    CCE = _EditionValue("cce", "ultimate", "Checkmk Ultimate (formerly Cloud)")
-    CSE = _EditionValue("cse", "cloud", "Checkmk Cloud")
-    CME = _EditionValue("cme", "ultimatemt", "Checkmk Ultimate with multi-tenancy (formerly MSP)")
+    COMMUNITY = _EditionValue(
+        "community", "community", "Checkmk Community (formerly Raw)"
+    )
+    PRO = _EditionValue("pro", "pro", "Checkmk Pro (formerly Enterprise)")
+    ULTIMATE = _EditionValue(
+        "ultimate", "ultimate", "Checkmk Ultimate (formerly Cloud)"
+    )
+    ULTIMATEMT = _EditionValue(
+        "ultimatemt", "ultimatemt", "Checkmk Ultimate with multi-tenancy (formerly MSP)"
+    )
+    CLOUD = _EditionValue("cloud", "cloud", "Checkmk Cloud")
 
     @classmethod
     def from_version_string(cls, raw: str) -> Edition:
@@ -77,7 +83,7 @@ def edition(omd_root: Path) -> Edition:
     except KeyError:
         # Without this fallback CI jobs may fail.
         # The last job known to fail was we the building of the sphinx documentation
-        return Edition.CRE
+        return Edition.COMMUNITY
 
 
 def is_cma() -> bool:
@@ -85,35 +91,35 @@ def is_cma() -> bool:
 
 
 def edition_has_enforced_licensing(ed: Edition, /) -> bool:
-    return ed in (Edition.CME, Edition.CCE, Edition.CEE)
+    return ed in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.PRO)
 
 
 def edition_has_license_scheduler(ed: Edition, /) -> bool:
-    return ed in (Edition.CME, Edition.CCE, Edition.CEE)
+    return ed in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.PRO)
 
 
 def edition_supports_nagvis(ed: Edition, /) -> bool:
-    return ed is not Edition.CSE
+    return ed is not Edition.CLOUD
 
 
 def edition_supports_relay(ed: Edition, /) -> bool:
-    return ed in (Edition.CME, Edition.CCE, Edition.CSE)
+    return ed in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.CLOUD)
 
 
 def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
     """
-    >>> mark_edition_only("Feature", [Edition.CRE])
+    >>> mark_edition_only("Feature", [Edition.COMMUNITY])
     'Feature (Checkmk Community (formerly Raw))'
-    >>> mark_edition_only("Feature", [Edition.CEE])
+    >>> mark_edition_only("Feature", [Edition.PRO])
     'Feature (Checkmk Pro (formerly Enterprise))'
-    >>> mark_edition_only("Feature", [Edition.CCE])
+    >>> mark_edition_only("Feature", [Edition.ULTIMATE])
     'Feature (Checkmk Ultimate (formerly Cloud))'
-    >>> mark_edition_only("Feature", [Edition.CME])
+    >>> mark_edition_only("Feature", [Edition.ULTIMATEMT])
     'Feature (Checkmk Ultimate with multi-tenancy (formerly MSP))'
-    >>> mark_edition_only("Feature", [Edition.CCE, Edition.CME])
+    >>> mark_edition_only("Feature", [Edition.ULTIMATE, Edition.ULTIMATEMT])
     'Feature (Checkmk Ultimate)'
     """
-    if exclusive_to == [Edition.CCE, Edition.CME]:
+    if exclusive_to == [Edition.ULTIMATE, Edition.ULTIMATEMT]:
         return f"{feature_to_mark} (Checkmk Ultimate)"
     return f"{feature_to_mark} ({', '.join([e.title for e in exclusive_to])})"
 
@@ -230,7 +236,9 @@ class Version:
     _PAT_BUILD = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
     _PAT_RC_CANDIDATE = r"-rc(\d+)"  # e.g. "-rc3"
     _PAT_META_DATA = r"\+(.*)"  # e.g. "+security"
-    _PAT_EDITION = r"(?:\.(%s))" % "|".join(map(lambda x: x.short, Edition))  # e.g. ".cre"
+    _PAT_EDITION = r"(?:\.(%s))" % "|".join(
+        map(lambda x: x.short, Edition)
+    )  # e.g. ".cre"
     _RGX_STABLE = re.compile(
         rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?(?:{_PAT_META_DATA})?"
     )  # e.g. "2.1.0p17-rc3+security"
@@ -240,7 +248,9 @@ class Version:
     #    Keep old variant in the parser for now for compatibility.
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
     # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
-    _RGX_DAILY = re.compile(rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?{_PAT_EDITION}?")
+    _RGX_DAILY = re.compile(
+        rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?{_PAT_EDITION}?"
+    )
 
     @classmethod
     def from_str(cls, raw: str) -> Self:
@@ -350,7 +360,11 @@ class Version:
 
     @property
     def version_without_rc(self) -> str:
-        return f"{'' if self.base is None else self.base}{self.release.suffix()}".lstrip("-")
+        return (
+            f"{'' if self.base is None else self.base}{self.release.suffix()}".lstrip(
+                "-"
+            )
+        )
 
     @property
     def version_rc_aware(self) -> str:
@@ -361,7 +375,9 @@ class Version:
 
     def __str__(self) -> str:
         optional_rc_suffix = (
-            "" if self.release_candidate.value is None else f"-rc{self.release_candidate.value}"
+            ""
+            if self.release_candidate.value is None
+            else f"-rc{self.release_candidate.value}"
         )
         optional_meta_suffix = "" if self.meta.value is None else f"+{self.meta.value}"
         return f"{'' if self.base is None else self.base}{self.release.suffix()}{optional_rc_suffix}{optional_meta_suffix}".lstrip(
@@ -662,7 +678,9 @@ def versions_compatible(
         if to_v.base.minor - from_v.base.minor > 1:
             return target_too_new  # preprev in 2nd number
         if to_v.base.minor - from_v.base.minor == 1:
-            return _check_minimum_patch_release(from_v, to_v)  # prev in 2nd number, ignoring 3rd
+            return _check_minimum_patch_release(
+                from_v, to_v
+            )  # prev in 2nd number, ignoring 3rd
 
     # Everything else is incompatible
     return target_too_new
@@ -678,7 +696,9 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
     ),
     _BaseVersion(2, 4, 0): max(
         (
-            Version.from_str("2.3.0p11"),  # dcd piggyback config converted to modern format
+            Version.from_str(
+                "2.3.0p11"
+            ),  # dcd piggyback config converted to modern format
             Version.from_str("2.3.0p26"),  # CMK-19258 - \n separated audit log
         ),
     ),
@@ -703,7 +723,9 @@ def _check_minimum_patch_release(
         return VersionsCompatible()
     if from_v >= required_patch_release:
         return VersionsCompatible()
-    return VersionsIncompatible(f"This target version requires at least {required_patch_release}")
+    return VersionsIncompatible(
+        f"This target version requires at least {required_patch_release}"
+    )
 
 
 #   .--general infos-------------------------------------------------------.
@@ -722,7 +744,9 @@ def general_version_infos_from_env() -> VersionInfo:
     The Checkmk site and relay both implement an executable `cmk-general-version-infos`
     to provide the necessary information.
     """
-    raw_version_infos = json.loads(subprocess.check_output(["cmk-general-version-infos"]))
+    raw_version_infos = json.loads(
+        subprocess.check_output(["cmk-general-version-infos"])
+    )
     return VersionInfo(
         {
             "core": raw_version_infos["core"],
@@ -739,11 +763,14 @@ def general_version_infos_from_env() -> VersionInfo:
 def get_general_version_infos(omd_root: Path) -> VersionInfo:
     """Compute general information about runtime environment (Checkmk site and OS)"""
     return general_version_infos(
-        edition=lambda: edition(omd_root).short, core=lambda: _current_monitoring_core(omd_root)
+        edition=lambda: edition(omd_root).short,
+        core=lambda: _current_monitoring_core(omd_root),
     )
 
 
-def general_version_infos(edition: Callable[[], str], core: Callable[[], str]) -> VersionInfo:
+def general_version_infos(
+    edition: Callable[[], str], core: Callable[[], str]
+) -> VersionInfo:
     return {
         "time": time.time(),
         "os": _get_os_info(),

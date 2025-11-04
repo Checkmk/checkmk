@@ -26,7 +26,7 @@ def generate_werk(
         component="component",
         level=Level.LEVEL_1,
         date=datetime.datetime.now(),
-        edition=Edition.CEE,
+        edition=Edition.PRO,
         description="description ut",
         title="title ut",
         version=version,

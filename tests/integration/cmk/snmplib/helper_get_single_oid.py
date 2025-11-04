@@ -27,7 +27,7 @@ from cmk.snmplib import (
     SNMPHostConfig,
 )
 
-if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
+if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
     from cmk.inline_snmp.inline import (  # type: ignore[import, unused-ignore] # pylint: disable=cmk-module-layer-violation
         InlineSNMPBackend,
     )

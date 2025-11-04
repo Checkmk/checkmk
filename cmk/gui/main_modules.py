@@ -29,27 +29,27 @@ from cmk.utils import paths
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 match edition := cmk_version.edition(paths.omd_root):
-    case Edition.CEE:
+    case Edition.PRO:
         import cmk.gui.nonfree.pro.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cmk.gui.nonfree.pro.registration.register(edition)
 
-    case Edition.CME:
+    case Edition.ULTIMATEMT:
         import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cmk.gui.nonfree.ultimate.registration.register(edition)
 
-    case Edition.CCE:
+    case Edition.ULTIMATE:
         import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cmk.gui.nonfree.ultimate.registration.register(edition)
 
-    case Edition.CSE:
+    case Edition.CLOUD:
         import cmk.gui.nonfree.cloud.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
         cmk.gui.nonfree.cloud.registration.register(edition)
 
-    case Edition.CRE:
+    case Edition.COMMUNITY:
         import cmk.gui.community_registration
 
         cmk.gui.community_registration.register(edition)
@@ -128,13 +128,13 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     yield f"cmk.gui.plugins.{main_module_name}"
 
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         yield f"cmk.gui.nonfree.pro.plugins.{main_module_name}"
 
     if (
-        cmk_version.edition(paths.omd_root) is cmk_version.Edition.CCE
-        or cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE
-        or cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
+        cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATE
+        or cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD
+        or cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT
     ):
         yield f"cmk.gui.nonfree.ultimate.plugins.{main_module_name}"
 

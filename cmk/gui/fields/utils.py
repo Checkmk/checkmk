@@ -160,10 +160,10 @@ def edition_field_description(
     """
 
     Example:
-        >>> edition_field_description("This is a test description.", supported_editions={Edition.CEE}, field_required=True)
+        >>> edition_field_description("This is a test description.", supported_editions={Edition.PRO}, field_required=True)
         '[Enterprise edition only] This is a test description. This field is required for the following editions: Enterprise.'
 
-        >>> edition_field_description("This is a test description.", supported_editions={Edition.CEE, Edition.CCE}, field_required=True)
+        >>> edition_field_description("This is a test description.", supported_editions={Edition.PRO, Edition.ULTIMATE}, field_required=True)
         '[Enterprise, Cloud editions only] This is a test description. This field is required for the following editions: Enterprise, Cloud.'
 
     """

@@ -332,7 +332,7 @@ def test_container_agent(checkmk: CheckmkApp) -> None:
 def test_update(client: docker.DockerClient) -> None:
     base_package = CMKPackageInfo(
         get_min_version(),
-        CMKEdition(CMKEdition.CRE),
+        CMKEdition(CMKEdition.COMMUNITY),
     )
     update_package = CMKPackageInfo(version_from_env(), edition_from_env())
     container_name = f"checkmk-{update_package.version.branch}_{randint(10000000, 99999999)}"

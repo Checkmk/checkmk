@@ -33,7 +33,10 @@ pytest.register_assert_rewrite(
 from tests.testlib.common.repo import (  # noqa: E402
     current_base_branch_name,
 )
-from tests.testlib.pytest_helpers.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
+from tests.testlib.pytest_helpers.timeouts import (  # noqa: E402
+    MonitorTimeout,
+    SessionTimeoutError,
+)
 from tests.testlib.utils import (  # noqa: E402
     is_containerized,
     run,
@@ -277,18 +280,18 @@ def pytest_addoption(parser):
         ARG_EDITION_CMK,
         action="store",
         choices=[
-            CMKEdition.CCE.long,
-            CMKEdition.CEE.long,
-            CMKEdition.CME.long,
-            CMKEdition.CRE.long,
-            CMKEdition.CSE.long,
+            CMKEdition.ULTIMATE.long,
+            CMKEdition.PRO.long,
+            CMKEdition.ULTIMATEMT.long,
+            CMKEdition.COMMUNITY.long,
+            CMKEdition.CLOUD.long,
         ],
         type=str,
         help=(
             "Select edition of the Checkmk site under test. If not set, value of environment "
             "variable 'EDITION' is used, if available. If neither is set, 'pro' is used."
         ),
-        default=os.getenv("EDITION", CMKEdition.CEE.long),
+        default=os.getenv("EDITION", CMKEdition.PRO.long),
     )
     parser.addoption(
         ARG_REUSE,

@@ -2100,7 +2100,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         loading_result = config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
 
     keepalive = "keepalive" in options and (
-        cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE
+        cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY
     )
     if keepalive:
         register_sigint_handler()
@@ -3701,7 +3701,7 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
         ),
     ]
 
-    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         sub_options.append(
             Option(
                 long_option=OPT_PERFORMANCE_GRAPHS,

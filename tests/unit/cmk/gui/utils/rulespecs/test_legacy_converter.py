@@ -1566,7 +1566,7 @@ def test_convert_to_legacy_rulespec(
     new_rulespec: APIV1RuleSpec, expected: legacy_rulespecs.Rulespec
 ) -> None:
     _compare_specs(
-        convert_to_legacy_rulespec(new_rulespec, Edition.CRE, translate_to_current_language),
+        convert_to_legacy_rulespec(new_rulespec, Edition.COMMUNITY, translate_to_current_language),
         expected,
     )
 
@@ -3245,7 +3245,7 @@ def test_agent_config_rule_spec_transformations_work_with_previous_non_dict_valu
             ),
             help_text=api_v1.Help("help text"),
         ),
-        Edition.CRE,
+        Edition.COMMUNITY,
         translate_to_current_language,
     )
     assert legacy_rulespec.valuespec.transform_value(()) == {"cmk-match-type": "dict"}

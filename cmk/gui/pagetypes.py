@@ -1457,7 +1457,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
 
 
 def _has_reporting() -> bool:
-    return edition(cmk.utils.paths.omd_root) is not Edition.CRE
+    return edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY
 
 
 def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
@@ -2306,7 +2306,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
                 owner=UserId.builtin(),
             ),
         }
-        if edition(cmk.utils.paths.omd_root) is not Edition.CSE:  # disabled in CSE
+        if edition(cmk.utils.paths.omd_root) is not Edition.CLOUD:  # disabled in CSE
             topics.update(
                 {
                     "events": PagetypeTopicConfig(

@@ -40,7 +40,7 @@ _ULTIMATE_EDITION_GCP_SERVICES: Final = [
 
 
 def get_gcp_services() -> Sequence[MultipleChoiceElement]:
-    if edition(omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
+    if edition(omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.CLOUD):
         return _ALL_EDITION_GCP_SERVICES + _ULTIMATE_EDITION_GCP_SERVICES
 
     return _ALL_EDITION_GCP_SERVICES

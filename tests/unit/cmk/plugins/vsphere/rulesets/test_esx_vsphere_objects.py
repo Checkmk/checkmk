@@ -36,7 +36,7 @@ def test_check_rulespec(partial_value: Mapping[str, int]) -> None:
     value["states"].update(partial_value)
 
     valuespec = convert_to_legacy_rulespec(
-        rule_spec_esx_vsphere_objects, Edition.CRE, lambda x: x
+        rule_spec_esx_vsphere_objects, Edition.COMMUNITY, lambda x: x
     ).valuespec
     valuespec.validate_datatype(value, "")
     valuespec.validate_value(value, "")
@@ -51,7 +51,7 @@ def test_check_rulespec(partial_value: Mapping[str, int]) -> None:
 )
 def test_discovery_rulespec(params: Mapping[str, bool]) -> None:
     valuespec = convert_to_legacy_rulespec(
-        rule_spec_esx_vsphere_objects_discovery, Edition.CRE, lambda x: x
+        rule_spec_esx_vsphere_objects_discovery, Edition.COMMUNITY, lambda x: x
     ).valuespec
     valuespec.validate_datatype(params, "")
     valuespec.validate_value(params, "")

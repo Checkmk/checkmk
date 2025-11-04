@@ -32,7 +32,7 @@ def test_rule_spec_winperf_ts_sessions_levels_migrated(
 ) -> None:
     """Test that rules from before ruleset migration are still readable"""
     valuespec = convert_to_legacy_rulespec(
-        rule_spec_winperf_ts_sessions, Edition.CRE, lambda x: x
+        rule_spec_winperf_ts_sessions, Edition.COMMUNITY, lambda x: x
     ).valuespec
 
     context = pytest.raises(KeyError) if expected_exception else nullcontext()

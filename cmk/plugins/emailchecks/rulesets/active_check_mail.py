@@ -64,7 +64,7 @@ def _valuespec_active_checks_mail() -> Dictionary:
             ),
             **(
                 {}
-                if edition(omd_root) is Edition.CSE
+                if edition(omd_root) is Edition.CLOUD
                 else {"forward": DictElement(parameter_form=_forward_to_ec_form())}
             ),
         },

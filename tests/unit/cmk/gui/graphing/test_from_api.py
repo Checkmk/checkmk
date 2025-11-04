@@ -327,7 +327,7 @@ def test_bundles() -> None:
 
 _ALLOWED_BUNDLE_VIOLATIONS = (
     set()
-    if edition(omd_root) is Edition.CRE
+    if edition(omd_root) is Edition.COMMUNITY
     else {
         # we cannot have sub-modules below the cee folder, so we have to allow the following violations
         # in cmk.nonfree.pro.robotmk, the module layout of the metric etc. defintions is correct
@@ -458,7 +458,7 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
 }
 
 
-if edition(omd_root) not in (Edition.CRE, Edition.CEE):
+if edition(omd_root) not in (Edition.COMMUNITY, Edition.PRO):
     _ALLOWED_DUPLICATE_METRIC_TITLES.update(_CCE_ALLOWED_DUPLICATE_METRIC_TITLES)
 
 
@@ -524,7 +524,7 @@ _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
 }
 
 
-if edition(omd_root) not in (Edition.CRE, Edition.CEE):
+if edition(omd_root) not in (Edition.COMMUNITY, Edition.PRO):
     _ALLOWED_DUPLICATE_GRAPH_TITLES.update(_CCE_ALLOWED_DUPLICATE_GRAPH_TITLES)
 
 

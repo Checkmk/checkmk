@@ -31,7 +31,7 @@ def test_get_needed_join_columns(view: View) -> None:
         "service_description",
     ]
 
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         expected_columns += [
             "host_custom_variable_names",
             "host_custom_variable_values",

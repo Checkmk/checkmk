@@ -330,7 +330,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
     @classmethod
     def _match_event_console_elements(cls) -> list[DictionaryEntry]:
-        if edition(paths.omd_root) is Edition.CSE:  # disabled in CSE
+        if edition(paths.omd_root) is Edition.CLOUD:  # disabled in CSE
             return []
 
         def migrate_ec_rule_id_match(val: list[TextInput] | TextInput) -> list[TextInput]:
@@ -610,7 +610,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                     ("ec_contact", _("Event Console contact")),
                     ("ec_comment", _("Event Console comment")),
                 ]
-                if edition(paths.omd_root) is not Edition.CSE  # disabled in CSE
+                if edition(paths.omd_root) is not Edition.CLOUD  # disabled in CSE
                 else []
             ),
             default_value=["host"],
@@ -3212,7 +3212,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 "contact_match_macros",
                 "contact_match_groups",
             ],
-            hidden_keys=(["contact_emails"] if edition(paths.omd_root) == Edition.CSE else []),
+            hidden_keys=(["contact_emails"] if edition(paths.omd_root) == Edition.CLOUD else []),
             headers=headers_part1 + contact_headers + headers_part2,
             render="form",
             form_narrow=True,

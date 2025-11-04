@@ -46,7 +46,7 @@ def test_minimal_migration_validation() -> None:
     }
 
     converted = legacy_converter.convert_to_legacy_rulespec(
-        rule_spec_mail, Edition.CEE, lambda x: x
+        rule_spec_mail, Edition.PRO, lambda x: x
     ).valuespec
 
     converted.validate_datatype(rule, "")

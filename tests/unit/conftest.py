@@ -257,7 +257,7 @@ def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     makedirs(cmk.utils.paths.default_config_dir / "mkeventd.d/wato")
     makedirs(cmk.utils.paths.local_dashboards_dir)
     makedirs(cmk.utils.paths.local_views_dir)
-    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         # needed for visuals.load()
         makedirs(cmk.utils.paths.local_reports_dir)
     _touch(cmk.utils.paths.default_config_dir / "mkeventd.mk")

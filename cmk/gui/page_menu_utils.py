@@ -378,7 +378,7 @@ def _get_combined_graphs_entry(
 
 
 def _show_combined_graphs_context_button(view: View) -> bool:
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         return False
 
     if view.name == "service":

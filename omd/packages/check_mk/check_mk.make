@@ -35,25 +35,22 @@ endif
 ADDITIONAL_EXCLUDE=--exclude "BUILD.*" --exclude "BUILD" --exclude "OWNERS"
 
 EDITION_EXCLUDE=
-ifeq ($(EDITION),raw)
+ifeq ($(EDITION),community)
 	EDITION_EXCLUDE += \
 	    --exclude "enterprise" \
-	    --exclude "cee"
+	    --exclude "pro"
 endif
-ifneq ($(EDITION),managed)
+ifneq ($(EDITION),ultimatemt)
 	EDITION_EXCLUDE += \
-	    --exclude "managed" \
-	    --exclude "cme"
+	    --exclude "ultimatemt"
 endif
-ifeq ($(filter $(EDITION),cloud free saas managed),)
+ifeq ($(filter $(EDITION),ultimate cloud ultimatemt),)
 	EDITION_EXCLUDE += \
-	    --exclude "cloud" \
-	    --exclude "cce"
+	    --exclude "ultimate"
 endif
-ifeq ($(filter $(EDITION),saas),)
+ifeq ($(filter $(EDITION),cloud),)
 	EDITION_EXCLUDE += \
-	    --exclude "saas" \
-	    --exclude "cse"
+	    --exclude "cloud"
 endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)

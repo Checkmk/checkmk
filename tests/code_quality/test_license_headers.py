@@ -73,15 +73,10 @@ ignored_files = [
 enterprise_names = [
     "non-free",
     "nonfree",
+    "pro",
+    "ultimate",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
-    "cee",
-    "cme",
-    "cce",
-    "cse",
-    "cmc",
 ]
 
 

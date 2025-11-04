@@ -14,51 +14,28 @@ def REPO_PATCH_RULES = [\
     "paths_to_be_removed": [\
         "enterprise", \
         "pro", \
-        "cee", \
-        "managed", \
-        "ultimatemt", \
-        "cme", \
-        "cloud", \
         "ultimate", \
-        "cce", \
-        "saas", \
-        "cloud", \
-        "cse", \
-        "cmk.cee.dcd.plugins.connectors.connectors_api", \
-        "cmk.nonfree.pro.dcd.plugins.connectors.connectors_api"],\
+        "ultimatemt", \
+        "cloud"], \
     "folders_to_be_created": []], \
 "pro": [\
     "paths_to_be_removed": [\
-        "managed", \
-        "ultimatemt", \
-        "cme", \
-        "cloud", \
         "ultimate", \
-        "cce", \
-        "saas", \
-        "cloud", \
-        "cse"], \
+        "ultimatemt", \
+        "cloud"], \
     "folders_to_be_created": []], \
 "ultimatemt": [\
     "paths_to_be_removed": [\
-        "saas", \
-        "cloud", \
-        "cse"], \
+        "cloud"], \
     "folders_to_be_created": []], \
 "ultimate": [\
     "paths_to_be_removed": [\
-        "managed", \
         "ultimatemt", \
-        "cme", \
-        "saas", \
-        "cloud", \
-        "cse"], \
+        "cloud"], \
     "folders_to_be_created": []], \
 "cloud": [\
     "paths_to_be_removed": [\
-        "managed", \
-        "ultimatemt", \
-        "cme"], \
+        "ultimatemt"], \
     "folders_to_be_created": []], \
 ];
 /* groovylint-enable DuplicateListLiteral */
@@ -223,16 +200,12 @@ def configure_checkout_folder(edition, cmk_version) {
 def delete_non_cre_files() {
     non_cre_paths = [
         "non-free",
+        "nonfree",
         "enterprise",
-        "managed",
+        "pro",
+        "ultimatemt",
+        "ultimate",
         "cloud",
-        "saas",
-        "check_mk_enterprise",
-        "check_mk_managed",
-        "cee",
-        "cme",
-        "cce",
-        "cse",
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ");
     // Do not remove files in .git, .venv, .mypy_cache directories

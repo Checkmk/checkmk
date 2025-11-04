@@ -59,7 +59,7 @@ watch(
     if (!newCreateUniqueId) {
       return
     }
-    _debouncedGenerateUniqueId(toSnakeCase(newName.trim()))
+    _debouncedGenerateUniqueId(toSnakeCase(newName.trim().toLowerCase()))
   },
   { deep: true }
 )

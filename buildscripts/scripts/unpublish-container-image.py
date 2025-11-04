@@ -15,7 +15,7 @@ from cmk.ccc.version import Version
 from .lib.common import load_editions_file
 from .lib.registry import DockerImage, edition_to_registry, get_default_registries, Registry
 
-Edition = Literal["raw", "cloud", "enterprise", "managed"]
+Edition = Literal["community", "ultimate", "pro", "ultimatemt"]
 
 
 def main():
@@ -57,7 +57,7 @@ def parse_arguments() -> argparse.Namespace:
         "--edition",
         default="all",
         help="Specify for what edition to process. Default: all",
-        choices=["raw", "cloud", "enterprise", "managed", "all"],
+        choices=["community", "ultimate", "pro", "ultimatemt", "all"],
     )
 
     subparsers = parser.add_subparsers(help="action to perform", required=True)
@@ -105,9 +105,9 @@ def get_docker_image_and_registry(
 
 def get_container_namespace(edition: Edition) -> str:
     match edition:
-        case "raw" | "cloud":
+        case "community" | "ultimate":
             return "checkmk"
-        case "enterprise" | "managed":
+        case "pro" | "ultimatemt":
             return edition
         case _:
             raise RuntimeError(f"Unknown edition {edition}")

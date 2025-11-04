@@ -28,13 +28,11 @@ from cmk.bi.lib import (
     BIParams,
     BIParamsSchema,
     replace_macros,
-    SearchResult,
-    SearchResults,
 )
 from cmk.bi.rule_interface import bi_rule_id_registry
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledLeaf, BIRemainingResult
-from cmk.bi.type_defs import ActionKind, ActionSerialized
+from cmk.bi.type_defs import ActionKind, ActionSerialized, SearchResult
 
 #   .--CallARule-----------------------------------------------------------.
 #   |               ____      _ _    _    ____        _                    |
@@ -78,7 +76,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
 
     @override
     def _generate_action_arguments(
-        self, search_results: SearchResults, macros: Mapping[str, str]
+        self, search_results: list[SearchResult], macros: Mapping[str, str]
     ) -> ActionArguments:
         return [
             tuple(replace_macros(self.params.arguments, {**macros, **x})) for x in search_results
@@ -149,7 +147,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
 
     @override
     def _generate_action_arguments(
-        self, search_results: SearchResults, macros: Mapping[str, str]
+        self, search_results: list[SearchResult], macros: Mapping[str, str]
     ) -> ActionArguments:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
@@ -212,7 +210,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
 
     @override
     def _generate_action_arguments(
-        self, search_results: SearchResults, macros: Mapping[str, str]
+        self, search_results: list[SearchResult], macros: Mapping[str, str]
     ) -> ActionArguments:
         return [
             (
@@ -296,7 +294,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
 
     @override
     def _generate_action_arguments(
-        self, search_results: SearchResults, macros: Mapping[str, str]
+        self, search_results: list[SearchResult], macros: Mapping[str, str]
     ) -> ActionArguments:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 

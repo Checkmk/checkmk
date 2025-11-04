@@ -61,8 +61,6 @@ from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
-SearchResult = dict[str, str]
-SearchResults = list[SearchResult]
 ActionArgument = tuple[str, ...]
 ActionArguments = list[ActionArgument]
 

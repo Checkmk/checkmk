@@ -10,8 +10,8 @@ import cmk.gui.watolib.host_attributes as attrs
 from cmk.gui.config import active_config, Config
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from tests.testlib.common.repo import (
-    is_cloud_repo,
     is_pro_repo,
+    is_ultimate_repo,
 )
 
 expected_attributes = {
@@ -288,7 +288,7 @@ expected_attributes = {
                 "topic": "Monitoring agents",
             },
         }
-        if is_cloud_repo()
+        if is_ultimate_repo()
         else {}
     ),
     **(
@@ -306,7 +306,7 @@ expected_attributes = {
                 "topic": "Monitoring agents",
             },
         }
-        if is_cloud_repo()
+        if is_ultimate_repo()
         else {}
     ),
     **(
@@ -342,7 +342,7 @@ expected_attributes = {
                 "topic": "Basic settings",
             },
         }
-        if is_cloud_repo()
+        if is_ultimate_repo()
         else {}
     ),
     "tag_snmp_ds": {
@@ -582,7 +582,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         "basic": [
             "alias",
             "site",
-            *(["relay"] if is_cloud_repo() else []),
+            *(["relay"] if is_ultimate_repo() else []),
             "contactgroups",
             "parents",
         ],
@@ -599,7 +599,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
             "tag_snmp_ds",
             "snmp_community",
             "tag_piggyback",
-            *(("metrics_association",) if is_cloud_repo() else ()),
+            *(("metrics_association",) if is_ultimate_repo() else ()),
         ],
         "management_board": [
             "management_protocol",

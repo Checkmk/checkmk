@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.valuespec import autocompleter_registry
-from tests.testlib.common.repo import is_cloud_repo, is_pro_repo
+from tests.testlib.common.repo import is_pro_repo, is_ultimate_repo
 
 
 def test_builtin_autocompleters_registered() -> None:
@@ -41,7 +41,7 @@ def test_builtin_autocompleters_registered() -> None:
             "monitored_data_point_attributes_backend",
         ]
 
-    if is_cloud_repo():
+    if is_ultimate_repo():
         expected += [
             "otel_host_name_computation",
             "otel_metric_name_autocompleter",

@@ -39,7 +39,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.tags import BuiltinTagConfig
-from tests.testlib.common.repo import is_cloud_repo
+from tests.testlib.common.repo import is_ultimate_repo
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
@@ -1579,14 +1579,14 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
         },
         "parents": [],
         "site": "NO_SITE",
-        **({"relay": ""} if is_cloud_repo() else {}),
+        **({"relay": ""} if is_ultimate_repo() else {}),
         "snmp_community": None,
         "tag_address_family": "ip-v4-only",
         "tag_agent": "cmk-agent",
         "tag_piggyback": "auto-piggyback",
         "tag_snmp_ds": "no-snmp",
         "waiting_for_discovery": False,
-        **({"metrics_association": ["disabled", None]} if is_cloud_repo() else {}),
+        **({"metrics_association": ["disabled", None]} if is_ultimate_repo() else {}),
     }
     assert resp.json["extensions"]["effective_attributes"] == expected, expected
 

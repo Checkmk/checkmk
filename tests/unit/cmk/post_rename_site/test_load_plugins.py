@@ -9,7 +9,7 @@ import pytest
 
 from cmk.post_rename_site import main
 from cmk.post_rename_site.registry import rename_action_registry
-from tests.testlib.common.repo import is_cloud_repo, is_pro_repo
+from tests.testlib.common.repo import is_pro_repo, is_ultimate_repo
 
 
 @pytest.fixture(name="expected_plugins")
@@ -33,7 +33,7 @@ def fixture_expected_plugins() -> list[str]:
         # when the "enterprise/" path is present.
         expected.append("dcd_connections")
 
-    if is_cloud_repo():
+    if is_ultimate_repo():
         # The CCE plug-ins are loaded when the CCE plug-ins are available
         expected.extend(["agent_controller_connections", "otel"])
 

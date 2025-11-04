@@ -48,20 +48,49 @@ class Data:
 Section = Mapping[str, Data]
 
 
+def _get_state_text(state: int) -> str:
+    state_text = {
+        1: "Closed high mem",
+        2: "Open low mem",
+        3: "Disabled",
+        4: "Not applicable",
+    }
+    return "{text} [{state}]".format(text=state_text.get(state, "unknown"), state=state)
+
+
+def get_state_tuple_based_on_snmp_value(
+    state: int, normal: int, severity: int
+) -> tuple[str, State]:
+    severity_map = {
+        1: State.OK,  # Informational
+        2: State.WARN,  # Warning
+        3: State.CRIT,  # Severe
+        4: State.UNKNOWN,  # Not applicable
+    }
+
+    current_state = _get_state_text(state)
+    if normal == state:
+        return (f"Normal state ({current_state})", State.OK)
+
+    # State is not normal. Error with given severity
+    severity_state = severity_map.get(severity, State.UNKNOWN)
+    return (
+        f"State: {current_state} but expected {_get_state_text(normal)}",
+        severity_state,
+    )
+
+
 def parse_apc_netbotz_drycontact(string_table: StringTable) -> Section:
     parsed = {}
 
-    state_map = {
-        "1": ("Closed high mem", State.CRIT),
-        "2": ("Open low mem", State.OK),
-        "3": ("Disabled", State.WARN),
-        "4": ("Not applicable", State.UNKNOWN),
-    }
-
-    for idx, inst, loc, state in string_table:
-        parsed[inst + " " + idx] = Data(
+    for idx, inst, loc, state, normal, severity in string_table:
+        parsed[f"{inst} {idx}"] = Data(
             location=loc,
-            state=state_map.get(state, (f"unknown[{state}]", State.UNKNOWN)),
+            state=get_state_tuple_based_on_snmp_value(
+                int(state),
+                int(normal),
+                int(severity),
+            ),
         )
 
     return parsed
@@ -76,7 +105,7 @@ def check_apc_netbotz_drycontact(item: str, section: Section) -> CheckResult:
         loc_info = "[%s] " % loc
     else:
         loc_info = ""
-    yield Result(state=state, summary=f"{loc_info}State: {state_readable}")
+    yield Result(state=state, summary=f"{loc_info}{state_readable}")
 
 
 def discover_apc_netbotz_drycontact(section: Section) -> DiscoveryResult:
@@ -87,8 +116,17 @@ snmp_section_apc_netbotz_drycontact = SimpleSNMPSection(
     name="apc_netbotz_drycontact",
     detect=DETECT,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.318.1.1.10.4.3.2.1",
-        oids=[OIDEnd(), "3", "4", "5"],
+        base=".1.3.6.1.4.1.318.1.1.10.4.3",
+        oids=[
+            OIDEnd(),  # Index
+            # memInputsStatusEntry
+            "2.1.3",  # memInputsStatusInputName
+            "2.1.4",  # memInputsStatusInputLocation
+            "2.1.5",  # memInputsStatusCurrentState
+            # memInputsConfigEntry
+            "4.1.7",  # memInputNormalState
+            "4.1.8",  # memInputAbnormalSeverity
+        ],
     ),
     parse_function=parse_apc_netbotz_drycontact,
 )

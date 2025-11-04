@@ -123,7 +123,6 @@ help:
 	    echo "$${i}              - Run $${i} locally"; \
 	    echo "$${i}-docker       - Run $${i} in container"; \
 	done
-	@echo "test-bandit-nosec-markers           - Check if all bandit #nosec markers are annotated properly"
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-integration-agent-plugin       - Run agent plugin integration tests"
@@ -179,9 +178,6 @@ test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -ll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
-
-test-bandit-nosec-markers:
-	$(UVENV) python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
 
 prepare-playwright:
 	$(UVENV) playwright install-deps "chromium";

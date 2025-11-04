@@ -128,7 +128,7 @@ PRO_PY = glob(
     allow_empty = True,
 )
 
-MANAGED_MT_PY = glob(
+ULTIMATEMT_PY = glob(
     [
         "**/ultimatemt/**/*.py",
     ],
@@ -238,7 +238,7 @@ py_library(
     srcs = glob(
         # Keep in sync with `REPO_PATCH_RULES` from `versioning.groovy`.
         include = ["**/*.py"],
-        exclude = COMMUNITY_PY + ULTIMATE_PY + PRO_PY + MANAGED_MT_PY + CLOUD_PY,
+        exclude = COMMUNITY_PY + ULTIMATE_PY + PRO_PY + ULTIMATEMT_PY + CLOUD_PY,
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
@@ -278,7 +278,7 @@ py_library(
 ) for edition, srcs in [
     ("ultimate", ULTIMATE_PY),
     ("pro", PRO_PY),
-    ("ultimatemt", MANAGED_MT_PY),
+    ("ultimatemt", ULTIMATEMT_PY),
     ("cloud", CLOUD_PY),
 ]]
 

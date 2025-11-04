@@ -74,7 +74,7 @@ class Dict2CatalogConverter:
                 },
             )
 
-        return cls(catalog=Catalog(elements=topics))
+        return cls(catalog=Catalog(elements=topics, custom_validate=dictionary.custom_validate))
 
     def convert_flat_to_catalog_config(
         self, flat_config: object

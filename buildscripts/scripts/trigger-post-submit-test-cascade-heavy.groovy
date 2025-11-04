@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: trigger-post-submit-test-cascade-full.groovy
+/// file: trigger-post-submit-test-cascade-heavy.groovy
 
 def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
@@ -13,24 +13,24 @@ def main() {
 
     def job_names = [
         "test-composition-single-f12less",
-        "test-composition-single-f12less-cme",
-        "test-composition-single-f12less-cre",
+        "test-composition-single-f12less-community",
+        "test-composition-single-f12less-ultimatemt",
         "test-gui-crawl-f12less",
-        "test-gui-e2e-f12less-cce",
-        "test-gui-e2e-f12less-cee",
-        "test-gui-e2e-f12less-cse",
+        "test-gui-e2e-f12less-ultimate",
+        "test-gui-e2e-f12less-pro",
+        "test-gui-e2e-f12less-cloud",
         "test-integration-agent-plugin",
         "test-integration-single-f12less",
-        "test-integration-single-f12less-cme",
-        "test-integration-single-f12less-cre",
+        "test-integration-single-f12less-community",
         "test-integration-single-f12less-redfish",
+        "test-integration-single-f12less-ultimatemt",
         "test-plugins",
         "test-plugins-piggyback",
         "test-plugins-siteless",
         "test-update-single-f12less",
-        "test-update-single-f12less-cce",
-        "test-update-single-f12less-cme",
-        "test-update-single-f12less-cre",
+        "test-update-single-f12less-pro-community",
+        "test-update-single-f12less-pro-ultimate",
+        "test-update-single-f12less-pro-ultimatemt",
     ];
 
     print(

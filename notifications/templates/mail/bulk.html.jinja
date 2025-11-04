@@ -1,20 +1,12 @@
-<!DOCTYPE html>
 <table width="100%"
-       height="124"
        style="border-collapse: collapse;
-              mso-table-lspace: 0pt;
-              mso-table-rspace: 0pt;
-              min-width: 220px;
-              max-width: 536px;
-              font-size: 14px"
-       align="center"
+              font-size: 14px;
+              max-width:600px;
+              margin: 10px auto 0 auto"
        cellspacing="0"
        cellpadding="0"
        border="0">
-    <tr align="left"
-        style="background-color: #F1F1F1;
-               height: 35px;
-               width: 100%">
+    <tr align="left" style="background-color: #F1F1F1; height: 35px;">
         <th align="left"
             style="border: 1px solid #DFDFDF;
                    padding-left: 2%;
@@ -27,12 +19,8 @@
                 <table style="border-collapse: collapse;">
                     <tr>
                         <td style="padding: 0; vertical-align: middle;">
-                            <div class="mobile_event_marker_bulk"
-                                 style="{{ macros.event_marker_bulk_style() }};
-                                        {% if service_notification %} {{ state_mapping[(entry.PREVIOUSSERVICEHARDSTATE|default("UNKNOWN") )] }} {% else %} {{ state_mapping[(entry.PREVIOUSHOSTHARDSTATE|default("UNKNOWN") )] }} {% endif %};
-                                        display: inline-block;
-                                        /* Inline block to respect width */">
-                                {% if service_notification %}
+                            <div style="{{ macros.event_marker_bulk_style() }} {% if bulk_service_notification %} {{ state_mapping[(entry.PREVIOUSSERVICEHARDSTATE|default("UNKNOWN") )] }} {% else %} {{ state_mapping[(entry.PREVIOUSHOSTHARDSTATE|default("UNKNOWN") )] }} {% endif %} display: inline-block">
+                                {% if bulk_service_notification %}
                                     {{ (entry.PREVIOUSSERVICEHARDSTATE|default("UNKNOWN") )[:4] }}
                                 {% else %}
                                     {{ (entry.PREVIOUSHOSTHARDSTATE|default("UNKNOWN") )[:4] }}
@@ -57,12 +45,9 @@
                             <!--<![endif]-->
                         </td>
                         <td style="padding: 0; vertical-align: middle;">
-                            <div class="mobile_event_marker_bulk"
-                                 style="{{ macros.event_marker_bulk_style() }};
-                                        {% if service_notification %} {{ state_mapping[entry.SERVICESTATE] }} {% else %} {{ state_mapping[entry.HOSTSTATE] }} {% endif %};
-                                        display: inline-block;
-                                        /* Inline block to respect width */">
-                                {% if service_notification %}
+                            <div style="{{ macros.event_marker_bulk_style() }} {% if bulk_service_notification %} {{ state_mapping[entry.SERVICESTATE] }} {% else %} {{ state_mapping[entry.HOSTSTATE] }} {% endif %};
+                                        display: inline-block">
+                                {% if bulk_service_notification %}
                                     {{ entry.SERVICESTATE[:4] }}
                                 {% else %}
                                     {{ entry.HOSTSTATE[:4] }}
@@ -94,26 +79,19 @@
         </tr>
     {% endfor %}
 </table>
-<table width="100%"
-       align="center"
-       style="min-width: 220px;
-              max-width: 536px">
-    <tr>
-        <td>
-            <a href="{{ data.EVENTHISTORYURL }}"
-               class="view_graph"
-               style="color: black;
-                      display: block;
-                      height: 16px;
-                      font-size: 14px;
-                      color: #2c3843;
-                      line-height: 24px">View event history</a>
-        </td>
-    </tr>
-    <tr>
-        <td style="height: 20px;
-                   line-height: 20px;
-                   font-size: 0;
-                   mso-line-height-rule: exactly">&nbsp;</td>
-    </tr>
-</table>
+{% if data.EVENTHISTORYURL | default(false) %}
+    <table width="100%" style="margin: 0 auto; max-width:600px;">
+        <tr>
+            <td>
+                <a href="{{ data.EVENTHISTORYURL }}"
+                   class="view_graph"
+                   style="color: black;
+                          display: block;
+                          height: 16px;
+                          font-size: 14px;
+                          color: #2c3843;
+                          line-height: 24px">View event history</a>
+            </td>
+        </tr>
+    </table>
+{% endif %}

@@ -9,7 +9,7 @@
 import sys
 
 try:
-    from cmk.cee.notification_plugins import (  # type: ignore[import-untyped, unused-ignore]
+    from cmk.nonfree.pro.notification_plugins import (  # type: ignore[import-untyped, unused-ignore]
         jira_issues,
     )
 except ImportError:

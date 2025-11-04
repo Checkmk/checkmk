@@ -201,7 +201,7 @@ class BICompiledLeaf(ABCBICompiledNode):
             if computation_options.freeze_aggregations:
                 return NodeResultBundle(
                     actual_result=NodeComputeResult(
-                        state=2,
+                        state=BIStates.CRIT,
                         in_downtime=False,
                         acknowledged=False,
                         output=f"{'Host ' if self.service_description is None else 'Service'} not found",

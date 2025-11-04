@@ -199,7 +199,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: Path
         + list(_iter_macros(documented["per_custom_macro"], ["CUSTOM_MACRO"]))
     )
 
-    if cmk_version.edition(cmk.utils.paths.omd_root).short == "cme":
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         expected_macros.extend(documented["CME_only"])
 
     assert sorted(host_config.macros.keys()) == sorted(expected_macros)
@@ -253,7 +253,7 @@ def test_special_agent_macros(
         + list(_iter_macros(documented["per_custom_host_attribute"], custom_attrs))
     )
 
-    if cmk_version.edition(cmk.utils.paths.omd_root).short == "cme":
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
         expected_macros.extend(documented["CME_only"])
 
     assert sorted(host_config.macros.keys()) == sorted(expected_macros)

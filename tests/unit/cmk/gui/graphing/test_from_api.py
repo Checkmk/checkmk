@@ -336,6 +336,7 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
     }
 )
 
+
 _CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
     "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
@@ -361,6 +362,7 @@ _CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
     },
     "Total RUs": {"azure_cosmosdb_total_rus", "azure_cosmosdb_database_total_rus"},
 }
+
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Active": {"docker_active", "mem_lnx_active"},
@@ -455,6 +457,7 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Write operations": {"write_ops_s", "disk_write_ios"},
 }
 
+
 if edition(omd_root) not in (Edition.CRE, Edition.CEE):
     _ALLOWED_DUPLICATE_METRIC_TITLES.update(_CCE_ALLOWED_DUPLICATE_METRIC_TITLES)
 
@@ -513,8 +516,16 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
     "Capacity usage": {"capacity_usage_2", "capacity_usage"},
     "Packets": {"packets_1", "packets_2", "packets_3"},
+}
+
+
+_CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Throughput": {"azure_redis_throughput", "azure_natgateways_throughput_in_out"},
 }
+
+
+if edition(omd_root) not in (Edition.CRE, Edition.CEE):
+    _ALLOWED_DUPLICATE_GRAPH_TITLES.update(_CCE_ALLOWED_DUPLICATE_GRAPH_TITLES)
 
 
 def test_duplicate_graph_titles_new() -> None:

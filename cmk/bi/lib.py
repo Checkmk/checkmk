@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import enum
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
@@ -74,7 +75,7 @@ ActionArgument = tuple[str, ...]
 ActionArguments = list[ActionArgument]
 
 
-class BIStates:
+class BIStates(enum.IntEnum):
     OK = 0
     WARN = 1
     CRIT = 2

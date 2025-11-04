@@ -41,7 +41,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
-from cmk.gui.view_utils import render_cre_upgrade_button
+from cmk.gui.view_utils import render_community_upgrade_button
 from cmk.livestatus_client.commands import (
     AcknowledgeHostProblem,
     Acknowledgement,
@@ -973,8 +973,8 @@ def command_acknowledge_render(what: str) -> None:
     date, time_ = _expiration_date_and_time(
         active_config.acknowledge_problems.get("ack_expire", 3600)
     )
-    is_raw_edition: bool = cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE
-    html.open_div(class_="disabled" if is_raw_edition else "")
+    is_community_edition: bool = cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE
+    html.open_div(class_="disabled" if is_community_edition else "")
     html.checkbox(
         "_ack_expire",
         False,
@@ -993,8 +993,8 @@ def command_acknowledge_render(what: str) -> None:
         % time.strftime("%m/%d/%Y %H:%M", time.localtime(time.time())),
         class_="server_time",
     )
-    if is_raw_edition:
-        render_cre_upgrade_button()
+    if is_community_edition:
+        render_community_upgrade_button()
     html.help(
         _("Note: Expiration of acknowledgements only works when using the Checkmk Micro Core.")
     )
@@ -1429,7 +1429,7 @@ class NoRecurringDowntimes:
             deflt=default,
             read_only=True,
         )
-        render_cre_upgrade_button()
+        render_community_upgrade_button()
         html.close_div()
 
     def number(self) -> int:

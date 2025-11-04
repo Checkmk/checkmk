@@ -18,7 +18,7 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger)
     This mainly updates the sites.mk, but also triggers changes on the following files when calling
     save_sites().
 
-    - etc/check_mk/liveproxyd.mk (CEE/CME only)
+    - etc/check_mk/liveproxyd.mk (Commercial editions only)
     - etc/check_mk/conf.d/distributed_wato.mk
     - etc/check_mk/dcd.d/wato/distributed.mk
     - etc/nagvis/conf.d/cmk_backends.ini.php

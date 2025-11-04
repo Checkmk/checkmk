@@ -25,8 +25,8 @@ def warn_about_configs_to_review(old_site_id: SiteId, new_site_id: SiteId, logge
             "- NagVis maps or custom NagVis backend settings\n"
             '- Notification rule "site" conditions\n'
             '- Event Console rule "site" conditions\n'
-            '- "site" field in "Agent updater (Linux, Windows, Solaris)" rules (CEE/CME only)\n'
-            '- Alert handler rule "site" conditions (CEE/CME only)\n'
+            '- "site" field in "Agent updater (Linux, Windows, Solaris)" rules (Commercial editions only)\n'
+            '- Alert handler rule "site" conditions (Commercial editions only)\n'
         )
     )
 

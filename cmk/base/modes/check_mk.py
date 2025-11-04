@@ -2149,7 +2149,7 @@ modes.register(
             ),
             Option(
                 long_option="keepalive",
-                short_help="Execute in keepalive mode (CEE only)",
+                short_help="Execute in keepalive mode (Commercial editions only)",
             ),
         ],
     )

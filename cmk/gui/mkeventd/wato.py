@@ -2061,7 +2061,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 html.icon_button(rules_url, _("Edit the rules in this pack"), "rules")
 
                 if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
-                    # Icons for mkp export (CEE/CME only)
+                    # Icons for mkp export (Commercial editions only)
                     if type_ == ec.RulePackType.internal:
                         export_url = make_action_link(
                             [("mode", "mkeventd_rule_packs"), ("_export", nr)]

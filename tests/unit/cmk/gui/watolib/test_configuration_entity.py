@@ -22,7 +22,7 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
         ("opsgenie_issues", "Opsgenie parameter"),
         ("pagerduty", "PagerDuty parameter"),
         ("pushover", "Push Notifications (using Pushover) parameter"),
-        ("servicenow", "Servicenow (Enterprise only) parameter"),
+        ("servicenow", "Servicenow (Commercial editions only) parameter"),
         ("signl4", "SIGNL4 Alerting parameter"),
         ("slack", "Slack or Mattermost parameter"),
         ("sms", "SMS (using smstools) parameter"),

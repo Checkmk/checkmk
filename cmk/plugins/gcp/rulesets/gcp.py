@@ -24,7 +24,7 @@ from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 from cmk.utils.paths import omd_root
 
-RAW_GCP_SERVICES: Final = [
+_ALL_EDITION_GCP_SERVICES: Final = [
     MultipleChoiceElement(name="gcs", title=Title("Google Cloud Storage (GCS)")),
     MultipleChoiceElement(name="cloud_sql", title=Title("Cloud SQL")),
     MultipleChoiceElement(name="filestore", title=Title("Filestore")),
@@ -32,7 +32,7 @@ RAW_GCP_SERVICES: Final = [
     MultipleChoiceElement(name="http_lb", title=Title("HTTP(S) load balancer")),
 ]
 
-CCE_GCP_SERVICES: Final = [
+_ULTIMATE_EDITION_GCP_SERVICES: Final = [
     MultipleChoiceElement(name="cloud_run", title=Title("Cloud Run")),
     MultipleChoiceElement(name="cloud_functions", title=Title("Cloud Functions")),
     MultipleChoiceElement(name="redis", title=Title("Memorystore Redis")),
@@ -41,9 +41,9 @@ CCE_GCP_SERVICES: Final = [
 
 def get_gcp_services() -> Sequence[MultipleChoiceElement]:
     if edition(omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
-        return RAW_GCP_SERVICES + CCE_GCP_SERVICES
+        return _ALL_EDITION_GCP_SERVICES + _ULTIMATE_EDITION_GCP_SERVICES
 
-    return RAW_GCP_SERVICES
+    return _ALL_EDITION_GCP_SERVICES
 
 
 def _get_edition_specific_choices(
@@ -53,7 +53,7 @@ def _get_edition_specific_choices(
         if not isinstance(value, Iterable):
             raise TypeError(value)
 
-        # silently cut off invalid CCE only choices if we're CEE now.
+        # silently cut off invalid ultimate edition only choices if we're pro edition now.
         return [s for s in value if s in valid_service_choices]
 
     return inner

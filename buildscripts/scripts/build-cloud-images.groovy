@@ -5,7 +5,7 @@
 /// Builds cloud images using checkmk (AWS and Azure)
 
 /// Parameters / environment values:
-///     EDITION: cloud only currently
+///     EDITION: Ultimate only currently
 ///
 /// Jenkins artifacts: will be directly pushed into the cloud
 /// Depends on: Ubuntu 22.04 package beeing available on download.checkmk.com (will be fetched by ansible collection)

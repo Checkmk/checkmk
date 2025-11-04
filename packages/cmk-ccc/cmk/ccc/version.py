@@ -5,11 +5,6 @@
 
 # mypy: disable-error-code="unreachable"
 
-"""Check_MK's library for code used by different components of Check_MK.
-
-This library is currently handled as internal module of Check_MK and
-does not offer stable APIs. The code may change at any time."""
-
 from __future__ import annotations
 
 __version__ = "2.5.0b1"
@@ -39,11 +34,11 @@ class _EditionValue(NamedTuple):
 
 
 class Edition(enum.Enum):
-    CRE = _EditionValue("cre", "raw", "Checkmk Raw Edition")
-    CEE = _EditionValue("cee", "enterprise", "Checkmk Enterprise Edition")
-    CCE = _EditionValue("cce", "cloud", "Checkmk Cloud Edition")
-    CSE = _EditionValue("cse", "saas", "Checkmk Cloud (SaaS)")
-    CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
+    CRE = _EditionValue("cre", "raw", "Checkmk Community (formerly Raw)")
+    CEE = _EditionValue("cee", "enterprise", "Checkmk Pro (formerly Enterprise)")
+    CCE = _EditionValue("cce", "cloud", "Checkmk Ultimate (formerly Cloud)")
+    CSE = _EditionValue("cse", "saas", "Checkmk Cloud")
+    CME = _EditionValue("cme", "managed", "Checkmk Ultimate with multi-tenancy (formerly MSP)")
 
     @classmethod
     def from_version_string(cls, raw: str) -> Edition:
@@ -108,19 +103,19 @@ def edition_supports_relay(ed: Edition, /) -> bool:
 def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
     """
     >>> mark_edition_only("Feature", [Edition.CRE])
-    'Feature (Raw Edition)'
+    'Feature (Checkmk Community (formerly Raw))'
     >>> mark_edition_only("Feature", [Edition.CEE])
-    'Feature (Enterprise Edition)'
+    'Feature (Checkmk Pro (formerly Enterprise))'
     >>> mark_edition_only("Feature", [Edition.CCE])
-    'Feature (Cloud Edition)'
+    'Feature (Checkmk Ultimate (formerly Cloud))'
     >>> mark_edition_only("Feature", [Edition.CME])
-    'Feature (Managed Services Edition)'
+    'Feature (Checkmk Ultimate with multi-tenancy (formerly MSP))'
     >>> mark_edition_only("Feature", [Edition.CCE, Edition.CME])
-    'Feature (Cloud Edition, Managed Services Edition)'
+    'Feature (Checkmk Ultimate)'
     """
-    return (
-        f"{feature_to_mark} ({', '.join([e.title.removeprefix('Checkmk ') for e in exclusive_to])})"
-    )
+    if exclusive_to == [Edition.CCE, Edition.CME]:
+        return f"{feature_to_mark} (Checkmk Ultimate)"
+    return f"{feature_to_mark} ({', '.join([e.title for e in exclusive_to])})"
 
 
 # Version string: <major>.<minor>.<sub><vtype><patch>-<year>.<month>.<day>

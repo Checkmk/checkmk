@@ -75,7 +75,7 @@ ActionArgument = tuple[str, ...]
 ActionArguments = list[ActionArgument]
 
 
-class BIStates(enum.IntEnum):
+class BIState(enum.IntEnum):
     OK = 0
     WARN = 1
     CRIT = 2

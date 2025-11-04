@@ -32,7 +32,7 @@ from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
     BIServiceWithFullState,
-    BIStates,
+    BIState,
     BIStatusInfo,
     NodeComputeResult,
     NodeResultBundle,
@@ -2815,7 +2815,7 @@ def _compute_node_result_bundle(
         # The aggregation did not find any hosts or services. Return "Not yet monitored"
         return NodeResultBundle(
             NodeComputeResult(
-                state=BIStates.PENDING,
+                state=BIState.PENDING,
                 in_downtime=False,
                 acknowledged=False,
                 output=_("Not yet monitored"),

@@ -26,7 +26,7 @@ from typing import Any
 from cmk import fields
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.computer import BIAggregationFilter
-from cmk.bi.lib import BIStates, NodeResultBundle, ReqBoolean, ReqList, ReqString
+from cmk.bi.lib import BIState, NodeResultBundle, ReqBoolean, ReqList, ReqString
 from cmk.bi.packs import (
     AggregationNotFoundException,
     BIAggregationPack,
@@ -335,7 +335,7 @@ def _aggregation_state(
         if actual_result.custom_infos:
             own_infos["custom"] = actual_result.custom_infos
 
-        if actual_result.state not in [BIStates.OK, BIStates.PENDING]:
+        if actual_result.state not in [BIState.OK, BIState.PENDING]:
             node_instance = node_result_bundle.instance
             line_tokens = []
             if isinstance(node_instance, BICompiledRule):

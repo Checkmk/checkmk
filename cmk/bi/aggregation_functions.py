@@ -15,7 +15,7 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
     bi_aggregation_function_registry,
-    BIStates,
+    BIState,
     ReqConstant,
     ReqInteger,
     ReqNested,
@@ -25,11 +25,11 @@ from cmk.bi.schema import Schema
 from cmk.bi.type_defs import AggregationFunctionKind, AggregationFunctionSerialized
 
 _bi_criticality_level: dict[int, int] = {
-    BIStates.OK: 0,
-    BIStates.PENDING: 2,
-    BIStates.WARN: 4,
-    BIStates.UNKNOWN: 6,
-    BIStates.CRIT: 8,
+    BIState.OK: 0,
+    BIState.PENDING: 2,
+    BIState.WARN: 4,
+    BIState.UNKNOWN: 6,
+    BIState.CRIT: 8,
 }
 
 # The reversed mapping is used to generate aggregation function return value
@@ -39,7 +39,7 @@ _reversed_bi_criticality_level = {v: k for k, v in _bi_criticality_level.items()
 def map_states(states: list[int], index: int, restricted_bi_level: int) -> int:
     new_states = sorted(_bi_criticality_level[state] for state in states)
     level = min(restricted_bi_level, new_states[index])
-    return _reversed_bi_criticality_level.get(level, BIStates.UNKNOWN)
+    return _reversed_bi_criticality_level.get(level, BIState.UNKNOWN)
 
 
 #   .--Best----------------------------------------------------------------.
@@ -219,11 +219,11 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
         ok_nodes = states.count(0)
 
         if self._check_levels(ok_nodes, len(states), self.levels_ok):
-            state = BIStates.OK
+            state = BIState.OK
         elif self._check_levels(ok_nodes, len(states), self.levels_warn):
-            state = BIStates.WARN
+            state = BIState.WARN
         else:
-            state = BIStates.CRIT
+            state = BIState.CRIT
 
         return int(state)
 

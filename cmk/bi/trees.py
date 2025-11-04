@@ -31,7 +31,7 @@ from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
     BIServiceWithFullState,
-    BIStates,
+    BIState,
     CompiledNodeKind,
     create_nested_schema_for_class,
     FrozenMarker,
@@ -201,7 +201,7 @@ class BICompiledLeaf(ABCBICompiledNode):
             if computation_options.freeze_aggregations:
                 return NodeResultBundle(
                     actual_result=NodeComputeResult(
-                        state=BIStates.CRIT,
+                        state=BIState.CRIT,
                         in_downtime=False,
                         acknowledged=False,
                         output=f"{'Host ' if self.service_description is None else 'Service'} not found",
@@ -225,7 +225,7 @@ class BICompiledLeaf(ABCBICompiledNode):
             if self.service_description is None:
                 state = self._map_hoststate_to_bistate(state)
         else:
-            state = BIStates.PENDING
+            state = BIState.PENDING
 
         # Assumed
         assumed_result = None
@@ -267,12 +267,12 @@ class BICompiledLeaf(ABCBICompiledNode):
 
     def _map_hoststate_to_bistate(self, host_state: HostState) -> int:
         match host_state:
-            case BIStates.HOST_UP:
-                return BIStates.OK
-            case BIStates.HOST_DOWN:
-                return BIStates.CRIT
+            case BIState.HOST_UP:
+                return BIState.OK
+            case BIState.HOST_DOWN:
+                return BIState.CRIT
             case _:  # also BIStates.HOST_UNREACHABLE:
-                return BIStates.UNKNOWN
+                return BIState.UNKNOWN
 
     def _get_state_name(self, state: HostState | ServiceState) -> str:
         return service_state_name(state) if self.service_description else host_state_name(state)

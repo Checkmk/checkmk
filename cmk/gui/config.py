@@ -282,7 +282,7 @@ def _get_default_config_from_module_plugins() -> dict[str, Any]:
     """Plug-ins from the config plug-in package are loaded here
 
     These are `cmk.gui.plugins.config`, `cmk.gui.nonfree.pro.plugins.config` and
-    `cmk.gui.nonfree.ultimate.plugins.config`.
+    `cmk.gui.nonfree.ultimatemt.plugins.config`.
     """
     config_plugin_vars: dict = {}
     for module in _config_plugin_modules():
@@ -307,13 +307,13 @@ def _config_plugin_modules() -> list[ModuleType]:
         if (
             name.startswith("cmk.gui.plugins.config.")
             or name.startswith("cmk.gui.nonfree.pro.plugins.config.")
-            or name.startswith("cmk.gui.nonfree.ultimate.plugins.config.")
+            or name.startswith("cmk.gui.nonfree.ultimatemt.plugins.config.")
         )
         and name
         not in (
             "cmk.gui.plugins.config.base",
             "cmk.gui.nonfree.pro.plugins.config.cee",
-            "cmk.gui.nonfree.ultimate.plugins.config.cme",
+            "cmk.gui.nonfree.ultimatemt.plugins.config.cme",
         )
         and module is not None
     ]

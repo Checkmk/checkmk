@@ -47,7 +47,7 @@ Args = argparse.Namespace
 @pytest.mark.parametrize(
     "resource, group_tags, expected_result",
     [
-        (
+        pytest.param(
             AzureResource(
                 {
                     "id": "myid",
@@ -84,73 +84,122 @@ Args = argparse.Namespace
                 ],
                 ["MyVM"],
             ),
+            id="Virtual machine with resource group tags",
         ),
-        # TODO:
-        # (
-        #     AzureResource(
-        #         {
-        #             "id": "resource_id",
-        #             "name": "my_resource",
-        #             "type": "Microsoft.Network/loadBalancers",
-        #             "location": "westeurope",
-        #             "tags": {"my-unique-tag": "unique", "tag4all": "True"},
-        #             "group": "resource_group_name",
-        #         },
-        #         TagsImportPatternOption.import_all,
-        #         subscription=AzureSubscription(
-        #             id="mock_subscription_id",
-        #             name="mock_subscription_name",
-        #             tags={},
-        #             safe_hostnames=False,
-        #             tenant_id="tenant_id",
-        #         ),
-        # safe_hostnames=False,
-        #     ),
-        #     {
-        #         "resource_group_name": {
-        #             "resource_group": "resource_group_name",
-        #             "another_group_tag": "another_value",
-        #         }
-        #     },
-        #     (
-        #         [
-        #             '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
-        #             ' "subscription_id": "mock_subscription_id"}\n',
-        #             '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
-        #         ],
-        #         ["my_resource"],
-        #     ),
-        # ),
-        # (
-        #     AzureResource(
-        #         {
-        #             "id": "resource_id",
-        #             "name": "my_resource",
-        #             "type": "Microsoft.Network/loadBalancers",
-        #             "location": "westeurope",
-        #             "tags": {},
-        #             "group": "resource_group_name",
-        #         },
-        #         TagsImportPatternOption.import_all,
-        #         subscription=AzureSubscription(
-        #             id="mock_subscription_id",
-        #             name="mock_subscription_name",
-        #             tags={},
-        #             safe_hostnames=False,
-        #             tenant_id="tenant_id",
-        #         ),
-        # safe_hostnames=False,
-        #     ),
-        #     {"resource_group_name": {}},
-        #     (
-        #         [
-        #             '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
-        #             ' "subscription_id": "mock_subscription_id"}\n',
-        #             "{}\n",
-        #         ],
-        #         ["my_resource"],
-        #     ),
-        # ),
+        pytest.param(
+            AzureResource(
+                {
+                    "id": "resource_id",
+                    "name": "my_resource",
+                    "type": "Microsoft.Network/loadBalancers",
+                    "location": "westeurope",
+                    "tags": {"my-unique-tag": "unique", "tag4all": "True"},
+                    "group": "resource_group_name",
+                },
+                TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
+                use_safe_names=False,
+            ),
+            {
+                "resource_group_name": AzureResourceGroup(
+                    info={
+                        "tags": {
+                            "resource_group": "resource_group_name",
+                            "another_group_tag": "another_value",
+                        },
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "resource_group_name",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                    use_safe_names=False,
+                )
+            },
+            (
+                [
+                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    ' "subscription_id": "mock_subscription_id"}\n',
+                    '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
+                ],
+                ["my_resource"],
+            ),
+            id="Load balancer with resource and group tags",
+        ),
+        pytest.param(
+            AzureResource(
+                {
+                    "id": "resource_id",
+                    "name": "my_resource",
+                    "type": "Microsoft.Network/loadBalancers",
+                    "location": "westeurope",
+                    "tags": {},
+                    "group": "resource_group_name",
+                },
+                TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(),
+                use_safe_names=False,
+            ),
+            {
+                "resource_group_name": AzureResourceGroup(
+                    info={
+                        "tags": {},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "resource_group_name",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(),
+                    use_safe_names=False,
+                )
+            },
+            (
+                [
+                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    ' "subscription_id": "mock_subscription_id"}\n',
+                    "{}\n",
+                ],
+                ["my_resource"],
+            ),
+            id="Load balancer with empty tags",
+        ),
+        pytest.param(
+            AzureResource(
+                {
+                    "id": "resource_id",
+                    "name": "my_resource",
+                    "type": "Microsoft.Network/loadBalancers",
+                    "location": "westeurope",
+                    "tags": {"my-unique-tag": "unique", "tag4all": "True"},
+                    "group": "resource_group_name",
+                },
+                TagsImportPatternOption.import_all,
+                subscription=fake_azure_subscription(use_safe_names=True),
+                use_safe_names=True,
+            ),
+            {
+                "resource_group_name": AzureResourceGroup(
+                    info={
+                        "tags": {
+                            "resource_group": "resource_group_name",
+                            "another_group_tag": "another_value",
+                        },
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "resource_group_name",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(use_safe_names=True),
+                    use_safe_names=True,
+                )
+            },
+            (
+                [
+                    '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
+                    ' "subscription_id": "mock_subscription_id"}\n',
+                    '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
+                ],
+                ["my_resource-06d4fb04"],
+            ),
+            id="Load balancer with safe hostnames",
+        ),
     ],
 )
 def test_get_resource_host_labels_section(
@@ -442,9 +491,10 @@ async def test_filter_tags(
 
 
 @pytest.mark.parametrize(
-    "monitored_groups, monitored_resources, expected_result",
+    "use_safe_names, monitored_groups, monitored_resources, expected_result",
     [
-        (
+        pytest.param(
+            False,
             {
                 "burningman": AzureResourceGroup(
                     info={
@@ -482,8 +532,10 @@ async def test_filter_tags(
             'monitored-groups|["burningman"]\n'
             'monitored-resources|["MyVM"]\n'
             "<<<<>>>>\n",
+            id="Single group with virtual machine resource",
         ),
-        (
+        pytest.param(
+            False,
             {
                 "burningman": AzureResourceGroup(
                     info={
@@ -536,10 +588,80 @@ async def test_filter_tags(
             'monitored-groups|["burningman", "resource_group_name"]\n'
             'monitored-resources|["my_resource"]\n'
             "<<<<>>>>\n",
+            id="Multiple groups with load balancer resource",
+        ),
+        pytest.param(
+            True,
+            {
+                "burningman": AzureResourceGroup(
+                    info={
+                        "tags": {"my-resource-tag": "my-resource-value"},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "burningman",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(use_safe_names=True),
+                    use_safe_names=True,
+                )
+            },
+            [
+                AzureResource(
+                    {
+                        "id": "myid",
+                        "name": "MyVM",
+                        "type": "Microsoft.Compute/virtualMachines",
+                        "location": "westeurope",
+                        "tags": {"my-unique-tag": "unique", "tag4all": "True"},
+                        "group": "BurningMan",
+                    },
+                    TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(use_safe_names=True),
+                    use_safe_names=True,
+                ),
+            ],
+            "<<<<burningman-3d63024c>>>>\n"
+            "<<<azure_v2_labels:sep(0)>>>\n"
+            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"my-resource-tag": "my-resource-value"}\n'
+            "<<<<>>>>\n"
+            "<<<<mock_subscription_name-3d63024c>>>>\n"
+            "<<<azure_v2_agent_info:sep(124)>>>\n"
+            'monitored-groups|["burningman"]\n'
+            'monitored-resources|["MyVM"]\n'
+            "<<<<>>>>\n",
+            id="Safe hostnames with virtual machine",
+        ),
+        pytest.param(
+            True,
+            {
+                "burningman": AzureResourceGroup(
+                    info={
+                        "tags": {},
+                        "type": "Microsoft.Resources/resourceGroups",
+                        "name": "burningman",
+                    },
+                    tag_key_pattern=TagsImportPatternOption.import_all,
+                    subscription=fake_azure_subscription(use_safe_names=True),
+                    use_safe_names=True,
+                )
+            },
+            [],
+            "<<<<burningman-3d63024c>>>>\n"
+            "<<<azure_v2_labels:sep(0)>>>\n"
+            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            "{}\n"
+            "<<<<>>>>\n"
+            "<<<<mock_subscription_name-3d63024c>>>>\n"
+            "<<<azure_v2_agent_info:sep(124)>>>\n"
+            'monitored-groups|["burningman"]\n'
+            "monitored-resources|[]\n"
+            "<<<<>>>>\n",
+            id="Empty tags and resources with safe hostnames",
         ),
     ],
 )
 def test_write_group_info(
+    use_safe_names: bool,
     monitored_groups: Mapping[str, AzureResourceGroup],
     monitored_resources: Sequence[AzureResource],
     expected_result: Sequence[str],
@@ -548,7 +670,7 @@ def test_write_group_info(
     write_group_info(
         monitored_groups,
         monitored_resources,
-        fake_azure_subscription(),
+        fake_azure_subscription(use_safe_names=use_safe_names),
     )
     captured = capsys.readouterr()
     assert captured.out == expected_result
@@ -619,7 +741,7 @@ RESOURCE_HEALTH_ENTRY = {
                     separator=0,
                 )
             ],
-            id="virtual machine with 2 entries in resource health",
+            id="Virtual machine with 2 entries in resource health",
         ),
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.import_all),
@@ -636,13 +758,13 @@ RESOURCE_HEALTH_ENTRY = {
                     separator=0,
                 )
             ],
-            id="virtual machine import tags",
+            id="Virtual machine import tags",
         ),
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.import_all),
             [],
             [],
-            id="empty resource health entries",
+            id="Empty resource health entries",
         ),
     ],
 )
@@ -663,15 +785,17 @@ async def test_get_resource_health_sections(
 @pytest.mark.parametrize(
     "rate_limit,expected_output",
     [
-        (
+        pytest.param(
             10000,
             "<<<<mock_subscription_name>>>>\n"
             "<<<azure_v2_agent_info:sep(124)>>>\nremaining-reads|10000\n<<<<>>>>\n",
+            id="Rate limit with specific value",
         ),
-        (
+        pytest.param(
             None,
             "<<<<mock_subscription_name>>>>\n"
             "<<<azure_v2_agent_info:sep(124)>>>\nremaining-reads|None\n<<<<>>>>\n",
+            id="No rate limit specified",
         ),
     ],
 )

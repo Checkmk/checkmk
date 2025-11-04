@@ -130,8 +130,6 @@ def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:
             return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
-            return Resume.UPDATE
         case ConflictMode.ASK:
             return continue_per_users_choice(
                 "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
@@ -144,8 +142,6 @@ def _continue_on_invalid_rule(conflict_mode: ConflictMode) -> Resume:
             return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
-            return Resume.UPDATE
         case ConflictMode.ASK:
             return continue_per_users_choice(
                 "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
@@ -157,8 +153,6 @@ def _continue_on_ruleset_exception(conflict_mode: ConflictMode) -> Resume:
         case ConflictMode.FORCE:
             return Resume.UPDATE
         case ConflictMode.ABORT:
-            return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
             return Resume.ABORT
         case ConflictMode.ASK:
             return continue_per_users_choice(

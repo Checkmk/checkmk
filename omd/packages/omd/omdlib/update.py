@@ -240,8 +240,6 @@ class ManageUpdate:
 
 class PreFlight(enum.Enum):
     ASK = "ask"
-    INSTALL = "install"
-    KEEPOLD = "keepold"
     ABORT = "abort"
     IGNORE = "ignore"
 
@@ -254,9 +252,9 @@ def get_conflict_mode_update(options: CommandOptions) -> tuple[Skeleton, PreFlig
             case "ask":
                 return Skeleton.ASK, PreFlight.ASK
             case "install":
-                return Skeleton.INSTALL, PreFlight.INSTALL
+                return Skeleton.INSTALL, PreFlight.IGNORE
             case "keepold":
-                return Skeleton.KEEPOLD, PreFlight.KEEPOLD
+                return Skeleton.KEEPOLD, PreFlight.IGNORE
             case "abort":
                 return Skeleton.ABORT, PreFlight.ABORT
             case "ignore":

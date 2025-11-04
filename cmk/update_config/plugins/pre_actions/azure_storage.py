@@ -20,9 +20,9 @@ class MigrateAzureStorage(PreUpdateAction):
     @staticmethod
     def _continue_on_exception(conflict_mode: ConflictMode) -> bool:
         match conflict_mode:
-            case ConflictMode.FORCE | ConflictMode.INSTALL:
+            case ConflictMode.FORCE:
                 return True
-            case ConflictMode.ABORT | ConflictMode.KEEP_OLD:
+            case ConflictMode.ABORT:
                 return False
             case ConflictMode.ASK:
                 return continue_per_users_choice(

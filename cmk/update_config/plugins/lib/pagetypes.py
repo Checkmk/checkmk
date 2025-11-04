@@ -131,8 +131,6 @@ def _continue_per_users_choice(conflict_mode: ConflictMode) -> Resume:
             return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
-            return Resume.ABORT
         case ConflictMode.ASK:
             return continue_per_users_choice(
                 "You can abort the update process (A) or continue (c) the update. "

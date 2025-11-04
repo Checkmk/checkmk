@@ -130,7 +130,7 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         type=ConflictMode,
         help=(
             f"If you choose '{ConflictMode.ASK}', you will need to manually answer all upcoming questions. "
-            f"With '{ConflictMode.FORCE}', '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"With '{ConflictMode.FORCE}' or '{ConflictMode.ABORT}' no interaction is needed. "
             f"'{ConflictMode.FORCE}' continues the update even if errors occur during the pre-flight checks. "
             f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
         ),

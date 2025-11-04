@@ -29,8 +29,6 @@ def _continue_per_users_choice(conflict_mode: ConflictMode, msg: str) -> bool:
             return True
         case ConflictMode.ABORT:
             return False
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
-            return False
         case ConflictMode.ASK:
             return continue_per_users_choice(msg).is_not_abort()
 

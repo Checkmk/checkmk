@@ -8,6 +8,7 @@ import datetime
 import logging
 import shlex
 from pathlib import Path
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import time_machine
@@ -67,17 +68,48 @@ def test_current_history_period(config: Config) -> None:
 
 def test_convert_history_line() -> None:
     """History convert values."""
-    values = "1	1666942292.2998602	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	".split(
-        "\t"
+    values: list[Any] = (
+        "1	1666942292.5	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					rule	heute	0	".split(
+            "\t"
+        )
     )
-
     assert len(values) == 30
 
     convert_history_line(StatusTableHistory.columns, values)
 
-    assert values[0] == 1  # type: ignore[comparison-overlap]
-    assert values[1] == 1666942292.2998602  # type: ignore[comparison-overlap]
-    assert values[5] == 5  # type: ignore[comparison-overlap]
+    assert values[0] == 1
+    assert values[1] == 1666942292.5
+    assert values[5] == 5
+    assert values[23] is None
+    assert values[24] == ""
+    assert values[25] == ""
+    assert values[26] == "rule"
+    assert values[27] == "heute"
+    assert values[28] is False
+    assert values[29] == ()
+
+
+def test_convert_history_line_legacy() -> None:
+    """History convert values."""
+    values: list[Any] = (
+        "1	1666942299	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin	".split(
+            "\t"
+        )
+    )
+    assert len(values) == 23
+
+    convert_history_line(StatusTableHistory.columns, values)
+
+    assert values[0] == 1
+    assert values[1] == 1666942299
+    assert values[5] == 5
+    assert values[23] is None
+    assert values[24] == ""
+    assert values[25] == ""
+    assert values[26] == "host"
+    assert values[27] == ""
+    assert values[28] is False
+    assert values[29] == ""
 
 
 def test_history_parse(tmp_path: Path) -> None:

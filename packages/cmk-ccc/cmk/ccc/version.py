@@ -76,9 +76,11 @@ def omd_version(omd_root: Path) -> str:
 def edition(omd_root: Path) -> Edition:
     try:
         return Edition.from_version_string(omd_version(omd_root))
-    except KeyError:
-        # Without this fallback CI jobs may fail.
-        # The last job known to fail was we the building of the sphinx documentation
+    except RuntimeError:
+        # Without this fallback Python code executed in the Git context fails, for example:
+        # - OpenAPI spec generator
+        # - Checkmk doctests
+        # It would be better to remove this and make the edition handling explizit in these contexts.
         return Edition.COMMUNITY
 
 

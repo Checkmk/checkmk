@@ -6,7 +6,7 @@
 import sys
 
 try:
-    from cmk.plugins.otel.special_agents.cce.agent_otel import (  # type: ignore[import-untyped,unused-ignore]
+    from cmk.plugins.otel.special_agents.nonfree.ultimate.agent_otel import (  # type: ignore[import-untyped,unused-ignore]
         main,
     )
 except ImportError:

@@ -37,6 +37,6 @@ onMounted(() => {
 
 <style scoped>
 .ai-text-content {
-  padding-bottom: var(--dimension-4);
+  margin: 0;
 }
 </style>

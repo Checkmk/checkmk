@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from typing import Any, override
 
+from cmk.bi.fields import ReqString
 from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
@@ -18,7 +19,6 @@ from cmk.bi.lib import (
     BIAggregationGroups,
     create_nested_schema,
     create_nested_schema_for_class,
-    ReqString,
 )
 from cmk.bi.log import LOGGER
 from cmk.bi.node_generator import BINodeGenerator

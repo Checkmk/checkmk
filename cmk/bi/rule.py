@@ -22,6 +22,7 @@ from typing import Any, override
 
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
+from cmk.bi.fields import ReqList, ReqString
 from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
@@ -33,8 +34,6 @@ from cmk.bi.lib import (
     create_nested_schema_for_class,
     get_schema_default_config,
     replace_macros,
-    ReqList,
-    ReqString,
 )
 from cmk.bi.node_generator import BINodeGenerator, BINodeGeneratorSchema
 from cmk.bi.node_vis import BINodeVisBlockStyleSchema, BINodeVisLayoutStyleSchema

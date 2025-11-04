@@ -12,15 +12,8 @@ from typing import Literal, override, TypedDict
 from marshmallow import validate
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
-from cmk.bi.lib import (
-    ABCBIAggregationFunction,
-    bi_aggregation_function_registry,
-    BIState,
-    ReqConstant,
-    ReqInteger,
-    ReqNested,
-    ReqString,
-)
+from cmk.bi.fields import ReqConstant, ReqInteger, ReqNested, ReqString
+from cmk.bi.lib import ABCBIAggregationFunction, bi_aggregation_function_registry, BIState
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import AggregationFunctionKind, AggregationFunctionSerialized
 

@@ -15,6 +15,7 @@ from typing import override
 
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
+from cmk.bi.fields import ReqConstant, ReqNested, ReqString
 from cmk.bi.lib import (
     ABCBIAction,
     ABCBICompiledNode,
@@ -27,9 +28,6 @@ from cmk.bi.lib import (
     BIParams,
     BIParamsSchema,
     replace_macros,
-    ReqConstant,
-    ReqNested,
-    ReqString,
     SearchResult,
     SearchResults,
 )

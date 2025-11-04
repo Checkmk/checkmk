@@ -23,7 +23,7 @@ from cmk.bi.actions import (
     BIStateOfServiceAction,
 )
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
-from cmk.bi.lib import ReqBoolean, ReqList, ReqNested, ReqString
+from cmk.bi.fields import ReqBoolean, ReqList, ReqNested, ReqString
 from cmk.bi.node_generator import BINodeGenerator
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.rule_interface import bi_rule_id_registry

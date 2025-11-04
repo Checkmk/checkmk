@@ -19,6 +19,7 @@ from marshmallow import post_dump, post_load, pre_dump, pre_load
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
+from cmk.bi.fields import ReqConstant, ReqDict, ReqList, ReqNested, ReqString
 from cmk.bi.lib import (
     ABCBISearch,
     ABCBISearcher,
@@ -27,11 +28,6 @@ from cmk.bi.lib import (
     BIHostSearchMatch,
     BIServiceSearchMatch,
     replace_macros,
-    ReqConstant,
-    ReqDict,
-    ReqList,
-    ReqNested,
-    ReqString,
 )
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (

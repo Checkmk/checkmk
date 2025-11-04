@@ -26,7 +26,8 @@ from typing import Any
 from cmk import fields
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.computer import BIAggregationFilter
-from cmk.bi.lib import BIState, NodeResultBundle, ReqBoolean, ReqList, ReqString
+from cmk.bi.fields import ReqBoolean, ReqList, ReqString
+from cmk.bi.lib import BIState, NodeResultBundle
 from cmk.bi.packs import (
     AggregationNotFoundException,
     BIAggregationPack,

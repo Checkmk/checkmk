@@ -14,7 +14,6 @@ import enum
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from functools import partial
 from typing import (
     Any,
     Literal,
@@ -30,6 +29,7 @@ from marshmallow import Schema as marshmallow_Schema
 
 from livestatus import LivestatusResponse, Query
 
+from cmk.bi.fields import ReqBoolean, ReqList, ReqNested, ReqString
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
     ActionKind,
@@ -54,20 +54,12 @@ from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-vio
     ServiceDetails,
     ServiceState,
 )
-from cmk.fields import Boolean, Constant, Dict, Integer, List, Nested, String
+from cmk.fields import Boolean, List, Nested, String
 from cmk.utils.labels import LabelGroups
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-
-ReqList = partial(List, required=True)
-ReqDict = partial(Dict, required=True)
-ReqConstant = partial(Constant, required=True)
-ReqInteger = partial(Integer, required=True)
-ReqString = partial(String, required=True)
-ReqNested = partial(Nested, required=True)
-ReqBoolean = partial(Boolean, required=True)
 
 SearchResult = dict[str, str]
 SearchResults = list[SearchResult]

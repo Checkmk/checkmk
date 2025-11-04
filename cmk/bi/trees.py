@@ -21,6 +21,7 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
+from cmk.bi.fields import ReqConstant, ReqList, ReqNested, ReqString
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
     ABCBICompiledNode,
@@ -38,10 +39,6 @@ from cmk.bi.lib import (
     NodeComputeResult,
     NodeIdentifierInfo,
     NodeResultBundle,
-    ReqConstant,
-    ReqList,
-    ReqNested,
-    ReqString,
     RequiredBIElement,
 )
 from cmk.bi.node_vis import (

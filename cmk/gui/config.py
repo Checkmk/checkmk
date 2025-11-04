@@ -45,7 +45,7 @@ if cmk_version.edition(paths.omd_root) in {
     cmk_version.Edition.CME,
     cmk_version.Edition.CSE,
 }:
-    from cmk.gui.cce.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.nonfree.ultimate.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CCEConfig,
     )
 else:

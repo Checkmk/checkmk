@@ -40,9 +40,9 @@ match edition := cmk_version.edition(paths.omd_root):
         cmk.gui.nonfree.ultimate.registration.register(edition)
 
     case Edition.CCE:
-        import cmk.gui.cce.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
-        cmk.gui.cce.registration.register(edition)
+        cmk.gui.nonfree.ultimate.registration.register(edition)
 
     case Edition.CSE:
         import cmk.gui.nonfree.cloud.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
@@ -136,7 +136,7 @@ def _plugin_package_names(main_module_name: str) -> Iterator[str]:
         or cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE
         or cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
     ):
-        yield f"cmk.gui.cce.plugins.{main_module_name}"
+        yield f"cmk.gui.nonfree.ultimate.plugins.{main_module_name}"
 
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:

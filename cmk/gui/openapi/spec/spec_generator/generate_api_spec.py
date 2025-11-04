@@ -103,7 +103,7 @@ def _import_cee_endpoints() -> None:
 
 def _import_cce_endpoints() -> None:
     with suppress(Exception):
-        from cmk.gui.cce.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        from cmk.gui.nonfree.ultimate.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
             register as cce_registration,
         )
 

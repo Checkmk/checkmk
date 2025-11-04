@@ -88,15 +88,15 @@ def load_api_v1_rule_specs(
             not_yet_moved_plugins.append(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
 
     try:
-        import cmk.gui.cce.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.ultimate.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cce_check_parameters_path = Path(
-            list(cmk.gui.cce.plugins.wato.check_parameters.__path__)[0]
+            list(cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.__path__)[0]
         )
         for plugin in cce_check_parameters_path.glob("*.py"):
             if plugin.stem != "__init__":
                 not_yet_moved_plugins.append(
-                    f"cmk.gui.cce.plugins.wato.check_parameters.{plugin.stem}"
+                    f"cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.{plugin.stem}"
                 )
     except ModuleNotFoundError:
         pass

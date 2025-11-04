@@ -889,7 +889,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.piggyback",
         "cmk.utils",
     ),
-    Component("cmk.nonfree.pro.mknotifyd"): _allow(),
+    Component("cmk.mknotifyd"): _allow(),
     Component("cmk.nonfree.pro.snmp_backend"): _allow(),
     Component("cmk.nonfree.pro.liveproxy"): _allow(
         *PACKAGE_CCC,

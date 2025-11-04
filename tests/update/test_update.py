@@ -113,4 +113,9 @@ def test_update(  # pylint: disable=too-many-branches
     if agent_receiver_error_log in error_match_dict:
         error_match_dict.pop(agent_receiver_error_log)
 
+    # TODO: Remove the following block after CMK-27248 is done
+    apache_error_log = str(target_site.logs_dir / "apache/error_log")
+    if apache_error_log in error_match_dict:
+        error_match_dict.pop(apache_error_log)
+
     assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"

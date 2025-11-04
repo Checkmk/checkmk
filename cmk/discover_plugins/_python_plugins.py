@@ -73,6 +73,18 @@ def discover_plugins_from_modules(
 
 
 def _ls_defensive(path: str) -> Sequence[str]:
+    if path == "nonfree":
+        # TODO Intermedite hack, will be fixed the next days
+        try:
+            file_paths = list(os.listdir(path))
+        except (FileNotFoundError, NotADirectoryError):
+            return []
+        if "ultimate" in file_paths:
+            try:
+                return list(os.listdir(f"{path}/ultimate"))
+            except (FileNotFoundError, NotADirectoryError):
+                return []
+        return file_paths
     try:
         return list(os.listdir(path))
     except (FileNotFoundError, NotADirectoryError):

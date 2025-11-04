@@ -1909,6 +1909,8 @@ def call_scripts(
     for file in sorted(path.iterdir()):
         if file.name[0] == ".":
             continue
+        if not file.is_file():
+            continue
         sys.stdout.write(f'Executing {phase} script "{file.name}"...')
         returncode = _call_script(open_pty, env, [str(file)])
 

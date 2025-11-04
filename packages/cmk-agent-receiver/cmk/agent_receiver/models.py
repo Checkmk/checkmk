@@ -18,7 +18,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, GetCoreSchemaHandler, UUID4
 from pydantic_core import core_schema
 
-from .certs import extract_cn_from_csr
+from cmk.agent_receiver.lib.certs import extract_cn_from_csr
 
 
 @dataclass(frozen=True)

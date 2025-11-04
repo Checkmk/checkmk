@@ -7,7 +7,7 @@ import datetime
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 
-from cmk.agent_receiver.certs import agent_root_ca, sign_agent_csr
+from cmk.agent_receiver.lib.certs import agent_root_ca, sign_agent_csr
 
 from .certs import (
     check_certificate_against_private_key,

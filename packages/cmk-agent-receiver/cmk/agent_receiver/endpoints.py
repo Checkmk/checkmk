@@ -22,7 +22,7 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
-from .certs import (
+from cmk.agent_receiver.lib.certs import (
     agent_root_ca,
     current_time_naive,
     extract_cn_from_csr,
@@ -30,6 +30,7 @@ from .certs import (
     sign_agent_csr,
     site_root_certificate,
 )
+
 from .checkmk_rest_api import (
     cmk_edition,
     controller_certificate_settings,

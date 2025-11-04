@@ -1134,7 +1134,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("tests.integration.nonfree.ultimate.relay"): _allow(
         *PACKAGE_RELAY_PROTOCOLS,
-        "cmk.agent_receiver.certs",
+        "cmk.agent_receiver.lib.certs",
     ),
     Component("tests.integration"): _allow(
         *PACKAGE_CCC,

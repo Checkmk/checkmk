@@ -24,7 +24,7 @@ from cryptography.x509 import (
 from cryptography.x509.oid import NameOID
 
 # TODO: Integration tests are not allowed to import application code. We need to get rid of this
-from cmk.agent_receiver.certs import (  # pylint: disable=cmk-module-layer-violation
+from cmk.agent_receiver.lib.certs import (  # pylint: disable=cmk-module-layer-violation
     current_time_naive,
     serialize_to_pem,
     sign_agent_csr,

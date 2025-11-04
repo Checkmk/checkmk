@@ -17,13 +17,12 @@ from fastapi.testclient import TestClient
 from pydantic import UUID4
 from pytest_mock import MockerFixture
 
-from cmk.agent_receiver.certs import serialize_to_pem
 from cmk.agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
 from cmk.agent_receiver.config import get_config
+from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from cmk.agent_receiver.utils import R4R
-
-from .certs import generate_csr_pair
+from tests.unit.agent_receiver.lib.certs import generate_csr_pair
 
 
 @pytest.fixture(name="symlink_push_host")

@@ -13,7 +13,6 @@ import cmk.utils.paths
 from cmk.crypto.password import Password
 from cmk.gui.backup import handler
 from cmk.gui.config import active_config
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
@@ -121,7 +120,7 @@ class PageAjaxBackupJobState(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("wato.backups")
-        if request.var("job") == "restore":
+        if ctx.request.var("job") == "restore":
             page: handler.PageAbstractMKBackupJobState = handler.PageBackupRestoreState()
         else:
             page = ModeBackupJobState()

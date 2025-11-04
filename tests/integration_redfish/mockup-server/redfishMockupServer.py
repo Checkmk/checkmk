@@ -1,6 +1,25 @@
+#!/usr/bin/env python3
 # Copyright Notice:
 # Copyright 2016-2019 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Mockup-Server/blob/main/LICENSE.md
+
+# mypy: disable-error-code="no-untyped-call"
+
+# mypy: disable-error-code="no-untyped-def"
+
+# mypy: disable-error-code="possibly-undefined"
+
+# mypy: disable-error-code="attr-defined"
+
+# mypy: disable-error-code="import-untyped"
+
+# mypy: disable-error-code="assignment"
+
+# mypy: disable-error-code="unreachable"
+
+# mypy: disable-error-code="var-annotated"
+
+# mypy: disable-error-code="arg-type"
 
 # redfishMockupServer.py
 # tested and developed Python 3.4

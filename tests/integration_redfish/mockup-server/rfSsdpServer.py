@@ -1,6 +1,15 @@
+#!/usr/bin/env python3
 # Copyright Notice:
 # Copyright 2016-2019 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/python-redfish-library/blob/main/LICENSE.md
+
+# mypy: disable-error-code="no-untyped-call"
+
+# mypy: disable-error-code="no-untyped-def"
+
+# mypy: disable-error-code="attr-defined"
+
+# mypy: disable-error-code="assignment"
 
 "Lib to receive ssdp packets"
 

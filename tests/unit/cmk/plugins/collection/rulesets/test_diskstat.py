@@ -1,5 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -57,8 +60,8 @@ from cmk.rulesets.v1.form_specs import Dictionary
         ),
     ],
 )
-def test_diskstat_inventory_migration(value: Mapping[str, object], expected_output: dict) -> None:
-    def migrate(form_spec: Dictionary, key: str, mig_value: Any) -> Any:
+def test_diskstat_inventory_migration(value: Mapping[str, object], expected_output: object) -> None:
+    def migrate(form_spec: Dictionary, key: str, mig_value: object) -> object:
         # migrate the fields first
         try:
             form_element = form_spec.elements[key]
@@ -120,7 +123,7 @@ def test_diskstat_inventory_migration(value: Mapping[str, object], expected_outp
     ],
 )
 @pytest.mark.skip()
-def test_diskstat_inventory_migration_error(value: dict, expected_output: dict) -> None:
+def test_diskstat_inventory_migration_error(value: object, expected_output: object) -> None:
     with pytest.raises(TypeError):
         pass
         # migrate_diskstat_inventory(value)

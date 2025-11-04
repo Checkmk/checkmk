@@ -53,6 +53,7 @@ def try_plot_cache_hits(bazel_log_prefix, distros) {
 
         archiveArtifacts(
            artifacts: "${bazel_log_prefix}*",
+           fingerprint: true,
         )
     }
     catch (e) {

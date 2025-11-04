@@ -45,7 +45,7 @@ from cmk.livestatus_client import (
     NetworkSocketDetails,
 )
 from cmk.messaging import rabbitmq
-from tests.testlib.common.repo import is_managed_repo, is_pro_repo
+from tests.testlib.common.repo import is_pro_repo, is_ultimatemt_repo
 from tests.testlib.unit.rabbitmq import get_expected_definition
 from tests.testlib.unit.utils import reset_registries
 
@@ -282,7 +282,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ),
         ]
 
-    if is_managed_repo() and edition is not cmk_version.Edition.ULTIMATEMT:
+    if is_ultimatemt_repo() and edition is not cmk_version.Edition.ULTIMATEMT:
         # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [

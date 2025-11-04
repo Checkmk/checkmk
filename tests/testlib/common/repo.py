@@ -40,7 +40,7 @@ def is_pro_repo() -> bool:
     return is_non_free_repo()
 
 
-def is_managed_repo() -> bool:
+def is_ultimatemt_repo() -> bool:
     return is_non_free_repo()
 
 
@@ -67,7 +67,7 @@ def add_protocols_path():
 
 def add_otel_collector_path() -> None:
     sys.path.insert(0, str(repo_path()))
-    if is_cloud_repo() or is_managed_repo():
+    if is_cloud_repo() or is_ultimatemt_repo():
         sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmk-otel-collector"))
 
 

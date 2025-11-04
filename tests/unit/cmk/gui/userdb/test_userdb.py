@@ -50,7 +50,7 @@ from cmk.gui.userdb.store import (
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Dictionary
-from tests.testlib.common.repo import is_managed_repo
+from tests.testlib.common.repo import is_ultimatemt_repo
 
 if TYPE_CHECKING:
     from tests.unit.cmk.web_test_app import SetConfig, SingleRequest, WebTestAppForCMK
@@ -742,7 +742,7 @@ def make_cme(monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig) -
         yield
 
 
-@pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
+@pytest.mark.skipif(not is_ultimatemt_repo(), reason="managed-edition-only test")
 @pytest.mark.usefixtures("make_cme")
 def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserId, str]) -> None:
     user_id, password = with_user
@@ -775,7 +775,7 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
     )
 
 
-@pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
+@pytest.mark.skipif(not is_ultimatemt_repo(), reason="managed-edition-only test")
 @pytest.mark.usefixtures("make_cme")
 def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[UserId, str]) -> None:
     user_id, password = with_user
@@ -806,7 +806,7 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
     )
 
 
-@pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
+@pytest.mark.skipif(not is_ultimatemt_repo(), reason="managed-edition-only test")
 @pytest.mark.usefixtures("make_cme")
 def test_check_credentials_managed_wrong_customer_user_is_denied(
     with_user: tuple[UserId, str],

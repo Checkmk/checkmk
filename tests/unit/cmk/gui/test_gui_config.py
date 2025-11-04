@@ -16,9 +16,9 @@ import cmk.utils.paths
 from cmk.gui.config import active_config, Config
 from tests.testlib.common.repo import (
     is_cloud_repo,
-    is_managed_repo,
     is_pro_repo,
     is_saas_repo,
+    is_ultimatemt_repo,
 )
 
 
@@ -192,7 +192,7 @@ def test_default_config_from_plugins() -> None:
             "ntop_connection",
         ]
 
-    if is_managed_repo():
+    if is_ultimatemt_repo():
         # CME plug-ins are added when the CEE plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [
@@ -200,7 +200,7 @@ def test_default_config_from_plugins() -> None:
             "current_customer",
         ]
 
-    if any((is_cloud_repo(), is_managed_repo(), is_saas_repo())):
+    if any((is_cloud_repo(), is_ultimatemt_repo(), is_saas_repo())):
         expected += ["metric_backend_instance"]
 
     default_config = cmk.gui.config.get_default_config()

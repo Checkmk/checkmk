@@ -30,9 +30,9 @@ from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.messaging import rabbitmq
 from tests.testlib.common.repo import (
     is_cloud_repo,
-    is_managed_repo,
     is_pro_repo,
     is_saas_repo,
+    is_ultimatemt_repo,
 )
 
 
@@ -444,7 +444,7 @@ def _get_expected_paths(
             "etc/check_mk/liveproxyd.d/wato",
         ]
 
-    if is_managed_repo() and edition is not cmk_version.Edition.ULTIMATEMT:
+    if is_ultimatemt_repo() and edition is not cmk_version.Edition.ULTIMATEMT:
         # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected_paths += [
@@ -460,7 +460,7 @@ def _get_expected_paths(
         ]
 
     if (is_cloud_repo() and edition is cmk_version.Edition.ULTIMATE) or (
-        is_managed_repo() and edition is cmk_version.Edition.ULTIMATEMT
+        is_ultimatemt_repo() and edition is cmk_version.Edition.ULTIMATEMT
     ):
         expected_paths += [
             "etc/check_mk/otel_collector.d",
@@ -472,7 +472,7 @@ def _get_expected_paths(
     if any(
         [
             (is_cloud_repo() and edition is cmk_version.Edition.ULTIMATE),
-            (is_managed_repo() and edition is cmk_version.Edition.ULTIMATEMT),
+            (is_ultimatemt_repo() and edition is cmk_version.Edition.ULTIMATEMT),
             (is_saas_repo() and edition is cmk_version.Edition.CLOUD),
         ]
     ):

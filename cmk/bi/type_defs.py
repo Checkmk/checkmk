@@ -10,6 +10,7 @@ from cmk.utils.labels import LabelGroups
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 
+# action
 ActionKind = Literal[
     "call_a_rule",
     "state_of_host",
@@ -22,8 +23,8 @@ class ActionSerialized(TypedDict):
     type: ActionKind
 
 
+# search
 SearchResult = dict[str, str]
-
 SearchKind = Literal[
     "empty",
     "fixed_arguments",
@@ -41,11 +42,13 @@ class SearchMetadata:
     kind: SearchKind = dataclasses.field(repr=False)
 
 
+# node
 class NodeDict(TypedDict):
     search: SearchSerialized
     action: ActionSerialized
 
 
+# aggregation
 AggregationFunctionKind = Literal[
     "best",
     "count_ok",
@@ -78,6 +81,7 @@ class AggrConfigDict(TypedDict):
     aggregation_visualization: Any
 
 
+# search
 HostState = int
 HostRegexMatches = dict[str, tuple[str, ...]]
 

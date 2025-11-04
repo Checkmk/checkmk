@@ -3641,7 +3641,11 @@ def make_fetcher_trigger(
         return PlainFetcherTrigger()
 
     match edition:
-        case cmk_version.Edition.ULTIMATE | cmk_version.Edition.ULTIMATEMT | cmk_version.Edition.CLOUD:
+        case (
+            cmk_version.Edition.ULTIMATE
+            | cmk_version.Edition.ULTIMATEMT
+            | cmk_version.Edition.CLOUD
+        ):
             from cmk.relay_fetcher_trigger.trigger import (  # type: ignore[import-not-found, unused-ignore]
                 RelayFetcherTrigger,
             )

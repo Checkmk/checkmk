@@ -316,13 +316,25 @@ def test_license_compatibility_distributed_setup(
     "central_edition, central_license_state, remote_edition, expected_compatibility",
     [
         pytest.param(
-            Edition.COMMUNITY, LicenseState.LICENSED, Edition.COMMUNITY, LicensingCompatible(), id="CRE-CRE"
+            Edition.COMMUNITY,
+            LicenseState.LICENSED,
+            Edition.COMMUNITY,
+            LicensingCompatible(),
+            id="CRE-CRE",
         ),
         pytest.param(
-            Edition.COMMUNITY, LicenseState.LICENSED, Edition.PRO, LicensingCompatible(), id="CRE-CEE"
+            Edition.COMMUNITY,
+            LicenseState.LICENSED,
+            Edition.PRO,
+            LicensingCompatible(),
+            id="CRE-CEE",
         ),
         pytest.param(
-            Edition.COMMUNITY, LicenseState.LICENSED, Edition.ULTIMATE, LicensingCompatible(), id="CRE-CCE"
+            Edition.COMMUNITY,
+            LicenseState.LICENSED,
+            Edition.ULTIMATE,
+            LicensingCompatible(),
+            id="CRE-CCE",
         ),
         pytest.param(
             Edition.COMMUNITY,
@@ -332,13 +344,21 @@ def test_license_compatibility_distributed_setup(
             id="CRE-CME",
         ),
         pytest.param(
-            Edition.PRO, LicenseState.LICENSED, Edition.COMMUNITY, LicensingCompatible(), id="CEE-CRE"
+            Edition.PRO,
+            LicenseState.LICENSED,
+            Edition.COMMUNITY,
+            LicensingCompatible(),
+            id="CEE-CRE",
         ),
         pytest.param(
             Edition.PRO, LicenseState.LICENSED, Edition.PRO, LicensingCompatible(), id="CEE-CEE"
         ),
         pytest.param(
-            Edition.PRO, LicenseState.LICENSED, Edition.ULTIMATE, LicensingCompatible(), id="CEE-CCE"
+            Edition.PRO,
+            LicenseState.LICENSED,
+            Edition.ULTIMATE,
+            LicensingCompatible(),
+            id="CEE-CCE",
         ),
         pytest.param(
             Edition.PRO,

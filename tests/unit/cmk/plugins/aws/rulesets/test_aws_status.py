@@ -9,7 +9,9 @@ from cmk.plugins.aws.rulesets.aws_status import rule_spec_aws_status
 
 def test_aws_status_vs_to_fs_rule_update_valid_datatypes() -> None:
     # GIVEN
-    valuespec = convert_to_legacy_rulespec(rule_spec_aws_status, Edition.COMMUNITY, lambda x: x).valuespec
+    valuespec = convert_to_legacy_rulespec(
+        rule_spec_aws_status, Edition.COMMUNITY, lambda x: x
+    ).valuespec
 
     # WHEN
     value = valuespec.transform_value({"regions": ["ap-northeast-2", "ca-central-1"]})

@@ -24,7 +24,9 @@ from cmk.utils import paths
 
 @pytest.mark.usefixtures("load_config")
 def test_is_ntop_available() -> None:
-    assert is_ntop_available() != (cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY)
+    assert is_ntop_available() != (
+        cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY
+    )
 
 
 @pytest.mark.usefixtures("load_config")

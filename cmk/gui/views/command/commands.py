@@ -973,7 +973,9 @@ def command_acknowledge_render(what: str) -> None:
     date, time_ = _expiration_date_and_time(
         active_config.acknowledge_problems.get("ack_expire", 3600)
     )
-    is_community_edition: bool = cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY
+    is_community_edition: bool = (
+        cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY
+    )
     html.open_div(class_="disabled" if is_community_edition else "")
     html.checkbox(
         "_ack_expire",

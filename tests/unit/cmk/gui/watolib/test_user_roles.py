@@ -43,7 +43,9 @@ def test_deleting_cloned_user_roles() -> None:
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert (
-        len(all_roles) == 5 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATE else 4
+        len(all_roles) == 5
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATE
+        else 4
     )
     userroles.delete_role(RoleID("adminx"), get_user_attributes([]), pprint_value=False)
     roles_after_deletion: Mapping[RoleID, UserRole] = userroles.get_all_roles()
@@ -63,7 +65,9 @@ def test_cloning_user_roles() -> None:
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert (
-        len(all_roles) == 8 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATE else 6
+        len(all_roles) == 8
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATE
+        else 6
     )
     assert {roleid for roleid in all_roles.keys() if roleid.endswith("x")} == {
         "adminx",

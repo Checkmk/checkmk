@@ -34,13 +34,9 @@ class _EditionValue(NamedTuple):
 
 
 class Edition(enum.Enum):
-    COMMUNITY = _EditionValue(
-        "community", "community", "Checkmk Community (formerly Raw)"
-    )
+    COMMUNITY = _EditionValue("community", "community", "Checkmk Community (formerly Raw)")
     PRO = _EditionValue("pro", "pro", "Checkmk Pro (formerly Enterprise)")
-    ULTIMATE = _EditionValue(
-        "ultimate", "ultimate", "Checkmk Ultimate (formerly Cloud)"
-    )
+    ULTIMATE = _EditionValue("ultimate", "ultimate", "Checkmk Ultimate (formerly Cloud)")
     ULTIMATEMT = _EditionValue(
         "ultimatemt", "ultimatemt", "Checkmk Ultimate with multi-tenancy (formerly MSP)"
     )
@@ -236,9 +232,7 @@ class Version:
     _PAT_BUILD = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
     _PAT_RC_CANDIDATE = r"-rc(\d+)"  # e.g. "-rc3"
     _PAT_META_DATA = r"\+(.*)"  # e.g. "+security"
-    _PAT_EDITION = r"(?:\.(%s))" % "|".join(
-        map(lambda x: x.short, Edition)
-    )  # e.g. ".cre"
+    _PAT_EDITION = r"(?:\.(%s))" % "|".join(map(lambda x: x.short, Edition))  # e.g. ".cre"
     _RGX_STABLE = re.compile(
         rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?(?:{_PAT_META_DATA})?"
     )  # e.g. "2.1.0p17-rc3+security"
@@ -248,9 +242,7 @@ class Version:
     #    Keep old variant in the parser for now for compatibility.
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
     # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
-    _RGX_DAILY = re.compile(
-        rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?{_PAT_EDITION}?"
-    )
+    _RGX_DAILY = re.compile(rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?{_PAT_EDITION}?")
 
     @classmethod
     def from_str(cls, raw: str) -> Self:
@@ -360,11 +352,7 @@ class Version:
 
     @property
     def version_without_rc(self) -> str:
-        return (
-            f"{'' if self.base is None else self.base}{self.release.suffix()}".lstrip(
-                "-"
-            )
-        )
+        return f"{'' if self.base is None else self.base}{self.release.suffix()}".lstrip("-")
 
     @property
     def version_rc_aware(self) -> str:
@@ -375,9 +363,7 @@ class Version:
 
     def __str__(self) -> str:
         optional_rc_suffix = (
-            ""
-            if self.release_candidate.value is None
-            else f"-rc{self.release_candidate.value}"
+            "" if self.release_candidate.value is None else f"-rc{self.release_candidate.value}"
         )
         optional_meta_suffix = "" if self.meta.value is None else f"+{self.meta.value}"
         return f"{'' if self.base is None else self.base}{self.release.suffix()}{optional_rc_suffix}{optional_meta_suffix}".lstrip(
@@ -678,9 +664,7 @@ def versions_compatible(
         if to_v.base.minor - from_v.base.minor > 1:
             return target_too_new  # preprev in 2nd number
         if to_v.base.minor - from_v.base.minor == 1:
-            return _check_minimum_patch_release(
-                from_v, to_v
-            )  # prev in 2nd number, ignoring 3rd
+            return _check_minimum_patch_release(from_v, to_v)  # prev in 2nd number, ignoring 3rd
 
     # Everything else is incompatible
     return target_too_new
@@ -696,9 +680,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
     ),
     _BaseVersion(2, 4, 0): max(
         (
-            Version.from_str(
-                "2.3.0p11"
-            ),  # dcd piggyback config converted to modern format
+            Version.from_str("2.3.0p11"),  # dcd piggyback config converted to modern format
             Version.from_str("2.3.0p26"),  # CMK-19258 - \n separated audit log
         ),
     ),
@@ -723,9 +705,7 @@ def _check_minimum_patch_release(
         return VersionsCompatible()
     if from_v >= required_patch_release:
         return VersionsCompatible()
-    return VersionsIncompatible(
-        f"This target version requires at least {required_patch_release}"
-    )
+    return VersionsIncompatible(f"This target version requires at least {required_patch_release}")
 
 
 #   .--general infos-------------------------------------------------------.
@@ -744,9 +724,7 @@ def general_version_infos_from_env() -> VersionInfo:
     The Checkmk site and relay both implement an executable `cmk-general-version-infos`
     to provide the necessary information.
     """
-    raw_version_infos = json.loads(
-        subprocess.check_output(["cmk-general-version-infos"])
-    )
+    raw_version_infos = json.loads(subprocess.check_output(["cmk-general-version-infos"]))
     return VersionInfo(
         {
             "core": raw_version_infos["core"],
@@ -768,9 +746,7 @@ def get_general_version_infos(omd_root: Path) -> VersionInfo:
     )
 
 
-def general_version_infos(
-    edition: Callable[[], str], core: Callable[[], str]
-) -> VersionInfo:
+def general_version_infos(edition: Callable[[], str], core: Callable[[], str]) -> VersionInfo:
     return {
         "time": time.time(),
         "os": _get_os_info(),

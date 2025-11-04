@@ -9,7 +9,7 @@ import datetime
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, TypeAdapter
 
 from .markup import markdown_to_html, nowiki_to_markdown
 

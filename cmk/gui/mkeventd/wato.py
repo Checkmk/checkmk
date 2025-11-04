@@ -2969,7 +2969,10 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                         )
             num_repl -= 1
 
-        if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT and "customer" in self._rule_pack:
+        if (
+            edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT
+            and "customer" in self._rule_pack
+        ):
             try:
                 del rule["customer"]
             except KeyError:

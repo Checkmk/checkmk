@@ -54,7 +54,13 @@ def format_endpoint_supported_editions(editions: set[Edition]) -> Sequence[Editi
         Edition.CLOUD: "#7e96f3",
         Edition.ULTIMATEMT: "#70a8db",
     }
-    ordered_editions = (Edition.COMMUNITY, Edition.PRO, Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD)
+    ordered_editions = (
+        Edition.COMMUNITY,
+        Edition.PRO,
+        Edition.ULTIMATE,
+        Edition.ULTIMATEMT,
+        Edition.CLOUD,
+    )
     edition_labels: list[EditionLabel] = []
     for edition in ordered_editions:
         if edition in editions:

@@ -5179,7 +5179,8 @@ SnmpBackendHosts = HostRulespec(
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
     title=lambda: cmk_version.mark_edition_only(
-        _("Hosts using a specific SNMP Backend"), [cmk_version.Edition.ULTIMATEMT, cmk_version.Edition.PRO]
+        _("Hosts using a specific SNMP Backend"),
+        [cmk_version.Edition.ULTIMATEMT, cmk_version.Edition.PRO],
     ),
 )
 

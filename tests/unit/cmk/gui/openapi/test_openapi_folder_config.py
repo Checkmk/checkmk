@@ -733,7 +733,8 @@ def test_openapi_folder_config_collections_recursive_list(
 
 
 @pytest.mark.skipif(
-    version.edition(paths.omd_root) is version.Edition.COMMUNITY, reason="Tested Attribute is not in RAW"
+    version.edition(paths.omd_root) is version.Edition.COMMUNITY,
+    reason="Tested Attribute is not in RAW",
 )
 def test_bake_agent_package_attribute_regression(
     clients: ClientRegistry, base: str, aut_user_auth_wsgi_app: WebTestAppForCMK

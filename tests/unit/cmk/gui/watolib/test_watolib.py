@@ -37,7 +37,10 @@ def test_registered_config_domains() -> None:
             "mknotifyd",
         ]
 
-    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.ULTIMATE, cmk_version.Edition.ULTIMATEMT]:
+    if cmk_version.edition(paths.omd_root) in [
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
+    ]:
         expected_config_domains.append("otel_collector")
 
     if cmk_version.edition(paths.omd_root) in {

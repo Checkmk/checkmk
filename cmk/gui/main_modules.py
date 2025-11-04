@@ -35,9 +35,9 @@ match edition := cmk_version.edition(paths.omd_root):
         cmk.gui.cee.registration.register(edition)
 
     case Edition.CME:
-        import cmk.gui.cme.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
-        cmk.gui.cme.registration.register(edition)
+        cmk.gui.nonfree.ultimate.registration.register(edition)
 
     case Edition.CCE:
         import cmk.gui.cce.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation

@@ -196,7 +196,7 @@ def _load_plugins(logger: logging.Logger) -> None:
             else []
         ),
         (
-            load_plugins_with_exceptions("cmk.update_config.cme.plugins.actions")
+            load_plugins_with_exceptions("cmk.update_config.nonfree.ultimatemt.plugins.actions")
             if edition(paths.omd_root) is Edition.CME
             else []
         ),

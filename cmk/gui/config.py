@@ -55,7 +55,7 @@ else:
 
 
 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
-    from cmk.gui.cme.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.nonfree.ultimate.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CMEConfig,
     )
 else:
@@ -280,7 +280,7 @@ def _get_default_config_from_module_plugins() -> dict[str, Any]:
     """Plug-ins from the config plug-in package are loaded here
 
     These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
-    `cmk.gui.cme.plugins.config`.
+    `cmk.gui.nonfree.ultimate.plugins.config`.
     """
     config_plugin_vars: dict = {}
     for module in _config_plugin_modules():
@@ -305,13 +305,13 @@ def _config_plugin_modules() -> list[ModuleType]:
         if (
             name.startswith("cmk.gui.plugins.config.")
             or name.startswith("cmk.gui.cee.plugins.config.")
-            or name.startswith("cmk.gui.cme.plugins.config.")
+            or name.startswith("cmk.gui.nonfree.ultimate.plugins.config.")
         )
         and name
         not in (
             "cmk.gui.plugins.config.base",
             "cmk.gui.cee.plugins.config.cee",
-            "cmk.gui.cme.plugins.config.cme",
+            "cmk.gui.nonfree.ultimate.plugins.config.cme",
         )
         and module is not None
     ]

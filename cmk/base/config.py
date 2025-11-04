@@ -179,7 +179,7 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 
 try:
-    from cmk.utils.cme.labels import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+    from cmk.utils.nonfree.ultimatemt.labels import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
         get_builtin_host_labels,
     )
 except ModuleNotFoundError:

@@ -663,7 +663,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.translations",
         exclude=("cmk.gui.plugins", "cmk.gui.cee.plugins"),
     ),
-    Component("cmk.gui.cme"): _allow(
+    Component("cmk.gui.nonfree.ultimatemt"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
         *PACKAGE_MESSAGING,
@@ -675,7 +675,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.piggyback",
         "cmk.utils.cee",
         "cmk.utils.certs",
-        "cmk.utils.cme",
+        "cmk.utils.nonfree.ultimatemt",
         "cmk.utils.images",
         "cmk.utils.password_store",
         "cmk.utils.paths",
@@ -783,7 +783,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
             "cmk.gui.cee.plugins",
             "cmk.gui.cee",
             "cmk.gui.cce",
-            "cmk.gui.cme",
+            "cmk.gui.nonfree.ultimatemt",
         ),
     ),
     Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),  # should become a package

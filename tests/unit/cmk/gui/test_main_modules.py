@@ -98,7 +98,7 @@ def test_plugins_loaded(plugin_module_dir: str) -> None:
         # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
         if module_name.startswith("cmk.gui.plugins.")
         or module_name.startswith("cmk.gui.cee.plugins.")
-        or module_name.startswith("cmk.gui.cme.plugins.")
+        or module_name.startswith("cmk.gui.nonfree.ultimate.plugins.")
     ]
 
     plugin_module_name = plugin_module_dir.replace("/", ".")
@@ -108,6 +108,6 @@ def test_plugins_loaded(plugin_module_dir: str) -> None:
         if (
             n.startswith("cmk.gui.plugins." + plugin_module_name)
             or n.startswith("cmk.gui.cee.plugins." + plugin_module_name)  #
-            or n.startswith("cmk.gui.cme.plugins." + plugin_module_name)  #
+            or n.startswith("cmk.gui.nonfree.ultimate.plugins." + plugin_module_name)  #
         )
     ]

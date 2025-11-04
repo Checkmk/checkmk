@@ -200,21 +200,30 @@ function Get-VMDriveInfo {
       # but instead a snapshot, so we have to go one level up to get the real drive info
       # because these snapshots can be shortlived.
       $ext = (Get-Item($vmHDDVHD.Path)).Extension.ToLower();
-      if (($ext -eq ".avhd" -or $ext -eq ".avhdx") -and $vmHDDVHD.VhdType -eq "Differencing") {
-        $parentVmHDDVHD = $vmHDDVHD.ParentPath | Get-VHD -ComputerName $clusterNode -ErrorAction SilentlyContinue
-        Write-Output "vhd.Path $($vmHDDVHD.ParentPath)"
-        Write-Output "vhd.DiskSize $($parentVmHDDVHD.Size)"
-        Write-Output "vhd.FileSize $($parentVmHDDVHD.FileSize)"
-        Write-Output "vhd.Type $($parentVmHDDVHD.VhdType)"
-        Write-Output "vhd.Format $($parentVmHDDVHD.VhdType)"
+      $finalVhd = $vmHDDVHD
+
+      $isSnapshot = {
+        $ext = [System.IO.Path]::GetExtension($finalVhd.Path);
+
+        return ($ext -eq ".avhd" -or $ext -eq ".avhdx") -and $finalVhd.VhdType -eq "Differencing";
       }
-      else {
-        Write-Output "vhd.Path $($vmHDD.Path)"
-        Write-Output "vhd.Format $($vmHDDVHD.VhdFormat)"
-        Write-Output "vhd.Type $($vmHDDVHD.VhdType)"
-        Write-Output "vhd.DiskSize $($vmHDDVHD.Size)"
-        Write-Output "vhd.FileSize $($vmHDDVHD.FileSize)"
+
+      while ($isSnapshot.Invoke()) {
+        $finalVhd = $finalVhd.ParentPath | Get-VHD -ErrorAction SilentlyContinue
+
+        # Best parent could not be found, so falling back to the original file.
+        # This can happen if the parent file becomes unavailable (deleted, on a disconnected drive, etc).
+        if ($finalVhd -eq $null) {
+          $finalVhd = $vmHDDVHD
+          break
+        }
       }
+
+      Write-Output "vhd.Path $($finalVhd.Path)"
+      Write-Output "vhd.Format $($finalVhd.VhdFormat)"
+      Write-Output "vhd.Type $($finalVhd.VhdType)"
+      Write-Output "vhd.DiskSize $($finalVhd.Size)"
+      Write-Output "vhd.FileSize $($finalVhd.FileSize)"
     }
     else {
       Write-Output "vhd.Path $($vmHDD.Path)"

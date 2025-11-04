@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.utils import run
-from tests.testlib.version import get_min_version
+from tests.testlib.version import CMKVersion, edition_from_env
 
 from tests.plugins_integration import checks
 
@@ -170,7 +170,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
-    base_version = get_min_version(Edition.CEE)
+    base_version = CMKVersion("2.2.0p27", edition_from_env(fallback=Edition.CEE))
     return get_site_factory(prefix="update_", version=base_version)
 
 

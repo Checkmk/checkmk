@@ -38,6 +38,7 @@ if "%PY_VER%" == "3.6" (
   )
   else (
     if "%PLATFORM%" == "amd64" (
+        SET PLATFORM=
         SET PreferredToolArchitecture=x64
         @echo call buildrelease.bat  -o %build_dir% -b -x64 --skip-nuget --skip-pgo --skip-zip -D
         call buildrelease.bat  -o %build_dir% -b -x64 --skip-nuget --skip-pgo --skip-zip -D
@@ -47,4 +48,3 @@ if "%PY_VER%" == "3.6" (
     )
   )
 )
-

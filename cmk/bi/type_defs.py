@@ -11,6 +11,7 @@ from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 
 # action
+ActionArgument = tuple[str, ...]
 ActionKind = Literal[
     "call_a_rule",
     "state_of_host",

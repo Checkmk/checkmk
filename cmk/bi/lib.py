@@ -32,6 +32,7 @@ from livestatus import LivestatusResponse, Query
 from cmk.bi.fields import ReqBoolean, ReqList, ReqNested, ReqString
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
+    ActionArgument,
     ActionKind,
     ActionSerialized,
     AggregationFunctionKind,
@@ -60,8 +61,6 @@ from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-
-ActionArgument = tuple[str, ...]
 
 
 class BIState(enum.IntEnum):

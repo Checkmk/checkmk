@@ -27,7 +27,6 @@ from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
     ABCWithSchema,
-    ActionArgument,
     bi_aggregation_function_registry,
     BIParams,
     create_nested_schema,
@@ -45,6 +44,7 @@ from cmk.bi.rule_interface import (
 )
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule
+from cmk.bi.type_defs import ActionArgument
 
 
 class BIRule(ABCBIRule, ABCWithSchema):

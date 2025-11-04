@@ -1683,15 +1683,15 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self,
         users: Users,
         ldap_users: dict[LdapUsername, FetchedLDAPUser],
-    ) -> list[str]:
-        changes = []
+        sync_users_result: SyncUsersResult,
+    ) -> None:
         for user_id, user in list(users.items()):
             user_connection_id = user.get("connector")
             if user_connection_id == self.id and self._strip_suffix(user_id) not in ldap_users:
                 del users[user_id]  # remove the user
-                changes.append(_("LDAP [%s]: Removed user %s") % (self.id, user_id))
-                # When a user is created on login via the REST-API, and then we do the
-                # user sync, logged_in_user_id() can return None.
+                sync_users_result.changes.append(
+                    _("LDAP [%s]: Removed user %s") % (self.id, user_id)
+                )
                 log_security_event(
                     UserManagementEvent(
                         event="user deleted",
@@ -1701,7 +1701,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                         connection_id=self.id,
                     )
                 )
-        return changes
 
     @override
     def do_sync(
@@ -1755,6 +1754,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
             users=users,
             ldap_users=fetched_ldap_users,
+            sync_users_result=sync_users_result,
         )
 
         for fetched_ldap_user in fetched_ldap_users.values():

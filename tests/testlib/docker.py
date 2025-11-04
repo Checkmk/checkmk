@@ -346,7 +346,7 @@ class CheckmkApp:
             ) from e
 
         if self.package_info.edition.is_saas_edition():
-            from tests.testlib.cse.utils import (  # type: ignore[import-untyped, unused-ignore]
+            from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore]
                 create_cse_initial_config,
             )
 

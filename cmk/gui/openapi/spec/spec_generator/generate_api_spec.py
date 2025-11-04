@@ -121,7 +121,7 @@ def _import_cme_endpoints() -> None:
 
 def _import_cse_endpoints() -> None:
     with suppress(Exception):
-        from cmk.gui.cse.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+        from cmk.gui.nonfree.cloud.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             register as cse_registration,
         )
 

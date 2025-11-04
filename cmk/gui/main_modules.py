@@ -45,9 +45,9 @@ match edition := cmk_version.edition(paths.omd_root):
         cmk.gui.cce.registration.register(edition)
 
     case Edition.CSE:
-        import cmk.gui.cse.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
+        import cmk.gui.nonfree.cloud.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
-        cmk.gui.cse.registration.register(edition)
+        cmk.gui.nonfree.cloud.registration.register(edition)
 
     case Edition.CRE:
         import cmk.gui.cre.registration

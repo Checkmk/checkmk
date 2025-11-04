@@ -346,7 +346,7 @@ CROSS_DEPENDING_UTILS_MODULES = (
     "cme",
     "config_path",
     "config_warnings",
-    "cse",
+    "nonfree.cloud",
     "dateutils",
     "diagnostics",
     "encryption",
@@ -682,7 +682,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.redis",
         exclude=("cmk.gui.plugins", "cmk.gui.cee.plugins"),
     ),
-    Component("cmk.gui.cse"): _allow(
+    Component("cmk.gui.nonfree.cloud"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
         *PACKAGE_TRACE,
@@ -691,7 +691,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui",
         "cmk.utils.agent_registration",
         "cmk.utils.cee",
-        "cmk.utils.cse",
+        "cmk.utils.nonfree.cloud",
         "cmk.utils.licensing",
         "cmk.utils.local_secrets",
         "cmk.utils.log",

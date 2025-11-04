@@ -8,25 +8,25 @@ from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
-from .._autocompleter import metrics_autocompleter
-from .._explicit_graphs import ExplicitGraphSpecification
-from .._graph_images import AjaxGraphImagesForNotifications
-from .._graph_metric_expressions import (
+from ._autocompleter import metrics_autocompleter
+from ._explicit_graphs import ExplicitGraphSpecification
+from ._graph_images import AjaxGraphImagesForNotifications
+from ._graph_metric_expressions import (
     graph_metric_expression_registry,
     GraphMetricConstant,
     GraphMetricConstantNA,
     GraphMetricOperation,
     GraphMetricRRDSource,
 )
-from .._graph_specification import graph_specification_registry
-from .._graph_templates import TemplateGraphSpecification
-from .._html_render import AjaxGraph, AjaxGraphHover, AjaxRenderGraphContent
-from .._metric_backend_registry import (
+from ._graph_specification import graph_specification_registry
+from ._graph_templates import TemplateGraphSpecification
+from ._html_render import AjaxGraph, AjaxGraphHover, AjaxRenderGraphContent
+from ._metric_backend_registry import (
     metric_backend_registry,
     MetricBackend,
 )
-from .._settings import ConfigVariableGraphTimeranges
-from .._valuespecs import PageVsAutocomplete
+from ._settings import ConfigVariableGraphTimeranges
+from ._valuespecs import PageVsAutocomplete
 
 
 def register(

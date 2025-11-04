@@ -232,7 +232,9 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
             list(bi_searcher.hosts.values()), argument[0]
         )
 
-        host_search_matches = [BIHostSearchMatch(x, match_groups[x.name]) for x in matched_hosts]
+        host_search_matches = [
+            BIHostSearchMatch(host=x, match_groups=match_groups[x.name]) for x in matched_hosts
+        ]
         service_matches = bi_searcher.get_service_description_matches(
             host_search_matches, argument[1]
         )

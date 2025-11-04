@@ -22,5 +22,9 @@ def is_part_of_aggregation(host: str, service: str) -> bool:
 def _get_cached_bi_compiler() -> BICompiler:
     return BICompiler(
         BIManager.bi_configuration_file(),
-        SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _),
+        SitesCallback(
+            all_sites_with_id_and_online=all_sites_with_id_and_online,
+            query=bi_livestatus_query,
+            translate=_,
+        ),
     )

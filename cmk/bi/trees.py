@@ -164,7 +164,13 @@ class BICompiledLeaf(ABCBICompiledNode):
     @override
     @instance_method_lru_cache()
     def required_elements(self) -> set[RequiredBIElement]:
-        return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
+        return {
+            RequiredBIElement(
+                site_id=self.site_id,
+                host_name=self.host_name,
+                service_description=self.service_description,
+            )
+        }
 
     @override
     def __str__(self) -> str:
@@ -194,18 +200,18 @@ class BICompiledLeaf(ABCBICompiledNode):
             #       For frozen aggregations the leaf remains, but reports the state CRIT
             if computation_options.freeze_aggregations:
                 return NodeResultBundle(
-                    NodeComputeResult(
-                        2,
-                        False,
-                        False,
-                        f"{'Host ' if self.service_description is None else 'Service'} not found",
-                        True,
-                        {},
-                        {},
+                    actual_result=NodeComputeResult(
+                        state=2,
+                        in_downtime=False,
+                        acknowledged=False,
+                        output=f"{'Host ' if self.service_description is None else 'Service'} not found",
+                        in_service_period=True,
+                        state_messages={},
+                        custom_infos={},
                     ),
-                    None,
-                    [],
-                    self,
+                    assumed_result=None,
+                    nested_results=[],
+                    instance=self,
                 )
             return None
 
@@ -225,34 +231,38 @@ class BICompiledLeaf(ABCBICompiledNode):
         assumed_result = None
         if use_assumed:
             assumed_state = bi_status_fetcher.assumed_states.get(
-                RequiredBIElement(self.site_id, self.host_name, self.service_description)
+                RequiredBIElement(
+                    site_id=self.site_id,
+                    host_name=self.host_name,
+                    service_description=self.service_description,
+                )
             )
             if assumed_state is not None:
                 # Make the i18n call explicit for our tooling
                 _ = bi_status_fetcher.sites_callback.translate
                 assumed_result = NodeComputeResult(
-                    int(assumed_state),
-                    in_downtime,
-                    bool(entity.acknowledged),
-                    _("Assumed to be %s") % self._get_state_name(assumed_state),
-                    entity.in_service_period,
-                    {},
-                    {},
+                    state=int(assumed_state),
+                    in_downtime=in_downtime,
+                    acknowledged=bool(entity.acknowledged),
+                    output=_("Assumed to be %s") % self._get_state_name(assumed_state),
+                    in_service_period=entity.in_service_period,
+                    state_messages={},
+                    custom_infos={},
                 )
 
         return NodeResultBundle(
-            NodeComputeResult(
-                state,
-                in_downtime,
-                bool(entity.acknowledged),
-                entity.plugin_output,
-                bool(entity.in_service_period),
-                {},
-                {},
+            actual_result=NodeComputeResult(
+                state=state,
+                in_downtime=in_downtime,
+                acknowledged=bool(entity.acknowledged),
+                output=entity.plugin_output,
+                in_service_period=bool(entity.in_service_period),
+                state_messages={},
+                custom_infos={},
             ),
-            assumed_result,
-            [],
-            self,
+            assumed_result=assumed_result,
+            nested_results=[],
+            instance=self,
         )
 
     def _map_hoststate_to_bistate(self, host_state: HostState) -> int:
@@ -272,7 +282,9 @@ class BICompiledLeaf(ABCBICompiledNode):
     ) -> tuple[int | None, BIHostStatusInfoRow | BIServiceWithFullState | None]:
         assert self.site_id is not None
 
-        if entity := bi_status_fetcher.states.get(BIHostSpec(self.site_id, self.host_name)):
+        if entity := bi_status_fetcher.states.get(
+            BIHostSpec(site_id=self.site_id, host_name=self.host_name)
+        ):
             if self.service_description is None:
                 return entity.scheduled_downtime_depth, entity
             return entity.scheduled_downtime_depth, entity.services_with_fullstate.get(
@@ -408,7 +420,8 @@ class BICompiledRule(ABCBICompiledNode):
 
     def get_required_hosts(self) -> set[BIHostSpec]:
         return {
-            BIHostSpec(element.site_id, element.host_name) for element in self.required_elements()
+            BIHostSpec(site_id=element.site_id, host_name=element.host_name)
+            for element in self.required_elements()
         }
 
     @override
@@ -433,7 +446,12 @@ class BICompiledRule(ABCBICompiledNode):
         )
 
         if not use_assumed:
-            return NodeResultBundle(actual_result, None, bundled_results, self)
+            return NodeResultBundle(
+                actual_result=actual_result,
+                assumed_result=None,
+                nested_results=bundled_results,
+                instance=self,
+            )
 
         assumed_result_items = [
             bundle.assumed_result if bundle.assumed_result is not None else bundle.actual_result
@@ -442,7 +460,12 @@ class BICompiledRule(ABCBICompiledNode):
         assumed_result = self._process_node_compute_result(
             assumed_result_items, computation_options
         )
-        return NodeResultBundle(actual_result, assumed_result, bundled_results, self)
+        return NodeResultBundle(
+            actual_result=actual_result,
+            assumed_result=assumed_result,
+            nested_results=bundled_results,
+            instance=self,
+        )
 
     def _process_node_compute_result(
         self, results: list[NodeComputeResult], computation_options: BIAggregationComputationOptions
@@ -472,14 +495,14 @@ class BICompiledRule(ABCBICompiledNode):
         )
 
         return NodeComputeResult(
-            state,
-            in_downtime,
-            is_acknowledged,
+            state=state,
+            in_downtime=in_downtime,
+            acknowledged=is_acknowledged,
             # TODO: fix str casting in later commit
-            self.properties.state_messages.get(str(state), ""),
-            in_service_period,
-            self.properties.state_messages,
-            {},
+            output=self.properties.state_messages.get(str(state), ""),
+            in_service_period=in_service_period,
+            state_messages=self.properties.state_messages,
+            custom_infos={},
         )
 
     @classmethod

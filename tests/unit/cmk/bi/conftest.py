@@ -38,7 +38,11 @@ def mock_query_callback(
     return LivestatusResponse([])
 
 
-DUMMY_SITES_CALLBACK = SitesCallback(lambda: [], mock_query_callback, lambda s: s)
+DUMMY_SITES_CALLBACK = SitesCallback(
+    all_sites_with_id_and_online=lambda: [],
+    query=mock_query_callback,
+    translate=lambda s: s,
+)
 
 
 @pytest.fixture(scope="function", name="bi_searcher")

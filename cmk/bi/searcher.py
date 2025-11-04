@@ -57,7 +57,9 @@ class BISearcher(ABCBISearcher):
         matched_hosts = self.filter_host_folder(hosts, conditions["host_folder"])
         matched_hosts = self.filter_host_tags(matched_hosts, conditions["host_tags"])
         matched_hosts = self.filter_host_labels(matched_hosts, conditions["host_label_groups"])
-        return [BIHostSearchMatch(x, matched_re_groups[x.name]) for x in matched_hosts]
+        return [
+            BIHostSearchMatch(host=x, match_groups=matched_re_groups[x.name]) for x in matched_hosts
+        ]
 
     @override
     def filter_host_choice(
@@ -161,7 +163,11 @@ class BISearcher(ABCBISearcher):
             for service_description in host_match.host.services.keys():
                 if match := regex_pattern.match(service_description):
                     matched_services.append(
-                        BIServiceSearchMatch(host_match, service_description, tuple(match.groups()))
+                        BIServiceSearchMatch(
+                            host_match=host_match,
+                            service_description=service_description,
+                            match_groups=tuple(match.groups()),
+                        )
                     )
         return matched_services
 

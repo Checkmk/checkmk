@@ -1532,7 +1532,11 @@ class BIAggregationForm(Dictionary):
 class AjaxBIRulePreview(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
+        sites_callback = SitesCallback(
+            all_sites_with_id_and_online=all_sites_with_id_and_online,
+            query=bi_livestatus_query,
+            translate=_,
+        )
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
@@ -1575,7 +1579,11 @@ class AjaxBIAggregationPreview(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         # Prepare compiler
-        sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
+        sites_callback = SitesCallback(
+            all_sites_with_id_and_online=all_sites_with_id_and_online,
+            query=bi_livestatus_query,
+            translate=_,
+        )
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 

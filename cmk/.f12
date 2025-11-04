@@ -66,18 +66,18 @@ rsync \
 # Transform required packages to namespace package
 grep --recursive --files-with-matches --null 'check_mk.make: do-not-deploy' "${ROOT}/lib/python3/cmk" | xargs --null rm -f
 
-# cse stuff is only in cse (not sure if this suffices to fake a "real" cse).
-if [ "$CMK_EDITION" != "cse" ]; then
-    find "${ROOT}/lib/python3" -regex '.*/cse*' -print0 | xargs --null rm -rf
+# cloud stuff is only in cloud (not sure if this suffices to fake a "real" cloud).
+if [ "$CMK_EDITION" != "cloud" ]; then
+    find "${ROOT}/lib/python3" -regex '.*/cloud*' -print0 | xargs --null rm -rf
 fi
 
-# cre < cee < cce < cme
-if [ "$CMK_EDITION" != "cme" ]; then
-    find "${ROOT}/lib/python3" -regex '.*/cme*' -print0 | xargs --null rm -rf
-    if [ "$CMK_EDITION" != "cce" ]; then
-        find "${ROOT}/lib/python3" -regex '.*/cce*' -print0 | xargs --null rm -rf
-        if [ "$CMK_EDITION" != "cee" ]; then
-            find "${ROOT}/lib/python3" -regex '.*/cee*' -print0 | xargs --null rm -rf
+# community < pro < ultimate < ultimatemt
+if [ "$CMK_EDITION" != "ultimatemt" ]; then
+    find "${ROOT}/lib/python3" -regex '.*/ultimatemt*' -print0 | xargs --null rm -rf
+    if [ "$CMK_EDITION" != "ultimate" ]; then
+        find "${ROOT}/lib/python3" -regex '.*/ultimate*' -print0 | xargs --null rm -rf
+        if [ "$CMK_EDITION" != "pro" ]; then
+            find "${ROOT}/lib/python3" -regex '.*/pro*' -print0 | xargs --null rm -rf
         fi
     fi
 fi
@@ -85,10 +85,10 @@ fi
 # Restore site version after .f12
 # sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/ccc/version.py
 
-# Make the target a CME edition again if it was before after replacing the version.py from the git
-if [ "$CMK_EDITION" = "cme" ]; then
-    echo "Make the target version a CME version..."
-    sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/ccc/version.py"
+# Make the target a ultimatemt again if it was before after replacing the version.py from the git
+if [ "$CMK_EDITION" = "ultimatemt" ]; then
+    echo "Make the target ultimatemt..."
+    sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.ULTIMATEMT/}" "$ROOT/lib/python3/cmk/ccc/version.py"
 fi
 
 if [ -z "${ONLY_COPY}" ]; then

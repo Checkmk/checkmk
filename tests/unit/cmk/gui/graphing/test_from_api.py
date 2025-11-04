@@ -319,7 +319,7 @@ def test_bundles() -> None:
         module for module, _ in offenders
     }
     assert not allowed_but_not_offending_modules, (
-        "The followin modules are allowed to violate our graphing module but they don't so so:\n"
+        "The followin modules are allowed to violate our graphing module but they don't do so:\n"
         f"{', '.join(sorted(allowed_but_not_offending_modules))}\n"
         "Please remove them from the list of allowed violations."
     )
@@ -331,8 +331,8 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
     else {
         # we cannot have sub-modules below the cee folder, so we have to allow the following violations
         # in cmk.nonfree.pro.robotmk, the module layout of the metric etc. defintions is correct
-        "cmk.plugins.robotmk.graphing.cee",
-        "cmk.plugins.azure_v2.graphing.cce",
+        "cmk.plugins.robotmk.graphing.nonfree",
+        "cmk.plugins.azure_v2.graphing.nonfree.ultimate",
     }
 )
 

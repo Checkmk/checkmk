@@ -6,25 +6,25 @@
 
 Checkmk is available in several editions, each suited to different operational needs. Please visit our [website](https://checkmk.com/) for more details, documentation, new releases, discussion forums, and more.
 
-### Checkmk Raw
+### Checkmk Community (formerly Raw)
 
-Checkmk Raw is completely free and open-source (licensed under the GNU GPL v2). It includes the core Checkmk monitoring engine, a web-based UI, agent-based and agentless monitoring, and support for hundreds of official and community-maintained plugins.
+Checkmk Community is completely free and open-source (licensed under the GNU GPL v2). It includes the core Checkmk monitoring engine, a web-based UI, agent-based and agentless monitoring, and support for hundreds of official and community-maintained plugins.
 
 This edition is ideal for smaller environments with basic requirements in terms of automation, dashboarding, and support. Download it in various formats [here](https://checkmk.com/download).
 
-### Checkmk Enterprise
+### Checkmk Pro (formerly Enterprise)
 
-A commercial edition that extends Checkmk Raw with advanced features for performance, automation, and usability. These include distributed monitoring, built-in dashboards, automated agent management, support for enterprise integrations (e.g. LDAP, REST APIs), and more. Professional support is included. A demo version can be freely [downloaded](https://checkmk.com/free-trial) for evaluation purposes.
+A commercial edition that extends Checkmk Community with advanced features for performance, automation, and usability. These include distributed monitoring, built-in dashboards, automated agent management, support for enterprise integrations (e.g. LDAP, REST APIs), and more. Professional support is included. A demo version can be freely [downloaded](https://checkmk.com/free-trial) for evaluation purposes.
 
-### Checkmk Cloud (self-hosted)
+### Checkmk Ultimate (formerly Cloud self-hosted)
 
-Tailored for modern cloud-native infrastructures, Checkmk Cloud includes all Enterprise features, plus enhanced capabilities for monitoring dynamic, ephemeral environments such as Kubernetes, AWS, Azure, and GCP. It supports application metrics collection via OpenTelemetry, and features push agents and auto-registration of hosts. Download the [free trial](https://checkmk.com/free-trial).
+Tailored for modern cloud-native infrastructures, Checkmk Ultimate includes all Pro features, plus enhanced capabilities for monitoring dynamic, ephemeral environments such as Kubernetes, AWS, Azure, and GCP. It supports application metrics collection via OpenTelemetry, and features push agents and auto-registration of hosts. Download the [free trial](https://checkmk.com/free-trial).
 
 ### Checkmk Cloud
 
 For teams that prefer not to deploy Checkmk themselves, [Checkmk Cloud](https://checkmk.com/product/checkmk-cloud-saas) is the SaaS version of Checkmk. It features automatic updates, backups, and easy onboarding, with no infrastructure overhead for the end user. Try it for free [here](https://admin.checkmk.cloud/).
 
-### Checkmk MSP
+### Checkmk Ultimate with multi-tenancy (formerly MSP)
 
 Designed for managed service providers, Checkmk MSP builds on the Checkmk Cloud (self-hosted) feature set and adds multitenancy support, centralized monitoring across multiple customer environments, isolated access controls, and MSP-specific reporting. A [free trial](https://checkmk.com/msp-trial) is available or you can directly [request a quote](https://checkmk.com/request-quote/msp).
 
@@ -38,7 +38,7 @@ Checkmk can be installed on Linux via DEB and RPM packages. We support RedHat (a
 
 All Checkmk editions can be also installed as Docker containers. Full instructions [here](https://docs.checkmk.com/latest/en/introduction_docker.html).
 
-Checkmk Enterprise, Cloud (self-hosted) and MSP are also available as virtual or physical appliances. All packages, images, and containers can be found on our [downloads page](https://checkmk.com/download.php).
+Checkmk Pro, Ultimate and Ultimate multi-tenancy are also available as virtual or physical appliances. All packages, images, and containers can be found on our [downloads page](https://checkmk.com/download.php).
 
 ## Getting started
 

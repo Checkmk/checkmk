@@ -118,7 +118,7 @@ class RegexAjaxDropdownFilter(AjaxDropdownFilter):
 class PageValidateFilter(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        api_request = self.webapi_request()
+        api_request = ctx.request.get_request()
         varname = str(api_request.get("varname"))
         value = str(api_request.get("value"))
         filter_ident = str(api_request.get("filter_ident"))

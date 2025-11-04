@@ -434,7 +434,7 @@ class PageVsAutocomplete(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
-        if metric_name := self.webapi_request()["metric"]:
+        if metric_name := ctx.request.get_request()["metric"]:
             metric_spec = get_metric_spec(metric_name, metrics_from_api)
             unit_choice_for_metric = _unit_choice_from_unit_spec(
                 metric_spec.unit_spec,

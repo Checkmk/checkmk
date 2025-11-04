@@ -1629,7 +1629,7 @@ class PageAjaxSetFoldertree(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
-        api_request = self.webapi_request()
+        api_request = ctx.request.get_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))
 
         return None

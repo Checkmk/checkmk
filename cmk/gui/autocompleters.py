@@ -248,7 +248,7 @@ def validate_autocompleter_data(api_request: dict[str, Any]) -> None:
 class PageVsAutocomplete(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        api_request = self.webapi_request()
+        api_request = ctx.request.get_request()
         validate_autocompleter_data(api_request)
         ident = api_request["ident"]
 

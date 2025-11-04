@@ -1032,7 +1032,7 @@ class PageAjaxStartActivation(AjaxPage):
         check_csrf_token()
         user.need_permission("wato.activate")
 
-        api_request = self.webapi_request()
+        api_request = ctx.request.get_request()
         activate_until = api_request.get("activate_until")
         if not activate_until:
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
@@ -1089,7 +1089,7 @@ class PageAjaxActivationState(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("wato.activate")
 
-        api_request = self.webapi_request()
+        api_request = ctx.request.get_request()
 
         activation_id = api_request.get("activation_id")
         if not activation_id:

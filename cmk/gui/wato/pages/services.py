@@ -324,7 +324,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         user.need_permission("wato.hosts")
 
         try:
-            api_request = AjaxDiscoveryRequest.model_validate(self.webapi_request())
+            api_request = AjaxDiscoveryRequest.model_validate(ctx.request.get_request())
         except ValueError as e:
             raise MKUserError("request", _("Invalid request")) from e
         request.del_var("request")  # Do not add this to URLs constructed later

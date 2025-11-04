@@ -35,7 +35,7 @@ class ModeAjaxProfileReplication(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
-        ajax_request = self.webapi_request()
+        ajax_request = ctx.request.get_request()
 
         site_id_val = ajax_request.get("site")
         if not site_id_val:

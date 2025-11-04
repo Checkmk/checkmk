@@ -9,6 +9,7 @@ from typing import override
 from cmk.gui import visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext
 from cmk.gui.type_defs import VisualContext
@@ -24,7 +25,7 @@ class ABCAjaxInitialFilters(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> dict[str, str]:
-        api_request = self.webapi_request()
+        api_request = ctx.request.get_request()
         varprefix = api_request.get("varprefix", "")
         page_name = api_request.get("page_name", "")
         context = self._get_context(page_name)
@@ -54,7 +55,9 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
         )
 
         view_context = view_spec.get("context", {})
-        current_context = self.webapi_request().get("context")
+        # TODO: we need this because a renderer is using the `get_context` method, but has no access
+        # to the request. This code and its callers needs to be reworked.
+        current_context = request.get_request().get("context")
 
         # If single info keys are missing in the spec context take them from the current context
         single_info_keys = visuals.get_missing_single_infos(view_spec["single_infos"], view_context)

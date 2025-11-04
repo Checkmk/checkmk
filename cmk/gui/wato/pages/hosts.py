@@ -1055,7 +1055,7 @@ class PageAjaxPingHost(AjaxPage):
 class PageAjaxDiagCmkAgent(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        api_request = self.webapi_request()
+        api_request = ctx.request.get_request()
         result = diag_cmk_agent(
             automation_config=make_automation_config(ctx.config.sites[api_request["site_id"]]),
             diag_cmk_agent_input=DiagCmkAgentInput(

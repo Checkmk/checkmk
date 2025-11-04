@@ -9,7 +9,7 @@ import http.client as http_client
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override, Protocol
+from typing import override, Protocol
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException, MKGeneralException
@@ -18,7 +18,7 @@ from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request, response
+from cmk.gui.http import Request, response
 from cmk.gui.log import logger
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 
@@ -72,9 +72,6 @@ class Page(abc.ABC):
 # TODO: Clean up implicit _from_vars() procotocol
 class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
-
-    def webapi_request(self) -> dict[str, Any]:
-        return request.get_request()
 
     def _handle_exc(self, ctx: PageContext, method: Callable[[PageContext], PageResult]) -> None:
         try:

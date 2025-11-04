@@ -486,7 +486,7 @@ class PageAjaxDiagHost(AjaxPage):
         if not transactions.check_transaction():
             raise MKAuthException(_("Invalid transaction"))
 
-        api_request = self.webapi_request()
+        api_request = ctx.request.get_request()
 
         hostname = api_request.get("host")
         if not hostname:

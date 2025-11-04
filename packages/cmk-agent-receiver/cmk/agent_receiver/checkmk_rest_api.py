@@ -21,20 +21,22 @@ from .utils import B64SiteInternalSecret
 
 
 class CMKEdition(Enum):
-    cre = "Raw"
-    cee = "Enterprise"
-    cme = "Managed Services"
-    cce = "Cloud"
-    cse = "Saas"
+    community = "Community"
+    pro = "Pro"
+    ultimatemt = "Ultimate multi-tenancy"
+    ultimate = "Ultimate"
+    cloud = "Cloud"
 
     def supports_register_new(self) -> bool:
         """
-        >>> CMKEdition.cre.supports_register_new()
+        >>> CMKEdition.community.supports_register_new()
         False
-        >>> CMKEdition.cce.supports_register_new()
+        >>> CMKEdition.ultimate.supports_register_new()
         True
         """
-        return self is CMKEdition.cce or self is CMKEdition.cse or self is CMKEdition.cme
+        return (
+            self is CMKEdition.ultimate or self is CMKEdition.cloud or self is CMKEdition.ultimatemt
+        )
 
 
 def _local_apache() -> tuple[str, int]:

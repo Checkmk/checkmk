@@ -46,7 +46,7 @@ def search(param):
                 "mod_wsgi": request.environ.get("mod_wsgi.version", "unknown"),
                 "wsgi": request.environ["wsgi.version"],
             },
-            "edition": cmk_version.edition(paths.omd_root).short,
+            "edition": cmk_version.edition(paths.omd_root).long,
             "demo": False,
         }
     )

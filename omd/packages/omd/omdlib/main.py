@@ -2861,7 +2861,9 @@ def main_update(  # pylint: disable=too-many-branches
     # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
     from_edition, to_edition = _get_edition(from_version), _get_edition(to_version)
-    if from_edition == "managed" and to_edition != "managed" and not global_opts.force:
+    from_edition_is_ultimatemt = from_edition in ("managed", "ultimatemt")
+    to_edition_is_ultimatemt = to_edition in ("managed", "ultimatemt")
+    if from_edition_is_ultimatemt and not to_edition_is_ultimatemt and not global_opts.force:
         bail_out(f"ERROR: Updating from {from_edition} to {to_edition} is not possible. Aborted.")
 
     if (
@@ -3033,7 +3035,19 @@ def _update_cmk_core_config(site: SiteContext) -> None:
 
 def _get_edition(
     omd_version: str,
-) -> Literal["raw", "enterprise", "managed", "free", "cloud", "saas", "unknown"]:
+) -> Literal[
+    "raw",
+    "enterprise",
+    "managed",
+    "free",
+    "cloud",
+    "saas",
+    "unknown",
+    "community",
+    "pro",
+    "ultimate",
+    "ultimatemt",
+]:
     """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
     parts = omd_version.split(".")
     if parts[-1] == "demo":
@@ -3053,6 +3067,19 @@ def _get_edition(
         return "cloud"
     if edition_short == "cse":
         return "saas"
+
+    # Handle edition names introduced with 2.5
+    if edition_short == "community":
+        return "community"
+    if edition_short == "pro":
+        return "pro"
+    if edition_short == "ultimate":
+        return "ultimate"
+    if edition_short == "ultimatemt":
+        return "ultimatemt"
+    if edition_short == "cloud":
+        return "cloud"
+
     return "unknown"
 
 
@@ -3063,6 +3090,8 @@ def _get_raw_version(omd_version: str) -> str:
 def _omd_to_check_mk_version(omd_version: str) -> Version:
     """
     >>> f = _omd_to_check_mk_version
+    >>> f("2.5.0p3.pro")
+    Version(_BaseVersion(major=2, minor=5, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
     >>> f("2.0.0p3.cee")
     Version(_BaseVersion(major=2, minor=0, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
     >>> f("1.6.0p3.cee.demo")

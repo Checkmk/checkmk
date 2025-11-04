@@ -73,18 +73,6 @@ def discover_plugins_from_modules(
 
 
 def _ls_defensive(path: str) -> Sequence[str]:
-    if path == "nonfree":
-        # TODO Intermedite hack, will be fixed the next days
-        try:
-            file_paths = list(os.listdir(path))
-        except (FileNotFoundError, NotADirectoryError):
-            return []
-        if "ultimate" in file_paths:
-            try:
-                return list(os.listdir(f"{path}/ultimate"))
-            except (FileNotFoundError, NotADirectoryError):
-                return []
-        return file_paths
     try:
         return list(os.listdir(path))
     except (FileNotFoundError, NotADirectoryError):
@@ -117,12 +105,31 @@ def discover_families(
     return family_paths
 
 
+def _ls_defensive_nested(path: str) -> Sequence[str]:
+    try:
+        file_paths = list(os.listdir(path))
+    except (FileNotFoundError, NotADirectoryError):
+        return []
+
+    if "nonfree" in file_paths:
+        try:
+            nonfree_file_paths = list(os.listdir(f"{path}/nonfree"))
+        except (FileNotFoundError, NotADirectoryError):
+            return file_paths
+
+        if "ultimate" in nonfree_file_paths:
+            return file_paths + ["nonfree"] + ["nonfree.ultimate"]
+        return file_paths + ["nonfree"]
+
+    return file_paths
+
+
 def discover_modules(
     plugin_group: PluginGroup,
     *,
     raise_errors: bool,
     modules: Iterable[ModuleType] | None = None,
-    ls: Callable[[str], Iterable[str]] = _ls_defensive,
+    ls: Callable[[str], Iterable[str]] = _ls_defensive_nested,
 ) -> Iterable[str]:
     """Discover all potential plug-in modules below `modules`.
 
@@ -132,7 +139,7 @@ def discover_modules(
         (
             f"{family}.{plugin_group.value}.{fname.removesuffix('.py')}"
             for family, paths in discover_families(
-                raise_errors=raise_errors, modules=modules, ls=ls
+                raise_errors=raise_errors, modules=modules
             ).items()
             for path in paths
             for fname in ls(f"{path}/{plugin_group.value}")

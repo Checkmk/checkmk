@@ -141,6 +141,7 @@ IdsFilter::IdsFilter(std::string_view line) {
             return;
         }
         name_ = name;
+        tools::StringLower(name_);
 
         IntervalSetBuilder<uint64_t> includes_builder;
         IntervalSetBuilder<uint64_t> excludes_builder;
@@ -180,6 +181,7 @@ TagsFilter::TagsFilter(std::string_view line) {
             return;
         }
         name_ = name;
+        tools::StringLower(name_);
 
         auto table = tools::SplitString(std::string(body), ";;", 2);
         auto i = tools::SplitString(table[0], ";");
@@ -632,9 +634,11 @@ std::optional<T> findWithDefault(const std::unordered_map<std::string, T> &m,
     return key == "*" ? std::nullopt : findWithDefault(m, "*");
 }
 
-bool RecordAllowed(const std::string_view name,
+bool RecordAllowed(const std::string_view log_file_name,
                    const evl::EventLogRecordBase *record,
                    const EventFilters &filters) {
+    std::string name{log_file_name};
+    tools::StringLower(name);
     {
         const auto &id = filters.id;
         auto ret = findWithDefault(id, name);

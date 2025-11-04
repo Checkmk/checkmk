@@ -1025,13 +1025,13 @@ logwatch:
     }
     {
         ASSERT_TRUE(temp_fs->loadContent(
-            std::string(config) + "        - 'Application': ;;checkmk;x"));
+            std::string(config) + "        - 'application': ;;checkmk;x"));
         const auto result = WriteStampReadEventLog(stamp);
         EXPECT_FALSE(result.find(stamp) != std::string::npos);
     }
     {
         ASSERT_TRUE(temp_fs->loadContent(
-            std::string(config) + "        - 'Application': checkmk;a;;"));
+            std::string(config) + "        - 'application': checkmk;a;;"));
         const auto result = WriteStampReadEventLog(stamp);
         EXPECT_FALSE(result.find(stamp) == std::string::npos);
     }
@@ -1212,8 +1212,8 @@ TEST(LogWatchEventTest, TestIdsFromString) {
         EXPECT_TRUE(ids.intervals().check(4));
     }
     {
-        const auto ids = IdsFilter("\"*\" :   0;3-4;;");
-        EXPECT_EQ(ids.name(), "*");
+        const auto ids = IdsFilter("\"XX\" :   0;3-4;;");
+        EXPECT_EQ(ids.name(), "xx");
         EXPECT_TRUE(ids.intervals().check(0));
         EXPECT_FALSE(ids.intervals().check(1));
         EXPECT_TRUE(ids.intervals().check(3));
@@ -1243,8 +1243,8 @@ TEST(LogWatchEventTest, TestTagsFromString) {
         EXPECT_TRUE(tags.checkTag("anything"));
     }
     {
-        const auto tags = TagsFilter("\"*\" :   Au;Ba;;");
-        EXPECT_EQ(tags.name(), "*");
+        const auto tags = TagsFilter("\"A\" :   Au;Ba;;");
+        EXPECT_EQ(tags.name(), "a");
         EXPECT_TRUE(tags.checkTag("Au"));
         EXPECT_TRUE(tags.checkTag("Ba"));
         EXPECT_FALSE(tags.checkTag("anything"));

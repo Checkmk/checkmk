@@ -10,10 +10,13 @@ import argparse
 import socket
 import sys
 
-from cmk.utils.password_store import replace_passwords
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
 # This special agent uses the S2A RCM API. Please refer to the
 # official documentation.
+
+
+SECRET_OPTION = "secret"
 
 
 def commandstring(command_txt, username_txt, password_txt):
@@ -33,7 +36,6 @@ def query(s, command_txt):
 
 def main(sys_argv=None):
     if sys_argv is None:
-        replace_passwords()
         sys_argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(
@@ -42,8 +44,8 @@ def main(sys_argv=None):
 
     parser.add_argument("ip_address")
     parser.add_argument("port", type=int)
-    parser.add_argument("username")
-    parser.add_argument("password")
+    parser.add_argument("--username", required=True)
+    parser_add_secret_option(parser, long=f"--{SECRET_OPTION}", help="The password", required=True)
     parser.add_argument("--debug", action="store_true")
 
     args = parser.parse_args(sys_argv)
@@ -51,7 +53,7 @@ def main(sys_argv=None):
     ip_address = args.ip_address
     port = args.port
     username = args.username
-    password = args.password
+    password = resolve_secret_option(args, SECRET_OPTION).reveal()
 
     sections = [
         ("1600", "ddn_s2a_faultsbasic"),

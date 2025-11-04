@@ -25,10 +25,12 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             ),
             SpecialAgentCommand(
                 command_arguments=[
+                    "--user",
+                    "user",
+                    "--secret-id",
+                    Secret(1),
                     "1.2.3.4",
                     "8008",
-                    "user",
-                    Secret(id=1, format="%s", pass_safely=False),
                 ],
             ),
             id="default port",
@@ -45,10 +47,12 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
             ),
             SpecialAgentCommand(
                 command_arguments=[
+                    "--user",
+                    "user",
+                    "--secret-id",
+                    Secret(1),
                     "1.2.3.4",
                     "8090",
-                    "user",
-                    Secret(id=1, format="%s", pass_safely=False),
                 ],
             ),
             id="custom port",

@@ -22,10 +22,12 @@ def _commands_function(
 ) -> Iterable[SpecialAgentCommand]:
     yield SpecialAgentCommand(
         command_arguments=[
+            "--user",
+            params.username,
+            "--secret-id",
+            params.password,
             host_config.primary_ip_config.address,
             str(params.port),
-            params.username,
-            params.password.unsafe(),
         ]
     )
 

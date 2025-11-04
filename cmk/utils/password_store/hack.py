@@ -40,7 +40,7 @@ HACK_AGENTS = {
     "cisco_prime": False,
     "couchbase": True,
     "datadog": False,
-    "ddn_s2a": True,
+    "ddn_s2a": False,
     "elasticsearch": False,
     "fritzbox": False,  # needs no secret
     "gcp_status": False,  # needs no secret

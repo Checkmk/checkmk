@@ -257,8 +257,8 @@ def _is_listening(process_def: ProcessDef) -> bool:
         ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
     )
     _error_indication, _error_status, _error_index, var_binds = g
-    logger.debug("SNMP get response")
-    logger.debug(repr((_error_indication, _error_status, _error_index, var_binds)))
+    logger.info("SNMP get response")
+    logger.info(repr((_error_indication, _error_status, _error_index, var_binds)))
     assert len(var_binds) == 1
     logger.debug(var_binds[0][1].prettyPrint())
     assert (

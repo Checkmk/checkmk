@@ -16,10 +16,11 @@ from typing import TypeAlias
 import requests
 import urllib3
 
-import cmk.utils.password_store
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-cmk.utils.password_store.replace_passwords()
+
+PASSWORD_OPTION = "password"
 
 JsonSerializable: TypeAlias = (
     Mapping[str, "JsonSerializable"]
@@ -39,7 +40,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parse_arguments(argv)
     with requests.Session() as session:
-        session.auth = (args.user, args.password)
+        session.auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
         try:
             _probe_api(args, session)
         except requests.exceptions.RequestException as e:
@@ -415,7 +416,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument("-u", "--user", default=None, help="Username for graylog login")
-    parser.add_argument("-s", "--password", default=None, help="Password for graylog login")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password for graylog login"
+    )
     parser.add_argument(
         "-P",
         "--proto",

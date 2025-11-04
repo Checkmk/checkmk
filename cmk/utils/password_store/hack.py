@@ -46,7 +46,7 @@ HACK_AGENTS = {
     "gcp_status": False,  # needs no secret
     "gcp": False,
     "gerrit": False,
-    "graylog": True,
+    "graylog": False,
     "hivemanager_ng": False,
     "hivemanager": False,
     "hp_msa": False,

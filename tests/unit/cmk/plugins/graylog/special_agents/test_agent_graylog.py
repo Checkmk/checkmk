@@ -14,8 +14,10 @@ from cmk.plugins.graylog.special_agent.agent_graylog import main
 
 DIR_PATH = Path(os.path.dirname(__file__))
 GRAYLOG_DEFAULT_ARGS = [
-    "-uadmin",
-    "-spassword",
+    "--user",
+    "admin",
+    "--password",
+    "password",
     "-p9000",
     "--proto",
     "http",

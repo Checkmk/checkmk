@@ -18,7 +18,7 @@ from cmk.server_side_calls.v1._utils import Secret
         pytest.param(
             {
                 "user": "user",
-                "password": Secret(id=1, pass_safely=True),
+                "password": Secret(1),
                 "instance": "test",
                 "protocol": "https",
                 "sections": ["alerts"],
@@ -42,8 +42,8 @@ from cmk.server_side_calls.v1._utils import Secret
                     "1800",
                     "-u",
                     "user",
-                    "-s",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password-id",
+                    Secret(1),
                     "--display_node_details",
                     "host",
                     "--display_sidecar_details",

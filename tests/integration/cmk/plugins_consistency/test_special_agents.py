@@ -176,7 +176,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "elasticsearch": ["--secret", "SECRET", "HOSTNAME"],
     "fritzbox": ["HOSTNAME"],
     "gerrit": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
-    "graylog": ["HOSTNAME"],
+    "graylog": ["--password", "PASSWORD", "HOSTNAME"],
     "hivemanager": ["IP", "USER", "PASSWORD"],
     "hivemanager_ng": [
         "URL",

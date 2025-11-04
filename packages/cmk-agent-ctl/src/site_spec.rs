@@ -121,6 +121,43 @@ impl Display for SiteID {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Protocol {
+    Https,
+    Http,
+}
+
+impl Protocol {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Protocol::Https => "https",
+            Protocol::Http => "http",
+        }
+    }
+
+    pub fn all() -> [Protocol; 2] {
+        [Protocol::Https, Protocol::Http]
+    }
+}
+
+impl Display for Protocol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+impl FromStr for Protocol {
+    type Err = AnyhowError;
+
+    fn from_str(s: &str) -> AnyhowResult<Self> {
+        match s.to_lowercase().as_str() {
+            "https" => Ok(Protocol::Https),
+            "http" => Ok(Protocol::Http),
+            _ => bail!("Invalid protocol: {}. Must be 'http' or 'https'", s),
+        }
+    }
+}
+
 pub fn make_site_url(site_id: &SiteID, port: &u16) -> AnyhowResult<reqwest::Url> {
     reqwest::Url::parse(&format!(
         "https://{}:{}/{}",
@@ -144,24 +181,58 @@ struct AgentRecvPortDiscoverer<'a> {
     client_config: &'a ClientConfig,
 }
 
-impl AgentRecvPortDiscoverer<'_> {
-    fn url(&self, protocol: &str) -> AnyhowResult<reqwest::Url> {
+trait ApiDiscoverer {
+    fn site_id(&self) -> &SiteID;
+    fn client_config(&self) -> &ClientConfig;
+    fn api_endpoint(&self) -> &str;
+
+    fn url(&self, protocol: Protocol) -> AnyhowResult<reqwest::Url> {
         reqwest::Url::parse(&format!(
-            "{}://{}/{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
-            protocol, self.site_id.server, self.site_id.site,
+            "{}://{}/{}{}",
+            protocol.as_str(),
+            self.site_id().server,
+            self.site_id().site,
+            self.api_endpoint()
         ))
         .context(format!(
-            "Failed to construct URL for discovering agent receiver port using server {} and site {}",
-            self.site_id.server, self.site_id.site,
+            "Failed to construct URL for {} using server {} and site {}",
+            self.api_endpoint(),
+            self.site_id().server,
+            self.site_id().site,
         ))
     }
 
+    fn build_client(&self) -> reqwest::Result<reqwest::blocking::Client> {
+        let mut client_builder = reqwest::blocking::ClientBuilder::new()
+            .danger_accept_invalid_certs(!self.client_config().validate_api_cert);
+        if !self.client_config().use_proxy {
+            client_builder = client_builder.no_proxy();
+        }
+        client_builder.build()
+    }
+}
+
+impl ApiDiscoverer for AgentRecvPortDiscoverer<'_> {
+    fn site_id(&self) -> &SiteID {
+        self.site_id
+    }
+
+    fn client_config(&self) -> &ClientConfig {
+        self.client_config
+    }
+
+    fn api_endpoint(&self) -> &str {
+        "/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke"
+    }
+}
+
+impl AgentRecvPortDiscoverer<'_> {
     fn discover_with_protocol(
         &self,
         client: &reqwest::blocking::Client,
-        protocol: &str,
+        protocol: Protocol,
     ) -> AnyhowResult<u16> {
-        let url = Self::url(self, protocol)?;
+        let url = self.url(protocol)?;
         let error_msg = format!("Failed to discover agent receiver port from {}", &url);
         client
             .get(url)
@@ -173,20 +244,11 @@ impl AgentRecvPortDiscoverer<'_> {
             .context(error_msg)
     }
 
-    fn build_client(&self) -> reqwest::Result<reqwest::blocking::Client> {
-        let mut client_builder = reqwest::blocking::ClientBuilder::new()
-            .danger_accept_invalid_certs(!self.client_config.validate_api_cert);
-        if !self.client_config.use_proxy {
-            client_builder = client_builder.no_proxy();
-        }
-        client_builder.build()
-    }
-
     pub fn discover(&self) -> AnyhowResult<u16> {
         let client = self.build_client()?;
 
-        for protocol in ["https", "http"] {
-            match Self::discover_with_protocol(self, &client, protocol) {
+        for protocol in Protocol::all() {
+            match self.discover_with_protocol(&client, protocol) {
                 Ok(p) => return Ok(p),
                 Err(err) => {
                     info!("Failed to discover agent receiver port using {protocol}.");
@@ -200,6 +262,78 @@ impl AgentRecvPortDiscoverer<'_> {
 
         bail!(
             "Failed to discover agent receiver port from Checkmk REST API, both with http and https. Run with verbose output to see errors."
+        )
+    }
+}
+
+pub fn discover_protocol(site_id: &SiteID, client_config: &ClientConfig) -> AnyhowResult<Protocol> {
+    ProtocolDiscoverer {
+        site_id,
+        client_config,
+    }
+    .discover()
+}
+
+struct ProtocolDiscoverer<'a> {
+    site_id: &'a SiteID,
+    client_config: &'a ClientConfig,
+}
+
+impl ApiDiscoverer for ProtocolDiscoverer<'_> {
+    fn site_id(&self) -> &SiteID {
+        self.site_id
+    }
+
+    fn client_config(&self) -> &ClientConfig {
+        self.client_config
+    }
+
+    fn api_endpoint(&self) -> &str {
+        "/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke"
+    }
+}
+
+impl ProtocolDiscoverer<'_> {
+    fn test_protocol(
+        &self,
+        client: &reqwest::blocking::Client,
+        protocol: Protocol,
+    ) -> AnyhowResult<()> {
+        let url = self.url(protocol)?;
+        let error_msg = format!("Failed to test protocol {} with {}", protocol, &url);
+
+        client
+            .get(url)
+            .send()
+            .context(error_msg.clone())?
+            .error_for_status()
+            .context(error_msg)?;
+
+        Ok(())
+    }
+
+    pub fn discover(&self) -> AnyhowResult<Protocol> {
+        let client = self.build_client()?;
+
+        for protocol in Protocol::all() {
+            match self.test_protocol(&client, protocol) {
+                Ok(()) => {
+                    info!("Successfully discovered protocol: {}", protocol);
+                    return Ok(protocol);
+                }
+                Err(err) => {
+                    info!("Failed to connect using {}.", protocol);
+                    debug!(
+                        "{} error: {:?}",
+                        protocol,
+                        anyhow_error_to_human_readable(&err)
+                    );
+                }
+            }
+        }
+
+        bail!(
+            "Failed to discover working protocol for Checkmk site, tried both https and http. Run with verbose output to see errors."
         )
     }
 }
@@ -478,7 +612,7 @@ mod test_agent_recv_port_discoverer {
                     validate_api_cert: false,
                 },
             }
-            .url("http")
+            .url(Protocol::Http)
             .unwrap()
             .to_string(),
             "http://some-server/some-site/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
@@ -502,6 +636,31 @@ mod test_make_site_url {
             )
             .unwrap(),
             reqwest::Url::from_str("https://some-server:8000/some-site").unwrap()
+        )
+    }
+}
+
+#[cfg(test)]
+mod test_protocol_discoverer {
+    use super::*;
+
+    #[test]
+    fn test_url() {
+        assert_eq!(
+            ProtocolDiscoverer {
+                site_id: &SiteID {
+                    server: String::from("some-server"),
+                    site: String::from("some-site"),
+                },
+                client_config: &ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+            }
+            .url(Protocol::Https)
+            .unwrap()
+            .to_string(),
+            "https://some-server/some-site/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
         )
     }
 }

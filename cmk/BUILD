@@ -110,7 +110,6 @@ REQUIRED_EXTERNAL_DEPS = [
 COMMUNITY_PY = glob(
     [
         "**/cre/**/*.py",
-        "**/cre.py",
     ],
     allow_empty = True,
 )
@@ -118,7 +117,6 @@ COMMUNITY_PY = glob(
 ULTIMATE_PY = glob(
     [
         "**/cce/**/*.py",
-        "**/cce.py",
     ],
     allow_empty = True,
 )
@@ -134,7 +132,6 @@ PRO_PY = glob(
 MANAGED_MT_PY = glob(
     [
         "**/cme/**/*.py",
-        "**/cme.py",
     ],
     allow_empty = True,
 )
@@ -142,7 +139,6 @@ MANAGED_MT_PY = glob(
 CLOUD_PY = glob(
     [
         "**/cse/**/*.py",
-        "**/cse.py",
     ],
     allow_empty = True,
 )

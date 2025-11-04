@@ -44,20 +44,17 @@ endif
 ifneq ($(EDITION),managed)
 	EDITION_EXCLUDE += \
 	    --exclude "managed" \
-	    --exclude "cme" \
-	    --exclude "cme.py"
+	    --exclude "cme"
 endif
 ifeq ($(filter $(EDITION),cloud free saas managed),)
 	EDITION_EXCLUDE += \
 	    --exclude "cloud" \
-	    --exclude "cce" \
-	    --exclude "cce.py"
+	    --exclude "cce"
 endif
 ifeq ($(filter $(EDITION),saas),)
 	EDITION_EXCLUDE += \
 	    --exclude "saas" \
-	    --exclude "cse" \
-	    --exclude "cse.py"
+	    --exclude "cse"
 endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)

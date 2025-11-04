@@ -19,15 +19,12 @@ def REPO_PATCH_RULES = [\
         "managed", \
         "ultimatemt", \
         "cme", \
-        "cme.py", \
         "cloud", \
         "ultimate", \
         "cce", \
-        "cce.py", \
         "saas", \
         "cloud", \
         "cse", \
-        "cse.py", \
         "cmk.cee.dcd.plugins.connectors.connectors_api", \
         "cmk.nonfree.pro.dcd.plugins.connectors.connectors_api"],\
     "folders_to_be_created": []], \
@@ -36,40 +33,33 @@ def REPO_PATCH_RULES = [\
         "managed", \
         "ultimatemt", \
         "cme", \
-        "cme.py", \
         "cloud", \
         "ultimate", \
         "cce", \
-        "cce.py", \
         "saas", \
         "cloud", \
-        "cse", \
-        "cse.py"], \
+        "cse"], \
     "folders_to_be_created": []], \
 "ultimatemt": [\
     "paths_to_be_removed": [\
         "saas", \
         "cloud", \
-        "cse", \
-        "cse.py"], \
+        "cse"], \
     "folders_to_be_created": []], \
 "ultimate": [\
     "paths_to_be_removed": [\
         "managed", \
         "ultimatemt", \
         "cme", \
-        "cme.py", \
         "saas", \
         "cloud", \
-        "cse", \
-        "cse.py"], \
+        "cse"], \
     "folders_to_be_created": []], \
 "cloud": [\
     "paths_to_be_removed": [\
         "managed", \
         "ultimatemt", \
-        "cme", \
-        "cme.py"], \
+        "cme"], \
     "folders_to_be_created": []], \
 ];
 /* groovylint-enable DuplicateListLiteral */
@@ -245,9 +235,6 @@ def delete_non_cre_files() {
         "cce",
         "cse",
         "cee.py",
-        "cme.py",
-        "cce.py",
-        "cse.py",
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ");
     // Do not remove files in .git, .venv, .mypy_cache directories

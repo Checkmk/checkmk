@@ -41,7 +41,7 @@ cma:
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
 
-ifneq ($(EDITION),raw)
+ifneq ($(EDITION),community)
 $(SOURCE_BUILT_AGENT_UPDATER):
 	@echo "ERROR: Should have already been built by artifact providing jobs"
 	@echo "If you don't need the artifacts, you can use "
@@ -114,7 +114,7 @@ setversion:
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' packages/cmk-ccc/cmk/ccc/version.py bin/livedump
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
-ifneq ($(EDITION),raw)
+ifneq ($(EDITION),community)
 	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' non-free/packages/cmk-update-agent/cmk_update_agent.py
 endif
 
@@ -192,7 +192,7 @@ update_venv:
 relock_venv:
 	bazel run //:lock_python_requirements > /dev/null
 
-ifeq ($(EDITION),raw)
+ifeq ($(EDITION),community)
     # Bazel cannot `select()` tests in a `test_suite` and cannot `alias` tests.
     # See discussion under https://github.com/bazelbuild/bazel/issues/11458
     PYTHON_REQUIREMENTS_TEST = //:py_requirements_test_gpl

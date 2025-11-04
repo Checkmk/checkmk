@@ -155,11 +155,11 @@ Each package in `packages/` has its own `run` script with standardized options:
 
 The codebase supports multiple Checkmk editions:
 
-- **CRE** (Raw): Open source base edition
-- **CEE** (Enterprise): Commercial with advanced features
-- **CCE** (Cloud): Cloud-native monitoring
-- **CME** (Managed): Multi-tenant MSP edition
-- **CSE** (SaaS): Hosted solution
+- Checkmk Community: Open source base edition
+- Checkmk Pro: Commercial with advanced features
+- Checkmk Ultimate: Cloud-native monitoring
+- Checkmk Ultimate with multi-tenancy: Multi-tenant MSP edition
+- Checkmk Cloud: Hosted solution
 
 ## Important Development Notes
 

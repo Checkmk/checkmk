@@ -127,7 +127,7 @@ class CMKWebSession:
 
         # There might be other resources like iframe, audio, ... but we don't care about them
         self._check_resources(soup, base_url, "img", "src", ["image/png", "image/svg+xml"])
-        # The CSE includes a new onboarding feature. This is loaded from an external source hosted
+        # Checkmk Cloud includes a new onboarding feature. This is loaded from an external source hosted
         # by checkmk. We do not want to check it in the integration tests
         script_filters = (
             [("src", "https://static.saas-dev.cloudsandbox.checkmk.cloud")]

@@ -5419,7 +5419,6 @@ def query_ec_directly(query: bytes, connect_timeout: int) -> dict[str, Any]:
 
 
 def form_spec() -> DictionaryExtended:
-    # TODO register CSE specific version
     return DictionaryExtended(
         title=Title("Forward to EC parameters"),
         elements={

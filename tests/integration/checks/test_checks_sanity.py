@@ -50,7 +50,7 @@ def _host_services(
 ) -> Iterator[dict[str, ServiceInfo]]:
     active_mode = request.param
     if active_mode and site.edition.is_saas_edition():
-        pytest.skip("Active mode requires pull agent, which is not available in CSE")
+        pytest.skip("Active mode requires pull agent, which is not available in Checkmk Cloud")
     rule_id = None
     hostname = HostName(f"host-{request.node.callspec.id}")
     site.openapi.hosts.create(

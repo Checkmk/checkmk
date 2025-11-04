@@ -413,7 +413,7 @@ class CheckmkApp:
 
         logger.debug(c.logs().decode("utf-8"))
 
-        # TODO: add CSE auth provider setup
+        # TODO: add Checkmk Cloud auth provider setup
 
         return c
 

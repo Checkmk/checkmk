@@ -184,7 +184,7 @@ def test_content_security_policy_header(site: Site) -> None:
     response = web.request("OPTIONS", "/", expected_code=405)
     assert response.headers["Content-Security-Policy"] == default_csp
 
-    # "CSP for successful pages" causes ConnectionError for CSE with auth provider in CI
+    # "CSP for successful pages" causes ConnectionError for Checkmk Cloud with auth provider in CI
     # See CMK-22347 for details.
     if site.edition.is_saas_edition():
         return

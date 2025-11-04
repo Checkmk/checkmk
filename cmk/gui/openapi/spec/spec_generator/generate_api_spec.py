@@ -83,7 +83,7 @@ def list_versions(args: argparse.Namespace) -> None:
     sys.stdout.write(f"{separator.join(released_versions)}\n")
 
 
-def _import_cre_endpoints() -> None:
+def _import_community_endpoints() -> None:
     with suppress(Exception):
         from cmk.gui.community_registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
             register as community_registration,
@@ -92,25 +92,25 @@ def _import_cre_endpoints() -> None:
         community_registration(Edition.COMMUNITY, ignore_duplicate_endpoints=True)
 
 
-def _import_cee_endpoints() -> None:
+def _import_pro_endpoints() -> None:
     with suppress(Exception):
         from cmk.gui.nonfree.pro.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
-            register as cee_registration,
+            register as pro_registration,
         )
 
-        cee_registration(Edition.PRO, ignore_duplicate_endpoints=True)
+        pro_registration(Edition.PRO, ignore_duplicate_endpoints=True)
 
 
-def _import_cce_endpoints() -> None:
+def _import_ultimate_endpoints() -> None:
     with suppress(Exception):
         from cmk.gui.nonfree.ultimate.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
-            register as cce_registration,
+            register as ultimate_registration,
         )
 
-        cce_registration(Edition.ULTIMATE, ignore_duplicate_endpoints=True)
+        ultimate_registration(Edition.ULTIMATE, ignore_duplicate_endpoints=True)
 
 
-def _import_cme_endpoints() -> None:
+def _import_ultimatemt_endpoints() -> None:
     with suppress(Exception):
         from cmk.gui.nonfree.ultimatemt.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
             register as ultimatemt_registration,
@@ -119,21 +119,21 @@ def _import_cme_endpoints() -> None:
         ultimatemt_registration(Edition.ULTIMATEMT, ignore_duplicate_endpoints=True)
 
 
-def _import_cse_endpoints() -> None:
+def _import_cloud_endpoints() -> None:
     with suppress(Exception):
         from cmk.gui.nonfree.cloud.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-            register as cse_registration,
+            register as cloud_registration,
         )
 
-        cse_registration(Edition.CLOUD, ignore_duplicate_endpoints=True)
+        cloud_registration(Edition.CLOUD, ignore_duplicate_endpoints=True)
 
 
 def process_version(args: argparse.Namespace) -> None:
-    _import_cre_endpoints()
-    _import_cee_endpoints()
-    _import_cce_endpoints()
-    _import_cme_endpoints()
-    _import_cse_endpoints()
+    _import_community_endpoints()
+    _import_pro_endpoints()
+    _import_ultimate_endpoints()
+    _import_ultimatemt_endpoints()
+    _import_cloud_endpoints()
 
     # this registers some permissions (dashboards, views)
     main_modules.load_plugins()

@@ -1926,7 +1926,7 @@ class SiteFactory:
         site = self._site_obj(name)
 
         if self.edition.is_saas_edition():
-            # We need to create some CSE config files before starting the site, exactly as it
+            # We need to create some Checkmk Cloud config files before starting the site, exactly as it
             # happens on the SaaS environment, where k8s takes care of creating the config files
             # before the site is created.
             create_cse_initial_config()

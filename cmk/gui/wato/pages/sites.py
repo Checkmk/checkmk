@@ -155,6 +155,7 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionRefused
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
+from cmk.utils.licensing.license_distribution_registry import distribute_license_to_remotes
 from cmk.utils.licensing.registry import is_free
 from cmk.utils.paths import omd_root
 
@@ -1133,6 +1134,10 @@ class ModeDistributedMonitoring(WatoMode):
                     site["alias"]
                 )
                 trigger_remote_certs_creation(login_id, site, force=False, debug=debug)
+                distribute_license_to_remotes(
+                    logger,
+                    remote_automation_configs=[RemoteAutomationConfig.from_site_config(site)],
+                )
 
                 _audit_log.log_audit(
                     action="edit-site",

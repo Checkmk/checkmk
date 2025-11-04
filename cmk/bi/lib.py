@@ -62,7 +62,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
 ActionArgument = tuple[str, ...]
-ActionArguments = list[ActionArgument]
 
 
 class BIState(enum.IntEnum):
@@ -597,7 +596,7 @@ class ABCBIAction(ABC):
 
     def _generate_action_arguments(
         self, search_results: list[dict[str, str]], macros: Mapping[str, str]
-    ) -> ActionArguments:
+    ) -> list[ActionArgument]:
         raise NotImplementedError()
 
     def execute_search_results(
@@ -607,7 +606,9 @@ class ABCBIAction(ABC):
         for argument in self._deduplicate_action_arguments(action_arguments):
             yield from self.execute(argument, bi_searcher)
 
-    def _deduplicate_action_arguments(self, arguments: ActionArguments) -> ActionArguments:
+    def _deduplicate_action_arguments(
+        self, arguments: list[ActionArgument]
+    ) -> list[ActionArgument]:
         return list(dict.fromkeys(arguments).keys())
 
     @abstractmethod

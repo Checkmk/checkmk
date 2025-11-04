@@ -22,7 +22,6 @@ from cmk.bi.lib import (
     ABCBISearcher,
     ABCWithSchema,
     ActionArgument,
-    ActionArguments,
     bi_action_registry,
     BIHostSearchMatch,
     BIParams,
@@ -77,7 +76,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
     @override
     def _generate_action_arguments(
         self, search_results: list[SearchResult], macros: Mapping[str, str]
-    ) -> ActionArguments:
+    ) -> list[ActionArgument]:
         return [
             tuple(replace_macros(self.params.arguments, {**macros, **x})) for x in search_results
         ]
@@ -148,7 +147,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
     @override
     def _generate_action_arguments(
         self, search_results: list[SearchResult], macros: Mapping[str, str]
-    ) -> ActionArguments:
+    ) -> list[ActionArgument]:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
     @override
@@ -211,7 +210,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
     @override
     def _generate_action_arguments(
         self, search_results: list[SearchResult], macros: Mapping[str, str]
-    ) -> ActionArguments:
+    ) -> list[ActionArgument]:
         return [
             (
                 replace_macros(self.host_regex, {**macros, **x}),
@@ -295,7 +294,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
     @override
     def _generate_action_arguments(
         self, search_results: list[SearchResult], macros: Mapping[str, str]
-    ) -> ActionArguments:
+    ) -> list[ActionArgument]:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
     @override

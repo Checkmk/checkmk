@@ -18,7 +18,7 @@ jobs:
             # Avoid falling back to our internal bazel remote cache on github actions
             BAZEL_CACHE_URL: ""
             # Needed by "make .venv" to compute PYTHON_REQUIREMENTS_TEST
-            EDITION: raw
+            EDITION: community
         strategy:
             matrix:
                 include:
@@ -31,7 +31,7 @@ jobs:
                     - name: Python unit tests
                       target: test-unit
                     - name: mypy tests
-                      target: test-mypy-raw
+                      target: test-mypy-gpl
         steps:
             - name: Set Environment Variables
               run: |

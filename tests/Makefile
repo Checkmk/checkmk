@@ -99,7 +99,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
-	test-mypy test-mypy-raw test-mypy-docker test-packaging test-pylint test-pylint-docker test-ruff test-ruff-docker \
+	test-mypy test-mypy-gpl test-mypy-docker test-packaging test-pylint test-pylint-docker test-ruff test-ruff-docker \
 	test-unit test-unit-all test-unit-docker \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
@@ -128,7 +128,7 @@ help:
 	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-integration-agent-plugin       - Run agent plugin integration tests"
 	@echo "test-integration-agent-plugin-docker - Run agent plugin integration tests in docker"
-	@echo "test-mypy-raw                       - Run mypy with raw edition config"
+	@echo "test-mypy-community                 - Run mypy with community config"
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-unit                           - Run unit tests"
 	@echo "test-unit-cmc                       - Run unit tests for cmc"
@@ -365,8 +365,8 @@ test-mypy-not-cmk:
 	    --config-file="$(REPO_PATH)/pyproject.toml" \
 	    -- $$($(FIND_PYTHON_FILES) | grep -v "$(realpath ..)\/cmk\/")
 
-test-mypy-raw:
-	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
+test-mypy-gpl:
+	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-gpl.ini)"
 
 test-packaging:
 	export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path); \

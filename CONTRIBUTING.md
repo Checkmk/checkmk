@@ -213,7 +213,7 @@ $ make -C tests test-ruff
 $ make -C tests test-bandit
 $ make -C tests test-unit
 $ make -C tests test-format
-$ make -C tests test-mypy-raw
+$ make -C tests test-mypy-gpl
 ```
 
 > We highly recommend integrating ruff and mypy into the editor you work with.

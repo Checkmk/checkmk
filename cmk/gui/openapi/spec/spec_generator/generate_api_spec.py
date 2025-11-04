@@ -85,11 +85,11 @@ def list_versions(args: argparse.Namespace) -> None:
 
 def _import_cre_endpoints() -> None:
     with suppress(Exception):
-        from cmk.gui.cre.registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-            register as cre_registration,
+        from cmk.gui.community_registration import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            register as community_registration,
         )
 
-        cre_registration(Edition.CRE, ignore_duplicate_endpoints=True)
+        community_registration(Edition.CRE, ignore_duplicate_endpoints=True)
 
 
 def _import_cee_endpoints() -> None:

@@ -15,7 +15,7 @@ from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from ._find_group_usage import find_usages_of_contact_group_in_dashboards
 from .api import register_endpoints
 from .builtin_dashboards import builtin_dashboards
-from .cre_dashboards import register_builtin_dashboards
+from .community_dashboards import register_builtin_dashboards
 from .dashlet import DashletRegistry, FigureDashletPage, register_dashlets
 from .dashlet.dashlets.view import ViewWidgetEditPage, ViewWidgetIFramePage
 from .page_create_dashboard import page_create_dashboard
@@ -25,7 +25,11 @@ from .page_create_view_dashlet import (
     page_create_view_dashlet_infos,
 )
 from .page_edit_dashboard import page_edit_dashboard
-from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
+from .page_edit_dashboard_actions import (
+    ajax_dashlet_pos,
+    page_clone_dashlet,
+    page_delete_dashlet,
+)
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_edit_dashlet import EditDashletPage
 from .page_figure_widget import FigureWidgetPage

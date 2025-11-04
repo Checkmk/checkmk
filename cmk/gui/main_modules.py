@@ -50,9 +50,9 @@ match edition := cmk_version.edition(paths.omd_root):
         cmk.gui.nonfree.cloud.registration.register(edition)
 
     case Edition.CRE:
-        import cmk.gui.cre.registration
+        import cmk.gui.community_registration
 
-        cmk.gui.cre.registration.register(edition)
+        cmk.gui.community_registration.register(edition)
 
     case _ as unreachable:
         assert_never(unreachable)

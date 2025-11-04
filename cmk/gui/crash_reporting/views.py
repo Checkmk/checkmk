@@ -744,7 +744,7 @@ def crash_exception_row_filter(filtertext: str, column: str) -> Callable[[Row], 
 
 
 FilterCrashException = FilterCrashText(
-    title="Crash Exception", ident="crash_exception", sort_index=175
+    title="Crash exception", ident="crash_exception", sort_index=175
 )
 FilterCrashException.query_filter = query_filters.TableTextQuery(
     ident=FilterCrashException.ident, row_filter=crash_exception_row_filter

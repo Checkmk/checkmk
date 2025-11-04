@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.licensing.cre_handler import CRELicensingHandler
+from cmk.utils.licensing.community_handler import CRELicensingHandler
 from cmk.utils.licensing.handler import LicenseState, UserEffect
 
 

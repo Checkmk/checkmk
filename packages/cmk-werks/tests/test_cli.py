@@ -202,7 +202,7 @@ def test_main_evaluate_no_id_uses_last_werk() -> None:
                 mock_bail_out.side_effect = SystemExit(1)
                 with pytest.raises(SystemExit):
                     main_evaluate(args)
-                mock_bail_out.assert_called_once_with("No werk with this id.")
+                mock_bail_out.assert_called_once_with("No Werk with this id.")
 
 
 def test_main_evaluate_rejects_v1_werks() -> None:
@@ -219,7 +219,7 @@ def test_main_evaluate_rejects_v1_werks() -> None:
             with pytest.raises(SystemExit):
                 main_evaluate(args)
             mock_bail_out.assert_called_once_with(
-                "Can only evaluate werk v2 files (with .md suffix)."
+                "Can only evaluate Werk v2 files (with .md suffix)."
             )
 
 
@@ -237,7 +237,7 @@ def test_main_rewrite_werk_rejects_v1_werks() -> None:
             with pytest.raises(SystemExit):
                 main_rewrite_werk(args)
             mock_bail_out.assert_called_once_with(
-                "Can only evaluate werk v2 files (with .md suffix)."
+                "Can only evaluate Werk v2 files (with .md suffix)."
             )
 
 
@@ -248,7 +248,7 @@ def test_evaluate_werk_with_unicode_content(tmp_path: Path) -> None:
     werk_dir.mkdir()
 
     unicode_title = "Unicode Test: émojis 🚀 and spëcial chars"
-    unicode_content = "This werk contains émojis 🚀, accented chars like café, and symbols like ©️™️."
+    unicode_content = "This Werk contains émojis 🚀, accented chars like café, and symbols like ©️™️."
     werk_path = create_test_werk_file(werk_dir, 77777, unicode_title, unicode_content)
 
     args = argparse.Namespace(id=77777)
@@ -312,7 +312,7 @@ Bug fix example.
 
 @pytest.mark.vcr
 def test_evaluate_werk_with_breaking_change(tmp_path: Path) -> None:
-    """Test evaluation of breaking change werk using real API call."""
+    """Test evaluation of breaking change Werk using real API call."""
     werk_dir = tmp_path / ".werks"
     werk_dir.mkdir()
 
@@ -413,7 +413,7 @@ def test_main_user_understanding_success(tmp_path: Path) -> None:
 
 @pytest.mark.vcr
 def test_main_rewrite_werk_append_mode(tmp_path: Path) -> None:
-    """Test werk rewriting in append mode with real API call."""
+    """Test Werk rewriting in append mode with real API call."""
     werk_dir = tmp_path / ".werks"
     werk_dir.mkdir()
     werk_path = create_test_werk_file(werk_dir, 22222, "Append Test", None)
@@ -433,7 +433,7 @@ def test_main_rewrite_werk_append_mode(tmp_path: Path) -> None:
 
 @pytest.mark.vcr
 def test_main_evaluate_success(tmp_path: Path) -> None:
-    """Test successful werk evaluation with real API call."""
+    """Test successful Werk evaluation with real API call."""
     werk_dir = tmp_path / ".werks"
     werk_dir.mkdir()
     werk_path = create_test_werk_file(werk_dir, 12345, "Test Werk for Evaluation", None)

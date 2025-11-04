@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checkmk development script to manage werks"""
+"""Checkmk development script to manage Werks"""
 
 # mypy: disable-error-code="comparison-overlap"
 
@@ -75,38 +75,38 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     subparsers.required = True
 
     # BLAME
-    parser_blame = subparsers.add_parser("blame", help="Show who worked on a werk")
+    parser_blame = subparsers.add_parser("blame", help="Show who worked on a Werk")
     parser_blame.add_argument(
         "id",
         nargs="?",
         type=int,
-        help="werk ID",
+        help="Werk ID",
         default=None,
     )
     parser_blame.set_defaults(func=main_blame)
 
     # DELETE
-    parser_delete = subparsers.add_parser("delete", help="delete werk(s)")
+    parser_delete = subparsers.add_parser("delete", help="delete Werk(s)")
     parser_delete.add_argument(
         "id",
         nargs="+",
         type=int,
-        help="werk ID",
+        help="Werk ID",
     )
     parser_delete.set_defaults(func=main_delete)
 
     # EDIT
-    parser_edit = subparsers.add_parser("edit", help="open werk in editor")
+    parser_edit = subparsers.add_parser("edit", help="open Werk in editor")
     parser_edit.add_argument(
         "id",
         nargs="?",
         type=int,
-        help="werk ID (defaults to newest)",
+        help="Werk ID (defaults to newest)",
     )
     parser_edit.set_defaults(func=main_edit)
 
     # EXPORT
-    parser_export = subparsers.add_parser("export", help="List werks")
+    parser_export = subparsers.add_parser("export", help="List Werks")
     parser_export.add_argument(
         "-r",
         "--reverse",
@@ -123,7 +123,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     # GREP
     parser_grep = subparsers.add_parser(
         "grep",
-        help="show werks containing all of the given keywords",
+        help="show Werks containing all of the given keywords",
     )
     parser_grep.add_argument("-v", "--verbose", action="store_true")
     parser_grep.add_argument(
@@ -136,18 +136,18 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     # IDS
     parser_ids = subparsers.add_parser(
         "ids",
-        help="Show the number of reserved werk IDs or reserve new werk IDs",
+        help="Show the number of reserved Werk IDs or reserve new Werk IDs",
     )
     parser_ids.add_argument(
         "count",
         nargs="?",
         type=int,
-        help="number of werks to reserve",
+        help="number of Werks to reserve",
     )
     parser_ids.set_defaults(func=main_fetch_ids)
 
     # LIST
-    parser_list = subparsers.add_parser("list", help="List werks")
+    parser_list = subparsers.add_parser("list", help="List Werks")
     parser_list.add_argument(
         "-r",
         "--reverse",
@@ -162,7 +162,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser_list.set_defaults(func=lambda args: main_list(args, "console"))
 
     # NEW
-    parser_new = subparsers.add_parser("new", help="Create a new werk")
+    parser_new = subparsers.add_parser("new", help="Create a new Werk")
     parser_new.add_argument(
         "custom_files",
         nargs="*",
@@ -174,7 +174,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser_pick = subparsers.add_parser(
         "pick",
         aliases=["cherry-pick"],
-        help="Pick these werks",
+        help="Pick these Werks",
     )
     parser_pick.add_argument(
         "-n",
@@ -190,16 +190,16 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser_pick.set_defaults(func=main_pick)
 
     # SHOW
-    parser_show = subparsers.add_parser("show", help="Show several werks")
+    parser_show = subparsers.add_parser("show", help="Show several Werks")
     parser_show.add_argument(
         "ids",
         nargs="*",
-        help="Show these werks, or 'all' for all, of leave out for last",
+        help="Show these Werks, or 'all' for all, of leave out for last",
     )
     parser_show.set_defaults(func=main_show)
 
     # PREVIEW
-    parser_preview = subparsers.add_parser("preview", help="Preview html rendering of a werk")
+    parser_preview = subparsers.add_parser("preview", help="Preview html rendering of a Werk")
     parser_preview.add_argument(
         "id",
     )
@@ -207,38 +207,38 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
     # MEISTERWERK
     parser_meisterwerk = subparsers.add_parser(
-        "meisterwerk", help="Use the ai tool to evaluate or rewrite a werk"
+        "meisterwerk", help="Use the ai tool to evaluate or rewrite a Werk"
     )
     meisterwerk_subparser = parser_meisterwerk.add_subparsers(dest="meisterwerk_command")
 
-    evaluate_parser = meisterwerk_subparser.add_parser("evaluate", help="Evaluate a werk")
+    evaluate_parser = meisterwerk_subparser.add_parser("evaluate", help="Evaluate a Werk")
     evaluate_parser.add_argument(
         "id",
         type=int,
-        help="werk ID",
+        help="Werk ID",
     )
 
-    rewrite_parser = meisterwerk_subparser.add_parser("rewrite", help="Rewrite a werk")
+    rewrite_parser = meisterwerk_subparser.add_parser("rewrite", help="Rewrite a Werk")
     rewrite_parser.add_argument(
         "id",
         type=int,
-        help="werk ID",
+        help="Werk ID",
     )
     rewrite_parser.add_argument(
         "-a",
         "--append",
         action="store_true",
-        help="append the rewrite to the existing werk printing it to stdout",
+        help="append the rewrite to the existing Werk printing it to stdout",
     )
 
     user_understanding_parser = meisterwerk_subparser.add_parser(
         "user-understanding",
-        help="Produce a simulated understanding of the current werk from a user perspective",
+        help="Produce a simulated understanding of the current Werk from a user perspective",
     )
     user_understanding_parser.add_argument(
         "id",
         type=int,
-        help="werk ID",
+        help="Werk ID",
     )
 
     evaluate_parser.set_defaults(func=main_evaluate)
@@ -246,8 +246,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     user_understanding_parser.set_defaults(func=main_user_understanding)
 
     # URL
-    parser_url = subparsers.add_parser("url", help="Show the online URL of a werk")
-    parser_url.add_argument("id", type=int, help="werk ID")
+    parser_url = subparsers.add_parser("url", help="Show the online URL of a Werk")
+    parser_url.add_argument("id", type=int, help="Werk ID")
     parser_url.set_defaults(func=main_url)
 
     return parser.parse_args(argv)
@@ -261,7 +261,7 @@ def werk_path_by_id(werk_id: WerkId) -> Path:
     path = Path(f"{werk_id.id}.md")
     if path.exists():
         return path
-    raise RuntimeError(f"Can not find werk with id={werk_id.id}")
+    raise RuntimeError(f"Can not find Werk with id={werk_id.id}")
 
 
 BASE_DIR = ""
@@ -285,7 +285,7 @@ def get_last_werk() -> WerkId:
         with open(".last", encoding="utf-8") as f_last:
             return WerkId(int(f_last.read()))
     except Exception as e:
-        raise RuntimeError("No last werk known. Please specify id.") from e
+        raise RuntimeError("No last Werk known. Please specify id.") from e
 
 
 @cache
@@ -301,7 +301,7 @@ def load_werks() -> dict[WerkId, Werk]:
             try:
                 werks[WerkId(int(werk_id))] = load_werk(entry)
             except Exception as e:
-                sys.stderr.write(f"ERROR: Skipping invalid werk {werk_id}: {e}\n")
+                sys.stderr.write(f"ERROR: Skipping invalid Werk {werk_id}: {e}\n")
     return werks
 
 
@@ -358,8 +358,8 @@ def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = 
             f.write(format_as_werk_v2(werk.content))
         else:
             raise NotImplementedError(
-                "Writing v1 werks is no longer supported. "
-                "Please use the werk tool of the 2.2.0 branch.\n"
+                "Writing v1 Werks is no longer supported. "
+                "Please use the Werk tool of the 2.2.0 branch.\n"
                 "Contact the component owner of 'Development Tools' if this blocks you."
             )
 
@@ -605,7 +605,7 @@ def get_edition_components(edition: str) -> list[tuple[str, str]]:
 WERK_NOTES = """
     .---Werk----------------------------------------------------------------------.
     |                                                                             |
-    |             The werk is intended for the user/admin!!                       |
+    |             The Werk is intended for the user/admin!!                       |
     |                                                                             |
     |    It should be obvious from the title if a user/admin is affected.         |
     |    Describe what needs to be done in the details. You can also note if no   |
@@ -725,9 +725,9 @@ def prepare_for_meisterwerk(
     werk_id = WerkId(args.id) if args.id else get_last_werk()
     werk_path = werk_path_by_id(werk_id)
     if not werk_path.exists():
-        bail_out("No werk with this id.")
+        bail_out("No Werk with this id.")
     if werk_path.suffix != ".md":
-        bail_out("Can only evaluate werk v2 files (with .md suffix).")
+        bail_out("Can only evaluate Werk v2 files (with .md suffix).")
     werk = load_werk(werk_path)
     payload = build_meisterwerk_payload(werk)
     return werk_path, werk, payload, werk_id
@@ -738,7 +738,7 @@ def get_werk_arg(arg: WerkId | None) -> WerkId:
 
     werk = load_werk(werk_path_by_id(wid))
     if not werk:
-        bail_out("No such werk.\n")
+        bail_out("No such Werk.\n")
     save_last_werkid(wid)
     return wid
 
@@ -758,20 +758,20 @@ def main_delete(args: argparse.Namespace) -> None:
 
     for werk_id in werks:
         if not werk_exists(werk_id):
-            bail_out(f"There is no werk {format_werk_id(werk_id)}.")
+            bail_out(f"There is no Werk {format_werk_id(werk_id)}.")
 
         werk_path = werk_path_by_id(werk_id)
         werk_to_be_removed_title = load_werk(werk_path).content.metadata["title"]
         try:
             subprocess.check_call(["git", "rm", "-f", f"{werk_path}"])
         except subprocess.CalledProcessError as exc:
-            sys.stdout.write(f"Error removing werk file: {exc}.\n")
+            sys.stdout.write(f"Error removing Werk file: {exc}.\n")
             continue
-        sys.stdout.write(f"Deleted werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
+        sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
         stash = Stash.load_from_file()
         stash.add_id(werk_id, project=get_config().project)
         stash.dump_to_file()
-        sys.stdout.write(f"You lucky bastard now own the werk ID {format_werk_id(werk_id)}.\n")
+        sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
 
 def grep(line: str, kw: str, n: int) -> str | None:
@@ -834,7 +834,7 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
     if custom_files is None:
         custom_files = []
     if not werk_path.exists():
-        bail_out("No werk with this id.")
+        bail_out("No Werk with this id.")
     editor = os.getenv("EDITOR")
     if not editor:
         for p in ["/usr/bin/editor", "/usr/bin/vim", "/bin/vi"]:
@@ -861,14 +861,14 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
             sys.stdout.write(initial_werk_text + "\n\n")
             sys.stdout.write(traceback.format_exc() + "\n\n")
             sys.stdout.write(
-                "Could not load the werk, see exception above.\n"
-                "You may copy the initial werk text above the exception to fix your werk.\n"
+                "Could not load the Werk, see exception above.\n"
+                "You may copy the initial Werk text above the exception to fix your Werk.\n"
                 "Will reopen the editor, after you acknowledged with enter\n"
             )
             input()
 
     if werk is None:
-        bail_out("This should not have happened, werk is None during edit_werk.")
+        bail_out("This should not have happened, Werk is None during edit_werk.")
 
     git_add(werk)
     if commit and get_config().create_commit:
@@ -911,8 +911,8 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
     if found_werk_path is not None:
         if found_werk_path.source.exists() or found_werk_path.destination.exists():
             bail_out(
-                f"Trying to pick werk {found_werk_path.source} to {found_werk_path.destination}, "
-                "but werk already present. Aborted."
+                f"Trying to pick Werk {found_werk_path.source} to {found_werk_path.destination}, "
+                "but Werk already present. Aborted."
             )
 
     # Cherry-pick the commit in question from the other branch
@@ -938,7 +938,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
         # Otherwise the dev may forget to change the version
         change_werk_version(found_werk_path.destination, get_config().current_version, werk_version)
         sys.stdout.write(
-            f"Changed version of werk {found_werk_path.destination} "
+            f"Changed version of Werk {found_werk_path.destination} "
             f"to {get_config().current_version}.\n"
         )
 
@@ -1026,7 +1026,7 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     project = get_config().project
     if project not in WERK_ID_RANGES:
-        raise RuntimeError(f"project {project} has no werk id range")
+        raise RuntimeError(f"project {project} has no Werk ID range")
     ranges = WERK_ID_RANGES[project].copy()
 
     new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
@@ -1046,12 +1046,12 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     if get_config().create_commit:
         if os.system(f"git commit --no-verify -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
-            sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
+            sys.stdout.write("--> Successfully committed reserved Werk IDS. Please push it soon!\n")
         else:
             bail_out("Cannot commit.")
     else:
         sys.stdout.write(
-            "--> Reserved werk IDs. Commit and push it soon, otherwise someone else reserves the same IDs!\n"
+            "--> Reserved Werk IDs. Commit and push it soon, otherwise someone else reserves the same IDs!\n"
         )
 
 
@@ -1071,7 +1071,7 @@ def main_preview(args: argparse.Namespace) -> None:
     sys.stdout.write(
         f'<!DOCTYPE html><html lang="en" style="font-family:sans-serif;">'
         "<head>"
-        f"<title>Preview of werk {args.id}</title>"
+        f"<title>Preview of Werk {args.id}</title>"
         "</head>"
         f'<body style="background-color:#ccc; max-width:1600px; padding: 10px; margin:auto;">'
         f"<h1>{werk.title}</h1>"
@@ -1085,7 +1085,7 @@ def main_preview(args: argparse.Namespace) -> None:
 def get_werk_file_version() -> WerkVersion:
     """
     as long as there is a single markdown file,
-    we assume we should create and pick markdown werks.
+    we assume we should create and pick markdown Werks.
     """
     for path in Path(".").iterdir():
         if path.name.endswith(".md") and path.name.removesuffix(".md").isdigit():

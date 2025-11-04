@@ -548,8 +548,7 @@ def check_storage() -> CheckFunctionWithoutItem:
 # per resource type.
 def create_inventory_function() -> Callable[[Resource], InventoryResult]:
     def inventory_common_azure(section: Resource) -> InventoryResult:
-        type_to_path = [component.replace(".", "_") for component in section.type.split("/")]
-        path = ["software", "applications", "azure", *type_to_path]
+        path = ["software", "applications", "azure"]
 
         # Table label -> resource dict key
         mapping = {
@@ -565,9 +564,17 @@ def create_inventory_function() -> Callable[[Resource], InventoryResult]:
         if section.type == "subscription":
             mapping["ID"] = "id"
 
+        match section.type:
+            case "Microsoft.Resources/resourceGroups":
+                entity = "Resource Group"
+            case "subscription":
+                entity = "Subscription"
+            case _:
+                entity = "Resource"
+
         hardcoded_values = {
             "Cloud provider": "Azure",
-            "Entity": "Resource",
+            "Entity": entity,
         }
 
         for label, value in mapping.items() | hardcoded_values.items():

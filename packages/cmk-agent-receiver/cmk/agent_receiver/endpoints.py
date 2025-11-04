@@ -31,6 +31,7 @@ from cmk.agent_receiver.lib.certs import (
     site_root_certificate,
 )
 from cmk.agent_receiver.lib.log import logger
+from cmk.agent_receiver.lib.route_classes import UUIDValidationRoute
 
 from .checkmk_rest_api import (
     cmk_edition,
@@ -65,7 +66,6 @@ from .models import (
     RenewCertResponse,
     RequestForRegistration,
 )
-from .route_classes import UUIDValidationRoute
 from .utils import (
     internal_credentials,
     NotRegisteredException,

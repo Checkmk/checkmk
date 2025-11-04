@@ -415,7 +415,7 @@ def _identify_user_modifications(
     return modifications
 
 
-def _sync_existing_user(
+def _sync_plugins_existing_user(
     checkmk_user_id: UserId,
     only_username: UserId | None,
     ldap_user_spec: LDAPUserSpec,
@@ -461,7 +461,7 @@ def _sync_existing_user(
         users[checkmk_user_id] = checkmk_user_copy
 
 
-def _sync_new_user(
+def _sync_plugins_new_user(
     checkmk_user_id: UserId,
     only_username: UserId | None,
     ldap_user_spec: LDAPUserSpec,
@@ -527,7 +527,7 @@ def _sync_ldap_user(
         )
     ) is not None:
         existing_user_id, copied_user_spec = userid_and_user
-        _sync_existing_user(
+        _sync_plugins_existing_user(
             checkmk_user_id=existing_user_id,
             only_username=only_username,
             ldap_user_spec=fetched_ldap_user.ldap_user_spec,
@@ -548,7 +548,7 @@ def _sync_ldap_user(
         )
     ) is not None:
         new_user_id, new_user_spec = userid_and_new_user
-        _sync_new_user(
+        _sync_plugins_new_user(
             checkmk_user_id=new_user_id,
             only_username=only_username,
             ldap_user_spec=fetched_ldap_user.ldap_user_spec,

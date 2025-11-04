@@ -160,8 +160,8 @@ def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_
         message="Expected the Quick setup to be linked on the password page!",
     ).to_be_visible()
 
-    if test_site.edition.is_raw_edition():
-        logger.info("Skipping DCD validation for raw edition.")
+    if test_site.edition.is_community_edition():
+        logger.info("Skipping DCD validation for Checkmk Community.")
     else:
         logger.info("Validate AWS DCD connection is setup.")
         dcd_page = DCD(list_passwords_page.page)

@@ -43,7 +43,7 @@ class TypeCMKEdition:
     - `pkg_edition = CMKEdition.edition_from_text("cloud")`
     - `pkg_edition = CMKEdition.from_version_string("2.4.0.cee")`
     - `pkg_edition.short/long/title`
-    - `pkg_edition.is_enterprise_edition()`
+    - `pkg_edition.is_pro_edition()`
 
     Note:
     Wrapping 'Edition' using inheritance would be easier but not possisble,
@@ -102,16 +102,16 @@ class TypeCMKEdition:
         """Return edition as displayed on Checkmk UI."""
         return self.edition_data.title
 
-    def is_managed_edition(self) -> bool:
+    def is_ultimatemt_edition(self) -> bool:
         return self.edition_data is self.ULTIMATEMT
 
-    def is_enterprise_edition(self) -> bool:
+    def is_pro_edition(self) -> bool:
         return self.edition_data is self.PRO
 
-    def is_raw_edition(self) -> bool:
+    def is_community_edition(self) -> bool:
         return self.edition_data is self.COMMUNITY
 
-    def is_cloud_edition(self) -> bool:
+    def is_ultimate_edition(self) -> bool:
         return self.edition_data is self.ULTIMATE
 
     def is_saas_edition(self) -> bool:

@@ -155,7 +155,7 @@ def inject_rules(site: Site) -> None:
         _ for _ in os.listdir(RULES_DIR) if _.endswith(".json") and _ not in ignore_list
     ]
     for rules_file_name in rules_file_names:
-        if edition_from_env().is_raw_edition() and rules_file_name.startswith("cmc_"):
+        if edition_from_env().is_community_edition() and rules_file_name.startswith("cmc_"):
             continue
         rules_file_path = RULES_DIR / rules_file_name
         with open(rules_file_path, encoding="UTF-8") as ruleset_file:

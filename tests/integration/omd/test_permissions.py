@@ -133,7 +133,7 @@ def test_version_file_ownership(site: Site) -> None:
         "lib/nagios/plugins/check_dhcp",
         "lib/nagios/plugins/check_icmp",
     }
-    if not site.edition.is_raw_edition():
+    if not site.edition.is_community_edition():
         exceptions |= {
             "lib/cmc/icmpsender",
             "lib/cmc/icmpreceiver",

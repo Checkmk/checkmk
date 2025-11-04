@@ -41,7 +41,7 @@ def test_hooks(site: Site) -> None:
         "AUTOMATION_HELPER",
     ]
 
-    if not site.edition.is_raw_edition():
+    if not site.edition.is_community_edition():
         hooks += [
             "LIVEPROXYD",
         ]
@@ -55,7 +55,7 @@ def test_hooks(site: Site) -> None:
             "TRACE_JAEGER_ADMIN_PORT",
         ]
 
-    if site.edition.is_cloud_edition() or site.edition.is_managed_edition():
+    if site.edition.is_ultimate_edition() or site.edition.is_ultimatemt_edition():
         hooks += [
             "OPENTELEMETRY_COLLECTOR",
             "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",

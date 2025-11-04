@@ -26,14 +26,14 @@ def test_init_scripts(site: Site) -> None:
         "xinetd",
     }
 
-    if not site.edition.is_raw_edition():
+    if not site.edition.is_community_edition():
         scripts |= {
             "cmc",
             "dcd",
             "liveproxyd",
             "mknotifyd",
         }
-    if site.edition.is_cloud_edition() or site.edition.is_managed_edition():
+    if site.edition.is_ultimate_edition() or site.edition.is_ultimatemt_edition():
         scripts |= {"otel-collector", "clickhouse"}
     if not site.edition.is_saas_edition():
         scripts |= {"jaeger"}

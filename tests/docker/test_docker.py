@@ -56,7 +56,7 @@ def test_start_simple(checkmk: CheckmkApp) -> None:
     assert "APACHE_TCP_PORT: 5000" in output
     assert "MKEVENTD: on" in output
 
-    if edition_from_env().is_raw_edition():
+    if edition_from_env().is_community_edition():
         assert "CORE: nagios" in output
     else:
         assert "CORE: cmc" in output

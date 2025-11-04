@@ -143,11 +143,13 @@ def prepare_package(package_info: CMKPackageInfo) -> None:
 def pull_checkmk(
     client: docker.client.DockerClient, package_info: CMKPackageInfo
 ) -> docker.models.containers.Image:
-    if not package_info.edition.is_raw_edition():
-        raise Exception("Can only fetch raw edition at the moment")
+    if not package_info.edition.is_community_edition():
+        raise Exception("Can only fetch community edition at the moment")
 
-    logger.info("Downloading docker image: checkmk/check-mk-raw:%s", package_info.version.version)
-    return client.images.pull("checkmk/check-mk-raw", tag=package_info.version.version)
+    logger.info(
+        "Downloading docker image: checkmk/check-mk-community:%s", package_info.version.version
+    )
+    return client.images.pull("checkmk/check-mk-community", tag=package_info.version.version)
 
 
 def resolve_image_alias(alias: str) -> str:

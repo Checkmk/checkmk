@@ -18,7 +18,8 @@ from tests.testlib.version import CMKEdition
 
 # Test whether or not factory settings and checkgroup parameters work
 @pytest.mark.skipif(
-    CMKEdition.edition_from_path(paths.omd_root).is_raw_edition(), reason="flaky on raw edition"
+    CMKEdition.edition_from_path(paths.omd_root).is_community_edition(),
+    reason="flaky on Checkmk Community",
 )
 def test_check_default_parameters(request: pytest.FixtureRequest, site: Site) -> None:
     host_name = "check-variables-test-host"

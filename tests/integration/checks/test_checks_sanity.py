@@ -158,7 +158,7 @@ def test_shipped_ps_discovery(host_services: dict[str, ServiceInfo], site: Site)
             # f"Process {site.id} real-time helper",  # not enabled
             f"Process {site.id} rrd helper",
         }
-    if not site.edition.is_raw_edition():
+    if not site.edition.is_community_edition():
         expected_ps_services |= {
             f"Process {site.id} dcd",
         }

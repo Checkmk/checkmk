@@ -155,8 +155,8 @@ def test_minimal_configuration(gcp_qs_config_page: GCPAddNewConfiguration, test_
         message="Expected the Quick setup to be linked on the password page!",
     ).to_be_visible()
 
-    if test_site.edition.is_raw_edition():
-        logger.info("Skipping DCD validation for raw edition.")
+    if test_site.edition.is_community_edition():
+        logger.info("Skipping DCD validation for Checkmk Community.")
     else:
         logger.info("Validate GCP DCD connection is setup.")
         dcd_page = DCD(list_passwords_page.page)

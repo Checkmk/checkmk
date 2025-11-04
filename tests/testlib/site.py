@@ -1011,7 +1011,7 @@ class Site:
             # This seems to cause an issue with GUI and XSS crawl (they take too long or seem to
             # hang) job. Disable as a quick fix. We may have to parametrize this per job type.
             # self._set_number_of_apache_processes()
-            if not self.edition.is_raw_edition():
+            if not self.edition.is_community_edition():
                 self._set_number_of_cmc_helpers()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
@@ -1400,7 +1400,7 @@ class Site:
         return stdout.strip() or default
 
     def core_name(self) -> Literal["cmc", "nagios"]:
-        return "nagios" if self.edition.is_raw_edition() else "cmc"
+        return "nagios" if self.edition.is_community_edition() else "cmc"
 
     def core_history_log(self) -> Path:
         core = self.core_name()
@@ -1977,7 +1977,7 @@ class SiteFactory:
         return site
 
     def setup_customers(self, site: Site, customers: Sequence[str]) -> None:
-        if not self.edition.is_managed_edition():
+        if not self.edition.is_ultimatemt_edition():
             return
         customer_content = "\n".join(
             f"customers.update({{'{customer}': {{'name': '{customer}', 'macros': [], 'customer_report_layout': 'default'}}}})"
@@ -2617,7 +2617,7 @@ def connection(
         "site_id": remote_site.id,
     }
 
-    if central_site.edition.is_managed_edition():
+    if central_site.edition.is_ultimatemt_edition():
         basic_settings["customer"] = "provider"
 
     configuration_connection = {

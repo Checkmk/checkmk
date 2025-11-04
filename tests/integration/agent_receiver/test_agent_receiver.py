@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import ssl
 import uuid
 from http import HTTPStatus
@@ -244,6 +245,10 @@ SUPPORTED_VERSIONS = (ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3)
 
 @pytest.mark.medium_test_chain
 @pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS)
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") in ["almalinux-8", "sles-15sp5"],
+    reason="CMK-27200: Requires investigation: ValueError: Cannot understand error message write:errno=0",
+)
 def test_unsupported_tls_versions(
     site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:

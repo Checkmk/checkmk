@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-10-23 05:05+0000\n"
+"PO-Revision-Date: 2025-11-04 10:56+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -3091,9 +3091,8 @@ msgstr "Absolute Levels in Bits oder Bytes pro Sekunde"
 msgid "Absolute levels of active sessions"
 msgstr "Absolute Levels für aktive Sitzungen"
 
-#, fuzzy
 msgid "Absolute limit"
-msgstr "Absolut"
+msgstr "Absolutes Limit"
 
 msgid "Absolute number of active connections"
 msgstr "Gesamtzahl von aktiven Verbindungen"
@@ -6414,7 +6413,7 @@ msgid "Amount of files in notification spool"
 msgstr "Anzahl der Dateien im Benachrichtigungs-Spooler"
 
 msgid "Amount of mails in queues"
-msgstr "Anzahl von Mails in den Mailqueues"
+msgstr "Anzahl von Mails in Warteschlangen"
 
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "Name einer AWS-Region wie z.B. 'eu-central-1'"
@@ -6716,7 +6715,7 @@ msgid "Apache"
 msgstr "Apache"
 
 msgid "Apache ActiveMQ Queue lengths"
-msgstr "Apache ActiveMQ Warteschlangenlängen"
+msgstr "Apache ActiveMQ Länge der Warteschlangen"
 
 msgid "Apache ActiveMQ queues"
 msgstr "Apache ActiveMQ Warteschlangen"
@@ -7928,7 +7927,7 @@ msgid "Average deadlock count"
 msgstr "Durchschnittliche Anzahl von Deadlocks"
 
 msgid "Average disk I/O-queue length"
-msgstr "Durchschnittliche Länge Disk I/O-Queue"
+msgstr "Durchschnittliche Länge Festplatten-E/A-Warteschlange"
 
 msgid "Average disk latency"
 msgstr "Durchschnittliche Disk-Latenz"
@@ -7937,13 +7936,13 @@ msgid "Average disk read latency"
 msgstr "Durchschnittliche Plattenlese-Latenz"
 
 msgid "Average disk read queue length"
-msgstr "Durchschnittliche Länge der Lese-Warteschlange"
+msgstr "Durchschnittliche Länge der Festplatten-Lese-Warteschlange"
 
 msgid "Average disk write latency"
 msgstr "Durchschnittliche Plattenschreib-Latenz"
 
 msgid "Average disk write queue length"
-msgstr "Durchschnittliche Länge der Schreib-Warteschlange"
+msgstr "Durchschnittliche Länge der Festplatten-Schreib-Warteschlange"
 
 msgid "Average document count growth"
 msgstr "Durchschnittliches Wachstum der Dokumentenanzahl"

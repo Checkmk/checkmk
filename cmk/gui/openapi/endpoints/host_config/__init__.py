@@ -69,7 +69,7 @@ BAKE_AGENT_PARAM = {
             "Tries to bake the agents for the just created hosts. This process is started in the "
             "background after configuring the host. Please note that the backing may take some "
             "time and might block subsequent API calls. "
-            "This only works when using the Enterprise Editions."
+            "This only works in the commercial editions of Checkmk."
         ),
     )
 }

@@ -251,7 +251,7 @@ def schedule_service_downtime(
                 * weekday_end
                 * day_of_month
 
-            This only works when using the Enterprise Editions.
+            This only works in the commercial editions of Checkmk.
 
         trigger_id:
             The id of another downtime-entry. If given (other than 0) then this downtime will be
@@ -358,7 +358,9 @@ def schedule_servicegroup_service_downtime(
                 * weekday_end
                 * day_of_month
 
-            This only works when using the Enterprise Editions. Defaults to 'fixed'.
+            This only works in the commercial editions of Checkmk.
+
+            Defaults to 'fixed'.
 
         trigger_id:
             The id of another downtime-entry. If given (other than 0) then this downtime will be
@@ -471,7 +473,9 @@ def schedule_hostgroup_host_downtime(
                 * weekday_end
                 * day_of_month
 
-            This only works when using the Enterprise Editions. Defaults to 'fixed'.
+            This only works in the commercial editions of Checkmk.
+
+            Defaults to 'fixed'.
 
         trigger_id:
             The id of another downtime-entry. If given (other than 0) then this downtime will be
@@ -637,7 +641,9 @@ def schedule_host_downtime(
                 * weekday_end
                 * day_of_month
 
-            This only works when using the Enterprise Editions. Defaults to 'fixed'.
+            This only works in the commercial editions of Checkmk.
+
+            Defaults to 'fixed'.
 
         trigger_id:
             The id of another downtime-entry. If given (other than 0) then this downtime will be

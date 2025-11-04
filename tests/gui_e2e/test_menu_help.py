@@ -61,7 +61,7 @@ class HelpMenuButton:
         pytest.param(
             HelpMenuButton("help_saas_status_page", "status.checkmk.com"),
             id="saas_status_page",
-            marks=pytest.mark.skip_if_not_edition("saas"),
+            marks=pytest.mark.skip_if_not_edition("cloud"),
         ),
         pytest.param(
             HelpMenuButton("help_suggest_product_improvement", "ideas.checkmk.com"),

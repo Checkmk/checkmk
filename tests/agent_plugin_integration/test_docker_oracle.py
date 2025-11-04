@@ -478,7 +478,7 @@ def _oracle(
         yield oracle_db
 
 
-@pytest.mark.skip_if_not_edition("enterprise")
+@pytest.mark.skip_if_not_edition("pro")
 @pytest.mark.parametrize("auth_mode", ["wallet", "credential"])
 def test_docker_oracle(
     checkmk: CheckmkApp,

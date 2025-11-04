@@ -15,7 +15,7 @@ from tests.testlib.site import Site
 
 from ..agent_receiver.test_agent_receiver import generate_csr_pair
 
-pytestmark = pytest.mark.skip_if_not_edition("cloud", "managed")
+pytestmark = pytest.mark.skip_if_not_edition("ultimate", "ultimatemt")
 
 
 class TestRelay:

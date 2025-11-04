@@ -70,7 +70,7 @@ def test_status_pull(
 
 @pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_containerized
-@pytest.mark.skip_if_not_edition("cloud", "managed")
+@pytest.mark.skip_if_not_edition("ultimate", "ultimatemt")
 def test_status_push(
     central_site: Site,
     agent_ctl: Path,

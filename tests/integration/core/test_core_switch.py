@@ -40,7 +40,7 @@ def _switch_core(site: Site) -> Iterator[None]:
     site.start()
 
 
-@pytest.mark.skip_if_not_edition("enterprise")
+@pytest.mark.skip_if_not_edition("pro")
 def test_core_switch(site: Site, switch_core: Iterator[None]) -> None:
     """Test switching the core from cmc to nagios.
 

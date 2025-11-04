@@ -308,7 +308,7 @@ class BIAggregationGroups(ABCWithSchema):
         return len(self.names) + len(self.paths)
 
     def combined_groups(self) -> set[str]:
-        return set(self.names + ["/".join(x) for x in self.paths])
+        return set(self.names + ["/".join(path) for path in self.paths])
 
     @override
     @classmethod

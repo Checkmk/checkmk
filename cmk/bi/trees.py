@@ -364,9 +364,9 @@ class BICompiledRule(ABCBICompiledNode):
     def __str__(self) -> str:
         return "BICompiledRule[%s, %d rules, %d leaves %d remaining]" % (
             self.properties.title,
-            len([x for x in self.nodes if x.kind() == "rule"]),
-            len([x for x in self.nodes if x.kind() == "leaf"]),
-            len([x for x in self.nodes if x.kind() == "remaining"]),
+            len([node for node in self.nodes if node.kind() == "rule"]),
+            len([node for node in self.nodes if node.kind() == "leaf"]),
+            len([node for node in self.nodes if node.kind() == "remaining"]),
         )
 
     @override
@@ -439,7 +439,7 @@ class BICompiledRule(ABCBICompiledNode):
         if not bundled_results:
             return None
         actual_result = self._process_node_compute_result(
-            [x.actual_result for x in bundled_results], computation_options
+            [result.actual_result for result in bundled_results], computation_options
         )
 
         if not use_assumed:
@@ -717,7 +717,8 @@ class BICompiledAggregation:
                 "reqhosts": list(bi_compiled_branch.required_hosts),
                 "nodes": list(map(self.eval_result_node, bi_compiled_branch.nodes)),
                 "rule_layout_style": bi_compiled_branch.node_visualization,
-                "aggr_group_tree": self.groups.names + ["/".join(x) for x in self.groups.paths],
+                "aggr_group_tree": self.groups.names
+                + ["/".join(path) for path in self.groups.paths],
                 "aggr_type": "multi",
                 "aggregation_id": self.id,
                 "downtime_aggr_warn": self.computation_options.escalate_downtimes_as_warn,

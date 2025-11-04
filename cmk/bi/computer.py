@@ -180,8 +180,12 @@ class BIComputer:
         self, compiled_branch: BICompiledRule, bi_aggregation_filter: BIAggregationFilter
     ) -> bool:
         branch_elements = compiled_branch.required_elements()
-        branch_hosts = {x[1] for x in branch_elements}
-        branch_services = {(x[1], x[2]) for x in branch_elements if x[2] is not None}
+        branch_hosts = {branch_element[1] for branch_element in branch_elements}
+        branch_services = {
+            (branch_element[1], branch_element[2])
+            for branch_element in branch_elements
+            if branch_element[2] is not None
+        }
         if bi_aggregation_filter.hosts and not branch_hosts.intersection(
             bi_aggregation_filter.hosts
         ):
@@ -253,7 +257,7 @@ class BIComputer:
 
         compiled_aggr_group_names = set(
             compiled_aggregation.groups.names
-            + ["/".join(x) for x in compiled_aggregation.groups.paths]
+            + ["/".join(path) for path in compiled_aggregation.groups.paths]
         )
         if not filter_names and not filter_paths:
             return compiled_aggr_group_names

@@ -399,7 +399,7 @@ class BIHostSearch(ABCBISearch):
 
         # Filter childrens known to bi_searcher
         children_host_data: list[BIHostData] = [
-            bi_searcher.hosts[x] for x in all_children if x in bi_searcher.hosts
+            bi_searcher.hosts[child] for child in all_children if child in bi_searcher.hosts
         ]
 
         conditions = refer_to["conditions"]

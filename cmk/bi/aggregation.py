@@ -110,7 +110,9 @@ class BIAggregation:
     def _verify_all_branches_start_with_rule(
         self, branches: list[ABCBICompiledNode]
     ) -> list[BICompiledRule]:
-        new_branches: list[BICompiledRule] = [x for x in branches if isinstance(x, BICompiledRule)]
+        new_branches: list[BICompiledRule] = [
+            branch for branch in branches if isinstance(branch, BICompiledRule)
+        ]
         assert len(branches) == len(new_branches)
         return new_branches
 

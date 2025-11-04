@@ -129,7 +129,7 @@ class BIStructureFetcher:
                 ]
             )
 
-        site_data: dict[SiteId, dict] = {x: {} for x in only_sites}
+        site_data: dict[SiteId, dict] = {site_id: {} for site_id in only_sites}
         for (
             site,
             host_name,
@@ -177,7 +177,7 @@ class BIStructureFetcher:
             self._marshal_save_data(path, hosts)
 
     def _read_cached_data(self, required_program_starts: set[SiteProgramStart]) -> None:
-        required_sites = {x[0] for x in required_program_starts}
+        required_sites = {program_starts[0] for program_starts in required_program_starts}
         for path_object, (site_id, _timestamp) in self._get_site_data_files():
             if site_id in self._have_sites:
                 # This data was already read during the live query

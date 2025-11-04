@@ -77,7 +77,8 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
         self, search_results: list[SearchResult], macros: Mapping[str, str]
     ) -> list[ActionArgument]:
         return [
-            tuple(replace_macros(self.params.arguments, {**macros, **x})) for x in search_results
+            tuple(replace_macros(self.params.arguments, {**macros, **search_result}))
+            for search_result in search_results
         ]
 
     @override
@@ -90,7 +91,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
         bi_rule = bi_rule_id_registry[self.rule_id]
         rule_arguments = replace_macros(self.params.arguments, search_result)
         mapped_rule_arguments = dict(
-            zip([f"${x}$" for x in bi_rule.params.arguments], rule_arguments)
+            zip([f"${rule}$" for rule in bi_rule.params.arguments], rule_arguments)
         )
         return replace_macros(bi_rule.properties.title, mapped_rule_arguments)
 
@@ -147,7 +148,10 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
     def _generate_action_arguments(
         self, search_results: list[SearchResult], macros: Mapping[str, str]
     ) -> list[ActionArgument]:
-        return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
+        return [
+            (replace_macros(self.host_regex, {**macros, **search_result}),)
+            for search_result in search_results
+        ]
 
     @override
     def execute(
@@ -156,7 +160,10 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), argument[0]
         )
-        return [BICompiledLeaf(host_name=x.name, site_id=x.site_id) for x in host_matches]
+        return [
+            BICompiledLeaf(host_name=host_match.name, site_id=host_match.site_id)
+            for host_match in host_matches
+        ]
 
 
 class BIStateOfHostActionSchema(Schema):
@@ -212,10 +219,10 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
     ) -> list[ActionArgument]:
         return [
             (
-                replace_macros(self.host_regex, {**macros, **x}),
-                replace_macros(self.service_regex, {**macros, **x}),
+                replace_macros(self.host_regex, {**macros, **search_result}),
+                replace_macros(self.service_regex, {**macros, **search_result}),
             )
-            for x in search_results
+            for search_result in search_results
         ]
 
     @override
@@ -227,18 +234,19 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
         )
 
         host_search_matches = [
-            BIHostSearchMatch(host=x, match_groups=match_groups[x.name]) for x in matched_hosts
+            BIHostSearchMatch(host=matched_host, match_groups=match_groups[matched_host.name])
+            for matched_host in matched_hosts
         ]
         service_matches = bi_searcher.get_service_description_matches(
             host_search_matches, argument[1]
         )
         return [
             BICompiledLeaf(
-                site_id=x.host_match.host.site_id,
-                host_name=x.host_match.host.name,
-                service_description=x.service_description,
+                site_id=service_match.host_match.host.site_id,
+                host_name=service_match.host_match.host.name,
+                service_description=service_match.service_description,
             )
-            for x in service_matches
+            for service_match in service_matches
         ]
 
 
@@ -294,7 +302,10 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
     def _generate_action_arguments(
         self, search_results: list[SearchResult], macros: Mapping[str, str]
     ) -> list[ActionArgument]:
-        return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
+        return [
+            (replace_macros(self.host_regex, {**macros, **search_result}),)
+            for search_result in search_results
+        ]
 
     @override
     def execute(
@@ -303,7 +314,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), argument[0]
         )
-        return [BIRemainingResult([x.name for x in host_matches])]
+        return [BIRemainingResult([host_match.name for host_match in host_matches])]
 
 
 class BIStateOfRemainingServicesActionSchema(Schema):

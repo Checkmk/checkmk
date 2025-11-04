@@ -8,28 +8,28 @@ def build_make_target(edition, cross_edition_target="") {
     switch(edition) {
         case 'raw':
             switch(cross_edition_target) {
-                case 'cce':
-                case 'cee':
-                    // from CRE to CCE or CEE
-                    return prefix + "cross-edition-cre-to-" + cross_edition_target + suffix;
+                case 'ultimate':
+                case 'pro':
+                    // from community to ultimate or pro
+                    return prefix + "cross-edition-community-to-" + cross_edition_target + suffix;
                 default:
-                    return prefix + "cre" + suffix;
+                    return prefix + "community" + suffix;
             }
         case 'enterprise':
             switch(cross_edition_target) {
-                case 'cce':
-                case 'cme':
-                    // from CEE to CCE or CME
-                    return prefix + "cross-edition-cee-to-" + cross_edition_target + suffix;
+                case 'ultimate':
+                case 'ultimatemt':
+                    // from pro to ultimate or ultimatemt
+                    return prefix + "cross-edition-pro-to-" + cross_edition_target + suffix;
                 default:
-                    return prefix + "cee" + suffix;
+                    return prefix + "pro" + suffix;
             }
         case 'cloud':
-            return prefix + "cce" + suffix;
+            return prefix + "ultimate" + suffix;
         case 'saas':
-            return prefix + "cse" + suffix;
+            return prefix + "cloud" + suffix;
         case 'managed':
-            return prefix + "cme" + suffix;
+            return prefix + "ultimatemt" + suffix;
         default:
             error("The update tests are not yet enabled for edition: " + edition);
     }

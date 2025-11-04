@@ -161,10 +161,6 @@ def main() {
 
     stage("Archive stuff") {
         dir("${checkout_dir}") {
-            setCustomBuildProperty(
-                key: "path_hashes",
-                value: versioning.path_hashes(["."])
-            );
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
                     artifacts: "*.deb,*.rpm,*.cma",

@@ -343,19 +343,19 @@ def convert_history_line(history_columns: Sequence[tuple[str, Any]], values: lis
     else:
         values[23] = _unsplit(values[23])
     if num_values <= 24:  # event_ipaddress
-        values.append(history_columns[25][1])
+        values.append(history_columns[24][1])
     if num_values <= 25:  # event_orig_host
-        values.append(history_columns[26][1])
+        values.append(history_columns[25][1])
     if num_values <= 26:  # event_contact_groups_precedence
-        values.append(history_columns[27][1])
+        values.append(history_columns[26][1])
     if num_values <= 27:  # event_core_host
-        values.append(history_columns[28][1])
+        values.append(history_columns[27][1])
     if num_values <= 28:  # event_host_in_downtime
-        values.append(history_columns[29][1])
+        values.append(history_columns[28][1])
     else:
         values[28] = values[28] == "1"
     if num_values <= 29:  # event_match_groups_syslog_application
-        values.append(history_columns[30][1])
+        values.append(history_columns[29][1])
     else:
         values[29] = _unsplit(values[29])
 

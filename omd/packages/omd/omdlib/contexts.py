@@ -18,7 +18,6 @@ from omdlib.type_defs import Config, Replacements
 from omdlib.version import version_from_site_dir
 
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import Edition
 
 
 class SiteContext:
@@ -61,7 +60,7 @@ class SiteContext:
         return {
             "###SITE###": self.name,
             "###ROOT###": self._paths.home,
-            "###EDITION###": Edition[version.split(".")[-1].upper()].long,
+            "###EDITION###": version.split(".")[-1],
         }
 
     def set_config(self, config: Config) -> None:

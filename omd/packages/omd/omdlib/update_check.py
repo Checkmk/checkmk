@@ -77,9 +77,9 @@ class ConflictResolution(BaseModel, frozen=True, extra="forbid"):
 def _omd_to_check_mk_version(omd_version: str) -> Version:
     """
     >>> f = _omd_to_check_mk_version
-    >>> f("2.0.0p3.cee")
-    Version(_BaseVersion(major=2, minor=0, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
-    >>> f("1.6.0p3.cee.demo")
+    >>> f("2.5.0p3.pro")
+    Version(_BaseVersion(major=2, minor=5, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
+    >>> f("1.6.0p3.cee")
     Version(_BaseVersion(major=1, minor=6, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
     >>> f("2.0.0p3.cee")
     Version(_BaseVersion(major=2, minor=0, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
@@ -87,11 +87,6 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
     Version(None, _Release(release_type=ReleaseType.daily, value=BuildDate(year=2021, month=12, day=13)), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
     """
     parts = omd_version.split(".")
-
-    # Before we had the free edition, we had versions like ".cee.demo". Since we deal with old
-    # versions, we need to care about this.
-    if parts[-1] == "demo":
-        del parts[-1]
 
     # Strip the edition suffix away
     del parts[-1]
@@ -195,10 +190,12 @@ def check_update_possible(
 
     # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
+    from_edition_is_ultimatemt = from_edition in ("managed", "ultimatemt")
+    to_edition_is_ultimatemt = to_edition in ("managed", "ultimatemt")
     if (
         resolution.ignore_editions_incompatible is IgnoreEditionsIncompatible.ABORT
-        and from_edition == "managed"
-        and to_edition != "managed"
+        and from_edition_is_ultimatemt
+        and not to_edition_is_ultimatemt
     ):
         sys.exit(f"ERROR: Updating from {from_edition} to {to_edition} is not possible. Aborted.")
 

@@ -28,26 +28,44 @@ def select_matching_packages(version: str, installed_packages: Sequence[str]) ->
 
 def get_edition(
     omd_version: str,
-) -> Literal["raw", "enterprise", "managed", "free", "cloud", "saas", "unknown"]:
+) -> Literal[
+    "raw",
+    "enterprise",
+    "managed",
+    "cloud",
+    "saas",
+    "unknown",
+    "community",
+    "pro",
+    "ultimate",
+    "ultimatemt",
+]:
     """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
-    parts = omd_version.split(".")
-    if parts[-1] == "demo":
-        edition_short = parts[-2]
-    else:
-        edition_short = parts[-1]
+    edition_short = omd_version.split(".")[-1]
 
+    if edition_short == "community":
+        return "community"
+    if edition_short == "pro":
+        return "pro"
+    if edition_short == "ultimate":
+        return "ultimate"
+    if edition_short == "ultimatemt":
+        return "ultimatemt"
+    if edition_short == "cloud":
+        return "cloud"
+
+    # TODO: Needs to be able to deal with 2.4 edition names in 2.5. Can be removed with 2.6
     if edition_short == "cre":
         return "raw"
     if edition_short == "cee":
         return "enterprise"
     if edition_short == "cme":
         return "managed"
-    if edition_short == "cfe":
-        return "free"
     if edition_short == "cce":
         return "cloud"
     if edition_short == "cse":
         return "saas"
+
     return "unknown"
 
 

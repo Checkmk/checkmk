@@ -20,11 +20,11 @@ def test_site_context() -> None:
 
 
 def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(os, "readlink", lambda x: "../2018.08.11.cee")
+    monkeypatch.setattr(os, "readlink", lambda x: "../2025.11.04.pro")
     site = SiteContext("dingeling")
     replacements = site.replacements()
 
     assert replacements["###SITE###"] == "dingeling"
     assert replacements["###ROOT###"] == "/omd/sites/dingeling"
-    assert replacements["###EDITION###"] in ("raw", "enterprise", "cloud", "managed")
+    assert replacements["###EDITION###"] == "pro"
     assert len(replacements) == 3

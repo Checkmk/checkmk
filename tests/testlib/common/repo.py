@@ -48,7 +48,7 @@ def is_ultimate_repo() -> bool:
     return is_non_free_repo()
 
 
-def is_saas_repo() -> bool:
+def is_cloud_repo() -> bool:
     return is_non_free_repo()
 
 

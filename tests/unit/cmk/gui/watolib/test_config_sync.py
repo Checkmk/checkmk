@@ -29,8 +29,8 @@ from cmk.gui.watolib import activate_changes, config_sync
 from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.messaging import rabbitmq
 from tests.testlib.common.repo import (
+    is_cloud_repo,
     is_pro_repo,
-    is_saas_repo,
     is_ultimate_repo,
     is_ultimatemt_repo,
 )
@@ -473,7 +473,7 @@ def _get_expected_paths(
         [
             (is_ultimate_repo() and edition is cmk_version.Edition.ULTIMATE),
             (is_ultimatemt_repo() and edition is cmk_version.Edition.ULTIMATEMT),
-            (is_saas_repo() and edition is cmk_version.Edition.CLOUD),
+            (is_cloud_repo() and edition is cmk_version.Edition.CLOUD),
         ]
     ):
         expected_paths += [

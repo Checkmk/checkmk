@@ -15,8 +15,8 @@ import cmk.gui.config
 import cmk.utils.paths
 from cmk.gui.config import active_config, Config
 from tests.testlib.common.repo import (
+    is_cloud_repo,
     is_pro_repo,
-    is_saas_repo,
     is_ultimate_repo,
     is_ultimatemt_repo,
 )
@@ -200,7 +200,7 @@ def test_default_config_from_plugins() -> None:
             "current_customer",
         ]
 
-    if any((is_ultimate_repo(), is_ultimatemt_repo(), is_saas_repo())):
+    if any((is_ultimate_repo(), is_ultimatemt_repo(), is_cloud_repo())):
         expected += ["metric_backend_instance"]
 
     default_config = cmk.gui.config.get_default_config()

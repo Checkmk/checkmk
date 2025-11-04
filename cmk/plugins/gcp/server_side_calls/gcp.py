@@ -44,8 +44,8 @@ def agent_gcp_arguments(
     args: list[str | Secret] = [
         "--project",
         params.project,
-        "--credentials",
-        params.credentials.unsafe(),
+        "--credentials-id",
+        params.credentials,
         "--date",
         today.isoformat(),
     ]

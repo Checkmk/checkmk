@@ -33,8 +33,8 @@ HOST_CONFIG = HostConfig(
             [
                 "--project",
                 "test",
-                "--credentials",
-                Secret(0).unsafe(),
+                "--credentials-id",
+                Secret(0),
                 "--date",
                 "2022-01-12",
                 "--services",
@@ -55,8 +55,8 @@ HOST_CONFIG = HostConfig(
             [
                 "--project",
                 "test",
-                "--credentials",
-                Secret(0).unsafe(),
+                "--credentials-id",
+                Secret(0),
                 "--date",
                 "2022-01-12",
                 "--cost_table",
@@ -76,8 +76,8 @@ HOST_CONFIG = HostConfig(
             [
                 "--project",
                 "test",
-                "--credentials",
-                Secret(0).unsafe(),
+                "--credentials-id",
+                Secret(0),
                 "--date",
                 "2022-01-12",
                 "--cost_table",
@@ -99,8 +99,8 @@ HOST_CONFIG = HostConfig(
             [
                 "--project",
                 "test",
-                "--credentials",
-                Secret(2).unsafe(),
+                "--credentials-id",
+                Secret(2),
                 "--date",
                 "2022-01-12",
                 "--services",

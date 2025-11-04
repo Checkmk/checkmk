@@ -29,17 +29,20 @@ from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.gcp.lib.constants import Extractors
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import (
-    ConditionalPiggybackSection,
-    SectionWriter,
-    special_agent_main,
-)
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+
+__version__ = "2.5.0b1"
+
+AGENT = "gcp"
+
+CREDENTIALS_OPTION = "credentials"
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = GoogleAggregation.Aligner
 Reducer = GoogleAggregation.Reducer
+
 
 ####################
 # Type Definitions #
@@ -367,42 +370,43 @@ Section = (
 
 
 def _asset_serializer(section: AssetSection) -> None:
-    with SectionWriter("gcp_assets") as w:
-        w.append(json.dumps({"config": section.config}))
-        for a in section.assets:
-            w.append(Asset.serialize(a))
+    sys.stdout.write("<<<gcp_assets:sep(0)>>>\n")
+    sys.stdout.write(f"{json.dumps({'config': section.config})}\n")
+    for a in section.assets:
+        sys.stdout.write(f"{Asset.serialize(a)}\n")
 
 
 def _result_serializer(section: ResultSection) -> None:
-    with SectionWriter(f"gcp_service_{section.name}") as w:
-        for r in section.results:
-            w.append(Result.serialize(r))
+    sys.stdout.write(f"<<<gcp_service_{section.name}:sep(0)>>>\n")
+    for r in section.results:
+        sys.stdout.write(f"{Result.serialize(r)}\n")
 
 
 def _piggyback_serializer(section: PiggyBackSection) -> None:
-    with ConditionalPiggybackSection(section.name):
-        _label_serializer(section.labels)
-        for s in section.sections:
-            new_s = ResultSection(f"{section.service_name}_{s.name}", s.results)
-            _result_serializer(new_s)
+    sys.stdout.write(f"<<<<{section.name}>>>>\n")
+    _label_serializer(section.labels)
+    for s in section.sections:
+        new_s = ResultSection(f"{section.service_name}_{s.name}", s.results)
+        _result_serializer(new_s)
+    sys.stdout.write("<<<<>>>>\n")
 
 
 def _cost_serializer(section: CostSection) -> None:
-    with SectionWriter("gcp_cost") as w:
-        w.append(json.dumps({"query_month": section.query_date.strftime("%Y%m")}))
-        for row in section.rows:
-            w.append(CostRow.serialize(row))
+    sys.stdout.write("<<<gcp_cost:sep(0)>>>\n")
+    sys.stdout.write(json.dumps({"query_month": section.query_date.strftime("%Y%m")}) + "\n")
+    for row in section.rows:
+        sys.stdout.write(f"{CostRow.serialize(row)}\n")
 
 
 def _exception_serializer(section: ExceptionSection) -> None:
-    with SectionWriter("gcp_exceptions") as w:
-        if section.exc_type is not None:
-            w.append(section.serialize())
+    sys.stdout.write("<<<gcp_exceptions:sep(0)>>>\n")
+    if section.exc_type is not None:
+        sys.stdout.write(f"{section.serialize()}\n")
 
 
 def _label_serializer(section: HostLabelSection) -> None:
-    with SectionWriter("labels") as w:
-        w.append(json.dumps(section.labels))
+    sys.stdout.write("<<<labels:sep(0)>>>\n")
+    sys.stdout.write(f"{json.dumps(section.labels)}\n")
 
 
 def gcp_serializer(sections: Iterable[Section]) -> None:
@@ -1270,9 +1274,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         ),
     )
     parser.add_argument("--project", type=str, help="Global ID of Project", required=True)
-    parser.add_argument(
-        "--credentials",
-        type=str,
+    parser_add_secret_option(
+        parser,
+        long=f"--{CREDENTIALS_OPTION}",
         help="JSON credentials for service account",
         required=True,
     )
@@ -1337,14 +1341,17 @@ def _test_connection(args: argparse.Namespace) -> int:
         error_msg = f"Connection failed with: {exc}\n"
         sys.stderr.write(error_msg)
         return 2
-    return 0
 
 
 def agent_gcp_main(args: argparse.Namespace) -> int:
     if args.connection_test:
         return _test_connection(args)
 
-    client = Client(json.loads(args.credentials), args.project, args.date)
+    client = Client(
+        json.loads(resolve_secret_option(args, CREDENTIALS_OPTION).reveal()),
+        args.project,
+        args.date,
+    )
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
     cost = CostArgument(args.cost_table) if args.cost_table else None
@@ -1360,6 +1367,8 @@ def agent_gcp_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_gcp_main)
+
+    return agent_gcp_main(parse_arguments(sys.argv[1:]))

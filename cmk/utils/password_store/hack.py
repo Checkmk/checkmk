@@ -44,7 +44,7 @@ HACK_AGENTS = {
     "elasticsearch": False,
     "fritzbox": False,  # needs no secret
     "gcp_status": False,  # needs no secret
-    "gcp": True,
+    "gcp": False,
     "gerrit": False,
     "graylog": True,
     "hivemanager_ng": False,

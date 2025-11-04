@@ -3886,7 +3886,7 @@ def get_metric_backend_fetcher(
 def make_metric_backend_fetcher(
     host_name: HostName, metric_backend_fetcher_config: MetricBackendFetcherConfig, is_cmc: bool
 ) -> ProgramFetcher:
-    from cmk.plugins.otel.special_agents.cce import (  # type: ignore[import-not-found, unused-ignore]
+    from cmk.plugins.otel.special_agents.nonfree.ultimate import (  # type: ignore[import-not-found, unused-ignore]
         agent_otel,
     )
 

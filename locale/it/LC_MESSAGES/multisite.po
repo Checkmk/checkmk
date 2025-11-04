@@ -31,6 +31,10 @@ msgstr " %s, durata dell'interruzione %s"
 msgid " (%d times)"
 msgstr " (%d volte)"
 
+#, fuzzy
+msgid " (Application Load Balancers only)"
+msgstr "Bilanciatori di carico delle applicazioni"
+
 msgid " (Data incomplete, maximum number of nodes reached)"
 msgstr " (Numero massimo di nodi superato)"
 
@@ -5204,16 +5208,6 @@ msgstr "Età dell'istantanea più vecchia"
 msgid "Agent"
 msgstr "Agente"
 
-#, python-format
-msgid "Agent %s currently running in <a href=\"%s\">background job</a>."
-msgstr ""
-"Agente %s attualmente in esecuzione in <a href=\"%s\">lavoro in background</"
-"a>."
-
-#, python-format
-msgid "Agent %s successful"
-msgstr "Agente %s riuscito"
-
 #, fuzzy
 msgid "Agent Bakery logging"
 msgstr "Registrazione agente panificio"
@@ -5400,6 +5394,14 @@ msgstr "Versione agente"
 
 msgid "Agents"
 msgstr "Agenti"
+
+#, fuzzy
+msgid "Agents baked."
+msgstr "Cottura dell'agente"
+
+#, fuzzy
+msgid "Agents signed."
+msgstr "Firma dell'agente"
 
 msgid ""
 "Agents will not accept packages that are not signed by at least one key that "
@@ -9069,6 +9071,10 @@ msgid "Azure NAT Gateways Connections"
 msgstr "Connessioni al database"
 
 #, fuzzy
+msgid "Azure NAT Gateways Throughput"
+msgstr "Unità di flusso del database"
+
+#, fuzzy
 msgid "Azure NAT Gateways datapath availability"
 msgstr "Vedere la disponibilità"
 
@@ -9589,6 +9595,12 @@ msgstr "Regole di scoperta"
 
 msgid "Baking Agents..."
 msgstr "Agenti di cottura..."
+
+#, fuzzy, python-format
+msgid "Baking agents in a&nbsp;<a href=\"%s\">background job</a>."
+msgstr ""
+"Agente %s attualmente in esecuzione in <a href=\"%s\">lavoro in background</"
+"a>."
 
 msgid "Baking successful"
 msgstr "Cottura di successo"
@@ -10973,6 +10985,14 @@ msgstr ""
 
 msgid "Bypass Proxy for certain hosts"
 msgstr "Bypassare il proxy per alcuni host"
+
+msgid ""
+"Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
+"adresses which should not be accessed through the given proxy.<br>The proxy "
+"setting is used for access to the internet, where Conda needs to download "
+"the installation files from. (In order to access a page through a proxy "
+"inside of the test suite, use the libraries capabilities)"
+msgstr ""
 
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
@@ -17187,6 +17207,10 @@ msgstr "Area critica"
 msgid "Critical at"
 msgstr "Critico a"
 
+#, fuzzy
+msgid "Critical at USD per day"
+msgstr "Critico dopo "
+
 msgid "Critical at a RAM usage of"
 msgstr "Critico ad un utilizzo della RAM di"
 
@@ -17353,6 +17377,14 @@ msgstr "Collegamenti attuali livelli superiori"
 
 msgid "Current date"
 msgstr "Data attuale"
+
+#, fuzzy
+msgid "Current disk size"
+msgstr "Dimensione attuale"
+
+#, fuzzy
+msgid "Current disk size %"
+msgstr "Dimensione attuale"
 
 msgid "Current events"
 msgstr "Eventi attuali"
@@ -20828,6 +20860,10 @@ msgstr "Livelli IO del disco (controlli vecchio stile)"
 
 msgid "Disk Latency"
 msgstr "Latenza del disco"
+
+#, fuzzy
+msgid "Disk Metrics"
+msgstr "Metriche"
 
 msgid "Disk Read Latency"
 msgstr "Latenza di lettura del disco"
@@ -32047,6 +32083,10 @@ msgid "Hyper-V VM RAM"
 msgstr "VM di Hyper-V (Windows)"
 
 #, fuzzy
+msgid "Hyper-V VM VHD"
+msgstr "VM di Hyper-V (Windows)"
+
+#, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Server Hyper-V: Stato delle VM"
 
@@ -32600,6 +32640,11 @@ msgstr ""
 
 msgid "Ident of the value"
 msgstr "Ident del valore"
+
+msgid ""
+"Identfier of the DB instance and the name of the region in square brackets, "
+"e.g. 'db-instance-1 \\[eu-central-1\\]'."
+msgstr ""
 
 msgid "Identity"
 msgstr "Identità"
@@ -35123,11 +35168,23 @@ msgid "Inbound and Outbound Messages"
 msgstr "Messaggi in entrata e in uscita"
 
 #, fuzzy
+msgid "Inbound data"
+msgstr "Dati mappati"
+
+#, fuzzy
 msgid "Inbound levels (per second)"
 msgstr "eventi al secondo"
 
 msgid "Inbound messages"
 msgstr "Messaggi in entrata"
+
+#, fuzzy
+msgid "Inbound throughput lower levels (/sec)"
+msgstr "5 Volt uscita livelli inferiori"
+
+#, fuzzy
+msgid "Inbound throughput upper levels (/sec)"
+msgstr "Livelli superiori di uscita a 5 Volt"
 
 msgid "Incident"
 msgstr "Incidente"
@@ -41391,6 +41448,17 @@ msgid "Max levels for ram"
 msgstr "Livelli massimi di tensione"
 
 #, fuzzy
+msgid "Max size for image file"
+msgstr "Dimensione massima di un file"
+
+msgid "Max size for image file (absolute value)"
+msgstr ""
+
+#, fuzzy
+msgid "Max size for image file (relative to max disk size)"
+msgstr "Usare una larghezza fissa (relativa alla dimensione del carattere)"
+
+#, fuzzy
 msgid "Max time for last reported"
 msgstr "Tempo massimo di attesa per una risposta."
 
@@ -41664,6 +41732,10 @@ msgstr "Conteggio massimo"
 
 msgid "Maximum critical level"
 msgstr "Livello critico massimo"
+
+#, fuzzy
+msgid "Maximum disk size"
+msgstr "Dimensione massima"
 
 msgid "Maximum distance (TTL) to gateway"
 msgstr "Distanza massima (TTL) dal gateway"
@@ -49500,6 +49572,10 @@ msgid "Outage statistics"
 msgstr "Statistiche di interruzione"
 
 #, fuzzy
+msgid "Outbound data"
+msgstr "Regola in uscita"
+
+#, fuzzy
 msgid "Outbound levels (per second)"
 msgstr "eventi al secondo"
 
@@ -49513,6 +49589,10 @@ msgstr "Regola in uscita"
 #, fuzzy
 msgid "Outbound rules"
 msgstr "Regole in uscita"
+
+#, fuzzy
+msgid "Outbound throughput upper levels (/sec)"
+msgstr "eventi al secondo"
 
 msgid "Outcome & Action"
 msgstr "Risultato e azione"
@@ -50033,6 +50113,10 @@ msgstr "PING (controllo attivo con richiesta ICMP echo)"
 
 msgid "PING and host check parameters"
 msgstr "PING e parametri di controllo dell'host"
+
+#, fuzzy
+msgid "PLEASE WAIT"
+msgstr "CHIUDERE"
 
 msgid "PLL lock voltages by freqency"
 msgstr "Tensioni di blocco PLL per frequenza"
@@ -52853,9 +52937,6 @@ msgstr "Presentazioni"
 
 msgid "Preserve cache times configured by other rules"
 msgstr "Conserva i tempi di cache configurati da altre regole"
-
-msgid "Press Ctrl + K to trigger search"
-msgstr ""
 
 msgid "Pressure"
 msgstr "Pressione"
@@ -56499,6 +56580,10 @@ msgstr "Ripristinare le modifiche?"
 #, fuzzy
 msgid "Revert foreign changes"
 msgstr "Attivare i cambiamenti stranieri"
+
+#, fuzzy
+msgid "Reverting pending changes."
+msgstr "Nessuna modifica in corso."
 
 #, fuzzy
 msgid "Review and run preview service discovery"
@@ -61062,6 +61147,12 @@ msgstr "Agenti firmati"
 msgid "Signing Agents..."
 msgstr "Firmare gli agenti..."
 
+#, fuzzy, python-format
+msgid "Signing agents in a&nbsp;<a href=\"%s\">background job</a>."
+msgstr ""
+"Agente %s attualmente in esecuzione in <a href=\"%s\">lavoro in background</"
+"a>."
+
 #, fuzzy
 msgid "Signing agents' client certificates"
 msgstr "Certificati SSL di Citrix Netscaler"
@@ -62429,10 +62520,10 @@ msgstr "Specificare la valutazione dello stato di ingresso"
 msgid "Specify levels"
 msgstr "Specificare i livelli"
 
-#, python-format
+#, fuzzy
 msgid ""
-"Specify levels for HTTP %s errors in percent which refer to the total number "
-"of requests."
+"Specify levels for HTTP {http_err_code.upper()} errors in percent which "
+"refer to the total number of requests."
 msgstr ""
 "Specifica i livelli per gli errori HTTP %s in percentuale che si riferiscono "
 "al numero totale di richieste."
@@ -70097,9 +70188,6 @@ msgstr ""
 "Il servizio non deve essere in uno dei gruppi di servizi selezionati. Per "
 "gli eventi host questa condizione è semplicemente ignorata."
 
-msgid "The service name"
-msgstr "Il nome del servizio"
-
 #, fuzzy
 msgid ""
 "The service name of qtree services is composed of the quota, quota-users and "
@@ -70835,9 +70923,6 @@ msgstr "I valori dell'etichetta \"%s\" non sono uguali: %r != %r"
 #, python-format
 msgid "The values of the label '%s' do not match: %r !~ %r."
 msgstr "I valori dell'etichetta '%s' non corrispondono: '%r' !~ '%r'."
-
-msgid "The vault name"
-msgstr "Il nome del caveau"
 
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr "La verifica non può essere avviata a causa del certificato CA mancante"
@@ -74742,6 +74827,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways "
+"throughput monitoring"
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
 msgstr ""
@@ -77250,12 +77343,20 @@ msgstr "Totale contenitori"
 msgid "Total count"
 msgstr "Conteggio totale"
 
+#, fuzzy
+msgid "Total data"
+msgstr "Larghezza totale"
+
 msgid "Total data file size: Absolute upper levels"
 msgstr "Dimensione totale del file di dati: Livelli superiori assoluti"
 
 #, fuzzy
 msgid "Total data in relation to RAM"
 msgstr "Dati totali in relazione alla RAM"
+
+#, fuzzy
+msgid "Total data transmitted"
+msgstr "Nessun dato da nessun sito"
 
 msgid "Total devices"
 msgstr "Dispositivi totali"
@@ -79561,7 +79662,15 @@ msgstr "Dimensione totale"
 msgid "Total swap space"
 msgstr "Spazio totale di swap"
 
+#, fuzzy
+msgid "Total throughput lower levels (/sec)"
+msgstr "Totale di flusso al secondo"
+
 msgid "Total throughput per second"
+msgstr "Totale di flusso al secondo"
+
+#, fuzzy
+msgid "Total throughput upper levels (/sec)"
 msgstr "Totale di flusso al secondo"
 
 msgid "Total timeout of check"
@@ -80151,9 +80260,6 @@ msgstr ""
 
 msgid "URL:"
 msgstr "URL:"
-
-msgid "USD per day"
-msgstr "USD al giorno"
 
 msgid "USER"
 msgstr ""
@@ -81748,8 +81854,8 @@ msgstr "Livelli percentuali superiori per le richieste GET"
 msgid "Upper percentual levels for HEAD requests"
 msgstr "Livelli percentuali superiori per le richieste HEAD"
 
-#, python-format
-msgid "Upper percentual levels for HTTP %s errors"
+#, fuzzy
+msgid "Upper percentual levels for HTTP {http_err_code.upper()} errors"
 msgstr "Livelli percentuali superiori per gli errori HTTP %s"
 
 msgid "Upper percentual levels for LIST requests"
@@ -84127,6 +84233,10 @@ msgstr "Rapporto di filo di lavoro della vernice"
 msgid "Varnish Worker thread ratio"
 msgstr "Vernice Rapporto filo lavoratore"
 
+#, fuzzy
+msgid "Vault name"
+msgstr "Il nome del caveau"
+
 msgid "Vault size"
 msgstr "Dimensione della volta"
 
@@ -84859,6 +84969,10 @@ msgstr "Area di avvertimento"
 
 msgid "Warning at"
 msgstr "Attenzione a"
+
+#, fuzzy
+msgid "Warning at USD per day"
+msgstr "Attenzione dopo "
 
 msgid "Warning at a RAM usage of"
 msgstr "Attenzione a un utilizzo della RAM di"
@@ -93424,6 +93538,10 @@ msgstr ""
 msgid "Search in"
 msgstr "Indice di ricerca"
 
+#, fuzzy
+msgid "Search in ${provider}"
+msgstr "Ricerca nel corpo"
+
 msgid "¯\\_(ツ)_/¯"
 msgstr ""
 
@@ -93816,6 +93934,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Agent %s successful"
+#~ msgstr "Agente %s riuscito"
+
+#~ msgid "The service name"
+#~ msgstr "Il nome del servizio"
+
+#~ msgid "USD per day"
+#~ msgstr "USD al giorno"
 
 #~ msgid "Do not regard required mirror space as free space"
 #~ msgstr "Non considerare lo spazio mirror richiesto come spazio libero"

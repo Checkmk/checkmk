@@ -32,6 +32,10 @@ msgstr " %s, durata întreruperii %s."
 msgid " (%d times)"
 msgstr " (%d ori)"
 
+#, fuzzy
+msgid " (Application Load Balancers only)"
+msgstr "Balansatoare de încărcare a aplicațiilor"
+
 msgid " (Data incomplete, maximum number of nodes reached)"
 msgstr " (Date incomplete, numărul maxim de noduri atins)"
 
@@ -5252,14 +5256,6 @@ msgstr "Vârsta celui mai vechi instantaneu"
 msgid "Agent"
 msgstr "Agent"
 
-#, python-format
-msgid "Agent %s currently running in <a href=\"%s\">background job</a>."
-msgstr "Agentul %s rulează în prezent în <a href=\"%s\">lucru de fundal</a>."
-
-#, python-format
-msgid "Agent %s successful"
-msgstr "Agent %s a reușit"
-
 #, fuzzy
 msgid "Agent Bakery logging"
 msgstr "Înregistrare agent de panificație"
@@ -5447,6 +5443,14 @@ msgstr "Versiunea agentului"
 
 msgid "Agents"
 msgstr "Agenți"
+
+#, fuzzy
+msgid "Agents baked."
+msgstr "Agent de coacere"
+
+#, fuzzy
+msgid "Agents signed."
+msgstr "Semnătura agentului"
 
 msgid ""
 "Agents will not accept packages that are not signed by at least one key that "
@@ -9133,6 +9137,10 @@ msgid "Azure NAT Gateways Connections"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
+msgid "Azure NAT Gateways Throughput"
+msgstr "Unitatea de debit a bazei de date"
+
+#, fuzzy
 msgid "Azure NAT Gateways datapath availability"
 msgstr "Vezi disponibilitatea"
 
@@ -9655,6 +9663,10 @@ msgstr "Reguli de descoperire"
 
 msgid "Baking Agents..."
 msgstr "Agenți de coacere..."
+
+#, fuzzy, python-format
+msgid "Baking agents in a&nbsp;<a href=\"%s\">background job</a>."
+msgstr "Agentul %s rulează în prezent în <a href=\"%s\">lucru de fundal</a>."
 
 msgid "Baking successful"
 msgstr "Coacerea cu succes"
@@ -11102,6 +11114,21 @@ msgstr ""
 
 msgid "Bypass Proxy for certain hosts"
 msgstr "Bypassarea Proxy pentru anumite gazde"
+
+#, fuzzy
+msgid ""
+"Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
+"adresses which should not be accessed through the given proxy.<br>The proxy "
+"setting is used for access to the internet, where Conda needs to download "
+"the installation files from. (In order to access a page through a proxy "
+"inside of the test suite, use the libraries capabilities)"
+msgstr ""
+"Omiteți Proxy pentru anumite gazde: Specifică o listă de gazde/adrese de "
+"destinație care nu ar trebui să fie accesate prin intermediul proxy-ului "
+"dat. <br>Setarea proxy este utilizată pentru accesul la internet, de unde "
+"RCC trebuie să descarce fișierele de instalare. (Pentru a accesa o pagină "
+"prin intermediul unui proxy în interiorul suitei de testare, utilizați "
+"capacitățile bibliotecilor)"
 
 #, fuzzy
 msgid ""
@@ -17367,6 +17394,10 @@ msgstr "Zona critică"
 msgid "Critical at"
 msgstr "Critic la"
 
+#, fuzzy
+msgid "Critical at USD per day"
+msgstr "Critic după "
+
 msgid "Critical at a RAM usage of"
 msgstr "Critic la o utilizare a RAM de"
 
@@ -17533,6 +17564,14 @@ msgstr "Conexiuni curente niveluri superioare"
 
 msgid "Current date"
 msgstr "Data curentă"
+
+#, fuzzy
+msgid "Current disk size"
+msgstr "Dimensiunea actuală"
+
+#, fuzzy
+msgid "Current disk size %"
+msgstr "Dimensiunea actuală"
 
 msgid "Current events"
 msgstr "Evenimente curente"
@@ -21041,6 +21080,10 @@ msgstr "Niveluri IO pe disc (verificări în stil vechi)"
 
 msgid "Disk Latency"
 msgstr "Latența discului"
+
+#, fuzzy
+msgid "Disk Metrics"
+msgstr "Metrici"
 
 msgid "Disk Read Latency"
 msgstr "Latența de citire a discului"
@@ -32355,6 +32398,10 @@ msgid "Hyper-V VM RAM"
 msgstr "VM Hyper-V (Windows)"
 
 #, fuzzy
+msgid "Hyper-V VM VHD"
+msgstr "VM Hyper-V (Windows)"
+
+#, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Server Hyper-V: Starea mașinilor virtuale"
 
@@ -32914,6 +32961,11 @@ msgstr ""
 
 msgid "Ident of the value"
 msgstr "Ident al valorii"
+
+msgid ""
+"Identfier of the DB instance and the name of the region in square brackets, "
+"e.g. 'db-instance-1 \\[eu-central-1\\]'."
+msgstr ""
 
 msgid "Identity"
 msgstr "Identitate"
@@ -35500,11 +35552,23 @@ msgid "Inbound and Outbound Messages"
 msgstr "Mesaje de intrare și de ieșire"
 
 #, fuzzy
+msgid "Inbound data"
+msgstr "Parola"
+
+#, fuzzy
 msgid "Inbound levels (per second)"
 msgstr "evenimente pe secundă"
 
 msgid "Inbound messages"
 msgstr "Mesaje primite"
+
+#, fuzzy
+msgid "Inbound throughput lower levels (/sec)"
+msgstr "5 Volt Niveluri inferioare de ieșire de 5 volți"
+
+#, fuzzy
+msgid "Inbound throughput upper levels (/sec)"
+msgstr "Niveluri superioare de ieșire de 5 volți"
 
 msgid "Incident"
 msgstr "Incident"
@@ -41814,6 +41878,17 @@ msgid "Max levels for ram"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Max size for image file"
+msgstr "Dimensiunea maximă a unui fișier"
+
+msgid "Max size for image file (absolute value)"
+msgstr ""
+
+#, fuzzy
+msgid "Max size for image file (relative to max disk size)"
+msgstr "Utilizați lățimea fixă (în raport cu dimensiunea fontului)"
+
+#, fuzzy
 msgid "Max time for last reported"
 msgstr "Timpul maxim de așteptare pentru un răspuns."
 
@@ -42087,6 +42162,10 @@ msgstr "Numarul maxim"
 
 msgid "Maximum critical level"
 msgstr "Nivelul critic maxim"
+
+#, fuzzy
+msgid "Maximum disk size"
+msgstr "Dimensiunea maximă"
 
 msgid "Maximum distance (TTL) to gateway"
 msgstr "Distanta maxima pana la gateway (TTL)"
@@ -50002,6 +50081,10 @@ msgid "Outage statistics"
 msgstr "Statistici privind întreruperile"
 
 #, fuzzy
+msgid "Outbound data"
+msgstr "Regula de ieșire"
+
+#, fuzzy
 msgid "Outbound levels (per second)"
 msgstr "evenimente pe secundă"
 
@@ -50015,6 +50098,10 @@ msgstr "Regula de ieșire"
 #, fuzzy
 msgid "Outbound rules"
 msgstr "Reguli de ieșire"
+
+#, fuzzy
+msgid "Outbound throughput upper levels (/sec)"
+msgstr "evenimente pe secundă"
 
 msgid "Outcome & Action"
 msgstr "Rezultat & Acțiune"
@@ -50535,6 +50622,10 @@ msgstr "PING (verificare activă cu cerere de ecou ICMP)"
 
 msgid "PING and host check parameters"
 msgstr "Parametrii de verificare PING și gazdă"
+
+#, fuzzy
+msgid "PLEASE WAIT"
+msgstr "CLOSE_WAIT"
 
 msgid "PLL lock voltages by freqency"
 msgstr "Tensiuni de blocare PLL în funcție de frecvență"
@@ -53371,9 +53462,6 @@ msgstr "Prezentări"
 
 msgid "Preserve cache times configured by other rules"
 msgstr "Păstrați timpii de cache configurați de alte reguli"
-
-msgid "Press Ctrl + K to trigger search"
-msgstr ""
 
 msgid "Pressure"
 msgstr "Presiune"
@@ -57041,6 +57129,10 @@ msgstr "Reveniți asupra modificărilor?"
 #, fuzzy
 msgid "Revert foreign changes"
 msgstr "Activați modificările străine"
+
+#, fuzzy
+msgid "Reverting pending changes."
+msgstr "Nu există modificări în așteptare."
 
 #, fuzzy
 msgid "Review and run preview service discovery"
@@ -61704,6 +61796,10 @@ msgstr "Agenți semnate"
 msgid "Signing Agents..."
 msgstr "Agenți de semnare..."
 
+#, fuzzy, python-format
+msgid "Signing agents in a&nbsp;<a href=\"%s\">background job</a>."
+msgstr "Agentul %s rulează în prezent în <a href=\"%s\">lucru de fundal</a>."
+
 #, fuzzy
 msgid "Signing agents' client certificates"
 msgstr "Certificate SSL Citrix Netscaler"
@@ -63082,10 +63178,10 @@ msgstr "Specificați evaluarea stării de intrare"
 msgid "Specify levels"
 msgstr "Specificați nivelurile"
 
-#, python-format
+#, fuzzy
 msgid ""
-"Specify levels for HTTP %s errors in percent which refer to the total number "
-"of requests."
+"Specify levels for HTTP {http_err_code.upper()} errors in percent which "
+"refer to the total number of requests."
 msgstr ""
 "Specificați nivelurile pentru erorile HTTP %s în procente care se referă la "
 "numărul total de solicitări."
@@ -70851,9 +70947,6 @@ msgstr ""
 "selectate. În cazul evenimentelor gazdă, această condiție este pur și simplu "
 "ignorată."
 
-msgid "The service name"
-msgstr "Numele serviciului"
-
 #, fuzzy
 msgid ""
 "The service name of qtree services is composed of the quota, quota-users and "
@@ -71593,9 +71686,6 @@ msgstr "Valorile etichetei \"%s\" nu sunt egale: %r!= %r"
 #, python-format
 msgid "The values of the label '%s' do not match: %r !~ %r."
 msgstr "Valorile etichetei '%s' nu se potrivesc: %r !~ %r."
-
-msgid "The vault name"
-msgstr "Numele seifului"
 
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Verificarea nu poate fi inițiată din cauza lipsei certificatului CA"
@@ -75581,6 +75671,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure NAT Gateways "
+"throughput monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
 msgstr ""
@@ -78119,12 +78217,20 @@ msgstr "Total containere"
 msgid "Total count"
 msgstr "Număr total"
 
+#, fuzzy
+msgid "Total data"
+msgstr "Lățimea totală"
+
 msgid "Total data file size: Absolute upper levels"
 msgstr "Dimensiunea totală a fișierului de date: Niveluri superioare absolute"
 
 #, fuzzy
 msgid "Total data in relation to RAM"
 msgstr "Date totale în raport cu RAM"
+
+#, fuzzy
+msgid "Total data transmitted"
+msgstr "Nu există date din niciun site"
 
 msgid "Total devices"
 msgstr "Total dispozitive"
@@ -80428,7 +80534,15 @@ msgstr "Dimensiunea totală"
 msgid "Total swap space"
 msgstr "Spațiu swap total"
 
+#, fuzzy
+msgid "Total throughput lower levels (/sec)"
+msgstr "Debit total pe secundă"
+
 msgid "Total throughput per second"
+msgstr "Debit total pe secundă"
+
+#, fuzzy
+msgid "Total throughput upper levels (/sec)"
 msgstr "Debit total pe secundă"
 
 msgid "Total timeout of check"
@@ -81019,9 +81133,6 @@ msgstr ""
 
 msgid "URL:"
 msgstr "URL:"
-
-msgid "USD per day"
-msgstr "USD pe zi"
 
 msgid "USER"
 msgstr ""
@@ -82624,8 +82735,8 @@ msgstr "Niveluri procentuale superioare pentru cererile GET"
 msgid "Upper percentual levels for HEAD requests"
 msgstr "Niveluri procentuale superioare pentru cererile HEAD"
 
-#, python-format
-msgid "Upper percentual levels for HTTP %s errors"
+#, fuzzy
+msgid "Upper percentual levels for HTTP {http_err_code.upper()} errors"
 msgstr "Nivelurile procentuale superioare pentru erorile HTTP %s"
 
 msgid "Upper percentual levels for LIST requests"
@@ -85025,6 +85136,10 @@ msgstr "Lacuri Lucrătorul de lacuri Raport de fire"
 msgid "Varnish Worker thread ratio"
 msgstr "Vernisaj Lucrător raport de fir de lucrător"
 
+#, fuzzy
+msgid "Vault name"
+msgstr "Numele seifului"
+
 msgid "Vault size"
 msgstr "Dimensiunea bolții"
 
@@ -85760,6 +85875,10 @@ msgstr "Zona de avertizare"
 
 msgid "Warning at"
 msgstr "Avertisment la"
+
+#, fuzzy
+msgid "Warning at USD per day"
+msgstr "Avertisment după "
 
 msgid "Warning at a RAM usage of"
 msgstr "Avertizare la o utilizare a RAM de"
@@ -94425,6 +94544,10 @@ msgstr ""
 msgid "Search in"
 msgstr "Indice de căutare"
 
+#, fuzzy
+msgid "Search in ${provider}"
+msgstr "Căutare în corp"
+
 msgid "¯\\_(ツ)_/¯"
 msgstr ""
 
@@ -94820,6 +94943,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Agent %s successful"
+#~ msgstr "Agent %s a reușit"
+
+#~ msgid "The service name"
+#~ msgstr "Numele serviciului"
+
+#~ msgid "USD per day"
+#~ msgstr "USD pe zi"
 
 #~ msgid "Do not regard required mirror space as free space"
 #~ msgstr "Nu considerați spațiul în oglindă necesar ca spațiu liber"

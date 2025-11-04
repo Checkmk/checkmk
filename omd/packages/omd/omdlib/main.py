@@ -98,7 +98,7 @@ from omdlib.tmpfs import (
     tmpfs_mounted,
     unmount_tmpfs,
 )
-from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements
+from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements, Skeleton
 from omdlib.update import get_conflict_mode_update, ManageUpdate
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
@@ -408,7 +408,7 @@ def walk_skel(
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
 def patch_skeleton_files(
-    conflict_mode: str,
+    conflict_mode: Skeleton,
     old_site_name: str,
     new_site: SiteContext,
     old_replacements: Replacements,
@@ -454,7 +454,7 @@ def _is_unpatchable_file(path: str) -> bool:
 
 
 def _patch_template_file(
-    conflict_mode: str,
+    conflict_mode: Skeleton,
     src: str,
     dst: str,
     old_site_name: str,
@@ -512,18 +512,23 @@ def _patch_template_file(
         ]
 
         while True:
-            if conflict_mode in ["abort", "install"]:
-                choice = conflict_mode
-            elif conflict_mode == "keepold":
-                choice = "restore"
-            else:
-                choice = ask_user_choices(
-                    "Conflicts in " + src + "!",
-                    "I've tried to merge your changes with the renaming of %s into %s.\n"
-                    "Unfortunately there are conflicts with your changes. \n"
-                    "You have the following options: " % (old_site_name, new_site.name),
-                    options,
-                )
+            match conflict_mode:
+                case Skeleton.ABORT:
+                    choice = "abort"
+                case Skeleton.INSTALL:
+                    choice = "install"
+                case Skeleton.KEEPOLD:
+                    choice = "restore"
+                case Skeleton.ASK:
+                    choice = ask_user_choices(
+                        "Conflicts in " + src + "!",
+                        "I've tried to merge your changes with the renaming of %s into %s.\n"
+                        "Unfortunately there are conflicts with your changes. \n"
+                        "You have the following options: " % (old_site_name, new_site.name),
+                        options,
+                    )
+                case mode:
+                    assert_never(mode)
 
             if choice == "abort":
                 sys.exit("Renaming aborted.")
@@ -598,7 +603,7 @@ def _patch_template_file(
 # old->user version
 def merge_update_file(
     site: SiteContext,
-    conflict_mode: str,
+    conflict_mode: Skeleton,
     relpath: str,
     old_version: str,
     new_version: str,
@@ -652,18 +657,23 @@ def merge_update_file(
     ]
 
     while True:
-        if conflict_mode in ["install", "abort"]:
-            choice = conflict_mode
-        elif conflict_mode == "keepold":
-            choice = "restore"
-        else:
-            choice = ask_user_choices(
-                "Conflicts in " + relpath + "!",
-                "I've tried to merge the changes from version %s to %s into %s.\n"
-                "Unfortunately there are conflicts with your changes. \n"
-                "You have the following options: " % (old_version, new_version, relpath),
-                options,
-            )
+        match conflict_mode:
+            case Skeleton.ABORT:
+                choice = "abort"
+            case Skeleton.INSTALL:
+                choice = "install"
+            case Skeleton.KEEPOLD:
+                choice = "restore"
+            case Skeleton.ASK:
+                choice = ask_user_choices(
+                    "Conflicts in " + relpath + "!",
+                    "I've tried to merge the changes from version %s to %s into %s.\n"
+                    "Unfortunately there are conflicts with your changes. \n"
+                    "You have the following options: " % (old_version, new_version, relpath),
+                    options,
+                )
+            case mode:
+                assert_never(mode)
 
         if choice == "abort":
             raise MKTerminate("Update aborted.")
@@ -753,16 +763,16 @@ def _read_skel_content(
     site_home: str,
     skel_path: Path,
     relpath: str,
-    conflict_mode: str,
+    conflict_mode: Skeleton,
 ) -> bytes:
     while True:
         try:
             return skel_path.read_bytes()
         except Exception:
             # Do not ask the user in non-interactive mode.
-            if conflict_mode in ["abort", "install"]:
+            if conflict_mode in [Skeleton.ABORT, Skeleton.INSTALL]:
                 sys.exit(f"Skeleton file '{skel_path}' of version {version} not readable.")
-            elif conflict_mode == "keepold" or not user_confirms(
+            elif conflict_mode == Skeleton.KEEPOLD or not user_confirms(
                 site_home,
                 conflict_mode,
                 "Skeleton file of version %s not readable" % version,
@@ -785,7 +795,7 @@ def _read_skel_content(
 
 def _try_merge(
     site: SiteContext,
-    conflict_mode: str,
+    conflict_mode: Skeleton,
     relpath: str,
     old_version: str,
     new_version: str,
@@ -854,7 +864,7 @@ def file_status(
 def _execute_update_file(
     relpath: str,
     site: SiteContext,
-    conflict_mode: str,
+    conflict_mode: Skeleton,
     old_version: str,
     new_version: str,
     old_edition: str,
@@ -893,7 +903,7 @@ def _execute_update_file(
 
             # If running in interactive mode ask the user to terminate or retry
             # In case of non interactive mode just throw the exception
-            if conflict_mode == "ask":
+            if conflict_mode == Skeleton.ASK:
                 options = [
                     ("retry", "Retry the operation"),
                     ("continue", "Continue with next files"),
@@ -914,7 +924,7 @@ def _execute_update_file(
 def update_file(
     relpath: str,
     site: SiteContext,
-    conflict_mode: str,
+    conflict_mode: Skeleton,
     old_version: str,
     new_version: str,
     old_edition: str,
@@ -1308,7 +1318,7 @@ def _patch_livestatus_nagios_cfg_replacements(
 def permission_action(
     *,
     site_home: str,
-    conflict_mode: str,
+    conflict_mode: Skeleton,
     relpath: str,
     old_type: str | None,
     new_type: str | None,
@@ -2500,13 +2510,13 @@ def _is_apache_enabled(config: Config) -> bool:
     return config["APACHE_MODE"] != "none"
 
 
-def _get_conflict_mode(options: CommandOptions) -> str:
+def _get_conflict_mode(options: CommandOptions) -> Skeleton:
     conflict_mode = cast(str, options.get("conflict", "ask"))
 
     if conflict_mode not in ["ask", "install", "keepold", "abort"]:
         sys.exit("Argument to --conflict must be one of ask, install, keepold and abort.")
 
-    return conflict_mode
+    return Skeleton(conflict_mode)
 
 
 def main_mv_or_cp(
@@ -2859,7 +2869,7 @@ def main_update(
         from_skelroot = site.version_skel_dir
         to_skelroot = "/omd/versions/%s/skel" % to_version
 
-        skeleton_mode = "install" if conflict_mode == "ignore" else conflict_mode
+        skeleton_mode = Skeleton("install" if conflict_mode == "ignore" else conflict_mode)
 
         with ManageUpdate(
             site.name, site.tmp_dir, Path(site_home), Path(from_skelroot), Path(to_skelroot)

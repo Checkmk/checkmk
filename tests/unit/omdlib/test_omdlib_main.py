@@ -16,6 +16,7 @@ import omdlib
 import omdlib.main
 import omdlib.utils
 from omdlib.contexts import SiteContext
+from omdlib.type_defs import Skeleton
 
 
 def test_initialize_site_ca(
@@ -59,7 +60,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="link",
             new_type="link",
@@ -73,7 +74,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="link",
@@ -87,7 +88,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="link",
             new_type="file",
@@ -104,7 +105,7 @@ def test_permission_action_changed_type_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="dir",
             new_type="file",
@@ -118,7 +119,7 @@ def test_permission_action_changed_type_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="dir",
@@ -135,7 +136,7 @@ def test_permission_action_same_target_permission_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="file",
@@ -149,7 +150,7 @@ def test_permission_action_same_target_permission_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="dir",
             new_type="dir",
@@ -169,7 +170,7 @@ def test_permission_action_user_and_new_changed(
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="file",
@@ -189,7 +190,7 @@ def test_permission_action_user_and_new_changed_set_default(
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="file",
@@ -206,7 +207,7 @@ def test_permission_action_new_changed_set_default() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="file",
@@ -223,7 +224,7 @@ def test_permission_action_user_changed_no_action() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="file",
@@ -240,7 +241,7 @@ def test_permission_action_old_and_new_changed_set_to_new() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="file",
@@ -258,7 +259,7 @@ def test_permission_action_all_changed_incl_type_ask(monkeypatch: pytest.MonkeyP
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="dir",
@@ -278,7 +279,7 @@ def test_permission_action_all_changed_incl_type_ask_default(
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="my/file",
             old_type="file",
             new_type="dir",
@@ -295,7 +296,7 @@ def test_permission_action_directory_was_removed_in_target() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="etc/ssl/private",
             old_type="dir",
             new_type=None,
@@ -312,7 +313,7 @@ def test_permission_action_directory_was_removed_in_both() -> None:
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath="etc/ssl/private",
             old_type="dir",
             new_type=None,
@@ -344,7 +345,7 @@ def test_permission_action_all_changed_streamline_standard_directories(relpath: 
     assert (
         omdlib.main.permission_action(
             site_home="/tmp",
-            conflict_mode="ask",
+            conflict_mode=Skeleton.ASK,
             relpath=relpath,
             old_type="dir",
             new_type="dir",

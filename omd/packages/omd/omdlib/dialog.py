@@ -13,7 +13,7 @@ import termios
 from re import Pattern
 from tty import setraw
 
-from omdlib.type_defs import ConfigChoiceHasError
+from omdlib.type_defs import ConfigChoiceHasError, Skeleton
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate
@@ -135,7 +135,7 @@ def _run_dialog(args: list[str]) -> DialogResult:
 
 def user_confirms(
     site_home: str,
-    conflict_mode: str,
+    conflict_mode: Skeleton,
     title: str,
     message: str,
     relpath: str,
@@ -145,11 +145,11 @@ def user_confirms(
     no_text: str,
 ) -> bool:
     # Handle non-interactive mode
-    if conflict_mode == "abort":
+    if conflict_mode == Skeleton.ABORT:
         raise MKTerminate("Update aborted.")
-    if conflict_mode == "install":
+    if conflict_mode == Skeleton.INSTALL:
         return False
-    if conflict_mode == "keepold":
+    if conflict_mode == Skeleton.KEEPOLD:
         return True
 
     user_path = site_home + "/" + relpath

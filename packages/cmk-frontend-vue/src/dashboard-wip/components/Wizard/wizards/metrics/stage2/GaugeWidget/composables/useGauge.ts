@@ -15,6 +15,7 @@ import {
   useWidgetVisualizationProps
 } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type {
+  ForStates,
   GaugeContent,
   UseWidgetHandler,
   WidgetProps
@@ -29,6 +30,7 @@ const { _t } = usei18n()
 
 type TimeRangeType = 'current' | 'window'
 
+export type ShowServiceStatusType = 'disabled' | 'text' | 'background'
 export interface UseGauge extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Time range
   timeRangeType: Ref<TimeRangeType>
@@ -38,7 +40,8 @@ export interface UseGauge extends UseWidgetHandler, UseWidgetVisualizationOption
   dataRangeSymbol: Ref<string>
   dataRangeMax: Ref<number>
   dataRangeMin: Ref<number>
-  showServiceStatus: Ref<boolean>
+  showServiceStatus: Ref<ShowServiceStatusType>
+  showServiceStatusSelection: Ref<ForStates | null>
 }
 
 export const useGauge = async (
@@ -63,9 +66,12 @@ export const useGauge = async (
     currentContent?.display_range?.maximum
   )
 
-  // TODO: This field is incomplete, both here and the vue component.
-  // Its missing a dropdwon with 3 options - CMK-26777
-  const showServiceStatus = ref<boolean>(false)
+  const showServiceStatus = ref<ShowServiceStatusType>(
+    currentContent?.status_display?.type ?? 'disabled'
+  )
+  const showServiceStatusSelection = ref<ForStates | null>(
+    currentContent?.status_display?.for_states ?? null
+  )
 
   const {
     title,
@@ -86,7 +92,7 @@ export const useGauge = async (
   }
 
   const _generateContent = (): GaugeContent => {
-    return {
+    const content: GaugeContent = {
       type: 'gauge',
       metric: metric,
       display_range: fixedDataRangeProps.value,
@@ -96,6 +102,15 @@ export const useGauge = async (
         consolidation: 'average'
       }
     }
+
+    if (showServiceStatus.value !== 'disabled' && showServiceStatusSelection.value) {
+      content.status_display = {
+        type: showServiceStatus.value,
+        for_states: showServiceStatusSelection.value
+      }
+    }
+
+    return content
   }
 
   const _updateWidgetProps = async () => {
@@ -112,7 +127,14 @@ export const useGauge = async (
   }
 
   watch(
-    [timeRangeType, timeRange, fixedDataRangeProps, showServiceStatus, showWidgetBackground],
+    [
+      timeRangeType,
+      timeRange,
+      fixedDataRangeProps,
+      showServiceStatus,
+      showServiceStatusSelection,
+      showWidgetBackground
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -129,6 +151,7 @@ export const useGauge = async (
     dataRangeMax,
     dataRangeMin,
     showServiceStatus,
+    showServiceStatusSelection,
 
     title,
     showTitle,

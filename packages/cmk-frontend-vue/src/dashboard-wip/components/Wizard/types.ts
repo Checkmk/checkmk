@@ -129,3 +129,4 @@ export type GraphRenderOptions = components['schemas']['GraphRenderOptions']
 export type HostState = components['schemas']['HostState']
 export type CombinedGraphContentPresentation =
   components['schemas']['CombinedGraphContent']['presentation']
+export type ForStates = components['schemas']['ForStates']

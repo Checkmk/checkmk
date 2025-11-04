@@ -25,6 +25,7 @@ import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/col
 import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { BaseWidgetProp } from '@/dashboard-wip/components/Wizard/types.ts'
 
+import ShowServiceStatus from './ShowServiceStatus.vue'
 import type { UseGauge } from './composables/useGauge.ts'
 
 const { _t } = usei18n()
@@ -101,9 +102,9 @@ const widgetProps = computed(() => handler.value.widgetProps)
       <TableFormRow>
         <FieldDescription>{{ _t('Service status') }}</FieldDescription>
         <FieldComponent>
-          <CmkCheckbox
-            v-model="handler.showServiceStatus.value"
-            :label="_t('Show service status')"
+          <ShowServiceStatus
+            v-model:show-service-status="handler.showServiceStatus.value"
+            v-model:show-service-status-selection="handler.showServiceStatusSelection.value"
           />
         </FieldComponent>
       </TableFormRow>

@@ -68,10 +68,10 @@ logging.getLogger("faker").setLevel(logging.ERROR)
 PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
 
 
-# Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
+# Some cmk.* code is calling things like cmk_version.is_community_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
-# site. For unit tests we assume we are in Enterprise Edition context.
+# site. For unit tests we assume we are in Ultimate multi-tenancy context.
 def _fake_version_and_paths() -> None:
     from pytest import MonkeyPatch
 
@@ -80,10 +80,10 @@ def _fake_version_and_paths() -> None:
 
     def guess_from_repo() -> str:
         if is_non_free_repo():
-            return "cme"
-        return "cre"
+            return "ultimatemt"
+        return "community"
 
-    edition_short = os.getenv("EDITION") or guess_from_repo()
+    edition = os.getenv("EDITION") or guess_from_repo()
 
     unpatched_paths: Final = {
         # FIXME :-(
@@ -131,7 +131,7 @@ def _fake_version_and_paths() -> None:
 
     monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
     monkeypatch.setattr(
-        cmk_version, "omd_version", lambda *args, **kw: f"{cmk_version.__version__}.{edition_short}"
+        cmk_version, "omd_version", lambda *args, **kw: f"{cmk_version.__version__}.{edition}"
     )
 
 
@@ -222,14 +222,14 @@ def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.Captur
         tty.reinit()
 
 
-@pytest.fixture(name="edition", params=["cre", "cee", "cme", "cce"])
+@pytest.fixture(name="edition", params=["community", "pro", "ultimatemt", "ultimate", "cloud"])
 def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edition]:
     # The param seems to be an optional attribute which mypy can not understand
-    edition_short = request.param
-    if edition_short in ("cse", "cce", "cme", "cee") and not is_non_free_repo():
+    edition = request.param
+    if edition in ("cloud", "ultimate", "ultimatemt", "pro") and not is_non_free_repo():
         pytest.skip("Needed files are not available")
 
-    yield cmk_version.Edition[edition_short.upper()]
+    yield cmk_version.Edition.from_long_edition(edition)
 
 
 @pytest.fixture(autouse=True, scope="session")

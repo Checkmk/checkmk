@@ -33,7 +33,7 @@ from tests.testlib.version import (
 pytestmark = [
     pytest.mark.skipif(
         edition_from_env().is_saas_edition(),
-        reason="CSE has its own docker entrypoint which is covered in SaaS tests",
+        reason="Checkmk Cloud has its own docker entrypoint which is covered in SaaS tests",
     )
 ]
 

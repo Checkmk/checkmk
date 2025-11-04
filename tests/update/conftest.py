@@ -60,7 +60,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--target-edition",
         action="store",
         default=None,
-        help="Edition for the target test-site; Options: CRE, CEE, CCE, CSE, CME.",
+        help="Edition for the target test-site; Options: community, pro, ultimate, ultimatemt, cloud.",
     )
     parser.addoption(
         "--skip-uninstall",
@@ -98,8 +98,8 @@ def _setup(
         if target_edition_raw
         else edition_from_env()
     )
-    logger.info("Base edition: %s", base_package.edition.short)
-    logger.info("Target edition: %s", target_edition.short)
+    logger.info("Base edition: %s", base_package.edition.long)
+    logger.info("Target edition: %s", target_edition.long)
 
     if (
         request.config.getoption(name="--latest-base-version")

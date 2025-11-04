@@ -277,18 +277,18 @@ def pytest_addoption(parser):
         ARG_EDITION_CMK,
         action="store",
         choices=[
-            CMKEdition.CCE.short,
-            CMKEdition.CEE.short,
-            CMKEdition.CME.short,
-            CMKEdition.CRE.short,
-            CMKEdition.CSE.short,
+            CMKEdition.CCE.long,
+            CMKEdition.CEE.long,
+            CMKEdition.CME.long,
+            CMKEdition.CRE.long,
+            CMKEdition.CSE.long,
         ],
         type=str,
         help=(
             "Select edition of the Checkmk site under test. If not set, value of environment "
-            "variable 'EDITION' is used, if available. If neither is set, 'cee' is used."
+            "variable 'EDITION' is used, if available. If neither is set, 'pro' is used."
         ),
-        default=os.getenv("EDITION", CMKEdition.CEE.short),
+        default=os.getenv("EDITION", CMKEdition.CEE.long),
     )
     parser.addoption(
         ARG_REUSE,
@@ -324,7 +324,7 @@ def pytest_configure(config: pytest.Config) -> None:
 
     env_vars = {
         "BRANCH": current_base_branch_name(),
-        "EDITION": "cee",
+        "EDITION": "pro",
         "VERSION": "daily",
         "DISTRO": "",
         "TZ": "UTC",

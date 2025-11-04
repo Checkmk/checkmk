@@ -18,7 +18,7 @@ may require the following env variables
 scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=master \
---edition=enterprise \
+--edition=pro \
 --version=2023.10.17 \
 --source_path=$PWD/download/2023.10.17 \
 --action=build \
@@ -33,7 +33,7 @@ may require the following env variables
 scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=2.2.0 \
---edition=enterprise \
+--edition=pro \
 --version=2.2.0p16 \
 --version_rc_aware=2.2.0p16-rc3 \
 --source_path=$PWD/download/2.2.0p16-rc3 \
@@ -85,7 +85,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--edition",
         required=True,
-        choices=["raw", "enterprise", "managed", "cloud", "saas"],
+        choices=["community", "pro", "ultimatemt", "ultimate", "cloud"],
         help="Checkmk edition to build",
     )
     parser.add_argument("--version", required=True, help="Version to build e.g. '2023.10.19'")
@@ -516,15 +516,15 @@ def main() -> None:
     LOG.debug("args: %s", args)
 
     match args.edition:
-        case "raw":
+        case "community":
             registries = [dockerhub]
-        case "enterprise":
+        case "pro":
             registries = [enterprise_registry]
-        case "managed":
+        case "ultimatemt":
             registries = [dockerhub]
-        case "cloud":
+        case "ultimate":
             registries = [dockerhub, nexus]
-        case "saas":
+        case "cloud":
             registries = [nexus]
         case _:
             raise Exception(f"ERROR: Unknown edition '{args.edition}'")

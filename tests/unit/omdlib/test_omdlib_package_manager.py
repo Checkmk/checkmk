@@ -14,7 +14,7 @@ from cmk.ccc import version
 
 @pytest.mark.parametrize("edition", list(version.Edition))
 def test_get_edition(edition: version._EditionValue) -> None:
-    assert get_edition(f"1.2.3.{edition.short}") != "unknown"
+    assert get_edition(f"1.2.3.{edition.long}") != "unknown"
 
 
 @pytest.mark.parametrize(

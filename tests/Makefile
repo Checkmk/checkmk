@@ -23,7 +23,7 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 REPO_PATH := $(shell make --no-print-directory --file=../defines.make print-REPO_PATH)
 MAX_CHARS := 1500000
-EDITION ?= cee
+EDITION ?= pro
 
 # A random time zone between UTC-11...UTC+14. Note the recursively expanded
 # variable assignment to get a new time zone on every access.
@@ -34,15 +34,15 @@ SYSTEM_TESTS := \
     test-integration-redfish \
     test-integration-otel \
     test-composition \
-    test-update-cre \
-    test-update-cee \
-    test-update-cce \
-    test-update-cme \
-    test-update-cse \
-    test-update-cross-edition-cee-to-cce \
-    test-update-cross-edition-cee-to-cme \
-    test-update-cross-edition-cre-to-cce \
-    test-update-cross-edition-cre-to-cee \
+    test-update-community \
+    test-update-pro \
+    test-update-ultimate \
+    test-update-ultimatemt \
+    test-update-cloud \
+    test-update-cross-edition-pro-to-ultimate \
+    test-update-cross-edition-pro-to-ultimatemt \
+    test-update-cross-edition-community-to-ultimate \
+    test-update-cross-edition-community-to-pro \
     test-schemathesis-openapi \
     test-plugins \
     test-plugins-piggyback \
@@ -50,10 +50,10 @@ SYSTEM_TESTS := \
     test-xss-crawl \
     test-gui-e2e \
     test-gui-e2e-non-free \
-    test-gui-e2e-cee \
-    test-gui-e2e-cce \
-    test-gui-e2e-cme \
-    test-gui-e2e-cse \
+    test-gui-e2e-pro \
+    test-gui-e2e-ultimate \
+    test-gui-e2e-ultimatemt \
+    test-gui-e2e-cloud \
     test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := \
     -p "no:cov" \
@@ -208,7 +208,7 @@ test-lint-groovy:
 
 test-performance:
 	BRANCH=$(shell make --no-print-directory --file="../defines.make" print-BRANCH_VERSION) \
-	EDITION=cee RELEASE="$${BRANCH}-$$(date '+%Y.%m.%d').$${EDITION}" \
+	EDITION=pro RELEASE="$${BRANCH}-$$(date '+%Y.%m.%d').$${EDITION}" \
 	ROOT_DIR=$(or $(RESULT_PATH),"$(REPO_PATH)/results")/performance \
 	BENCHMARK_DIR=$${ROOT_DIR}/$${RELEASE} \
 	$(UVENV) "$(realpath performance)/perftest.sh"
@@ -222,22 +222,22 @@ test-gui-crawl: prepare-playwright
 test-xss-crawl: prepare-playwright
 	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
-test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
-	$(PYTEST) --cmk-edition cee --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
+test-gui-e2e test-gui-e2e-pro: prepare-playwright # full e2e test is done for pro
+	$(PYTEST) --cmk-edition pro --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
 	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/) --numprocesses=1
 
-test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
+test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (pro or higher)
 	$(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath gui_e2e/cee) --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath gui_e2e/pro) --numprocesses=1
 
-test-gui-e2e-cce:
-	EDITION=cce $(MAKE) test-gui-e2e-non-free
+test-gui-e2e-ultimate:
+	EDITION=ultimate $(MAKE) test-gui-e2e-non-free
 
-test-gui-e2e-cme:
-	EDITION=cme $(MAKE) test-gui-e2e-non-free
+test-gui-e2e-ultimatemt:
+	EDITION=ultimatemt $(MAKE) test-gui-e2e-non-free
 
-test-gui-e2e-cse:
-	EDITION=cse $(MAKE) test-gui-e2e-non-free
+test-gui-e2e-cloud:
+	EDITION=cloud $(MAKE) test-gui-e2e-non-free
 
 test-integration:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
@@ -259,37 +259,37 @@ test-composition:
 test-extension-compatibility:
 	$(PYTEST) -vv $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
-test-update-cre:
-	$(PYTEST) --cmk-edition cre $(realpath update/cre) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+test-update-community:
+	$(PYTEST) --cmk-edition community $(realpath update/community) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
-test-update-cee:
-	$(PYTEST) --cmk-edition cee $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+test-update-pro:
+	$(PYTEST) --cmk-edition pro $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
-test-update-cce:
-	$(PYTEST) --cmk-edition cce $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+test-update-ultimate:
+	$(PYTEST) --cmk-edition ultimate $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
-test-update-cme:
-	$(PYTEST) --cmk-edition cme $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+test-update-ultimatemt:
+	$(PYTEST) --cmk-edition ultimatemt $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
-test-update-cse:
-	$(PYTEST) --cmk-edition cse $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
+test-update-cloud:
+	$(PYTEST) --cmk-edition cloud $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
 	--session-timeout 5400
 
-test-update-cross-edition-cee-to-cce: # from CEE to CCE
-	$(PYTEST) --cmk-edition cee $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) \
-	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
+test-update-cross-edition-pro-to-ultimate: # from pro to ultimate
+	$(PYTEST) --cmk-edition pro $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/nonfree/pro/test_update.py) \
+	--latest-base-version --target-edition=ultimate --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-cee-to-cme: # from CEE to CME
-	$(PYTEST) --cmk-edition cee $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) \
-	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
+test-update-cross-edition-pro-to-ultimatemt: # from pro to ultimatemt
+	$(PYTEST) --cmk-edition pro $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/nonfree/pro/test_update.py) \
+	--latest-base-version --target-edition=ultimatemt --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-cre-to-cee: # from CRE to CEE
-	$(PYTEST) --cmk-edition cre $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
-	--latest-base-version --target-edition=CEE --disable-interactive-mode --session-timeout 5400
+test-update-cross-edition-community-to-pro: # from community to pro
+	$(PYTEST) --cmk-edition community $(realpath update/community/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
+	--latest-base-version --target-edition=pro --disable-interactive-mode --session-timeout 5400
 
-test-update-cross-edition-cre-to-cce: # from CRE to CCE
-	$(PYTEST) --cmk-edition cre $(realpath update/cre/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
-	--latest-base-version --target-edition=CCE --disable-interactive-mode --session-timeout 5400
+test-update-cross-edition-community-to-ultimate: # from community to ultimate
+	$(PYTEST) --cmk-edition community $(realpath update/community/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
+	--latest-base-version --target-edition=ultimate --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:
 	SCHMATHESIS_PROFILE=ci $(PYTEST) $(realpath schemathesis_openapi) \

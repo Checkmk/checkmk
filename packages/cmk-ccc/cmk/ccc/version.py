@@ -34,15 +34,15 @@ class _EditionValue(NamedTuple):
 
 
 class Edition(enum.Enum):
-    CRE = _EditionValue("cre", "raw", "Checkmk Community (formerly Raw)")
-    CEE = _EditionValue("cee", "enterprise", "Checkmk Pro (formerly Enterprise)")
-    CCE = _EditionValue("cce", "cloud", "Checkmk Ultimate (formerly Cloud)")
-    CSE = _EditionValue("cse", "saas", "Checkmk Cloud")
-    CME = _EditionValue("cme", "managed", "Checkmk Ultimate with multi-tenancy (formerly MSP)")
+    CRE = _EditionValue("cre", "community", "Checkmk Community (formerly Raw)")
+    CEE = _EditionValue("cee", "pro", "Checkmk Pro (formerly Enterprise)")
+    CCE = _EditionValue("cce", "ultimate", "Checkmk Ultimate (formerly Cloud)")
+    CSE = _EditionValue("cse", "cloud", "Checkmk Cloud")
+    CME = _EditionValue("cme", "ultimatemt", "Checkmk Ultimate with multi-tenancy (formerly MSP)")
 
     @classmethod
     def from_version_string(cls, raw: str) -> Edition:
-        return cls[raw.split(".")[-1].upper()]
+        return cls.from_long_edition(raw.split(".")[-1])
 
     @classmethod
     def from_long_edition(cls, long: str) -> Edition:

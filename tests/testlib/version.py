@@ -355,7 +355,7 @@ class CMKPackageInfo:
         return self.omd_version()
 
     def omd_version(self) -> str:
-        return f"{self._version.version}.{self._edition.short}"
+        return f"{self._version.version}.{self._edition.long}"
 
 
 def package_hash_path(version: str, edition: TypeCMKEdition) -> Path:

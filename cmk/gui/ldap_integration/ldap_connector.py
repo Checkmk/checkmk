@@ -287,6 +287,7 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
 @dataclass
 class SyncUsersResult:
     fetched_users: dict[LdapUsername, FetchedLDAPUser]
+    sync_start_time: float
     changes: list[str] = field(default_factory=list)
     has_changed_passwords: bool = False
     profiles_to_synchronize: dict[UserId, UserSpec] = field(default_factory=dict)
@@ -1617,6 +1618,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         """
 
         sync_user_result = SyncUsersResult(
+            sync_start_time=time.time(),
             fetched_users={fetched_ldap_user.ldap_user_name: fetched_ldap_user},
         )
         users = load_users(lock=True)
@@ -1633,7 +1635,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             login_attempt=True,
         )
         self._complete_sync(
-            sync_start_time=time.time(),
             sync_users_result=sync_user_result,
             users=users,
             user_connections=user_connections,
@@ -1747,6 +1748,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
         sync_users_result = SyncUsersResult(
+            sync_start_time=start_time,
             fetched_users=fetched_ldap_users,
         )
 
@@ -1766,7 +1768,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             )
 
         self._complete_sync(
-            sync_start_time=start_time,
             sync_users_result=sync_users_result,
             users=users,
             user_connections=active_config.user_connections,  # TODO user connections should be independent of active config
@@ -1778,7 +1779,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     def _complete_sync(
         self,
-        sync_start_time: float,
         sync_users_result: SyncUsersResult,
         users: Users,
         user_connections: Sequence[UserConnectionConfig],
@@ -1812,7 +1812,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # modified by the ldap sync process but the user has been updated correctly.
             pass
 
-        duration = time.time() - sync_start_time
+        duration = time.time() - sync_users_result.sync_start_time
         self._logger.info(
             "SYNC FINISHED - Duration: %0.3f sec, Queries: %d" % (duration, self._num_queries)
         )

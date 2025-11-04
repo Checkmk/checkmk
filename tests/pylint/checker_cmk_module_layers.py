@@ -444,7 +444,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.helper_interface",
         "cmk.inventory",
         "cmk.piggyback",
-        "cmk.plugins.otel.special_agents.cce.agent_otel",
+        "cmk.plugins.otel.special_agents.nonfree.ultimate.agent_otel",
         "cmk.relay_fetcher_trigger",
         "cmk.rrd",
         "cmk.server_side_calls_backend",
@@ -591,7 +591,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.render",
         "cmk.utils.rulesets",
     ),
-    Component("cmk.gui.cce.plugins"): _allow(
+    Component("cmk.gui.nonfree.ultimate.plugins"): _allow(
         *PACKAGE_PLUGIN_APIS,
         "cmk.gui",
         "cmk.shared_typing.vue_formspec_components",
@@ -642,7 +642,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_METRIC_BACKEND,
-        "cmk.cce.metric_backend.gui",
+        "cmk.nonfree.ultimate.metric_backend.gui",
         "cmk.checkengine",
         "cmk.nonfree.pro.robotmk.gui",
         "cmk.fields",
@@ -668,7 +668,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         *PACKAGE_MESSAGING,
         "cmk.bi",
-        "cmk.cce.metric_backend.gui.register",
+        "cmk.nonfree.ultimate.metric_backend.gui.register",
         "cmk.nonfree.pro.robotmk.gui",
         "cmk.gui",
         "cmk.inventory",
@@ -686,7 +686,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
         *PACKAGE_TRACE,
-        "cmk.cce.metric_backend.gui.register",
+        "cmk.nonfree.ultimate.metric_backend.gui.register",
         "cmk.fields",
         "cmk.gui",
         "cmk.utils.agent_registration",
@@ -842,7 +842,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_WERKS,
         "cmk.base",
-        "cmk.cce.metric_backend",
+        "cmk.nonfree.ultimate.metric_backend",
         "cmk.checkengine",
         "cmk.nonfree.pro.robotmk",
         "cmk.discover_plugins",
@@ -875,7 +875,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.base.checkers",
         "cmk.base.config",
         "cmk.base.configlib.loaded_config",
-        "cmk.base.core.cee.cmc",
+        "cmk.base.core.nonfree.pro.cmc",
         "cmk.base.errorhandling",
         "cmk.base.plugins.bakery.bakery_api.v1",
         "cmk.base.sources",
@@ -884,7 +884,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.nonfree.pro.dcd"): _allow(
         *PACKAGE_CCC,
-        "cmk.cce.metric_backend.dcd.register",
+        "cmk.nonfree.ultimate.metric_backend.dcd.register",
         "cmk.otel_collector",
         "cmk.piggyback",
         "cmk.utils",
@@ -992,13 +992,13 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.events",
         "cmk.otel_collector",
     ),
-    Component("cmk.cce.metric_backend.dcd"): _allow(
+    Component("cmk.nonfree.ultimate.metric_backend.dcd"): _allow(
         *PACKAGE_METRIC_BACKEND,
         "cmk.ccc",
         "cmk.nonfree.pro.dcd",
         "cmk.utils",
     ),
-    Component("cmk.cce.metric_backend.gui"): _allow(
+    Component("cmk.nonfree.ultimate.metric_backend.gui"): _allow(
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_METRIC_BACKEND,
         "cmk.ccc",
@@ -1035,7 +1035,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.nonfree.pro.licensing",
         "cmk.utils.paths",
     ),
-    Component("tests.integration.cce.metric_backend"): _allow(
+    Component("tests.integration.nonfree.ultimate.metric_backend"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_METRIC_BACKEND,
         "cmk.gui",
@@ -1075,7 +1075,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.snmplib",
         "cmk.utils",
     ),
-    Component("tests.integration.cce.otel"): _allow(
+    Component("tests.integration.nonfree.ultimate.otel"): _allow(
         *PACKAGE_CCC,
         "cmk.otel_collector.constants",
     ),
@@ -1134,7 +1134,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.bakery",
         "cmk.base",
         "cmk.bi",
-        "cmk.cce.metric_backend",
+        "cmk.nonfree.ultimate.metric_backend",
         "cmk.nonfree.pro.bakery",
         "cmk.nonfree.pro.dcd",
         "cmk.fetcher_encoder",

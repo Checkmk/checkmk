@@ -99,7 +99,9 @@ class TestVersion:
         assert Version.from_str("1.2.3-2023.12.24").version_without_rc == "1.2.3-2023.12.24"
 
     def test_version_without_rc_stable_daily_and_edition(self) -> None:
-        assert Version.from_str("1.2.3-2023.12.24.cce").version_without_rc == "1.2.3-2023.12.24"
+        assert (
+            Version.from_str("1.2.3-2023.12.24.ultimate").version_without_rc == "1.2.3-2023.12.24"
+        )
 
     def test_version_rc_aware_master(self) -> None:
         assert Version.from_str("1984.04.01").version_rc_aware == "1984.04.01"
@@ -147,7 +149,7 @@ class TestVersion:
                 "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.daily, value=BuildDate(year=2024, month=9, day=9)), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))",
             ),
             (
-                Version.from_str("1.2.3-2023.12.24.cce"),
+                Version.from_str("1.2.3-2023.12.24.ultimate"),
                 "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.daily, value=BuildDate(year=2023, month=12, day=24)), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))",
             ),
             (
@@ -282,9 +284,9 @@ def test_parse_check_mk_version(version_string: str, expected: int) -> None:
 
 def test_omd_version_reads_from_version_link(tmp_path: Path) -> None:
     link_path = tmp_path / "version"
-    link_path.symlink_to("/omd/versions/2016.09.12.cee")
+    link_path.symlink_to("/omd/versions/2016.09.12.pro")
     # Is set dynamically by fake_version_and_paths
-    assert cmk_version.orig_omd_version(link_path.parent) == "2016.09.12.cee"  # type: ignore[attr-defined]
+    assert cmk_version.orig_omd_version(link_path.parent) == "2016.09.12.pro"  # type: ignore[attr-defined]
     link_path.unlink()
 
 
@@ -292,12 +294,12 @@ class TestEdition:
     @pytest.mark.parametrize(
         "omd_version_str, expected",
         [
-            ("1.4.0i1.cre", cmk_version.Edition.COMMUNITY),
-            ("1.4.0i1.cee", cmk_version.Edition.PRO),
-            ("2016.09.22.cee", cmk_version.Edition.PRO),
-            ("2.1.0p3.cme", cmk_version.Edition.ULTIMATEMT),
-            ("2.1.0p3.cce", cmk_version.Edition.ULTIMATE),
-            ("2.1.0p3.cse", cmk_version.Edition.CLOUD),
+            ("1.4.0i1.community", cmk_version.Edition.COMMUNITY),
+            ("1.4.0i1.pro", cmk_version.Edition.PRO),
+            ("2016.09.22.pro", cmk_version.Edition.PRO),
+            ("2.1.0p3.ultimatemt", cmk_version.Edition.ULTIMATEMT),
+            ("2.1.0p3.ultimate", cmk_version.Edition.ULTIMATE),
+            ("2.1.0p3.cloud", cmk_version.Edition.CLOUD),
         ],
     )
     def test_from_version_string(self, omd_version_str: str, expected: cmk_version.Edition) -> None:

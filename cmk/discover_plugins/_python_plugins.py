@@ -139,7 +139,9 @@ def discover_modules(
         (
             f"{family}.{plugin_group.value}.{fname.removesuffix('.py')}"
             for family, paths in discover_families(
-                raise_errors=raise_errors, modules=modules
+                raise_errors=raise_errors,
+                modules=modules,
+                ls=ls,
             ).items()
             for path in paths
             for fname in ls(f"{path}/{plugin_group.value}")

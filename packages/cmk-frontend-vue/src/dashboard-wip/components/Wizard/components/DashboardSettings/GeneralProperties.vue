@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, useAttrs, watch } from 'vue'
+import { computed, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -34,7 +34,10 @@ interface GeneralPropertiesProps {
 const props = defineProps<GeneralPropertiesProps>()
 
 const name = defineModel<string>('name', { required: true })
-const addFilterSuffix = defineModel<boolean>('addFilterSuffix', { required: false })
+const addFilterSuffix = defineModel<boolean>('addFilterSuffix', {
+  required: false,
+  default: undefined
+})
 const createUniqueId = defineModel<boolean>('createUniqueId', { required: true })
 const uniqueId = defineModel<string>('uniqueId', { required: true })
 const dashboardIcon = defineModel<string | null>('dashboardIcon', {
@@ -64,8 +67,7 @@ watch(
   { deep: true }
 )
 
-const attrs = useAttrs()
-const displaySuffixInput = computed(() => 'addFilterSuffix' in attrs)
+const displaySuffixInput = computed(() => addFilterSuffix.value !== undefined)
 </script>
 
 <template>

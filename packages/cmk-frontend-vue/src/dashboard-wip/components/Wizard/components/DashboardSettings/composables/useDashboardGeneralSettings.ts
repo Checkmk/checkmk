@@ -24,6 +24,7 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
   const createUniqueId = ref<boolean>(true)
   const uniqueId = ref<string>('')
   const uniqueIdErrors = ref<string[]>([])
+  const addFilterSuffix = ref<boolean>(false)
 
   const dashboardIcon = ref<string | null>(s?.menu.icon?.name ?? null)
   const dashboardEmblem = ref<string | null>(s?.menu.icon?.emblem ?? null)
@@ -72,7 +73,7 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
     const title: DashboardGeneralSettings['title'] = {
       text: name.value.trim(),
       render: true,
-      include_context: false
+      include_context: addFilterSuffix.value
     }
 
     const menu: DashboardGeneralSettings['menu'] = {
@@ -112,6 +113,7 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
     showInMonitorMenu,
     monitorMenuTopic,
     sortIndex,
+    addFilterSuffix,
 
     // api
     validateGeneralSettings,

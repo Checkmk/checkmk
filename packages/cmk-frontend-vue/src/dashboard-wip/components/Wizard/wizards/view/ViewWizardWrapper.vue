@@ -25,9 +25,8 @@ interface ViewWizardProps {
   editWidget?: ContentProps | null
 }
 
-const { editWidget } = withDefaults(defineProps<ViewWizardProps>(), {
-  editWidget: null
-})
+const { editWidget = null } = defineProps<ViewWizardProps>()
+
 defineEmits<{
   goBack: []
   addWidget: [

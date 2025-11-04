@@ -10,52 +10,64 @@ import groovy.transform.Field
 //            paths will not be removed as expected.
 @Field
 def REPO_PATCH_RULES = [\
-"raw": [\
+"community": [\
     "paths_to_be_removed": [\
         "enterprise", \
+        "pro", \
         "cee", \
         "cee.py", \
         "managed", \
+        "ultimatemt", \
         "cme", \
         "cme.py", \
         "cloud", \
+        "ultimate", \
         "cce", \
         "cce.py", \
         "saas", \
+        "cloud", \
         "cse", \
         "cse.py", \
-        "cmk.cee.dcd.plugins.connectors.connectors_api"],\
+        "cmk.cee.dcd.plugins.connectors.connectors_api", \
+        "cmk.nonfree.pro.dcd.plugins.connectors.connectors_api"],\
     "folders_to_be_created": []], \
-"enterprise": [\
+"pro": [\
     "paths_to_be_removed": [\
         "managed", \
+        "ultimatemt", \
         "cme", \
         "cme.py", \
         "cloud", \
+        "ultimate", \
         "cce", \
         "cce.py", \
         "saas", \
+        "cloud", \
         "cse", \
         "cse.py"], \
     "folders_to_be_created": []], \
-"managed": [\
+"ultimatemt": [\
     "paths_to_be_removed": [\
         "saas", \
+        "cloud", \
+        "cse", \
+        "cse.py"], \
+    "folders_to_be_created": []], \
+"ultimate": [\
+    "paths_to_be_removed": [\
+        "managed", \
+        "ultimatemt", \
+        "cme", \
+        "cme.py", \
+        "saas", \
+        "cloud", \
         "cse", \
         "cse.py"], \
     "folders_to_be_created": []], \
 "cloud": [\
     "paths_to_be_removed": [\
         "managed", \
-        "cme", \
-        "cme.py", \
-        "saas", \
-        "cse", \
-        "cse.py"], \
-    "folders_to_be_created": []], \
-"saas": [\
-    "paths_to_be_removed": [\
-        "managed", \
+        "ultimatemt", \
         "cme", \
         "cme.py"], \
     "folders_to_be_created": []], \

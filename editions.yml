@@ -29,9 +29,9 @@ daily_saas: &daily_saas
 # internal_distros: &internal_distros
 #     - "ubuntu-23.10"
 
-# Currently, all builds of the saas edition should stay completley internal
+# Currently, all builds of the cloud (formerly saas) edition should stay completley internal
 internal_editions:
-    - "saas"
+    - "cloud"
 
 cma_distros: &cma_distros
     - "cma-4"
@@ -46,7 +46,7 @@ fips_distros: &fips_distros
 #     we may also need the builds for that!
 #   - so keep that in mind when changing those settings!
 editions:
-    enterprise:
+    pro:
         release: [*common, *cma_distros]
         daily: [*common, *cma_distros]
         daily_tests: [*common]
@@ -55,7 +55,7 @@ editions:
         daily_update_tests: [*common]
         weekly: [*common, *cma_distros]
         testbuild: ["ubuntu-24.04", "sles-15sp6", "cma-4"]
-    cloud:
+    ultimate:
         release: [*common, *cma_distros]
         daily: *daily_reduced
         daily_tests: *daily_reduced
@@ -64,7 +64,7 @@ editions:
         daily_update_tests: [*daily_reduced]
         weekly: *daily_reduced
         testbuild: []
-    managed:
+    ultimatemt:
         release: [*common, *cma_distros]
         daily: *daily_reduced
         daily_tests: *daily_reduced
@@ -73,7 +73,7 @@ editions:
         daily_update_tests: [*daily_reduced]
         weekly: *daily_reduced
         testbuild: []
-    raw:
+    community:
         release: *common
         daily: *daily_reduced
         daily_tests: *daily_reduced
@@ -82,7 +82,7 @@ editions:
         daily_update_tests: [*daily_reduced]
         weekly: *daily_reduced
         testbuild: []
-    saas:
+    cloud:
         release: *daily_saas
         daily: *daily_saas
         daily_tests: *daily_saas

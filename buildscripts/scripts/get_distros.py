@@ -69,7 +69,7 @@ def test_distro_lists():
     ]
 
     # fmt: off
-    assert distros_for_use_case(edition_distros, "enterprise", "release") == [
+    assert distros_for_use_case(edition_distros, "pro", "release") == [
         "almalinux-10", "almalinux-8", "almalinux-9",
         "cma-4",
         "debian-12",
@@ -77,7 +77,7 @@ def test_distro_lists():
         "sles-15sp5", "sles-15sp6",
         "ubuntu-22.04", "ubuntu-24.04",
     ]
-    assert distros_for_use_case(edition_distros, "enterprise", "daily") == [
+    assert distros_for_use_case(edition_distros, "pro", "daily") == [
         "almalinux-10", "almalinux-8", "almalinux-9",
         "cma-4",
         "debian-12",

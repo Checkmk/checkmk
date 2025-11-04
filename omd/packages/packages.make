@@ -195,19 +195,19 @@ include \
 
 ifeq ($(EDITION),pro)
 include \
-    packages/pro/pro.make
+    packages/enterprise/enterprise.make
 endif
 ifeq ($(EDITION),ultimatemt)
 include \
-    packages/pro/pro.make \
+    packages/enterprise/enterprise.make \
     $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),ultimate)
 include \
-    packages/pro/pro.make \
+    packages/enterprise/enterprise.make \
     $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),cloud)
 include \
-    packages/pro/pro.make
+    packages/enterprise/enterprise.make
 endif

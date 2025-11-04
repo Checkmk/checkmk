@@ -7,9 +7,9 @@
 from fastapi import FastAPI
 
 from cmk.agent_receiver.endpoints import AGENT_RECEIVER_ROUTER, UUID_VALIDATION_ROUTER
+from cmk.agent_receiver.lib.log import configure_logger
 
 from .config import get_config
-from .log import configure_logger
 from .middleware import B3RequestIDMiddleware
 from .relay.app import create_app as create_relay_app
 from .relay.app import lifespan as relay_lifespan

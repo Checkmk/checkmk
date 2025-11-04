@@ -10,7 +10,7 @@ from datetime import datetime, UTC
 from enum import StrEnum
 from typing import final
 
-from cmk.agent_receiver.log import logger
+from cmk.agent_receiver.lib.log import logger
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
     TaskID,

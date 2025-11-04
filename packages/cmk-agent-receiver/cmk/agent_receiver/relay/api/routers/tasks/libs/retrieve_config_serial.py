@@ -5,7 +5,7 @@
 
 
 from cmk.agent_receiver.config import get_config
-from cmk.agent_receiver.log import logger
+from cmk.agent_receiver.lib.log import logger
 
 
 class GetConfigSerialError(Exception):

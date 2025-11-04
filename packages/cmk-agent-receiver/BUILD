@@ -20,7 +20,7 @@ py_library(
         "cmk/agent_receiver/endpoints.py",
         "cmk/agent_receiver/lib/__init__.py",
         "cmk/agent_receiver/lib/certs.py",
-        "cmk/agent_receiver/log.py",
+        "cmk/agent_receiver/lib/log.py",
         "cmk/agent_receiver/main.py",
         "cmk/agent_receiver/middleware.py",
         "cmk/agent_receiver/models.py",

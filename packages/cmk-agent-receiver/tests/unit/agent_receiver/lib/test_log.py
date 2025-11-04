@@ -9,7 +9,7 @@ import logging
 import pytest
 from _pytest.logging import LogCaptureFixture
 
-from cmk.agent_receiver import log as logger
+from cmk.agent_receiver.lib import log as logger
 
 
 @pytest.fixture

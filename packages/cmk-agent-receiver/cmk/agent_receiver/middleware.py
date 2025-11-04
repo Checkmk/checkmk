@@ -12,7 +12,7 @@ from typing import Final, final, Literal, NewType, override
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from cmk.agent_receiver.log import bound_contextvars
+from cmk.agent_receiver.lib.log import bound_contextvars
 
 TraceID = NewType("TraceID", str)
 HeaderName = Literal["b3", "x-b3-traceid", "x-trace-id", "x-request-id", "traceparent"]

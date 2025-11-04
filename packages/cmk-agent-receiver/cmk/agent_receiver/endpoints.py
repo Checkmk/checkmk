@@ -30,6 +30,7 @@ from cmk.agent_receiver.lib.certs import (
     sign_agent_csr,
     site_root_certificate,
 )
+from cmk.agent_receiver.lib.log import logger
 
 from .checkmk_rest_api import (
     cmk_edition,
@@ -43,7 +44,6 @@ from .checkmk_rest_api import (
 )
 from .config import get_config
 from .decompression import DecompressionError, Decompressor
-from .log import logger
 from .models import (
     CertificateRenewalBody,
     ConnectionMode,

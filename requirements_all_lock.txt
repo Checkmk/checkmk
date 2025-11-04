@@ -1125,9 +1125,9 @@ googleapis-common-protos[grpc]==1.71.0 \
     #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-graphql-core==3.2.6 \
-    --hash=sha256:78b016718c161a6fb20a7d97bbf107f331cd1afe53e45566c59f776ed7f0b45f \
-    --hash=sha256:c08eec22f9e40f0bd61d805907e3b3b1b9a320bc606e23dc145eebca07c8fbab
+graphql-core==3.2.7 \
+    --hash=sha256:17fc8f3ca4a42913d8e24d9ac9f08deddf0a0b2483076575757f6c412ead2ec0 \
+    --hash=sha256:27b6904bdd3b43f2a0556dad5d579bdfdeab1f38e8e8788e555bdcb586a6f62c
     # via hypothesis-graphql
 graphviz==0.21 \
     --hash=sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78 \
@@ -2480,9 +2480,9 @@ pathspec==0.12.1 \
     --hash=sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08 \
     --hash=sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712
     # via black
-pbr==7.0.2 \
-    --hash=sha256:2a598b3d930f260576888932969b3b7dbcaa1d86505f9317dbd34b4a83eaf7ad \
-    --hash=sha256:d0c48993f54253b2c95d433d3960c95dd56e19a5cf5a545980180e91165ba342
+pbr==7.0.3 \
+    --hash=sha256:b46004ec30a5324672683ec848aed9e8fc500b0d261d40a3229c2d2bbfcedc29 \
+    --hash=sha256:ff223894eb1cd271a98076b13d3badff3bb36c424074d26334cd25aebeecea6b
     # via python-jenkins
 pexpect==4.9.0 \
     --hash=sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523 \
@@ -3444,8 +3444,8 @@ python-jenkins==1.8.3 \
     --hash=sha256:2e1766b253e3b2f28f52abfd0de45ffeaa1191f98520cc8d74d2c317786e59d0 \
     --hash=sha256:8f4761c391ac11e8c1f23f771010920c10440497705ab7175d52358f5a12dc98
     # via checkmk-dev-tools
-python-ldap==3.4.3 \
-    --hash=sha256:ab26c519a0ef2a443a2a10391fa3c5cb52d7871323399db949ebfaa9f25ee2a0
+python-ldap==3.4.5 \
+    --hash=sha256:b2f6ef1c37fe2c6a5a85212efe71311ee21847766a7d45fcb711f3b270a5f79a
     # via
     #   -r requirements_all.txt
     #   python-active-directory
@@ -4571,9 +4571,9 @@ watchdog==6.0.0 \
     --hash=sha256:e7631a77ffb1f7d2eefa4445ebbee491c720a5661ddf6df3498ebecae5ed375c \
     --hash=sha256:ef810fbf7b781a5a593894e4f439773830bdecb885e6880d957d5b9382a960d2
     # via -r requirements_all.txt
-webcolors==24.11.1 \
-    --hash=sha256:515291393b4cdf0eb19c155749a096f779f7d909f7cceea072791cb9095b92e9 \
-    --hash=sha256:ecb3d768f32202af770477b8b65f318fa4f566c22948673a977b00d589dd80f6
+webcolors==25.10.0 \
+    --hash=sha256:032c727334856fc0b968f63daa252a1ac93d33db2f5267756623c210e57a4f1d \
+    --hash=sha256:62abae86504f66d0f6364c2a8520de4a0c47b80c03fc3a5f1815fedbef7c19bf
     # via jsonschema
 webencodings==0.5.1 \
     --hash=sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78 \

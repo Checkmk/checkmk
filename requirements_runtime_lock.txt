@@ -2367,8 +2367,8 @@ python-dateutil==2.9.0.post0 \
     #   pysaml2
     #   recurring-ical-events
     #   time-machine
-python-ldap==3.4.3 \
-    --hash=sha256:ab26c519a0ef2a443a2a10391fa3c5cb52d7871323399db949ebfaa9f25ee2a0
+python-ldap==3.4.5 \
+    --hash=sha256:b2f6ef1c37fe2c6a5a85212efe71311ee21847766a7d45fcb711f3b270a5f79a
     # via
     #   -r _requirements_runtime.txt
     #   python-active-directory

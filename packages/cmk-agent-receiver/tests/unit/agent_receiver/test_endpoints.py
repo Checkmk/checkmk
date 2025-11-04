@@ -297,7 +297,7 @@ def test_register_new_unauthenticated(
     assert response.json() == {"detail": "User authentication failed"}
 
 
-def test_register_new_cre(
+def test_register_new_community(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
@@ -305,7 +305,7 @@ def test_register_new_cre(
 ) -> None:
     mocker.patch(
         "cmk.agent_receiver.endpoints.cmk_edition",
-        return_value=CMKEdition.cre,
+        return_value=CMKEdition.community,
     )
     response = client.post(
         "/register_new",
@@ -318,7 +318,7 @@ def test_register_new_cre(
     )
     assert response.status_code == 501
     assert response.json() == {
-        "detail": "The Checkmk Raw edition does not support registration of new hosts"
+        "detail": "The Checkmk Community edition does not support registration of new hosts"
     }
 
 
@@ -329,7 +329,7 @@ def test_register_new_uuid_csr_mismatch(
 ) -> None:
     mocker.patch(
         "cmk.agent_receiver.endpoints.cmk_edition",
-        return_value=CMKEdition.cce,
+        return_value=CMKEdition.ultimate,
     )
     response = client.post(
         "/register_new",
@@ -389,7 +389,7 @@ def test_register_new_folder_missing(
 ) -> None:
     config = get_config()
     assert not (config.r4r_dir / "NEW").exists()
-    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cce)
+    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.ultimate)
     assert oct(stat.S_IMODE((config.r4r_dir / "NEW").stat().st_mode)) == "0o770"
 
 
@@ -401,7 +401,7 @@ def test_register_new_folder_missing_cse(
 ) -> None:
     config = get_config()
     assert not (config.r4r_dir / "NEW").exists()
-    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cse)
+    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cloud)
     assert oct(stat.S_IMODE((config.r4r_dir / "NEW").stat().st_mode)) == "0o770"
 
 
@@ -413,17 +413,17 @@ def test_register_new_folder_exists(
 ) -> None:
     config = get_config()
     (config.r4r_dir / "NEW").mkdir(parents=True)
-    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cce)
+    _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.ultimate)
 
 
-def test_register_new_ongoing_cre(
+def test_register_new_ongoing_community(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
 ) -> None:
     mocker.patch(
         "cmk.agent_receiver.endpoints.cmk_edition",
-        return_value=CMKEdition.cre,
+        return_value=CMKEdition.community,
     )
     response = client.post(
         f"/register_new_ongoing/{uuid}",
@@ -431,18 +431,18 @@ def test_register_new_ongoing_cre(
     )
     assert response.status_code == 501
     assert response.json() == {
-        "detail": "The Checkmk Raw edition does not support registration of new hosts"
+        "detail": "The Checkmk Community edition does not support registration of new hosts"
     }
 
 
-def _call_register_new_ongoing_cce(
+def _call_register_new_ongoing_ultimate(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
 ) -> httpx.Response:
     mocker.patch(
         "cmk.agent_receiver.endpoints.cmk_edition",
-        return_value=CMKEdition.cce,
+        return_value=CMKEdition.ultimate,
     )
     return client.post(
         f"/register_new_ongoing/{uuid}",
@@ -464,7 +464,7 @@ def test_register_new_ongoing_not_found(
             agent_cert="cert",
         ),
     ).write()
-    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
     assert response.status_code == 404
     assert response.json() == {"detail": "No registration with this UUID in progress"}
 
@@ -483,7 +483,7 @@ def test_register_new_ongoing_username_mismatch(
             agent_cert="cert",
         ),
     ).write()
-    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
     assert response.status_code == 403
     assert response.json() == {
         "detail": "A registration is in progress, but it was triggered by a different user"
@@ -509,7 +509,7 @@ def test_register_new_ongoing_in_progress(
             agent_cert="cert",
         ),
     ).write()
-    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
     assert response.status_code == 200
     assert response.json() == {"status": "InProgress"}
 
@@ -533,7 +533,7 @@ def test_register_new_ongoing_in_declined(
             },
         ),
     ).write()
-    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
     assert response.status_code == 200
     assert response.json() == {"status": "Declined", "reason": "Registration request declined"}
 
@@ -553,7 +553,7 @@ def test_register_new_ongoing_success(
             agent_cert="cert",
         ),
     ).write()
-    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    response = _call_register_new_ongoing_ultimate(mocker, client, uuid)
     assert response.status_code == 200
     assert response.json() == {
         "status": "Success",

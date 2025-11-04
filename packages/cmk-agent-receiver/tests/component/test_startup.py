@@ -22,7 +22,7 @@ from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 # https://fastapi.tiangolo.com/advanced/testing-events/
 
 
-@pytest.mark.parametrize("edition", ["cme", "cce", "cse"])
+@pytest.mark.parametrize("edition", ["ultimatemt", "ultimate", "cloud"])
 def test_startup_with_relays(
     site: SiteMock, site_context: Config, user: User, edition: str
 ) -> None:
@@ -47,7 +47,7 @@ def test_startup_with_relays(
     assert isinstance(task.spec, RelayConfigTask)
 
 
-@pytest.mark.parametrize("edition", ["cme", "cce", "cse"])
+@pytest.mark.parametrize("edition", ["ultimatemt", "ultimate", "cloud"])
 def test_no_relays_folder(site: SiteMock, site_context: Config, user: User, edition: str) -> None:
     """
     Given:
@@ -68,7 +68,7 @@ def test_no_relays_folder(site: SiteMock, site_context: Config, user: User, edit
     assert len(tasks) == 0
 
 
-@pytest.mark.parametrize("edition", ["cme", "cce", "cse"])
+@pytest.mark.parametrize("edition", ["ultimatemt", "ultimate", "cloud"])
 def test_empty_relays_folder(
     site: SiteMock, site_context: Config, user: User, edition: str
 ) -> None:
@@ -93,7 +93,7 @@ def test_empty_relays_folder(
     assert len(tasks) == 0
 
 
-@pytest.mark.parametrize("edition", ["cre", "cee"])
+@pytest.mark.parametrize("edition", ["community", "pro"])
 def test_unsupported_editions(
     site: SiteMock, site_context: Config, user: User, edition: str
 ) -> None:

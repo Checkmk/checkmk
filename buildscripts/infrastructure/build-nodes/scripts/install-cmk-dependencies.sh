@@ -38,10 +38,6 @@ extract_needed_packages
 case "$DISTRO" in
     almalinux-*)
         add_gpg_key
-        # "mod_auth_mellon" is assumed to be installed on RHEL-9 from 2.3 on
-        # see announcement in werk 15561 and removal of package from MK file with 15694
-        # This line can be removed in 2.4. onwards
-        yum install -y mod_auth_mellon
         # shellcheck disable=SC2046  # we want word splitting here
         yum install -y --allowerasing $(cat "$TARGET_DIR"/needed-packages)
         ;;

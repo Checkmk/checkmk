@@ -116,7 +116,7 @@ def main() {
                             build_params << [
                                 CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
                                 DISTRO: "ubuntu-24.04",
-                                EDITION: "enterprise",
+                                EDITION: "pro",
                             ];
                             break;
                         default:

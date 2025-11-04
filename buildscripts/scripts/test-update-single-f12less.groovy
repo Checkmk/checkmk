@@ -6,7 +6,7 @@ def build_make_target(edition, cross_edition_target="") {
     def prefix = "test-update-";
     def suffix = "-docker";
     switch(edition) {
-        case 'raw':
+        case 'community':
             switch(cross_edition_target) {
                 case 'ultimate':
                 case 'pro':
@@ -15,7 +15,7 @@ def build_make_target(edition, cross_edition_target="") {
                 default:
                     return prefix + "community" + suffix;
             }
-        case 'enterprise':
+        case 'pro':
             switch(cross_edition_target) {
                 case 'ultimate':
                 case 'ultimatemt':
@@ -24,11 +24,11 @@ def build_make_target(edition, cross_edition_target="") {
                 default:
                     return prefix + "pro" + suffix;
             }
-        case 'cloud':
+        case 'ultimate':
             return prefix + "ultimate" + suffix;
-        case 'saas':
+        case 'cloud':
             return prefix + "cloud" + suffix;
-        case 'managed':
+        case 'ultimatemt':
             return prefix + "ultimatemt" + suffix;
         default:
             error("The update tests are not yet enabled for edition: " + edition);

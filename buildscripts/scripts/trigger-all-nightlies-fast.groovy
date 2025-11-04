@@ -16,7 +16,7 @@ def main() {
 
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15) {
         // build only enterprise on high noon or a little bit later
-        editions_to_test = ["enterprise"];
+        editions_to_test = ["pro"];
     }
 
     def job_parameters = [

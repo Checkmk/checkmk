@@ -59,15 +59,15 @@ def main() {
     job_parameters = job_parameters_common + job_parameters_use_case;
 
     // TODO we should take this list from a single source of truth
-    assert edition in ["cloud", "enterprise", "managed", "raw", "saas"] : (
+    assert edition in ["ultimate", "pro", "ultimatemt", "community", "cloud"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = true;
     def run_int_tests = true;
-    def run_fips_tests = edition == "enterprise";
-    def run_comp_tests = !(edition in ["saas"]);
-    def run_image_tests = !(edition in ["saas", "managed"]);
-    def run_update_tests = (edition in ["cloud", "enterprise", "managed", "raw", "saas"]);
+    def run_fips_tests = edition == "pro";
+    def run_comp_tests = !(edition in ["cloud"]);
+    def run_image_tests = !(edition in ["cloud", "ultimatemt"]);
+    def run_update_tests = (edition in ["ultimate", "pro", "ultimatemt", "community", "cloud"]);
 
     print(
         """
@@ -168,11 +168,11 @@ def main() {
     }[0]
 
     success &= smart_stage(
-            name: "Trigger SaaS Gitlab jobs",
-            condition: success && edition == "saas",
+            name: "Trigger Cloud Gitlab jobs",
+            condition: success && edition == "cloud",
             raiseOnError: false,) {
         smart_build(
-            job: "${edition_base_folder}/trigger-saas-gitlab",
+            job: "${edition_base_folder}/trigger-cloud-gitlab",
             parameters: job_parameters
         );
     }[0]

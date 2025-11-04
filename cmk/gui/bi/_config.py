@@ -1382,6 +1382,12 @@ class ModeBIEditRule(ABCBIMode):
                             "title of the rule as well as the host and service names, you can insert the "
                             "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
                             "(enclosed in dollar signs)."
+                            "<p>"
+                            "<b>Note</b>: a parameter with a colon (:) inside its value is a valid "
+                            "parameter, e.g. <tt>LABEL_KEY:LABEL_VALUE</tt>. This is quite handy "
+                            "when you want to pass a parameter to a label filter since labels "
+                            "require a colon to be present to be considered valid."
+                            "</p>"
                         ),
                         orientation="horizontal",
                         valuespec=TextInput(

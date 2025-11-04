@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 import calendar
 import dataclasses
 import datetime
@@ -12,10 +10,10 @@ import enum
 import itertools
 import time
 import typing
+from collections.abc import Sequence
 
 import feedparser
 import pydantic
-from pydantic import ConfigDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -54,14 +52,11 @@ _NO_ISSUES = Result(
 AWS_REGIONS_MAP: typing.Final = dict(aws_constants.AWSRegions)
 
 
-class Entry(pydantic.BaseModel):
+class Entry(pydantic.BaseModel, frozen=True, arbitrary_types_allowed=True):
     """RSS scheme.
 
     External format, which we obtain from AWS and parse with feedparser.
     """
-
-    # FIXME: implement `__get_pydantic_core_schema__` on your custom type to fully support it.
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     title: str
     published_parsed: time.struct_time
@@ -83,20 +78,20 @@ class Entry(pydantic.BaseModel):
         return "Global"
 
 
-class AWSRSSFeed(pydantic.BaseModel):
+class AWSRSSFeed(pydantic.BaseModel, frozen=True):
     """RSS scheme.
 
     External format, which we obtain from AWS and parse with feedparser.
     """
 
-    entries: list[Entry]
+    entries: Sequence[Entry]
 
     @classmethod
-    def parse_rss(cls, element: str) -> "AWSRSSFeed":
-        return cls.model_validate(feedparser.parse(element))  # type: ignore[attr-defined]
+    def parse_rss(cls, element: str) -> typing.Self:
+        return cls.model_validate(feedparser.parse(element))  # type: ignore[attr-defined,no-untyped-call]
 
 
-class DiscoveryParam(pydantic.BaseModel):
+class DiscoveryParam(pydantic.BaseModel, frozen=True):
     """Config scheme: discovery for aws_status.
 
     This configuration not needed in the special agent, it is used by the discovery function of
@@ -104,10 +99,10 @@ class DiscoveryParam(pydantic.BaseModel):
     view.
     """
 
-    regions: list[str]
+    regions: Sequence[str]
 
 
-class AgentOutput(pydantic.BaseModel):
+class AgentOutput(pydantic.BaseModel, frozen=True):
     """Section scheme: aws_status
 
     Internal json, which is used to forward the rss feed between agent_aws_status and the parse
@@ -172,7 +167,7 @@ def _check_aws_status(
         yield _NO_ISSUES
 
 
-def _restrict_to_region(entries: list[Entry], region: str) -> list[Entry]:
+def _restrict_to_region(entries: Sequence[Entry], region: str) -> list[Entry]:
     return [e for e in entries if e.region() == region]
 
 

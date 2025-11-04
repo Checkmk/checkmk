@@ -16,12 +16,12 @@ from tenacity import (
 
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
+from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError, RelaysRepository
 from cmk.ccc import version as cmk_version
 
-from ..middleware import B3RequestIDMiddleware
 from .api.routers.relays import router as relay_router
 from .api.routers.tasks import router as task_router
 

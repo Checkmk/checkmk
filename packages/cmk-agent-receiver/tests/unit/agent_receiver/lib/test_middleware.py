@@ -9,7 +9,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from cmk.agent_receiver.middleware import B3RequestIDMiddleware
+from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware
 
 
 @pytest.fixture

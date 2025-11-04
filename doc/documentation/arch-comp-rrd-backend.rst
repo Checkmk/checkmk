@@ -37,11 +37,11 @@ So we need two paths:
 * Reading/Writing metrics to RRDs via rrdcached
 * Create RRD databases via RRD create helper
 
-Differences between Raw and Enterprise editions
+Differences between Checkmk Community and the commercial editions
 -----------------------------------------------
 
-The RRD backend architecture differs between Nagios core and Microcore. In the
-Raw Edition, when the Nagios core is used, the NPCD an `process_perfdata.pl`,
+The RRD backend architecture differs between Nagios core and Microcore. In
+Checkmk Community, when the Nagios core is used, the NPCD an `process_perfdata.pl`,
 components of PNP4Nagios, are used to write the metrics to the RRD storage.
 
 .. uml:: arch-comp-rrd-backend-components-raw.puml
@@ -60,6 +60,6 @@ Risks and technical debts
 Technical debts
 ---------------
 
-The Raw Edition with the Nagios core follows a different approach for creating
+Checkmk Community with the Nagios core follows a different approach for creating
 RRD databases of new hosts and services. This functionality currently needs to
 be kept in sync.

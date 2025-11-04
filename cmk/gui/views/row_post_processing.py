@@ -20,7 +20,7 @@ def post_process_rows(
 
     For example:
         - Add HW/SW Inventory data when needed
-        - Add SLA data when needed (Enterprise editions only)
+        - Add SLA data when needed (Commercial editions only)
     """
     if not rows:
         return

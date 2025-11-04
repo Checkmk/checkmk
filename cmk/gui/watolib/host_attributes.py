@@ -162,11 +162,11 @@ class BuiltInHostAttributes(TypedDict, total=False):
     waiting_for_discovery: bool
     labels: Labels
     contactgroups: HostContactGroupSpec
-    # Enterprise editions only
+    # Commerical editions only
     bake_agent_package: bool
-    # Enterprise editions only
+    # Commerical editions only
     cmk_agent_connection: Literal["push-agent", "pull-agent"]
-    # Cloud editions only
+    # Ultimate editions only
     relay: str
 
 

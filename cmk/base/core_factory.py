@@ -22,7 +22,7 @@ def get_licensing_handler_type() -> type[LicensingHandler]:
     if edition(paths.omd_root) is Edition.CRE:
         from cmk.utils.licensing.registry import get_available_licensing_handler_type
     else:
-        from cmk.utils.cee.licensing.registry import (  # type: ignore[import,unused-ignore,no-redef]
+        from cmk.utils.nonfree.pro.licensing.registry import (  # type: ignore[import,unused-ignore,no-redef]
             get_available_licensing_handler_type,
         )
     return get_available_licensing_handler_type()
@@ -41,15 +41,15 @@ def create_core(
 ) -> MonitoringCore:
     match loaded_config.monitoring_core:
         case "cmc":
-            from cmk.base.cee.precompute_timeperiods import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            from cmk.base.nonfree.pro.precompute_timeperiods import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 precompute_timeperiods,
             )
-            from cmk.base.configlib.cee.microcore import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            from cmk.base.configlib.nonfree.pro.microcore import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 make_cmc_config,
                 make_fetcher_config_writer,
                 make_statehist_cache_config,
             )
-            from cmk.base.core.cee.cmc import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+            from cmk.base.core.nonfree.pro.cmc import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 CmcPb,
                 ConfigWriterInterface,
             )

@@ -1027,7 +1027,7 @@ def _make_configured_bake_on_restart_callback(
     # TODO: consider passing the edition here, instead of "detecting" it (and thus
     # silently failing if the bakery is missing unexpectedly)
     try:
-        from cmk.base.configlib.cee.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+        from cmk.base.configlib.nonfree.pro.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
             make_configured_bake_on_restart_callback,
         )
     except ImportError:
@@ -2511,7 +2511,7 @@ class ABCDeleteHosts:
     def _delete_robotmk_html_log_dir(self, hostname: HostName) -> None:
         with suppress(FileNotFoundError):
             shutil.rmtree(
-                # Keep in sync with cmk.cee.robotmk.html_log_dir
+                # Keep in sync with cmk.nonfree.pro.robotmk.html_log_dir
                 omd_root / "var" / "robotmk" / "html_logs" / hostname
             )
 

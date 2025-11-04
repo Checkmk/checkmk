@@ -16,7 +16,7 @@ def register(linter: PyLinter) -> None:
         # disabled using this, but this does not seem to be possible :(
         linter.set_option(
             "ignored-modules",
-            "cmk.base.cee,cmk.gui.cee,cmk.gui.nonfree.ultimatemt,cmk.gui.nonfree.ultimatemt.managed,cmk.gui.nonfree.ultimate,cmk.gui.nonfree.cloud",
+            "cmk.base.nonfree.pro,cmk.gui.nonfree.pro,cmk.gui.nonfree.ultimatemt,cmk.gui.nonfree.ultimatemt.managed,cmk.gui.nonfree.ultimate,cmk.gui.nonfree.cloud",
         )
         # This disables no-member errors
         linter.set_option(

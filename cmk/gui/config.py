@@ -31,7 +31,7 @@ from cmk.utils import paths
 from cmk.utils.experimental_config import load_experimental_config
 
 if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.plugins.config.cee import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.nonfree.pro.plugins.config.cee import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CEEConfig,
     )
 else:
@@ -279,7 +279,7 @@ def _get_default_config_from_legacy_plugins() -> dict[str, Any]:
 def _get_default_config_from_module_plugins() -> dict[str, Any]:
     """Plug-ins from the config plug-in package are loaded here
 
-    These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
+    These are `cmk.gui.plugins.config`, `cmk.gui.nonfree.pro.plugins.config` and
     `cmk.gui.nonfree.ultimate.plugins.config`.
     """
     config_plugin_vars: dict = {}
@@ -304,13 +304,13 @@ def _config_plugin_modules() -> list[ModuleType]:
         for name, module in list(sys.modules.items())
         if (
             name.startswith("cmk.gui.plugins.config.")
-            or name.startswith("cmk.gui.cee.plugins.config.")
+            or name.startswith("cmk.gui.nonfree.pro.plugins.config.")
             or name.startswith("cmk.gui.nonfree.ultimate.plugins.config.")
         )
         and name
         not in (
             "cmk.gui.plugins.config.base",
-            "cmk.gui.cee.plugins.config.cee",
+            "cmk.gui.nonfree.pro.plugins.config.cee",
             "cmk.gui.nonfree.ultimate.plugins.config.cme",
         )
         and module is not None

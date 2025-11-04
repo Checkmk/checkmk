@@ -1598,7 +1598,7 @@ def _make_configured_bake_on_restart(
     # TODO: consider passing the edition here, instead of "detecting" it (and thus
     # silently failing if the bakery is missing unexpectedly)
     try:
-        from cmk.base.configlib.cee.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+        from cmk.base.configlib.nonfree.pro.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
             make_configured_bake_on_restart_callback,
         )
     except ImportError:

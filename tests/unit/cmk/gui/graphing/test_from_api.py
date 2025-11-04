@@ -330,7 +330,7 @@ _ALLOWED_BUNDLE_VIOLATIONS = (
     if edition(omd_root) is Edition.CRE
     else {
         # we cannot have sub-modules below the cee folder, so we have to allow the following violations
-        # in cmk.cee.robotmk, the module layout of the metric etc. defintions is correct
+        # in cmk.nonfree.pro.robotmk, the module layout of the metric etc. defintions is correct
         "cmk.plugins.robotmk.graphing.cee",
         "cmk.plugins.azure_v2.graphing.cce",
     }

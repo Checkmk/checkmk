@@ -30,9 +30,9 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 match edition := cmk_version.edition(paths.omd_root):
     case Edition.CEE:
-        import cmk.gui.cee.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.pro.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
-        cmk.gui.cee.registration.register(edition)
+        cmk.gui.nonfree.pro.registration.register(edition)
 
     case Edition.CME:
         import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
@@ -124,12 +124,12 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 
 
 # Note: One day, when we have migrated all main module plug-ins to PEP 420 namespaces, we
-# have no cmk.gui.cee namespaces anymore and can remove them.
+# have no cmk.gui.nonfree.pro namespaces anymore and can remove them.
 def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     yield f"cmk.gui.plugins.{main_module_name}"
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-        yield f"cmk.gui.cee.plugins.{main_module_name}"
+        yield f"cmk.gui.nonfree.pro.plugins.{main_module_name}"
 
     if (
         cmk_version.edition(paths.omd_root) is cmk_version.Edition.CCE
@@ -193,7 +193,7 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
         if (
             name.startswith("cmk.gui.")
             and len(name.split(".")) == 3
-            or name.startswith("cmk.gui.cee.")
+            or name.startswith("cmk.gui.nonfree.pro.")
             and len(name.split(".")) == 4
         )
     ]

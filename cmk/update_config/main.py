@@ -188,7 +188,7 @@ def _load_plugins(logger: logging.Logger) -> None:
         (
             []
             if edition(paths.omd_root) is Edition.CRE
-            else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
+            else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.actions")
         ),
         (
             load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.actions")
@@ -212,7 +212,7 @@ def _load_pre_plugins() -> None:
         (
             []
             if edition(paths.omd_root) is Edition.CRE
-            else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions")
+            else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.pre_actions")
         ),
     ):
         sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")

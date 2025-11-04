@@ -110,6 +110,7 @@ impl RegisterNewConfig {
     }
 }
 
+#[derive(Clone)]
 pub struct RegistrationConnectionConfig {
     pub site_id: site_spec::SiteID,
     pub receiver_port: u16,
@@ -165,6 +166,7 @@ pub struct PreConfiguredConnection {
     pub port: Option<u16>,
     pub credentials: types::Credentials,
     pub root_cert: String,
+    pub enable_auto_update: Option<bool>,
 }
 
 #[derive(Deserialize, Clone, Default)]

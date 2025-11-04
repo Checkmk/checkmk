@@ -2,12 +2,15 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::constants::CMK_UPDATE_AGENT_CMD;
+use crate::site_spec::Protocol;
 use crate::{
     agent_receiver_api::{self, RegistrationStatusV2},
     certs, config, misc, site_spec, types, version,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 use log::{error, info};
+use std::process::Command;
 
 trait TrustEstablishing {
     fn prompt_server_certificate(&self, server: &str, port: &u16) -> AnyhowResult<()>;
@@ -487,21 +490,25 @@ fn process_pre_configured_connection(
         }
     }
 
-    let registration_config = config::RegisterNewConfig::new(
-        config::RegistrationConnectionConfig {
-            site_id: site_id.clone(),
-            receiver_port,
-            username: pre_configured.credentials.username.clone(),
-            password: Some(pre_configured.credentials.password.clone()),
-            root_certificate: Some(pre_configured.root_cert.clone()),
-            trust_server_cert: false,
-            client_config: client_config.clone(),
-        },
-        agent_labels.clone(),
-    )?;
+    let connection_config = config::RegistrationConnectionConfig {
+        site_id: site_id.clone(),
+        receiver_port,
+        username: pre_configured.credentials.username.clone(),
+        password: Some(pre_configured.credentials.password.clone()),
+        root_certificate: Some(pre_configured.root_cert.clone()),
+        trust_server_cert: false,
+        client_config: client_config.clone(),
+    };
+    let registration_config =
+        config::RegisterNewConfig::new(connection_config.clone(), agent_labels.clone())?;
 
     registration_pre_configured.register(&registration_config, registry)?;
     info!("Registered new connection {}", site_id);
+
+    if pre_configured.enable_auto_update.unwrap_or(false) {
+        let protocol = site_spec::discover_protocol(site_id, client_config)?;
+        register_updater_subprocess(site_id, protocol, &connection_config)?;
+    }
 
     Ok(())
 }
@@ -531,6 +538,91 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
         },
         &InteractiveTrust {},
     )
+}
+
+fn _prepare_register_updater_cmd(
+    site_id: &site_spec::SiteID,
+    protocol: Protocol,
+    registration_config: &config::RegistrationConnectionConfig,
+) -> AnyhowResult<Command> {
+    let mut cmd = Command::new(CMK_UPDATE_AGENT_CMD);
+    #[cfg(windows)]
+    {
+        cmd.arg("updater");
+    }
+    cmd.arg("register")
+        .arg("-s")
+        .arg(&site_id.server)
+        .arg("-i")
+        .arg(&site_id.site)
+        .arg("-H")
+        .arg(
+            // should use the hostname returned from registration_status_v2 API call,
+            // but for now we use the local hostname
+            gethostname::gethostname()
+                .to_str()
+                .context("Failed to get hostname for updater registration")?,
+        )
+        .arg("-U")
+        .arg(&registration_config.username)
+        .arg("-p")
+        .arg(protocol.as_str())
+        // this is a temporary solution, will be replaced with a more secure one in the future
+        .arg("-P")
+        .arg(
+            registration_config
+                .password
+                .as_ref()
+                .expect("Password is required"),
+        );
+    cmd.stdin(std::process::Stdio::null());
+    Ok(cmd)
+}
+
+pub fn register_updater_subprocess(
+    site_id: &site_spec::SiteID,
+    protocol: Protocol,
+    registration_config: &config::RegistrationConnectionConfig,
+) -> AnyhowResult<()> {
+    let check_cmd = if cfg!(windows) {
+        Command::new("where").arg(CMK_UPDATE_AGENT_CMD).output()
+    } else {
+        Command::new("which").arg(CMK_UPDATE_AGENT_CMD).output()
+    };
+
+    match check_cmd {
+        Ok(output) if output.status.success() => {
+            info!("Found {} command", CMK_UPDATE_AGENT_CMD);
+        }
+        _ => {
+            error!("Command '{}' not found in PATH", CMK_UPDATE_AGENT_CMD);
+            return Ok(()); // Skip updater registration gracefully
+        }
+    };
+
+    let mut cmd = match _prepare_register_updater_cmd(site_id, protocol, registration_config) {
+        Ok(cmd) => cmd,
+        Err(e) => {
+            error!(
+                "Warning: can't build {} command, error: {}",
+                CMK_UPDATE_AGENT_CMD, e
+            );
+            return Ok(()); // Skip updater registration gracefully
+        }
+    };
+
+    info!("Registering updater for site {}", site_id);
+    let output = cmd.output().context(format!(
+        "Failed to execute {CMK_UPDATE_AGENT_CMD} register command"
+    ))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("Updater registration failed: {}", stderr);
+    }
+
+    info!("Successfully registered updater for site {}", site_id);
+    Ok(())
 }
 
 #[cfg(test)]
@@ -852,6 +944,7 @@ mod tests {
                                 password: String::from("password"),
                             },
                             root_cert: String::from("root_cert"),
+                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -863,6 +956,7 @@ mod tests {
                                 password: String::from("password"),
                             },
                             root_cert: String::from("root_cert"),
+                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -874,6 +968,7 @@ mod tests {
                                 password: String::from("password"),
                             },
                             root_cert: String::from("root_cert"),
+                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -885,6 +980,7 @@ mod tests {
                                 password: String::from("password"),
                             },
                             root_cert: String::from("root_cert"),
+                            enable_auto_update: Some(false),
                         },
                     ),
                 ]),
@@ -1077,6 +1173,7 @@ mod tests {
                             password: String::from("password"),
                         },
                         root_cert: String::from("root_cert"),
+                        enable_auto_update: Some(false),
                     },
                 )]),
                 agent_labels: types::AgentLabels::from([(
@@ -1143,6 +1240,78 @@ mod tests {
                 }
             }
             Ok(())
+        }
+    }
+
+    mod test_prepare_register_updater_cmd {
+        use super::*;
+        use std::ffi::OsStr;
+
+        #[test]
+        fn test_prepare_register_updater_cmd() {
+            let site_id = site_spec::SiteID {
+                server: "test-server".to_string(),
+                site: "test-site".to_string(),
+            };
+            let protocol = Protocol::Http;
+            let config = config::RegistrationConnectionConfig {
+                site_id: site_id.clone(),
+                receiver_port: 8000,
+                username: "test-user".to_string(),
+                password: Some("test-password".to_string()),
+                root_certificate: None,
+                trust_server_cert: false,
+                client_config: config::ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+            };
+
+            let cmd = _prepare_register_updater_cmd(&site_id, protocol, &config).unwrap();
+
+            let args: Vec<&OsStr> = cmd.get_args().collect();
+
+            let hostname = gethostname::gethostname();
+            #[cfg(windows)]
+            let expected_args = [
+                "updater",
+                "register",
+                "-s",
+                "test-server",
+                "-i",
+                "test-site",
+                "-H",
+                hostname.to_str().unwrap(),
+                "-U",
+                "test-user",
+                "-p",
+                "http",
+                "-P",
+                "test-password",
+            ];
+            #[cfg(unix)]
+            let expected_args = [
+                "register",
+                "-s",
+                "test-server",
+                "-i",
+                "test-site",
+                "-H",
+                hostname.to_str().unwrap(),
+                "-U",
+                "test-user",
+                "-p",
+                "http",
+                "-P",
+                "test-password",
+            ];
+
+            assert_eq!(cmd.get_program(), CMK_UPDATE_AGENT_CMD);
+            assert_eq!(args.len(), expected_args.len());
+
+            for (actual, expected) in args.iter().zip(expected_args.iter()) {
+                assert_eq!(actual, expected);
+            }
         }
     }
 }

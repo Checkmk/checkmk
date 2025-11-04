@@ -13,6 +13,10 @@ pub const CERT_RSA_KEY_SIZE: u32 = 4096;
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 #[cfg(unix)]
 pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
+#[cfg(windows)]
+pub const CMK_UPDATE_AGENT_CMD: &str = "check_mk_agent.exe";
+#[cfg(unix)]
+pub const CMK_UPDATE_AGENT_CMD: &str = "cmk-update-agent";
 
 // FILES
 pub const PRE_CONFIGURED_CONNECTIONS_FILE: &str = "pre_configured_connections.json";

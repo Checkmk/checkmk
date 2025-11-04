@@ -1,5 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 
@@ -185,7 +188,7 @@ def test_discover_rabbitmq_queues(string_table: StringTable, expected: list[Serv
     ],
 )
 def test_check_rabbitmq_queues(
-    string_table: StringTable, params: Mapping[str, Any], expected: CheckResult
+    string_table: StringTable, params: Mapping[str, object], expected: CheckResult
 ) -> None:
     parsed = parse_rabbitmq_queues(string_table)
     assert expected == list(

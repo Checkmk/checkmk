@@ -118,7 +118,7 @@ class QueryDataKey:
 
 @dataclass(frozen=True)
 class QueryDataValue:
-    metric_type: Literal["gauge", "sum", "histogram", "exponential_histogram", "exemplar"]
+    metric_type: Literal["gauge", "sum", "histogram", "exponential_histogram", "summary"]
     time_series: TimeSeries
 
 

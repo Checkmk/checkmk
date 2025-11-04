@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from omdlib.options import CommandOptions
+from omdlib.type_defs import Skeleton
 from omdlib.update import (
     _restore_version_meta_dir,
     _store_version_meta_dir,
@@ -18,6 +19,7 @@ from omdlib.update import (
     get_conflict_mode_update,
     ManagedTypes,
     ManageUpdate,
+    PreFlight,
     restore,
     store,
     walk_in_DFS_order,
@@ -405,10 +407,15 @@ def test_restore_version_meta_dir(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "options, expected",
     [
-        ({"conflict": "ask"}, "ask"),
-        ({}, "ask"),
-        ({"conflict": "ignore"}, "ignore"),
+        ({"conflict": "ask"}, (Skeleton.ASK, PreFlight.ASK)),
+        ({}, (Skeleton.ASK, PreFlight.ASK)),
+        ({"conflict": "ignore"}, (Skeleton.INSTALL, PreFlight.IGNORE)),
+        ({"conflict": "keepold"}, (Skeleton.KEEPOLD, PreFlight.KEEPOLD)),
+        ({"conflict": "install"}, (Skeleton.INSTALL, PreFlight.INSTALL)),
+        ({"conflict": "abort"}, (Skeleton.ABORT, PreFlight.ABORT)),
     ],
 )
-def test_get_conflict_mode_update(options: CommandOptions, expected: str) -> None:
+def test_get_conflict_mode_update(
+    options: CommandOptions, expected: tuple[Skeleton, PreFlight]
+) -> None:
     assert get_conflict_mode_update(options) == expected

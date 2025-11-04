@@ -18,7 +18,7 @@ from omdlib.crash_reporting import report_crash
 from omdlib.options import CommandOptions
 from omdlib.skel_permissions import Permissions
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
-from omdlib.type_defs import Config, Replacements
+from omdlib.type_defs import Config, Replacements, Skeleton
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.crash_reporting import make_crash_report_base_path
@@ -238,10 +238,26 @@ class ManageUpdate:
         return False  # Don't suppress the exception
 
 
-def get_conflict_mode_update(options: CommandOptions) -> str:
+class PreFlight(enum.Enum):
+    ASK = "ask"
+    INSTALL = "install"
+    KEEPOLD = "keepold"
+    ABORT = "abort"
+    IGNORE = "ignore"
+
+
+def get_conflict_mode_update(options: CommandOptions) -> tuple[Skeleton, PreFlight]:
     match options.get("conflict", "ask"):
-        case "ask" | "install" | "keepold" | "abort" | "ignore" as conflict_mode:
-            return conflict_mode
+        case "ask":
+            return Skeleton.ASK, PreFlight.ASK
+        case "install":
+            return Skeleton.INSTALL, PreFlight.INSTALL
+        case "keepold":
+            return Skeleton.KEEPOLD, PreFlight.KEEPOLD
+        case "abort":
+            return Skeleton.ABORT, PreFlight.ABORT
+        case "ignore":
+            return Skeleton.INSTALL, PreFlight.IGNORE
         case None:  # mismatch between our yanky argument parsing and reading the result.
             raise NotImplementedError()
         case _:

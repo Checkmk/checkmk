@@ -99,7 +99,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs,
 )
 from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements, Skeleton
-from omdlib.update import get_conflict_mode_update, ManageUpdate
+from omdlib.update import get_conflict_mode_update, ManageUpdate, PreFlight
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
 from omdlib.users_and_groups import (
@@ -2812,7 +2812,7 @@ def main_update(
     options: CommandOptions,
     versions_path: Path = Path("/omd/versions/"),
 ) -> None:
-    conflict_mode = get_conflict_mode_update(options)
+    skeleton_mode, conflict_mode = get_conflict_mode_update(options)
 
     if not site.is_stopped(global_opts.verbose):
         sys.exit("Please completely stop '%s' before updating it." % site.name)
@@ -2869,8 +2869,6 @@ def main_update(
         from_skelroot = site.version_skel_dir
         to_skelroot = "/omd/versions/%s/skel" % to_version
 
-        skeleton_mode = Skeleton("install" if conflict_mode == "ignore" else conflict_mode)
-
         with ManageUpdate(
             site.name, site.tmp_dir, Path(site_home), Path(from_skelroot), Path(to_skelroot)
         ) as mu:
@@ -2926,8 +2924,8 @@ def main_update(
                 "OMD_TO_EDITION": to_edition,
                 "OMD_TO_VERSION": to_version,
             }
-            if conflict_mode != "ignore":
-                command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
+            if conflict_mode != PreFlight.IGNORE:
+                command = ["cmk-update-config", "--conflict", conflict_mode.value, "--dry-run"]
                 sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
                 returncode = _call_script(
                     is_tty,

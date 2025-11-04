@@ -35,7 +35,7 @@ $(DEPS_INSTALL_BAZEL):
 	# TODO: Find a better way to sync the generation and its clean up.
 	bazel build --cmk_version=$(VERSION) --cmk_edition=$(EDITION) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
-	    $(if $(filter raw,$(EDITION)),--//:repo_license="gpl") \
+	    $(if $(filter community,$(EDITION)),--//:repo_license="gpl") \
 	    --execution_log_json_file="$(REPO_PATH)/deps_install.json" \
 	    //omd:deps_install_$(EDITION)
 	$(MKDIR) $(DESTDIR)
@@ -193,21 +193,21 @@ include \
     packages/check_mk/check_mk.make \
     packages/appliance/appliance.make \
 
-ifeq ($(EDITION),enterprise)
+ifeq ($(EDITION),pro)
 include \
-    packages/enterprise/enterprise.make
+    packages/pro/pro.make
 endif
-ifeq ($(EDITION),managed)
+ifeq ($(EDITION),ultimatemt)
 include \
-    packages/enterprise/enterprise.make \
+    packages/pro/pro.make \
+    $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
+endif
+ifeq ($(EDITION),ultimate)
+include \
+    packages/pro/pro.make \
     $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),cloud)
 include \
-    packages/enterprise/enterprise.make \
-    $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
-endif
-ifeq ($(EDITION),saas)
-include \
-    packages/enterprise/enterprise.make
+    packages/pro/pro.make
 endif

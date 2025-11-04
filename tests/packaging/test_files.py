@@ -52,16 +52,16 @@ def _get_omd_version(cmk_version: str, package_path: str) -> str:
 
 def _edition_from_pkg_path(package_path: str) -> str:
     file_name = os.path.basename(package_path)
-    if file_name.startswith("check-mk-raw-"):
-        return "raw"
-    if file_name.startswith("check-mk-enterprise-"):
-        return "enterprise"
-    if file_name.startswith("check-mk-managed-"):
-        return "managed"
+    if file_name.startswith("check-mk-community-"):
+        return "community"
+    if file_name.startswith("check-mk-pro-"):
+        return "pro"
+    if file_name.startswith("check-mk-ultimatemt-"):
+        return "ultimatemt"
+    if file_name.startswith("check-mk-ultimate-"):
+        return "ultimate"
     if file_name.startswith("check-mk-cloud-"):
         return "cloud"
-    if file_name.startswith("check-mk-saas-"):
-        return "saas"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
@@ -136,8 +136,8 @@ def test_package_sizes(package_path: str, pkg_format: str, min_size: int, max_si
     if not package_path.endswith(".%s" % pkg_format):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
-    if not os.path.basename(package_path).startswith("check-mk-enterprise-"):
-        pytest.skip("only testing enterprise packages")
+    if not os.path.basename(package_path).startswith("check-mk-pro-"):
+        pytest.skip("only testing pro packages")
 
     size = os.stat(package_path).st_size
     assert min_size <= size <= max_size, (
@@ -183,15 +183,15 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/usr/share/man/$",
             "/usr/share/man/man8/$",
             "/usr/share/doc/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/changelog.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/COPYING.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/TEAM$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/copyright$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/README.md$",
+            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/$",
+            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/changelog.gz$",
+            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/COPYING.gz$",
+            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/TEAM$",
+            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/copyright$",
+            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/README.md$",
             "/etc/$",
             "/etc/init.d/$",
-            "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*$",
+            "/etc/init.d/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*$",
         ] + version_allowed_patterns
     else:
         raise NotImplementedError()
@@ -317,13 +317,13 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
         ["tar", "tvf", package_path], encoding="utf-8"
     ).splitlines():
         path = line.split()[5]
-        if path != "%s/enterprise/" % prefix and path.startswith("%s/enterprise/" % prefix):
+        if path != "%s/pro/" % prefix and path.startswith("%s/pro/" % prefix):
             enterprise_files.append(path)
-        if path != "%s/managed/" % prefix and path.startswith("%s/managed/" % prefix):
+        if path != "%s/ultimatemt/" % prefix and path.startswith("%s/ultimatemt/" % prefix):
             managed_files.append(path)
-        if path != "%s/cloud/" % prefix and path.startswith("%s/cloud/" % prefix):
+        if path != "%s/ultimate/" % prefix and path.startswith("%s/ultimate/" % prefix):
             cloud_files.append(path)
-        if path != "%s/saas/" % prefix and path.startswith("%s/saas/" % prefix):
+        if path != "%s/cloud/" % prefix and path.startswith("%s/cloud/" % prefix):
             saas_files.append(path)
         if path != "%s/tests/qa-test-data/" % prefix and path.startswith(
             "%s/tests/qa-test-data/" % prefix
@@ -357,7 +357,7 @@ def test_monitoring_cores_packaging(package_path: str, cmk_version: str) -> None
     if package_path.endswith(".tar.gz"):
         pytest.skip("%s do not test source packages" % os.path.basename(package_path))
 
-    if _edition_from_pkg_path(package_path) != "raw":
+    if _edition_from_pkg_path(package_path) != "community":
         assert (
             len(_get_file_from_package(package_path, cmk_version, version_rel_path="bin/cmc")) > 0
         )
@@ -427,8 +427,8 @@ def test_python_files_are_precompiled_pycs(package_path: str, cmk_version: str) 
         raise ValueError("Unable to find shipped Python version")
 
     def expected_pyc_path(python_file_path: str, python3_version: str) -> str:
-        # In: /opt/omd/versions/2.4.0-2025.02.06.enterprise/lib/python3/cmk/automations/__init__.py
-        # Out: /opt/omd/versions/2.4.0-2025.02.06.enterprise/lib/python3/cmk/automations/__pycache__/__init__.cpython-312.pyc
+        # In: /opt/omd/versions/2.4.0-2025.02.06.pro/lib/python3/cmk/automations/__init__.py
+        # Out: /opt/omd/versions/2.4.0-2025.02.06.pro/lib/python3/cmk/automations/__pycache__/__init__.cpython-312.pyc
         path = PosixPath(python_file_path)
 
         cachedir = path.parent / "__pycache__"

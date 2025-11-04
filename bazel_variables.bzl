@@ -3,7 +3,6 @@ RUFF_VERSION = "0.14.2"  # keep in sync with the multitool hub
 
 # TODO: Re-work this with edition_deps + check for duplicate in cmk/BUILD
 edition_python_deps = {
-    "raw": [],
     "cloud": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-metric-backend",
@@ -11,18 +10,19 @@ edition_python_deps = {
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
     ],
-    "enterprise": [
+    "community": [],
+    "pro": [
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
     ],
-    "managed": [
+    "ultimate": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
     ],
-    "saas": [
+    "ultimatemt": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
@@ -32,14 +32,49 @@ edition_python_deps = {
 }
 
 edition_deps = {
+    "cloud": [
+        "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-core-helpers:pkg_tar",
+        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
+        "//non-free/packages/cmk-metric-backend:pkg_tar",
+        "//non-free/packages/cmk-mknotifyd:pkg_tar",
+        "//non-free/packages/cmk-otel-collector:pkg_tar",
+        "//non-free/packages/cmk-update-agent:pkg_tar",
+        "//omd/non-free/packages/alert-handling:pkg_tar",
+        "//omd/non-free/packages/cmc:pkg_tar",
+        "//omd/non-free/packages/cmk-dcd:pkg_tar",
+        "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
+        "//omd/non-free/packages/legal-docs:cloud_pkg_tar",
+        "//omd/non-free/packages/licensing:pkg_tar",
+        "//omd/non-free/packages/reporting:pkg_tar",
+        "//omd/non-free/packages/robotmk:pkg_tar",
+        "//omd/non-free/packages/saml2:pkg_tar",
+    ],
     # NOTES:
-    # * jaeger should be added to all editions EXCEPT saas - saas has its own tracing collector
-    # * nagvis should be added to all editions EXCEPT saas - see CMK-14926
-    "raw": [
+    # * jaeger should be added to all editions EXCEPT cloud - cloud has its own tracing collector
+    # * nagvis should be added to all editions EXCEPT cloud - see CMK-14926
+    "community": [
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
-    "cloud": [
+    "pro": [
+        "//non-free/packages/cmc-protocols:pkg_tar",
+        "//non-free/packages/cmk-core-helpers:pkg_tar",
+        "//non-free/packages/cmk-mknotifyd:pkg_tar",
+        "//non-free/packages/cmk-update-agent:pkg_tar",
+        "//omd/non-free/packages/alert-handling:pkg_tar",
+        "//omd/non-free/packages/cmc:pkg_tar",
+        "//omd/non-free/packages/cmk-dcd:pkg_tar",
+        "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
+        "//omd/non-free/packages/legal-docs:enterprise_pkg_tar",
+        "//omd/non-free/packages/licensing:pkg_tar",
+        "//omd/non-free/packages/reporting:pkg_tar",
+        "//omd/non-free/packages/robotmk:pkg_tar",
+        "//omd/non-free/packages/saml2:pkg_tar",
+        "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/nagvis:pkg_tar",
+    ],
+    "ultimate": [
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -60,24 +95,7 @@ edition_deps = {
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
-    "enterprise": [
-        "//non-free/packages/cmc-protocols:pkg_tar",
-        "//non-free/packages/cmk-core-helpers:pkg_tar",
-        "//non-free/packages/cmk-mknotifyd:pkg_tar",
-        "//non-free/packages/cmk-update-agent:pkg_tar",
-        "//omd/non-free/packages/alert-handling:pkg_tar",
-        "//omd/non-free/packages/cmc:pkg_tar",
-        "//omd/non-free/packages/cmk-dcd:pkg_tar",
-        "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
-        "//omd/non-free/packages/legal-docs:enterprise_pkg_tar",
-        "//omd/non-free/packages/licensing:pkg_tar",
-        "//omd/non-free/packages/reporting:pkg_tar",
-        "//omd/non-free/packages/robotmk:pkg_tar",
-        "//omd/non-free/packages/saml2:pkg_tar",
-        "//omd/packages/jaeger:pkg_tar",
-        "//omd/packages/nagvis:pkg_tar",
-    ],
-    "managed": [
+    "ultimatemt": [
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -99,38 +117,9 @@ edition_deps = {
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
-    "saas": [
-        "//non-free/packages/cmc-protocols:pkg_tar",
-        "//non-free/packages/cmk-core-helpers:pkg_tar",
-        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
-        "//non-free/packages/cmk-metric-backend:pkg_tar",
-        "//non-free/packages/cmk-mknotifyd:pkg_tar",
-        "//non-free/packages/cmk-otel-collector:pkg_tar",
-        "//non-free/packages/cmk-update-agent:pkg_tar",
-        "//omd/non-free/packages/alert-handling:pkg_tar",
-        "//omd/non-free/packages/cmc:pkg_tar",
-        "//omd/non-free/packages/cmk-dcd:pkg_tar",
-        "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
-        "//omd/non-free/packages/legal-docs:cloud_pkg_tar",
-        "//omd/non-free/packages/licensing:pkg_tar",
-        "//omd/non-free/packages/reporting:pkg_tar",
-        "//omd/non-free/packages/robotmk:pkg_tar",
-        "//omd/non-free/packages/saml2:pkg_tar",
-    ],
 }
 
 edition_skel_permissions = {
-    "raw": [
-        "//omd/packages/jaeger:skel.permissions",
-        "//omd/packages/maintenance:skel.permissions",
-        "//omd/packages/nagios:skel.permissions",
-        "//omd/packages/nagvis:skel.permissions",
-        "//omd/packages/omd:skel.permissions",
-        "//omd/packages/pnp4nagios:skel.permissions",
-        "//omd/packages/rabbitmq:skel.permissions",
-        "//omd/packages/redis:skel.permissions",
-        "//omd/packages/stunnel:skel.permissions",
-    ],
     "cloud": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
@@ -140,6 +129,15 @@ edition_skel_permissions = {
         "//omd/non-free/packages/metric-backend:skel.permissions",
         "//omd/non-free/packages/reporting:skel.permissions",
         "//omd/non-free/packages/saml2:skel.permissions",
+        "//omd/packages/maintenance:skel.permissions",
+        "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/omd:skel.permissions",
+        "//omd/packages/pnp4nagios:skel.permissions",
+        "//omd/packages/rabbitmq:skel.permissions",
+        "//omd/packages/redis:skel.permissions",
+        "//omd/packages/stunnel:skel.permissions",
+    ],
+    "community": [
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
@@ -150,7 +148,7 @@ edition_skel_permissions = {
         "//omd/packages/redis:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
     ],
-    "enterprise": [
+    "pro": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -166,7 +164,26 @@ edition_skel_permissions = {
         "//omd/packages/redis:skel.permissions",
         "//omd/packages/stunnel:skel.permissions",
     ],
-    "managed": [
+    "ultimate": [
+        "//non-free/packages/cmk-mknotifyd:skel.permissions",
+        "//omd/non-free/packages/cmc:skel.permissions",
+        "//omd/non-free/packages/cmk-dcd:skel.permissions",
+        "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",
+        "//omd/non-free/packages/licensing:skel.permissions",
+        "//omd/non-free/packages/metric-backend:skel.permissions",
+        "//omd/non-free/packages/reporting:skel.permissions",
+        "//omd/non-free/packages/saml2:skel.permissions",
+        "//omd/packages/jaeger:skel.permissions",
+        "//omd/packages/maintenance:skel.permissions",
+        "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/nagvis:skel.permissions",
+        "//omd/packages/omd:skel.permissions",
+        "//omd/packages/pnp4nagios:skel.permissions",
+        "//omd/packages/rabbitmq:skel.permissions",
+        "//omd/packages/redis:skel.permissions",
+        "//omd/packages/stunnel:skel.permissions",
+    ],
+    "ultimatemt": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -179,23 +196,6 @@ edition_skel_permissions = {
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
-        "//omd/packages/omd:skel.permissions",
-        "//omd/packages/pnp4nagios:skel.permissions",
-        "//omd/packages/rabbitmq:skel.permissions",
-        "//omd/packages/redis:skel.permissions",
-        "//omd/packages/stunnel:skel.permissions",
-    ],
-    "saas": [
-        "//non-free/packages/cmk-mknotifyd:skel.permissions",
-        "//omd/non-free/packages/cmc:skel.permissions",
-        "//omd/non-free/packages/cmk-dcd:skel.permissions",
-        "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",
-        "//omd/non-free/packages/licensing:skel.permissions",
-        "//omd/non-free/packages/metric-backend:skel.permissions",
-        "//omd/non-free/packages/reporting:skel.permissions",
-        "//omd/non-free/packages/saml2:skel.permissions",
-        "//omd/packages/maintenance:skel.permissions",
-        "//omd/packages/nagios:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",

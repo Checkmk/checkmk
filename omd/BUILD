@@ -35,8 +35,8 @@ file_from_flag(
         "",
     ],
     replace_labels = {
-        "cmk_version": "@cmk//version",
         "cmk_edition": "@cmk//edition",
+        "cmk_version": "@cmk//version",
     },
     tags = ["manual"],
 )
@@ -208,11 +208,11 @@ pkg_files(
            }) +
            edition_deps[edition],
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 [genrule(
@@ -222,11 +222,11 @@ pkg_files(
     cmd = "cat $(SRCS) > $@",
     tags = ["manual"],
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 py_binary(
@@ -305,9 +305,9 @@ pkg_tar(
     package = "check-mk-" + edition,
     tags = ["manual"],
     version = select({
+        "@cmk//distro:almalinux-10": "el10-38",
         "@cmk//distro:almalinux-8": "el8-38",
         "@cmk//distro:almalinux-9": "el9-38",
-        "@cmk//distro:almalinux-10": "el10-38",
         "@cmk//distro:debian-12": "0.bookworm",
         "@cmk//distro:debian-13": "0.trixie",
         "@cmk//distro:sles-15sp5": "sles15sp5",
@@ -316,11 +316,11 @@ pkg_tar(
         "@cmk//distro:ubuntu-24.04": "0.noble",
     }),
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 [pkg_deb(
@@ -335,7 +335,7 @@ pkg_tar(
     description = "Checkmk - Best-in-class infrastructure & application monitoring",
     homepage = "https://checkmk.com",
     maintainer = "Checkmk team <feedback@checkmk.com>",
-    # check-mk-enterprise-2.5.0-2025.06.26_0.noble_amd64.deb
+    # check-mk-pro-2.5.0-2025.06.26_0.noble_amd64.deb
     package = "check-mk-" + edition,
     package_file_name = "{package}-{cmk_version}_{version}_{architecture}.deb",
     package_variables = ":cmk_pkg_variables_" + edition,
@@ -350,9 +350,9 @@ pkg_tar(
     triggers = "//omd/debian:triggers",
     version_file = "//omd/distros:distro_version_file",
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]

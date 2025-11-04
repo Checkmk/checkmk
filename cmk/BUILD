@@ -107,17 +107,15 @@ REQUIRED_EXTERNAL_DEPS = [
     "werkzeug",
 ]
 
-RAW_PY = glob(
+COMMUNITY_PY = glob(
     [
         "**/cre/**/*.py",
         "**/cre.py",
-        "**/raw/**/*.py",
-        "**/raw.py",
     ],
     allow_empty = True,
 )
 
-CLOUD_PY = glob(
+ULTIMATE_PY = glob(
     [
         "**/cce/**/*.py",
         "**/cce.py",
@@ -125,7 +123,7 @@ CLOUD_PY = glob(
     allow_empty = True,
 )
 
-ENTERPRISE_PY = glob(
+PRO_PY = glob(
     [
         "**/cee/**/*.py",
         "**/cee.py",
@@ -133,7 +131,7 @@ ENTERPRISE_PY = glob(
     allow_empty = True,
 )
 
-MANAGED_PY = glob(
+MANAGED_MT_PY = glob(
     [
         "**/cme/**/*.py",
         "**/cme.py",
@@ -141,7 +139,7 @@ MANAGED_PY = glob(
     allow_empty = True,
 )
 
-SAAS_PY = glob(
+CLOUD_PY = glob(
     [
         "**/cse/**/*.py",
         "**/cse.py",
@@ -223,7 +221,6 @@ CMK_PACKAGES = [
     "//packages/cmk-trace",
     "//packages/cmk-werks",
 ] + select({
-    "@//:gpl_repo": [],
     "@//:gpl+nonfree_repo": [
         "//non-free/packages/cmk-core-helpers:check-helper-protocol",
         "//non-free/packages/cmk-core-helpers:fetcher-helper",
@@ -232,6 +229,7 @@ CMK_PACKAGES = [
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
     ],
+    "@//:gpl_repo": [],
 })
 
 CMC_PROTO_DEPS = [
@@ -245,7 +243,7 @@ py_library(
     srcs = glob(
         # Keep in sync with `REPO_PATCH_RULES` from `versioning.groovy`.
         include = ["**/*.py"],
-        exclude = RAW_PY + CLOUD_PY + ENTERPRISE_PY + MANAGED_PY + SAAS_PY,
+        exclude = COMMUNITY_PY + ULTIMATE_PY + PRO_PY + MANAGED_MT_PY + CLOUD_PY,
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
@@ -261,8 +259,8 @@ py_library(
 )
 
 py_library(
-    name = "lib_cmk_raw",
-    srcs = RAW_PY,
+    name = "lib_cmk_community",
+    srcs = COMMUNITY_PY,
     imports = [".."],
     visibility = [
         "//tests:__subpackages__",
@@ -283,10 +281,10 @@ py_library(
         "lib_cmk",
     ] + edition_python_deps[edition],
 ) for edition, srcs in [
+    ("ultimate", ULTIMATE_PY),
+    ("pro", PRO_PY),
+    ("ultimatemt", MANAGED_MT_PY),
     ("cloud", CLOUD_PY),
-    ("enterprise", ENTERPRISE_PY),
-    ("managed", MANAGED_PY),
-    ("saas", SAAS_PY),
 ]]
 
 py_library(
@@ -302,21 +300,21 @@ py_library(
     deps = [
         "//agents/plugins:mk_jolokia",
     ] + select({
-        "@//:gpl_repo": [],
         "@//:gpl+nonfree_repo": CMC_PROTO_DEPS,
+        "@//:gpl_repo": [],
     }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
 
 py_wheel(
-    name = "cmk_raw",
+    name = "cmk_community",
     distribution = "checkmk",
     requires = REQUIRED_EXTERNAL_DEPS,
     # TODO(ml): cmk_version vs. PEP 440?
-    version = "1+raw",
+    version = "1+community",
     visibility = ["//visibility:public"],
     deps = [
         "lib_cmk",
-        "lib_cmk_raw",
+        "lib_cmk_community",
         ":checkman",
         ":libexec",
         ":miscellaneous",
@@ -335,10 +333,10 @@ py_wheel(
         "lib_cmk_" + edition,
     ],
 ) for edition in [
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 [package_wheel(
@@ -346,11 +344,11 @@ py_wheel(
     visibility = ["//visibility:public"],
     whl = "cmk_" + edition,
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 py_pytest_main(

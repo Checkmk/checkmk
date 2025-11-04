@@ -104,11 +104,11 @@ py_binary(
     tool = ":binreplace_binary",
     value = "@cmk//version",
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 [pkg_files(
@@ -121,11 +121,11 @@ py_binary(
     renames = {"lib/libcrypto.so.3." + edition: "libcrypto.so.3"},
     tags = ["manual"],
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 [pkg_mklink(
@@ -214,11 +214,11 @@ pkg_files(
     tags = ["manual"],
     visibility = ["//visibility:public"],
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 [pkg_tar(
@@ -228,9 +228,9 @@ pkg_files(
     tags = ["manual"],
     visibility = ["//visibility:public"],
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]

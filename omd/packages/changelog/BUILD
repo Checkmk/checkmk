@@ -22,11 +22,11 @@ py_binary(
 )
 
 short_editions = {
-    "cloud": "cce",
-    "enterprise": "cee",
-    "managed": "cme",
-    "raw": "cre",
-    "saas": "cse",
+    "cloud": "cse",
+    "community": "cre",
+    "pro": "cee",
+    "ultimate": "cce",
+    "ultimatemt": "cme",
 }
 
 [run_binary(
@@ -48,11 +48,11 @@ short_editions = {
     tags = ["manual"],
     tool = ":werks_utils_binary",
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 [run_binary(
@@ -68,11 +68,11 @@ short_editions = {
     tool = ":werks_utils_binary",
     visibility = ["@@//omd:__subpackages__"],
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 [pkg_files(
@@ -82,18 +82,18 @@ short_editions = {
     renames = {":changelog_" + edition: "ChangeLog"},
     tags = ["manual"],
 ) for edition in [
-    "raw",
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 pkg_files(
-    name = "werks_pkg_raw",
-    srcs = [":werks_precompiled_raw"],
+    name = "werks_pkg_community",
+    srcs = [":werks_precompiled_community"],
     prefix = "share/check_mk/werks",
-    renames = {":werks_precompiled_raw": "werks"},
+    renames = {":werks_precompiled_community": "werks"},
     tags = ["manual"],
 )
 
@@ -104,10 +104,10 @@ pkg_files(
     renames = {":werks_precompiled_" + edition: "werks_" + edition},
     tags = ["manual"],
 ) for edition in [
+    "ultimate",
+    "pro",
+    "ultimatemt",
     "cloud",
-    "enterprise",
-    "managed",
-    "saas",
 ]]
 
 pkg_mklink(
@@ -121,25 +121,25 @@ pkg_tar(
     name = "changelog",
     srcs = [
         "changelog_link",
-        "changelog_pkg_raw",
-        "werks_pkg_raw",
+        "changelog_pkg_community",
+        "werks_pkg_community",
     ] + select({
-        "@cmk//edition:raw": [],
-        "@cmk//edition:enterprise": [
-            "changelog_pkg_enterprise",
-            "werks_pkg_enterprise",
-        ],
         "@cmk//edition:cloud": [
             "changelog_pkg_cloud",
             "werks_pkg_cloud",
         ],
-        "@cmk//edition:managed": [
-            "changelog_pkg_managed",
-            "werks_pkg_managed",
+        "@cmk//edition:community": [],
+        "@cmk//edition:pro": [
+            "changelog_pkg_pro",
+            "werks_pkg_pro",
         ],
-        "@cmk//edition:saas": [
-            "changelog_pkg_saas",
-            "werks_pkg_saas",
+        "@cmk//edition:ultimate": [
+            "changelog_pkg_ultimate",
+            "werks_pkg_ultimate",
+        ],
+        "@cmk//edition:ultimatemt": [
+            "changelog_pkg_ultimatemt",
+            "werks_pkg_ultimatemt",
         ],
     }),
     tags = ["manual"],

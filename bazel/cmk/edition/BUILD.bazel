@@ -4,37 +4,37 @@ package(default_visibility = ["//visibility:public"])
 
 string_flag(
     name = "edition",
-    build_setting_default = "raw",
+    build_setting_default = "community",
     values = [
-        "raw",
+        "community",
+        "ultimate",
+        "pro",
+        "ultimatemt",
         "cloud",
-        "enterprise",
-        "managed",
-        "saas",
     ],
 )
 
 config_setting(
-    name = "raw",
-    flag_values = {":edition": "raw"},
+    name = "community",
+    flag_values = {":edition": "community"},
+)
+
+config_setting(
+    name = "ultimate",
+    flag_values = {":edition": "ultimate"},
+)
+
+config_setting(
+    name = "pro",
+    flag_values = {":edition": "pro"},
+)
+
+config_setting(
+    name = "ultimatemt",
+    flag_values = {":edition": "ultimatemt"},
 )
 
 config_setting(
     name = "cloud",
     flag_values = {":edition": "cloud"},
-)
-
-config_setting(
-    name = "enterprise",
-    flag_values = {":edition": "enterprise"},
-)
-
-config_setting(
-    name = "managed",
-    flag_values = {":edition": "managed"},
-)
-
-config_setting(
-    name = "saas",
-    flag_values = {":edition": "saas"},
 )

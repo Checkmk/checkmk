@@ -14,7 +14,8 @@ from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from pydantic import UUID4
 
-from .config import get_config
+from cmk.agent_receiver.lib.config import get_config
+
 from .models import ConnectionMode, R4RStatus, RequestForRegistration
 
 

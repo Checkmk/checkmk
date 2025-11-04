@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import datetime
 
-from cmk.agent_receiver.config import Config
+from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     RelayConfigSpec,

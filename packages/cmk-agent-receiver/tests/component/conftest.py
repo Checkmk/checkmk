@@ -9,7 +9,7 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from cmk.agent_receiver.config import Config, CONFIG_FILE
+from cmk.agent_receiver.lib.config import Config, CONFIG_FILE
 from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.utils import internal_credentials
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient

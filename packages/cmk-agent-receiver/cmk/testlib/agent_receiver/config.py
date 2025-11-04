@@ -5,7 +5,7 @@
 
 import pathlib
 
-from cmk.agent_receiver.config import Config, get_config
+from cmk.agent_receiver.lib.config import Config, get_config
 
 
 def create_relay_config(

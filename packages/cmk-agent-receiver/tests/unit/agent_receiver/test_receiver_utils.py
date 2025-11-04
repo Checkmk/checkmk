@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import UUID4
 
-from cmk.agent_receiver.config import get_config
+from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from cmk.agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
 

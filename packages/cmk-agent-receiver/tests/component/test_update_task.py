@@ -8,7 +8,7 @@ import uuid
 
 import pytest
 
-from cmk.agent_receiver.config import Config
+from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import (
     ResultType,
     TaskResponse,

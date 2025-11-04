@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
-from cmk.agent_receiver.config import get_config
+from cmk.agent_receiver.lib.config import get_config
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 
 

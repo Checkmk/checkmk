@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.agent_receiver.config import Config
+from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
     SOCKET_TIMEOUT,
 )

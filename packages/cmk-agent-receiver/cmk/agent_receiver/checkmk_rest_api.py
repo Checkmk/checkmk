@@ -14,9 +14,9 @@ from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from pydantic import BaseModel, UUID4
 
+from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
 
-from .config import get_config
 from .models import ConnectionMode
 from .utils import B64SiteInternalSecret
 

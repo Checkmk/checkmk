@@ -8,7 +8,7 @@ import tarfile
 from datetime import datetime, UTC
 from pathlib import Path
 
-from cmk.agent_receiver.config import get_config
+from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import bound_contextvars, logger
 from cmk.agent_receiver.relay.api.routers.tasks.libs.retrieve_config_serial import (
     retrieve_config_serial,

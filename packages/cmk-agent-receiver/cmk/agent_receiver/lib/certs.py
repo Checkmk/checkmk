@@ -23,7 +23,7 @@ from cryptography.x509 import (
 from cryptography.x509.oid import NameOID
 from dateutil.relativedelta import relativedelta
 
-from cmk.agent_receiver.config import get_config
+from cmk.agent_receiver.lib.config import get_config
 
 
 def site_root_certificate() -> Certificate:

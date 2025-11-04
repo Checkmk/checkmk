@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -16,7 +18,19 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const { _t } = usei18n()
 
-defineProps<CmkWizardStepProps & { relayName: string }>()
+const props = defineProps<CmkWizardStepProps & { relayName: string }>()
+
+// Escape shell arguments by wrapping in single quotes and escaping single quotes.
+// This should ensure that regardless of what characters are in the given string argument,
+// they will be treated as literal text in the shell command,
+// preventing shell injection attacks.
+const escapeShellArg = (arg: string): string => {
+  return `'${arg.replace(/'/g, "'\"'\"'")}'`
+}
+
+const escapedCommand = computed(() => {
+  return `cmk-relay register -s <SERVER> -i <SITE> -U <USERNAME> -P <PASSWORD> -n ${escapeShellArg(props.relayName)}`
+})
 </script>
 
 <template>
@@ -29,10 +43,7 @@ defineProps<CmkWizardStepProps & { relayName: string }>()
       <CmkParagraph>
         {{ _t('Register the Relay to authorize it for communication with your Checkmk site.') }}
       </CmkParagraph>
-      <CmkCode
-        :code_txt="`cmk-relay register -s <SERVER> -i <SITE> -U <USERNAME> -P <PASSWORD> -n ${relayName}`"
-      >
-      </CmkCode>
+      <CmkCode :code_txt="escapedCommand"> </CmkCode>
       <CmkAlertBox variant="info">
         {{
           _t(

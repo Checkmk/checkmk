@@ -27,7 +27,7 @@ import requirements
 from tests.testlib.common.repo import (
     branch_from_env,
     current_base_branch_name,
-    is_enterprise_repo,
+    is_pro_repo,
     repo_path,
 )
 
@@ -183,7 +183,7 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         basepath / "omd/license_sources",  # update_licenses.py contains imports
         basepath / "packages/cmk-shared-typing/utils",  # only build time dependencies
     ]
-    if is_enterprise_repo():
+    if is_pro_repo():
         # Not deployed with the Checkmk site Python environment, but required by tests in the
         # cmk-update-agent package
         exclusions.append(basepath / "non-free/packages/cmk-update-agent")
@@ -449,7 +449,7 @@ def test_dependencies_are_used() -> None:
     # used for deploying the agent receiver, but in a bash script, so undetectable by this test
     known_unused_packages.add("gunicorn")
 
-    if not is_enterprise_repo():
+    if not is_pro_repo():
         known_unused_packages.update(("PyPDF", "numpy", "roman"))
 
     unused_dependencies = set(get_unused_dependencies())

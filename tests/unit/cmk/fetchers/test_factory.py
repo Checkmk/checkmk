@@ -16,9 +16,9 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.fetchers.snmp import make_backend
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
-from tests.testlib.common.repo import is_enterprise_repo
+from tests.testlib.common.repo import is_pro_repo
 
-if is_enterprise_repo():
+if is_pro_repo():
     from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore]
         InlineSNMPBackend,
     )

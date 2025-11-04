@@ -16,8 +16,8 @@ import cmk.utils.paths
 from cmk.gui.config import active_config, Config
 from tests.testlib.common.repo import (
     is_cloud_repo,
-    is_enterprise_repo,
     is_managed_repo,
+    is_pro_repo,
     is_saas_repo,
 )
 
@@ -162,7 +162,7 @@ def test_default_config_from_plugins() -> None:
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if is_enterprise_repo():
+    if is_pro_repo():
         # CEE plug-ins are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [

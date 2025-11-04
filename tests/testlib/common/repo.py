@@ -36,7 +36,7 @@ def is_non_free_repo() -> bool:
     return (repo_path() / "non-free").exists()
 
 
-def is_enterprise_repo() -> bool:
+def is_pro_repo() -> bool:
     return is_non_free_repo()
 
 
@@ -54,14 +54,14 @@ def is_saas_repo() -> bool:
 
 def add_python_paths() -> None:
     sys.path.insert(0, str(repo_path()))
-    if is_enterprise_repo():
+    if is_pro_repo():
         sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmk-update-agent"))
     sys.path.insert(0, os.path.join(repo_path(), "omd/packages/omd"))
 
 
 def add_protocols_path():
     sys.path.insert(0, str(repo_path()))
-    if is_enterprise_repo():
+    if is_pro_repo():
         sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmc-protocols"))
 
 

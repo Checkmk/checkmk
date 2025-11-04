@@ -45,7 +45,7 @@ from cmk.livestatus_client import (
     NetworkSocketDetails,
 )
 from cmk.messaging import rabbitmq
-from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
+from tests.testlib.common.repo import is_managed_repo, is_pro_repo
 from tests.testlib.unit.rabbitmq import get_expected_definition
 from tests.testlib.unit.utils import reset_registries
 
@@ -250,7 +250,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if is_enterprise_repo() and edition is cmk_version.Edition.COMMUNITY:
+    if is_pro_repo() and edition is cmk_version.Edition.COMMUNITY:
         # CEE paths are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [

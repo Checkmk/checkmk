@@ -11,7 +11,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from tests.testlib.common.repo import (
     is_cloud_repo,
-    is_enterprise_repo,
+    is_pro_repo,
 )
 
 expected_attributes = {
@@ -324,7 +324,7 @@ expected_attributes = {
                 "topic": "Monitoring agents",
             },
         }
-        if is_enterprise_repo()
+        if is_pro_repo()
         else {}
     ),
     **(
@@ -595,7 +595,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         ],
         "monitoring_agents": [
             "tag_agent",
-            *(("cmk_agent_connection", "bake_agent_package") if is_enterprise_repo() else ()),
+            *(("cmk_agent_connection", "bake_agent_package") if is_pro_repo() else ()),
             "tag_snmp_ds",
             "snmp_community",
             "tag_piggyback",

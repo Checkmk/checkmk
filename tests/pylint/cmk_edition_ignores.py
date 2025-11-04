@@ -5,13 +5,13 @@
 
 from pylint.lint import PyLinter
 
-from tests.testlib.common.repo import is_enterprise_repo
+from tests.testlib.common.repo import is_pro_repo
 
 
 # Is called by pylint to load this plugin
 def register(linter: PyLinter) -> None:
     # Disable some CEE/CME/CCE specific things when linting CRE repos
-    if not is_enterprise_repo():
+    if not is_pro_repo():
         # Is used to disable import-error. Would be nice if no-name-in-module could be
         # disabled using this, but this does not seem to be possible :(
         linter.set_option(

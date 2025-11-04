@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.valuespec import autocompleter_registry
-from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
+from tests.testlib.common.repo import is_cloud_repo, is_pro_repo
 
 
 def test_builtin_autocompleters_registered() -> None:
@@ -29,7 +29,7 @@ def test_builtin_autocompleters_registered() -> None:
         "wato_folder_choices",
     ]
 
-    if is_enterprise_repo():
+    if is_pro_repo():
         expected += [
             "add_to_report_choices",
             "graph_template_for_combined_graph",

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
-from tests.testlib.common.repo import is_enterprise_repo
+from tests.testlib.common.repo import is_pro_repo
 
 
 def test_group_usage_finder_registry_entries() -> None:
@@ -16,7 +16,7 @@ def test_group_usage_finder_registry_entries() -> None:
         "find_timeperiod_usage_in_users",
     ]
 
-    if is_enterprise_repo():
+    if is_pro_repo():
         expected.append("find_timeperiod_usage_in_alert_handler_rules")
 
     registered = [f.__name__ for f in timeperiod_usage_finder_registry.values()]

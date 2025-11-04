@@ -20,8 +20,8 @@ from cmk.gui.views.icon.registry import all_icons
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.common.repo import (
     is_cloud_repo,
-    is_enterprise_repo,
     is_managed_repo,
+    is_pro_repo,
     is_saas_repo,
 )
 from tests.testlib.unit.rest_api_client import ClientRegistry
@@ -245,7 +245,7 @@ def _check_widget_create(
 
 @pytest.fixture(name="skip_in_raw_edition", scope="session")
 def fixture_skip_in_raw_edition() -> None:
-    if is_saas_repo() or is_cloud_repo() or is_managed_repo() or is_enterprise_repo():
+    if is_saas_repo() or is_cloud_repo() or is_managed_repo() or is_pro_repo():
         return
 
     pytest.skip("This test is not applicable for the raw edition.")

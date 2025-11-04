@@ -9,7 +9,7 @@ import pytest
 
 from cmk.post_rename_site import main
 from cmk.post_rename_site.registry import rename_action_registry
-from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
+from tests.testlib.common.repo import is_cloud_repo, is_pro_repo
 
 
 @pytest.fixture(name="expected_plugins")
@@ -28,7 +28,7 @@ def fixture_expected_plugins() -> list[str]:
     # because our test environments do not reflect our Checkmk editions properly.
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
-    if is_enterprise_repo():
+    if is_pro_repo():
         # The CEE plug-ins are loaded when the CEE plug-ins are available, i.e.
         # when the "enterprise/" path is present.
         expected.append("dcd_connections")

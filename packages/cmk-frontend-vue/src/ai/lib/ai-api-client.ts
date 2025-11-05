@@ -3,17 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { Api, type ApiResponseBody } from '@/lib/api-client'
-import { type CmkState, type CmkStateName, mapCmkState } from '@/lib/cmkState'
-import { randomId } from '@/lib/randomId'
+import type { AiTemplateId } from 'cmk-shared-typing/typescript/ai_button'
 
-export interface ExplainThisIssue {
-  short_summary: string
-  detected_problem: string
-  potential_solutions: string
-  context: { [key: string]: unknown }
-  might_be_misconfigured?: string | undefined | null
-}
+import { Api, type ApiResponseBody } from '@/lib/api-client'
+import { randomId } from '@/lib/randomId'
 
 export interface AiBaseRequestResponse {
   user_id?: string | undefined
@@ -34,18 +27,40 @@ export interface DataToBeProvidedToLlmResponse extends AiBaseRequestResponse {
   list_service_cols: string[]
 }
 
+export interface AiServiceAction {
+  action_id: string
+  action_name: string
+}
+
+export interface EnumerateActionsResponse {
+  all_possible_action_types: AiServiceAction[]
+}
+
 export interface AiInferenceRequest extends AiBaseRequestResponse {
-  host_name: string
-  service_name: string
-  status: CmkStateName
+  action_id: string
+  data: unknown
+  history?: [] | undefined
 }
 
 export interface AiInferenceResponse extends AiBaseLlmResponse {
-  response: ExplainThisIssue | string
+  response: AiInference
+}
+
+export interface AiInferenceUsedResource {
+  host_id: string
+  service_id: string
+  list_of_used_fields: string
+}
+
+export interface AiExplanationSection {
+  title: string
+  content: string
+  type: 'markdown' | 'json'
 }
 
 export interface AiInference extends AiBaseLlmResponse {
-  response: ExplainThisIssue
+  explanation_sections: AiExplanationSection[]
+  used_resources: AiInferenceUsedResource[]
 }
 
 export class AiApiClient extends Api {
@@ -62,20 +77,28 @@ export class AiApiClient extends Api {
     ) as Promise<DataToBeProvidedToLlmResponse>
   }
 
-  public async inference(host: string, service: string, state: CmkState): Promise<AiInference> {
+  public async getUserActions(templateId: AiTemplateId): Promise<AiServiceAction[]> {
+    return (
+      (await this.get(
+        `enumerate-actions?request_id=${randomId()}&template_id=${templateId}`
+      )) as EnumerateActionsResponse
+    ).all_possible_action_types
+  }
+
+  public async inference(actionId: string, data: unknown, history?: []): Promise<AiInference> {
     const options: AiInferenceRequest = {
-      host_name: host,
-      service_name: service,
-      status: mapCmkState(state)
+      action_id: actionId,
+      data,
+      history
     }
 
     const res = (await this.post('inference', this.ensureAiRequest(options))) as AiInferenceResponse
 
     if (typeof res.response === 'string') {
-      res.response = JSON.parse(res.response as string) as ExplainThisIssue
+      res.response = JSON.parse(res.response as string) as AiInference
     }
 
-    return res as AiInference
+    return res.response
   }
 
   public override get(url: string): Promise<AiBaseRequestResponse> {

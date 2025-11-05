@@ -10,7 +10,7 @@ import { onMounted, ref } from 'vue'
 import type {
   TBaseConversationElementEmits,
   TextConversationElementContent
-} from '@/ai/lib/conversation-templates/base-template'
+} from '@/ai/lib/service/ai-template'
 import { typewriter } from '@/ai/lib/utils'
 
 const props = defineProps<TextConversationElementContent>()

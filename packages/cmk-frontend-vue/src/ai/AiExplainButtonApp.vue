@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type AiButton } from 'cmk-shared-typing/typescript/ai_button'
-import { ref } from 'vue'
+import { type Ref, computed, provide, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -14,17 +14,24 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
 import AiConversationSlideout from './components/conversation/AiConversationSlideout.vue'
-import type { AiConversationBaseTemplate } from './lib/conversation-templates/base-template'
-import { getAiTemplate } from './lib/templates'
+import { aiTemplateKey } from './lib/provider/ai-template'
+import { AiTemplateService } from './lib/service/ai-template'
 
 const props = defineProps<AiButton>()
-const aiTemplate = ref<AiConversationBaseTemplate>()
+const aiTemplate = ref<AiTemplateService | null>(null)
+
+provide(aiTemplateKey, aiTemplate as Ref<AiTemplateService | null>)
+
 const conversationOpen = ref(true)
 
 function explainThis() {
-  aiTemplate.value = getAiTemplate(props.template.id, props.user_id, props.template.data)
+  aiTemplate.value = new AiTemplateService(props.template.id, props.user_id, props.template.data)
   conversationOpen.value = true
 }
+
+const templateLoaded = computed(() => {
+  return aiTemplate.value !== null
+})
 </script>
 
 <template>
@@ -38,8 +45,7 @@ function explainThis() {
   </Teleport>
 
   <AiConversationSlideout
-    v-if="aiTemplate"
-    v-model="aiTemplate"
+    v-if="templateLoaded"
     :slidoeut-open="conversationOpen"
     :title="props.template.title as TranslatedString"
     @update:slidoeut-open="

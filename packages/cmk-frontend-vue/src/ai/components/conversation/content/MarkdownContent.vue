@@ -11,7 +11,7 @@ import { onMounted } from 'vue'
 import type {
   MarkdownConversationElementContent,
   TBaseConversationElementEmits
-} from '@/ai/lib/conversation-templates/base-template'
+} from '@/ai/lib/service/ai-template'
 
 const props = defineProps<MarkdownConversationElementContent>()
 
@@ -24,7 +24,7 @@ onMounted(() => {
 
 <template>
   <!-- eslint-disable-next-line vue/no-v-html -->
-  <div class="ai-markdown-content" v-html="marked.parse(props.markdown)"></div>
+  <div class="ai-markdown-content" v-html="marked.parse(props.content)"></div>
 </template>
 
 <style scoped>

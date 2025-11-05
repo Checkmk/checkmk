@@ -14,23 +14,21 @@ import CmkSkeleton from '@/components/CmkSkeleton.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import type {
-  AiConversationBaseTemplate,
-  TAiConversationElementContent
-} from '@/ai/lib/conversation-templates/base-template'
+import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
+import type { TAiConversationElementContent } from '@/ai/lib/service/ai-template'
 import { AiRole } from '@/ai/lib/utils'
 
 import AiConversationElement from './AiConversationElement.vue'
 
 const { _t } = usei18n()
-const aiTemplate = defineModel<AiConversationBaseTemplate>({ required: true })
+const aiTemplate = getInjectedAiTemplate()
 const systemPromp = ref<TAiConversationElementContent[] | null>(null)
 const doNotAskAgain = ref<boolean>(false)
 const consentTriggered = ref<boolean>(false)
 
 onMounted(async () => {
-  if (!aiTemplate.value.consented) {
-    if (typeof aiTemplate.value.config.dataToProvideToLlm === 'function') {
+  if (!aiTemplate.value?.isConsented()) {
+    if (typeof aiTemplate.value?.config.dataToProvideToLlm === 'function') {
       const res = await aiTemplate.value.config.dataToProvideToLlm()
       if (res) {
         systemPromp.value = res
@@ -43,7 +41,7 @@ const emit = defineEmits(['consent', 'decline'])
 
 function onConsent() {
   if (doNotAskAgain.value) {
-    aiTemplate.value.persistConsent()
+    aiTemplate.value?.persistConsent()
   }
   consentTriggered.value = true
   emit('consent')

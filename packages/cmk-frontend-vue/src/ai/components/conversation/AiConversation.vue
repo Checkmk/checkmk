@@ -7,20 +7,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type {
-  AiConversationBaseTemplate,
-  IAiConversationElement
-} from '@/ai/lib/conversation-templates/base-template'
+import AiUserAction from '@/ai/components/user-action/AiConversationUserAction.vue'
+import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
+import type { IAiConversationElement } from '@/ai/lib/service/ai-template'
 
 import AiConversationConsent from './AiConversationConsent.vue'
 import AiConversationElement from './AiConversationElement.vue'
 
-const aiTemplate = defineModel<AiConversationBaseTemplate>({ required: true })
+const aiTemplate = getInjectedAiTemplate()
 
-const showConsent = ref<boolean>(!aiTemplate.value.consented.value)
+const showConsent = ref<boolean>(!aiTemplate.value?.isConsented())
 const emit = defineEmits(['close', 'consent'])
 
-const elements = computed(() => aiTemplate.value.elements as unknown as IAiConversationElement[])
+const elements = computed(() => aiTemplate.value?.elements as unknown as IAiConversationElement[])
 
 function onConsent() {
   setTimeout(() => {
@@ -35,14 +34,10 @@ function onDecline() {
 
 <template>
   <div class="ai-conversation">
-    <AiConversationConsent
-      v-if="showConsent"
-      v-model="aiTemplate"
-      @consent="onConsent"
-      @decline="onDecline"
-    />
+    <AiConversationConsent v-if="showConsent" @consent="onConsent" @decline="onDecline" />
     <template v-else>
       <AiConversationElement v-for="(element, index) in elements" :key="index" v-bind="element" />
+      <AiUserAction />
     </template>
   </div>
 </template>

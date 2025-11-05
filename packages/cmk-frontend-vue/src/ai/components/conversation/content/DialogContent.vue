@@ -14,7 +14,7 @@ import CmkDialog from '@/components/CmkDialog.vue'
 import type {
   DialogConversationElementContent,
   TBaseConversationElementEmits
-} from '@/ai/lib/conversation-templates/base-template'
+} from '@/ai/lib/service/ai-template'
 
 defineProps<DialogConversationElementContent>()
 

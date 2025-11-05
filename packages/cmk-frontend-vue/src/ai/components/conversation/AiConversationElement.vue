@@ -5,12 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
-import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type {
@@ -23,8 +22,7 @@ import type {
   MarkdownConversationElementContent,
   TAiConversationElementContent,
   TextConversationElementContent
-} from '@/ai/lib/conversation-templates/base-template'
-import { AiRole } from '@/ai/lib/utils'
+} from '@/ai/lib/service/ai-template'
 
 import AlertContent from './content/AlertContent.vue'
 import CodeContent from './content/CodeContent.vue'
@@ -67,17 +65,6 @@ function onContentDone() {
   }
 }
 
-const rolename = computed(() => {
-  switch (props.role) {
-    case AiRole.user:
-      return 'You'
-    case AiRole.ai:
-      return 'AI'
-    default:
-      return 'System'
-  }
-})
-
 onMounted(async () => {
   if (typeof props.content === 'function') {
     contentData.value = await props.content()
@@ -102,9 +89,6 @@ onMounted(async () => {
       </div>
     </template>
     <template v-else>
-      <div class="ai-conversation-element__avatar">
-        <strong>{{ rolename }}</strong>
-      </div>
       <div v-if="contentData" class="ai-conversation-element__text">
         <template v-for="(cnt, i) in contentsToDisplay" :key="i">
           <CmkHeading
@@ -157,6 +141,7 @@ onMounted(async () => {
             @done="onContentDone"
           />
         </template>
+        <!--
         <div v-if="done && !hideControls" class="ai-conversation-element__ctrls">
           <template v-if="role === AiRole.ai">
             <CmkIconButton name="checkmark"></CmkIconButton>
@@ -167,6 +152,7 @@ onMounted(async () => {
           </template>
           <CmkIconButton name="copied"></CmkIconButton>
         </div>
+        -->
       </div>
     </template>
   </div>
@@ -180,6 +166,7 @@ onMounted(async () => {
   flex-direction: row-reverse;
   gap: var(--dimension-6);
   width: 60%;
+  justify-self: flex-end;
 
   .ai-conversation-element__loader {
     display: flex;
@@ -192,16 +179,6 @@ onMounted(async () => {
     }
   }
 
-  .ai-conversation-element__avatar {
-    background: var(--default-form-element-bg-color);
-    border-radius: 50%;
-    width: var(--dimension-10);
-    height: var(--dimension-10);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   .ai-conversation-element__text {
     padding: var(--dimension-4);
     background: var(--default-form-element-bg-color);
@@ -211,6 +188,7 @@ onMounted(async () => {
     flex-direction: column;
     position: relative;
     margin-bottom: var(--dimension-10);
+    gap: var(--dimension-10);
 
     .ai-conversation-element__text-header {
       width: 100%;
@@ -239,6 +217,7 @@ onMounted(async () => {
 
   &.ai-conversation-element--ai,
   &.ai-conversation-element--system {
+    justify-self: flex-start;
     flex-direction: column;
     align-items: start;
     width: 100%;
@@ -247,10 +226,6 @@ onMounted(async () => {
       background: transparent;
       border: none;
       width: 90%;
-    }
-
-    .ai-conversation-element__avatar {
-      display: none;
     }
   }
 

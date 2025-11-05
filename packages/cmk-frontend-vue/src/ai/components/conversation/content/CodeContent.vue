@@ -12,7 +12,7 @@ import CmkCode from '@/components/CmkCode.vue'
 import type {
   CodeBlockConversationElementContent,
   TBaseConversationElementEmits
-} from '@/ai/lib/conversation-templates/base-template'
+} from '@/ai/lib/service/ai-template'
 
 defineProps<CodeBlockConversationElementContent>()
 

@@ -9,11 +9,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 
-import type { AiConversationBaseTemplate } from '@/ai/lib/conversation-templates/base-template'
-
 import AiConversation from './AiConversation.vue'
 
-const aiTemplate = defineModel<AiConversationBaseTemplate>({ required: true })
 const props = defineProps<{
   title: TranslatedString
 }>()
@@ -38,6 +35,6 @@ function onClose() {
     :open="slideInOpen"
     @close="onClose"
   >
-    <AiConversation v-if="slideInOpen" v-model="aiTemplate" @close="onClose" />
+    <AiConversation v-if="slideInOpen" @close="onClose" />
   </CmkSlideInDialog>
 </template>

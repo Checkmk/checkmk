@@ -10,7 +10,7 @@ import { onMounted } from 'vue'
 import type {
   ListConversationElementContent,
   TBaseConversationElementEmits
-} from '@/ai/lib/conversation-templates/base-template'
+} from '@/ai/lib/service/ai-template'
 
 defineProps<ListConversationElementContent>()
 

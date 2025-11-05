@@ -12,7 +12,7 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import type {
   AlertConversationElementContent,
   TBaseConversationElementEmits
-} from '@/ai/lib/conversation-templates/base-template'
+} from '@/ai/lib/service/ai-template'
 
 defineProps<AlertConversationElementContent>()
 

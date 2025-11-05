@@ -6,8 +6,8 @@
 import pytest
 from pydantic import UUID4
 
+from cmk.agent_receiver.agent_receiver.models import CsrField
 from cmk.agent_receiver.lib.certs import serialize_to_pem
-from cmk.agent_receiver.models import CsrField
 from tests.unit.agent_receiver.lib.certs import generate_csr_pair
 
 

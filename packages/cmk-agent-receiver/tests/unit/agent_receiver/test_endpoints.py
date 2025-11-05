@@ -22,9 +22,13 @@ from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     HostConfiguration,
     RegisterResponse,
 )
+from cmk.agent_receiver.agent_receiver.models import (
+    ConnectionMode,
+    R4RStatus,
+    RequestForRegistration,
+)
 from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.config import get_config
-from cmk.agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from cmk.agent_receiver.utils import R4R
 from tests.unit.agent_receiver.lib.certs import generate_csr_pair
 

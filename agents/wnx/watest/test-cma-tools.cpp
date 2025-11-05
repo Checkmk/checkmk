@@ -376,4 +376,10 @@ TEST(CmaToolsWin, WithEnv) {
 
 }  // namespace win
 
+TEST(CmaTools, LowerUpper) {
+    EXPECT_EQ(ToLower("ABCdef"), "abcdef");
+    EXPECT_EQ(ToLower(L"ABCdef"), L"abcdef");
+    EXPECT_EQ(ToUpper("ABCdef"), "ABCDEF");
+    EXPECT_EQ(ToUpper(L"ABCdef"), L"ABCDEF");
+}
 }  // namespace cma::tools

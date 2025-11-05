@@ -162,6 +162,30 @@ inline void WideLower(std::wstring &str) {
     }
 }
 
+inline std::string ToLower(std::string_view str) {
+    std::string s{str};
+    StringLower(s);
+    return s;
+}
+
+inline std::string ToUpper(std::string_view str) {
+    std::string s{str};
+    StringUpper(s);
+    return s;
+}
+
+inline std::wstring ToLower(std::wstring_view str) {
+    std::wstring s{str};
+    WideLower(s);
+    return s;
+}
+
+inline std::wstring ToUpper(std::wstring_view str) {
+    std::wstring s{str};
+    WideUpper(s);
+    return s;
+}
+
 // makes a vector from arbitrary objects
 // Usage:
 // auto vector_of string

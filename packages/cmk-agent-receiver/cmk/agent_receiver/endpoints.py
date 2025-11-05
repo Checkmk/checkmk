@@ -32,6 +32,7 @@ from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     post_csr,
     register,
 )
+from cmk.agent_receiver.agent_receiver.decompression import DecompressionError, Decompressor
 from cmk.agent_receiver.lib.certs import (
     agent_root_ca,
     current_time_naive,
@@ -44,7 +45,6 @@ from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
 from cmk.agent_receiver.lib.route_classes import UUIDValidationRoute
 
-from .decompression import DecompressionError, Decompressor
 from .models import (
     CertificateRenewalBody,
     ConnectionMode,

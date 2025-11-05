@@ -15,7 +15,7 @@ py_library(
     srcs = [
         "cmk/agent_receiver/__init__.py",
         "cmk/agent_receiver/agent_receiver/checkmk_rest_api.py",
-        "cmk/agent_receiver/decompression.py",
+        "cmk/agent_receiver/agent_receiver/decompression.py",
         "cmk/agent_receiver/endpoints.py",
         "cmk/agent_receiver/lib/__init__.py",
         "cmk/agent_receiver/lib/certs.py",

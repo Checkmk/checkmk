@@ -18,7 +18,7 @@ from typing import Any, assert_never, Literal
 
 from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult, TableRow
 
-_Edition = Literal["cre", "cee", "cce", "cme", "cse"]
+_Edition = Literal["community", "pro", "ultimate", "ultimatemt", "cloud"]
 
 
 def _service_status(
@@ -45,9 +45,18 @@ def _service_status(
 
 
 def _get_sites_edition(site_info: Mapping[str, object]) -> _Edition:
+    # TODO With 2.6 we can remove the old edition names
     match str(site_info["used_version"]).rsplit(".", 1)[-1]:
-        case "cre" | "cee" | "cce" | "cme" | "cse" as edition:
-            return edition
+        case "cre" | "community":
+            return "community"
+        case "cee" | "pro":
+            return "pro"
+        case "cce" | "ultimate":
+            return "ultimate"
+        case "cme" | "ultimatemt":
+            return "ultimatemt"
+        case "cse" | "cloud":
+            return "cloud"
         case other:
             raise ValueError(other)
 
@@ -63,9 +72,9 @@ def _make_edition_specific_services(edition: _Edition) -> Sequence[str]:
         "xinetd",
     ]
     match edition:
-        case "cre":
+        case "community":
             return ["nagios", "npcd", *common_services]
-        case "cee" | "cce" | "cme" | "cse":
+        case "pro" | "ultimate" | "ultimatemt" | "cloud":
             return ["cmc", "dcd", "liveproxyd", "mknotifyd", *common_services]
         case other:
             assert_never(other)

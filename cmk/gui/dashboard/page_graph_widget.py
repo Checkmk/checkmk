@@ -137,6 +137,7 @@ class GraphWidgetPage(cmk.gui.pages.Page):
         try:
             html.write_html(
                 host_service_graph_dashlet_cmk(
+                    ctx.request,
                     graph_spec,
                     GraphRenderConfig.model_validate(
                         graph_config["graph_render_options"]

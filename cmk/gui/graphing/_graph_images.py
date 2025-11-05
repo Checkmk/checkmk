@@ -24,7 +24,7 @@ from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import pdf
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
@@ -84,6 +84,7 @@ class AjaxGraphImagesForNotifications(Page):
             raise MKUnauthenticatedException(_("You are not allowed to access this page."))
 
         _answer_graph_image_request(
+            ctx.request,
             metrics_from_api,
             graphs_from_api,
             UserPermissions.from_config(ctx.config, permission_registry),
@@ -94,6 +95,7 @@ class AjaxGraphImagesForNotifications(Page):
 
 
 def _answer_graph_image_request(
+    request: Request,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,

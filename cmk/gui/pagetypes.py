@@ -48,7 +48,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
@@ -983,7 +983,7 @@ class ListPage(Page, Generic[_T]):
         self._type.need_overriding_permission("edit")
 
         title_plural = self._type.phrase("title_plural")
-        breadcrumb = make_breadcrumb(title_plural, "list", self._type.list_url())
+        breadcrumb = make_breadcrumb(ctx.request, title_plural, "list", self._type.list_url())
 
         current_type_dropdown = PageMenuDropdown(
             name=self._type.type_name(),
@@ -1261,7 +1261,9 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
                 assert user.id is not None
                 page_dict["owner"] = str(user.id)
                 owner_id = user.id
-        breadcrumb = make_breadcrumb(title, mode, self._type.list_url(), self._type.phrase("title"))
+        breadcrumb = make_breadcrumb(
+            ctx.request, title, mode, self._type.list_url(), self._type.phrase("title")
+        )
         page_menu = make_edit_form_page_menu(
             breadcrumb,
             dropdown_name=self._type.type_name(),
@@ -1388,7 +1390,7 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
 
 
 def make_breadcrumb(
-    title: str, page_name: str, list_url: str, parent_title: str | None = None
+    request: Request, title: str, page_name: str, list_url: str, parent_title: str | None = None
 ) -> Breadcrumb:
     breadcrumb = make_main_menu_breadcrumb(main_menu_registry.menu_customize())
 

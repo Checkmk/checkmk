@@ -42,7 +42,6 @@ from cmk.gui.graphing import (
     perfometers_from_api,
 )
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
@@ -182,9 +181,10 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
     def page(self, ctx: PageContext) -> PageResult:
         """This page is called for the popup of the graph icon of hosts/services."""
         host_service_graph_popup_cmk(
-            SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
-            request.get_validated_type_input_mandatory(HostName, "host_name"),
-            ServiceName(request.get_str_input_mandatory("service")),
+            ctx.request,
+            SiteId(raw_site_id) if (raw_site_id := ctx.request.var("site")) else None,
+            ctx.request.get_validated_type_input_mandatory(HostName, "host_name"),
+            ServiceName(ctx.request.get_str_input_mandatory("service")),
             metrics_from_api,
             graphs_from_api,
             UserPermissions.from_config(ctx.config, permission_registry),
@@ -201,8 +201,13 @@ class PageGraphDashlet(cmk.gui.pages.Page):
     def page(self, ctx: PageContext) -> None:
         html.write_html(
             host_service_graph_dashlet_cmk(
-                parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
-                GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
+                ctx.request,
+                parse_raw_graph_specification(
+                    json.loads(ctx.request.get_str_input_mandatory("spec"))
+                ),
+                GraphRenderConfig.model_validate_json(
+                    ctx.request.get_str_input_mandatory("config")
+                ),
                 metrics_from_api,
                 graphs_from_api,
                 UserPermissions.from_config(ctx.config, permission_registry),
@@ -210,6 +215,6 @@ class PageGraphDashlet(cmk.gui.pages.Page):
                 graph_timeranges=ctx.config.graph_timeranges,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
-                graph_display_id=request.get_str_input_mandatory("id"),
+                graph_display_id=ctx.request.get_str_input_mandatory("id"),
             )
         )

@@ -24,7 +24,7 @@ from cmk.gui.color import render_color_icon
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import (
@@ -110,6 +110,7 @@ min_resize_height = 6
 
 
 def host_service_graph_popup_cmk(
+    request: Request,
     site: SiteId | None,
     host_name: HostName,
     service_description: ServiceName,
@@ -182,12 +183,13 @@ def render_graph_error_html(*, title: str, msg_or_exc: Exception | str, debug: b
 # Render the complete HTML code of a graph - including its <div> container.
 # Later updates will just replace the content of that container.
 def _render_graph_html(
+    request: Request,
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
 ) -> HTML:
     with output_funnel.plugged():
-        _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
+        _show_graph_html_content(request, graph_artwork, graph_data_range, graph_render_config)
         html_code = HTML.without_escaping(output_funnel.drain())
 
     return HTMLWriter.render_javascript(
@@ -222,16 +224,19 @@ def _render_title_elements_plain(elements: Iterable[str]) -> str:
     return " / ".join(_u(txt) for txt in elements if txt)
 
 
+# TODO: still relies on the global request object because painters also use this function.
 def render_plain_graph_title(
     graph_artwork: GraphArtwork,
     graph_render_config: GraphRenderConfigBase,
 ) -> str:
     return _render_title_elements_plain(
-        element[0] for element in _render_graph_title_elements(graph_artwork, graph_render_config)
+        element[0]
+        for element in _render_graph_title_elements(request, graph_artwork, graph_render_config)
     )
 
 
 def _render_graph_title_elements(
+    request: Request,
     graph_artwork: GraphArtwork,
     graph_render_config: GraphRenderConfigBase,
     explicit_title: str | None = None,
@@ -253,13 +258,15 @@ def _render_graph_title_elements(
     if not isinstance(specification, TemplateGraphSpecification):
         return title_elements
 
-    title_elements.extend(_title_info_elements(specification, graph_render_config.title_format))
+    title_elements.extend(
+        _title_info_elements(request, specification, graph_render_config.title_format)
+    )
 
     return title_elements
 
 
 def _title_info_elements(
-    spec_info: TemplateGraphSpecification, title_format: GraphTitleFormat
+    request: Request, spec_info: TemplateGraphSpecification, title_format: GraphTitleFormat
 ) -> Iterable[tuple[str, str]]:
     if title_format.add_host_name:
         host_url = makeuri_contextless(
@@ -300,6 +307,7 @@ def _graph_legend_enabled(
 
 
 def _show_graph_html_content(
+    request: Request,
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
@@ -350,6 +358,7 @@ def _show_graph_html_content(
 
     if title := text_with_links_to_user_translated_html(
         _render_graph_title_elements(
+            request,
             graph_artwork,
             graph_render_config,
             explicit_title=graph_render_config.explicit_title,
@@ -579,9 +588,10 @@ class AjaxGraph(Page):
         """Registered as `ajax_graph`."""
         response.set_content_type("application/json")
         try:
-            context_var = request.get_str_input_mandatory("context")
+            context_var = ctx.request.get_str_input_mandatory("context")
             context = json.loads(context_var)
             response_data = render_ajax_graph(
+                ctx.request,
                 context,
                 metrics_from_api,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
@@ -597,6 +607,7 @@ class AjaxGraph(Page):
 
 
 def render_ajax_graph(
+    request: Request,
     context: Mapping[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
@@ -667,7 +678,7 @@ def render_ajax_graph(
     )
 
     with output_funnel.plugged():
-        _show_graph_html_content(graph_artwork, graph_data_range, graph_render_config)
+        _show_graph_html_content(request, graph_artwork, graph_data_range, graph_render_config)
         html_code = HTML.without_escaping(output_funnel.drain())
 
     return {
@@ -719,6 +730,7 @@ class UserGraphDataRangeStore:
         ).unlink(missing_ok=True)
 
 
+# TODO: still relies on the global request object because painters also use this function.
 def render_graphs_from_specification_html(
     graph_specification: GraphSpecification,
     graph_data_range: GraphDataRange,
@@ -763,6 +775,7 @@ def render_graphs_from_specification_html(
         )
 
     return _render_graphs_from_definitions(
+        request,
         graph_recipes,
         graph_data_range,
         graph_render_config,
@@ -777,6 +790,7 @@ def render_graphs_from_specification_html(
 
 
 def _render_graphs_from_definitions(
+    request: Request,
     graph_recipes: Sequence[GraphRecipe],
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
@@ -807,6 +821,7 @@ def _render_graphs_from_definitions(
             )
         else:
             output += _render_graph_content_html(
+                request,
                 graph_recipe,
                 recipe_specific_data_range,
                 recipe_specific_render_config,
@@ -864,8 +879,9 @@ class AjaxRenderGraphContent(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         # Called from javascript code via JSON to initially render a graph
         """Registered as `ajax_render_graph_content`."""
-        api_request = request.get_request()
+        api_request = ctx.request.get_request()
         return _render_graph_content_html(
+            ctx.request,
             GraphRecipe.model_validate(api_request["graph_recipe"]),
             GraphDataRange.model_validate(api_request["graph_data_range"]),
             GraphRenderConfig.model_validate(api_request["graph_render_config"]),
@@ -879,6 +895,7 @@ class AjaxRenderGraphContent(AjaxPage):
 
 
 def _render_graph_content_html(
+    request: Request,
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
@@ -900,12 +917,15 @@ def _render_graph_content_html(
             fetch_time_series=fetch_time_series,
             graph_display_id=graph_display_id,
         )
-        main_graph_html = _render_graph_html(graph_artwork, graph_data_range, graph_render_config)
+        main_graph_html = _render_graph_html(
+            request, graph_artwork, graph_data_range, graph_render_config
+        )
 
         if graph_render_config.show_time_range_previews:
             return HTMLWriter.render_div(
                 main_graph_html
                 + _render_time_range_selection(
+                    request,
                     graph_recipe,
                     graph_render_config,
                     registered_metrics,
@@ -937,6 +957,7 @@ def _render_graph_content_html(
 
 
 def _render_time_range_selection(
+    request: Request,
     graph_recipe: GraphRecipe,
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -983,7 +1004,7 @@ def _render_time_range_selection(
         )
         rows.append(
             HTMLWriter.render_td(
-                _render_graph_html(graph_artwork, graph_data_range, graph_render_config),
+                _render_graph_html(request, graph_artwork, graph_data_range, graph_render_config),
                 title=_("Change graph time range to: %s") % timerange_attrs["title"],
             )
         )
@@ -1035,9 +1056,9 @@ class AjaxGraphHover(Page):
         """Registered as `ajax_graph_hover`."""
         response.set_content_type("application/json")
         try:
-            context_var = request.get_str_input_mandatory("context")
+            context_var = ctx.request.get_str_input_mandatory("context")
             context = json.loads(context_var)
-            hover_time = request.get_integer_input_mandatory("hover_time")
+            hover_time = ctx.request.get_integer_input_mandatory("hover_time")
             response_data = _render_ajax_graph_hover(
                 context,
                 hover_time,
@@ -1134,6 +1155,7 @@ def _graph_title_height_ex(config: GraphRenderConfig) -> SizeEx:
 
 
 def host_service_graph_dashlet_cmk(
+    request: Request,
     graph_specification: GraphSpecification,
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -1246,6 +1268,7 @@ def host_service_graph_dashlet_cmk(
             graph_render_config.size = (width, graph_height)
 
     return _render_graphs_from_definitions(
+        request,
         [graph_recipe],
         graph_data_range,
         graph_render_config,

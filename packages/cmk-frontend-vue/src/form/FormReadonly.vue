@@ -64,7 +64,7 @@ function renderForm(
   value: unknown,
   backendValidation: ValidationMessages = []
 ): VNode {
-  switch (formSpec.type as Components['type']) {
+  switch ((formSpec as Components).type) {
     case 'dictionary':
       return renderDict(
         formSpec as Dictionary,

@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { Components } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import { staticAssertNever } from '@/lib/typeUtils'
 
@@ -17,7 +18,7 @@ type RendersRequiredLabels =
 function isTypeRenderingRequiredLabel(
   parameterForm: FormSpec.FormSpec
 ): parameterForm is RendersRequiredLabels {
-  const type = parameterForm.type as RendersRequiredLabels['type']
+  const type = (parameterForm as Components).type as RendersRequiredLabels['type']
   switch (type) {
     case 'password':
     case 'condition_choices':

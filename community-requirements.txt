@@ -1035,11 +1035,10 @@ cycler==0.12.1 \
     # via
     #   -c requirements.txt
     #   matplotlib
-datamodel-code-generator==0.33.0 \
-    --hash=sha256:7635ef788201d69bd3e98ba88ce6afe479400dc2737fe9d5e21f87408f352c08 \
-    --hash=sha256:e229264aa612b2d5bb4901bcd6c520a799ae0d5c19262577a0f876eb48afaaa3
+datamodel-code-generator==0.35.0 \
+    --hash=sha256:46805fa2515d3871f6bfafce9aa63128e735a7a6a4cfcbf9c27b3794ee4ea846 \
+    --hash=sha256:c356d1e4a555f86667a4262db03d4598a30caeda8f51786555fd269c8abb806b
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
 decorator==5.2.1 \

@@ -20,7 +20,7 @@ class MetricVisitor(StringVisitor):
     @override
     def _to_vue(
         self, parsed_value: str | InvalidValue[str]
-    ) -> tuple[shared_type_defs.Metric, object]:
+    ) -> tuple[shared_type_defs.FormSpec, object]:
         string_autocompleter, value = super()._to_vue(parsed_value)
         string_autocompleter_args = asdict(string_autocompleter)
         del string_autocompleter_args["type"]

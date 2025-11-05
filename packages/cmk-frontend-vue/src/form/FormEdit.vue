@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { Components, FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { provide } from 'vue'
 
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
@@ -28,6 +28,10 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 <template>
   <CmkErrorBoundary>
-    <FormEditDispatcher v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
+    <FormEditDispatcher
+      v-model:data="data"
+      :spec="spec as Components"
+      :backend-validation="backendValidation"
+    />
   </CmkErrorBoundary>
 </template>

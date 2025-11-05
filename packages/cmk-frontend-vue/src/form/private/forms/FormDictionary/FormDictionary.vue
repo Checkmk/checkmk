@@ -79,7 +79,7 @@ function indentRequired(
     titleRequired(element) &&
     !(element.group && layout === 'horizontal') &&
     !(
-      element.parameter_form.type === 'fixed_value' &&
+      (element.parameter_form as FormSpec.FixedValue).type === 'fixed_value' &&
       !(element.parameter_form as FormSpec.FixedValue).label &&
       !(element.parameter_form as FormSpec.FixedValue).value
     )

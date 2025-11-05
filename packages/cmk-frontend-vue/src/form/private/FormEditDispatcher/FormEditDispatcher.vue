@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type { Components } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import FormHelp from '@/form/private/FormHelp.vue'
 import type { ValidationMessages } from '@/form/private/validation'
@@ -12,7 +12,7 @@ import type { ValidationMessages } from '@/form/private/validation'
 import { getComponent } from './dispatch'
 
 defineProps<{
-  spec: FormSpec
+  spec: Components
   backendValidation: ValidationMessages
 }>()
 

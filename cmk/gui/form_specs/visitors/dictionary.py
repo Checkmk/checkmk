@@ -108,7 +108,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
     @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
-    ) -> tuple[shared_type_defs.Dictionary, object]:
+    ) -> tuple[shared_type_defs.FormSpec, object]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
             parsed_value = parsed_value.fallback_value

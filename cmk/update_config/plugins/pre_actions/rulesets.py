@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from logging import Logger
 
 from cmk.utils import version
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
 from cmk.utils.regex import is_regex, RegexFutureWarning
@@ -38,7 +39,7 @@ class PreUpdateRulesets(PreUpdateAction):
     * validate host conditions
     """
 
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:  # noqa: C901
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:  # noqa: C901  # pylint: disable=too-many-branches
         try:
             with disable_redis(), gui_context(), SuperUserContext():
                 set_global_vars()
@@ -73,10 +74,21 @@ class PreUpdateRulesets(PreUpdateAction):
                 for folder, index, rule in ruleset.get_rules():
                     if (host_name_conditions := rule.conditions.host_name) is None:
                         continue
+
+                    if isinstance(host_name_conditions, dict) and "$nor" in host_name_conditions:
+                        host_name_conditions = host_name_conditions["$nor"]
+
                     for condition in host_name_conditions:
                         # {'$regex': 'old*'}
                         if isinstance(condition, dict):
                             continue
+
+                        # 'old.de'
+                        try:
+                            HostAddress.is_valid(HostName(condition))
+                            continue
+                        except ValueError:
+                            pass
 
                         # 'old'
                         if not is_regex(condition):

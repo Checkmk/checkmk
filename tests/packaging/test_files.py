@@ -341,6 +341,20 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     assert not non_free_files
 
 
+def test_community_not_contains_nonfree_files(package_path: str) -> None:
+    """community packages should NOT contain non-free (formerly cee/enterprise) files"""
+    if not Path(package_path).name.startswith("check-mk-community-"):
+        pytest.skip("%s is not a community package" % os.path.basename(package_path))
+    if package_path.endswith(".tar.gz") and "-docker-" in package_path:
+        pytest.skip("%s is a docker OCI image - can't handle here" % os.path.basename(package_path))
+
+    files_in_package = _get_paths_from_package(package_path)
+    non_free_files = [f for f in files_in_package if re.search(r"(non-free|nonfree)", f)]
+    assert not non_free_files, (
+        f"Found {len(non_free_files)} non-free files in community package (only first 10): {non_free_files[:10]}"
+    )
+
+
 def test_package_is_identifiable_by_commit(package_path: str, cmk_version: str) -> None:
     commit = _get_file_from_package(
         package_path,

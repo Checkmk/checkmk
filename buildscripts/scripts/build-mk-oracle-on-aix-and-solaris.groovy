@@ -18,8 +18,8 @@ def main() {
     stage("Set version") {
         inside_container() {
             dir("${checkout_dir}") {
-                // mk-oracle is not edition specific, use "managed" as it is the superset
-                versioning.configure_checkout_folder("managed", cmk_version);
+                // mk-oracle is not edition specific, use "ultimatemt" as it is the superset
+                versioning.configure_checkout_folder("ultimatemt", cmk_version);
             }
         }
     }

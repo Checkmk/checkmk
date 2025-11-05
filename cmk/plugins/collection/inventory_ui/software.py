@@ -184,6 +184,22 @@ node_software_applications_azure_application_gateways_rules_listeners_public_ips
     ),
 )
 
+node_software_applications_azure_metadata = Node(
+    name="software_applications_azure_metadata",
+    path=["software", "applications", "azure", "metadata"],
+    title=Title("Metadata"),
+    attributes={
+        "object": TextField(Title("Object")),
+        "name": TextField(Title("Name")),
+        "entity": TextField(Title("Entity")),
+        "resource_group": TextField(Title("Resource group")),
+        "subscription_id": TextField(Title("Subscription ID")),
+        "subscription_name": TextField(Title("Subscription name")),
+        "region": TextField(Title("Region")),
+        "tenant_id": TextField(Title("Tenant ID")),
+    },
+)
+
 node_software_applications_azure_load_balancers = Node(
     name="software_applications_azure_load_balancers",
     path=["software", "applications", "azure", "load_balancers"],

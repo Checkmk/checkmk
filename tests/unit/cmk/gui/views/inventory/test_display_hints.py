@@ -254,6 +254,7 @@ def test_paths() -> None:
                 "backend_pools",
                 "addresses",
             ),
+            ("software", "applications", "azure", "metadata"),
         ]
     )
 
@@ -424,6 +425,16 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "available_ethernet_ports",
     ],
     ("hardware", "storage", "disks"): ["size"],
+    ("software", "applications", "azure", "metadata"): [
+        "object",
+        "name",
+        "entity",
+        "resource_group",
+        "subscription_id",
+        "subscription_name",
+        "region",
+        "tenant_id",
+    ],
 }
 
 _KNOWN_COLUMNS_KEY_ORDERS = {

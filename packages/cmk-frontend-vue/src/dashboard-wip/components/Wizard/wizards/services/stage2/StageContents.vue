@@ -58,11 +58,6 @@ const emit = defineEmits<{
     generalSettings: WidgetGeneralSettings,
     filterContext: WidgetFilterContext
   ]
-  updateWidget: [
-    content: WidgetContent,
-    generalSettings: WidgetGeneralSettings,
-    filterContext: WidgetFilterContext
-  ]
 }>()
 
 const addWidget = () => {
@@ -77,25 +72,6 @@ const addWidget = () => {
     const widgetPops = activeHandler!.widgetProps.value
     emit(
       'addWidget',
-      toValue(widgetPops.content),
-      toValue(widgetPops.general_settings),
-      toValue(widgetPops.effective_filter_context)
-    )
-  }
-}
-
-const updateWidget = () => {
-  if (!selectedWidget.value) {
-    return
-  }
-
-  const activeHandler = handler[selectedWidget.value]
-  const isValid = activeHandler?.validate()
-
-  if (isValid) {
-    const widgetPops = activeHandler!.widgetProps.value
-    emit(
-      'updateWidget',
       toValue(widgetPops.content),
       toValue(widgetPops.general_settings),
       toValue(widgetPops.effective_filter_context)
@@ -172,12 +148,10 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
       variant="secondary"
     />
     <ActionButton
-      v-if="!editWidgetSpec"
-      :label="_t('Add & place widget')"
+      :label="!!editWidgetSpec ? _t('Update widget') : _t('Add & place widget')"
       :action="addWidget"
       variant="primary"
     />
-    <ActionButton v-else :label="_t('Update widget')" :action="updateWidget" variant="secondary" />
   </ActionBar>
 
   <ContentSpacer />

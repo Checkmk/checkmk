@@ -65,11 +65,6 @@ const emit = defineEmits<{
     generalSettings: WidgetGeneralSettings,
     filterContext: WidgetFilterContext
   ]
-  updateWidget: [
-    content: WidgetContent,
-    generalSettings: WidgetGeneralSettings,
-    filterContext: WidgetFilterContext
-  ]
 }>()
 
 const filterDefinitions = useFilterDefinitions()
@@ -203,10 +198,6 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           @add-widget="
             (content, generalSettings, filterContext) =>
               emit('addWidget', content, generalSettings, filterContext)
-          "
-          @update-widget="
-            (content, generalSettings, filterContext) =>
-              emit('updateWidget', content, generalSettings, filterContext)
           "
         />
         <template #fallback>

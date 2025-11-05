@@ -86,9 +86,9 @@ class AgentReceiverClient:
         return self.client.post(f"/{self.site_name}/relays/activate-config")
 
     def forward_monitoring_data(
-        self, *, relay_id: str, host: str, monitoring_data: MonitoringData
+        self, *, relay_id: str, monitoring_data: MonitoringData
     ) -> httpx.Response:
         return self.client.post(
-            f"/{self.site_name}/relays/{relay_id}/data/{host}",
+            f"/{self.site_name}/relays/{relay_id}/monitoring",
             json=monitoring_data.model_dump(mode="json"),
         )

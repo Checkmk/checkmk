@@ -16,8 +16,16 @@ class ForwardMonitoringDataHandler:
     def __init__(self, data_socket: Path) -> None:
         self._data_socket = data_socket
 
-    def process(self, payload: bytes) -> None:
-        self._send_to_cmc(payload)
+    def process(self, *, payload: bytes, host: str, config_serial: str, timestamp: int) -> None:
+        # TODO: Are we sure host and config_serial cannot contain illegal characters like ';'?
+        header = (
+            "payload_type:fetcher;"
+            f"payload_size:{len(payload)};"
+            f"config_serial:{config_serial};"
+            f"start_timestamp:{timestamp};"
+            f"host_by_name:{host};\n"
+        )
+        self._send_to_cmc(header.encode("utf-8") + payload)
 
     def _send_to_cmc(self, data: bytes) -> None:
         """
@@ -25,7 +33,7 @@ class ForwardMonitoringDataHandler:
         Args:
             data: The monitoring data to send as bytes.
         Raises:
-            OSError: If the socket connection or send fails.
+            FailedToSendMonitoringDataError: If the socket connection or send fails.
         """
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:

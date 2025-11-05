@@ -103,12 +103,12 @@ async def unregister_relay(
 
 
 @router.post(
-    "/{relay_id}/data/{host}",
+    "/{relay_id}/monitoring",
     status_code=fastapi.status.HTTP_200_OK,
     dependencies=[fastapi.Depends(check_relay)],
 )
 async def forward_monitoring_data(
-    monitoring_data: MonitoringData,  # request payload
+    monitoring_data: MonitoringData,
     handler: Annotated[
         ForwardMonitoringDataHandler, fastapi.Depends(get_forward_monitoring_data_handler)
     ],
@@ -117,7 +117,12 @@ async def forward_monitoring_data(
     Forward monitoring data to CMC for a specific relay and host.
     """
     try:
-        handler.process(payload=monitoring_data.payload)
+        handler.process(
+            payload=monitoring_data.payload,
+            host=monitoring_data.host,
+            config_serial=monitoring_data.serial,
+            timestamp=monitoring_data.timestamp,
+        )
     except FailedToSendMonitoringDataError as e:
         return fastapi.Response(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,

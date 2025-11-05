@@ -1,6 +1,7 @@
 import base64
 import uuid
 from http import HTTPStatus
+from time import time
 from unittest.mock import patch
 
 from cmk.agent_receiver.config import Config
@@ -30,18 +31,29 @@ def test_forward_monitoring_data(
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
+    payload = b"monitoring payload"
+    timestamp = int(time())
+    expected_header = (
+        f"payload_type:fetcher;"
+        f"payload_size:{len(payload)};"
+        f"config_serial:{cf.serial};"
+        f"start_timestamp:{timestamp};"
+        f"host_by_name:{host};"
+    )
     with create_socket() as ms:
         with patch.object(Config, "raw_data_socket", ms.socket_path):
-            payload = b"monitoring payload"
             monitoring_data = MonitoringData(
+                serial=cf.serial,
                 host=host,
+                timestamp=timestamp,
                 payload=base64.b64encode(payload),
             )
             response = agent_receiver.forward_monitoring_data(
                 relay_id=relay_id,
-                host=host,
                 monitoring_data=monitoring_data,
             )
             assert response.status_code == HTTPStatus.OK, response.text
             received = ms.data_queue.get(timeout=5.0)
-            assert received == payload
+            lines = received.splitlines()
+            assert lines[0].decode() == expected_header
+            assert lines[1] == payload

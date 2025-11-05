@@ -41,12 +41,12 @@ class TypeCMKEdition:
     - `edition = CMKEdition.ULTIMATE/PRO/ULTIMATEMT/COMMUNITY/CLOUD`
     - `pkg_edition = CMKEdition(edition)`
     - `pkg_edition = CMKEdition.edition_from_text("cloud")`
-    - `pkg_edition = CMKEdition.from_version_string("2.4.0.cee")`
+    - `pkg_edition = CMKEdition.from_version_string("2.5.0.pro")`
     - `pkg_edition.short/long/title`
     - `pkg_edition.is_pro_edition()`
 
     Note:
-    Wrapping 'Edition' using inheritance would be easier but not possisble,
+    Wrapping 'Edition' using inheritance would be easier but not possible,
     as 'enum.Enum' with existing members must not be subclassed.
     """
 
@@ -189,7 +189,7 @@ class CMKVersion:
     """Holds an instance of `cmk.ccc.version::Version`.
 
     This object acts as an interface to `cmk.ccc.version::Version`. Additionally,
-    `CMKVersion` encapsualtes version-centric actions within this object. Like,
+    `CMKVersion` encapsulates version-centric actions within this object. Like,
     + `versions_compatible`
     """
 

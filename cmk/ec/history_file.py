@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import itertools
 import shlex
 import subprocess
 import threading
@@ -293,31 +292,6 @@ def parse_history_file(
                 logger.exception("Invalid line '%s' in history file %s", line, path)
 
     return entries
-
-
-def parse_history_file_python(
-    history_columns: Sequence[tuple[str, Any]],
-    path: Path,
-    logger: Logger,
-) -> Iterable[Sequence[Any]]:
-    """Pure python reader for history files. Used for update config, where filtering is not needed.
-
-    To avoid slurping the whole file in memory this generator yields chunks of entries.
-    This is not faster than the grep approach(parse_history_file()), but it's more memory efficient
-    and does not need to fork a subprocess and other cmk specific stuff.
-    """
-    with open(path, "rb") as f:
-        for chunk in itertools.batched(f, 100_000):
-            entries = []
-            for line in chunk:
-                try:
-                    parts: list[Any] = line.decode("utf-8").rstrip("\n").split("\t")
-                    parts.insert(0, 0)  # add line number
-                    convert_history_line(history_columns, parts)
-                    entries.append(parts)
-                except Exception:
-                    logger.exception("Invalid line '%s' in history file %s", line, path)
-            yield entries
 
 
 def convert_history_line(history_columns: Sequence[tuple[str, Any]], values: list[Any]) -> None:

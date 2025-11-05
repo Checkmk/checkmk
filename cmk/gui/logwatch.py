@@ -27,7 +27,7 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
@@ -66,9 +66,9 @@ def register(page_registry: PageRegistry) -> None:
 
 
 def page_show(ctx: PageContext) -> None:
-    site = request.get_validated_type_input(SiteId, "site")  # optional site hint
-    host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
-    file_name = request.get_str_input_mandatory("file", "")
+    site = ctx.request.get_validated_type_input(SiteId, "site")  # optional site hint
+    host_name = ctx.request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
+    file_name = ctx.request.get_str_input_mandatory("file", "")
 
     # Fix problem when URL is missing certain illegal characters
     try:
@@ -79,24 +79,24 @@ def page_show(ctx: PageContext) -> None:
         pass  # host_name log dir does not exist
 
     if not host_name:
-        show_log_list(debug=ctx.config.debug)
+        show_log_list(ctx.request, debug=ctx.config.debug)
         return
 
     user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     if file_name:
-        show_file(site, host_name, file_name, user_permissions, debug=ctx.config.debug)
+        show_file(ctx.request, site, host_name, file_name, user_permissions, debug=ctx.config.debug)
     else:
-        show_host_log_list(site, host_name, user_permissions, debug=ctx.config.debug)
+        show_host_log_list(ctx.request, site, host_name, user_permissions, debug=ctx.config.debug)
 
 
-def show_log_list(*, debug: bool) -> None:
+def show_log_list(request: Request, *, debug: bool) -> None:
     """Shows a list of all problematic logfiles grouped by host"""
     title = _("All problematic log files")
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
-    make_header(html, title, breadcrumb, _log_list_page_menu(breadcrumb))
+    make_header(html, title, breadcrumb, _log_list_page_menu(request, breadcrumb))
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
-        do_log_ack(site=None, host_name=None, file_name=None)
+        do_log_ack(request, site=None, host_name=None, file_name=None)
         return
 
     for site, host_name, logs in all_logs():
@@ -121,11 +121,11 @@ def show_log_list(*, debug: bool) -> None:
             ),
             class_="table",
         )
-        list_logs(site, host_name, logs, debug=debug)
+        list_logs(request, site, host_name, logs, debug=debug)
     html.footer()
 
 
-def _log_list_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+def _log_list_page_menu(request: Request, breadcrumb: Breadcrumb) -> PageMenu:
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -134,7 +134,7 @@ def _log_list_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
                 topics=[
                     PageMenuTopic(
                         title=_("Acknowledge"),
-                        entries=list(_page_menu_entry_acknowledge()),
+                        entries=list(_page_menu_entry_acknowledge(request)),
                     ),
                 ],
             ),
@@ -165,7 +165,7 @@ def _log_list_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-def services_url(site: SiteId | None, host_name: HostName) -> str:
+def services_url(request: Request, site: SiteId | None, host_name: HostName) -> str:
     return makeuri_contextless(
         request,
         [("view_name", "host"), ("site", site), ("host", host_name)],
@@ -174,7 +174,7 @@ def services_url(site: SiteId | None, host_name: HostName) -> str:
 
 
 def analyse_url(
-    site: SiteId | None, host_name: HostName, file_name: str = "", match: str = ""
+    request: Request, site: SiteId | None, host_name: HostName, file_name: str = "", match: str = ""
 ) -> str:
     return makeuri_contextless(
         request,
@@ -190,19 +190,26 @@ def analyse_url(
 
 
 def show_host_log_list(
-    site: SiteId | None, host_name: HostName, user_permissions: UserPermissions, *, debug: bool
+    request: Request,
+    site: SiteId | None,
+    host_name: HostName,
+    user_permissions: UserPermissions,
+    *,
+    debug: bool,
 ) -> None:
     """Shows all problematic logfiles of a host"""
     title = _("Logfiles of host %s") % host_name
     breadcrumb = _host_log_list_breadcrumb(host_name, title, user_permissions)
-    make_header(html, title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
+    make_header(
+        html, title, breadcrumb, _host_log_list_page_menu(request, breadcrumb, site, host_name)
+    )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
-        do_log_ack(site, host_name, file_name=None)
+        do_log_ack(request, site, host_name, file_name=None)
         return
 
     html.open_table(class_=["data"])
-    list_logs(site, host_name, logfiles_of_host(site, host_name), debug=debug)
+    list_logs(request, site, host_name, logfiles_of_host(site, host_name), debug=debug)
     html.close_table()
 
     html.footer()
@@ -217,7 +224,7 @@ def _host_log_list_breadcrumb(
 
 
 def _host_log_list_page_menu(
-    breadcrumb: Breadcrumb, site_id: SiteId | None, host_name: HostName
+    request: Request, breadcrumb: Breadcrumb, site_id: SiteId | None, host_name: HostName
 ) -> PageMenu:
     return PageMenu(
         dropdowns=[
@@ -227,7 +234,7 @@ def _host_log_list_page_menu(
                 topics=[
                     PageMenuTopic(
                         title=_("Current log files"),
-                        entries=list(_page_menu_entry_acknowledge(site_id, host_name)),
+                        entries=list(_page_menu_entry_acknowledge(request, site_id, host_name)),
                     ),
                     PageMenuTopic(
                         title=_("Log files"),
@@ -256,7 +263,7 @@ def _host_log_list_page_menu(
                             PageMenuEntry(
                                 title=_("Services of host"),
                                 icon_name="services",
-                                item=make_simple_link(services_url(site_id, host_name)),
+                                item=make_simple_link(services_url(request, site_id, host_name)),
                             ),
                         ],
                     ),
@@ -266,7 +273,7 @@ def _host_log_list_page_menu(
                             PageMenuEntry(
                                 title=_("Analyze host patterns"),
                                 icon_name="analyze",
-                                item=make_simple_link(analyse_url(site_id, host_name)),
+                                item=make_simple_link(analyse_url(request, site_id, host_name)),
                             ),
                         ],
                     ),
@@ -278,7 +285,12 @@ def _host_log_list_page_menu(
 
 
 def list_logs(
-    site: SiteId | None, host_name: HostName, logfile_names: Sequence[str], *, debug: bool
+    request: Request,
+    site: SiteId | None,
+    host_name: HostName,
+    logfile_names: Sequence[str],
+    *,
+    debug: bool,
 ) -> None:
     """Displays a table of logfiles"""
     with table_element(empty_text=_("No logs found for this host.")) as table:
@@ -313,6 +325,7 @@ def list_logs(
 
 
 def show_file(
+    request: Request,
     site: SiteId | None,
     host_name: HostName,
     file_name: str,
@@ -323,16 +336,16 @@ def show_file(
     int_filename = form_file_to_int(file_name)
 
     title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
-    breadcrumb = _show_file_breadcrumb(host_name, title, user_permissions)
+    breadcrumb = _show_file_breadcrumb(request, host_name, title, user_permissions)
     make_header(
         html,
         title,
         breadcrumb,
-        _show_file_page_menu(breadcrumb, site, host_name, int_filename),
+        _show_file_page_menu(request, breadcrumb, site, host_name, int_filename),
     )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
-        do_log_ack(site, host_name, file_name)
+        do_log_ack(request, site, host_name, file_name)
         return
 
     try:
@@ -374,7 +387,7 @@ def show_file(
             html.open_tr(class_=line["class"])
             html.open_td(class_="lines")
             html.icon_button(
-                analyse_url(site, host_name, int_filename, line["line"]),
+                analyse_url(request, site, host_name, int_filename, line["line"]),
                 _("Analyze this line"),
                 "analyze",
             )
@@ -389,7 +402,7 @@ def show_file(
 
 
 def _show_file_breadcrumb(
-    host_name: HostName, title: str, user_permissions: UserPermissions
+    request: Request, host_name: HostName, title: str, user_permissions: UserPermissions
 ) -> Breadcrumb:
     breadcrumb = make_host_breadcrumb(host_name, user_permissions)
     breadcrumb.append(
@@ -403,7 +416,11 @@ def _show_file_breadcrumb(
 
 
 def _show_file_page_menu(
-    breadcrumb: Breadcrumb, site_id: SiteId | None, host_name: HostName, int_filename: str
+    request: Request,
+    breadcrumb: Breadcrumb,
+    site_id: SiteId | None,
+    host_name: HostName,
+    int_filename: str,
 ) -> PageMenu:
     menu = PageMenu(
         dropdowns=[
@@ -414,7 +431,7 @@ def _show_file_page_menu(
                     PageMenuTopic(
                         title=_("This log file"),
                         entries=list(
-                            _page_menu_entry_acknowledge(site_id, host_name, int_filename)
+                            _page_menu_entry_acknowledge(request, site_id, host_name, int_filename)
                         ),
                     ),
                     PageMenuTopic(
@@ -449,7 +466,7 @@ def _show_file_page_menu(
                             PageMenuEntry(
                                 title=_("Services of host"),
                                 icon_name="services",
-                                item=make_simple_link(services_url(site_id, host_name)),
+                                item=make_simple_link(services_url(request, site_id, host_name)),
                             ),
                         ],
                     ),
@@ -459,7 +476,7 @@ def _show_file_page_menu(
                             PageMenuEntry(
                                 title=_("Analyze host patterns"),
                                 icon_name="analyze",
-                                item=make_simple_link(analyse_url(site_id, host_name)),
+                                item=make_simple_link(analyse_url(request, site_id, host_name)),
                             ),
                         ],
                     ),
@@ -468,11 +485,11 @@ def _show_file_page_menu(
         ],
         breadcrumb=breadcrumb,
     )
-    _extend_display_dropdown(menu)
+    _extend_display_dropdown(request, menu)
     return menu
 
 
-def _extend_display_dropdown(menu: PageMenu) -> None:
+def _extend_display_dropdown(request: Request, menu: PageMenu) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     context_hidden = request.var("_hidecontext", "no") == "yes"
     display_dropdown.topics.insert(
@@ -516,6 +533,7 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
 
 
 def _page_menu_entry_acknowledge(
+    request: Request,
     site: SiteId | None = None,
     host_name: HostName | None = None,
     int_filename: str | None = None,
@@ -550,7 +568,9 @@ def _page_menu_entry_acknowledge(
     )
 
 
-def do_log_ack(site: SiteId | None, host_name: HostName | None, file_name: str | None) -> None:
+def do_log_ack(
+    request: Request, site: SiteId | None, host_name: HostName | None, file_name: str | None
+) -> None:
     sites.live().set_auth_domain("action")
 
     logs_to_ack: list = []

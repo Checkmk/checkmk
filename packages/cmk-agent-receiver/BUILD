@@ -17,6 +17,7 @@ py_library(
         "cmk/agent_receiver/agent_receiver/checkmk_rest_api.py",
         "cmk/agent_receiver/agent_receiver/decompression.py",
         "cmk/agent_receiver/agent_receiver/models.py",
+        "cmk/agent_receiver/agent_receiver/utils.py",
         "cmk/agent_receiver/endpoints.py",
         "cmk/agent_receiver/lib/__init__.py",
         "cmk/agent_receiver/lib/auth.py",
@@ -54,7 +55,6 @@ py_library(
         "cmk/agent_receiver/relay/lib/relays_repository.py",
         "cmk/agent_receiver/relay/lib/shared_types.py",
         "cmk/agent_receiver/relay/lib/site_auth.py",
-        "cmk/agent_receiver/utils.py",
         "cmk/agent_receiver/worker.py",
     ],
     data = [

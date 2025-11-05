@@ -495,7 +495,7 @@ def test__find_ac_test_result_problems(
                 },
             ),
             "Unsorted",
-            "This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.",
+            "This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.",
             id="unsorted-warn",
         ),
         pytest.param(
@@ -543,7 +543,7 @@ def test__find_ac_test_result_problems(
                 },
             ),
             "Deprecated plug-in: ident",
-            "This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.",
+            "This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.",
             id="file-warn",
         ),
         pytest.param(
@@ -593,7 +593,7 @@ def test__find_ac_test_result_problems(
                 },
             ),
             "Deprecated extension package: ident",
-            "This may partially work in Checkmk 2.3.0 but will stop working from the next major version onwards.",
+            "This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.",
             id="mkp-warn",
         ),
         pytest.param(

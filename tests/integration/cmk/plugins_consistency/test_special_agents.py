@@ -187,7 +187,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "REDIRECT_URL",
     ],
     "ibmsvc": ["HOSTNAME"],
-    "jenkins": ["HOSTNAME"],
+    "jenkins": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
     "jira": ["-P", "PROTOCOL", "-u", "USER", "-s", "PASSWORD", "--hostname", "HOSTNAME"],
     "kube": [
         "--cluster",

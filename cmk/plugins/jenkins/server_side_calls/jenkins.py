@@ -34,10 +34,10 @@ def agent_jenkins_config(
     args: list[str | Secret] = [
         "-P",
         params.protocol,
-        "-u",
+        "--user",
         params.user,
-        "-s",
-        params.password.unsafe(),
+        "--secret-id",
+        params.password,
     ]
 
     if params.path:

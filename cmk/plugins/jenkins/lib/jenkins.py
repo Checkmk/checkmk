@@ -15,8 +15,14 @@ from typing import NamedTuple
 
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+
+__version__ = "2.5.0b1"
+
+AGENT = "jenkins"
+
+PASSWORD_OPTION = "password"
 
 
 class Section(NamedTuple):
@@ -25,9 +31,10 @@ class Section(NamedTuple):
     uri: str
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_jenkins_main)
+    return agent_jenkins_main(parse_arguments(sys.argv[1:]))
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -54,8 +61,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         ),
     )
 
-    parser.add_argument("-u", "--user", default=None, help="Username for jenkins login")
-    parser.add_argument("-s", "--password", default=None, help="Password for jenkins login")
+    parser.add_argument("-u", "--user", help="Username for jenkins login", required=True)
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", help="Password for jenkins login", required=True
+    )
     parser.add_argument(
         "-P",
         "--proto",
@@ -130,7 +139,7 @@ def handle_request(args, sections):
     # labels = {}
 
     session = requests.Session()
-    session.auth = (args.user, args.password)
+    session.auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
 
     for section in sections:
         if section.name not in args.sections:

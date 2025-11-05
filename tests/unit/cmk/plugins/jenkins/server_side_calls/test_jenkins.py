@@ -31,10 +31,10 @@ HOST_CONFIG = HostConfig(
                     command_arguments=[
                         "-P",
                         "https",
-                        "-u",
+                        "--user",
                         "username",
-                        "-s",
-                        Secret(0).unsafe(),
+                        "--secret-id",
+                        Secret(0),
                         "test",
                     ]
                 )
@@ -56,10 +56,10 @@ HOST_CONFIG = HostConfig(
                     command_arguments=[
                         "-P",
                         "https",
-                        "-u",
+                        "--user",
                         "username",
-                        "-s",
-                        Secret(0).unsafe(),
+                        "--secret-id",
+                        Secret(0),
                         "--path",
                         "path",
                         "-m",

@@ -207,10 +207,6 @@ test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
 test-performance:
-	BRANCH=$(shell make --no-print-directory --file="../defines.make" print-BRANCH_VERSION) \
-	EDITION=pro RELEASE="$${BRANCH}-$$(date '+%Y.%m.%d').$${EDITION}" \
-	ROOT_DIR=$(or $(RESULT_PATH),"$(REPO_PATH)/results")/performance \
-	BENCHMARK_DIR=$${ROOT_DIR}/$${RELEASE} \
 	$(UVENV) "$(realpath performance)/perftest.sh"
 
 test-performance-docker:

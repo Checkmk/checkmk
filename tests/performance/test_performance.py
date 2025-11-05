@@ -277,7 +277,9 @@ class PerformanceTest:
                         "Expires": "0",
                         "Connection": "close",
                     },
-                    auth=None if page_url == page_url.LOGIN else HTTPBasicAuth("cmkadmin", "cmk"),
+                    auth=None
+                    if page_url.value == page_url.LOGIN.value
+                    else HTTPBasicAuth("cmkadmin", "cmk"),
                     timeout=max_first_request_timeout if i == 0 else max_request_timeout,
                 )
                 if i == 0:

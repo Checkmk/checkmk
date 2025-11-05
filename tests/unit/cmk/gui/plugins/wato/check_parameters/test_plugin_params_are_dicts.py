@@ -37,7 +37,11 @@ def _get_first_actual_valuespec(vspec: ValueSpec) -> ValueSpec:
 
 def _get_first_actual_form_spec(form_spec: FormSpec[Any]) -> FormSpec[Any]:
     if isinstance(form_spec, TransformDataForLegacyFormatOrRecomposeFunction):
-        return _get_first_actual_form_spec(form_spec.wrapped_form_spec)
+        return _get_first_actual_form_spec(
+            form_spec.wrapped_form_spec()
+            if callable(form_spec.wrapped_form_spec)
+            else form_spec.wrapped_form_spec
+        )
     if isinstance(form_spec, TimeSpecific):
         return _get_first_actual_form_spec(form_spec.parameter_form)
     return form_spec

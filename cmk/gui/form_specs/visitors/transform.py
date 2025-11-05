@@ -2,12 +2,14 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import override
+from collections.abc import Callable
+from typing import Any, override
 
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.i18n import _
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from ._base import FormSpecVisitor
@@ -16,6 +18,10 @@ from ._type_defs import IncomingData, InvalidValue, RawDiskData
 
 _ParsedValueModel = IncomingData
 _FallbackModel = object
+
+
+def _get_fs(fs: FormSpec[Any] | Callable[[], FormSpec[Any]]) -> FormSpec[Any]:
+    return fs() if callable(fs) else fs
 
 
 class TransformVisitor(
@@ -48,18 +54,20 @@ class TransformVisitor(
             if isinstance(parsed_value, InvalidValue)
             else parsed_value
         )
-        return get_visitor(self.form_spec.wrapped_form_spec, self.visitor_options).to_vue(value)
+        return get_visitor(_get_fs(self.form_spec.wrapped_form_spec), self.visitor_options).to_vue(
+            value
+        )
 
     @override
     def _validate(self, parsed_value: _ParsedValueModel) -> list[VueComponents.ValidationMessage]:
-        return get_visitor(self.form_spec.wrapped_form_spec, self.visitor_options).validate(
-            parsed_value
-        )
+        return get_visitor(
+            _get_fs(self.form_spec.wrapped_form_spec), self.visitor_options
+        ).validate(parsed_value)
 
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return self.form_spec.to_disk(
-            get_visitor(self.form_spec.wrapped_form_spec, self.visitor_options).to_disk(
+            get_visitor(_get_fs(self.form_spec.wrapped_form_spec), self.visitor_options).to_disk(
                 parsed_value
             )
         )

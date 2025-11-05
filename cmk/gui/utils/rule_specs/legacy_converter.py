@@ -45,7 +45,11 @@ from cmk.gui.utils.autocompleter_config import (
     AutocompleterConfig,
     ContextAutocompleterConfig,
 )
-from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.rule_specs.compatibility import (
+    add_agent_config_match_type_key,
+    remove_agent_config_match_type_key,
+)
+from cmk.gui.utils.rule_specs.types import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
@@ -422,21 +426,6 @@ def _convert_to_legacy_agent_config_rule_spec(
     )
 
 
-def _add_agent_config_match_type_key(value: object) -> object:
-    if isinstance(value, dict):
-        value["cmk-match-type"] = "dict"
-        return value
-
-    raise TypeError(value)
-
-
-def _remove_agent_config_match_type_key(value: object) -> object:
-    if isinstance(value, dict):
-        return {k: v for k, v in value.items() if k != "cmk-match-type"}
-
-    raise TypeError(value)
-
-
 def _transform_agent_config_rule_spec_match_type(
     parameter_form: FormSpecCallable, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
@@ -447,22 +436,22 @@ def _transform_agent_config_rule_spec_match_type(
     if not inner_transform:
         return Transform(
             legacy_vs,
-            forth=_remove_agent_config_match_type_key,
-            back=_add_agent_config_match_type_key,
+            forth=remove_agent_config_match_type_key,
+            back=add_agent_config_match_type_key,
         )
 
     # We cannot simply wrap legacy_vs into a Transform to handle the match type key. Wrapping a
     # valuespec into a Transform results in the following order of transformations:
-    # 1. outer transform   (_remove_agent_config_match_type_key)
+    # 1. outer transform   (remove_agent_config_match_type_key)
     # 2. inner transforms
-    # _remove_agent_config_match_type_key fails for non-dictionaries, however, it is the job of the
+    # remove_agent_config_match_type_key fails for non-dictionaries, however, it is the job of the
     # inner transforms to migrate to a dictionairy in case of a migration from a non-dictionary
     # rule spec.
     return Transform(
         valuespec=Transform(
             inner_transform._valuespec,
-            to_valuespec=_remove_agent_config_match_type_key,
-            from_valuespec=_add_agent_config_match_type_key,
+            to_valuespec=remove_agent_config_match_type_key,
+            from_valuespec=add_agent_config_match_type_key,
         ),
         to_valuespec=inner_transform.to_valuespec,
         from_valuespec=inner_transform.from_valuespec,

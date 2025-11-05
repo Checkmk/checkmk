@@ -24,6 +24,6 @@ class TransformDataForLegacyFormatOrRecomposeFunction(FormSpec[object]):
     The value is only transformed for RawDiskData
     """
 
-    wrapped_form_spec: FormSpec[Any]
+    wrapped_form_spec: FormSpec[Any] | Callable[[], FormSpec[Any]]
     from_disk: Callable[[object], object]
     to_disk: Callable[[object], object]

@@ -40,7 +40,7 @@ from cmk.gui.form_specs import (  # pylint: disable=cmk-module-layer-violation
 )
 from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils import get_failed_plugins  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.rule_specs.loader import RuleSpec  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.rule_specs.types import RuleSpec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
     FormSpecNotImplementedError,

@@ -6,12 +6,17 @@
 import cmk.ccc.version as cmk_version
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import ColumnSpec, SorterSpec, VisualLinkSpec
+from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.utils import paths
 
 from .builtin_dashboards import GROW, MAX
 from .dashlet import StatsDashletConfig
-from .type_defs import DashboardConfig, DashboardName, LinkedViewDashletConfig, ViewDashletConfig
+from .type_defs import (
+    DashboardConfig,
+    DashboardName,
+    EmbeddedViewDashletConfig,
+    LinkedViewDashletConfig,
+)
 
 
 def register_builtin_dashboards(builtin: dict[DashboardName, DashboardConfig]) -> None:
@@ -68,19 +73,16 @@ ProblemsDashboard = DashboardConfig(
                     "single_infos": [],
                 }
             ),
-            ViewDashletConfig(
+            EmbeddedViewDashletConfig(
                 {
-                    "type": "view",
+                    "type": "embedded_view",
                     "title": _("Host Problems (unhandled)"),
                     "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
                     "position": (-1, 1),
                     "size": (GROW, 18),
                     "show_title": True,
-                    "browser_reload": 30,
-                    "column_headers": "pergroup",
                     "datasource": "hosts",
                     "single_infos": [],
-                    "group_painters": [],
                     "context": {
                         "hoststate": {
                             "hst0": "",
@@ -91,39 +93,19 @@ ProblemsDashboard = DashboardConfig(
                         "host_acknowledged": {"is_host_acknowledged": "0"},
                         "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
                     },
-                    "layout": "table",
-                    "mustsearch": False,
                     "name": "dashlet_2",
-                    "num_columns": 1,
-                    "painters": [
-                        ColumnSpec(name="host_state"),
-                        ColumnSpec(
-                            name="host",
-                            link_spec=VisualLinkSpec(type_name="views", name="host"),
-                        ),
-                        ColumnSpec(name="host_icons"),
-                        ColumnSpec(name="host_state_age"),
-                        ColumnSpec(name="host_plugin_output"),
-                    ],
-                    "sorters": [SorterSpec(sorter="hoststate", negate=True)],
-                    "add_context_to_title": True,
-                    "sort_index": 99,
-                    "is_show_more": False,
                 }
             ),
-            ViewDashletConfig(
+            EmbeddedViewDashletConfig(
                 {
-                    "type": "view",
+                    "type": "embedded_view",
                     "title": _("Service problems (unhandled)"),
                     "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
                     "position": (1, 19),
                     "size": (GROW, MAX),
                     "show_title": True,
-                    "browser_reload": 30,
-                    "column_headers": "pergroup",
                     "datasource": "services",
                     "single_infos": [],
-                    "group_painters": [],
                     "context": {
                         "service_acknowledged": {"is_service_acknowledged": "0"},
                         "in_downtime": {"is_in_downtime": "0"},
@@ -136,10 +118,74 @@ ProblemsDashboard = DashboardConfig(
                             "stp": "",
                         },
                     },
-                    "layout": "table",
-                    "mustsearch": False,
                     "name": "dashlet_3",
+                }
+            ),
+            EmbeddedViewDashletConfig(
+                {
+                    "type": "embedded_view",
+                    "title": _("Events of recent 4 hours"),
+                    "title_url": "view.py?view_name=events_dash",
+                    "position": (-1, -1),
+                    "size": (GROW, GROW),
+                    "show_title": True,
+                    "datasource": "log_events",
+                    "single_infos": [],
+                    "context": {
+                        "logtime": {
+                            "logtime_from_range": "3600",
+                            "logtime_from": "4",
+                        },
+                    },
+                    "name": "dashlet_4",
+                }
+            ),
+        ],
+        "owner": UserId.builtin(),
+        "public": True,
+        "name": "problems",
+        "hidden": False,
+        "link_from": {},
+        "add_context_to_title": True,
+        "is_show_more": False,
+        "packaged": False,
+        "main_menu_search_terms": [],
+        "embedded_views": {
+            "dashlet_2": DashboardEmbeddedViewSpec(
+                {
+                    "datasource": "hosts",
+                    "single_infos": [],
+                    "browser_reload": 30,
+                    "layout": "table",
                     "num_columns": 1,
+                    "column_headers": "pergroup",
+                    "painters": [
+                        ColumnSpec(name="host_state"),
+                        ColumnSpec(
+                            name="host",
+                            link_spec=VisualLinkSpec(type_name="views", name="host"),
+                        ),
+                        ColumnSpec(name="host_icons"),
+                        ColumnSpec(name="host_state_age"),
+                        ColumnSpec(name="host_plugin_output"),
+                    ],
+                    "group_painters": [],
+                    "sorters": [SorterSpec(sorter="hoststate", negate=True)],
+                    "mustsearch": False,
+                    "user_sortable": True,
+                    "play_sounds": False,
+                    "force_checkboxes": False,
+                    "mobile": False,
+                }
+            ),
+            "dashlet_3": DashboardEmbeddedViewSpec(
+                {
+                    "datasource": "services",
+                    "single_infos": [],
+                    "browser_reload": 30,
+                    "layout": "table",
+                    "num_columns": 1,
+                    "column_headers": "pergroup",
                     "painters": [
                         ColumnSpec(name="service_state"),
                         ColumnSpec(
@@ -155,40 +201,27 @@ ProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="svc_state_age"),
                         ColumnSpec(name="svc_check_age"),
                     ],
-                    "play_sounds": True,
+                    "group_painters": [],
                     "sorters": [
                         SorterSpec(sorter="svcstate", negate=True),
                         SorterSpec(sorter="stateage", negate=False),
                         SorterSpec(sorter="svcdescr", negate=False),
                     ],
-                    "add_context_to_title": True,
-                    "sort_index": 99,
-                    "is_show_more": False,
+                    "mustsearch": False,
+                    "user_sortable": True,
+                    "play_sounds": True,
+                    "force_checkboxes": False,
+                    "mobile": False,
                 }
             ),
-            ViewDashletConfig(
+            "dashlet_4": DashboardEmbeddedViewSpec(
                 {
-                    "type": "view",
-                    "title": _("Events of recent 4 hours"),
-                    "title_url": "view.py?view_name=events_dash",
-                    "position": (-1, -1),
-                    "size": (GROW, GROW),
-                    "show_title": True,
-                    "browser_reload": 90,
-                    "column_headers": "pergroup",
                     "datasource": "log_events",
                     "single_infos": [],
-                    "group_painters": [],
-                    "context": {
-                        "logtime": {
-                            "logtime_from_range": "3600",
-                            "logtime_from": "4",
-                        },
-                    },
+                    "browser_reload": 90,
                     "layout": "table",
-                    "mustsearch": False,
-                    "name": "dashlet_4",
                     "num_columns": 1,
+                    "column_headers": "pergroup",
                     "painters": [
                         ColumnSpec(name="log_icon"),
                         ColumnSpec(name="log_time"),
@@ -202,23 +235,16 @@ ProblemsDashboard = DashboardConfig(
                         ),
                         ColumnSpec(name="log_plugin_output"),
                     ],
-                    "play_sounds": False,
+                    "group_painters": [],
                     "sorters": [SorterSpec(sorter="log_time", negate=True)],
-                    "add_context_to_title": True,
-                    "sort_index": 99,
-                    "is_show_more": False,
+                    "mustsearch": False,
+                    "user_sortable": True,
+                    "play_sounds": False,
+                    "force_checkboxes": False,
+                    "mobile": False,
                 }
             ),
-        ],
-        "owner": UserId.builtin(),
-        "public": True,
-        "name": "problems",
-        "hidden": False,
-        "link_from": {},
-        "add_context_to_title": True,
-        "is_show_more": False,
-        "packaged": False,
-        "main_menu_search_terms": [],
+        },
     }
 )
 
@@ -238,57 +264,34 @@ SimpleProblemsDashboard = DashboardConfig(
             "A compact dashboard which lists your unhandled host and service problems."
         ),
         "dashlets": [
-            ViewDashletConfig(
+            EmbeddedViewDashletConfig(
                 {
-                    "type": "view",
+                    "type": "embedded_view",
                     "title": _("Host Problems (unhandled)"),
                     "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
                     "show_title": True,
                     "position": (1, 1),
                     "size": (GROW, 18),
-                    "browser_reload": 30,
-                    "column_headers": "pergroup",
                     "datasource": "hosts",
                     "single_infos": [],
-                    "group_painters": [],
                     "context": {
                         "host_acknowledged": {"is_host_acknowledged": "0"},
                         "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
                         "hoststate": {"hst0": "", "hst1": "on", "hst2": "on", "hstp": ""},
                     },
-                    "layout": "table",
-                    "mustsearch": False,
                     "name": "dashlet_0",
-                    "num_columns": 1,
-                    "painters": [
-                        ColumnSpec(name="host_state"),
-                        ColumnSpec(
-                            name="host",
-                            link_spec=VisualLinkSpec(type_name="views", name="host"),
-                        ),
-                        ColumnSpec(name="host_icons"),
-                        ColumnSpec(name="host_state_age"),
-                        ColumnSpec(name="host_plugin_output"),
-                    ],
-                    "sorters": [SorterSpec(sorter="hoststate", negate=True)],
-                    "add_context_to_title": True,
-                    "sort_index": 99,
-                    "is_show_more": False,
                 }
             ),
-            ViewDashletConfig(
+            EmbeddedViewDashletConfig(
                 {
-                    "type": "view",
+                    "type": "embedded_view",
                     "title": _("Service problems (unhandled)"),
                     "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
                     "show_title": True,
                     "position": (1, 19),
                     "size": (GROW, MAX),
-                    "browser_reload": 30,
-                    "column_headers": "pergroup",
                     "datasource": "services",
                     "single_infos": [],
-                    "group_painters": [],
                     "context": {
                         "service_acknowledged": {"is_service_acknowledged": "0"},
                         "in_downtime": {"is_in_downtime": "0"},
@@ -301,10 +304,55 @@ SimpleProblemsDashboard = DashboardConfig(
                             "stp": "",
                         },
                     },
-                    "layout": "table",
-                    "mustsearch": False,
                     "name": "dashlet_1",
+                }
+            ),
+        ],
+        "owner": UserId.builtin(),
+        "public": True,
+        "name": "simple_problems",
+        "hidden": False,
+        "link_from": {},
+        "add_context_to_title": True,
+        "is_show_more": False,
+        "packaged": False,
+        "main_menu_search_terms": [],
+        "embedded_views": {
+            "dashlet_0": DashboardEmbeddedViewSpec(
+                {
+                    "datasource": "hosts",
+                    "single_infos": [],
+                    "browser_reload": 30,
+                    "layout": "table",
                     "num_columns": 1,
+                    "column_headers": "pergroup",
+                    "painters": [
+                        ColumnSpec(name="host_state"),
+                        ColumnSpec(
+                            name="host",
+                            link_spec=VisualLinkSpec(type_name="views", name="host"),
+                        ),
+                        ColumnSpec(name="host_icons"),
+                        ColumnSpec(name="host_state_age"),
+                        ColumnSpec(name="host_plugin_output"),
+                    ],
+                    "group_painters": [],
+                    "sorters": [SorterSpec(sorter="hoststate", negate=True)],
+                    "mustsearch": False,
+                    "user_sortable": True,
+                    "play_sounds": False,
+                    "force_checkboxes": False,
+                    "mobile": False,
+                }
+            ),
+            "dashlet_1": DashboardEmbeddedViewSpec(
+                {
+                    "datasource": "services",
+                    "single_infos": [],
+                    "browser_reload": 30,
+                    "layout": "table",
+                    "num_columns": 1,
+                    "column_headers": "pergroup",
                     "painters": [
                         ColumnSpec(name="service_state"),
                         ColumnSpec(
@@ -320,27 +368,20 @@ SimpleProblemsDashboard = DashboardConfig(
                         ColumnSpec(name="svc_state_age"),
                         ColumnSpec(name="svc_check_age"),
                     ],
-                    "play_sounds": True,
+                    "group_painters": [],
                     "sorters": [
                         SorterSpec(sorter="svcstate", negate=True),
                         SorterSpec(sorter="stateage", negate=False),
                         SorterSpec(sorter="svcdescr", negate=False),
                     ],
-                    "add_context_to_title": True,
-                    "sort_index": 99,
-                    "is_show_more": False,
+                    "mustsearch": False,
+                    "user_sortable": True,
+                    "play_sounds": True,
+                    "force_checkboxes": False,
+                    "mobile": False,
                 }
             ),
-        ],
-        "owner": UserId.builtin(),
-        "public": True,
-        "name": "simple_problems",
-        "hidden": False,
-        "link_from": {},
-        "add_context_to_title": True,
-        "is_show_more": False,
-        "packaged": False,
-        "main_menu_search_terms": [],
+        },
     }
 )
 

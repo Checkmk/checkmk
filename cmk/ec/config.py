@@ -5,10 +5,9 @@
 
 from collections.abc import Collection, Iterator, KeysView, Mapping, MutableMapping, Sequence
 from re import Pattern
-from typing import Any, Literal, TypeAlias, TypedDict
+from typing import Any, Literal, NewType, TypeAlias, TypedDict
 
 from cmk.ccc.exceptions import MKException
-from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.translations import TranslationOptions
 
 TextPattern = str | Pattern[str]
@@ -142,6 +141,9 @@ class Count(TypedDict):
     separate_host: bool
     separate_application: bool
     separate_match_groups: bool
+
+
+TimeperiodName = NewType("TimeperiodName", str)
 
 
 # TODO: This is only a rough approximation.

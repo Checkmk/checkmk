@@ -20,7 +20,6 @@ from shutil import disk_usage
 from typing import Final, Literal
 
 from cmk.utils.log import VERBOSE
-from cmk.utils.render import fmt_bytes
 
 from .config import Config
 from .event import Event
@@ -347,8 +346,8 @@ class SQLiteHistory(History):
             freelist_size = freelist_count * self._page_size
         max_freelist_size = self._config["sqlite_freelist_size"]
         freelist_msg = (
-            f"freelist size of the history DB at {self._settings.database} is {fmt_bytes(freelist_size)}, "
-            f"configured limit is {fmt_bytes(max_freelist_size)}"
+            f"freelist size of the history DB at {self._settings.database} is {_fmt_bytes(freelist_size)}, "
+            f"configured limit is {_fmt_bytes(max_freelist_size)}"
         )
         if freelist_size <= max_freelist_size:
             self._logger.log(VERBOSE, f"{freelist_msg}, no VACUUM needed")
@@ -359,8 +358,8 @@ class SQLiteHistory(History):
             db_size = self._settings.database.stat().st_size
             disk_free = disk_usage(self._sqlite_temp_file_dir).free
             disk_free_msg = (
-                f"{self._sqlite_temp_file_dir} has {fmt_bytes(disk_free)} free, "
-                f"estimated size for VACUUM is {fmt_bytes(db_size)}"
+                f"{self._sqlite_temp_file_dir} has {_fmt_bytes(disk_free)} free, "
+                f"estimated size for VACUUM is {_fmt_bytes(db_size)}"
             )
             if db_size * 1.1 > disk_free:  # Overestimate by 10%, just to be sure
                 self._logger.warning(f"{disk_free_msg}, not running it due to insufficient space")
@@ -379,3 +378,12 @@ class SQLiteHistory(History):
         """
         self.conn.commit()
         self.conn.close()
+
+
+# dumbed-down local version from cmk.utils.render
+def _fmt_bytes(b: float) -> str:
+    factor = 1
+    for prefix in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"):
+        if abs(b) < (factor := factor * 1024):
+            break
+    return f"{b * 1024 / factor:.2f} {prefix}B"

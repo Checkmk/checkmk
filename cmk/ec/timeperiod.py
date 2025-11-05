@@ -7,8 +7,7 @@ import time
 from collections.abc import Mapping
 from logging import Logger
 
-from cmk.utils.timeperiod import TimeperiodName
-
+from .config import TimeperiodName
 from .core_queries import query_timeperiods_in
 
 

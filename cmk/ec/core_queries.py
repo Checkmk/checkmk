@@ -12,7 +12,8 @@ from livestatus import LocalConnection
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.user import UserId
-from cmk.utils.timeperiod import TimeperiodName
+
+from .config import TimeperiodName
 
 _ContactgroupName = str
 _HostGroupName = str

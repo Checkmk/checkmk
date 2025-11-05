@@ -37,7 +37,6 @@ from pysmi.searcher.stub import StubSearcher
 from pysmi.writer.pyfile import PyFileWriter
 
 from cmk.utils.log import VERBOSE
-from cmk.utils.render import approx_age
 
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
 from .settings import Paths, Settings
@@ -314,7 +313,7 @@ class SNMPTrapTranslator:
         key = "Uptime" if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0) else str(oid)
         # We could use Asn1Type.isSuperTypeOf() instead of isinstance() below.
         if isinstance(value, pysnmp.proto.rfc1155.TimeTicks | pysnmp.proto.rfc1902.TimeTicks):
-            val = approx_age(float(value) / 100)
+            val = _approx_age(float(value) / 100)
         else:
             val = value.prettyPrint()
         return key, val
@@ -392,3 +391,38 @@ def compile_mib(
             StubSearcher(*PySnmpCodeGen.baseMibs),
         )
     ).compile(mibname, ignoreErrors=True, genTexts=True)
+
+
+# Note: This is a local copy of the same function from cmk.utils.render, but for decoupling reasons
+# we don't want to import that here: There is no fundamental reason to keep both versions in sync.
+def _approx_age(secs: float) -> str:
+    """Format time difference seconds into approximated human readable text"""
+    if secs < 0:
+        return f"-{_approx_age(-secs)}"
+    if secs < 1e-12:
+        return f"{secs * 1e15:.0f} fs"
+    if secs < 1e-9:
+        return f"{secs * 1e12:.0f} ps"
+    if secs < 1e-6:
+        return f"{secs * 1e9:.0f} ns"
+    if secs < 1e-3:
+        return f"{secs * 1e6:.0f} µs"
+    if secs < 1:
+        return f"{secs * 1e3:.0f} ms"
+    if secs < 10:
+        return f"{secs:.2f} s"
+    if secs < 60:
+        return f"{secs:.1f} s"
+    if secs < 240:
+        return f"{int(secs)} s"
+    if (mins := secs / 60) < 360:
+        return f"{int(mins)} m"
+    if (hours := mins / 60) < 48:
+        return f"{int(hours)} h"
+    if (days := hours / 24) < 6:
+        return f"{days:.1f}".removesuffix(".0") + " d"
+    if days < 999:
+        return f"{days:.0f} d"
+    if (years := days / 365) < 10:
+        return f"{years:.1f} y"
+    return f"{years:.0f} y"

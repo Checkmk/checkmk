@@ -13,7 +13,6 @@ from logging import Logger
 
 from cmk.events import event_context
 from cmk.utils.log import VERBOSE
-from cmk.utils.statename import service_state_name
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
@@ -422,7 +421,7 @@ def _base_notification_context(
         SERVICEOUTPUT=event["text"],
         SERVICEPERFDATA="",
         SERVICEPROBLEMID="ec-id-" + str(event["id"]),
-        SERVICESTATE=service_state_name(event["state"]),
+        SERVICESTATE=_service_state_name(event["state"]),
         SERVICESTATEID=str(event["state"]),
         SERVICE_EC_CONTACT=event.get("owner", ""),
         SERVICE_SL=str(event["sl"]),
@@ -541,3 +540,13 @@ def _core_has_notifications_enabled(logger: Logger) -> bool:
             "Cannot determine whether notifications are enabled in core, assuming YES."
         )
         return True
+
+
+def _service_state_name(state_num: int) -> str:
+    return {
+        -1: "NODATA",
+        0: "OK",
+        1: "WARNING",
+        2: "CRITICAL",
+        3: "UNKNOWN",
+    }.get(state_num, "")

@@ -14,6 +14,7 @@ py_library(
     name = "cmk-agent-receiver",
     srcs = [
         "cmk/agent_receiver/__init__.py",
+        "cmk/agent_receiver/agent_receiver/app.py",
         "cmk/agent_receiver/agent_receiver/checkmk_rest_api.py",
         "cmk/agent_receiver/agent_receiver/decompression.py",
         "cmk/agent_receiver/agent_receiver/endpoints.py",

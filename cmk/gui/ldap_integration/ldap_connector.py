@@ -1028,13 +1028,15 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         tries_left = 2
         success = False
         last_exc = None
+
+        result: list[tuple[str, dict[str, list[str]]]] = []
         while not success:
             tries_left -= 1
             try:
                 if implicit_connect:
                     self.connect()
 
-                result = []
+                result.clear()
                 try:
                     for dn, obj in self._ldap_paged_async_search(
                         base, self._ldap_get_scope(scope), filt, columns

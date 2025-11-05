@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from argparse import Namespace
 from collections.abc import Mapping
 from types import ModuleType
@@ -256,7 +257,19 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
     "bazel_cache": ["--host", "SERVER"],
     "otel": ["HOSTNAME"],
-    "metric_backend_custom_query": ["HOSTNAME"],
+    "metric_backend_custom_query": [
+        json.dumps(
+            {
+                "metric_name": "Dummy",
+                "resource_attributes": ["a"],
+                "scope_attributes": ["a"],
+                "data_point_attributes": ["a"],
+                "aggregation_sum": ["none", None],
+                "aggregation_histogram": ["none", None],
+                "host_name": "v250",
+            }
+        )
+    ],
 }
 
 

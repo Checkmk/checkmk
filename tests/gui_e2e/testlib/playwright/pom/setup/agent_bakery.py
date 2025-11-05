@@ -43,7 +43,7 @@ class AgentBakeryPage(CmkPage):
 
     @property
     def baking_success_msg(self) -> Locator:
-        return self.main_area.get_text("Agent baking successful")
+        return self.main_area.get_text("Agents baked.")
 
     @property
     def key_passphrase_input(self) -> Locator:
@@ -75,7 +75,7 @@ class AgentBakeryPage(CmkPage):
     def assert_baking_succeeded(self) -> None:
         expect(
             self.baking_success_msg,
-            "Message box with text 'Agent baking successful' was not found.",
+            "Baking success message was not found.",
         ).to_be_visible()
 
     def check_sign_buttons_disabled(self) -> None:

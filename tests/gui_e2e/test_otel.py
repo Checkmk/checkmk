@@ -12,8 +12,14 @@ import yaml
 from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
+from tests.gui_e2e.testlib.playwright.pom.setup.otel.add_open_telemetry_collector_prometheus_scraping import (
+    AddOpenTelemetryCollectorPrometheusScraping,
+)
 from tests.gui_e2e.testlib.playwright.pom.setup.otel.add_open_telemetry_collector_receiver import (
     AddOpenTelemetryCollectorReceiver,
+)
+from tests.gui_e2e.testlib.playwright.pom.setup.otel.open_telemetry_collector_prometheus_scraping import (
+    OpenTelemetryCollectorPrometheusScraping,
 )
 from tests.gui_e2e.testlib.playwright.pom.setup.otel.open_telemetry_collector_receiver import (
     OpenTelemetryCollectorReceiver,
@@ -180,4 +186,94 @@ def test_open_telemetry_collector_receiver(
     finally:
         logger.info("Delete OpenTelemetry collector receiver configuration via API")
         test_site.openapi.otel_collector.delete_receivers(collector_id)
+        test_site.openapi.changes.activate_and_wait_for_completion()
+
+
+PROMETHEUS_CONFIG = {
+    "job_name": "test_job",
+    "scrape_interval": 30,
+    "metrics_path": "/metrics",
+    "targets": [{"address": "localhost", "port": 9090}],
+    "host_name_rules": [
+        {"type": "service_instance_id"},
+        {
+            "type": "custom",
+            "value": [
+                {"type": "key", "value": "test.attribute"},
+                {"type": "free", "value": "_"},
+                {"type": "key", "value": "another.attribute"},
+            ],
+        },
+    ],
+    "encryption": False,
+}
+
+
+@pytest.mark.skip_if_not_edition("cloud", "managed")
+def test_open_telemetry_collector_prometheus_scraping(
+    test_site: Site,
+    dashboard_page: Dashboard,
+) -> None:
+    """Test adding, verifying, and deleting OpenTelemetry collector scrape configuration via UI.
+
+    The test creates a new OpenTelemetry collector scrape configuration, verifies its presence,
+    and then deletes it. It also compares the configuration file created via UI with the one
+    created via API.
+    """
+    collector_id = "otel_collector_prometheus_scraping_id"
+    collector_title = "OTel collector Prometheus scraping title"
+
+    logger.info("Add OpenTelemetry collector: Prometheus scraping configuration via UI")
+    add_otel_collector_prom_scrape_page = AddOpenTelemetryCollectorPrometheusScraping(
+        dashboard_page.page
+    )
+    add_otel_collector_prom_scrape_page.unique_id_textfield.fill(collector_id)
+    add_otel_collector_prom_scrape_page.title_textfield.fill(collector_title)
+    add_otel_collector_prom_scrape_page.site_restriction_checkbox(test_site.id).check()
+    add_otel_collector_prom_scrape_page.fill_collector_scrape_properties(PROMETHEUS_CONFIG)
+
+    add_otel_collector_prom_scrape_page.save_configuration_button.click()
+    otel_collector_prom_scrape_page = OpenTelemetryCollectorPrometheusScraping(
+        add_otel_collector_prom_scrape_page.page, navigate_to_page=False
+    )
+    otel_collector_prom_scrape_page.activate_changes()
+
+    try:
+        logger.info("Verify OpenTelemetry collector scrape configuration is present in UI")
+        otel_collector_prom_scrape_page.navigate()
+        expect(
+            otel_collector_prom_scrape_page.collector_configuration_row(collector_id)
+        ).to_be_visible()
+        ui_collector_config = read_collector_configuration_file(test_site)
+
+        # TODO: Uncomment when error handling is implemented
+        # otel_collector_prom_scrape_page.add_open_telemetry_collector_configuration_btn.click()
+        # expect(otel_collector_prom_scrape_page.check_error("Some error text")).to_be_visible()
+    finally:
+        logger.info("Delete OpenTelemetry collector scrape configuration via UI")
+        otel_collector_prom_scrape_page.delete_collector_configuration_button(collector_id).click()
+        otel_collector_prom_scrape_page.delete_confirmation_button.click()
+        expect(
+            otel_collector_prom_scrape_page.collector_configuration_row(collector_id)
+        ).not_to_be_visible()
+        otel_collector_prom_scrape_page.activate_changes()
+
+    try:
+        logger.info(
+            "Recreate OpenTelemetry collector scrape configuration via API to compare configs"
+        )
+        test_site.openapi.otel_collector.create_prom_scrape(
+            collector_id,
+            collector_title,
+            False,
+            prometheus_scrape_configs=[PROMETHEUS_CONFIG],
+        )
+        test_site.openapi.changes.activate_and_wait_for_completion()
+        api_collector_config = read_collector_configuration_file(test_site)
+        assert (
+            ui_collector_config == api_collector_config
+        ), "The collector configuration created via UI does not match the one created via API."
+    finally:
+        logger.info("Delete OpenTelemetry collector scrape configuration via API")
+        test_site.openapi.otel_collector.delete_prom_scrape(collector_id)
         test_site.openapi.changes.activate_and_wait_for_completion()

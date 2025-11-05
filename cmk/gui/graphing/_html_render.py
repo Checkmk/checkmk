@@ -33,7 +33,7 @@ from cmk.gui.logged_in import (
     user,
     UserGraphDataRangeFileName,
 )
-from cmk.gui.pages import AjaxPage, PageContext, PageResult
+from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GraphTimerange, SizePT
@@ -574,7 +574,7 @@ def _graph_margin_ex(
 # while these functions do not have that. In order to preserve the functionality of the JS side
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
-class AjaxGraph(cmk.gui.pages.Page):
+class AjaxGraph(Page):
     def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph`."""
         response.set_content_type("application/json")
@@ -1030,7 +1030,7 @@ def estimate_graph_step_for_html(
 # while these functions do not have that. In order to preserve the functionality of the JS side
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
-class AjaxGraphHover(cmk.gui.pages.Page):
+class AjaxGraphHover(Page):
     def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph_hover`."""
         response.set_content_type("application/json")

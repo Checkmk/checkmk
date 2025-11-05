@@ -22,6 +22,16 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
+from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
+    cmk_edition,
+    controller_certificate_settings,
+    get_root_cert,
+    host_configuration,
+    HostConfiguration,
+    link_host_with_uuid,
+    post_csr,
+    register,
+)
 from cmk.agent_receiver.lib.certs import (
     agent_root_ca,
     current_time_naive,
@@ -34,16 +44,6 @@ from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
 from cmk.agent_receiver.lib.route_classes import UUIDValidationRoute
 
-from .checkmk_rest_api import (
-    cmk_edition,
-    controller_certificate_settings,
-    get_root_cert,
-    host_configuration,
-    HostConfiguration,
-    link_host_with_uuid,
-    post_csr,
-    register,
-)
 from .decompression import DecompressionError, Decompressor
 from .models import (
     CertificateRenewalBody,

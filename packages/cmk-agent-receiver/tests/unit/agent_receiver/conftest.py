@@ -14,7 +14,7 @@ from pydantic import UUID4
 from pytest_mock import MockerFixture
 from starlette.routing import Mount
 
-from cmk.agent_receiver.checkmk_rest_api import ControllerCertSettings
+from cmk.agent_receiver.agent_receiver.checkmk_rest_api import ControllerCertSettings
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.main import main_app
 

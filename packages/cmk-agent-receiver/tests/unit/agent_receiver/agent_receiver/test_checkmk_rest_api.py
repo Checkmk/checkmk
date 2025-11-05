@@ -10,7 +10,7 @@ from pydantic import UUID4
 from pytest_mock import MockerFixture
 from requests import Response
 
-from cmk.agent_receiver.checkmk_rest_api import link_host_with_uuid
+from cmk.agent_receiver.agent_receiver.checkmk_rest_api import link_host_with_uuid
 
 
 def test_link_host_with_uuid_unauthorized(
@@ -23,7 +23,7 @@ def test_link_host_with_uuid_unauthorized(
         b'{"title": "You do not have the permission for agent pairing.", "status": 403}'
     )
     mocker.patch(
-        "cmk.agent_receiver.checkmk_rest_api._forward_put",
+        "cmk.agent_receiver.agent_receiver.checkmk_rest_api._forward_put",
         return_value=response,
     )
     with pytest.raises(HTTPException) as excpt_info:
@@ -48,7 +48,7 @@ def test_link_host_with_uuid_ok(
     response = Response()
     response.status_code = 204
     mocker.patch(
-        "cmk.agent_receiver.checkmk_rest_api._forward_put",
+        "cmk.agent_receiver.agent_receiver.checkmk_rest_api._forward_put",
         return_value=response,
     )
     link_host_with_uuid(

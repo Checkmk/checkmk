@@ -144,11 +144,13 @@ $(SKEL_PERMISSIONS): $(INSTALL)
 	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
 	    fi ; \
 	done ; \
-	cd ../../non-free/packages ; for p in $(PACKAGES) ; do \
-	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
-	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
-	    fi ; \
-	done ; \
+	if [ -d ../non-free/packages ] ; then \
+	    cd ../../non-free/packages ; for p in $(PACKAGES) ; do \
+	        if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
+	            OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
+	        fi ; \
+	    done ; \
+	fi ; \
 	bazel build //omd:skel_permissions_$(EDITION) ; \
 	OUTPUT="$${OUTPUT}# Bazel\n$$(cat $(REPO_PATH)/bazel-bin/omd/skel.permissions_$(EDITION))\n" ; \
 	echo -e "$$OUTPUT" > $(SKEL_PERMISSIONS)

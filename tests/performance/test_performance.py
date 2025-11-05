@@ -22,7 +22,7 @@ from urllib.parse import urljoin
 
 import pytest
 import requests
-from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore[import-untyped]
+from pytest_benchmark.fixture import BenchmarkFixture
 from requests.auth import HTTPBasicAuth
 
 from tests.performance.sysmon import track_resources
@@ -315,7 +315,7 @@ def test_performance_hosts(
     perftest_dist: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:
     """Bulk host creation"""
-    benchmark.pedantic(
+    benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest_dist.scenario_create_and_delete_hosts,
         args=[],
         rounds=perftest_dist.rounds,
@@ -325,7 +325,7 @@ def test_performance_hosts(
 
 def test_performance_hosts_restart(perftest: PerformanceTest, benchmark: BenchmarkFixture) -> None:
     """Bulk host creation"""
-    benchmark.pedantic(
+    benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest.scenario_create_and_delete_hosts,
         args=[perftest.iterations],  # pass the iterations to switch to restart mode
         rounds=perftest.rounds,
@@ -341,7 +341,7 @@ def test_performance_services(
     perftest: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:
     """Bulk service discovery"""
-    benchmark.pedantic(
+    benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest.scenario_performance_services,
         args=[],
         rounds=perftest.rounds,
@@ -353,7 +353,7 @@ def test_performance_services(
 def test_performance_piggyback(
     perftest: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:
-    benchmark.pedantic(
+    benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest.scenario_performance_dcd_piggyback,
         args=[],
         rounds=perftest.rounds,
@@ -369,7 +369,7 @@ def test_performance_ui_response(
     page_url: CmkPageUrl,
 ) -> None:
     print(f"Checking {page_url.value}...")
-    benchmark.pedantic(
+    benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest.scenario_performance_ui_response,
         args=[page_url],
         rounds=perftest.rounds,

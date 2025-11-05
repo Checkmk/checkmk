@@ -23,8 +23,10 @@ def test_command_creation() -> None:
         SpecialAgentCommand(
             command_arguments=[
                 "1.2.3.4",
+                "--user",
                 "user",
-                Secret(id=1, format="%s", pass_safely=False),
+                "--password-id",
+                Secret(1),
                 "--cert-server-name",
                 "hostname",
             ]

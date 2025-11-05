@@ -22,8 +22,10 @@ def _commands_function(
     yield SpecialAgentCommand(
         command_arguments=[
             host_config.primary_ip_config.address,
+            "--user",
             params.username,
-            params.password.unsafe(),
+            "--password-id",
+            params.password,
             "--cert-server-name",
             host_config.name,
         ]

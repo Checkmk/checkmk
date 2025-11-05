@@ -11,27 +11,33 @@ from collections.abc import Sequence
 
 import requests
 
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
-from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, report_agent_crashes
+
+__version__ = "2.5.0b1"
+
+AGENT = "hivemanager"
+
+PASSWORD_OPTION = "password"
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(_parse_arguments, _main)
+    return _main(_parse_arguments(sys.argv[1:]))
 
 
-def _parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "server",
         help="Hivemanager server address",
     )
-    parser.add_argument(
-        "user",
-        help="Hivemanager API username",
-    )
-    parser.add_argument(
-        "password",
+    parser.add_argument("--user", help="Hivemanager API username", required=True)
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
         help="Hivemanager API password",
+        required=True,
     )
     parser.add_argument(
         "--cert-server-name",
@@ -50,7 +56,7 @@ def _main(args: argparse.Namespace) -> int:
     session = _session(
         server=args.server,
         username=args.user,
-        password=args.password,
+        password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
         cert_server_name=args.cert_server_name,
     )
 

@@ -13,7 +13,9 @@ import traceback
 
 import requests
 
-from cmk.utils.password_store import replace_passwords
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+
+SECRET_OPTION = "secret"
 
 
 def bail_out(message, debug=False):
@@ -38,13 +40,12 @@ def parse_arguments(argv):
     parser.add_argument("vhm_id", help="Numericl ID of the VHM e.g. 102")
     parser.add_argument("api_token", help="API Access Token")
     parser.add_argument("client_id", help="Client ID")
-    parser.add_argument("client_secret", help="Client secret")
+    parser_add_secret_option(parser, long=f"--{SECRET_OPTION}", help="Client secret", required=True)
     parser.add_argument("redirect_url", help="Redirect URL")
     return parser.parse_args(argv)
 
 
 def main():
-    replace_passwords()
     args = parse_arguments(sys.argv[1:])
 
     sys.stdout.write("<<<hivemanager_ng_devices:sep(124)>>>\n")
@@ -57,7 +58,7 @@ def main():
     headers = {
         "Authorization": "Bearer %s" % args.api_token,
         "X-AH-API-CLIENT-ID": args.client_id,
-        "X-AH-API-CLIENT-SECRET": args.client_secret,
+        "X-AH-API-CLIENT-SECRET": resolve_secret_option(args, SECRET_OPTION).reveal(),
         "X-AH-API-CLIENT-REDIRECT-URI": args.redirect_url,
         "Content-Type": "application/json",
     }

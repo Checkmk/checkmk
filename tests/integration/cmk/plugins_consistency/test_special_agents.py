@@ -183,6 +183,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "VHM_ID",
         "API_TOKEN",
         "CLIENT_ID",
+        "--secret",
         "CLIENT_SECRET",
         "REDIRECT_URL",
     ],

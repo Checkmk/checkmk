@@ -27,7 +27,8 @@ def test_command_creation() -> None:
                 "102",
                 "token",
                 "clientID",
-                Secret(id=1, format="%s", pass_safely=False),
+                "--secret-id",
+                Secret(1),
                 "http://redirect.com",
             ]
         )

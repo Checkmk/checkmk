@@ -29,7 +29,8 @@ def _commands_function(
             params.vhm_id,
             params.api_token,
             params.client_id,
-            params.client_secret.unsafe(),
+            "--secret-id",
+            params.client_secret,
             params.redirect_url,
         ]
     )

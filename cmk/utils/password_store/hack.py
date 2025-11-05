@@ -47,8 +47,8 @@ HACK_AGENTS = {
     "gcp": True,
     "gerrit": False,
     "graylog": True,
-    "hivemanager_ng": True,
-    "hivemanager": True,
+    "hivemanager_ng": False,
+    "hivemanager": False,
     "hp_msa": True,
     "ibmsvc": False,  # needs no secret
     "innovaphone": False,

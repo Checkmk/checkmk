@@ -102,6 +102,15 @@ class TypeCMKEdition:
         """Return edition as displayed on Checkmk UI."""
         return self.edition_data.title
 
+    @property
+    def license_edition(self) -> str:
+        """Return the legacy edition short name used in the licensing logic."""
+        return {
+            "ultimate": "cce",
+            "ultimatemt": "cme",
+            "cloud": "cse",
+        }.get(self.short, "cee")
+
     def is_ultimatemt_edition(self) -> bool:
         return self.edition_data is self.ULTIMATEMT
 

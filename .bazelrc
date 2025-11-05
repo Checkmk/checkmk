@@ -94,6 +94,11 @@ common:debug --verbose_failures
 # test:debug ...
 
 ################################################################################
+# Example: bazel build //:state_proto
+################################################################################
+build --host_per_file_copt=^external/protobuf~/src/google/protobuf/.*.cc@-Wno-maybe-uninitialized
+
+################################################################################
 # Example: bazel build --config clang-tidy //non-free/packages/cmc:all
 ################################################################################
 

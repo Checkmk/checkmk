@@ -2541,7 +2541,7 @@ class PythonHelper:
                 ["python3", str(self.site_path)],
                 input_=input_,
                 encoding=encoding,
-                stderr=subprocess.STDOUT,
+                stderr=subprocess.PIPE,
             )
             return output
 

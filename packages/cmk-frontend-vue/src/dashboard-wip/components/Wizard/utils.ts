@@ -196,6 +196,11 @@ export function getInitialElementSelection(
     return ElementSelection.SPECIFIC
   }
 
+  if (Object.keys(editWidgetSpec.filter_context.filters).length === 0) {
+    // no filters configured, use default
+    return defaultSelection
+  }
+
   const visualInfo = visualInfos.value[infoName]
   if (!visualInfo) {
     throw new Error(`visualInfo for ${infoName} not found`)

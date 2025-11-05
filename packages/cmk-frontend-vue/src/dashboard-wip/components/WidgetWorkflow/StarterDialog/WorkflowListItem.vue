@@ -16,7 +16,7 @@ const emit = defineEmits(['select'])
 
 <template>
   <button class="db-workflow-list-item" @click="emit('select')">
-    <IconWithEmblem :icon="icon" :icon_emblem="icon_emblem" />
+    <IconWithEmblem :icon="icon" :icon-emblem="icon_emblem" size="xxlarge" />
     <div class="db-workflow-list-item__content">
       <CmkHeading type="h2">
         {{ title }}

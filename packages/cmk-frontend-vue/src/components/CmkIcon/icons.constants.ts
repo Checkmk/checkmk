@@ -147,6 +147,28 @@ export const simpleIcons = [
   'custom-snapin'
 ] as const
 
+export const emblems = [
+  'add',
+  'api',
+  'disable',
+  'download',
+  'downtime',
+  'edit',
+  'enable',
+  'more',
+  'pending',
+  'refresh',
+  'remove',
+  'rulesets',
+  'search',
+  'settings',
+  'sign',
+  'statistic',
+  'time',
+  'trans',
+  'warning'
+] as const
+
 export const oneColorIcons = [
   'changes',
   'customize',

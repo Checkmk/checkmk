@@ -5,10 +5,11 @@
  */
 import type { VariantProps } from 'class-variance-authority'
 
-import type { oneColorIcons, simpleIcons, twoColorIcons } from './icons.constants'
+import type { emblems, oneColorIcons, simpleIcons, twoColorIcons } from './icons.constants'
 import type { cmkIconVariants, cmkMultitoneIconVariants } from './icons.constants'
 
 export type SimpleIcons = (typeof simpleIcons)[number]
+export type IconEmblems = (typeof emblems)[number]
 export type OneColorIcons = (typeof oneColorIcons)[number]
 export type TwoColorIcons = (typeof twoColorIcons)[number]
 

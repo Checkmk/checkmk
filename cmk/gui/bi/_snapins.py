@@ -36,10 +36,11 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
         return _("A direct link to all groups of BI aggregations")
 
     def show(self, config: Config) -> None:
-        html.open_ul()
-        for _ident, group in bi.aggregation_group_choices():
-            bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % urlencode(group))
-        html.close_ul()
+        if len(bi.aggregation_group_choices()):
+            html.open_ul()
+            for _ident, group in bi.aggregation_group_choices():
+                bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % urlencode(group))
+            html.close_ul()
 
 
 class SidebarSnapinAggregationGroupTree(SidebarSnapin):

@@ -249,7 +249,8 @@ div.add_snapin div.snapin {
   box-sizing: border-box;
 }
 
-div.snapin {
+div.snapin,
+div.sidebar-snapin__container {
   &.dragging {
     position: absolute;
     z-index: 200;
@@ -467,11 +468,13 @@ div.snapin {
   }
 }
 
-div.snapin div.content div.foldable ul.treeangle a.iconlink {
+div.snapin div.content div.foldable ul.treeangle a.iconlink,
+div.sidebar-snapin__container div.foldable ul.treeangle a.iconlink {
   padding: 0;
 }
 
-div.snapin div.footnotelink a.link {
+div.snapin div.footnotelink a.link,
+div.sidebar-snapin__container div.footnotelink a.link {
   height: 11px;
   padding: 2px 7px;
   font-size: $font-size-small;
@@ -481,8 +484,10 @@ div.snapin div.footnotelink a.link {
   border: none;
   box-shadow: none;
 
-  &:not(:last-child) {
-    margin: $spacing-half $spacing-half 0 0;
+  margin: $spacing-half $spacing-half 0 0;
+
+  &:last-child {
+    margin: $spacing-half 0 0 0;
   }
 }
 

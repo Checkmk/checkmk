@@ -5,10 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
+import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCollapsible from '@/components/CmkCollapsible/CmkCollapsible.vue'
 import CmkCollapsibleTitle from '@/components/CmkCollapsible/CmkCollapsibleTitle.vue'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
@@ -19,6 +21,11 @@ import CmkSkeleton from '@/components/CmkSkeleton.vue'
 import type { TSidebarSnapin } from '@/sidebar/lib/type-defs'
 import { getInjectedSidebar } from '@/sidebar/provider/sidebar'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const cmk: any
+
+const { _t } = usei18n()
+
 interface SidebarSnapinProps extends TSidebarSnapin {
   isDragged?: boolean | undefined
 }
@@ -27,10 +34,14 @@ const props = defineProps<SidebarSnapinProps>()
 const sidebar = getInjectedSidebar()
 const snapinOpen = ref(props.open || false)
 const snapinContent = ref<string | null>(null)
+const snapinContentElement = useTemplateRef('snapin-content')
 
 sidebar.onUpdateSnapinContent((contents) => {
   if (typeof contents[props.name] === 'string') {
     snapinContent.value = contents[props.name] as string
+    void nextTick(() => {
+      cmk.utils.execute_javascript_by_object(snapinContentElement.value)
+    })
   }
 })
 
@@ -70,13 +81,20 @@ async function onToggle() {
     </button>
     <CmkCollapsible :open="snapinOpen">
       <div class="sidebar-snapin__content-wrapper">
-        <CmkSkeleton v-if="!snapinContent" class="sidebar-snapin__skel" />
+        <CmkSkeleton v-if="!snapinContent && snapinContent !== ''" class="sidebar-snapin__skel" />
         <!-- eslint-disable vue/no-v-html-->
-        <div
-          v-else
-          :class="{ more: sidebar.showMoreIsActive(props.name) }"
-          v-html="snapinContent"
-        ></div>
+        <template v-else>
+          <CmkAlertBox v-if="snapinContent === ''" variant="info">
+            {{ _t('No data recieved') }}
+          </CmkAlertBox>
+          <div
+            v-else
+            :id="`snapin_${name}`"
+            ref="snapin-content"
+            :class="{ more: sidebar.showMoreIsActive(props.name) }"
+            v-html="snapinContent"
+          ></div>
+        </template>
         <CmkIconButton
           class="sidebar-snapin__delete"
           name="delete"

@@ -375,7 +375,8 @@ div.spacertop {
 /*
  * Admin mini snapin (WATO)
  */
-#snapin_container_admin_mini.more a.show_more_mode {
+#snapin_container_admin_mini.more a.show_more_mode,
+.sidebar-snapin__content-wrapper > .more a.show_more_mode {
   display: inline;
 }
 
@@ -623,6 +624,7 @@ div.spacertop {
   }
 }
 
-div.snapin select {
+div.snapin select,
+div.sidebar-snapin__container select {
   background-image: url(images/select_arrow.png);
 }

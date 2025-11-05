@@ -595,12 +595,12 @@ let g_sidebar_scheduler_timer: null | number = null
 let g_sidebar_full_reload = false
 
 export function refresh_single_snapin(name: string) {
-  const url = 'sidebar_snapin.py?names=' + name
-  const ids = ['snapin_' + name]
-  call_ajax(url, {
-    response_handler: bulk_update_contents,
-    handler_data: ids
+  const event = new CustomEvent('sidebar-update-snapin-content', {
+    detail: {
+      name
+    }
   })
+  window.dispatchEvent(event)
 }
 
 export function reset_sidebar_scheduler() {
@@ -909,7 +909,7 @@ export function fetch_nagvis_snapin_contents() {
         add_ajax_id: false,
         post_data: 'request=' + encodeURIComponent(ajax_response),
         response_handler: function (_unused_handler_data: any, snapin_content_response: string) {
-          update_contents('snapin_nagvis_maps', snapin_content_response)
+          update_vue_snapin_contents('snapin_nagvis_maps', snapin_content_response)
         }
       })
 
@@ -941,7 +941,7 @@ export function add_bookmark() {
   const title = parent.frames[0].document.title
   call_ajax('add_bookmark.py', {
     add_ajax_id: false,
-    response_handler: update_contents,
+    response_handler: update_vue_snapin_contents,
     handler_data: 'snapin_bookmarks',
     method: 'POST',
     post_data: 'title=' + encodeURIComponent(title) + '&url=' + encodeURIComponent(url.toString())
@@ -1275,4 +1275,14 @@ export function toggle_user_attribute(mode: string) {
       }
     }
   })
+}
+
+export function update_vue_snapin_contents(id: string, content: string) {
+  const event = new CustomEvent('sidebar-new-snapin-content', {
+    detail: {
+      name: id.replace('snapin_', ''),
+      content
+    }
+  })
+  window.dispatchEvent(event)
 }

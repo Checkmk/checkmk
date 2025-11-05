@@ -32,6 +32,7 @@ function onClose() {
       },
       closeButton: true
     }"
+    :is-index-page="true"
     size="small"
     :open="slideInOpen"
     @close="onClose"

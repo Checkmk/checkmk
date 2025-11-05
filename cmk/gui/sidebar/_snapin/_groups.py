@@ -32,11 +32,12 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
             case _:
                 raise ValueError(f"Unknown group type: {group_type}")
 
-        html.open_ul()
-        for name, alias in sites.all_groups(grouped_type):
-            url = f"view.py?view_name={group_type}&{group_type}={urlencode(name)}"
-            bulletlink(alias or name, url)
-        html.close_ul()
+        if len(sites.all_groups(grouped_type)):
+            html.open_ul()
+            for name, alias in sites.all_groups(grouped_type):
+                url = f"view.py?view_name={group_type}&{group_type}={urlencode(name)}"
+                bulletlink(alias or name, url)
+            html.close_ul()
 
     @classmethod
     def refresh_on_restart(cls) -> bool:

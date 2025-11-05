@@ -159,7 +159,7 @@ class MasterControlSnapin(SidebarSnapin):
             onclick = (
                 """cmk.ajax.call_ajax('%s', {
             method: "POST",
-            response_handler: cmk.utils.update_contents,
+            response_handler: cmk.sidebar.update_vue_snapin_contents,
             handler_data: 'snapin_master_control',
             })"""
                 % url

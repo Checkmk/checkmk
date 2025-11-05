@@ -221,6 +221,32 @@ export class SidebarService extends ServiceBase {
 
     void this.updateSnapinContent(this.snapins.map((s) => s.name))
     this.initPeriodically()
+    this.initEventListener()
+  }
+
+  private async handleNewSnapinContent(event: CustomEvent) {
+    this.snapinContents[event.detail.name] = event.detail.content
+
+    const contents: SidebarSnapinContents = {}
+    contents[event.detail.name] = event.detail.content
+
+    this.dispatchCallback('update-snapin-content', contents)
+  }
+
+  private async handleUpdateSnapinContent(event: CustomEvent) {
+    await this.updateSnapinContent([event.detail.name])
+  }
+
+  private initEventListener() {
+    window.addEventListener(
+      'sidebar-new-snapin-content',
+      this.handleNewSnapinContent.bind(this) as unknown as EventListener
+    )
+
+    window.addEventListener(
+      'sidebar-update-snapin-content',
+      this.handleUpdateSnapinContent.bind(this) as unknown as EventListener
+    )
   }
 
   private initPeriodically() {

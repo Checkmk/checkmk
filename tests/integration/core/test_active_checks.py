@@ -36,7 +36,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.skip_if_edition("saas")  # active checks not supported in SaaS
+@pytest.mark.skip_if_edition("cloud")  # active checks not supported in SaaS
 @pytest.mark.usefixtures("web")
 def test_active_check_execution(site: Site) -> None:
     rule_id = site.openapi.rules.create(
@@ -65,7 +65,7 @@ def test_active_check_execution(site: Site) -> None:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.skip_if_edition("saas")  # active checks not supported in SaaS
+@pytest.mark.skip_if_edition("cloud")  # active checks not supported in SaaS
 @pytest.mark.usefixtures("web")
 @pytest.mark.usefixtures("test_cfg")
 def test_active_check_macros(site: Site) -> None:

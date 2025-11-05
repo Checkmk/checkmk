@@ -33,7 +33,7 @@ def create_and_delete_automation_user(site: Site) -> Iterator[tuple[str, str]]:
         site.openapi.users.delete(username)
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_login_and_logout(site: Site) -> None:
     web = CMKWebSession(site)
 
@@ -50,7 +50,7 @@ def test_login_and_logout(site: Site) -> None:
     assert "Global settings" not in r.text
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_session_cookie(site: Site) -> None:
     web = CMKWebSession(site)
     web.login()
@@ -64,7 +64,7 @@ def test_session_cookie(site: Site) -> None:
     assert cookie.__dict__.get("_rest", {}).get("SameSite") == "Lax"
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_automation_user_gui(with_automation_user: tuple[str, str], site: Site) -> None:
     """test authenticated request of an automation user to the gui
 
@@ -94,7 +94,7 @@ def test_automation_user_gui(with_automation_user: tuple[str, str], site: Site) 
     assert session.get_auth_cookie() is None
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_automation_user_rest_api(with_automation_user: tuple[str, str], site: Site) -> None:
     """test authenticated request of an automation user to the rest api
 
@@ -124,7 +124,7 @@ def test_automation_user_rest_api(with_automation_user: tuple[str, str], site: S
     assert session.get_auth_cookie() is None
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_human_user_gui(site: Site) -> None:
     """test authenticated request of a "normal"/"human" user to the gui
 
@@ -168,7 +168,7 @@ def test_human_user_gui(site: Site) -> None:
     assert session.get_auth_cookie() is not None
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_human_user_restapi(site: Site) -> None:
     """test authenticated request of a "normal"/"human" user to the rest api
 
@@ -229,7 +229,7 @@ def _reset_failed_logins(site: Site, username: str) -> Iterator[None]:
         _set_failed_logins(site, username, 0)
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_failed_login_counter_human(site: Site) -> None:
     """test that all authentication methods count towards the failed login attempts"""
     session = CMKWebSession(site)
@@ -289,7 +289,7 @@ def test_failed_login_counter_automation(with_automation_user: tuple[str, str], 
         assert 0 == _get_failed_logins(site, username)
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_local_secret_no_sessions(site: Site) -> None:
     """test authenticated request with the site internal secret
 
@@ -392,7 +392,7 @@ def test_rest_api_access_with_enabled_2fa(site: Site) -> None:
         assert not session.is_logged_in()
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
     """login via the gui but do not complete the 2fa, the cookie must not allow you access to the
     rest api
@@ -423,7 +423,7 @@ def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
         assert not session.is_logged_in()
 
 
-@pytest.mark.skip_if_edition("raw", "saas")
+@pytest.mark.skip_if_edition("community", "cloud")
 def test_invalid_remote_site_login(site: Site) -> None:
     """test that we are not logged in with any remote site secret
 

@@ -12,7 +12,7 @@ from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
 
-@pytest.mark.skip_if_edition("raw")
+@pytest.mark.skip_if_edition("community")
 def test_rrd_files_creation(site: Site) -> None:
     """Test that RRD files are created for a hosts.
 

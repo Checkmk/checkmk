@@ -47,7 +47,7 @@ def _get_crash_report(site: Site) -> tuple[Path, dict[str, object]] | None:
     return None
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_crash_report(site: Site, faulty_page: None) -> None:
     web = CMKWebSession(site)
     web.login()

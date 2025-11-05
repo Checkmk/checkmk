@@ -108,7 +108,7 @@ def test_cmk_automation(site: Site) -> None:
     assert response.text == "Missing secret for automation command."
 
 
-@pytest.mark.skip_if_edition("raw")
+@pytest.mark.skip_if_edition("community")
 def test_cmk_deploy_agent(site: Site) -> None:
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/deploy_agent.py" % site.id)

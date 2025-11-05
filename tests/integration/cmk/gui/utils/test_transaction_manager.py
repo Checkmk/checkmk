@@ -8,7 +8,7 @@ from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_failed_transid_validations_is_logged(site: Site) -> None:
     web = CMKWebSession(site)
     web.login()

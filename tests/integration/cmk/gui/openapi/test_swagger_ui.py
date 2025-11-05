@@ -8,19 +8,19 @@ from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_swagger_ui_http_unauthenticated(site: Site) -> None:
     session = CMKWebSession(site)
     session.get(f"/{site.id}/check_mk/api/v1/ui/index.html", expected_code=401)
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_swagger_ui_resource_urls_unauthenticated(site: Site) -> None:
     session = CMKWebSession(site)
     session.get(f"/{site.id}/check_mk/api/v1/ui/swagger-ui.js", expected_code=401)
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_swagger_ui_http(site: Site) -> None:
     session = CMKWebSession(site)
     session.login()
@@ -32,7 +32,7 @@ def test_swagger_ui_http(site: Site) -> None:
     assert "openapi-swagger-ui.yaml" in resp.text
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_swagger_ui_resource_urls(site: Site) -> None:
     session = CMKWebSession(site)
     session.login()

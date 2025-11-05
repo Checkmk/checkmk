@@ -31,7 +31,7 @@ def test_http_methods(site: Site) -> None:
     pytest.fail("Could not find regex in logfile")
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize(
     ["size", "status_code"],
     [

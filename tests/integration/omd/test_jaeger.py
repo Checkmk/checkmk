@@ -7,11 +7,11 @@ import pytest
 from tests.testlib.site import Site
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_jaeger_exists(site: Site) -> None:
     assert (site.root / "bin" / "jaeger").exists()
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_jaeger_executable(site: Site) -> None:
     assert "Jaeger backend v2" in site.check_output(["jaeger", "--help"])

@@ -15,7 +15,7 @@ _RELATIVE_PATH_PNP_RRDS = Path("var", "pnp4nagios", "perfdata")
 _RELATIVE_PATH_CMC_RRDS = Path("var", "check_mk", "rrd")
 
 
-@pytest.mark.skip_if_edition("raw", "saas")
+@pytest.mark.skip_if_edition("community", "cloud")
 def test_convert_pnp_to_cmc(request: pytest.FixtureRequest, site: Site) -> None:
     hostname = HostAddress("test-pnp-to-cmc")
     rule_id_host_rrd_config = rule_id_service_rrd_config = None

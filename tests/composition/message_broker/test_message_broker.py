@@ -42,7 +42,7 @@ def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
     return False
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 class TestCMKBrokerTest:
     """Make sure our cmk-broker-test tool works"""
 
@@ -80,7 +80,7 @@ def _next_free_port(site: Site, key: str, port: str) -> int:
     return int(site.run(["lib/omd/next_free_port", key, port]).stdout.strip())
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 class TestMessageBroker:
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
         """Test if the connection between central and remote site works"""

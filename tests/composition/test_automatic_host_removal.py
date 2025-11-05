@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.medium_test_chain
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 @pytest.mark.xfail(
     condition=os.getenv("DISTRO") in ("almalinux-9", "almalinux-10"),
     reason="May fail on EL* systems, investigating.",

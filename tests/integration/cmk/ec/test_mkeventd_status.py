@@ -14,7 +14,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip_if_edition("saas")  # reason="EC is disabled in the SaaS edition"
+@pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
 def test_command_reload(site: Site, ec: CMKEventConsole) -> None:
     live = site.live
 
@@ -30,7 +30,7 @@ def test_command_reload(site: Site, ec: CMKEventConsole) -> None:
     assert new_t > old_t
 
 
-@pytest.mark.skip_if_edition("saas")  # reason="EC is disabled in the SaaS edition"
+@pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
 def test_status_table_via_core(site: Site) -> None:
     result = site.live.query_table_assoc("GET eventconsolestatus\n")
     assert len(result) == 1
@@ -75,7 +75,7 @@ def test_status_table_via_core(site: Site) -> None:
     assert isinstance(status["status_event_limit_overall"], int)
 
 
-@pytest.mark.skip_if_edition("saas")  # reason="EC is disabled in the SaaS edition"
+@pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
 def test_rules_table_via_core(site: Site) -> None:
     result = site.live.query_table_assoc("GET eventconsolerules\n")
     assert isinstance(result, list)

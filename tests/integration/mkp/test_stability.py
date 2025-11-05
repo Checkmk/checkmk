@@ -13,7 +13,7 @@ from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
 
-@pytest.mark.skip_if_edition("saas")
+@pytest.mark.skip_if_edition("cloud")
 def test_site_availability_after_mkp_removal(site: Site, web: CMKWebSession) -> None:
     """
     Removing or disabling MKPs should not cause the entire UI to crash

@@ -8,7 +8,7 @@ import pytest
 from tests.testlib.site import Site
 
 
-@pytest.mark.skip_if_edition("saas")  # The EC is disabled in SaaS
+@pytest.mark.skip_if_edition("cloud")  # The EC is disabled in SaaS
 @pytest.mark.parametrize(
     "args",
     [

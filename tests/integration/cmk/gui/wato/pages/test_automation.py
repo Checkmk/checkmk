@@ -12,7 +12,7 @@ import pytest
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
-pytestmark = [pytest.mark.skip_if_edition("saas")]
+pytestmark = [pytest.mark.skip_if_edition("cloud")]
 
 
 def _distributed_site_secret(site: Site) -> str:

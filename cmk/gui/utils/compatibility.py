@@ -72,7 +72,7 @@ def is_distributed_setup_compatible_for_licensing(
     remote_license_state: LicenseState | None,
 ) -> LicensingCompatibility:
     if central_edition is cmk_version.Edition.CLOUD or remote_edition is cmk_version.Edition.CLOUD:
-        return EditionsIncompatible(_("CSE is not allowed in distributed monitoring."))
+        return EditionsIncompatible(_("Checkmk Cloud is not allowed in distributed monitoring."))
 
     if remote_license_state is LicenseState.FREE:
         return LicenseStateIncompatible(
@@ -92,7 +92,9 @@ def is_distributed_setup_compatible_for_licensing(
     if (central_edition is cmk_version.Edition.ULTIMATEMT) is not (
         remote_edition is cmk_version.Edition.ULTIMATEMT
     ):
-        return EditionsIncompatible(_("Mix of CME and non-CME is not allowed."))
+        return EditionsIncompatible(
+            _("Mix of Checkmk Ultimate with and without multi-tenancy is not allowed.")
+        )
     return LicensingCompatible()
 
 
@@ -102,7 +104,7 @@ def is_distributed_monitoring_compatible_for_licensing(
     remote_edition: cmk_version.Edition,
 ) -> LicensingCompatibility:
     if central_edition is cmk_version.Edition.CLOUD:
-        return EditionsIncompatible(_("CSE is not allowed in distributed monitoring."))
+        return EditionsIncompatible(_("Checkmk Cloud is not allowed in distributed monitoring."))
     if not isinstance(
         compatibility := _common_is_compatible_for_licensing(
             central_edition,
@@ -117,7 +119,9 @@ def is_distributed_monitoring_compatible_for_licensing(
         central_edition is cmk_version.Edition.ULTIMATEMT
         and remote_edition is cmk_version.Edition.ULTIMATE
     ):
-        return EditionsIncompatible(_("Mix of CME and non-CME is not allowed."))
+        return EditionsIncompatible(
+            _("Mix of Checkmk Ultimate with and without multi-tenancy is not allowed.")
+        )
     return LicensingCompatible()
 
 
@@ -143,7 +147,11 @@ def _common_is_compatible_for_licensing(
                 % central_license_state.readable
             )
         if remote_edition is not cmk_version.Edition.ULTIMATE:
-            return EditionsIncompatible(_("Only CCE remote sites can be added to CCE central site"))
+            return EditionsIncompatible(
+                _(
+                    "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate central site"
+                )
+            )
         return LicensingCompatible()
 
     if (

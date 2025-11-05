@@ -115,9 +115,9 @@ class Theme:
         return self._local_web_dir / "htdocs" / "themes" / self._theme
 
     def has_custom_logo(self, logo_name: str) -> bool:
-        """Whether or not the current CME customer has a custom logo
+        """Whether the customer has a custom logo
 
-        CME snapshot sync copies the customer logo to themes/facelift/images/<logo_name>.png.
+        The snapshot sync copies the customer logo to themes/facelift/images/<logo_name>.png.
         See CMESnapshotDataCollector._update_customer_sidebar_top.
         """
         return (

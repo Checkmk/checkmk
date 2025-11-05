@@ -452,8 +452,6 @@ def worst_service_state(*states: int, default: int) -> int:
   - e.g. if the name `load_ec_rule_packs` is registered in `cmk/ec/__init__.py`,
     the GUI code may access `cmk.ec.load_ec_rule_packs`.
   - Names from submodules must not be imported from other components.
-- For the CME/CEE there is a module hierarchy under `cmk/cee` or `cmk/cme`.
-  The same rules apply as for `cmk` itself.
 
 ### Code formatting
 

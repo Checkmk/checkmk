@@ -307,13 +307,11 @@ def _config_plugin_modules() -> list[ModuleType]:
         if (
             name.startswith("cmk.gui.plugins.config.")
             or name.startswith("cmk.gui.nonfree.pro.plugins.config.")
-            or name.startswith("cmk.gui.nonfree.ultimatemt.plugins.config.")
         )
         and name
         not in (
             "cmk.gui.plugins.config.base",
             "cmk.gui.nonfree.pro.plugins.config.cee",
-            "cmk.gui.nonfree.ultimatemt.plugins.config.cme",
         )
         and module is not None
     ]

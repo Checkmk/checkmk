@@ -40,7 +40,7 @@ def get_local_port() -> int:
 
 
 #
-# Non-CME setup central site
+# Non-multi-tenancy setup central site
 #
 # /etc/rabbitmq/ssl
 #                ├── multisite_certs
@@ -51,7 +51,7 @@ def get_local_port() -> int:
 #                ├── cert.pem             (site_cert_file)
 #                └── key.pem              (site_key_file)
 #
-# CME setup central site
+# multi-tenancy setup central site
 #
 # /etc/rabbitmq/ssl
 #                ├── multisite_cas
@@ -65,7 +65,7 @@ def get_local_port() -> int:
 #                ├── cert.pem             (site_cert_file)
 #                └── key.pem                      (site_key_file)
 #
-# remote sites (both CME and Non-CME)
+# remote sites (both multi-tenancy and Non-multi-tenancy)
 #
 # /etc/rabbitmq/ssl
 #                ├── trusted_cas.pem      (cacert_file)

@@ -77,8 +77,7 @@ def check_credentials(
 
         user_spec = load_user(user_id)
         if not is_customer_user_allowed_to_login(user_id, user_spec):
-            # A CME not assigned with the current sites customer
-            # is not allowed to login
+            # A user not assigned with the current sites customer is not allowed to login
             auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % user_id)
             return False
 

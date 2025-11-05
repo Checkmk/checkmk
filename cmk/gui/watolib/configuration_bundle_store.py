@@ -59,7 +59,7 @@ class ConfigBundle(TypedDict):
     owned_by: NotRequired[str | None]  # user id, not set = admin
     group: str  # e.g. rulespec_name    # special_agent:aws
     program_id: str  # PROGRAM_ID_QUICK_SETUP
-    customer: NotRequired[str]  # CME specific
+    customer: NotRequired[str]  # multi-tenancy specific
 
 
 class ConfigBundleStore(WatoSingleConfigFile[dict[BundleId, ConfigBundle]]):

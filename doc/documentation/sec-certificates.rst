@@ -147,7 +147,7 @@ $agent-UUID
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Created by omd
-* CME: `etc/rabbitmq/ssl/multisite/$customer-name/ca.pem`
+* Ultimate with multi-tenancy: `etc/rabbitmq/ssl/multisite/$customer-name/ca.pem`
 * other editions: `etc/rabbitmq/ssl/multisite/ca.pem`
 * must be a CA
 * signs the local and remote site certs
@@ -157,7 +157,7 @@ $site-name broker certificate
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Created by omd
-* CME: `etc/rabbitmq/ssl/multisite/$customer-name/$site-name_cert.pem`
+* Ultimate with multi-tenancy: `etc/rabbitmq/ssl/multisite/$customer-name/$site-name_cert.pem`
 * other editions: `etc/rabbitmq/ssl/multisite/$site-name_cert.pem`
 * Used by RabbitMQ broker to authenticate the connections
 

@@ -80,7 +80,7 @@ class ProxyConfig(TypedDict, total=False):
 
 class SiteConfiguration(TypedDict):
     alias: str
-    customer: NotRequired[str]  # CME specific attribute: Not set in other editions
+    customer: NotRequired[str]  # multi-tenancy specific attribute: Not set in other editions
     disable_wato: bool
     disabled: bool
     globals: NotRequired[SiteGlobals]  # Set when configuring site specific global settings

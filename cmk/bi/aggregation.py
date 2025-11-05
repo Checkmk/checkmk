@@ -143,7 +143,7 @@ class BIAggregationSchema(Schema):
         example="Rule comment",
     )
     customer = String(
-        description="CME Edition only: The customer id for this aggregation.",
+        description="Checkmk Ultimate with multi-tennancy only: The customer id for this aggregation.",
         allow_none=True,
         example="customer1",
     )

@@ -239,7 +239,8 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
 
         for component in snapshot_settings.snapshot_components:
             if component.ident == "sitespecific":
-                # Only the site specific global files are individually handled in the non CME snapshot
+                # Only the site specific global files are individually handled in the non
+                # multi-tenancy snapshot
                 custom_site_components.append(component)
             else:
                 generic_site_components.append(component)

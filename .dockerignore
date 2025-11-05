@@ -62,7 +62,6 @@ check-mk-*.tar.gz
 check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
-cme-*.tar.gz
 /container_shadow_workspace*/
 download/
 doc/plugin-api/build/

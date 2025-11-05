@@ -93,7 +93,7 @@ def check_auth(config: Config) -> tuple[UserId | PseudoUserId, AuthType]:
         raise MKAuthException("Couldn't log in.")
 
     if not isinstance(selected[0], PseudoUserId):
-        _check_cme_login(selected[0])
+        _check_multi_tenancy_login(selected[0])
 
     return selected
 
@@ -378,8 +378,8 @@ def _parse_bearer_token(token: str) -> tuple[str, str]:
     return user_id, password
 
 
-def _check_cme_login(user_id: UserId) -> None:
-    """In case of CME, check that the customer is allowed to log in at this site"""
+def _check_multi_tenancy_login(user_id: UserId) -> None:
+    """In multi-tenancy sites, check that the customer is allowed to log in to this site"""
     if not userdb.is_customer_user_allowed_to_login(user_id, load_user(user_id)):
         auth_logger.debug("User '%s' is not allowed to authenticate: Invalid customer", user_id)
         raise MKAuthException("Unknown customer. Can't log in.")

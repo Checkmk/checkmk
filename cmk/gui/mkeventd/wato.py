@@ -2673,7 +2673,7 @@ def _add_change_for_sites(
     config_domain: ConfigDomainEventConsole,
     use_git: bool,
 ) -> None:
-    """If CME, add the changes only for the customer's sites if customer is configured"""
+    """In case of Ultimate with multi-tenancy, add the changes only for the customer's sites if customer is configured"""
     customer_id: str | None = rule_or_rulepack.get("customer")
     if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT and customer_id is not None:
         sites_ = list(customer_api().get_sites_of_customer(customer_id).keys())

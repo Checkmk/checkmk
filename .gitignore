@@ -1,4 +1,3 @@
-.*.swo
 .*.swp
 .bugs/.last
 .bugs/.my_ids
@@ -52,7 +51,6 @@ check-mk-*.tar.gz
 check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
-cme-*.tar.gz
 agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/

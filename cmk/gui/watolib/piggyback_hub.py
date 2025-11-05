@@ -45,7 +45,7 @@ def has_piggyback_hub_relevant_changes(pending_changes: Iterable[ChangeSpec]) ->
 def distribute_piggyback_hub_configs(
     global_settings: GlobalSettings,
     configured_sites: Mapping[SiteId, SiteConfiguration],
-    dirty_sites: Collection[SiteId],  # only needed in CME case.
+    dirty_sites: Collection[SiteId],  # only needed in multi-tenancy case.
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
     for destination_site, locations in compute_new_config(

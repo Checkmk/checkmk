@@ -200,7 +200,7 @@ class ConfigDomainGUI(ABCConfigDomain):
 # TODO: This has been moved directly into watolib because it was not easily possible
 # to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
 # As soon as we have untied this we should re-establish a watolib plug-in hierarchy and
-# move this to a CEE/CME specific watolib plug-in
+# move this to a commercial edition specific watolib plug-in
 class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False

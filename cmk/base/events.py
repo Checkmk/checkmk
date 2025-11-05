@@ -309,7 +309,9 @@ def complete_raw_context(
 
     try:
         # "SITEOFHOST" is only set in case of test notifications
-        enriched_context["OMD_SITE"] = raw_context["SITEOFHOST"] if analyse else omd_site()  # type: ignore[typeddict-item]
+        enriched_context["OMD_SITE"] = (
+            raw_context["SITEOFHOST"] if analyse and "SITEOFHOST" in raw_context else omd_site()  # type: ignore[typeddict-item]
+        )
 
         enriched_context["WHAT"] = "SERVICE" if enriched_context.get("SERVICEDESC") else "HOST"
 

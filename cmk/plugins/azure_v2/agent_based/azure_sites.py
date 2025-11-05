@@ -12,6 +12,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     FixedLevelsT,
+    InventoryPlugin,
     render,
     Result,
     Service,
@@ -19,6 +20,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     check_resource_metrics,
+    create_inventory_function,
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
@@ -51,6 +53,11 @@ _AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag, fo
 agent_section_azure_sites = AgentSection(
     name="azure_v2_sites",
     parse_function=parse_resource,
+)
+
+inventory_plugin_azure_sites = InventoryPlugin(
+    name="azure_v2_sites",
+    inventory_function=create_inventory_function(),
 )
 
 

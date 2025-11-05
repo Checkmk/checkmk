@@ -795,6 +795,7 @@ class AzureResource(_AzureEntity):
             "tags": self.tags,
             "tenant_id": subscription.tenant_id,
             "subscription_name": subscription.name,
+            "subscription": subscription.id,
         }
         self.info.update(get_attrs_from_uri(info["id"]))
         self.subscription = subscription

@@ -561,14 +561,12 @@ def create_inventory_function() -> Callable[[Resource], InventoryResult]:
             "Region": "location",
         }
 
-        if section.type == "subscription":
-            mapping["ID"] = "id"
-
         match section.type:
             case "Microsoft.Resources/resourceGroups":
                 entity = "Resource Group"
             case "subscription":
                 entity = "Subscription"
+                mapping["ID"] = "id"
             case _:
                 entity = "Resource"
 

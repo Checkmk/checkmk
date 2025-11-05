@@ -44,6 +44,7 @@ def test_unified_search_slideout(dashboard_page: MainDashboard) -> None:
             f" Expected '{search_operator}'; got '{search.input.input_value()}'."
         ),
     ).to_have_value(search_operator)
+    search.input.clear()
 
     logger.info("Execute simple search and validate that results are shown")
     search.provider_select.select("Setup")

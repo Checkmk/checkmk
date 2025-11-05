@@ -22,30 +22,35 @@ def log_duration[**P, R](
     A common pattern for this utility would be to create an instance in your package that
     wraps the local logger:
 
-    >>> log_duration_debug = log_duration(logger=LOGGER, level="debug")
+    >>> import logging
+    >>> log_duration_debug = log_duration(logger=logging.getLogger("fetcher"), level="debug")
 
     Here we are specifying the log level, but you could make this a partial and then pass the log
     level later. With the decorator instance, you can wrap the function definition like so:
 
     >>> @log_duration_debug
-    >>> def fetch_site_names() -> list[str]: ...
+    ... def fetch_site_names() -> list[str]:
+    ...     return ["heute"]
 
     Calling `fetch_site_names()` will then produce the following log output:
 
     ```
-    2025-10-27 12:21:23 ... CALLING path.to.module.fetch_site_names …
-    2025-10-27 12:21:26 ... FINISHED path.to.module.fetch_site_names (3.02142s)
+    CALLING path.to.module.fetch_site_names …
+    FINISHED path.to.module.fetch_site_names (3.02142s)
     ```
 
     Alternatively, you can wrap an existing function like a builtin function or third party library:
 
-    >>> log_duration_debug(sum)(site for site in fetched_sites)
+    >>> log_duration_debug(len)(fetch_site_names())
+    1
 
     This call outputs the following log:
 
     ```
-    2025-10-27 12:21:26 ... CALLING builtins.sum …
-    2025-10-27 12:21:27 ... FINISHED builtins.sum (1.03982s)
+    CALLING builtins.len …
+    CALLING path.to.module.fetch_site_names …
+    FINISHED path.to.module.fetch_site_names (3.02142s)
+    FINISHED builtins.len (4.03982s)
     ```
 
     If you want to see what parameters were passed to the function, set the `print_params=True`.

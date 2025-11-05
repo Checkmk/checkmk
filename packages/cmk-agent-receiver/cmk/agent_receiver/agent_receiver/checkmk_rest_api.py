@@ -15,9 +15,9 @@ from fastapi.security import HTTPBasicCredentials
 from pydantic import BaseModel, UUID4
 
 from cmk.agent_receiver.agent_receiver.models import ConnectionMode
+from cmk.agent_receiver.lib.auth import B64SiteInternalSecret
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
-from cmk.agent_receiver.utils import B64SiteInternalSecret
 
 
 class CMKEdition(Enum):

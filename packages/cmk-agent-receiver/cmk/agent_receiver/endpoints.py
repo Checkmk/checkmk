@@ -66,8 +66,8 @@ from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
 from cmk.agent_receiver.lib.route_classes import UUIDValidationRoute
 
+from .lib.auth import internal_credentials
 from .utils import (
-    internal_credentials,
     NotRegisteredException,
     R4R,
     RegisteredHost,

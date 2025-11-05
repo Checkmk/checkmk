@@ -8,10 +8,7 @@ from typing import final, override
 import httpx
 from pydantic import SecretStr
 
-from cmk.agent_receiver.utils import (
-    async_internal_credentials,
-    internal_credentials,
-)
+from cmk.agent_receiver.lib.auth import async_internal_credentials, internal_credentials
 
 
 @final

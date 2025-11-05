@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import asyncio
-import base64
 import os
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Final, NewType, Self
+from typing import Final, Self
 
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
@@ -82,20 +80,3 @@ def uuid_from_pem_csr(pem_csr: str) -> str:
         return v
     except ValueError:
         return "[CSR parsing failed]"
-
-
-B64SiteInternalSecret = NewType("B64SiteInternalSecret", str)
-
-
-def internal_credentials() -> B64SiteInternalSecret:
-    config = get_config()
-    return B64SiteInternalSecret(
-        base64.b64encode(config.internal_secret_path.read_bytes()).decode("ascii")
-    )
-
-
-async def async_internal_credentials() -> B64SiteInternalSecret:
-    # Use asyncio thread pool to avoid blocking the event loop, similar to aiofiles
-    loop = asyncio.get_running_loop()
-    content = await loop.run_in_executor(None, internal_credentials)
-    return content

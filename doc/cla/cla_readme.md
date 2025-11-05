@@ -1,6 +1,6 @@
 # Checkmk CLA Process
 
-This project requires contributors to sign a Contributor License Agreement (CLA) before accepting any contributions. The most important reason for this is that we need to be able to dual license the software for the Raw Edition and the Enterprise Editions of Checkmk.
+This project requires contributors to sign a Contributor License Agreement (CLA) before accepting any contributions. The most important reason for this is that we need to be able to dual license the software for Checkmk Community and the commercial editions of Checkmk.
 We have two processes for signing a CLA:
 
 - Individual CLA (ICLA): this is for contributors who are contributing to the project as individuals, not as employees of a company.

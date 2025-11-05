@@ -15,7 +15,7 @@ cp ~/Downloads/check-mk-enterprise-2.5.0-2025.02.19_0.jammy_amd64.deb download/2
 scripts/run-uvenv python \
     buildscripts/scripts/build-cmk-container.py \
     --branch=master \
-    --edition=enterprise \
+    --edition=pro \
     --version=2.5.0-2025.02.19 \
     --source_path=$PWD/download/2024.02.19 \
     --action=build \

@@ -168,7 +168,7 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         instance_id=instance_id,
         site_hash=site_hash,
         version=cmk_version.omd_version(paths.omd_root),
-        edition=general_infos["edition"],
+        edition=_cmk_edition_to_licensing_edition(general_infos["edition"]),
         platform=general_infos["os"],
         is_cma=cmk_version.is_cma(),
         num_hosts=hosts_counter.num,
@@ -187,6 +187,17 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         timezone=now.tz,
         extension_ntop=extensions.ntop,
     )
+
+
+# TODO: Keep until we have a new protocol version which knows about the new edition names
+def _cmk_edition_to_licensing_edition(cmk_edition: str) -> str:
+    return {
+        "community": "cre",
+        "pro": "cee",
+        "ultimate": "cce",
+        "ultimatemt": "cme",
+        "cloud": "cse",
+    }[cmk_edition]
 
 
 def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:

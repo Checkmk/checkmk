@@ -11,8 +11,6 @@ from collections.abc import Iterable, Iterator, Sequence
 from pprint import pformat
 from typing import Generic, NamedTuple, Protocol, TypeVar
 
-import pytest
-
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, InventoryPlugin
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
@@ -235,7 +233,6 @@ def load_wato() -> Iterator[WatoProtocol]:
             yield WatoCheck(element)
 
 
-@pytest.mark.skip(reason="CMK-27258")
 def test_plugin_vs_wato(agent_based_plugins: AgentBasedPlugins) -> None:
     error_reporter = ErrorReporter()
     for plugin, wato in merge(sorted(load_plugin(agent_based_plugins)), sorted(load_wato())):

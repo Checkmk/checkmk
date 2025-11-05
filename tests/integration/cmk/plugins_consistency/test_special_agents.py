@@ -52,10 +52,10 @@ from cmk.utils import password_store
 agent_metric_backend_custom_query: ModuleType | None = None
 agent_otel: ModuleType | None = None
 try:
-    from cmk.plugins.metric_backend.special_agents.cce import (  # type: ignore[import-untyped,no-redef,unused-ignore]
+    from cmk.plugins.metric_backend.special_agents.nonfree.ultimate import (  # type: ignore[import-untyped,no-redef,unused-ignore]
         agent_metric_backend_custom_query,
     )
-    from cmk.plugins.otel.special_agents.cce import (  # type: ignore[import-untyped,no-redef,unused-ignore]
+    from cmk.plugins.otel.special_agents.nonfree.ultimate import (  # type: ignore[import-untyped,no-redef,unused-ignore]
         agent_otel,
     )
 except ImportError:
@@ -305,10 +305,12 @@ def test_parse_arguments(monkeypatch: pytest.MonkeyPatch, name: str, module: Mod
 
 def test_special_agents_location() -> None:
     """Make sure all executables are where we expect them"""
-    assert all(
-        (family_libexec_dir(location.module) / f"agent_{plugin.name}").exists()
+    executables = [
+        family_libexec_dir(location.module) / f"agent_{plugin.name}"
         for location, plugin in load_special_agents(raise_errors=True).items()
-    )
+    ]
+    existing_executables = [executable for executable in executables if executable.exists()]
+    assert executables == existing_executables
 
 
 @pytest.mark.parametrize(

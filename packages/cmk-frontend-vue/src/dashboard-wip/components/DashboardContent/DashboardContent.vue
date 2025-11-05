@@ -20,6 +20,8 @@ import { CONTENT_FIGURE_TYPES, GRAPH_TYPES, NTOP_TYPES } from './types.ts'
 </script>
 
 <script setup lang="ts">
+import type { WidgetContent } from '@/dashboard-wip/types/widget'
+
 import type { ContentProps } from './types.ts'
 
 defineProps<ContentProps>()
@@ -50,11 +52,19 @@ function contentTypeToComponent(contentType: string): Component {
       throw new Error(`Unknown dashboard content type: ${contentType}`)
   }
 }
+
+function componentKey(content: WidgetContent): string {
+  if (content.type === 'alert_timeline' || content.type === 'notification_timeline') {
+    return `${content.type}-${content.render_mode.type}`
+  }
+  return content.type
+}
 </script>
 
 <template>
   <component
     :is="contentTypeToComponent(content.type)"
+    :key="componentKey(content)"
     :widget_id="widget_id"
     :general_settings="general_settings"
     :content="content"

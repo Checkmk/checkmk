@@ -90,12 +90,8 @@ const httpVars: Ref<FilterHTTPVars> = computed(() => {
 
 // Resolve figure type for special cases where figure and content type are not the same
 const figureType = computed(() => {
-  if (['alert_timeline', 'notification_timeline'].includes(props.content.type)) {
-    if (!('render_mode' in props.content)) {
-      throw new Error(
-        `No render mode found for DashboardContentFigure of type '${props.content.type}'`
-      )
-    }
+  // NOTE: this logic must match with the keys generated in DashboardContent componentKey()
+  if (props.content.type === 'alert_timeline' || props.content.type === 'notification_timeline') {
     const renderType: string = props.content.render_mode.type
     if (renderType === 'bar_chart') {
       return 'timeseries'

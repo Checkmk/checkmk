@@ -74,10 +74,12 @@ from tests.testlib.utils import (
 )
 from tests.testlib.version import (
     CMKPackageInfo,
+    CMKPackageInfoOld,
     CMKVersion,
     edition_from_env,
     get_min_version,
     TypeCMKEdition,
+    TypeCMKEditionOld,
     version_from_env,
 )
 from tests.testlib.web_session import CMKWebSession
@@ -112,7 +114,7 @@ class Site:
 
     def __init__(
         self,
-        package: CMKPackageInfo,
+        package: CMKPackageInfo | CMKPackageInfoOld,
         site_id: str,
         reuse: bool = True,
         admin_password: str = "cmk",
@@ -166,11 +168,11 @@ class Site:
         return self._package.version
 
     @property
-    def edition(self) -> TypeCMKEdition:
+    def edition(self) -> TypeCMKEdition | TypeCMKEditionOld:
         return self._package.edition
 
     @property
-    def package(self) -> CMKPackageInfo:
+    def package(self) -> CMKPackageInfo | CMKPackageInfoOld:
         return self._package
 
     @property
@@ -1896,7 +1898,7 @@ class SiteFactory:
 
     def __init__(
         self,
-        package: CMKPackageInfo,
+        package: CMKPackageInfo | CMKPackageInfoOld,
         prefix: str | None = None,
         update: bool = False,
         update_conflict_mode: str = "install",
@@ -1919,7 +1921,7 @@ class SiteFactory:
         return self._package.version
 
     @property
-    def edition(self) -> TypeCMKEdition:
+    def edition(self) -> TypeCMKEdition | TypeCMKEditionOld:
         return self._package.edition
 
     def get_site(self, name: str, create: bool = True) -> Site:
@@ -2103,7 +2105,7 @@ class SiteFactory:
         Returns:
             Site:              The updated site object.
         """
-        base_package: CMKPackageInfo = test_site.package
+        base_package: CMKPackageInfo | CMKPackageInfoOld = test_site.package
         self._package = target_package
 
         # refresh site object to install the correct target version
@@ -2478,7 +2480,7 @@ class SiteFactory:
 def get_site_factory(
     *,
     prefix: str,
-    package: CMKPackageInfo | None = None,
+    package: CMKPackageInfo | CMKPackageInfoOld | None = None,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> SiteFactory:
     """retrieves a correctly parameterized SiteFactory object

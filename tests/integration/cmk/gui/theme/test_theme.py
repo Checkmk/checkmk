@@ -9,18 +9,21 @@ import pytest
 
 from cmk.gui.theme import Theme
 from tests.testlib.site import Site
+from tests.testlib.version import TypeCMKEdition
 
 
 @pytest.fixture(name="th")
 def fixture_th(tmp_path: Path, site: Site) -> Theme:
-    th = Theme(
-        edition=site.edition.edition_data,
-        web_dir=site.root / "share" / "check_mk" / "web",
-        local_web_dir=tmp_path,
-    )
-    th.from_config("modern-dark")
-    assert th.get() == "modern-dark"
-    return th
+    if isinstance(site.edition, TypeCMKEdition):
+        th = Theme(
+            edition=site.edition.edition_data,
+            web_dir=site.root / "share" / "check_mk" / "web",
+            local_web_dir=tmp_path,
+        )
+        th.from_config("modern-dark")
+        assert th.get() == "modern-dark"
+        return th
+    raise NotImplementedError("fixture: 'th' cannot process type: 'TypeCMKEditionOld'")
 
 
 def test_icon_themes(th: Theme) -> None:

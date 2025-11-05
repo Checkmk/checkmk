@@ -194,6 +194,6 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
             name.startswith("cmk.gui.")
             and len(name.split(".")) == 3
             or name.startswith("cmk.gui.nonfree.pro.")
-            and len(name.split(".")) == 4
+            and len(name.split(".")) == 5
         )
     ]

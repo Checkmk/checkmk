@@ -115,8 +115,13 @@ const selectedDashboard = computed(() => {
   }
 })
 
-const handleGoBack = () => {
-  openAddWidgetDialog.value = true
+const handleWizardSelectorGoBack = () => {
+  // when editing, do not go back to widget type selection (and clear the edit state)
+  if (widgetToEdit.value) {
+    widgetToEdit.value = null
+  } else {
+    openAddWidgetDialog.value = true
+  }
   openWizard.value = false
 }
 
@@ -386,7 +391,7 @@ function deepClone<T>(obj: T): T {
         :dashboard-constants="dashboardsManager.constants.value!"
         :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
         :edit-widget-id="widgetToEdit"
-        @back-button="handleGoBack"
+        @back-button="handleWizardSelectorGoBack"
         @add-widget="addWidget"
         @edit-widget="executeEditWidget"
       />

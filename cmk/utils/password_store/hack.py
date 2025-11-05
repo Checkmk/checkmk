@@ -49,7 +49,7 @@ HACK_AGENTS = {
     "graylog": True,
     "hivemanager_ng": False,
     "hivemanager": False,
-    "hp_msa": True,
+    "hp_msa": False,
     "ibmsvc": False,  # needs no secret
     "innovaphone": False,
     "ipmi_sensors": False,

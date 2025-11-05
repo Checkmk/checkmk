@@ -19,9 +19,11 @@ import requests
 import urllib3
 from requests.structures import CaseInsensitiveDict
 
-from cmk.utils.password_store import replace_passwords
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
 LOGGER = logging.getLogger(__name__)
+
+PASSWORD_OPTION = "password"
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -35,7 +37,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
     parser.add_argument("hostaddress", help="HP MSA host name")
     parser.add_argument("-u", "--username", required=True, help="HP MSA user name")
-    parser.add_argument("-p", "--password", required=True, help="HP MSA user password")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="HP MSA user password"
+    )
 
     args = parser.parse_args(argv)
 
@@ -195,12 +199,13 @@ class HPMSAConnection:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
 
     connection = HPMSAConnection(hostaddress=args.hostaddress, opt_timeout=opt_timeout)
-    connection.login(username=args.username, password=args.password)
+    connection.login(
+        username=args.username, password=resolve_secret_option(args, PASSWORD_OPTION).reveal()
+    )
     atexit.register(connection.logout)
 
     parser = HTMLObjectParser()

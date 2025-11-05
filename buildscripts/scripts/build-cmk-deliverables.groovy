@@ -37,7 +37,7 @@ def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
 
-    /// Might also be taken from editions.yml - there we also have "saas" and "raw" but
+    /// Might also be taken from editions.yml - there we also have "cloud" and "community" but
     /// AFAIK there is no way to extract the editions we want to test generically, so we
     /// hard-code these:
     def all_distros = versioning.get_distros(override: "all");

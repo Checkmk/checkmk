@@ -4,8 +4,8 @@
 
 def main() {
     check_job_parameters([
-        ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
-        ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
+        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
+        ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
         ["FAKE_WINDOWS_ARTIFACTS", true],  // forwarded to package build job
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         // "DISABLE_CACHE",    // forwarded to package build job (todo)

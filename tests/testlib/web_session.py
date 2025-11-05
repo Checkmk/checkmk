@@ -131,7 +131,7 @@ class CMKWebSession:
         # by checkmk. We do not want to check it in the integration tests
         script_filters = (
             [("src", "https://static.saas-dev.cloudsandbox.checkmk.cloud")]
-            if edition_from_env().is_saas_edition()
+            if edition_from_env().is_cloud_edition()
             else None
         )
         self._check_resources(
@@ -242,7 +242,7 @@ class CMKWebSession:
             r = self.get("change_log.py", allow_redirect_to_login=True)
             return "Change log (Werks)" in r.text
         except requests.exceptions.ConnectionError:
-            if edition_from_env().is_saas_edition():
+            if edition_from_env().is_cloud_edition():
                 # with the auth provider running, the get request may fail
                 return self.get_auth_cookie() is not None
             raise

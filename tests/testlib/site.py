@@ -1440,7 +1440,7 @@ class Site:
         self._create_automation_user(username)
         if self.enforce_english_gui:
             web = CMKWebSession(self)
-            if not self.edition.is_saas_edition():
+            if not self.edition.is_cloud_edition():
                 web.login()
             self.enforce_non_localized_gui(web)
         self._add_wato_test_config()
@@ -1925,7 +1925,7 @@ class SiteFactory:
     def get_site(self, name: str, create: bool = True) -> Site:
         site = self._site_obj(name)
 
-        if self.edition.is_saas_edition():
+        if self.edition.is_cloud_edition():
             # We need to create some Checkmk Cloud config files before starting the site, exactly as it
             # happens on the SaaS environment, where k8s takes care of creating the config files
             # before the site is created.
@@ -1960,7 +1960,7 @@ class SiteFactory:
         if prepare_for_tests:
             with (
                 cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-                if self.edition.is_saas_edition()
+                if self.edition.is_cloud_edition()
                 else nullcontext()
             ):
                 site.prepare_for_tests()
@@ -2231,7 +2231,7 @@ class SiteFactory:
         )
 
         _assert_tmpfs(site, base_package.version)
-        if not site.edition.is_saas_edition():
+        if not site.edition.is_cloud_edition():
             _assert_nagvis_server(target_package)
 
         # start the site after manually installing it
@@ -2310,7 +2310,7 @@ class SiteFactory:
         )
 
         _assert_tmpfs(site, base_package.version)
-        if not site.edition.is_saas_edition():
+        if not site.edition.is_cloud_edition():
             _assert_nagvis_server(target_package)
 
         if start_site_after_update:
@@ -2410,7 +2410,7 @@ class SiteFactory:
             )
             with (
                 cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-                if self.edition.is_saas_edition()
+                if self.edition.is_cloud_edition()
                 else nullcontext()
             ):
                 yield site

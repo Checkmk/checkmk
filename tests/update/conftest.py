@@ -116,7 +116,7 @@ def _setup(
         inject_dumps(test_site, DUMPS_DIR)
         create_password(test_site)
         disable_rules_injection = request.config.getoption(name="--disable-rules-injection")
-        if not edition_from_env().is_saas_edition():
+        if not edition_from_env().is_cloud_edition():
             if not disable_rules_injection:
                 inject_rules(test_site)
 

@@ -49,7 +49,7 @@ def _host_services(
     site: Site, agent_ctl: Path, request: pytest.FixtureRequest
 ) -> Iterator[dict[str, ServiceInfo]]:
     active_mode = request.param
-    if active_mode and site.edition.is_saas_edition():
+    if active_mode and site.edition.is_cloud_edition():
         pytest.skip("Active mode requires pull agent, which is not available in Checkmk Cloud")
     rule_id = None
     hostname = HostName(f"host-{request.node.callspec.id}")
@@ -72,7 +72,7 @@ def _host_services(
         if active_mode:
             site.reschedule_services(hostname)
         else:
-            if not site.edition.is_saas_edition():
+            if not site.edition.is_cloud_edition():
                 # Reduce check interval to 3 seconds
                 rule_id = site.openapi.rules.create(
                     ruleset_name=RuleGroup.ExtraServiceConf("check_interval"),
@@ -142,7 +142,7 @@ def test_shipped_ps_discovery(host_services: dict[str, ServiceInfo], site: Site)
         f"Process {site.id} rrdcached",
     }
 
-    if not site.edition.is_saas_edition():
+    if not site.edition.is_cloud_edition():
         expected_ps_services.add(f"Process {site.id} event console")
 
     if _runs_cmc(site):

@@ -260,7 +260,7 @@ class BaseVersions:
 
     min_version = get_min_version()
 
-    if edition_from_env().is_saas_edition():
+    if edition_from_env().is_cloud_edition():
         base_packages = [
             CMKPackageInfo(
                 CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"), CMKEdition(CMKEdition.CLOUD)

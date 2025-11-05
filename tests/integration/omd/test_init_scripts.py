@@ -35,7 +35,7 @@ def test_init_scripts(site: Site) -> None:
         }
     if site.edition.is_ultimate_edition() or site.edition.is_ultimatemt_edition():
         scripts |= {"otel-collector", "clickhouse"}
-    if not site.edition.is_saas_edition():
+    if not site.edition.is_cloud_edition():
         scripts |= {"jaeger"}
 
     installed_scripts = set(site.listdir("etc/init.d"))

@@ -136,7 +136,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
 )
 def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     """Validate the plugin's presence and version in the site."""
-    if site.edition.is_saas_edition() and plugin.binary_name == "check_mkevents":
+    if site.edition.is_cloud_edition() and plugin.binary_name == "check_mkevents":
         pytest.skip("check_mkevents is disabled in SaaS edition")
 
     cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]

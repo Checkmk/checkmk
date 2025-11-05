@@ -18,12 +18,12 @@ from tests.testlib.web_session import CMKWebSession
 def session(site: Site) -> Generator[CMKWebSession]:
     session = CMKWebSession(site)
 
-    if not site.edition.is_saas_edition():
+    if not site.edition.is_cloud_edition():
         session.login()
 
     yield session
 
-    if not site.edition.is_saas_edition():
+    if not site.edition.is_cloud_edition():
         session.logout()
 
 

@@ -46,7 +46,7 @@ def test_hooks(site: Site) -> None:
             "LIVEPROXYD",
         ]
 
-    if not site.edition.is_saas_edition():
+    if not site.edition.is_cloud_edition():
         hooks += [
             "TRACE_RECEIVE",
             "TRACE_RECEIVE_ADDRESS",

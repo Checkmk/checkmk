@@ -186,7 +186,7 @@ def test_content_security_policy_header(site: Site) -> None:
 
     # "CSP for successful pages" causes ConnectionError for Checkmk Cloud with auth provider in CI
     # See CMK-22347 for details.
-    if site.edition.is_saas_edition():
+    if site.edition.is_cloud_edition():
         return
 
     # CSP for successful pages

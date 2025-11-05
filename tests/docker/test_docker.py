@@ -32,7 +32,7 @@ from tests.testlib.version import (
 # Apply the skipif marker to all tests in this file for SaaS edition
 pytestmark = [
     pytest.mark.skipif(
-        edition_from_env().is_saas_edition(),
+        edition_from_env().is_cloud_edition(),
         reason="Checkmk Cloud has its own docker entrypoint which is covered in SaaS tests",
     )
 ]

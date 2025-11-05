@@ -114,7 +114,7 @@ class TypeCMKEdition:
     def is_ultimate_edition(self) -> bool:
         return self.edition_data is self.ULTIMATE
 
-    def is_saas_edition(self) -> bool:
+    def is_cloud_edition(self) -> bool:
         return self.edition_data is self.CLOUD
 
     def edition_from_text(self, value: str) -> "TypeCMKEdition":

@@ -333,13 +333,25 @@ export class SiteOverview extends FigureBase<SiteData> {
 
   _render_hexagon_content(hexagon_content: HexagonContent) {
     if (this._data.render_mode == SiteOverviewRenderMode.Hosts) {
+      // cleanup svg elements when rendering to canvas
+      // this only matters if the user is configuring the widget and switches between the modes
+      this.plot.selectAll('*').remove()
+
       this._render_host_hexagons_as_canvas(
         hexagon_content as HexagonContent<HostGeometry, HostElement>
       )
-    } else if (this._data.render_mode == SiteOverviewRenderMode.Alerts) {
-      this._render_host_hexagons_as_svg(hexagon_content)
     } else {
-      this._render_sites(hexagon_content as HexagonContent<SiteGeometry, SiteElement>)
+      // cleanup canvas when rendering to svg
+      // this only matters if the user is configuring the widget and switches between the modes
+      const canvas = this.canvas.node()!
+      const ctx = canvas.getContext('2d')!
+      ctx.reset()
+
+      if (this._data.render_mode == SiteOverviewRenderMode.Alerts) {
+        this._render_host_hexagons_as_svg(hexagon_content)
+      } else {
+        this._render_sites(hexagon_content as HexagonContent<SiteGeometry, SiteElement>)
+      }
     }
   }
 

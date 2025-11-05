@@ -66,11 +66,11 @@ def build_docker_image_name_and_registry(
     def build_folder(ed: str) -> str:
         # TODO: Merge with build-cmk-container.py
         match ed:
-            case "raw" | "cloud" | "managed":
+            case "community" | "ultimate" | "ultimatemt":
                 return "checkmk/"
-            case "enterprise":
+            case "pro":
                 return f"{ed}/"
-            case "saas":
+            case "cloud":
                 return ""
             case _:
                 raise RuntimeError(f"Unknown edition {ed}")

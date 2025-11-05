@@ -20,6 +20,8 @@ from cmk.ccc.version import (
     VersionsIncompatible,
 )
 from cmk.ccc.version import edition as cmk_edition
+from cmk.utils.licensing.usage import _cmk_edition_to_licensing_edition
+from cmk.utils.nonfree.pro.licensing.export import CheckmkEdition
 from tests.testlib.common.repo import (
     branch_from_env,
     current_base_branch_name,
@@ -103,13 +105,9 @@ class TypeCMKEdition:
         return self.edition_data.title
 
     @property
-    def license_edition(self) -> str:
-        """Return the legacy edition short name used in the licensing logic."""
-        return {
-            "ultimate": "cce",
-            "ultimatemt": "cme",
-            "cloud": "cse",
-        }.get(self.short, "cee")
+    def license_edition(self) -> CheckmkEdition:
+        """Return the Checkmk edition used in the licensing logic."""
+        return CheckmkEdition(_cmk_edition_to_licensing_edition(self.short))
 
     def is_ultimatemt_edition(self) -> bool:
         return self.edition_data is self.ULTIMATEMT

@@ -172,7 +172,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     ],
     "bi": [],
     "couchbase": ["HOSTNAME"],
-    "elasticsearch": ["HOSTNAME"],
+    "elasticsearch": ["--secret", "SECRET", "HOSTNAME"],
     "fritzbox": ["HOSTNAME"],
     "gerrit": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
     "graylog": ["HOSTNAME"],
@@ -227,7 +227,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "Hostname",
     ],
     "netapp_ontap": ["--hostname", "HOSTNAME", "--username", "USERNAME", "--password", "PASSWORD"],
-    "activemq": ["server", "1234"],
+    "activemq": ["--password", "PASSWORD", "server", "1234"],
     "datadog": [
         "HOSTNAME",
         "API_KEY",

@@ -153,6 +153,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
       <StepsHeader
         :title="_t('Service overview')"
         :subtitle="_t('Define widget')"
+        :hide-back-button="!!editWidgetSpec"
         @back="() => emit('goBack')"
       />
 

@@ -3,7 +3,7 @@
 # https://www.aleksey.com/xmlsec/
 
 XMLSEC1 := xmlsec1
-XMLSEC1_VERS := 1.3.0
+XMLSEC1_VERS := 1.3.8
 XMLSEC1_DIR := $(XMLSEC1)-$(XMLSEC1_VERS)
 
 XMLSEC1_BUILD := $(BUILD_HELPER_DIR)/$(XMLSEC1_DIR)-build

@@ -152,9 +152,9 @@ def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 @pytest.fixture(autouse=True)
 def mock_controller_certificate_settings(mocker: MockerFixture) -> None:
-    mocker.patch("cmk.agent_receiver.endpoints.internal_credentials")
+    mocker.patch("cmk.agent_receiver.agent_receiver.endpoints.internal_credentials")
     mocker.patch(
-        "cmk.agent_receiver.endpoints.controller_certificate_settings",
+        "cmk.agent_receiver.agent_receiver.endpoints.controller_certificate_settings",
         return_value=ControllerCertSettings(lifetime_in_months=12),
     )
 

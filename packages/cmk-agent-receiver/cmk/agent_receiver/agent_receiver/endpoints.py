@@ -60,6 +60,7 @@ from cmk.agent_receiver.agent_receiver.utils import (
     RegisteredHost,
     uuid_from_pem_csr,
 )
+from cmk.agent_receiver.lib.auth import internal_credentials
 from cmk.agent_receiver.lib.certs import (
     agent_root_ca,
     current_time_naive,
@@ -71,8 +72,6 @@ from cmk.agent_receiver.lib.certs import (
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
 from cmk.agent_receiver.lib.route_classes import UUIDValidationRoute
-
-from .lib.auth import internal_credentials
 
 UUID_VALIDATION_ROUTER = APIRouter(route_class=UUIDValidationRoute)
 AGENT_RECEIVER_ROUTER = APIRouter()

@@ -6,7 +6,10 @@
 
 from fastapi import FastAPI
 
-from cmk.agent_receiver.endpoints import AGENT_RECEIVER_ROUTER, UUID_VALIDATION_ROUTER
+from cmk.agent_receiver.agent_receiver.endpoints import (
+    AGENT_RECEIVER_ROUTER,
+    UUID_VALIDATION_ROUTER,
+)
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import configure_logger
 from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware

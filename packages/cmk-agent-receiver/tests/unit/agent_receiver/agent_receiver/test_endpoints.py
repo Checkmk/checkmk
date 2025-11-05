@@ -69,7 +69,7 @@ def test_register_existing_ok(
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
 
     mocker.patch(
-        "cmk.agent_receiver.endpoints.register",
+        "cmk.agent_receiver.agent_receiver.endpoints.register",
         rest_api_register_mock,
     )
     response = client.post(
@@ -127,7 +127,7 @@ def test_register_register_with_hostname_host_missing(
     uuid: UUID4,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.host_configuration",
+        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
         side_effect=HTTPException(
             status_code=404,
             detail="N O T  F O U N D",
@@ -151,7 +151,7 @@ def test_register_register_with_hostname_wrong_site(
     uuid: UUID4,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.host_configuration",
+        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
         return_value=HostConfiguration(
             site="some-site",
             is_cluster=False,
@@ -180,7 +180,7 @@ def test_register_register_with_hostname_cluster_host(
     uuid: UUID4,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.host_configuration",
+        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
         return_value=HostConfiguration(
             site="NO_SITE",
             is_cluster=True,
@@ -204,14 +204,14 @@ def test_register_register_with_hostname_unauthorized(
     uuid: UUID4,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.host_configuration",
+        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
         return_value=HostConfiguration(
             site="NO_SITE",
             is_cluster=False,
         ),
     )
     mocker.patch(
-        "cmk.agent_receiver.endpoints.link_host_with_uuid",
+        "cmk.agent_receiver.agent_receiver.endpoints.link_host_with_uuid",
         side_effect=HTTPException(
             status_code=403,
             detail="You do not have the permission for agent pairing.",
@@ -253,13 +253,15 @@ def test_register_register_with_hostname_hostname_validity(
     valid: bool,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.host_configuration",
+        "cmk.agent_receiver.agent_receiver.endpoints.host_configuration",
         return_value=HostConfiguration(
             site="NO_SITE",
             is_cluster=False,
         ),
     )
-    mocker.patch("cmk.agent_receiver.endpoints.link_host_with_uuid", return_value=None)
+    mocker.patch(
+        "cmk.agent_receiver.agent_receiver.endpoints.link_host_with_uuid", return_value=None
+    )
 
     response = client.post(
         "/register_with_hostname",
@@ -285,7 +287,7 @@ def test_register_new_unauthenticated(
     serialized_csr: str,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.cmk_edition",
+        "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         side_effect=HTTPException(
             status_code=401,
             detail="User authentication failed",
@@ -311,7 +313,7 @@ def test_register_new_community(
     serialized_csr: str,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.cmk_edition",
+        "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.community,
     )
     response = client.post(
@@ -335,7 +337,7 @@ def test_register_new_uuid_csr_mismatch(
     serialized_csr: str,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.cmk_edition",
+        "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.ultimate,
     )
     response = client.post(
@@ -359,7 +361,7 @@ def _test_register_new(
     edition: CMKEdition,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.cmk_edition",
+        "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         return_value=edition,
     )
     response = client.post(
@@ -429,7 +431,7 @@ def test_register_new_ongoing_community(
     uuid: UUID4,
 ) -> None:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.cmk_edition",
+        "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.community,
     )
     response = client.post(
@@ -448,7 +450,7 @@ def _call_register_new_ongoing_ultimate(
     uuid: UUID4,
 ) -> httpx.Response:
     mocker.patch(
-        "cmk.agent_receiver.endpoints.cmk_edition",
+        "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.ultimate,
     )
     return client.post(

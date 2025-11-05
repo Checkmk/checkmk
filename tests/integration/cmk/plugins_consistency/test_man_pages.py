@@ -311,12 +311,12 @@ def test_man_page_agents(all_pages: Mapping[str, man_pages.ManPage]) -> None:
 def test_man_page_license(all_pages: Mapping[str, man_pages.ManPage]) -> None:
     license_not_open_source = set()
     license_not_enterprise = set()
-    non_free_editions_short = {
+    non_free_directories = {
         edition.long for edition in Edition if edition is not Edition.COMMUNITY
-    }
+    } | {"nonfree"}
 
     for page in all_pages.values():
-        if non_free_editions_short.intersection(page.path.relative_to(repo_path()).parts):
+        if non_free_directories.intersection(page.path.relative_to(repo_path()).parts):
             if page.license != "Checkmk Enterprise License":
                 license_not_enterprise.add(page.name)
 

@@ -475,7 +475,7 @@ def _verify_compatibility(response: requests.Response) -> None:
         return  # No validation
 
     if not isinstance(
-        compatibility := compatible_with_central_site(
+        compatibility := _compatible_with_central_site(
             central_version,
             central_edition_short,
             central_license_state,
@@ -517,7 +517,7 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
     remote_edition_short = cmk_version.edition(paths.omd_root).short
     remote_license_state = get_license_state()
 
-    compatibility = compatible_with_central_site(
+    compatibility = _compatible_with_central_site(
         central_version,
         central_edition_short,
         central_license_state,
@@ -705,7 +705,7 @@ def _edition_from_short(edition_short: str) -> cmk_version.Edition:
     raise ValueError(edition_short)
 
 
-def compatible_with_central_site(
+def _compatible_with_central_site(
     central_version: str,
     central_edition_short: str,
     central_license_state: LicenseState | None,
@@ -722,7 +722,7 @@ def compatible_with_central_site(
 
     The version check is handled by the version utils, the edition check is handled here.
 
-    >>> c = compatible_with_central_site
+    >>> c = _compatible_with_central_site
 
     C*E != CME is not allowed
 

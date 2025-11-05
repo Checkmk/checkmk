@@ -275,15 +275,15 @@ div.dashlet.edit {
       }
 
       &.edit {
-        background-image: url('images/dashlet_edit.svg');
+        background-image: url('../facelift/images/dashlet_edit.svg');
       }
 
       &.clone {
-        background-image: url('images/dashlet_clone.svg');
+        background-image: url('../facelift/images/dashlet_clone.svg');
       }
 
       &.del {
-        background-image: url('images/dashlet_delete.svg');
+        background-image: url('../facelift/images/dashlet_delete.svg');
       }
     }
   }
@@ -312,7 +312,7 @@ div.dashlet.edit {
         width: 15px;
         height: 15px;
         padding: 0;
-        background-image: url('images/dashlet_anchor.svg');
+        background-image: url('../facelift/images/dashlet_anchor.svg');
         background-repeat: no-repeat;
       }
     }
@@ -454,7 +454,7 @@ div.dashlet.edit {
 }
 
 div#dashboard.grid {
-  background-image: url('images/dashboard_grid.png');
+  background-image: url('../facelift/images/dashboard_grid.png');
 }
 
 .sizer {
@@ -499,7 +499,7 @@ div#dashboard.grid {
     width: 10px;
     height: 10px;
     margin: auto;
-    background-image: url('images/dashlet_resize.svg');
+    background-image: url('../facelift/images/dashlet_resize.svg');
     background-repeat: no-repeat;
   }
 }

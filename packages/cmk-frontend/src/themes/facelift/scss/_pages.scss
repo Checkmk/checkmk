@@ -320,7 +320,7 @@ table.data {
 
   .checkbox_hover {
     background-attachment: fixed;
-    background-image: url('images/checkbox_hover_bg.png');
+    background-image: url('../facelift/images/checkbox_hover_bg.png');
   }
 
   th {
@@ -1529,7 +1529,7 @@ table.data.job_table td {
       background: rgba($tag-changed-color, $tag-discovered-opacity);
       ::before {
         background: rgba($tag-changed-color-light, $tag-discovered-opacity);
-        content: url('images/icon_service_label_update.svg');
+        content: url('../facelift/images/icon_service_label_update.svg');
       }
     }
 
@@ -1537,7 +1537,7 @@ table.data.job_table td {
       background: rgba($tag-added-color, $tag-discovered-opacity);
       ::before {
         background: rgba($tag-added-color-light, $tag-discovered-opacity);
-        content: url('images/icon_service_label_add.svg');
+        content: url('../facelift/images/icon_service_label_add.svg');
       }
     }
 
@@ -1548,7 +1548,7 @@ table.data.job_table td {
       }
       ::before {
         background: rgba($tag-removed-color-light, $tag-discovered-opacity);
-        content: url('images/icon_service_label_remove.svg');
+        content: url('../facelift/images/icon_service_label_remove.svg');
       }
     }
 

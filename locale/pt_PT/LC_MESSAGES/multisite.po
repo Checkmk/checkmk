@@ -16813,6 +16813,10 @@ msgstr "Hora do acidente"
 msgid "Crash type"
 msgstr "Tipo de colisão"
 
+#, fuzzy
+msgid "Crash version"
+msgstr "Versão Crash Checkmk"
+
 msgid "Crashed check"
 msgstr "Cheque de emergência"
 
@@ -81691,7 +81695,7 @@ msgstr ""
 "alterações de endereços IP em anfitriões configurados sem um endereço "
 "explícito."
 
-msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgid "Upgrade to Checkmk Enterprise or Checkmk Ultimate to use this feature"
 msgstr ""
 
 msgid "Upload"

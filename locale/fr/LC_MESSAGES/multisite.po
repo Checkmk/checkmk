@@ -16919,6 +16919,10 @@ msgstr "Durée de l'accident"
 msgid "Crash type"
 msgstr "Type d'accident"
 
+#, fuzzy
+msgid "Crash version"
+msgstr "Version de Crash Checkmk"
+
 msgid "Crashed check"
 msgstr "Contrôle de l'accident"
 
@@ -82430,7 +82434,7 @@ msgstr ""
 "La mise à jour du cache DNS des sites est nécessaire pour refléter les "
 "changements d'adresse IP des hôtes configurés sans adresse explicite."
 
-msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgid "Upgrade to Checkmk Enterprise or Checkmk Ultimate to use this feature"
 msgstr ""
 
 msgid "Upload"

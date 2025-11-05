@@ -16930,6 +16930,10 @@ msgstr "Hora de la colisión"
 msgid "Crash type"
 msgstr "Tipo de accidente"
 
+#, fuzzy
+msgid "Crash version"
+msgstr "Versión de Crash Checkmk"
+
 msgid "Crashed check"
 msgstr "Comprobación de la colisión"
 
@@ -82402,7 +82406,8 @@ msgstr ""
 "los cambios de dirección IP en los hosts que están configurados sin una "
 "dirección explícita."
 
-msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+#, fuzzy
+msgid "Upgrade to Checkmk Enterprise or Checkmk Ultimate to use this feature"
 msgstr "Actualice a la edición Cloud o Enterprise para utilizar esta función"
 
 msgid "Upload"

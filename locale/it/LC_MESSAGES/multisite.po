@@ -16665,6 +16665,10 @@ msgstr "Tempo di arresto"
 msgid "Crash type"
 msgstr "Tipo di incidente"
 
+#, fuzzy
+msgid "Crash version"
+msgstr "Versione Crash Checkmk"
+
 msgid "Crashed check"
 msgstr "Assegno bloccato"
 
@@ -81100,7 +81104,7 @@ msgstr ""
 "modifiche dell'indirizzo IP degli host configurati senza un indirizzo "
 "esplicito."
 
-msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgid "Upgrade to Checkmk Enterprise or Checkmk Ultimate to use this feature"
 msgstr ""
 
 msgid "Upload"

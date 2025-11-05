@@ -16842,6 +16842,10 @@ msgstr "Timp de impact"
 msgid "Crash type"
 msgstr "Tipul de accident"
 
+#, fuzzy
+msgid "Crash version"
+msgstr "Versiunea Crash Checkmk"
+
 msgid "Crashed check"
 msgstr "Verificare prăbușită"
 
@@ -81967,7 +81971,8 @@ msgstr ""
 "schimbările de adresă IP ale gazdelor care sunt configurate fără o adresă "
 "explicită."
 
-msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+#, fuzzy
+msgid "Upgrade to Checkmk Enterprise or Checkmk Ultimate to use this feature"
 msgstr ""
 "Actualizați la ediția Cloud sau Enterprise pentru a utiliza această funcție"
 

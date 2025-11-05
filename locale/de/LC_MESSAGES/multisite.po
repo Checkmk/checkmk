@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-11-04 10:56+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -16230,6 +16230,10 @@ msgstr "Absturz-Zeit"
 
 msgid "Crash type"
 msgstr "Absturz-Typ"
+
+#, fuzzy
+msgid "Crash version"
+msgstr "Absturz-Checkmk-Version"
 
 msgid "Crashed check"
 msgstr "abgestürzter Check"
@@ -78526,7 +78530,8 @@ msgstr ""
 "Adressänderungen bei Hosts, die ohne explizite Adresse konfiguriert sind, zu "
 "berücksichtigen."
 
-msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+#, fuzzy
+msgid "Upgrade to Checkmk Enterprise or Checkmk Ultimate to use this feature"
 msgstr ""
 "Upgraden Sie auf die Cloud oder Enterprise Edition, um diese Funktion zu "
 "nutzen"

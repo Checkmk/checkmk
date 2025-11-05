@@ -16815,6 +16815,10 @@ msgstr "Crash tijd"
 msgid "Crash type"
 msgstr "Type ongeval"
 
+#, fuzzy
+msgid "Crash version"
+msgstr "Crash Checkmk Versie"
+
 msgid "Crashed check"
 msgstr "Neergestorte cheque"
 
@@ -81748,7 +81752,7 @@ msgstr ""
 "adressen weer te geven bij hosts die zonder expliciet adres zijn "
 "geconfigureerd."
 
-msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgid "Upgrade to Checkmk Enterprise or Checkmk Ultimate to use this feature"
 msgstr ""
 
 msgid "Upload"

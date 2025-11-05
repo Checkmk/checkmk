@@ -496,12 +496,6 @@ def main() -> None:
         username_env_var="DOCKER_USERNAME",
         password_env_var="DOCKER_PASSPHRASE",
     )
-    enterprise_registry = RegistryConfig(
-        url="registry.checkmk.com",
-        namespace="/enterprise",
-        username_env_var="DOCKER_USERNAME",
-        password_env_var="DOCKER_PASSPHRASE",
-    )
     nexus = RegistryConfig(
         url="artifacts.lan.tribe29.com:4000",
         namespace="",
@@ -516,11 +510,7 @@ def main() -> None:
     LOG.debug("args: %s", args)
 
     match args.edition:
-        case "community":
-            registries = [dockerhub]
-        case "pro":
-            registries = [enterprise_registry]
-        case "ultimatemt":
+        case "community" | "pro" | "ultimatemt":
             registries = [dockerhub]
         case "ultimate":
             registries = [dockerhub, nexus]

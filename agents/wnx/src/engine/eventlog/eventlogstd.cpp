@@ -161,12 +161,6 @@ public:
             return (reinterpret_cast<char *>(record_) + record_->UserSidOffset);
         }
         return nullptr;
-        auto buf = std::make_unique<char[]>(record_->UserSidLength);
-        std::memcpy(
-            buf.get(),
-            (reinterpret_cast<char *>(record_) + record_->UserSidOffset),
-            record_->UserSidLength);
-        return {};
     }
 
     [[nodiscard]] Level eventLevel() const override {

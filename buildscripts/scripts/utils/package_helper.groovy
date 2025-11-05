@@ -89,15 +89,15 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
-            /// no Linux agent updaters for raw edition..
-            condition: true, // edition != "raw",  // FIXME!
+            /// no Linux agent updaters for community edition..
+            condition: true, // edition != "community",  // FIXME!
             dependency_paths_hash: all_dependency_paths_hashes["build-linux-agent-updater"],
             install_cmd: """\
                 # check-mk-agent-*.{deb,rpm}
                 cp *.deb *.rpm ${checkout_dir}/agents/
                 # artifact file flags are not being kept - building a tar would be better..
                 install -m 755 -D cmk-agent-ctl* mk-sql -t ${checkout_dir}/agents/linux/
-                if [ "${args.edition}" != "raw" ]; then
+                if [ "${args.edition}" != "community" ]; then
                     echo "edition is ${args.edition} => copy Linux agent updaters"
                     install -m 755 -D cmk-update-agent* -t ${checkout_dir}/non-free/packages/cmk-update-agent/
                 fi

@@ -184,7 +184,7 @@ class _ACTestResultProblem:
             case ACResultState.WARN:
                 return (
                     _(
-                        "This may partially work in Checkmk %s but will stop working from the"
+                        "This may partially work in Checkmk %s but might not work from the"
                         " next major version onwards."
                     )
                     % version

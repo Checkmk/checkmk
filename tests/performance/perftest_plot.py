@@ -1692,7 +1692,7 @@ def parse_args() -> PerftestPlotArgs:
     repo_root_dir = Path(__file__).parent.parent.parent
 
     def job_name() -> Callable:
-        pattern = r"[0-9](\.[0-9]){2}-[0-9]{4}(\.[0-9]{2}){2}\.c[cemrs]e"
+        pattern = r"[0-9](\.[0-9]){2}-[0-9]{4}(\.[0-9]{2}){2}\.[a-z]*"
 
         def validator(value: str) -> str:
             if not (match := re.search(pattern, value)):
@@ -1913,7 +1913,7 @@ def parse_args() -> PerftestPlotArgs:
         "--edition",
         dest="edition",
         type=str,
-        default="cee",
+        default="pro",
         help="The default edition for jobs (default: %(default)s).",
     )
     parser.add_argument(

@@ -250,33 +250,38 @@ The option \fB-f/--force\fP will skip asking whether the user is sure to
 update. If you have more than two versions of omd installed, you should
 also specify \fB-V\fP if you want to avoid user interaction.
 
-With \fB--conflict\fP (in addition to \fB-f\fP and \fB-V\fP) you can make
-the whole update process non-interactive. There are four possible arguments
-to \fB--conflict\fP:
+With \fB--skeleton\fP you can make the update process non-interactive (known as
+\fB--conflict\fP for other commands in omd). There are four possible arguments:
 
-.B --conflict=keepold
+.B --conflict=keepold or --skeleton=keepold
 Whenever your local changes cannot be merged with changes introduced by the
 target version in a file , i.e. when a merge conflict occurs, then keep the current contents
 and permissions of the file unchanged (this is the same as the option \fBr\fPestore
 in the merge dialog or \fBk\fPeep in the dialog for conflicts in permissions and file
 types).
 
-.B --conflict=install
+.B --conflict=install or --skeleton=install
 In case of a merge conflict install the default file of the target version and
 drop your changes.
 
-.B --conflict=abort
+.B --conflict=abort or --skeleton=abort
 In case of a merge conflict abort the update. Please note that currently there is
 no roll back (yet). Files already updated stay updated. The file that caused the
 conflict will contain merge indicators (>>>>>> and <<<<<<). The version will not
 be switched.
 
-.B --conflict=ignore
-In case of a merge conflict install the default file of the target version and
-drop your changes. Moreover, `omd` will ignore every conflict, that arises during
-site verification.
+.B --conflict=ask or --skeleton=ask
+This is the default behaviour of interactive conflict resolution.
 
-.B --conflict=ask
+Additionally, omd update provides the \fB--pre-flight\fP option, which affects the site verification done by `cmk-update-config`. This option supports these values:
+
+.B pre-flight=ignore
+If \fBcmk-update-config\fP detects a conflict, take the appropriate action and continue the update.
+
+.B --pre-flight=abort
+If \fBcmk-update-config\fP detects a conflict, abort the update.
+
+.B --pre-flight=ask
 This is the default behaviour of interactive conflict resolution.
 
 .TP

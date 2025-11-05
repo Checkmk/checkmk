@@ -12,7 +12,7 @@ import sys
 from collections.abc import Iterator
 from pathlib import Path
 from types import TracebackType
-from typing import Literal, Self
+from typing import assert_never, Literal, Self
 
 from omdlib.crash_reporting import report_crash
 from omdlib.options import CommandOptions
@@ -247,20 +247,55 @@ class PreFlight(enum.Enum):
 
 
 def get_conflict_mode_update(options: CommandOptions) -> tuple[Skeleton, PreFlight]:
-    match options.get("conflict", "ask"):
+    if "conflict" in options:
+        if "pre-flight" in options or "skeleton" in options:
+            sys.exit("argument --conflict cannot be combined with --pre-flight or --skeleton")
+        match options["conflict"]:
+            case "ask":
+                return Skeleton.ASK, PreFlight.ASK
+            case "install":
+                return Skeleton.INSTALL, PreFlight.INSTALL
+            case "keepold":
+                return Skeleton.KEEPOLD, PreFlight.KEEPOLD
+            case "abort":
+                return Skeleton.ABORT, PreFlight.ABORT
+            case "ignore":
+                return Skeleton.INSTALL, PreFlight.IGNORE
+            case None:  # mismatch between our yanky argument parsing and reading the result.
+                raise NotImplementedError()
+            case _:
+                sys.exit(
+                    "Argument to --conflict must be one of ask, install, keepold, ignore and abort."
+                )
+
+    match options.get("skeleton", "ask"):
         case "ask":
-            return Skeleton.ASK, PreFlight.ASK
-        case "install":
-            return Skeleton.INSTALL, PreFlight.INSTALL
-        case "keepold":
-            return Skeleton.KEEPOLD, PreFlight.KEEPOLD
+            skel = Skeleton.ASK
         case "abort":
-            return Skeleton.ABORT, PreFlight.ABORT
-        case "ignore":
-            return Skeleton.INSTALL, PreFlight.IGNORE
+            skel = Skeleton.ABORT
+        case "install":
+            skel = Skeleton.INSTALL
+        case "keepold":
+            skel = Skeleton.KEEPOLD
+        case str(_):
+            sys.exit("Argument to --skeleton must be one of ask, install, keepold and abort.")
         case None:  # mismatch between our yanky argument parsing and reading the result.
             raise NotImplementedError()
-        case _:
-            sys.exit(
-                "Argument to --conflict must be one of ask, install, keepold, ignore and abort."
-            )
+        case never:
+            assert_never(never)
+
+    match options.get("pre-flight", "ask"):
+        case "ask":
+            pre = PreFlight.ASK
+        case "abort":
+            pre = PreFlight.ABORT
+        case "ignore":
+            pre = PreFlight.IGNORE
+        case str(_):
+            sys.exit("Argument to --pre-flight must be one of ask, ignore and abort.")
+        case None:  # mismatch between our yanky argument parsing and reading the result.
+            raise NotImplementedError()
+        case never:
+            assert_never(never)
+
+    return skel, pre

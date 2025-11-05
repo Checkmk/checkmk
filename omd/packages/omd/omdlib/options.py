@@ -309,10 +309,22 @@ COMMANDS: Final = [
         args_text="",
         options=[
             Option(
+                "pre-flight",
+                None,
+                True,
+                "non-interactive for handling the pre-flight check. ARG is abort, ignore or ask",
+            ),
+            Option(
+                "skeleton",
+                None,
+                True,
+                "non-interactive conflict resolution. ARG is install, keepold, abort or ask",
+            ),
+            Option(
                 "conflict",
                 None,
                 True,
-                "non-interactive conflict resolution. ARG is install, keepold, abort, ignore or ask",
+                "(deprecated - please use --pre-flight and --skeleton instead) non-interactive conflict resolution. ARG is install, keepold, abort, ignore or ask",
             ),
             Option(
                 UpdateOption.confirm_version,

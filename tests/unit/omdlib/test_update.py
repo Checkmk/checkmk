@@ -413,6 +413,13 @@ def test_restore_version_meta_dir(tmp_path: Path) -> None:
         ({"conflict": "keepold"}, (Skeleton.KEEPOLD, PreFlight.KEEPOLD)),
         ({"conflict": "install"}, (Skeleton.INSTALL, PreFlight.INSTALL)),
         ({"conflict": "abort"}, (Skeleton.ABORT, PreFlight.ABORT)),
+        ({"skeleton": "ask"}, (Skeleton.ASK, PreFlight.ASK)),
+        ({"skeleton": "abort"}, (Skeleton.ABORT, PreFlight.ASK)),
+        ({"skeleton": "keepold"}, (Skeleton.KEEPOLD, PreFlight.ASK)),
+        ({"skeleton": "install"}, (Skeleton.INSTALL, PreFlight.ASK)),
+        ({"pre-flight": "ask"}, (Skeleton.ASK, PreFlight.ASK)),
+        ({"pre-flight": "ignore"}, (Skeleton.ASK, PreFlight.IGNORE)),
+        ({"pre-flight": "abort", "skeleton": "install"}, (Skeleton.INSTALL, PreFlight.ABORT)),
     ],
 )
 def test_get_conflict_mode_update(

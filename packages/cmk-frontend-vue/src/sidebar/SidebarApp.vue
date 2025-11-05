@@ -142,7 +142,6 @@ function dragEnd(_e: DragEvent, index: number) {
     display: flex;
     flex-direction: column;
     position: relative;
-    cursor: grab;
 
     .sidebar-app__drag-end {
       height: 30px;

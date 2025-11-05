@@ -62,6 +62,7 @@ async function onToggle() {
 
 <template>
   <div
+    :id="`snapin_${props.name}`"
     class="sidebar-snapin__container"
     :class="{ 'sidebar-snapin--drag-active': props.isDragged ?? false }"
   >
@@ -89,7 +90,6 @@ async function onToggle() {
           </CmkAlertBox>
           <div
             v-else
-            :id="`snapin_${name}`"
             ref="snapin-content"
             :class="{ more: sidebar.showMoreIsActive(props.name) }"
             v-html="snapinContent"
@@ -111,6 +111,7 @@ async function onToggle() {
   box-sizing: border-box;
   padding: var(--dimension-4) var(--dimension-7) 0 var(--dimension-7);
   position: relative;
+  cursor: grab;
 
   &.sidebar-snapin--drag-active {
     opacity: 0.2;

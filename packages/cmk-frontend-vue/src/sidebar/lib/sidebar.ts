@@ -252,7 +252,7 @@ export class SidebarService extends ServiceBase {
   private initPeriodically() {
     setInterval(() => {
       void this.updateSnapinContent(
-        this.snapins.filter((s) => s.refresh_on_restart || s.refresh_on_restart).map((s) => s.name)
+        this.snapins.filter((s) => s.refresh_regularly || s.refresh_on_restart).map((s) => s.name)
       )
     }, this.updateInterval * 1000)
   }

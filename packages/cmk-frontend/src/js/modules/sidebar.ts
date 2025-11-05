@@ -11,7 +11,6 @@ import { close_popup } from './quicksearch'
 import type { CMKAjaxReponse } from './types'
 import {
   add_class,
-  add_simplebar_scrollbar,
   change_class,
   execute_javascript_by_object,
   get_button,
@@ -26,39 +25,16 @@ import {
 let g_content_loc: null | string = null
 let g_scrollbar: SimpleBar | null | undefined = null
 
-export function initialize_sidebar(
-  update_interval: number,
-  refresh: [string, string][],
-  restart: string[],
-  static_: string[]
-) {
-  if (restart) {
-    sidebar_restart_time = Math.floor(new Date().getTime() / 1000)
-  }
-
-  sidebar_update_interval = update_interval
-
-  register_edge_listeners(null)
-
-  refresh_snapins = refresh
-  restart_snapins = restart
-  static_snapins = static_
-
-  execute_sidebar_scheduler()
-
-  g_scrollbar = add_simplebar_scrollbar('side_content')
-  g_scrollbar?.getScrollElement()?.addEventListener(
-    'scroll',
-    function () {
-      store_scroll_position()
-      return false
-    },
-    false
-  )
-  register_event_handlers()
+function update_content_location_if_accessible() {
   if (is_content_frame_accessible()) {
     update_content_location()
   }
+}
+
+export function initialize_sidebar() {
+  setInterval(function () {
+    update_content_location_if_accessible()
+  }, 1000)
 }
 
 export function register_event_handlers() {

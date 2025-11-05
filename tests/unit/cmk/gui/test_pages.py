@@ -119,6 +119,7 @@ def test_registered_pages() -> None:
         "sidebar_ajax_speedometer",
         "sidebar_ajax_tag_tree",
         "sidebar_ajax_tag_tree_enter",
+        "sidebar_ajax_get_available_snapins",
         "sidebar_fold",
         "sidebar_message_read",
         "sidebar_move_snapin",

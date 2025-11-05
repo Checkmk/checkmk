@@ -515,7 +515,7 @@ class Sidebar(LocatorHelper):
         @property
         def close_button(self) -> Locator:
             """Returns the close button of the snapin."""
-            return self._base_locator.locator("div.closesnapin a")
+            return self._base_locator.get_by_role("button").filter(has_text=re.compile(r"^$"))
 
         def get_button(self, name: str) -> Locator:
             """Returns the footnote link with the specified text.
@@ -552,8 +552,27 @@ class Sidebar(LocatorHelper):
         _loc = _loc.filter(**kwargs) if kwargs else _loc
         return _loc
 
-    def snapin(self, snapin_container_id: str) -> "Snapin":
-        return self.Snapin(self.locator(f"div#{snapin_container_id}"))
+    @property
+    def add_snapin_button(self) -> Locator:
+        return self.page.get_by_role("button", name="Add element")
+
+    def open_add_snapin_sidebar(self) -> None:
+        self.add_snapin_button.click()
+
+    def close_add_snapin_sidebar(self) -> None:
+        self.page.get_by_role("button", name="Close").click()
+
+    def add_snapin(self, snapin_id: str) -> "Snapin":
+        self.open_add_snapin_sidebar()
+
+        self.page.get_by_label(f"Add snapin {snapin_id}").click()
+
+        self.close_add_snapin_sidebar()
+
+        return self.snapin(snapin_id)
+
+    def snapin(self, snapin_id: str) -> "Snapin":
+        return self.Snapin(self.locator(f"#snapin_{snapin_id}"))
 
 
 class FilterSidebar(LocatorHelper):

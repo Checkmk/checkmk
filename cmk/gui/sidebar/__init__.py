@@ -15,6 +15,7 @@ import json
 import textwrap
 import traceback
 from collections.abc import Callable, Sequence
+from dataclasses import asdict
 from enum import Enum
 from typing import Any, override
 
@@ -47,6 +48,8 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.werks import may_acknowledge
+from cmk.shared_typing.sidebar import SidebarConfig
+from cmk.shared_typing.sidebar import SidebarSnapin as SidebarSnapinConfig
 
 from . import _snapin
 from ._snapin import all_snapins as all_snapins
@@ -100,6 +103,9 @@ def register(
     page_registry.register(PageEndpoint("sidebar_fold", AjaxFoldSnapin()))
     page_registry.register(PageEndpoint("sidebar_openclose", AjaxOpenCloseSnapin()))
     page_registry.register(PageEndpoint("sidebar_ajax_add_snapin", AjaxAddSnapin()))
+    page_registry.register(
+        PageEndpoint("sidebar_ajax_get_available_snapins", AjaxGetAvialableSnapins())
+    )
     page_registry.register(PageEndpoint("side", page_side))
     page_registry.register(PageEndpoint("sidebar_snapin", ajax_snapin))
     page_registry.register(PageEndpoint("sidebar_move_snapin", move_snapin))
@@ -502,6 +508,24 @@ class SidebarRenderer:
         if user_config.folded:
             html.final_javascript("cmk.sidebar.fold_sidebar();")
 
+    def _migrate_to_vue_sidbar_snapin_config(
+        self, snapin: UserSidebarSnapin
+    ) -> SidebarSnapinConfig:
+        name = snapin.snapin_type.type_name()
+        more_id = "sidebar_snapin_%s" % name
+
+        show_more_active = user.get_show_more_setting(more_id)
+
+        return SidebarSnapinConfig(
+            name=name,
+            title=snapin.snapin_type.title(),
+            refresh_regularly=snapin.snapin_type.refresh_regularly(),
+            refresh_on_restart=snapin.snapin_type.refresh_on_restart(),
+            has_show_more_items=snapin.snapin_type.has_show_more_items(),
+            show_more_active=show_more_active,
+            open=snapin.visible == SnapinVisibility.OPEN,
+        )
+
     def _show_snapin_bar(
         self,
         config: Config,
@@ -510,25 +534,19 @@ class SidebarRenderer:
         show_scrollbar: bool,
         sidebar_update_interval: float,
     ) -> None:
-        html.open_div(
-            class_="scroll" if show_scrollbar else None,
-            id_="side_content",
+        html.vue_component(
+            component_name="cmk-sidebar",
+            data=asdict(
+                SidebarConfig(
+                    update_interval=sidebar_update_interval,
+                    snapins=[
+                        self._migrate_to_vue_sidbar_snapin_config(s) for s in user_config.snapins
+                    ],
+                )
+            ),
         )
 
-        refresh_snapins, restart_snapins, static_snapins = self._show_snapins(config, user_config)
-        self._show_add_snapin_button()
-
-        html.close_div()
-
-        html.javascript(
-            "cmk.sidebar.initialize_sidebar(%0.2f, %s, %s, %s);\n"
-            % (
-                sidebar_update_interval,
-                json.dumps(refresh_snapins),
-                json.dumps(restart_snapins),
-                json.dumps(static_snapins),
-            )
-        )
+        html.javascript("cmk.sidebar.initialize_sidebar();\n")
 
     def _show_snapins(
         self, config: Config, user_config: UserSidebarConfig
@@ -954,6 +972,50 @@ def _used_snapins(config: Config, user_permissions: UserPermissions) -> list[Any
     return [snapin.snapin_type.type_name() for snapin in user_config.snapins]
 
 
+class AjaxGetAvialableSnapins(AjaxPage):
+    @override
+    def page(self, ctx: PageContext) -> PageResult:
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        used_snapins = _used_snapins(ctx.config, user_permissions)
+
+        def get_snapin_content(name: str) -> str:
+            with output_funnel.plugged():
+                try:
+                    snapin = UserSidebarSnapin.from_snapin_type_id(name, user_permissions)
+                    html.open_div(class_=["sidebar-add-sidebar-snapin__preview-content"])
+                    snapin.snapin_type().show(ctx.config)
+                    html.close_div()
+                except Exception as e:
+                    write_snapin_exception(e)
+                    e_message = _("Exception during element refresh (element '%s')") % name
+                    logger.error(
+                        "%s %s: %s",
+                        request.requested_url,
+                        e_message,
+                        traceback.format_exc(),
+                    )
+                finally:
+                    return output_funnel.drain()
+
+        return [
+            asdict(
+                SidebarSnapinConfig(
+                    name=name,
+                    title=snapin_class.title(),
+                    refresh_on_restart=snapin_class.refresh_on_restart(),
+                    refresh_regularly=snapin_class.refresh_regularly(),
+                    has_show_more_items=snapin_class.has_show_more_items(),
+                    open=True,
+                    show_more_active=user.get_show_more_setting("sidebar_snapin_%s" % name),
+                    content=get_snapin_content(name),
+                    description=snapin_class.description(),
+                )
+            )
+            for name, snapin_class in sorted(all_snapins(user_permissions).items())
+            if name not in used_snapins and snapin_class.may_see(user_permissions)
+        ]
+
+
 class AjaxAddSnapin(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
@@ -977,7 +1039,7 @@ class AjaxAddSnapin(AjaxPage):
 
         with output_funnel.plugged():
             try:
-                url = SidebarRenderer().render_snapin(ctx.config, snapin)
+                url = snapin.snapin_type().show(ctx.config)
             finally:
                 snapin_code = output_funnel.drain()
 
@@ -985,8 +1047,6 @@ class AjaxAddSnapin(AjaxPage):
             "name": addname,
             "url": url,
             "content": snapin_code,
-            "refresh": snapin.snapin_type.refresh_regularly(),
-            "restart": snapin.snapin_type.refresh_on_restart(),
         }
 
 

@@ -10,22 +10,15 @@ import pytest
 from playwright.sync_api import expect
 
 # from tests.gui_e2e.testlib.playwright.helpers import Keys
-from tests.gui_e2e.testlib.playwright.pom.add_sidebar_element import AddSidebarElement
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 
 
-@pytest.mark.parametrize("snapin_id", [("snapin_container_time"), ("snapin_container_speedometer")])
+@pytest.mark.parametrize("snapin_id", [("time"), ("speedometer")])
 def test_add_remove_snapin(dashboard_page: MainDashboard, snapin_id: str) -> None:
     """Add and remove a snapin (aka a sidebar element)"""
 
-    add_sidebar_element_page = AddSidebarElement(dashboard_page.page)
-    add_sidebar_element_page.add_snapin_to_sidebar(snapin_id)
-
-    snapin = dashboard_page.sidebar.snapin(snapin_id)
-
+    snapin = dashboard_page.sidebar.add_snapin(snapin_id)
     snapin.remove_from_sidebar()
-
-    add_sidebar_element_page.snapin_container(snapin_id).wait_for(state="attached")
 
 
 @pytest.mark.xfail(reason="https://jira.lan.tribe29.com/browse/CMK-28193")
@@ -42,14 +35,10 @@ def test_add_nagvis_snapin(dashboard_page: MainDashboard) -> None:
     7. Verifies that the NagVis snapin is no longer visible in the sidebar.
     """
 
-    snapin_id: Final[str] = "snapin_container_nagvis_maps"
+    snapin_id: Final[str] = "nagvis_maps"
 
     # add nagvis snapin to the sidebar
-    add_sidebar_element_page = AddSidebarElement(dashboard_page.page)
-    add_sidebar_element_page.add_snapin_to_sidebar(snapin_id)
-
-    # check that the nagvis snapin is visible in the sidebar
-    snapin = dashboard_page.sidebar.snapin(snapin_id)
+    snapin = dashboard_page.sidebar.add_snapin(snapin_id)
 
     # Wait for the loading spinner to disappear
     snapin.loading_spinner.wait_for(state="detached")
@@ -71,8 +60,6 @@ def test_add_nagvis_snapin(dashboard_page: MainDashboard) -> None:
 
     # Clean up: remove the nagvis snapin from the sidebar
     snapin.remove_from_sidebar()
-    add_sidebar_element_page.navigate()
-    add_sidebar_element_page.snapin_container(snapin_id).wait_for(state="attached")
 
 
 def test_global_searchbar_sanity_check(dashboard_page: MainDashboard) -> None:

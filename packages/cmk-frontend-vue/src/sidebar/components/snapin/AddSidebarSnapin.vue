@@ -27,7 +27,11 @@ const emit = defineEmits<{
       class="sidebar-add-sidebar-snapin__description"
       v-html="props.description"
     ></div>
-    <button class="sidebar-add-sidebar-snapin__button" @click="emit('add-snapin', props)">
+    <button
+      class="sidebar-add-sidebar-snapin__button"
+      :aria-label="_t(`Add snapin ${props.name}`)"
+      @click="emit('add-snapin', props)"
+    >
       <span>{{ _t(`Add "${props.title}" to sidebar`) }}</span>
     </button>
   </div>

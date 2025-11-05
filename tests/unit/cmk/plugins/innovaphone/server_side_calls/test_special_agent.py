@@ -26,8 +26,10 @@ from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand
             SpecialAgentCommand(
                 command_arguments=[
                     "hostname",
+                    "--user",
                     "user",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password-id",
+                    Secret(1),
                 ]
             ),
             id="certification verification enabled, without protocol",
@@ -45,8 +47,10 @@ from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand
             SpecialAgentCommand(
                 command_arguments=[
                     "hostname",
+                    "--user",
                     "user",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password-id",
+                    Secret(1),
                     "--protocol",
                     "https",
                     "--no-cert-check",

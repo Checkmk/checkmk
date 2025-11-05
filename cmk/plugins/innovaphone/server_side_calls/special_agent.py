@@ -27,8 +27,10 @@ def _commands_function(
 ) -> Iterable[SpecialAgentCommand]:
     args: list[str | Secret] = [
         host_config.name,
+        "--user",
         params.auth_basic.username,
-        params.auth_basic.password.unsafe(),
+        "--password-id",
+        params.auth_basic.password,
     ]
     if params.protocol:
         args.extend(["--protocol", params.protocol])

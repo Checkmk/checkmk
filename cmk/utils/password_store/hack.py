@@ -51,7 +51,7 @@ HACK_AGENTS = {
     "hivemanager": True,
     "hp_msa": True,
     "ibmsvc": False,  # needs no secret
-    "innovaphone": True,
+    "innovaphone": False,
     "ipmi_sensors": False,
     "jenkins": False,
     "jira": True,

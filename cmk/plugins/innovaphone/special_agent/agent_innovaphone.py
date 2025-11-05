@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import argparse
 import sys
@@ -13,8 +12,10 @@ from xml.etree import ElementTree as etree
 
 import requests
 
-import cmk.utils.password_store
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
+
+PASSWORD_OPTION = "password"
 
 
 class InnovaphoneConnection:
@@ -30,9 +31,9 @@ class InnovaphoneConnection:
         self._verify_ssl = verify_ssl
 
     def get(self, endpoint: str) -> str | None:
+        url = urllib.parse.urljoin(self._base_url, endpoint)
         try:
             # we must provide the verify keyword to every individual request call!
-            url = urllib.parse.urljoin(self._base_url, endpoint)
             response = self._session.get(
                 url,
                 verify=self._verify_ssl,
@@ -164,8 +165,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         ),
     )
     parser.add_argument("host", metavar="HOST")
-    parser.add_argument("user", metavar="USER")
-    parser.add_argument("password", metavar="PASSWORD")
+    parser.add_argument("--user", required=True)
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", help="Password for the user", required=True
+    )
     parser.add_argument(
         "--protocol",
         choices=[
@@ -185,14 +188,14 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 def main(sys_argv: Sequence[str] | None = None) -> int:
     if sys_argv is None:
-        cmk.utils.password_store.replace_passwords()
         sys_argv = sys.argv[1:]
+
     args = parse_arguments(sys_argv)
     connection = InnovaphoneConnection(
         host=args.host,
         protocol=args.protocol,
         user=args.user,
-        password=args.password,
+        password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
         verify_ssl=not args.no_cert_check,
     )
 

@@ -19,7 +19,9 @@ from cmk.plugins.innovaphone.special_agent import agent_innovaphone
         (
             [
                 "192.168.178.10",
+                "--user",
                 "USER",
+                "--password",
                 "PASSWORD",
             ],
             "<<<innovaphone_cpu>>>\nCPU 21\n<<<innovaphone_mem>>>\nMEM 5\n<<<innovaphone_temp>>>\nTEMP 35\n<<<innovaphone_channels>>>\nPRI1 Up Up 8 30\nPRI2 Up Up 12 30\n<<<innovaphone_licenses>>>\n",

@@ -358,10 +358,11 @@ def configuration_advanced() -> Mapping[str, DictElement]:
             parameter_form=BooleanChoice(
                 label=Label("Enable safe host names"),
                 help_text=Help(
-                    "Using this option will let Checkmk create safe host names for piggyback hosts "
-                    "to avoid conflicts in entity names from Azure. This option will prepend 'azr-' and append the last part "
-                    "of the subscription ID to host names. Example: 'azr-my-vm-1a2b3c4d'. "
-                    "Enable this option if you have resources or resource groups with the same name."
+                    "Enabling this option lets Checkmk create safe host names for piggyback hosts. "
+                    "This avoids conflicts caused by entities having the same name in Azure, which could lead to monitoring data "
+                    "being overwritten or lost. The option works by appending a unique hash to the Checkmk piggyback host names "
+                    "(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, resources, or resource groups "
+                    "with the same name across multiple Azure tenants or subscriptions."
                 ),
                 prefill=DefaultValue(False),
             ),
@@ -370,10 +371,6 @@ def configuration_advanced() -> Mapping[str, DictElement]:
         "config": DictElement(
             parameter_form=Dictionary(
                 title=Title("Retrieve information"),
-                # Since we introduced this, Microsoft has already reduced the number
-                # of allowed API requests. At the time of this writing (11/2018)
-                # you can find the number here:
-                # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
                 help_text=Help(
                     "By default, all resources associated to the configured tenant ID"
                     " will be monitored. "

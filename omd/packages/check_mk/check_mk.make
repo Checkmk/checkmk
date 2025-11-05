@@ -37,6 +37,8 @@ ADDITIONAL_EXCLUDE=--exclude "BUILD.*" --exclude "BUILD" --exclude "OWNERS"
 EDITION_EXCLUDE=
 ifeq ($(EDITION),community)
 	EDITION_EXCLUDE += \
+	    --exclude "non-free" \
+	    --exclude "nonfree" \
 	    --exclude "enterprise" \
 	    --exclude "pro"
 endif

@@ -12,6 +12,8 @@ import groovy.transform.Field
 def REPO_PATCH_RULES = [\
 "community": [\
     "paths_to_be_removed": [\
+        "non-free", \
+        "nonfree", \
         "enterprise", \
         "pro", \
         "ultimate", \

@@ -28,18 +28,18 @@ PACKAGES := \
     apache-omd \
     check_mk
 
-ifeq ($(EDITION),enterprise)
+ifeq ($(EDITION),pro)
 PACKAGES += enterprise
 endif
-ifeq ($(EDITION),managed)
+ifeq ($(EDITION),ultimatemt)
+PACKAGES += enterprise
+PACKAGES += otel-collector
+endif
+ifeq ($(EDITION),ultimate)
 PACKAGES += enterprise
 PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),cloud)
-PACKAGES += enterprise
-PACKAGES += otel-collector
-endif
-ifeq ($(EDITION),saas)
 PACKAGES += enterprise
 endif
 

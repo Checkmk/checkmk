@@ -101,34 +101,33 @@ def approx_age(secs: float) -> str:
     """Format time difference seconds into approximated human readable text"""
     if secs < 0:
         return f"-{approx_age(-secs)}"
-
-    if 0 < secs < 1:
-        return physical_precision(secs, 3, _("s"))
+    if secs < 1e-12:
+        return f"{secs * 1e15:.0f} fs"
+    if secs < 1e-9:
+        return f"{secs * 1e12:.0f} ps"
+    if secs < 1e-6:
+        return f"{secs * 1e9:.0f} ns"
+    if secs < 1e-3:
+        return f"{secs * 1e6:.0f} µs"
+    if secs < 1:
+        return f"{secs * 1e3:.0f} ms"
     if secs < 10:
-        return "{:.2f} {}".format(secs, _("s"))
+        return f"{secs:.2f} s"
     if secs < 60:
-        return "{:.1f} {}".format(secs, _("s"))
+        return f"{secs:.1f} s"
     if secs < 240:
-        return "%d %s" % (secs, _("s"))
-
-    mins = int(secs / 60.0)
-    if mins < 360:
-        return "%d %s" % (mins, _("m"))
-
-    hours = int(mins / 60.0)
-    if hours < 48:
-        return "%d %s" % (hours, _("h"))
-
-    days = hours / 24.0
-    if days < 6:
-        return f"{drop_dotzero(days, 1)} {_('d')}"
+        return f"{int(secs)} s"
+    if (mins := secs / 60) < 360:
+        return f"{int(mins)} m"
+    if (hours := mins / 60) < 48:
+        return f"{int(hours)} h"
+    if (days := hours / 24) < 6:
+        return f"{days:.1f}".removesuffix(".0") + " d"
     if days < 999:
-        return "{:.0f} {}".format(days, _("d"))
-
-    years = days / 365.0
-    if years < 10:
-        return "{:.1f} {}".format(years, _("y"))
-    return "{:.0f} {}".format(years, _("y"))
+        return f"{days:.0f} d"
+    if (years := days / 365) < 10:
+        return f"{years:.1f} y"
+    return f"{years:.0f} y"
 
 
 #   .--Prefix & Scale------------------------------------------------------.
@@ -342,98 +341,12 @@ def scientific(v: float, precision: int = 3) -> str:
     if v < 0:
         return f"-{scientific(v * -1, precision)}"
 
-    mantissa, exponent = _frexp10(v)
+    exponent = int(math.log10(v))
+    if (mantissa := v / 10**exponent) < 1:
+        mantissa *= 10
+        exponent -= 1
+
     # Render small numbers without exponent
     if -3 <= exponent <= 4:
         return "%.*f" % (min(precision, max(0, precision - exponent)), v)
-
     return "%.*fe%+d" % (precision, mantissa, exponent)
-
-
-# Render a physical value with a precision of p
-# digits. Use K (kilo), M (mega), m (milli), µ (micro)
-# p is the number of non-zero digits - not the number of
-# decimal places.
-# Examples for p = 3:
-# a: 0.0002234   b: 4,500,000  c: 137.56
-# Result:
-# a: 223 µ       b: 4.50 M     c: 138
-#
-# Note if the type of v is integer, then the precision cut
-# down to the precision of the actual number
-def physical_precision(v: float, precision: int, unit_symbol: str) -> str:
-    if v < 0:
-        return f"-{physical_precision(-v, precision, unit_symbol)}"
-
-    scale_symbol, places_after_comma, scale_factor = calculate_physical_precision(v, precision)
-
-    scaled_value = v / scale_factor
-    return "%.*f %s%s" % (places_after_comma, scaled_value, scale_symbol, unit_symbol)
-
-
-def calculate_physical_precision(v: float, precision: int) -> tuple[str, int, int]:
-    if v == 0:
-        return "", precision - 1, 1
-
-    # Splitup in mantissa (digits) an exponent to the power of 10
-    # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
-    _mantissa, exponent = _frexp10(v)
-
-    if isinstance(v, int):
-        precision = min(precision, exponent + 1)
-
-    # Choose a power where no artifical zero (due to rounding) needs to be
-    # placed left of the decimal point.
-    scale_symbols = {
-        -5: "f",
-        -4: "p",
-        -3: "n",
-        -2: "µ",
-        -1: "m",
-        0: "",
-        1: "k",
-        2: "M",
-        3: "G",
-        4: "T",
-        5: "P",
-    }
-    scale = 0
-
-    while exponent < 0 and scale > -5:
-        scale -= 1
-        exponent += 3
-
-    # scale, exponent = divmod(exponent, 3)
-    places_before_comma = exponent + 1
-    places_after_comma = precision - places_before_comma
-    while places_after_comma < 0 and scale < 5:
-        scale += 1
-        exponent -= 3
-        places_before_comma = exponent + 1
-        places_after_comma = precision - places_before_comma
-
-    return scale_symbols[scale], places_after_comma, 1000**scale
-
-
-# .
-#   .--helper--------------------------------------------------------------.
-#   |                    _          _                                      |
-#   |                   | |__   ___| |_ __   ___ _ __                      |
-#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
-#   |                   | | | |  __/ | |_) |  __/ |                        |
-#   |                   |_| |_|\___|_| .__/ \___|_|                        |
-#   |                                |_|                                   |
-#   '----------------------------------------------------------------------'
-
-
-def _frexp10(x: float) -> tuple[float, int]:
-    return _frexpb(x, 10)
-
-
-def _frexpb(x: float, base: int) -> tuple[float, int]:
-    exp = int(math.log(x, base))
-    mantissa = x / base**exp
-    if mantissa < 1:
-        mantissa *= base
-        exp -= 1
-    return mantissa, exp

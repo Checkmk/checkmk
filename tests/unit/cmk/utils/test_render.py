@@ -69,23 +69,6 @@ def test_fmt_bytes(value: int, kwargs: Mapping[str, Any], result: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ["args", "result"],
-    [
-        (
-            (0.433 / 1, 10),
-            (4.33, -1),
-        ),
-        (
-            (5, 10),
-            (5, 0),
-        ),
-    ],
-)
-def test_frexpb(args: tuple[float, int], result: tuple[float, int]) -> None:
-    assert render._frexpb(*args) == result
-
-
-@pytest.mark.parametrize(
     ["perc", "result"],
     [
         (0.0, "0%"),
@@ -123,7 +106,7 @@ def test_percent_std(perc: float, result: str) -> None:
         (100, 5, "100.000"),
         (10000, 5, "10000.0"),
         (10000, 6, "10000.00"),
-        (1000000, 2, "10.00e+5"),
+        (1000000, 2, "1.00e+6"),
         (9000000, 2, "9.00e+6"),
     ],
 )
@@ -178,3 +161,29 @@ def test_fmt_number_with_precision(value: float, kwargs: Mapping[str, Any], resu
 )
 def test_fmt_nic_speed(speed: int, result: str) -> None:
     assert render.fmt_nic_speed(speed) == result
+
+
+@pytest.mark.parametrize(
+    ["secs", "result"],
+    [
+        (-1234.5, "-20 m"),
+        (234.7e-15, "235 fs"),
+        (234.7e-12, "235 ps"),
+        (234.7e-9, "235 ns"),
+        (234.7e-6, "235 µs"),
+        (234.7e-3, "235 ms"),
+        (3.125, "3.12 s"),
+        (42.125, "42.1 s"),
+        (200.125, "200 s"),
+        (345.125, "5 m"),
+        (345.125, "5 m"),
+        (23456.125, "6 h"),
+        (172800.0, "2 d"),
+        (234567.125, "2.7 d"),
+        (54321012.125, "629 d"),
+        (98765432.125, "3.1 y"),
+        (987654321.125, "31 y"),
+    ],
+)
+def test_approx_age(secs: int, result: str) -> None:
+    assert render.approx_age(secs) == result

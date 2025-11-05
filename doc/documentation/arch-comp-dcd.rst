@@ -21,7 +21,7 @@ example. For this purpose the DCD works with so-called connectors. Each
 connector can get information from a very specific type of source, and has its
 own specific configuration.
 
-The DCD is an Enterprise feature.
+The DCD is a commercial feature.
 
 Architecture
 ============

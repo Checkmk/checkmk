@@ -8,7 +8,7 @@ Introduction and goals
 The main requirement we solve with the Livestatus proxy daemon is:
 
 * Optimize Livestatus connections from the central site to the remote site in
-  :doc:`arch-comp-distributed` (Enterprise Edition).
+  :doc:`arch-comp-distributed` (Commercial editions).
 
 Other features we get:
 
@@ -16,7 +16,7 @@ Other features we get:
 * Transport of HW/SW Inventory information from remote to central site
 * Shared livestatus connections between apache worker processes
 
-The Livestatus proxy daemon is an Enterprise feature.
+The Livestatus proxy daemon is a commercial feature.
 
 Architecture
 ============

@@ -70,7 +70,7 @@ Plugins
 The GUI has a plugin mechanic which is used to address the two requirements:
 
 * Allow external developers to extend the functionality of the GUI.
-* Allow non Checkmk Raw Editions to extend the functionality of the GUI.
+* Allow commercial editions to extend the functionality of the GUI.
 
 Each of the GUI's "main modules" can be extended with plugins. For example a
 main module `cmk.gui.views` can be extended with plugins from the

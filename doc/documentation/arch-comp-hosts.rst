@@ -121,7 +121,7 @@ Deployment view
 ===============
 
 The agent needs to be deployed on the host.  The program may be copied by
-the user or updated automatically in the enterprise edition.
+the user or updated automatically in the commercial editions.
 
 .. uml::
 

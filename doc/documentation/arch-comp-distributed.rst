@@ -156,7 +156,7 @@ information from remote sites to the central site. This is the single
 communication channel used by the status UI.
 
 The :doc:`arch-comp-liveproxyd` is helping the UI to manage the connections in
-the Enterprise Editions.
+the commercial editions.
 
 TODO: Document how to debug these
 
@@ -220,7 +220,7 @@ Notification Spooler
 --------------------
 
 By default notifications are sent out locally from every site. This can be
-customized with the Checkmk Enterprise Editions using the
+customized with the commercial editions using the
 :doc:`arch-comp-mknotifyd`.
 
 See also

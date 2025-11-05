@@ -27,7 +27,7 @@ If a site is forwarding notifications to another site, the raw notification
 contexts are transported to the destination site between two mknotifyd
 instances, the one of the origin site and the destination site.
 
-The mknotifyd is an Enterprise feature.
+The mknotifyd is a commercial feature.
 
 Architecture
 ============

@@ -38,7 +38,7 @@ So we need two paths:
 * Create RRD databases via RRD create helper
 
 Differences between Checkmk Community and the commercial editions
------------------------------------------------
+-----------------------------------------------------------------
 
 The RRD backend architecture differs between Nagios core and Microcore. In
 Checkmk Community, when the Nagios core is used, the NPCD an `process_perfdata.pl`,

@@ -1599,7 +1599,7 @@ def _config_set(site: SiteContext, config: Config, hook_name: str, verbose: bool
     if output and output != value:
         config[hook_name] = output
 
-    putenv("CONFIG_" + hook_name, config[hook_name])
+    os.environ["CONFIG_" + hook_name] = config[hook_name]
 
 
 def config_set_value(
@@ -1800,27 +1800,6 @@ def init_action(
 #   '----------------------------------------------------------------------'
 
 
-# No using os.putenv, os.getenv os.unsetenv directly because
-# they seem not to work correctly in debian 503.
-#
-# Unsetting all vars with os.unsetenv and after that using os.getenv to read
-# some vars did not bring the expected result that the environment was empty.
-# The vars were still set.
-#
-# Same for os.putenv. Executing os.getenv right after os.putenv did not bring
-# the expected result.
-#
-# Directly modifying os.environ seems to work.
-def putenv(key: str, value: str) -> None:
-    os.environ[key] = value
-
-
-def getenv(key: str, default: str | None = None) -> str | None:
-    if key not in os.environ:
-        return default
-    return os.environ[key]
-
-
 def clear_environment() -> None:
     # first remove *all* current environment variables, except:
     # TERM
@@ -1833,16 +1812,15 @@ def clear_environment() -> None:
 
 def set_environment(site_name: str, config: Config) -> None:
     site_home = SitePaths.from_site_name(site_name).home
-    putenv("OMD_SITE", site_name)
-    putenv("OMD_ROOT", site_home)
-    putenv(
-        "PATH",
-        f"{site_home}/local/bin:{site_home}/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin",
+    os.environ["OMD_SITE"] = site_name
+    os.environ["OMD_ROOT"] = site_home
+    os.environ["PATH"] = (
+        f"{site_home}/local/bin:{site_home}/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin"
     )
-    putenv("USER", site_name)
+    os.environ["USER"] = site_name
 
-    putenv("LD_LIBRARY_PATH", f"{site_home}/local/lib:{site_home}/lib")
-    putenv("HOME", site_home)
+    os.environ["LD_LIBRARY_PATH"] = f"{site_home}/local/lib:{site_home}/lib"
+    os.environ["HOME"] = site_home
 
     # allow user to define further environment variable in ~/etc/environment
     envfile = Path(site_home, "etc", "environment")
@@ -1864,13 +1842,13 @@ def set_environment(site_name: str, config: Config) -> None:
 
                 # Add the present environment when someone wants to append some
                 if value.startswith("$%s:" % varname):
-                    before = getenv(varname, None)
+                    before = os.environ.get(varname)
                     if before:
                         value = before + ":" + value.replace("$%s:" % varname, "")
 
                 if value.startswith("'"):
                     value = value.strip("'")
-                putenv(varname, value)
+                os.environ[varname] = value
 
     create_config_environment(config)
 
@@ -1892,7 +1870,7 @@ def hostname() -> str:
 
 # return "| $PAGER", if a pager is available
 def pipe_pager() -> str:
-    pager = getenv("PAGER")
+    pager = os.environ.get("PAGER")
     if not pager and os.path.exists("/usr/bin/less"):
         pager = "less -F -X"
     if pager:
@@ -2640,7 +2618,7 @@ def main_mv_or_cp(
         add_to_fstab(new_site.name, new_site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
     # Needed by the post-rename-site script
-    putenv("OLD_OMD_SITE", old_site.name)
+    os.environ["OLD_OMD_SITE"] = old_site.name
 
     outcome = finalize_site(
         version_info,
@@ -3314,7 +3292,7 @@ def _process_backup_tar_and_setup_env(
     set_environment(new_site.name, new_config)
 
     # Needed by the post-rename-site script
-    putenv("OLD_OMD_SITE", old_site_name)
+    os.environ["OLD_OMD_SITE"] = old_site_name
     return new_config
 
 

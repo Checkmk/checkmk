@@ -24,7 +24,6 @@ PYTHON3_PATHS=(
     automations
     base
     bi
-    cce
     checkengine
     ec
     fields

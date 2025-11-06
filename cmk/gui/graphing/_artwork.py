@@ -158,7 +158,7 @@ def compute_graph_artwork(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
     graph_display_id: str = "",
 ) -> GraphArtwork:
     unit_spec = user_specific_unit(graph_recipe.unit_spec, temperature_unit)
@@ -341,7 +341,7 @@ def compute_graph_artwork_curves(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
 ) -> list[Curve]:
     curves = [
         Curve(

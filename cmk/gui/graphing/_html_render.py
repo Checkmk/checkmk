@@ -121,7 +121,7 @@ def host_service_graph_popup_cmk(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -595,7 +595,9 @@ class AjaxGraph(Page):
                 context,
                 metrics_from_api,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
+                fetch_time_series=metric_backend_registry[
+                    str(edition(paths.omd_root))
+                ].get_time_series_fetcher(ctx.config),
             )
             response.set_data(json.dumps(response_data))
         except Exception as e:
@@ -612,7 +614,7 @@ def render_ajax_graph(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
 ) -> JsonSerializable:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
@@ -742,7 +744,7 @@ def render_graphs_from_specification_html(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -799,7 +801,7 @@ def _render_graphs_from_definitions(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -889,7 +891,9 @@ class AjaxRenderGraphContent(AjaxPage):
             debug=ctx.config.debug,
             graph_timeranges=ctx.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
+            fetch_time_series=metric_backend_registry[
+                str(edition(paths.omd_root))
+            ].get_time_series_fetcher(ctx.config),
             graph_display_id=api_request["graph_display_id"],
         )
 
@@ -904,7 +908,7 @@ def _render_graph_content_html(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
     graph_display_id: str = "",
 ) -> HTML:
     try:
@@ -964,7 +968,7 @@ def _render_time_range_selection(
     *,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
     graph_display_id: str,
 ) -> HTML:
     now = int(time.time())
@@ -1064,7 +1068,9 @@ class AjaxGraphHover(Page):
                 hover_time,
                 metrics_from_api,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
+                fetch_time_series=metric_backend_registry[
+                    str(edition(paths.omd_root))
+                ].get_time_series_fetcher(ctx.config),
             )
             response.set_data(json.dumps(response_data))
         except Exception as e:
@@ -1081,7 +1087,7 @@ def _render_ajax_graph_hover(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
 ) -> dict[str, object]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
@@ -1165,7 +1171,7 @@ def host_service_graph_dashlet_cmk(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
+    fetch_time_series: FetchTimeSeries | None,
     graph_display_id: str = "",
     time_range: TimerangeValue = None,
 ) -> HTML:

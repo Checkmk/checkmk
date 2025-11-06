@@ -53,10 +53,4 @@ def register(
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
 
-    metric_backend_registry.register(
-        MetricBackend(
-            edition=edition,
-            is_available=False,
-            client=lambda *args, **kwargs: {},
-        )
-    )
+    metric_backend_registry.register(MetricBackend(edition=edition))

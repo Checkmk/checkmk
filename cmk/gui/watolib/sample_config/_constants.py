@@ -262,7 +262,7 @@ SHIPPED_RULES = {
         },
     ],
     # Enable HW/SW Inventory + status data inventory for docker
-    # containers, kubernetes objects, robotmk and Check-MK servers by default to
+    # containers, kubernetes objects, robotmk, azure and Check-MK servers by default to
     # simplify the setup procedure for them
     "active_checks": {
         "cmk_inv": [
@@ -293,6 +293,14 @@ SHIPPED_RULES = {
             {
                 "id": "bea23477-f13a-4e9f-a472-08be507aac9e",
                 "condition": {"host_label_groups": [("and", [("and", "cmk/rmk/node_type:local")])]},
+                "value": {"status_data_inventory": True},
+                "options": {
+                    "description": "Factory default. Required for the shipped dashboards.",
+                },
+            },
+            {
+                "id": "de3be70a-5efb-4a00-8173-441329887c4a",
+                "condition": {"host_label_groups": [("and", [("and", "cmk/cloud:azure")])]},
                 "value": {"status_data_inventory": True},
                 "options": {
                     "description": "Factory default. Required for the shipped dashboards.",

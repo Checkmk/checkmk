@@ -134,12 +134,10 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
       variant="secondary"
     />
     <ActionButton
-      v-if="!editWidgetSpec"
-      :label="_t('Add & place widget')"
+      :label="!!editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
       :action="addWidget"
       variant="primary"
     />
-    <ActionButton v-else :label="_t('Update widget')" :action="addWidget" variant="secondary" />
   </ActionBar>
 
   <ContentSpacer />

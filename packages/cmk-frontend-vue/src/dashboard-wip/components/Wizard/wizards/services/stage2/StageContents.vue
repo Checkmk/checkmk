@@ -148,7 +148,7 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
       variant="secondary"
     />
     <ActionButton
-      :label="!!editWidgetSpec ? _t('Update widget') : _t('Add & place widget')"
+      :label="!!editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
       :action="addWidget"
       variant="primary"
     />

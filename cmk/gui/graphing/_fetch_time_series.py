@@ -64,7 +64,7 @@ def fetch_augmented_time_series(
     graph_data_range: GraphDataRange,
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> Iterator[AugmentedTimeSeries]:
     consolidation_function = graph_recipe.consolidation_function
     conversion = user_specific_unit(graph_recipe.unit_spec, temperature_unit).conversion
@@ -92,12 +92,12 @@ def fetch_augmented_time_series(
         step=step,
     )
     query_data = (
-        fetch_time_series(
+        backend_time_series_fetcher(
             list(query_keys),
             start_time=start_time,
             end_time=end_time,
         )
-        if fetch_time_series
+        if backend_time_series_fetcher
         else {}
     )
 

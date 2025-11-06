@@ -121,7 +121,7 @@ def host_service_graph_popup_cmk(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -157,7 +157,7 @@ def host_service_graph_popup_cmk(
             debug=debug,
             graph_timeranges=graph_timeranges,
             temperature_unit=temperature_unit,
-            fetch_time_series=fetch_time_series,
+            backend_time_series_fetcher=backend_time_series_fetcher,
             render_async=False,
         )
     )
@@ -595,7 +595,7 @@ class AjaxGraph(Page):
                 context,
                 metrics_from_api,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                fetch_time_series=metric_backend_registry[
+                backend_time_series_fetcher=metric_backend_registry[
                     str(edition(paths.omd_root))
                 ].get_time_series_fetcher(ctx.config),
             )
@@ -614,7 +614,7 @@ def render_ajax_graph(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> JsonSerializable:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
@@ -676,7 +676,7 @@ def render_ajax_graph(
         graph_render_config.size,
         registered_metrics,
         temperature_unit=temperature_unit,
-        fetch_time_series=fetch_time_series,
+        backend_time_series_fetcher=backend_time_series_fetcher,
     )
 
     with output_funnel.plugged():
@@ -744,7 +744,7 @@ def render_graphs_from_specification_html(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -785,7 +785,7 @@ def render_graphs_from_specification_html(
         debug=debug,
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,
-        fetch_time_series=fetch_time_series,
+        backend_time_series_fetcher=backend_time_series_fetcher,
         render_async=render_async,
         graph_display_id=graph_display_id,
     )
@@ -801,7 +801,7 @@ def _render_graphs_from_definitions(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -831,7 +831,7 @@ def _render_graphs_from_definitions(
                 debug=debug,
                 graph_timeranges=graph_timeranges,
                 temperature_unit=temperature_unit,
-                fetch_time_series=fetch_time_series,
+                backend_time_series_fetcher=backend_time_series_fetcher,
                 graph_display_id=graph_display_id,
             )
     return output
@@ -891,7 +891,7 @@ class AjaxRenderGraphContent(AjaxPage):
             debug=ctx.config.debug,
             graph_timeranges=ctx.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[
+            backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(ctx.config),
             graph_display_id=api_request["graph_display_id"],
@@ -908,7 +908,7 @@ def _render_graph_content_html(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str = "",
 ) -> HTML:
     try:
@@ -918,7 +918,7 @@ def _render_graph_content_html(
             graph_render_config.size,
             registered_metrics,
             temperature_unit=temperature_unit,
-            fetch_time_series=fetch_time_series,
+            backend_time_series_fetcher=backend_time_series_fetcher,
             graph_display_id=graph_display_id,
         )
         main_graph_html = _render_graph_html(
@@ -935,7 +935,7 @@ def _render_graph_content_html(
                     registered_metrics,
                     graph_timeranges=graph_timeranges,
                     temperature_unit=temperature_unit,
-                    fetch_time_series=fetch_time_series,
+                    backend_time_series_fetcher=backend_time_series_fetcher,
                     graph_display_id=graph_display_id,
                 ),
                 class_="graph_with_timeranges",
@@ -968,7 +968,7 @@ def _render_time_range_selection(
     *,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str,
 ) -> HTML:
     now = int(time.time())
@@ -1003,7 +1003,7 @@ def _render_time_range_selection(
             graph_render_config.size,
             registered_metrics,
             temperature_unit=temperature_unit,
-            fetch_time_series=fetch_time_series,
+            backend_time_series_fetcher=backend_time_series_fetcher,
             graph_display_id=graph_display_id,
         )
         rows.append(
@@ -1068,7 +1068,7 @@ class AjaxGraphHover(Page):
                 hover_time,
                 metrics_from_api,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                fetch_time_series=metric_backend_registry[
+                backend_time_series_fetcher=metric_backend_registry[
                     str(edition(paths.omd_root))
                 ].get_time_series_fetcher(ctx.config),
             )
@@ -1087,7 +1087,7 @@ def _render_ajax_graph_hover(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> dict[str, object]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
@@ -1097,7 +1097,7 @@ def _render_ajax_graph_hover(
         graph_data_range,
         registered_metrics,
         temperature_unit=temperature_unit,
-        fetch_time_series=fetch_time_series,
+        backend_time_series_fetcher=backend_time_series_fetcher,
     )
 
     return {
@@ -1171,7 +1171,7 @@ def host_service_graph_dashlet_cmk(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str = "",
     time_range: TimerangeValue = None,
 ) -> HTML:
@@ -1258,7 +1258,7 @@ def host_service_graph_dashlet_cmk(
             graph_render_config.size,
             registered_metrics,
             temperature_unit=temperature_unit,
-            fetch_time_series=fetch_time_series,
+            backend_time_series_fetcher=backend_time_series_fetcher,
         )
         if graph_artwork.curves:
             legend_height = _graph_legend_height_ex(
@@ -1282,7 +1282,7 @@ def host_service_graph_dashlet_cmk(
         debug=debug,
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,
-        fetch_time_series=fetch_time_series,
+        backend_time_series_fetcher=backend_time_series_fetcher,
         render_async=False,
         graph_display_id=graph_display_id,
     )

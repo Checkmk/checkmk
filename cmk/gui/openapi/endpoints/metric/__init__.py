@@ -71,7 +71,7 @@ def get_graph(params):
             UserPermissions.from_config(active_config, permission_registry),
             debug=active_config.debug,
             temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[
+            backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(active_config),
         )

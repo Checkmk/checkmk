@@ -188,7 +188,7 @@ def _paint_time_graph_cmk(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
     user: LoggedInUser,
     request: Request,
     response: Response,
@@ -275,7 +275,7 @@ def _paint_time_graph_cmk(
         debug=debug,
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,
-        fetch_time_series=fetch_time_series,
+        backend_time_series_fetcher=backend_time_series_fetcher,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -369,7 +369,7 @@ class PainterServiceGraphs(Painter):
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[
+            backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(self.config),
             show_time_range_previews=True,
@@ -423,7 +423,7 @@ class PainterHostGraphs(Painter):
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[
+            backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(self.config),
             show_time_range_previews=True,
@@ -503,7 +503,7 @@ class PainterSvcPnpgraph(Painter):
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[
+            backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(self.config),
         )
@@ -559,7 +559,7 @@ class PainterHostPnpgraph(Painter):
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[
+            backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(self.config),
         )

@@ -90,7 +90,7 @@ class AjaxGraphImagesForNotifications(Page):
             UserPermissions.from_config(ctx.config, permission_registry),
             debug=ctx.config.debug,
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[
+            backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(ctx.config),
         )
@@ -104,7 +104,7 @@ def _answer_graph_image_request(
     *,
     debug: bool,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> None:
     try:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
@@ -164,7 +164,7 @@ def _answer_graph_image_request(
                 graph_render_config.size,
                 registered_metrics,
                 temperature_unit=temperature_unit,
-                fetch_time_series=fetch_time_series,
+                backend_time_series_fetcher=backend_time_series_fetcher,
             )
             graph_png = render_graph_image(graph_artwork, graph_render_config)
 
@@ -318,7 +318,7 @@ def graph_spec_from_request(
     *,
     debug: bool,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> dict[str, Any]:
     try:
         graph_data_range, graph_recipes = graph_recipes_for_api_request(
@@ -345,7 +345,7 @@ def graph_spec_from_request(
         graph_data_range,
         registered_metrics,
         temperature_unit=temperature_unit,
-        fetch_time_series=fetch_time_series,
+        backend_time_series_fetcher=backend_time_series_fetcher,
     )
 
     api_curves = []

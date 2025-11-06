@@ -113,7 +113,7 @@ def test_fetch_augmented_time_series(
                 _GRAPH_RECIPE,
                 _GRAPH_DATA_RANGE,
                 temperature_unit=TemperatureUnit.CELSIUS,
-                fetch_time_series=lambda *args, **kwargs: {},
+                backend_time_series_fetcher=lambda *args, **kwargs: {},
             )
         ) == [
             AugmentedTimeSeries(
@@ -137,7 +137,7 @@ def test_fetch_augmented_time_series_with_conversion(
                 _GRAPH_RECIPE,
                 _GRAPH_DATA_RANGE,
                 temperature_unit=TemperatureUnit.FAHRENHEIT,
-                fetch_time_series=lambda *args, **kwargs: {},
+                backend_time_series_fetcher=lambda *args, **kwargs: {},
             )
         ) == [
             AugmentedTimeSeries(

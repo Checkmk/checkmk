@@ -155,7 +155,7 @@ class GraphWidgetPage(cmk.gui.pages.Page):
                     temperature_unit=get_temperature_unit(
                         user, ctx.config.default_temperature_unit
                     ),
-                    fetch_time_series=metric_backend_registry[
+                    backend_time_series_fetcher=metric_backend_registry[
                         str(edition(paths.omd_root))
                     ].get_time_series_fetcher(ctx.config),
                     graph_display_id=widget_id,

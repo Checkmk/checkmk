@@ -191,7 +191,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             debug=ctx.config.debug,
             graph_timeranges=ctx.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            fetch_time_series=metric_backend_registry[
+            backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(ctx.config),
         )
@@ -216,7 +216,7 @@ class PageGraphDashlet(cmk.gui.pages.Page):
                 debug=ctx.config.debug,
                 graph_timeranges=ctx.config.graph_timeranges,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                fetch_time_series=metric_backend_registry[
+                backend_time_series_fetcher=metric_backend_registry[
                     str(edition(paths.omd_root))
                 ].get_time_series_fetcher(ctx.config),
                 graph_display_id=ctx.request.get_str_input_mandatory("id"),

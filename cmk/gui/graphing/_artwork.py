@@ -158,7 +158,7 @@ def compute_graph_artwork(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
     graph_display_id: str = "",
 ) -> GraphArtwork:
     unit_spec = user_specific_unit(graph_recipe.unit_spec, temperature_unit)
@@ -169,7 +169,7 @@ def compute_graph_artwork(
             graph_data_range,
             registered_metrics,
             temperature_unit=temperature_unit,
-            fetch_time_series=fetch_time_series,
+            backend_time_series_fetcher=backend_time_series_fetcher,
         )
     )
 
@@ -341,7 +341,7 @@ def compute_graph_artwork_curves(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries | None,
+    backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> list[Curve]:
     curves = [
         Curve(
@@ -355,7 +355,7 @@ def compute_graph_artwork_curves(
             graph_recipe,
             graph_data_range,
             temperature_unit=temperature_unit,
-            fetch_time_series=fetch_time_series,
+            backend_time_series_fetcher=backend_time_series_fetcher,
         )
         if augmented_time_series.meta_data
     ]

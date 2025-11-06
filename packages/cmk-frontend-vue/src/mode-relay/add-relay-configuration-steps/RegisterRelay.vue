@@ -18,8 +18,6 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<CmkWizardStepProps & { relayName: string }>()
-
 // Escape shell arguments by wrapping in single quotes and escaping single quotes.
 // This should ensure that regardless of what characters are in the given string argument,
 // they will be treated as literal text in the shell command,
@@ -28,38 +26,71 @@ const escapeShellArg = (arg: string): string => {
   return `'${arg.replace(/'/g, "'\"'\"'")}'`
 }
 
-const escapedCommand = computed(() => {
-  return `cmk-relay register -s <SERVER> -i <SITE> -U <USERNAME> -P <PASSWORD> -n ${escapeShellArg(props.relayName)}`
-})
+const props = defineProps<
+  CmkWizardStepProps & {
+    relayName: string
+    siteName: string
+    domain: string
+    siteVersion: string
+    urlToGetAnAutomationSecret: string
+  }
+>()
+
+const relayImageReference = computed(() => `checkmk/check-mk-relay:${props.siteVersion}`)
+
+const registrationCommand = computed(() =>
+  [
+    'docker run --rm \\',
+    '  -v checkmk_relay_data:/opt/check-mk-relay/workdir \\',
+    `  ${relayImageReference.value} \\`,
+    `  sh -c "cmk-relay register \\`,
+    `    --server ${props.domain} \\`,
+    `    --site ${props.siteName} \\`,
+    '    --user agent_registration \\',
+    '    --password [automation-secret] \\',
+    `    -n ${escapeShellArg(props.relayName)}"`
+  ].join('\n')
+)
+
+const daemonCommand = computed(() =>
+  [
+    'docker run --rm \\',
+    '  -v checkmk_relay_data:/opt/check-mk-relay/workdir \\',
+    `  ${relayImageReference.value} \\`,
+    '  sh -c "cmk-relay daemon"'
+  ].join('\n')
+)
 </script>
 
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h2"> {{ _t('Register the relay with your Checkmk site') }}</CmkHeading>
+      <CmkHeading type="h2">
+        {{ _t('Register the relay with your Checkmk site and run it') }}</CmkHeading
+      >
     </template>
 
     <template #content>
       <CmkParagraph>
         {{ _t('Register the Relay to authorize it for communication with your Checkmk site.') }}
       </CmkParagraph>
-      <CmkCode :code_txt="escapedCommand"> </CmkCode>
       <CmkAlertBox variant="info">
-        {{
-          _t(
-            'This code snippet includes a one-time token. If you plan to use it multiple times in larger environments, you can check '
-          )
-        }}
+        {{ _t(' Go to ') }}
         <a
-          href="https://docs.checkmk.com/latest/en/not-yet-defined"
+          :href="props.urlToGetAnAutomationSecret"
           style="text-decoration: underline"
           target="_blank"
           rel="noopener noreferrer"
         >
-          {{ _t('this article') }}
+          {{ _t('this page') }}
         </a>
-        {{ _t(' for more details.') }}
+        {{ _t(' and get an automation secret. Use it in place of [automation-secret]') }}
       </CmkAlertBox>
+      <CmkCode :code_txt="registrationCommand"></CmkCode>
+      <CmkParagraph>
+        {{ _t('After successful registration, start the Relay daemon.') }}
+      </CmkParagraph>
+      <CmkCode :code_txt="daemonCommand"></CmkCode>
     </template>
 
     <template #actions>

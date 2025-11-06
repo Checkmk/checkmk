@@ -103,24 +103,30 @@ class HostConverter:
     permission_type: PermissionType = "monitor"
     should_be_cluster: bool | None = None
 
+    @staticmethod
+    def _parse_host_name(value: str) -> HostName:
+        if not value:
+            raise ValueError("Host name cannot be empty.")
+        return HostName(value)
+
     def host(self, value: str) -> Host:
-        if host := Host.host(HostName(value)):
+        if host := Host.host(self._parse_host_name(value)):
             self._verify(host)
             return host
 
         raise ValueError(f"Host not found: {value!r}")
 
     def host_name(self, value: str) -> HostName:
-        name = HostName(value)
+        name = self._parse_host_name(value)
         if host := Host.host(name):
             self._verify(host)
             return name
 
         raise ValueError(f"Host not found: {value!r}")
 
-    @staticmethod
-    def not_exists(value: str) -> HostName:
-        name = HostName(value)
+    @classmethod
+    def not_exists(cls, value: str) -> HostName:
+        name = cls._parse_host_name(value)
         if Host.host(name):
             raise ValueError(f"Host {value!r} already exists.")
 

@@ -369,3 +369,15 @@ class TestHostConverter:
                 assert sample_host == HostConverter(permission_type="setup_write").host_name(
                     sample_host
                 )
+
+    def test_host_fails_empty_host(self) -> None:
+        with pytest.raises(ValueError, match="Host name cannot be empty"):
+            HostConverter().host("")
+
+    def test_host_name_fails_empty_host(self) -> None:
+        with pytest.raises(ValueError, match="Host name cannot be empty"):
+            HostConverter().host_name("")
+
+    def test_not_exists_fails_empty_host(self) -> None:
+        with pytest.raises(ValueError, match="Host name cannot be empty"):
+            HostConverter.not_exists("")

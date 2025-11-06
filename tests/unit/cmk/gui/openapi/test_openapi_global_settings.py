@@ -8,7 +8,7 @@
 # mypy: disable-error-code="type-arg"
 
 import pytest
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
+from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.gui.openapi.endpoints.global_settings.schemas import (
     CAInputSchema,

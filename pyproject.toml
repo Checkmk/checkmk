@@ -126,11 +126,14 @@ first-party-not-cmk = ["cmc_proto", "omdlib", "livestatus"]
 # Add per-module options as [[tool.mypy.overrides]].
 explicit_package_bases = true
 # TODO: `mypy_path` shouldn't be required with Bazel.
+# Even though mypy_path is not needed anymore for Bazel based jobs, it still needed for e.g. editor
+# integrations, which typically run mypy outside of Bazel so far.
 # cmk-update-agent is needed for now because cmk_update_agent is still imported by some composition
 # tests. Can hopefully be cleaned up in a following step.
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-update-agent:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
+    $MYPY_CONFIG_FILE_DIR/tests/typeshed:\
     """
 plugins = ["pydantic.mypy"]
 python_version = "3.13"

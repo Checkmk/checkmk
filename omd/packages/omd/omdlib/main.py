@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import contextlib
-import enum
 import errno
 import fcntl
 import io
@@ -21,8 +20,7 @@ import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Iterable, Iterator, Sequence
-from enum import auto, Enum
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import (
     assert_never,
@@ -33,7 +31,6 @@ from typing import (
     override,
     TextIO,
 )
-from uuid import uuid4
 
 import omdlib
 import omdlib.backup
@@ -49,7 +46,6 @@ from omdlib.config_hooks import (
     load_config_hooks,
     load_hook_dependencies,
     save_site_conf,
-    update_cmk_core_config,
 )
 from omdlib.console import ok, show_success
 from omdlib.contexts import RootContext, SiteContext
@@ -62,9 +58,9 @@ from omdlib.dialog import (
     dialog_yesno,
     user_confirms,
 )
+from omdlib.finalize import CommandType, finalize_site, finalize_site_as_user, FinalizeOutcome
 from omdlib.global_options import GlobalOptions
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.instance_id import create_instance_id
 from omdlib.options import (
     Arguments,
     Command,
@@ -208,32 +204,6 @@ def with_update_logging_stderr(logfile: Path) -> Iterator[None]:
             yield
     finally:
         sys.stderr = original
-
-
-class CommandType(Enum):
-    create = auto()
-    move = auto()
-    copy = auto()
-
-    # reuse in options or not:
-    restore_existing_site = auto()
-    restore_as_new_site = auto()
-
-    @property
-    def short(self) -> str:
-        if self is CommandType.create:
-            return "create"
-
-        if self is CommandType.move:
-            return "mv"
-
-        if self is CommandType.copy:
-            return "cp"
-
-        if self in [CommandType.restore_as_new_site, CommandType.restore_existing_site]:
-            return "restore"
-
-        raise TypeError()
 
 
 # .
@@ -1887,19 +1857,6 @@ def use_update_alternatives() -> bool:
     return os.path.exists("/var/lib/dpkg/alternatives/omd")
 
 
-def _crontab_access() -> bool:
-    return (
-        subprocess.run(
-            ["crontab", "-e"],
-            env={"VISUAL": "true", "EDITOR": "true"},
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ).returncode
-        == 0
-    )
-
-
 def main_create(
     version_info: VersionInfo,
     site: SiteContext,
@@ -2065,114 +2022,6 @@ def init_site(
         version_info, site, config, CommandType.create, apache_reload, global_opts.verbose
     )
     return outcome, admin_password
-
-
-# Is being called at the end of create, cp and mv.
-# What is "create", "mv" or "cp". It is used for
-# running the appropriate hooks.
-def finalize_site(
-    version_info: VersionInfo,
-    site: SiteContext,
-    config: Config,
-    command_type: CommandType,
-    apache_reload: bool,
-    verbose: bool,
-) -> FinalizeOutcome:
-    # Now we need to do a few things as site user. Note:
-    # - We cannot use setuid() here, since we need to get back to root.
-    # - We cannot use seteuid() here, since the id command call will then still
-    #   report root and confuse some tools
-    # - We cannot sue setresuid() here, since that is not supported an Python 2.4
-    # So we need to fork() and use a real setuid() here and leave the main process
-    # at being root.
-    pid = os.fork()
-    if pid == 0:
-        try:
-            # From now on we run as normal site user!
-            switch_to_site_user(site.name)
-
-            # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
-            # see CMK-3067
-            outcome = finalize_site_as_user(
-                version_info, site, config, command_type, verbose, ignored_hooks=["TMPFS"]
-            )
-            sys.exit(outcome.value)
-        except Exception as e:
-            sys.stderr.write(f"Failed to finalize site: {e}\n")
-            sys.exit(FinalizeOutcome.ABORTED.value)
-    else:
-        _wpid, status = os.waitpid(pid, 0)
-        if (
-            not os.WIFEXITED(status)
-            or (outcome := FinalizeOutcome(os.WEXITSTATUS(status))) is FinalizeOutcome.ABORTED
-        ):
-            sys.exit("Error in non-priviledged sub-process.")
-
-    # The config changes above, made with the site user, have to be also available for
-    # the root user, so load the site config again. Otherwise e.g. changed
-    # APACHE_TCP_PORT would not be recognized
-    config = load_config(site, verbose)
-    site_home = SitePaths.from_site_name(site.name).home
-    register_with_system_apache(
-        version_info,
-        SitePaths.from_site_name(site.name).apache_conf,
-        site.name,
-        site_home,
-        config["APACHE_TCP_ADDR"],
-        config["APACHE_TCP_PORT"],
-        apache_reload,
-        verbose=verbose,
-    )
-    return outcome
-
-
-class FinalizeOutcome(enum.Enum):
-    OK = 0
-    ABORTED = 1
-    WARN = 2
-
-
-def finalize_site_as_user(
-    version_info: VersionInfo,
-    site: SiteContext,
-    config: Config,
-    command_type: CommandType,
-    verbose: bool,
-    ignored_hooks: Sequence[str],
-) -> FinalizeOutcome:
-    # Mount and create contents of tmpfs. This must be done as normal
-    # user. We also could do this at 'omd start', but this might confuse
-    # users. They could create files below tmp which would be shadowed
-    # by the mount.
-    site_home = SitePaths.from_site_name(site.name).home
-    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    prepare_and_populate_tmpfs(
-        config,
-        version_info,
-        site.name,
-        site_home,
-        site.tmp_dir,
-        site.replacements(),
-        site.skel_permissions,
-        skelroot,
-    )
-
-    # Run all hooks in order to setup things according to the
-    # configuration settings
-    config_set_all(site, config, verbose, ignored_hooks)
-    initialize_site_ca(site)
-    initialize_agent_ca(site)
-    save_site_conf(site_home, config)
-    update_cmk_core_config(config)
-
-    if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
-        create_instance_id(site_home=Path(site_home), instance_id=uuid4())
-
-    call_scripts(site.name, "post-" + command_type.short, open_pty=sys.stdout.isatty())
-    if not _crontab_access():
-        sys.stderr.write("Warning: site user cannot access crontab\n")
-        return FinalizeOutcome.WARN
-    return FinalizeOutcome.OK
 
 
 def main_rm(

@@ -166,6 +166,7 @@ pkg_files(
         ":omdlib/contexts.py",
         ":omdlib/crash_reporting.py",
         ":omdlib/dialog.py",
+        ":omdlib/finalize.py",
         ":omdlib/global_options.py",
         ":omdlib/init_scripts.py",
         ":omdlib/instance_id.py",

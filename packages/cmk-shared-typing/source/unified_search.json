@@ -27,7 +27,7 @@
       "required": ["active", "sort"]
     },
     "editions": {
-      "enum": ["cre", "cee", "cce", "cse", "cme"]
+      "enum": ["community", "pro", "ultimate", "ultimatemt", "cloud"]
     }
   }
 }

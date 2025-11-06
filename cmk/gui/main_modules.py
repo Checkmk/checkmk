@@ -104,39 +104,23 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
     for module in main_modules:
         main_module_name = module.__name__.split(".")[-1]
 
-        for plugin_package_name in _plugin_package_names(main_module_name):
-            if not _is_plugin_namespace(plugin_package_name):
-                continue
+        plugin_package_name = f"cmk.gui.plugins.{main_module_name}"
+        if not _is_plugin_namespace(plugin_package_name):
+            continue
 
-            logger.debug("  Importing plug-ins from %s", plugin_package_name)
-            for plugin_name, exc in load_plugins_with_exceptions(plugin_package_name):
-                logger.error(
-                    "  Error in %s plug-in '%s'\n", main_module_name, plugin_name, exc_info=exc
-                )
-                utils.add_failed_plugin(
-                    Path(traceback.extract_tb(exc.__traceback__)[-1].filename),
-                    main_module_name,
-                    plugin_name,
-                    exc,
-                )
+        logger.debug("  Importing plug-ins from %s", plugin_package_name)
+        for plugin_name, exc in load_plugins_with_exceptions(plugin_package_name):
+            logger.error(
+                "  Error in %s plug-in '%s'\n", main_module_name, plugin_name, exc_info=exc
+            )
+            utils.add_failed_plugin(
+                Path(traceback.extract_tb(exc.__traceback__)[-1].filename),
+                main_module_name,
+                plugin_name,
+                exc,
+            )
 
     logger.debug("Main module plug-ins imported")
-
-
-# Note: One day, when we have migrated all main module plug-ins to PEP 420 namespaces, we
-# have no cmk.gui.nonfree.pro namespaces anymore and can remove them.
-def _plugin_package_names(main_module_name: str) -> Iterator[str]:
-    yield f"cmk.gui.plugins.{main_module_name}"
-
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
-        yield f"cmk.gui.nonfree.pro.plugins.{main_module_name}"
-
-    if (
-        cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATE
-        or cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD
-        or cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT
-    ):
-        yield f"cmk.gui.nonfree.ultimate.plugins.{main_module_name}"
 
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:
@@ -184,16 +168,11 @@ def _call_load_plugins_hooks(main_modules: list[ModuleType]) -> None:
 
 def _cmk_gui_top_level_modules() -> list[ModuleType]:
     return [
-        module  #
+        module
         for name, module in sys.modules.items()
         # None entries are only an import optimization of cPython and can be removed:
         # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
         if module is not None
         # top level modules only, please...
-        if (
-            name.startswith("cmk.gui.")
-            and len(name.split(".")) == 3
-            or name.startswith("cmk.gui.nonfree.pro.")
-            and len(name.split(".")) == 5
-        )
+        if name.startswith("cmk.gui.") and len(name.split(".")) == 3
     ]

@@ -88,6 +88,20 @@ def load_api_v1_rule_specs(
             not_yet_moved_plugins.append(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
 
     try:
+        import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+
+        cee_bakery_ruleset_path = Path(
+            list(cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__)[0]
+        )
+        for plugin in cee_bakery_ruleset_path.glob("*.py"):
+            if plugin.stem != "__init__":
+                not_yet_moved_plugins.append(
+                    f"cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.{plugin.stem}"
+                )
+    except ModuleNotFoundError:
+        pass
+
+    try:
         import cmk.gui.nonfree.ultimate.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
 
         cce_check_parameters_path = Path(

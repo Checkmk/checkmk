@@ -39,23 +39,31 @@ def test_rrd_files_creation(site: Site) -> None:
     site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
     site.wait_until_service_has_been_checked("test_host", "PING")
 
-    # Check that the rrd file for PING is created
-    file_path = "var/check_mk/rrd/test_host/PING.rrd"
-    wait_until(
-        lambda: site.file_exists(file_path),
-        timeout=10,
-        condition_name="RRD file for PING service creation",
-    )
+    try:
+        # Check that the rrd file for PING is created
+        file_path = "var/check_mk/rrd/test_host/PING.rrd"
+        wait_until(
+            lambda: site.file_exists(file_path),
+            timeout=10,
+            condition_name="RRD file for PING service creation",
+        )
 
-    # Get the information of the RRD file
-    rrd_info = site.check_output(["rrdtool", "info", str(site.path(file_path))])
+        # Get the information of the RRD file
+        rrd_info = site.check_output(["rrdtool", "info", str(site.path(file_path))])
 
-    # Check that the last_update timestamp is greater than or equal to the timestamp before host creation
-    last_update_search_result = re.search(r"last_update = (?P<last_update_timestamp>\d+)", rrd_info)
-    assert last_update_search_result is not None, "last_update not found in RRD info"
+        # Check that the last_update timestamp is greater than or equal to the timestamp before host creation
+        last_update_search_result = re.search(
+            r"last_update = (?P<last_update_timestamp>\d+)", rrd_info
+        )
+        assert last_update_search_result is not None, "last_update not found in RRD info"
 
-    last_update_timestamp = int(last_update_search_result.group("last_update_timestamp"))
-    assert last_update_timestamp >= timestamp_before, (
-        f"last_update of rrd file info ({last_update_timestamp}) is previous"
-        f" than timestamp before host creation ({timestamp_before})"
-    )
+        last_update_timestamp = int(last_update_search_result.group("last_update_timestamp"))
+        assert last_update_timestamp >= timestamp_before, (
+            f"last_update of rrd file info ({last_update_timestamp}) is previous"
+            f" than timestamp before host creation ({timestamp_before})"
+        )
+    finally:
+        site.openapi.hosts.delete("test_host")
+        site.activate_changes_and_wait_for_core_reload()
+        # needed to make the test idempotent
+        site.delete_dir("var/check_mk/rrd/test_host")

@@ -58,7 +58,7 @@ HACK_AGENTS = {
     "jolokia": True,
     "kube": False,
     "metric_backend_custom_query": False,  # needs no secret
-    "mobileiron": True,
+    "mobileiron": False,
     "mqtt": True,
     "netapp_ontap": False,
     "otel": False,  # needs no secret

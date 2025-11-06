@@ -49,10 +49,10 @@ def generate_mobileiron_command(
 ) -> Iterator[SpecialAgentCommand]:
     partitions = [replace_macros(p, host_config.macros) for p in params.partition]
     args: list[str | Secret] = [
-        "-u",
+        "--username",
         params.username,
-        "-p",
-        params.password.unsafe(),
+        "--password-id",
+        params.password,
         "--partition",
         ",".join(partitions),
         "--hostname",

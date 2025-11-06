@@ -31,10 +31,10 @@ HOST_CONFIG = HostConfig(
                 "other_regex": [".*"],
             },
             [
-                "-u",
+                "--username",
                 "mobileironuser",
-                "-p",
-                Secret(23).unsafe(),
+                "--password-id",
+                Secret(23),
                 "--partition",
                 "10",
                 "--hostname",

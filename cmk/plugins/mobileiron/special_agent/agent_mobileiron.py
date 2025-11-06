@@ -28,6 +28,7 @@ from urllib.parse import urljoin
 
 import requests
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
@@ -36,6 +37,8 @@ from cmk.special_agents.v0_unstable.agent_common import (
 )
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
+
+PASSWORD_OPTION = "password"
 
 LOGGER = logging.getLogger("agent_mobileiron")
 
@@ -114,7 +117,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         ),
     )
     parser.add_argument("--username", "-u", type=str, help="username for connection")
-    parser.add_argument("--password", "-p", type=str, help="password for connection")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", help="password for connection", required=True
+    )
     parser.add_argument("--key-fields", action="append", help="field for host name generation")
     parser.add_argument(
         "--partition",
@@ -300,7 +305,7 @@ def agent_mobileiron_main(args: argparse.Namespace) -> int:
             api_host=args.hostname,
             key_fields=args.key_fields,
             regex_patterns=Regexes(args.android_regex, args.ios_regex, args.other_regex),
-            auth=(args.username, args.password),
+            auth=(args.username, resolve_secret_option(args, PASSWORD_OPTION).reveal()),
             proxy=args.proxy,
         ) as mobileiron_api:
             all_devices = mobileiron_api.get_all_devices(partitions=args.partition)

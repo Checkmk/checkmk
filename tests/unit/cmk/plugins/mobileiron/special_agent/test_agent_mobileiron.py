@@ -13,6 +13,7 @@ import pytest
 import requests
 import responses
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.mobileiron.special_agent.agent_mobileiron import agent_mobileiron_main
 
 URL1 = "https://example.com/api/v1/device?rows=200&start=0&dmPartitionId=103881"
@@ -51,7 +52,7 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
         ios_regex=["foo"],
         other_regex=["foo"],
         username="",
-        password="",
+        password=Secret(""),
         partition=[103881, 103882],
         proxy=None,
         debug=False,
@@ -99,7 +100,7 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
         ios_regex=["foo"],
         other_regex=["foo"],
         username="",
-        password="",
+        password=Secret(""),
         partition=[103881, 103882],
         proxy=None,
         debug=False,
@@ -140,7 +141,7 @@ def test_agent_handles_exceptions(
         ios_regex=["foo"],
         other_regex=["foo"],
         username="",
-        password="",
+        password=Secret(""),
         partition=[103881],
         proxy=None,
         debug=False,

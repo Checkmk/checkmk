@@ -18,9 +18,11 @@ from collections.abc import Sequence
 
 import requests
 
-from cmk.utils.password_store import replace_passwords
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
 LOGGER = logging.getLogger(__name__)
+
+PASSWORD_OPTION = "password"
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -35,7 +37,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument("-v", "--verbose", action="count", help="Be more verbose")
     parser.add_argument("-u", "--username", required=True, help="Zerto user name")
-    parser.add_argument("-p", "--password", required=True, help="Zerto user password")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="Zerto user password"
+    )
     parser.add_argument("hostaddress", help="Zerto host name")
 
     args = parser.parse_args(argv)
@@ -112,11 +116,12 @@ class AuthError(Exception):
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    replace_passwords()
     args = parse_arguments(argv or sys.argv[1:])
     sys.stdout.write("<<<zerto_agent:sep(0)>>>\n")
     try:
-        connection = ZertoConnection(args.hostaddress, args.username, args.password)
+        connection = ZertoConnection(
+            args.hostaddress, args.username, resolve_secret_option(args, PASSWORD_OPTION).reveal()
+        )
         session_id = connection.get_session_id(args.authentication)
     except Exception as e:
         sys.stdout.write(f"Error: {e}\n")

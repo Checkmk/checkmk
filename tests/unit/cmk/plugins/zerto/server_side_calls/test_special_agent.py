@@ -15,14 +15,14 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
     ["params", "expected_args"],
     [
         pytest.param(
-            {"username": "usr", "password": Secret(id=1, pass_safely=True)},
+            {"username": "usr", "password": Secret(1)},
             [
                 "--authentication",
                 "windows",
-                "-u",
+                "--username",
                 "usr",
-                "-p",
-                Secret(id=1, pass_safely=False),
+                "--password-id",
+                Secret(1),
                 "address",
             ],
         ),

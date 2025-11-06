@@ -82,7 +82,7 @@ HACK_AGENTS = {
     "ucs_bladecenter": True,
     "vnx_quotas": True,
     "vsphere": False,
-    "zerto": True,
+    "zerto": False,
 }
 
 

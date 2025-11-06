@@ -23,10 +23,10 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
         command_arguments=[
             "--authentication",
             params.authentication,
-            "-u",
+            "--username",
             params.username,
-            "-p",
-            params.password.unsafe(),
+            "--password-id",
+            params.password,
             host_config.primary_ip_config.address,
         ]
     )

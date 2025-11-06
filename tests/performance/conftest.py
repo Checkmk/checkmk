@@ -93,9 +93,7 @@ def _site(description: str, distributed: bool) -> Iterator[Site]:
             )
         )
     with (
-        track_resources(
-            f"setup_{site_name}_site" if distributed else "setup_", stop_event=setup_stop_event
-        ),
+        track_resources(f"setup_{site_name}_site", stop_event=setup_stop_event),
         site_factory.get_test_site_ctx(
             site_name,
             description=description,

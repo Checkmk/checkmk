@@ -1812,10 +1812,10 @@ def pipe_pager() -> str:
 
 
 def call_scripts(
-    site: SiteContext, phase: str, open_pty: bool, add_env: Mapping[str, str] | None = None
+    site_name: str, phase: str, open_pty: bool, add_env: Mapping[str, str] | None = None
 ) -> None:
     """Calls hook scripts in defined directories."""
-    site_home = SitePaths.from_site_name(site.name).home
+    site_home = SitePaths.from_site_name(site_name).home
     path = Path(site_home, "lib", "omd", "scripts", phase)
     if not path.exists():
         return
@@ -1823,7 +1823,7 @@ def call_scripts(
     env = {
         **os.environ,
         "OMD_ROOT": site_home,
-        "OMD_SITE": site.name,
+        "OMD_SITE": site_name,
         **(add_env if add_env else {}),
     }
 
@@ -2233,7 +2233,7 @@ def finalize_site_as_user(
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         create_instance_id(site_home=Path(site_home), instance_id=uuid4())
 
-    call_scripts(site, "post-" + command_type.short, open_pty=sys.stdout.isatty())
+    call_scripts(site.name, "post-" + command_type.short, open_pty=sys.stdout.isatty())
     if not _crontab_access():
         sys.stderr.write("Warning: site user cannot access crontab\n")
         return FinalizeOutcome.WARN
@@ -2859,7 +2859,7 @@ def main_update(
             )
 
         call_scripts(
-            site,
+            site.name,
             "post-update",
             open_pty=is_tty,
             add_env=additional_update_env,

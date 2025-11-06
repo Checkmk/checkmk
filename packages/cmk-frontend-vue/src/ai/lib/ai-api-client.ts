@@ -37,9 +37,9 @@ export interface EnumerateActionsResponse {
 }
 
 export interface AiInferenceRequest extends AiBaseRequestResponse {
-  action_id: string
+  action_type: AiServiceAction
   data: unknown
-  history?: [] | undefined
+  history?: unknown[] | undefined
 }
 
 export interface AiInferenceResponse extends AiBaseLlmResponse {
@@ -85,9 +85,13 @@ export class AiApiClient extends Api {
     ).all_possible_action_types
   }
 
-  public async inference(actionId: string, data: unknown, history?: []): Promise<AiInference> {
+  public async inference(
+    action: AiServiceAction,
+    data: unknown,
+    history?: unknown[]
+  ): Promise<AiInference> {
     const options: AiInferenceRequest = {
-      action_id: actionId,
+      action_type: action,
       data,
       history
     }

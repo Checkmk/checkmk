@@ -10,6 +10,7 @@ import { computed, ref } from 'vue'
 import AiUserAction from '@/ai/components/user-action/AiConversationUserAction.vue'
 import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
 import type { IAiConversationElement } from '@/ai/lib/service/ai-template'
+import { AiRole } from '@/ai/lib/utils'
 
 import AiConversationConsent from './AiConversationConsent.vue'
 import AiConversationElement from './AiConversationElement.vue'
@@ -37,7 +38,7 @@ function onDecline() {
     <AiConversationConsent v-if="showConsent" @consent="onConsent" @decline="onDecline" />
     <template v-else>
       <AiConversationElement v-for="(element, index) in elements" :key="index" v-bind="element" />
-      <AiUserAction />
+      <AiUserAction v-if="aiTemplate?.activeRole === AiRole.user" />
     </template>
   </div>
 </template>

@@ -6,6 +6,7 @@
 import type { AiTemplateId } from 'cmk-shared-typing/typescript/ai_button'
 import { type Ref, ref } from 'vue'
 
+import usei18n from '@/lib/i18n'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import { ServiceBase } from '@/lib/service/base'
 import usePersistentRef from '@/lib/usePersistentRef'
@@ -15,6 +16,7 @@ import { type ButtonProps } from '@/components/CmkButton.vue'
 import { AiApiClient, type AiServiceAction } from '@/ai/lib/ai-api-client'
 import { AiRole } from '@/ai/lib/utils'
 
+const { _t } = usei18n()
 export interface AiActionButton extends ButtonProps, AiServiceAction {
   executed?: boolean | undefined
 }
@@ -88,7 +90,7 @@ export type TAiConversationElementContent =
   | TextConversationElementContent
 
 export interface IAiConversationElement {
-  role: AiConversationElementRole
+  role: AiRole
   content:
     | TAiConversationElementContent[]
     | Promise<TAiConversationElementContent[]>
@@ -99,8 +101,6 @@ export interface IAiConversationElement {
   error?: string | undefined
 }
 
-export type AiConversationElementRole = 'user' | 'ai' | 'system'
-
 export type OnAddElementCallback = (element: IAiConversationElement) => void
 export type OnUserActionChangeCallback = (actions: AiActionButton[]) => void
 
@@ -108,6 +108,7 @@ export class AiTemplateService extends ServiceBase {
   public conversationOpen = ref(false)
   public elements: IAiConversationElement[] = []
   public config: IAiConversationConfig<unknown>
+  public activeRole: AiRole = AiRole.user
   protected api: AiApiClient
 
   constructor(
@@ -140,7 +141,12 @@ export class AiTemplateService extends ServiceBase {
     void this.loadAiUserActions()
   }
 
+  public setActiveRole(role: AiRole) {
+    this.activeRole = role
+  }
+
   public addElement(element: IAiConversationElement) {
+    this.setActiveRole(element.role)
     this.elements.push(element)
   }
 
@@ -187,7 +193,7 @@ export class AiTemplateService extends ServiceBase {
   protected execAiAction(action: AiActionButton): IAiConversationElement {
     return {
       role: AiRole.ai,
-      content: this.getAiInferenceElement(action.action_id)
+      content: this.getAiInferenceElement(action)
     }
   }
 
@@ -200,13 +206,22 @@ export class AiTemplateService extends ServiceBase {
   }
 
   protected async getAiInferenceElement(
-    actionId: string
+    action: AiServiceAction
   ): Promise<TAiConversationElementContent[]> {
-    const res = await this.api.inference(actionId, this.config.data)
-
-    return res.explanation_sections.filter(
-      (s) => s.type === 'markdown'
-    ) as MarkdownConversationElementContent[]
+    try {
+      const res = await this.api.inference(action, this.data)
+      return res.explanation_sections.filter(
+        (s) => s.type === 'markdown'
+      ) as MarkdownConversationElementContent[]
+    } catch {
+      return [
+        {
+          type: 'alert',
+          variant: 'error',
+          text: _t('Something went wrong. Please try again later.')
+        }
+      ]
+    }
   }
 
   protected getInitialElements(): IAiConversationElement[] {

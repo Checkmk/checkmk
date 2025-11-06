@@ -42,7 +42,9 @@ onMounted(async () => {
 
 <template>
   <div class="ai-conversation-user-action__container">
-    <span>{{ _t('What would you like the AI to do?') }}</span>
+    <span v-if="userActions && userActions.filter((a) => !a.executed).length > 0">{{
+      _t('What would you like the AI to do?')
+    }}</span>
     <template v-if="userActions">
       <AiConversationUserActionButton
         v-for="action in userActions.filter((a) => !a.executed)"
@@ -50,6 +52,9 @@ onMounted(async () => {
         v-bind="action"
         @click="aiTemplate?.execUserActionButton(action)"
       />
+    </template>
+    <template v-else>
+      <CmkSkeleton v-for="i in 3" :key="i" class="ai-conversation-user-action__skeleton" />
     </template>
     <template v-if="userActions && userActions.length === 0">
       <AlertContent type="alert" variant="warning" :text="_t('No actions found')" />
@@ -62,9 +67,6 @@ onMounted(async () => {
           :text="actionsError.message"
           :title="actionsError.name"
         />
-      </template>
-      <template v-else>
-        <CmkSkeleton v-for="i in 3" :key="i" class="ai-conversation-user-action__skeleton" />
       </template>
     </template>
     <br />
@@ -85,7 +87,7 @@ onMounted(async () => {
   }
 
   .ai-conversation-user-action__skeleton {
-    width: 150px;
+    width: 180px;
     height: 30px;
     border-radius: var(--border-radius);
   }

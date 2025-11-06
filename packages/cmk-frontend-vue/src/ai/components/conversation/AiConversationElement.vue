@@ -12,6 +12,7 @@ import usei18n from '@/lib/i18n'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
 import type {
   AlertConversationElementContent,
   CodeBlockConversationElementContent,
@@ -23,6 +24,7 @@ import type {
   TAiConversationElementContent,
   TextConversationElementContent
 } from '@/ai/lib/service/ai-template'
+import { AiRole } from '@/ai/lib/utils'
 
 import AlertContent from './content/AlertContent.vue'
 import CodeContent from './content/CodeContent.vue'
@@ -34,6 +36,8 @@ import TextContent from './content/TextContent.vue'
 
 const { _t } = usei18n()
 const props = defineProps<IAiConversationElement>()
+
+const aiTemplate = getInjectedAiTemplate()
 
 const contentData = ref<TAiConversationElementContent[] | null>(
   typeof props.content === 'function' || props.content instanceof Promise ? null : props.content
@@ -60,6 +64,8 @@ function onContentDone() {
     setTimeout(() => {
       if (!addNextContent()) {
         done.value = true
+
+        aiTemplate.value?.setActiveRole(AiRole.user)
       }
     }, 50)
   }

@@ -171,6 +171,7 @@ pkg_files(
         ":omdlib/main.py",
         ":omdlib/options.py",
         ":omdlib/package_manager.py",
+        ":omdlib/restore.py",
         ":omdlib/site_name.py",
         ":omdlib/site_paths.py",
         ":omdlib/sites.py",

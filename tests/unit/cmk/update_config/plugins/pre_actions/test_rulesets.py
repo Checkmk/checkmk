@@ -29,7 +29,7 @@ from cmk.update_config.plugins.pre_actions.utils import ConflictMode
         pytest.param(["ok_host", "ok.host", "okhost"], None, id="Valid conditions"),
         pytest.param(
             ["ok_host", "ok.host", "notohost*"],
-            "invalid_host_condition",
+            "invalid host condition",
             id="Invalid host condition",
         ),
         pytest.param(
@@ -37,7 +37,7 @@ from cmk.update_config.plugins.pre_actions.utils import ConflictMode
         ),
         pytest.param(
             [{"$regex": "someregex.*"}, "ok.host", "notohost*"],
-            "invalid_host_condition",
+            "invalid host condition",
             id="Invalid host conditions with valid regex",
         ),
         pytest.param(
@@ -45,7 +45,7 @@ from cmk.update_config.plugins.pre_actions.utils import ConflictMode
         ),
         pytest.param(
             {"$nor": ["ok_host", "ok.host", "notohost*"]},
-            "invalid_host_condition",
+            "invalid host condition",
             id="Invalid negated host conditions",
         ),
         pytest.param(
@@ -55,7 +55,7 @@ from cmk.update_config.plugins.pre_actions.utils import ConflictMode
         ),
         pytest.param(
             {"$nor": [{"$regex": "someregex.*"}, "ok.host", "notohost*"]},
-            "invalid_host_condition",
+            "invalid host condition",
             id="Invalid negated host conditions with valid regex",
         ),
     ],
@@ -97,14 +97,15 @@ def test_pre_rulesets(
         return_value=AllRulesets({ruleset_name: ruleset}),
     )
     if expected:
-        with pytest.raises(MKUserError):
-            assert _execute_pre_update_rulesets(mocker) == expected
+        with pytest.raises(MKUserError) as e:
+            _execute_pre_update_rulesets(mocker)
+        assert expected == e.value.args[1]
     else:
-        assert _execute_pre_update_rulesets(mocker) == expected
+        _execute_pre_update_rulesets(mocker)
 
 
-def _execute_pre_update_rulesets(mocker: MockerFixture) -> None | str:
-    return PreUpdateRulesets(
+def _execute_pre_update_rulesets(mocker: MockerFixture) -> None:
+    PreUpdateRulesets(
         name="rulesets",
         title="Rulesets",
         sort_index=10,

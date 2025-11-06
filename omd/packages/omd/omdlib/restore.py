@@ -58,7 +58,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, ver
     if not site.is_stopped(verbose) and "kill" not in options:
         sys.exit("Cannot restore site while it is running.")
     site_home = SitePaths.from_site_name(site.name).home
-    verify_directory_write_access(site_home)
+    _verify_directory_write_access(site_home)
 
     sys.stdout.write("Stopping site processes...\n")
     call_init_scripts(site_home, "stop")
@@ -79,7 +79,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, ver
 
 # Scans all site directories and ensures the site user is able to write all directories.
 # This is needed to prevent eventual permission issues during the rmtree process.
-def verify_directory_write_access(site_home: str) -> None:
+def _verify_directory_write_access(site_home: str) -> None:
     wrong = []
     for dirpath, dirnames, _filenames in os.walk(site_home):
         for dirname in dirnames:

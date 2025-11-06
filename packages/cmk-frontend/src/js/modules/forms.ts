@@ -415,7 +415,7 @@ export function confirm_dialog(
   if (!!post_confirm_waiting_text) {
     const current_confirm_handler = confirm_handler ?? (() => {})
     confirm_handler = () => {
-      waiting_flash_message(post_confirm_waiting_text, 0)
+      waiting_flash_message('page_menu_popups', post_confirm_waiting_text)
       current_confirm_handler()
     }
   }
@@ -436,12 +436,16 @@ export function confirm_dialog(
   })
 }
 
-export function waiting_flash_message(message: string, delay_ms: number = 0) {
-  setTimeout(() => {
-    document
-      .getElementById('page_menu_popups')
-      ?.insertAdjacentHTML('beforeend', '<div class="waiting flashed">' + message + '</div>')
-  }, delay_ms)
+export function waiting_flash_message(parent_element_id: string, message: string): HTMLDivElement {
+  const parentElement = document.getElementById(parent_element_id)
+  if (!parentElement || typeof parentElement.appendChild !== 'function') {
+    throw new Error('waiting_flash_message: Invalid parent id provided.')
+  }
+  const messageDiv = document.createElement('div')
+  messageDiv.classList.add('waiting', 'flashed')
+  messageDiv.textContent = message
+  parentElement.appendChild(messageDiv)
+  return messageDiv
 }
 
 // Makes a form submittable after explicit confirmation

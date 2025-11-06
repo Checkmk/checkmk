@@ -29,9 +29,9 @@
     "explain_this_issue": {
       "type": "object",
       "properties": {
-        "host": { "type": "string" },
-        "service": { "type": "string" },
-        "state": { "type": "number" }
+        "host_name": { "type": "string" },
+        "service_name": { "type": "string" },
+        "status": { "enum": ["Ciritcal", "Warning", "Ok"] }
       }
     }
   }

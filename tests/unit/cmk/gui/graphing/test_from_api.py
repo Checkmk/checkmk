@@ -345,22 +345,34 @@ _CCE_ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Data usage": {"azure_cosmosdb_data_usage", "data_usage"},
     "Failed requests (404)": {
         "azure_cosmosdb_database_failed_requests",
+        "azure_cosmosdb_database_container_failed_requests",
         "azure_cosmosdb_failed_requests",
     },
     "Throttled requests ratio": {
         "azure_cosmosdb_throttled_ratio",
         "azure_cosmosdb_database_throttled_ratio",
+        "azure_cosmosdb_database_container_throttled_ratio",
     },
     "Throttled requests (429)": {
         "azure_cosmosdb_throttled_requests",
         "azure_cosmosdb_database_throttled_requests",
+        "azure_cosmosdb_database_container_throttled_requests",
     },
-    "Total requests": {"azure_cosmosdb_totalrequests", "azure_cosmosdb_database_total_requests"},
+    "Total requests": {
+        "azure_cosmosdb_totalrequests",
+        "azure_cosmosdb_database_total_requests",
+        "azure_cosmosdb_database_container_total_requests",
+    },
     "Normalized RU consumption": {
         "azure_cosmosdb_normalized_ru_consumption",
         "azure_cosmosdb_database_normalized_ru_consumption",
+        "azure_cosmosdb_database_container_normalized_ru_consumption",
     },
-    "Total RUs": {"azure_cosmosdb_total_rus", "azure_cosmosdb_database_total_rus"},
+    "Total RUs": {
+        "azure_cosmosdb_total_rus",
+        "azure_cosmosdb_database_total_rus",
+        "azure_cosmosdb_database_container_total_rus",
+    },
 }
 
 
@@ -521,6 +533,14 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
 
 _CCE_ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Throughput": {"azure_redis_throughput", "azure_natgateways_throughput_in_out"},
+    "Requests (Azure, CosmosDB)": {
+        "azure_cosmosdb_database_container_requests",
+        "azure_cosmosdb_database_requests",
+    },
+    "Throttled Requests Ratio": {
+        "azure_cosmosdb_database_container_throttled_ratio",
+        "azure_cosmosdb_database_throttled_ratio",
+    },
 }
 
 

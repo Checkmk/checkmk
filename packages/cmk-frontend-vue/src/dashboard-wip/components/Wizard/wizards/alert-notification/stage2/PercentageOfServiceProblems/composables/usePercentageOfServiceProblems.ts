@@ -38,7 +38,6 @@ export interface UsePercentageOfServiceProblems
     UseGraphRenderOptions {
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
-  widgetProps: Ref<WidgetProps>
 }
 
 export const usePercentageOfServiceProblems = async (
@@ -57,7 +56,10 @@ export const usePercentageOfServiceProblems = async (
     titleUrlValidationErrors,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('', currentSpec?.general_settings)
+  } = useWidgetVisualizationProps(
+    _t('Percentage of total service problems'),
+    currentSpec?.general_settings
+  )
 
   const currentContent = currentSpec?.content as ProblemGraphContent
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))

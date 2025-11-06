@@ -39,7 +39,6 @@ export interface UseNotificationTimeline extends UseWidgetHandler, UseWidgetVisu
   visualizationType: Ref<VisualizationTimelineType>
   logtarget: Ref<'both' | 'host' | 'service'>
   logtargetOptions: Suggestions
-  widgetProps: Ref<WidgetProps>
   isUpdating: Ref<boolean>
 }
 
@@ -88,9 +87,18 @@ export const useNotificationTimeline = async (
   const logtargetOptions: Suggestions = {
     type: 'fixed',
     suggestions: [
-      { name: 'both', title: _t('Show notifications for hosts and services') as TranslatedString },
-      { name: 'host', title: _t('Show notifications for hosts only') as TranslatedString },
-      { name: 'service', title: _t('Show notifications for services only') as TranslatedString }
+      {
+        name: 'both',
+        title: _t('Show notifications for hosts and services') as TranslatedString
+      },
+      {
+        name: 'host',
+        title: _t('Show notifications for hosts only') as TranslatedString
+      },
+      {
+        name: 'service',
+        title: _t('Show notifications for services only') as TranslatedString
+      }
     ]
   }
 
@@ -123,6 +131,7 @@ export const useNotificationTimeline = async (
   }
 
   const _updateWidgetProps = async () => {
+    isUpdating.value = true
     const content = _generateContent()
     widgetProps.value = {
       general_settings: widgetGeneralSettings.value,
@@ -133,17 +142,14 @@ export const useNotificationTimeline = async (
         dashboardConstants
       )
     }
+    isUpdating.value = false
   }
 
   watch(
     [timeRangeType, timeRange, timeResolution, visualizationType, logtarget, widgetGeneralSettings],
-    () => {
-      isUpdating.value = true
-      useDebounceFn(async () => {
-        await _updateWidgetProps()
-        isUpdating.value = false
-      }, 300)()
-    },
+    useDebounceFn(async () => {
+      void _updateWidgetProps()
+    }, 300),
     { deep: true }
   )
 

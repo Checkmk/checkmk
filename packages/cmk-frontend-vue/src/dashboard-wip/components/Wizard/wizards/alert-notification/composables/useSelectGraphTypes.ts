@@ -53,3 +53,21 @@ export const getAvailableWidgets = (): WidgetItemList => {
     }
   ]
 }
+
+export const getGraphFromWidgetType = (widgetType: string): Graph => {
+  switch (widgetType) {
+    case 'alert_timeline':
+      return Graph.ALERT_TIMELINE
+
+    case 'notification_timeline':
+      return Graph.NOTIFICATION_TIMELINE
+
+    case 'problem_graph':
+      return Graph.PERCENTAGE_OF_SERVICE_PROBLEMS
+
+    case 'alert_overview':
+    default: {
+      return Graph.ALERT_OVERVIEW
+    }
+  }
+}

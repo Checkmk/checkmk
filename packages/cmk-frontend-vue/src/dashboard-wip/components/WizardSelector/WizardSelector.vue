@@ -84,6 +84,7 @@ const handleAddEditWidget = (
         :dashboard-name="dashboardName"
         :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
       />

@@ -33,8 +33,6 @@ export interface UseAlertOverview extends UseWidgetHandler, UseWidgetVisualizati
 
   objectsEnabled: Ref<boolean>
   objectsLimit: Ref<number>
-
-  widgetProps: Ref<WidgetProps>
 }
 
 type TimeRangeType = 'current' | 'window'
@@ -94,7 +92,7 @@ export const useAlertOverview = async (
   }
 
   watch(
-    [timeRangeType, timeRange, widgetGeneralSettings],
+    [timeRangeType, timeRange, widgetGeneralSettings, objectsEnabled, objectsLimit],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),

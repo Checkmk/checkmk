@@ -33,7 +33,6 @@ export interface UseAlertTimeline extends UseWidgetHandler, UseWidgetVisualizati
   timeRange: Ref<GraphTimerange>
   timeResolution: Ref<'hour' | 'day'>
   visualizationType: Ref<VisualizationTimelineType>
-  widgetProps: Ref<WidgetProps>
   isUpdating: Ref<boolean>
 }
 
@@ -91,6 +90,7 @@ export const useAlertTimeline = async (
   }
 
   const _updateWidgetProps = async () => {
+    isUpdating.value = true
     const content = _generateContent()
     widgetProps.value = {
       general_settings: widgetGeneralSettings.value,
@@ -101,17 +101,14 @@ export const useAlertTimeline = async (
         dashboardConstants
       )
     }
+    isUpdating.value = false
   }
 
   watch(
     [timeRangeType, timeRange, timeResolution, visualizationType, widgetGeneralSettings],
-    () => {
-      isUpdating.value = true
-      useDebounceFn(async () => {
-        await _updateWidgetProps()
-        isUpdating.value = false
-      }, 300)()
-    },
+    useDebounceFn(async () => {
+      await _updateWidgetProps()
+    }, 300),
     { deep: true }
   )
 

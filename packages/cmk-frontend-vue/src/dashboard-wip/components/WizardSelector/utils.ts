@@ -51,6 +51,17 @@ export function widgetTypeToSelectorMatcher(
       return 'other'
     }
 
+    case 'notification_timeline':
+    case 'alert_overview':
+    case 'alert_timeline':
+    case 'problem_graph': {
+      return 'alerts_notifications'
+    }
+
+    case 'inventory': {
+      return 'hw_sw_inventory'
+    }
+
     default: {
       throw new Error(
         `No selector defined widget content type: ${widgetContentType}. Please add it.`

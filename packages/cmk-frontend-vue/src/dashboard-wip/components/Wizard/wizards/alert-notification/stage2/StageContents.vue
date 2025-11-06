@@ -24,7 +24,12 @@ import type {
 } from '@/dashboard-wip/types/widget'
 
 import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
-import { Graph, getAvailableGraphs, getAvailableWidgets } from '../composables/useSelectGraphTypes'
+import {
+  Graph,
+  getAvailableGraphs,
+  getAvailableWidgets,
+  getGraphFromWidgetType
+} from '../composables/useSelectGraphTypes'
 import AlertOverview from './AlertOverview/AlertOverview.vue'
 import {
   type UseAlertOverview,
@@ -93,7 +98,7 @@ const gotoPrevStage = () => {
 const enabledWidgets = getAvailableGraphs()
 const availableWidgets = getAvailableWidgets()
 
-const selectedWidget = ref<Graph>(Graph.ALERT_OVERVIEW)
+const selectedWidget = ref<Graph>(getGraphFromWidgetType(props.editWidgetSpec?.content.type ?? ''))
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   [Graph.ALERT_OVERVIEW]: await useAlertOverview(
@@ -134,7 +139,7 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
       variant="secondary"
     />
     <ActionButton
-      :label="!!editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
+      :label="editWidgetSpec ? _t('Save widget') : _t('Add & place widget')"
       :action="addWidget"
       variant="primary"
     />

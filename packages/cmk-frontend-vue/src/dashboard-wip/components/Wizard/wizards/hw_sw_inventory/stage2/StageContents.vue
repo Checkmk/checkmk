@@ -82,7 +82,11 @@ const inventoryHandler = await useInventory(
       :action="gotoPrevStage"
       variant="secondary"
     />
-    <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="primary" />
+    <ActionButton
+      :label="editWidget ? _t('Save widget') : _t('Add & place widget')"
+      :action="gotoNextStage"
+      variant="primary"
+    />
   </ActionBar>
 
   <ContentSpacer />

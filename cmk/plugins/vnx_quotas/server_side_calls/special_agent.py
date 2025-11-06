@@ -23,10 +23,10 @@ def command_function(
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = [
-        "-u",
+        "--username",
         params.user,
-        "-p",
-        params.password.unsafe(),
+        "--password-id",
+        params.password,
         "--nas-db",
         params.nas_db,
     ]

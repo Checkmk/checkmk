@@ -11,8 +11,10 @@ import shlex
 import sys
 from typing import Any
 
-import cmk.utils.password_store
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.utils.ssh_client import get_ssh_client
+
+PASSWORD_OPTION = "password"
 
 
 def parse_arguments(argv):
@@ -21,7 +23,9 @@ def parse_arguments(argv):
     )
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument("-u", "--username", required=True, help="The username.")
-    parser.add_argument("-p", "--password", required=True, help="The password.")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="The password."
+    )
     parser.add_argument("--nas-db", required=True, help="The NAS-DB name.")
     parser.add_argument("hostname")
     return parser.parse_args(argv)
@@ -30,7 +34,12 @@ def parse_arguments(argv):
 def get_client_connection(args):
     try:
         client = get_ssh_client()
-        client.connect(args.hostname, username=args.username, password=args.password, timeout=5)
+        client.connect(
+            args.hostname,
+            username=args.username,
+            password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
+            timeout=5,
+        )
         return client
 
     except Exception as e:
@@ -39,7 +48,6 @@ def get_client_connection(args):
 
 def main(args=None):
     if args is None:
-        cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
 
     args = parse_arguments(args)

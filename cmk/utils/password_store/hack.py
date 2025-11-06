@@ -80,7 +80,7 @@ HACK_AGENTS = {
     "three_par": True,
     "tinkerforge": False,  # needs no secret
     "ucs_bladecenter": True,
-    "vnx_quotas": True,
+    "vnx_quotas": False,
     "vsphere": False,
     "zerto": False,
 }

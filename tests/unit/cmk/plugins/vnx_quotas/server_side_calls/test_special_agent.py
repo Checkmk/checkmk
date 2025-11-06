@@ -22,40 +22,21 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "user": "username",
-                "password": Secret(23),
+                "password": Secret(1),
                 "nas_db": "",
             },
             SpecialAgentCommand(
                 command_arguments=[
-                    "-u",
+                    "--username",
                     "username",
-                    "-p",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(1),
                     "--nas-db",
                     "",
                     "1.2.3.4",
                 ]
             ),
-            id="with explicit password",
-        ),
-        pytest.param(
-            {
-                "user": "username",
-                "password": Secret(id=1, pass_safely=True),
-                "nas_db": "",
-            },
-            SpecialAgentCommand(
-                command_arguments=[
-                    "-u",
-                    "username",
-                    "-p",
-                    Secret(id=1, format="%s", pass_safely=False),
-                    "--nas-db",
-                    "",
-                    "1.2.3.4",
-                ]
-            ),
-            id="with password from store",
+            id="with password",
         ),
     ],
 )

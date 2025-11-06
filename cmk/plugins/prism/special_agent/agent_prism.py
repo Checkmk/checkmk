@@ -7,6 +7,7 @@
 
 import argparse
 import base64
+import json
 import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
@@ -20,10 +21,6 @@ from cmk.server_side_programs.v1_unstable import (
     HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,
-)
-from cmk.special_agents.v0_unstable.agent_common import (
-    ConditionalPiggybackSection,
-    SectionWriter,
 )
 
 __version__ = "2.5.0b1"
@@ -200,22 +197,24 @@ def output_vms(vms: dict[str, Any]) -> None:
     output_entities(vms, "vms")
 
     for element in vms.get("entities", []):
-        with ConditionalPiggybackSection(element.get("vmName")):
-            output_entities(element, "vm")
+        sys.stdout.write(f"<<<<{element.get('vmName') or ''}>>>>\n")
+        output_entities(element, "vm")
+        sys.stdout.write("<<<<>>>>\n")
 
 
 def output_hosts(hosts: dict[str, Any], hosts_networks: dict[str, Any]) -> None:
     output_entities(hosts, "hosts")
     for element in hosts.get("entities", []):
-        with ConditionalPiggybackSection(element["name"]):
-            output_entities(element, "host")
-            if networks := hosts_networks.get(element["uuid"]):
-                output_entities(networks, "host_networks")
+        sys.stdout.write(f"<<<<{element['name'] or ''}>>>>\n")
+        output_entities(element, "host")
+        if networks := hosts_networks.get(element["uuid"]):
+            output_entities(networks, "host_networks")
+        sys.stdout.write("<<<<>>>>\n")
 
 
 def output_entities(entities: dict[str, Any], target_name: str) -> None:
-    with SectionWriter(f"prism_{target_name}") as w:
-        w.append_json(entities)
+    sys.stdout.write(f"<<<prism_{target_name}:sep(0)>>>\n")
+    sys.stdout.write(f"{json.dumps(entities)}\n")
 
 
 def agent_prism_main(args: argparse.Namespace) -> int:

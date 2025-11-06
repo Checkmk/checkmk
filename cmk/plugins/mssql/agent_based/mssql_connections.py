@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     Service,
     StringTable,
 )
@@ -28,7 +29,7 @@ MSSQLConnections = NewType("MSSQLConnections", Mapping[str, int])
 
 
 class CheckParams(TypedDict):
-    levels: tuple[int | float, int | float] | None
+    levels: LevelsT[int]
 
 
 def parse_mssql_connections(string_table: StringTable) -> MSSQLConnections:
@@ -56,7 +57,7 @@ def check_mssql_connections(
     yield from check_levels(
         value=section[item],
         metric_name="connections",
-        levels_upper=("fixed", params["levels"]) if params["levels"] else None,
+        levels_upper=params["levels"],
         render_func=lambda x: str(int(x)),
         label="Connections",
     )
@@ -75,6 +76,6 @@ check_plugin_mssql_connections = CheckPlugin(
     check_function=check_mssql_connections,
     check_ruleset_name="mssql_connections",
     check_default_parameters=CheckParams(
-        levels=None,
+        levels=("no_levels", None),
     ),
 )

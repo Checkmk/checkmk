@@ -3,40 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Integer,
+    LevelDirection,
+    LevelsType,
+    migrate_to_integer_simple_levels,
+    SimpleLevels,
 )
-from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer, TextInput
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _parameter_valuespec_mssql_connections():
+def _parameter_rulespec_mssql_connections() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "levels",
-                SimpleLevels(
-                    title=_("Upper levels for the number of active database connections"),
-                    spec=Integer,
-                    default_value=(20, 50),
+        elements={
+            "levels": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Upper levels for the number of active database connections"),
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_levels_type=DefaultValue(LevelsType.NONE),
+                    prefill_fixed_levels=DefaultValue((20, 50)),
+                    migrate=migrate_to_integer_simple_levels,
                 ),
-            )
-        ],
+                required=False,
+            ),
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="mssql_connections",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Database identifier"), allow_empty=True),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_mssql_connections,
-        title=lambda: _("MSSQL Connections"),
-    )
+rule_spec_mssql_connections = CheckParameters(
+    name="mssql_connections",
+    topic=Topic.APPLICATIONS,
+    condition=HostAndItemCondition(item_title=Title("Database identifier")),
+    parameter_form=_parameter_rulespec_mssql_connections,
+    title=Title("MSSQL Connections"),
 )

@@ -65,13 +65,13 @@ def test_inventory_mssql_connections() -> None:
     [
         pytest.param(
             "FOO DBa",
-            CheckParams(levels=None),
+            CheckParams(levels=("no_levels", None)),
             STRING_TABLE,
             [Result(state=State.OK, summary="Connections: 25"), Metric("connections", 25.0)],
         ),
         pytest.param(
             "FOO DBa",
-            CheckParams(levels=(20, 30)),
+            CheckParams(levels=("fixed", (20, 30))),
             STRING_TABLE,
             [
                 Result(state=State.WARN, summary="Connections: 25 (warn/crit at 20/30)"),
@@ -80,14 +80,14 @@ def test_inventory_mssql_connections() -> None:
         ),
         pytest.param(
             "FOO DBa",
-            CheckParams(levels=(10, 20)),
+            CheckParams(levels=("fixed", (10, 20))),
             STRING_TABLE,
             [
                 Result(state=State.CRIT, summary="Connections: 25 (warn/crit at 10/20)"),
                 Metric("connections", 25.0, levels=(10.0, 20.0)),
             ],
         ),
-        pytest.param("FOO DBc", {"levels": None}, STRING_TABLE, []),
+        pytest.param("FOO DBc", {"levels": ("no_levels", None)}, STRING_TABLE, []),
     ],
 )
 def test_check_mssql_connections(

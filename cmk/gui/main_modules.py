@@ -16,11 +16,6 @@ from types import ModuleType
 from typing import assert_never
 
 import cmk.ccc.version as cmk_version
-
-# The following imports trigger loading of built-in main modules.
-# Note: They are loaded once more in `_import_main_module_plugins()` and
-# possibly a third time over the plug-in discovery mechanism.
-import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
 from cmk import trace
 from cmk.ccc.version import Edition
 from cmk.gui import utils
@@ -83,9 +78,6 @@ def _import_local_main_modules() -> list[ModuleType]:
 
     We essentially load the site local pages plug-ins (`local/share/check_mk/web/plugins/pages`)
     which are expected to contain the actual imports of the main modules.
-
-    Please note that the built-in main modules are already loaded by the imports of
-    `cmk.gui.plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.

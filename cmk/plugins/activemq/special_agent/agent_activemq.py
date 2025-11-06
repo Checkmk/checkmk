@@ -72,7 +72,10 @@ def parse_arguments(args: Sequence[str] | None) -> argparse.Namespace:
         help="Username for authenticating at the server",
     )
     parser_add_secret_option(
-        parser, long=f"--{PASSWORD_OPTION}", help="Password for authenticating at the server"
+        parser,
+        long=f"--{PASSWORD_OPTION}",
+        required=False,
+        help="Password for authenticating at the server",
     )
     return parser.parse_args(args)
 

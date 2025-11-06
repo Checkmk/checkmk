@@ -102,7 +102,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
     parser.add_argument("-u", "--user", default=None, help="Username for elasticsearch login")
     parser_add_secret_option(
-        parser, long=f"--{SECRET_OPTION}", help="Password for elasticsearch login"
+        parser, long=f"--{SECRET_OPTION}", required=False, help="Password for elasticsearch login"
     )
     parser.add_argument(
         "-P",

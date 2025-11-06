@@ -1033,7 +1033,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     # optional arguments (from a coding point of view - should some of them be mandatory?)
     parser.add_argument("-u", "--user", default=None, help="""Username for vSphere login""")
     parser_add_secret_option(
-        parser, short="-s", long=f"--{SECRET_OPTION}", help="Secret/Password for vSphere login"
+        parser,
+        short="-s",
+        long=f"--{SECRET_OPTION}",
+        required=True,
+        help="Secret/Password for vSphere login",
     )
 
     # positional arguments

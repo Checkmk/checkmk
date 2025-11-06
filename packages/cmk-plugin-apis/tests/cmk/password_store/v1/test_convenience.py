@@ -25,6 +25,7 @@ def test_secret_parser_mandatory() -> None:
         short="-s",
         long="--secret",
         help="A secret",
+        required=True,
     )
 
     with pytest.raises(SystemExit):
@@ -54,6 +55,7 @@ def test_secret_parser_resolve_explicit() -> None:
         short="-s",
         long="--secret",
         help="A secret",
+        required=True,
     )
     args = parser.parse_args(["--secret", "mysecret"])
     secret = resolve_secret_option(args, "secret")
@@ -73,6 +75,7 @@ def test_secret_parser_resolve_reference(monkeypatch: pytest.MonkeyPatch) -> Non
         short="-s",
         long="--secret",
         help="A secret",
+        required=True,
     )
     args = parser.parse_args(["--secret-id", "hurray:/path/to/secret"])
     secret = resolve_secret_option(args, "secret")

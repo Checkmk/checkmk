@@ -17,8 +17,51 @@ def parser_add_secret_option(
     short: str | None = None,
     long: str,
     help: str,
-    required: bool = True,
+    required: bool,
 ) -> None:
+    """Add mutually exclusive secret options to an argument parser.
+
+    Creates two mutually exclusive options for handling secrets:
+     * A direct secret option using the provided long an short names.
+       This is intended for debuggnig purposes, but keep in mind that
+       using it will expose the actual secret in the commandline.
+     * An option to provide the password store reference using the long
+       name with "-id" suffix: '<long>-id'. This should be used in the
+       commandline that is created by the server side calls plugin.
+       This prevents the actual secret from showing on the commandline or
+       in the fetcher configuration.
+
+    Args:
+        parser: The argument parser to add options to
+        short: Optional short option name (e.g., "-s") for convenience.
+            It will only be used for the direct option. Must start with
+            exactly one "-".
+        long: Long option name (must start with "--", e.g., "--password")
+        help: Help text for the direct secret option
+        required: Whether one of the two options must be provided
+
+    Raises:
+        ValueError: If long option doesn't start with "--"
+
+    Example:
+        To create the options: --password, -p, --password-id
+
+        >>> OPTION_NAME = "password"  # reuse this for `resolve_secret_option`
+        >>> parser = argparse.ArgumentParser()
+        >>> parser_add_secret_option(
+        ...     parser,
+        ...     short="-p",
+        ...     long=f"--{OPTION_NAME}",
+        ...     help="Database password",
+        ...     required=True
+        ... )
+    """
+    # Some custom validation, because the exception raised by argparse is rather obscure.
+    if short and len(short) - len(short.lstrip("-")) != 1:
+        raise ValueError('short option must start with exactly one "-"')
+    if not long.startswith("--"):
+        raise ValueError('long option must start with "--"')
+
     group = parser.add_mutually_exclusive_group(required=required)
     group.add_argument(
         *((short,) if short else ()),
@@ -41,7 +84,15 @@ def resolve_secret_option(args: argparse.Namespace, option_name: str) -> Secret[
     will either dereference the secret given by "--<LONG>-id" or use the explicit secret
     given by "--<LONG>".
 
-    If neither is given, a TypeError is raised.
+    Args:
+        args: The parsed arguments namespace as created by an argparse parser that used
+            :func:`parser_add_secret_option`.
+        option_name: The name of the option as passed to :func:`parser_add_secret_option`,
+            without the leading dashes.
+
+    Raises:
+        TypeError: If neither of the two options where specified.
+
     """
     if (secret_id := getattr(args, f"{option_name}_id", None)) is not None:
         return dereference_secret(secret_id)

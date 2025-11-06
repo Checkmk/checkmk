@@ -1144,7 +1144,7 @@ std::optional<OsInfo> GetOsInfo();
 
 std::optional<std::tm> GetTimeAsTm(
     std::chrono::system_clock::time_point time_point);
-std::wstring FindUserName(const PSID sid);
+std::optional<std::wstring> FindUserName(const PSID sid);
 }  // namespace wtools
 
 #endif  // WTOOLS_H

@@ -93,7 +93,6 @@ uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
 
         last_pos = record->recordId();
         if (!allowed(record.get())) {
-            XLOG::d("skipped ID {} ", record->eventId());
             continue;
         }
         if (skip == SkipDuplicatedRecords::yes) {

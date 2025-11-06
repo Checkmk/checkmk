@@ -136,17 +136,21 @@ public:
 
     bool check(std::string_view name) const {
         // skip if present _and_ list contains id
+        const auto name_lc = tools::ToLower(name);
         if (excludes_ &&
-            std::ranges::any_of(*excludes_, [name](const auto &exclude) {
-                return name == exclude;
+            std::ranges::any_of(*excludes_, [name_lc](const auto &e) {
+                return name_lc == tools::ToLower(e);
             })) {
+            XLOG::d("skip {}", name);
             return false;
         }
 
         // if includes is present, then check it and return
         if (includes_) {
-            return std::ranges::any_of(*includes_, [name](const auto &include) {
-                return name == include;
+            return std::ranges::any_of(*includes_, [name_lc](const auto &i) {
+                auto include = name_lc == tools::ToLower(i);
+                XLOG::d("{} {}", name_lc, include);
+                return include;
             });
         }
 
@@ -262,6 +266,7 @@ using LogWatchEntries = std::vector<LogWatchEntry>;
 struct EventFilters {
     std::unordered_map<std::string, IdsFilter> id;
     std::unordered_map<std::string, TagsFilter> source;
+    std::unordered_map<std::string, TagsFilter> user;
 };
 using LogwatchClusterMap =
     std::unordered_map<std::string,

@@ -51,6 +51,9 @@ public:
     [[nodiscard]] char getEventSymbol(cfg::EventLevels required) const;
     /// decode windows level to universal
     [[nodiscard]] cfg::EventLevels calcEventLevel() const;
+    [[nodiscard]] std::wstring getUserName() const {
+        return wtools::FindUserName(sid()).value_or(std::wstring{});
+    }
 };
 
 class EventLogBase {

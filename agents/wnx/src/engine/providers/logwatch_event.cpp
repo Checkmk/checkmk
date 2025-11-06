@@ -244,7 +244,8 @@ std::optional<LogWatchEntry> LoadFromString(std::string_view line) {
     }
 }
 namespace {
-std::vector<IdsFilter> ProcessEventIds(std::optional<YAML::Node> &log_ids) {
+std::vector<IdsFilter> ProcessEventIds(
+    const std::optional<YAML::Node> &log_ids) {
     if (!log_ids.has_value()) {
         return {};
     }
@@ -259,7 +260,8 @@ std::vector<IdsFilter> ProcessEventIds(std::optional<YAML::Node> &log_ids) {
     return filters;
 }
 
-std::vector<TagsFilter> ProcessEventTags(std::optional<YAML::Node> &log_tags) {
+std::vector<TagsFilter> ProcessEventTags(
+    const std::optional<YAML::Node> &log_tags) {
     if (!log_tags.has_value()) {
         return {};
     }
@@ -300,6 +302,14 @@ void LogWatchEvent::loadConfig() {
         auto sources = ProcessEventTags(filter_sources);
         for (const auto &s : sources) {
             event_filters_.source.insert_or_assign(s.name(), s);
+        }
+
+        event_filters_.user.clear();
+        auto filter_users =
+            readLogEntryArray(cfg::vars::kLogWatchEventFilterUsers);
+        auto users = ProcessEventTags(filter_users);
+        for (const auto &s : users) {
+            event_filters_.user.insert_or_assign(s.name(), s);
         }
 
     } catch (const std::exception &e) {
@@ -713,24 +723,23 @@ bool RecordAllowed(const std::string_view log_file_name,
                    const EventFilters &filters) {
     std::string name{log_file_name};
     tools::StringLower(name);
-    {
-        const auto &id = filters.id;
-        auto ret = findWithDefault(id, name);
-        if (ret.has_value()) {
-            if (!ret->checkId(record->eventId())) {
-                return false;
-            }
+
+    if (auto ret = findWithDefault(filters.id, name); ret.has_value()) {
+        if (!ret->checkId(record->eventId())) {
+            return false;
         }
     }
 
-    {
-        const auto &source = filters.source;
-        auto ret = findWithDefault(source, name);
-        if (ret.has_value()) {
-            if (!ret->checkTag(record->source())) {
-                return false;
-            }
+    if (auto ret = findWithDefault(filters.source, name); ret.has_value()) {
+        if (!ret->checkTag(record->source())) {
+            return false;
         }
+    }
+
+    if (auto ret = findWithDefault(filters.user, name); ret.has_value()) {
+        auto rec_user =
+            wtools::FindUserName(record->sid()).value_or(std::wstring{});
+        return ret->checkTag(rec_user);
     }
 
     return true;

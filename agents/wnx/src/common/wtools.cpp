@@ -3896,7 +3896,8 @@ std::optional<std::tm> GetTimeAsTm(
     return buf;
 }
 
-std::wstring FindUserName(const PSID sid) {
+///  tested indirectly
+std::optional<std::wstring> FindUserName(const PSID sid) {
     if (sid == nullptr) {
         return {};
     }
@@ -3910,7 +3911,7 @@ std::wstring FindUserName(const PSID sid) {
         return name;
     }
 
-    return {};
+    return std::nullopt;
 }
 
 }  // namespace wtools

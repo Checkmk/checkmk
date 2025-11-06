@@ -1018,6 +1018,48 @@ logwatch:
     ASSERT_TRUE(temp_fs->loadContent(cfg + "        - 'Nope': ;;checkmk;b"));
     EXPECT_TRUE(is_found_stamp(WriteStampReadEventLog(stamp)));
 }
+
+///  Test is disabled because it is VERY LONG
+TEST(LogWatchEventTest, TestFilterUsers_DISABLED) {
+    const auto config = [](bool yes_no) {
+        return fmt::format(R"(
+global:
+    enabled: yes
+    sections: logwatch
+logwatch:
+    enabled: yes
+    sendall: yes
+    vista_api: {}
+    logfile: #
+        - 'System': warn nocontext
+        - '*': off nocontext
+    filter_users:
+)",
+                           yes_no ? "yes" : "no");
+    };
+    for (auto vista : {false, true}) {
+        auto temp_fs = tst::TempCfgFs::CreateNoIo();
+        auto cfg = config(vista);
+        ASSERT_TRUE(temp_fs->loadContent(cfg));
+        LogWatchEvent lwe;
+        lwe.loadConfig();
+        const auto all = lwe.generateContent();
+        size_t all_count = rs::count(all, '\n');
+        ASSERT_TRUE(temp_fs->loadContent(cfg + "        - 'System': ;;SYSTEM"));
+        lwe.loadConfig();
+        const auto no_system = lwe.generateContent();
+        size_t no_count = rs::count(no_system, '\n');
+        EXPECT_NE(all, no_system);
+        ASSERT_TRUE(temp_fs->loadContent(cfg + "        - 'System': SYSTEM;;"));
+        lwe.loadConfig();
+        const auto with_system = lwe.generateContent();
+        size_t with_count = rs::count(with_system, '\n');
+        EXPECT_NE(all, with_system);
+        EXPECT_NE(no_system, with_system);
+        EXPECT_TRUE(no_count + with_count > all_count / 2);
+    }
+}
+
 TEST(LogWatchEventTest, TestSkip) {
     auto test_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(test_fs->loadFactoryConfig());

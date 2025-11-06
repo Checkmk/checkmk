@@ -64,7 +64,6 @@ class Resource(BaseModel):
     name: str
     type: str
     group: str
-    kind: str | None = None
     location: str | None = None
     tags: Mapping[str, str] = Field(default_factory=dict)
     properties: Mapping[Any, Any] = Field(default_factory=dict)
@@ -194,7 +193,6 @@ def _get_resource(
         name=resource["name"],
         type=resource["type"],
         group=resource["group"],
-        kind=resource.get("kind"),  # TODO: remove
         location=resource.get("location"),
         tags=resource.get("tags", {}),
         properties=resource.get("properties", {}),

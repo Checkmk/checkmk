@@ -99,7 +99,6 @@ PARSED_RESOURCE = Resource(
     name="checkmk-mysql-server",
     type="Microsoft.DBforMySQL/servers",
     group="BurningMan",
-    kind=None,
     location="westeurope",
     tags={"tag1": "value1", "tag2": "value2"},
     properties={},
@@ -847,7 +846,7 @@ def test_create_discover_by_metrics_function_single(
     [
         (
             PARSED_RESOURCE,
-            ("kind", "group", "type"),
+            ("group", "type"),
             [
                 ("Group", "BurningMan"),
                 ("Type", "Microsoft.DBforMySQL/servers"),

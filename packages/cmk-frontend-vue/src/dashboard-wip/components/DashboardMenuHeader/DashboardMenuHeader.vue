@@ -299,8 +299,8 @@ const pageNavigation = parsePageNavigation()
     &:hover {
       background-color: var(--ux-theme-5);
     }
-
-    &--link {
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+    &.menu-item--link {
       padding: 0;
       justify-content: flex-start;
     }

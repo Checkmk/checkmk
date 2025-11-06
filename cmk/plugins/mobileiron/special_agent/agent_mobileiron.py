@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import enum
 import itertools
+import json
 import logging
 import re
 import sys
@@ -29,18 +30,17 @@ from urllib.parse import urljoin
 import requests
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import (
-    ConditionalPiggybackSection,
-    SectionWriter,
-    special_agent_main,
-)
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
+__version__ = "2.5.0b1"
+
+AGENT = "mobileiron"
+
 PASSWORD_OPTION = "password"
 
-LOGGER = logging.getLogger("agent_mobileiron")
+LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 
 class PlatformType(enum.Enum):
@@ -316,24 +316,29 @@ def agent_mobileiron_main(args: argparse.Namespace) -> int:
         LOGGER.info("Write agent output..")
         for device in all_devices:
             if "total_count" in all_devices[device]:
-                with SectionWriter("mobileiron_statistics") as writer:
-                    writer.append_json(all_devices[device])
-            else:
-                with (
-                    ConditionalPiggybackSection(device),
-                    SectionWriter("mobileiron_section") as writer,
-                ):
-                    writer.append_json(all_devices[device])
-                if uptime := all_devices[device]["uptime"]:
-                    with ConditionalPiggybackSection(device), SectionWriter("uptime") as writer:
-                        writer.append_json(uptime)
-                with ConditionalPiggybackSection(device), SectionWriter("mobileiron_df") as writer:
-                    writer.append_json(
-                        {
-                            "totalCapacity": all_devices[device].get("totalCapacity"),
-                            "availableCapacity": all_devices[device].get("availableCapacity"),
-                        }
-                    )
+                sys.stdout.write("<<<mobileiron_statistics:sep(0)>>>\n")
+                sys.stdout.write(json.dumps(all_devices[device]) + "\n")
+                continue
+
+            sys.stdout.write(
+                f"<<<<{device}>>>>\n"
+                f"<<<mobileiron_section:sep(0)>>>\n"
+                f"{json.dumps(all_devices[device])}\n"
+            )
+
+            if uptime := all_devices[device]["uptime"]:
+                sys.stdout.write(f"<<<uptime:sep(0)>>>\n{json.dumps(uptime)}\n")
+
+            sys.stdout.write("<<<mobileiron_df:sep(0)>>>\n")
+            sys.stdout.write(
+                json.dumps(
+                    {
+                        "totalCapacity": all_devices[device].get("totalCapacity"),
+                        "availableCapacity": all_devices[device].get("availableCapacity"),
+                    }
+                )
+                + "\n"
+            )
     except (
         requests.Timeout,
         requests.exceptions.SSLError,
@@ -345,9 +350,10 @@ def agent_mobileiron_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_mobileiron_main)
+    return agent_mobileiron_main(parse_arguments(sys.argv[1:]))
 
 
 if __name__ == "__main__":

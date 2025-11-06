@@ -160,7 +160,7 @@ _CLEAN_PLUGIN_FAMILIES = {
     "jira",
     # "jolokia",  # : import hack. resolve by migrating the bakery plugin
     # "kube",  # :HostAddress, Edition, cmk.gui.form_specs.unstable.ListExtended, omd_root,
-    "metric_backend",
+    # "metric_backend",  # :cmk.metric_backend, cmk.utils.paths
     "mobileiron",
     "mqtt",
     "netapp",
@@ -275,6 +275,10 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ec.export",
         "cmk.gui.mkeventd",
         "cmk.plugins.lib",
+        "cmk.utils.paths",
+    ),
+    "metric_backend": (
+        "cmk.metric_backend",
         "cmk.utils.paths",
     ),
     "mobileiron": (

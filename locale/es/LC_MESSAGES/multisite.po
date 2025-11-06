@@ -645,10 +645,6 @@ msgstr "%s vista previa del reporte finalizada"
 msgid "%s Retrieve created dump file"
 msgstr "%s Recuperar archivo dump creado"
 
-#, fuzzy, python-format
-msgid "%s all ids"
-msgstr "En todos los sitios"
-
 #, python-format
 msgid "%s by host"
 msgstr "%s por host"
@@ -727,10 +723,6 @@ msgstr "%s etiquetas coincidentes: %s"
 #, fuzzy, python-format
 msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%s podría faltar, no debe estar vacío si está configurado."
-
-#, python-format
-msgid "%s messages with ids:"
-msgstr ""
 
 #, fuzzy, python-format
 msgid "%s notification %s (%d global %s, %d user %s)"
@@ -3985,8 +3977,16 @@ msgid "Add Counter Object"
 msgstr "Añadir objeto de contador"
 
 #, fuzzy
+msgid "Add Event Id filter rule"
+msgstr "Añadir filtro"
+
+#, fuzzy
 msgid "Add Event Id or Event Id range"
 msgstr "Añadir un nuevo rango de IP"
+
+#, fuzzy
+msgid "Add Event Source filter rule"
+msgstr "Añadir filtro"
 
 msgid "Add Exception"
 msgstr "Añadir excepción"
@@ -4038,6 +4038,10 @@ msgstr "Añadir ID de regla"
 
 msgid "Add SLA"
 msgstr "Añadir SLA"
+
+#, fuzzy
+msgid "Add Source"
+msgstr "Fuente"
 
 msgid "Add Suffix"
 msgstr "Añadir sufijo"
@@ -4185,10 +4189,6 @@ msgid "Add files to be monitored"
 msgstr "Añadir archivos a supervisar"
 
 msgid "Add filter"
-msgstr "Añadir filtro"
-
-#, fuzzy
-msgid "Add filter rule"
 msgstr "Añadir filtro"
 
 msgid "Add folder"
@@ -11764,10 +11764,6 @@ msgstr "CRÍTICA"
 msgid "CRT/PEM File"
 msgstr "Archivo CRT/PEM"
 
-#, fuzzy
-msgid "CSE is not allowed in distributed monitoring."
-msgstr "Supervisión distribuida"
-
 msgid "CSV File"
 msgstr "Archivo CSV"
 
@@ -13181,6 +13177,10 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk Appliance information"
 msgstr "Automatización de Checkmk"
+
+#, fuzzy
+msgid "Checkmk Cloud is not allowed in distributed monitoring."
+msgstr "Supervisión distribuida"
 
 msgid "Checkmk Configuration Files"
 msgstr "Archivos de configuración de Checkmk"
@@ -22096,6 +22096,14 @@ msgid "Do not encrypt the backup"
 msgstr "No cifrar la copia de seguridad"
 
 #, fuzzy
+msgid "Do not exclude"
+msgstr "No compruebe"
+
+#, fuzzy
+msgid "Do not exclude messages"
+msgstr "Borrar mensajes"
+
+#, fuzzy
 msgid ""
 "Do not forget to activate the plug-in (i.e., deploy with or without "
 "configuration in at least one of your rules. It can be useful to create "
@@ -24359,6 +24367,10 @@ msgstr "Entrar en el modo de diseño"
 msgid "Enter performance data to show in notifications etc. ..."
 msgstr ""
 
+#, fuzzy
+msgid "Enter source name"
+msgstr "Introduzca el nombre de usuario"
+
 #, python-format
 msgid ""
 "Enter the %s to connect Checkmk to self-hosted Jira or enter the %s to "
@@ -25154,6 +25166,14 @@ msgstr "Excluir hosts donde el agente es inalcanzable"
 
 msgid "Exclude instances"
 msgstr "Excluir casos"
+
+#, fuzzy
+msgid "Exclude messages from Sources:"
+msgstr "Excluir el volumen del nombre del servicio"
+
+#, fuzzy
+msgid "Exclude messages with ids:"
+msgstr "Excluir los espacios de nombres que coincidan"
 
 msgid "Exclude namespaces matching"
 msgstr "Excluir los espacios de nombres que coincidan"
@@ -26806,6 +26826,14 @@ msgstr "Vista del filtro"
 
 msgid "Filtering and computation options"
 msgstr "Opciones de filtrado y cálculo"
+
+#, fuzzy
+msgid "Filtering by Event Id"
+msgstr "Cadena final a enviar"
+
+#, fuzzy
+msgid "Filtering by Event Source"
+msgstr "Filtrar la selección de %s por servicio: "
 
 #, fuzzy
 msgid "Filtering tags enabled but no tags defined."
@@ -33461,6 +33489,13 @@ msgstr ""
 "la configuración global realizada aquí."
 
 msgid ""
+"If enabled, the agent on the monitored host will be automatically updated "
+"whenever a new version is available on the monitoring server. This will only "
+"work if the agent updater is deployed in the agent package. To do so, "
+"please, configure <i>Automatic agent updates</i>."
+msgstr ""
+
+msgid ""
 "If enabled, the instance name will be queried from the database instead of "
 "the database name."
 msgstr ""
@@ -35725,17 +35760,21 @@ msgstr "Niveles superiores de salida de 5 voltios"
 msgid "Incident"
 msgstr "Incidente"
 
-#, fuzzy
-msgid "Include"
-msgstr "Excluye"
-
 msgid "Include Pattern"
 msgstr "Incluir patrón"
 
 msgid "Include WAFs in front of CloudFront resources in the monitoring."
 msgstr "Incluya WAF delante de los recursos de CloudFront en la supervisión."
 
+#, fuzzy
+msgid "Include all"
+msgstr "Incluir todos los nodos"
+
 msgid "Include all Nodes"
+msgstr "Incluir todos los nodos"
+
+#, fuzzy
+msgid "Include all messages"
 msgstr "Incluir todos los nodos"
 
 msgid "Include all subfolders"
@@ -35752,6 +35791,13 @@ msgstr "Incluir la ruta completa"
 
 msgid "Include indirectly connected hosts (recursively)"
 msgstr "Incluir hosts conectados indirectamente (recursivamente)"
+
+msgid "Include messages only from Sources:"
+msgstr ""
+
+#, fuzzy
+msgid "Include only messages with ids:"
+msgstr "Acuse de recibo de todos los mensajes en %s."
 
 #, fuzzy
 msgid "Include pattern"
@@ -43599,8 +43645,8 @@ msgstr "Falta la variable siteid"
 msgid "Missing variable user_id"
 msgstr "Falta la variable user_id"
 
-msgid "Mix of CME and non-CME is not allowed."
-msgstr "No se permite la mezcla de CME y no CME."
+msgid "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+msgstr ""
 
 msgid "Mixed"
 msgstr "Mixto"
@@ -48565,7 +48611,10 @@ msgstr ""
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Sólo se permiten las letras A-Z, a-z, 0-9 y el signo menos (-)."
 
-msgid "Only CCE remote sites can be added to CCE central site"
+#, fuzzy
+msgid ""
+"Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate "
+"central site"
 msgstr "Sólo se pueden añadir sitios remotos CCE al sitio central CCE"
 
 msgid ""
@@ -51294,10 +51343,6 @@ msgstr "Parámetros para %s"
 #, python-format
 msgid "Parameters for %s"
 msgstr "Parámetros para %s"
-
-#, fuzzy
-msgid "Parameters for event filtering"
-msgstr "Parámetros para las latencias"
 
 msgid "Parameters for input phases of UPSs and PDUs"
 msgstr "Parámetros para las fases de entrada de los SAIs y PDUs"
@@ -55669,6 +55714,10 @@ msgstr "Registrar un nuevo anfitrión"
 #, fuzzy
 msgid "Register authenticator app"
 msgstr "Autenticación del sistema"
+
+#, fuzzy
+msgid "Register for automatic agent updates"
+msgstr "Activación de las actualizaciones automáticas de los agentes"
 
 #, fuzzy
 msgid "Register host & download monitoring agents of your hosts"
@@ -73834,8 +73883,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"This may partially work in Checkmk %s but will stop working from the next "
-"major version onwards."
+"This may partially work in Checkmk %s but might not work from the next major "
+"version onwards."
 msgstr ""
 
 #, python-format
@@ -90298,6 +90347,9 @@ msgid ""
 "$HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
 
+msgid "You may enter either number, like 2345, or range 20-2000"
+msgstr ""
+
 msgid ""
 "You may enter one or several alternative names that are expected to be in "
 "the certificate. Please note that the check does only accept DNS names and "
@@ -92084,9 +92136,6 @@ msgstr "límite inferior"
 msgid "lx"
 msgstr "lx"
 
-msgid "m"
-msgstr "m"
-
 msgid "mails"
 msgstr "correos"
 
@@ -93158,9 +93207,6 @@ msgstr ""
 msgid "xinetd"
 msgstr "xinetd"
 
-msgid "y"
-msgstr "y"
-
 msgid "year"
 msgstr "año"
 
@@ -93279,30 +93325,12 @@ msgstr "Dispositivo en línea"
 msgid "Generating response..."
 msgstr "Generación de informes..."
 
-#, fuzzy
-msgid "Analyzing data..."
-msgstr "Identificación inválida"
-
-msgid ""
-"For a comprehensive analysis, the following data will be shared with our AI "
-"model. "
+msgid "What would you like the AI to do?"
 msgstr ""
 
 #, fuzzy
-msgid "Shared data:"
-msgstr "Datos mapeados"
-
-#, fuzzy
-msgid "Short summary"
-msgstr "Resumen"
-
-#, fuzzy
-msgid "Detected problem"
-msgstr "Problemas con DaemonSet"
-
-#, fuzzy
-msgid "Potential solutions"
-msgstr "Fijar la resolución"
+msgid "No actions found"
+msgstr "No se ha encontrado"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -93697,6 +93725,10 @@ msgid "Filter by service"
 msgstr "Filtrar la selección de %s por servicio: "
 
 #, fuzzy
+msgid "Select option"
+msgstr "Conexiones rechazadas"
+
+#, fuzzy
 msgid "Name is required."
 msgstr "es necesario"
 
@@ -93775,10 +93807,6 @@ msgstr ""
 #, fuzzy
 msgid "Show in monitor menu"
 msgstr "Tema en el menú 'Monitor'"
-
-#, fuzzy
-msgid "Select option"
-msgstr "Conexiones rechazadas"
 
 #, fuzzy
 msgid "Dashboard visibility"
@@ -94050,6 +94078,22 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Link content to"
+msgstr "Enlace del título"
+
+#, fuzzy
+msgid "Select a category"
+msgstr "Seleccione un icono"
+
+#, fuzzy
+msgid "Select a target"
+msgstr "Seleccione la fuente de datos"
+
+#, fuzzy
+msgid "Must select a target"
+msgstr "Conexiones rechazadas"
+
+#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "El valor debe ser una cadena"
 
@@ -94280,6 +94324,10 @@ msgid "Small"
 msgstr ""
 
 #, fuzzy
+msgid "Loading widget visualization settings..."
+msgstr "Configuración por defecto de la visualización de BI"
+
+#, fuzzy
 msgid "Metric selection"
 msgstr "Selección de carpetas"
 
@@ -94326,6 +94374,14 @@ msgstr "Gráficos de servicio"
 #, fuzzy
 msgid "Fixed data range"
 msgstr "Alcance fijo"
+
+#, fuzzy
+msgid "Show colored status label"
+msgstr "Mostrar una etiqueta de estado de color"
+
+#, fuzzy
+msgid "Show colored metric background"
+msgstr "Mostrar el título sin fondo"
 
 #, fuzzy
 msgid "Additional scatterplot options"
@@ -94976,6 +95032,9 @@ msgstr "La guía oficial del usuario de Checkmk"
 msgid "Close & run service discovery"
 msgstr "Guardar & ejecutar la detección de servicios"
 
+msgid "Add \"${props.title}\" to sidebar"
+msgstr ""
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -95423,6 +95482,47 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "%s all ids"
+#~ msgstr "En todos los sitios"
+
+#, fuzzy
+#~ msgid "Include"
+#~ msgstr "Excluye"
+
+#~ msgid "Mix of CME and non-CME is not allowed."
+#~ msgstr "No se permite la mezcla de CME y no CME."
+
+#, fuzzy
+#~ msgid "Parameters for event filtering"
+#~ msgstr "Parámetros para las latencias"
+
+#~ msgid "m"
+#~ msgstr "m"
+
+#~ msgid "y"
+#~ msgstr "y"
+
+#, fuzzy
+#~ msgid "Analyzing data..."
+#~ msgstr "Identificación inválida"
+
+#, fuzzy
+#~ msgid "Shared data:"
+#~ msgstr "Datos mapeados"
+
+#, fuzzy
+#~ msgid "Short summary"
+#~ msgstr "Resumen"
+
+#, fuzzy
+#~ msgid "Detected problem"
+#~ msgstr "Problemas con DaemonSet"
+
+#, fuzzy
+#~ msgid "Potential solutions"
+#~ msgstr "Fijar la resolución"
 
 #, python-format
 #~ msgid "Agent %s successful"
@@ -96217,9 +96317,6 @@ msgstr ""
 #, python-format
 #~ msgid "Translated %s"
 #~ msgstr "Traducido %s"
-
-#~ msgid "Do not check"
-#~ msgstr "No compruebe"
 
 #, fuzzy
 #~ msgid "Migrated Parents"
@@ -98700,9 +98797,6 @@ msgstr ""
 #~ msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
 #~ msgstr ""
 #~ "Ruta local donde colocar el archivo descargado (por ejemplo, 'tmp' )."
-
-#~ msgid "Delete messages"
-#~ msgstr "Borrar mensajes"
 
 #~ msgid "Directly forward to event console"
 #~ msgstr "Reenviar directamente a la consola de eventos"

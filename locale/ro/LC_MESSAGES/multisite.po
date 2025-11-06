@@ -653,10 +653,6 @@ msgstr "%s Previzualizare a raportului terminat"
 msgid "%s Retrieve created dump file"
 msgstr "%s Preluare fișier de vidare creat"
 
-#, fuzzy, python-format
-msgid "%s all ids"
-msgstr "Pe toate site-urile"
-
 #, python-format
 msgid "%s by host"
 msgstr "%s de către gazdă"
@@ -735,10 +731,6 @@ msgstr "%s etichete corespunzătoare: %s"
 #, fuzzy, python-format
 msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%s ar putea să lipsească, dacă nu trebuie să fie gol dacă este setat."
-
-#, python-format
-msgid "%s messages with ids:"
-msgstr ""
 
 #, fuzzy, python-format
 msgid "%s notification %s (%d global %s, %d user %s)"
@@ -3983,8 +3975,16 @@ msgid "Add Counter Object"
 msgstr "Adăugați obiectul contor"
 
 #, fuzzy
+msgid "Add Event Id filter rule"
+msgstr "Adaugă filtre"
+
+#, fuzzy
 msgid "Add Event Id or Event Id range"
 msgstr "Adăugați un nou interval IP"
+
+#, fuzzy
+msgid "Add Event Source filter rule"
+msgstr "Adaugă filtre"
 
 msgid "Add Exception"
 msgstr "Adaugă Excepție"
@@ -4036,6 +4036,10 @@ msgstr "Adăugați ID-ul regulii"
 
 msgid "Add SLA"
 msgstr "Adăugați SLA"
+
+#, fuzzy
+msgid "Add Source"
+msgstr "Sursa"
 
 msgid "Add Suffix"
 msgstr "Adăugați sufixul"
@@ -4181,10 +4185,6 @@ msgid "Add files to be monitored"
 msgstr "Adăugați fișierele care urmează să fie monitorizate"
 
 msgid "Add filter"
-msgstr "Adaugă filtre"
-
-#, fuzzy
-msgid "Add filter rule"
 msgstr "Adaugă filtre"
 
 msgid "Add folder"
@@ -11738,10 +11738,6 @@ msgstr "CRITICAL"
 msgid "CRT/PEM File"
 msgstr "Fișier CRT/PEM"
 
-# georgem ##############
-msgid "CSE is not allowed in distributed monitoring."
-msgstr "CSE nu este permisă în monitorizarea distribuită."
-
 msgid "CSV File"
 msgstr "Fișier CSV"
 
@@ -13124,6 +13120,11 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk Appliance information"
 msgstr "Automatizare Checkmk"
+
+# georgem ##############
+#, fuzzy
+msgid "Checkmk Cloud is not allowed in distributed monitoring."
+msgstr "CSE nu este permisă în monitorizarea distribuită."
 
 msgid "Checkmk Configuration Files"
 msgstr "Fișiere de configurare Checkmk"
@@ -21982,6 +21983,14 @@ msgid "Do not encrypt the backup"
 msgstr "Nu criptați copia de rezervă"
 
 #, fuzzy
+msgid "Do not exclude"
+msgstr "Nu verificați"
+
+#, fuzzy
+msgid "Do not exclude messages"
+msgstr "Ștergerea mesajelor"
+
+#, fuzzy
 msgid ""
 "Do not forget to activate the plug-in (i.e., deploy with or without "
 "configuration in at least one of your rules. It can be useful to create "
@@ -24252,6 +24261,10 @@ msgid "Enter performance data to show in notifications etc. ..."
 msgstr ""
 "Introduceți datele de performanță pentru a le afișa în notificări etc. ..."
 
+#, fuzzy
+msgid "Enter source name"
+msgstr "Introduceți numele de utilizator"
+
 #, python-format
 msgid ""
 "Enter the %s to connect Checkmk to self-hosted Jira or enter the %s to "
@@ -25048,6 +25061,14 @@ msgstr "Excludeți gazdele unde agentul este inaccesibil"
 
 msgid "Exclude instances"
 msgstr "Excludeți instanțe"
+
+#, fuzzy
+msgid "Exclude messages from Sources:"
+msgstr "Excludeți volumul din numele serviciului"
+
+#, fuzzy
+msgid "Exclude messages with ids:"
+msgstr "Excludeți spațiile de nume care corespund"
 
 msgid "Exclude namespaces matching"
 msgstr "Excludeți spațiile de nume care corespund"
@@ -26692,6 +26713,14 @@ msgstr "Vizualizare filtru"
 
 msgid "Filtering and computation options"
 msgstr "Opțiuni de filtrare și calcul"
+
+#, fuzzy
+msgid "Filtering by Event Id"
+msgstr "Șirul final de trimis"
+
+#, fuzzy
+msgid "Filtering by Event Source"
+msgstr "Filtrați selecția %s în funcție de serviciu: "
 
 #, fuzzy
 msgid "Filtering tags enabled but no tags defined."
@@ -33294,6 +33323,13 @@ msgstr ""
 "setările globale efectuate aici."
 
 msgid ""
+"If enabled, the agent on the monitored host will be automatically updated "
+"whenever a new version is available on the monitoring server. This will only "
+"work if the agent updater is deployed in the agent package. To do so, "
+"please, configure <i>Automatic agent updates</i>."
+msgstr ""
+
+msgid ""
 "If enabled, the instance name will be queried from the database instead of "
 "the database name."
 msgstr ""
@@ -35577,17 +35613,21 @@ msgstr "Niveluri superioare de ieșire de 5 volți"
 msgid "Incident"
 msgstr "Incident"
 
-#, fuzzy
-msgid "Include"
-msgstr "Excludeți"
-
 msgid "Include Pattern"
 msgstr "Includeți modelul"
 
 msgid "Include WAFs in front of CloudFront resources in the monitoring."
 msgstr "Includeți WAF-urile în fața resurselor CloudFront în monitorizare."
 
+#, fuzzy
+msgid "Include all"
+msgstr "Includeți toate nodurile"
+
 msgid "Include all Nodes"
+msgstr "Includeți toate nodurile"
+
+#, fuzzy
+msgid "Include all messages"
 msgstr "Includeți toate nodurile"
 
 msgid "Include all subfolders"
@@ -35604,6 +35644,13 @@ msgstr "Includeți calea completă"
 
 msgid "Include indirectly connected hosts (recursively)"
 msgstr "Includeți gazdele conectate indirect (recursiv)"
+
+msgid "Include messages only from Sources:"
+msgstr ""
+
+#, fuzzy
+msgid "Include only messages with ids:"
+msgstr "A confirmat toate mesajele din %s."
 
 #, fuzzy
 msgid "Include pattern"
@@ -43357,8 +43404,8 @@ msgstr "Variabila lipsă siteid"
 msgid "Missing variable user_id"
 msgstr "Lipsește variabila user_id"
 
-msgid "Mix of CME and non-CME is not allowed."
-msgstr "Nu este permisă amestecul de EMC și non EMC."
+msgid "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+msgstr ""
 
 msgid "Mixed"
 msgstr "Mixtă"
@@ -48286,7 +48333,10 @@ msgstr "Procedura de verificare online a avut succes"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Sunt permise doar A-Z, a-z, 0-9 și minus (-)."
 
-msgid "Only CCE remote sites can be added to CCE central site"
+#, fuzzy
+msgid ""
+"Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate "
+"central site"
 msgstr ""
 "Numai site-urile la distanță CCE pot fi adăugate la site-ul central CCE"
 
@@ -51014,10 +51064,6 @@ msgstr "Parametrii pentru %s"
 #, python-format
 msgid "Parameters for %s"
 msgstr "Parametrii pentru %s"
-
-#, fuzzy
-msgid "Parameters for event filtering"
-msgstr "Parametrii pentru latențe"
 
 msgid "Parameters for input phases of UPSs and PDUs"
 msgstr "Parametrii pentru fazele de intrare ale UPS-urilor și PDU-urilor"
@@ -55354,6 +55400,10 @@ msgstr "Înregistrați orice gazdă nouă"
 
 msgid "Register authenticator app"
 msgstr "Înregistrați aplicația Authenticator App"
+
+#, fuzzy
+msgid "Register for automatic agent updates"
+msgstr "Activarea actualizărilor automate ale agentului"
 
 msgid "Register host & download monitoring agents of your hosts"
 msgstr ""
@@ -73465,8 +73515,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"This may partially work in Checkmk %s but will stop working from the next "
-"major version onwards."
+"This may partially work in Checkmk %s but might not work from the next major "
+"version onwards."
 msgstr ""
 
 #, python-format
@@ -89825,6 +89875,9 @@ msgid ""
 "$HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
 
+msgid "You may enter either number, like 2345, or range 20-2000"
+msgstr ""
+
 msgid ""
 "You may enter one or several alternative names that are expected to be in "
 "the certificate. Please note that the check does only accept DNS names and "
@@ -91601,9 +91654,6 @@ msgstr "limita inferioară"
 msgid "lx"
 msgstr "lx"
 
-msgid "m"
-msgstr "m"
-
 msgid "mails"
 msgstr "mailuri"
 
@@ -92675,9 +92725,6 @@ msgstr ""
 msgid "xinetd"
 msgstr "xinetd"
 
-msgid "y"
-msgstr "y"
-
 msgid "year"
 msgstr "an"
 
@@ -92797,30 +92844,12 @@ msgstr "Dispozitiv online"
 msgid "Generating response..."
 msgstr "Generarea de rapoarte..."
 
-#, fuzzy
-msgid "Analyzing data..."
-msgstr "Identificator invalid"
-
-msgid ""
-"For a comprehensive analysis, the following data will be shared with our AI "
-"model. "
+msgid "What would you like the AI to do?"
 msgstr ""
 
 #, fuzzy
-msgid "Shared data:"
-msgstr "Parola"
-
-#, fuzzy
-msgid "Short summary"
-msgstr "Rezumat"
-
-#, fuzzy
-msgid "Detected problem"
-msgstr "Probleme cu DaemonSet"
-
-#, fuzzy
-msgid "Potential solutions"
-msgstr "Setați rezoluția"
+msgid "No actions found"
+msgstr "Nu a fost găsit"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -93217,6 +93246,10 @@ msgid "Filter by service"
 msgstr "Filtrați selecția %s în funcție de serviciu: "
 
 #, fuzzy
+msgid "Select option"
+msgstr "Conexiuni respinse"
+
+#, fuzzy
 msgid "Name is required."
 msgstr "este necesară"
 
@@ -93296,10 +93329,6 @@ msgstr ""
 #, fuzzy
 msgid "Show in monitor menu"
 msgstr "Subiect în 'Monitor' meniu"
-
-#, fuzzy
-msgid "Select option"
-msgstr "Conexiuni respinse"
 
 #, fuzzy
 msgid "Dashboard visibility"
@@ -93571,6 +93600,22 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Link content to"
+msgstr "Legătura cu titlul"
+
+#, fuzzy
+msgid "Select a category"
+msgstr "Selectați o pictogramă"
+
+#, fuzzy
+msgid "Select a target"
+msgstr "Selectați sursa de date"
+
+#, fuzzy
+msgid "Must select a target"
+msgstr "Conexiuni respinse"
+
+#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "Valoarea trebuie să fie un șir de caractere"
 
@@ -93802,6 +93847,10 @@ msgid "Small"
 msgstr ""
 
 #, fuzzy
+msgid "Loading widget visualization settings..."
+msgstr "Setări implicite de vizualizare BI"
+
+#, fuzzy
 msgid "Metric selection"
 msgstr "Selecția fișierelor"
 
@@ -93850,6 +93899,14 @@ msgstr "Grafice de servicii"
 #, fuzzy
 msgid "Fixed data range"
 msgstr "Interval fix"
+
+#, fuzzy
+msgid "Show colored status label"
+msgstr "Afișați o etichetă de stare colorată"
+
+#, fuzzy
+msgid "Show colored metric background"
+msgstr "Afișați titlul fără fundal"
 
 #, fuzzy
 msgid "Additional scatterplot options"
@@ -94499,6 +94556,9 @@ msgstr "Ghidul oficial al utilizatorului Checkmk"
 msgid "Close & run service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
+msgid "Add \"${props.title}\" to sidebar"
+msgstr ""
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -94948,6 +95008,47 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "%s all ids"
+#~ msgstr "Pe toate site-urile"
+
+#, fuzzy
+#~ msgid "Include"
+#~ msgstr "Excludeți"
+
+#~ msgid "Mix of CME and non-CME is not allowed."
+#~ msgstr "Nu este permisă amestecul de EMC și non EMC."
+
+#, fuzzy
+#~ msgid "Parameters for event filtering"
+#~ msgstr "Parametrii pentru latențe"
+
+#~ msgid "m"
+#~ msgstr "m"
+
+#~ msgid "y"
+#~ msgstr "y"
+
+#, fuzzy
+#~ msgid "Analyzing data..."
+#~ msgstr "Identificator invalid"
+
+#, fuzzy
+#~ msgid "Shared data:"
+#~ msgstr "Parola"
+
+#, fuzzy
+#~ msgid "Short summary"
+#~ msgstr "Rezumat"
+
+#, fuzzy
+#~ msgid "Detected problem"
+#~ msgstr "Probleme cu DaemonSet"
+
+#, fuzzy
+#~ msgid "Potential solutions"
+#~ msgstr "Setați rezoluția"
 
 #, python-format
 #~ msgid "Agent %s successful"
@@ -95737,9 +95838,6 @@ msgstr ""
 #, python-format
 #~ msgid "Translated %s"
 #~ msgstr "Tradus %s"
-
-#~ msgid "Do not check"
-#~ msgstr "Nu verificați"
 
 #, fuzzy
 #~ msgid "Migrated Parents"
@@ -98274,9 +98372,6 @@ msgstr ""
 #~ msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
 #~ msgstr ""
 #~ "Calea locală în care se pune fișierul descărcat (de exemplu 'tmp' )."
-
-#~ msgid "Delete messages"
-#~ msgstr "Ștergerea mesajelor"
 
 #~ msgid "Directly forward to event console"
 #~ msgstr "Transmiteți direct la consola de evenimente"

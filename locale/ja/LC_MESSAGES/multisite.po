@@ -631,10 +631,6 @@ msgid "%s Retrieve created dump file"
 msgstr "%s 作成されたダンプファイルを取得します"
 
 #, python-format
-msgid "%s all ids"
-msgstr "%sすべてのID"
-
-#, python-format
 msgid "%s by host"
 msgstr "ホスト別の %s"
 
@@ -711,10 +707,6 @@ msgstr "%s 一致するラベル: "
 #, python-format
 msgid "%s may be missing, it must not be empty if it is set."
 msgstr "%sは、設定されている場合、空であってはならない。"
-
-#, python-format
-msgid "%s messages with ids:"
-msgstr ""
 
 #, python-format
 msgid "%s notification %s (%d global %s, %d user %s)"
@@ -3773,8 +3765,16 @@ msgid "Add Counter Object"
 msgstr "カウンターオブジェクトの追加"
 
 #, fuzzy
+msgid "Add Event Id filter rule"
+msgstr "フィルタを追加"
+
+#, fuzzy
 msgid "Add Event Id or Event Id range"
 msgstr "新しいIP範囲を追加する"
+
+#, fuzzy
+msgid "Add Event Source filter rule"
+msgstr "フィルタを追加"
 
 msgid "Add Exception"
 msgstr "例外を追加"
@@ -3823,6 +3823,10 @@ msgstr "ルールIDを追加"
 
 msgid "Add SLA"
 msgstr "SLAの追加"
+
+#, fuzzy
+msgid "Add Source"
+msgstr "ソース"
 
 msgid "Add Suffix"
 msgstr "サフィックスを追加する"
@@ -3962,10 +3966,6 @@ msgid "Add files to be monitored"
 msgstr "監視するファイルを追加する"
 
 msgid "Add filter"
-msgstr "フィルタを追加"
-
-#, fuzzy
-msgid "Add filter rule"
 msgstr "フィルタを追加"
 
 msgid "Add folder"
@@ -10971,9 +10971,6 @@ msgstr "クリティカル"
 msgid "CRT/PEM File"
 msgstr "CRT/PEMファイル"
 
-msgid "CSE is not allowed in distributed monitoring."
-msgstr "分散モニタリングではCSEは禁止されている。"
-
 msgid "CSV File"
 msgstr "CSVファイル"
 
@@ -12310,6 +12307,10 @@ msgstr ""
 
 msgid "Checkmk Appliance information"
 msgstr "Checkmkアプライアンス情報"
+
+#, fuzzy
+msgid "Checkmk Cloud is not allowed in distributed monitoring."
+msgstr "分散モニタリングではCSEは禁止されている。"
 
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
@@ -20635,6 +20636,14 @@ msgstr "ホスト名を表示しない"
 msgid "Do not encrypt the backup"
 msgstr "バックアップを暗号化しないでください"
 
+#, fuzzy
+msgid "Do not exclude"
+msgstr "チェックしないでください"
+
+#, fuzzy
+msgid "Do not exclude messages"
+msgstr "メッセージを削除する"
+
 msgid ""
 "Do not forget to activate the plug-in (i.e., deploy with or without "
 "configuration in at least one of your rules. It can be useful to create "
@@ -22804,6 +22813,10 @@ msgstr "レイアウトモードに入る"
 msgid "Enter performance data to show in notifications etc. ..."
 msgstr "通知などに表示するパフォーマンス・データを入力する ..."
 
+#, fuzzy
+msgid "Enter source name"
+msgstr "ユーザーネームを入力してください"
+
 #, python-format
 msgid ""
 "Enter the %s to connect Checkmk to self-hosted Jira or enter the %s to "
@@ -23570,6 +23583,14 @@ msgstr "エージェントに到達できないホストを除外します"
 
 msgid "Exclude instances"
 msgstr "インスタンスを除外する"
+
+#, fuzzy
+msgid "Exclude messages from Sources:"
+msgstr "サービス名からボリュームを除外する"
+
+#, fuzzy
+msgid "Exclude messages with ids:"
+msgstr "名前空間の一致を除外する"
 
 msgid "Exclude namespaces matching"
 msgstr "名前空間の一致を除外する"
@@ -25125,6 +25146,14 @@ msgstr "フィルタビュー"
 
 msgid "Filtering and computation options"
 msgstr "フィルタリングと計算のオプション"
+
+#, fuzzy
+msgid "Filtering by Event Id"
+msgstr "送信する最後の文字列"
+
+#, fuzzy
+msgid "Filtering by Event Source"
+msgstr "サービスによるフィルター選択:"
 
 msgid "Filtering tags enabled but no tags defined."
 msgstr "タグのフィルタリングは有効だが、タグが定義されていない。"
@@ -31155,6 +31184,13 @@ msgstr ""
 "こで行われたグローバル設定を上書きします。"
 
 msgid ""
+"If enabled, the agent on the monitored host will be automatically updated "
+"whenever a new version is available on the monitoring server. This will only "
+"work if the agent updater is deployed in the agent package. To do so, "
+"please, configure <i>Automatic agent updates</i>."
+msgstr ""
+
+msgid ""
 "If enabled, the instance name will be queried from the database instead of "
 "the database name."
 msgstr ""
@@ -33303,17 +33339,21 @@ msgstr "5ボルト出力の上位レベル"
 msgid "Incident"
 msgstr "インシデント"
 
-#, fuzzy
-msgid "Include"
-msgstr "除外する"
-
 msgid "Include Pattern"
 msgstr "パターンを含める"
 
 msgid "Include WAFs in front of CloudFront resources in the monitoring."
 msgstr "モニタリングでCloudFrontリソースの前にWAFを含める。"
 
+#, fuzzy
+msgid "Include all"
+msgstr "すべてのノードを含める"
+
 msgid "Include all Nodes"
+msgstr "すべてのノードを含める"
+
+#, fuzzy
+msgid "Include all messages"
 msgstr "すべてのノードを含める"
 
 msgid "Include all subfolders"
@@ -33330,6 +33370,13 @@ msgstr "フルパスを含める"
 
 msgid "Include indirectly connected hosts (recursively)"
 msgstr "間接的に接続されたホストを含める（再帰的に）"
+
+msgid "Include messages only from Sources:"
+msgstr ""
+
+#, fuzzy
+msgid "Include only messages with ids:"
+msgstr "%s内のすべてのメッセージを承認しました。"
 
 #, fuzzy
 msgid "Include pattern"
@@ -40699,8 +40746,8 @@ msgstr "変数siteidがありません"
 msgid "Missing variable user_id"
 msgstr "変数user_idがありません"
 
-msgid "Mix of CME and non-CME is not allowed."
-msgstr "CMEと非CMEの混合は認められない。"
+msgid "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+msgstr ""
 
 msgid "Mixed"
 msgstr "混合"
@@ -45287,7 +45334,10 @@ msgstr "オンライン認証成功"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "A-Z、a-z、0-9およびマイナス(-)のみが許可されます。"
 
-msgid "Only CCE remote sites can be added to CCE central site"
+#, fuzzy
+msgid ""
+"Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate "
+"central site"
 msgstr "CCEセントラルサイトに追加できるのはCCEリモートサイトのみ"
 
 msgid ""
@@ -47717,10 +47767,6 @@ msgstr "パラメータ"
 #, python-format
 msgid "Parameters for %s"
 msgstr "%sのパラメータ"
-
-#, fuzzy
-msgid "Parameters for event filtering"
-msgstr "レイテンシーのパラメータ"
 
 msgid "Parameters for input phases of UPSs and PDUs"
 msgstr "UPSおよびPDUの入力フェーズのパラメーター"
@@ -51749,6 +51795,10 @@ msgstr "新規ホストの登録"
 
 msgid "Register authenticator app"
 msgstr "認証アプリの登録"
+
+#, fuzzy
+msgid "Register for automatic agent updates"
+msgstr "自動エージェント更新のアクティブ化"
 
 msgid "Register host & download monitoring agents of your hosts"
 msgstr "ホストの登録と監視エージェントのダウンロード"
@@ -68900,10 +68950,10 @@ msgstr ""
 "するグラフに役立つ場合があります。このオプションを有効にすると、前の上のデー"
 "タが軸の下に表示され、下のデータがその上に表示されます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"This may partially work in Checkmk %s but will stop working from the next "
-"major version onwards."
+"This may partially work in Checkmk %s but might not work from the next major "
+"version onwards."
 msgstr ""
 "これはCheckmk %sでは一部機能するかもしれませんが、次のメジャーバージョン以降"
 "では機能しなくなります。"
@@ -83913,6 +83963,9 @@ msgstr ""
 "ではマクロを使うことができます。最も一般的なものは$HOSTNAME$、$HOSTALIAS$、"
 "$HOSTADDRESS$です。"
 
+msgid "You may enter either number, like 2345, or range 20-2000"
+msgstr ""
+
 msgid ""
 "You may enter one or several alternative names that are expected to be in "
 "the certificate. Please note that the check does only accept DNS names and "
@@ -85620,9 +85673,6 @@ msgstr "下限"
 msgid "lx"
 msgstr "lx"
 
-msgid "m"
-msgstr "m"
-
 msgid "mails"
 msgstr "メール"
 
@@ -86647,9 +86697,6 @@ msgstr "タイプが間違っています。期待される値は%sです"
 msgid "xinetd"
 msgstr "xinetd"
 
-msgid "y"
-msgstr "y"
-
 msgid "year"
 msgstr "年"
 
@@ -86769,28 +86816,12 @@ msgstr "オンラインデバイス"
 msgid "Generating response..."
 msgstr "レポートを生成しています..."
 
-msgid "Analyzing data..."
-msgstr "データ分析中…"
-
-msgid ""
-"For a comprehensive analysis, the following data will be shared with our AI "
-"model. "
+msgid "What would you like the AI to do?"
 msgstr ""
 
-msgid "Shared data:"
-msgstr "共有データ："
-
 #, fuzzy
-msgid "Short summary"
-msgstr "概要"
-
-#, fuzzy
-msgid "Detected problem"
-msgstr "デーモンセットの問題"
-
-#, fuzzy
-msgid "Potential solutions"
-msgstr "解像度を設定する"
+msgid "No actions found"
+msgstr "見つかりません"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -87170,6 +87201,10 @@ msgstr "サービスメトリクス"
 msgid "Filter by service"
 msgstr "サービスによるフィルター選択:"
 
+#, fuzzy
+msgid "Select option"
+msgstr "オプション選択"
+
 msgid "Name is required."
 msgstr "名前は必須です。"
 
@@ -87247,10 +87282,6 @@ msgstr ""
 #, fuzzy
 msgid "Show in monitor menu"
 msgstr "\"モニター\" メニューのトピック"
-
-#, fuzzy
-msgid "Select option"
-msgstr "オプション選択"
 
 #, fuzzy
 msgid "Dashboard visibility"
@@ -87518,6 +87549,22 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Link content to"
+msgstr "タイトルのリンク"
+
+#, fuzzy
+msgid "Select a category"
+msgstr "アイコンを選択してください"
+
+#, fuzzy
+msgid "Select a target"
+msgstr "データソースを選択"
+
+#, fuzzy
+msgid "Must select a target"
+msgstr "オプション選択"
+
+#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "値は文字列であること"
 
@@ -87745,6 +87792,10 @@ msgid "Small"
 msgstr ""
 
 #, fuzzy
+msgid "Loading widget visualization settings..."
+msgstr "デフォルトのBI視覚化設定"
+
+#, fuzzy
 msgid "Metric selection"
 msgstr "ファイル選択"
 
@@ -87791,6 +87842,14 @@ msgstr "サービスグラフ"
 #, fuzzy
 msgid "Fixed data range"
 msgstr "固定範囲"
+
+#, fuzzy
+msgid "Show colored status label"
+msgstr "色付きのステータスラベルを表示する"
+
+#, fuzzy
+msgid "Show colored metric background"
+msgstr "背景なしでタイトルを表示"
 
 #, fuzzy
 msgid "Additional scatterplot options"
@@ -88404,6 +88463,9 @@ msgstr "Checkmk公式ユーザーガイドをお読みください"
 msgid "Close & run service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
+msgid "Add \"${props.title}\" to sidebar"
+msgstr ""
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -88842,6 +88904,45 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "%s all ids"
+#~ msgstr "%sすべてのID"
+
+#, fuzzy
+#~ msgid "Include"
+#~ msgstr "除外する"
+
+#~ msgid "Mix of CME and non-CME is not allowed."
+#~ msgstr "CMEと非CMEの混合は認められない。"
+
+#, fuzzy
+#~ msgid "Parameters for event filtering"
+#~ msgstr "レイテンシーのパラメータ"
+
+#~ msgid "m"
+#~ msgstr "m"
+
+#~ msgid "y"
+#~ msgstr "y"
+
+#~ msgid "Analyzing data..."
+#~ msgstr "データ分析中…"
+
+#~ msgid "Shared data:"
+#~ msgstr "共有データ："
+
+#, fuzzy
+#~ msgid "Short summary"
+#~ msgstr "概要"
+
+#, fuzzy
+#~ msgid "Detected problem"
+#~ msgstr "デーモンセットの問題"
+
+#, fuzzy
+#~ msgid "Potential solutions"
+#~ msgstr "解像度を設定する"
 
 #, python-format
 #~ msgid "Agent %s successful"
@@ -89591,9 +89692,6 @@ msgstr ""
 #, python-format
 #~ msgid "Translated %s"
 #~ msgstr "翻訳された%s"
-
-#~ msgid "Do not check"
-#~ msgstr "チェックしないでください"
 
 #~ msgid "Migrated Parents"
 #~ msgstr "移行された親"
@@ -92112,9 +92210,6 @@ msgstr ""
 
 #~ msgid "Local path where to put the downloaded file (e.g. 'tmp' )."
 #~ msgstr "ダウンロードしたファイルを配置するローカルパス(例 'tmp' )。"
-
-#~ msgid "Delete messages"
-#~ msgstr "メッセージを削除する"
 
 #~ msgid "Directly forward to event console"
 #~ msgstr "イベントコンソールに直接転送する"

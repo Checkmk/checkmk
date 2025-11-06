@@ -86,20 +86,23 @@ watch(
 </script>
 
 <template>
-  <div class="cmk-searchable-list">
-    <div class="cmk-searchable-list-header">
-      <div class="cmk-searchable-list-title">{{ props.title }}</div>
+  <div class="cmk-searchable-list__container">
+    <div class="cmk-searchable-list__header">
+      <div class="cmk-searchable-list__title">{{ props.title }}</div>
       <div>{{ selected.length }}/{{ items.length }} {{ _t('selected') }}</div>
     </div>
 
-    <div class="cmk-searchable-list-search-input-wrapper">
+    <div class="cmk-searchable-list__search-input-wrapper">
       <CmkInput
         :id="`cmk-searchable-list-search-input-${componentId}`"
         v-model="search"
         :aria-label="`${_t('Filter')} ${props.title}`"
         style="width: 100%"
       />
-      <label :for="`cmk-searchable-list-search-input-${componentId}`" class="icon">
+      <label
+        :for="`cmk-searchable-list-search-input-${componentId}`"
+        class="cmk-searchable-list__icon"
+      >
         <img />
       </label>
     </div>
@@ -125,47 +128,42 @@ watch(
       </select>
     </div>
 
-    <div v-else :style="selectStyle" class="cmk-searchable-list-no-element-in-select">
+    <div v-else :style="selectStyle" class="cmk-searchable-list__no-element-in-select">
       {{ _t('No elements') }}
     </div>
   </div>
 </template>
 
 <style scoped>
-.cmk-searchable-list {
+.cmk-searchable-list__container {
   display: flex;
   flex-direction: column;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-searchable-list-header {
+.cmk-searchable-list__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-searchable-list-header .cmk-searchable-list-title {
+.cmk-searchable-list__header .cmk-searchable-list__title {
   font-weight: bold;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-searchable-list-search-input-wrapper {
+.cmk-searchable-list__search-input-wrapper {
   position: relative;
   display: flex;
   margin: 0;
   padding: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-searchable-list-search-input-wrapper .icon {
+.cmk-searchable-list__search-input-wrapper .cmk-searchable-list__icon {
   position: absolute;
   top: 0;
   right: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-searchable-list-search-input-wrapper .icon img {
+.cmk-searchable-list__search-input-wrapper .cmk-searchable-list__icon img {
   content: var(--icon-search);
   cursor: pointer;
   height: 12px;
@@ -174,14 +172,13 @@ watch(
   border-radius: 2px;
 }
 
-.cmk-searchable-list select {
+.cmk-searchable-list__container select {
   width: 100%;
   min-height: 150px;
   box-sizing: border-box;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-searchable-list-no-element-in-select {
+.cmk-searchable-list__no-element-in-select {
   display: flex;
   justify-content: center;
   align-items: center;

@@ -102,9 +102,9 @@ const elementCounter = computed(() => props.elements.length)
 </script>
 
 <template>
-  <div class="cmk-dual-list-container" role="group" :aria-label="title">
-    <div class="cmk-dual-list-body">
-      <div class="cmk-dual-list-single-list">
+  <div class="cmk-dual-list__container" role="group" :aria-label="title">
+    <div class="cmk-dual-list__body">
+      <div class="cmk-dual-list__single-list">
         <CmkSearchableList
           ref="unselectedListRef"
           :elements="unselectedItems"
@@ -115,8 +115,8 @@ const elementCounter = computed(() => props.elements.length)
         />
       </div>
 
-      <div class="cmk-dual-list-action-buttons">
-        <div class="cmk-dual-list-action-button">
+      <div class="cmk-dual-list__action-buttons">
+        <div class="cmk-dual-list__action-button">
           <CmkButton
             :disabled="!unselectedListRef?.getSelected().length"
             :aria-label="_t('Add >')"
@@ -125,7 +125,7 @@ const elementCounter = computed(() => props.elements.length)
             &gt;
           </CmkButton>
         </div>
-        <div class="cmk-dual-list-action-button">
+        <div class="cmk-dual-list__action-button">
           <CmkButton
             :disabled="!unselectedListRef?.getVisibleItems().length"
             :aria-label="_t('Add all >>')"
@@ -134,7 +134,7 @@ const elementCounter = computed(() => props.elements.length)
             &gt;&gt;&gt;
           </CmkButton>
         </div>
-        <div class="cmk-dual-list-action-button">
+        <div class="cmk-dual-list__action-button">
           <CmkButton
             :disabled="!selectedListRef?.getVisibleItems().length"
             :aria-label="_t('<< Remove all')"
@@ -143,7 +143,7 @@ const elementCounter = computed(() => props.elements.length)
             &lt;&lt;&lt;
           </CmkButton>
         </div>
-        <div class="cmk-dual-list-action-button">
+        <div class="cmk-dual-list__action-button">
           <CmkButton
             :disabled="!selectedListRef?.getSelected().length"
             :aria-label="_t('< Remove')"
@@ -154,7 +154,7 @@ const elementCounter = computed(() => props.elements.length)
         </div>
       </div>
 
-      <div class="cmk-dual-list-single-list">
+      <div class="cmk-dual-list__single-list">
         <CmkSearchableList
           ref="selectedListRef"
           :elements="selectedItems"
@@ -170,27 +170,23 @@ const elementCounter = computed(() => props.elements.length)
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-dual-list-container {
+.cmk-dual-list__container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-dual-list-body {
+.cmk-dual-list__body {
   display: flex;
   gap: 1rem;
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-dual-list-single-list {
+.cmk-dual-list__single-list {
   flex: 1;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-dual-list-action-buttons {
+.cmk-dual-list__action-buttons {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -200,14 +196,12 @@ const elementCounter = computed(() => props.elements.length)
   max-width: 51px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-dual-list-action-button {
+.cmk-dual-list__action-button {
   margin: 5px;
   width: 100%;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-dual-list-action-button button {
+.cmk-dual-list__action-button button {
   width: 100%;
 }
 </style>

@@ -211,9 +211,9 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
 
   <ContentSpacer />
 
-  <CmkHeading type="h3">{{ _t('Choose how to display your data') }}</CmkHeading>
-
   <div v-if="metricType === MetricSelection.SINGLE_METRIC">
+    <CmkHeading type="h3">{{ _t('Choose how to display your data') }}</CmkHeading>
+
     <SelectableWidgets
       v-model:selected-widget="selectedWidget as Graph"
       :available-items="availableWidgetsTop"

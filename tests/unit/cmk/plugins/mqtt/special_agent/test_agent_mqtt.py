@@ -3,13 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import argparse
-from pathlib import Path
-
-import pytest
 
 from cmk.plugins.mqtt.special_agent import agent_mqtt
-from cmk.utils import password_store
 
 
 def test_parse_minimal_arguments() -> None:
@@ -48,27 +43,3 @@ def test_parse_all_arguments() -> None:
     assert args.username == "asd"
     assert args.password.reveal() == "xyz"
     assert args.client_id == "ding"
-
-
-def test_parse_password_store(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    store_file = tmp_path / "store"
-    password_store.save({"mqtt_password": "blablu"}, store_file)
-    monkeypatch.setattr(
-        "sys.argv",
-        [
-            "agent_mqtt",
-            f"--pwstore=2@0@{store_file}@mqtt_password",
-            "--password",
-            "******",
-            "--username",
-            "mqtt",
-            "piff",
-        ],
-    )
-
-    def test_main(args: argparse.Namespace) -> None:
-        assert args.password == "blablu"
-
-    monkeypatch.setattr(agent_mqtt, "agent_mqtt_main", test_main)
-
-    agent_mqtt.main()

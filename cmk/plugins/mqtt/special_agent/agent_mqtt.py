@@ -31,10 +31,14 @@ from dataclasses import dataclass, field
 import paho.mqtt.client as mqtt
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 
-LOGGER = logging.getLogger("agent_mqtt")
+__version__ = "2.5.0b1"
+
+AGENT = "mqtt"
+
+LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 PASSWORD_OPTION = "password"
 
@@ -246,5 +250,6 @@ def on_message(mqttc: mqtt.Client, received: ReceivedData, msg: mqtt.MQTTMessage
     received.topics[msg.topic] = msg.payload.decode()
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(parse_arguments, agent_mqtt_main)
+    return agent_mqtt_main(parse_arguments(sys.argv[1:]))

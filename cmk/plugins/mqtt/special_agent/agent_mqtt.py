@@ -21,6 +21,7 @@ useful or probably only when directly connecting to single nodes - not sure abou
 """
 
 import argparse
+import json
 import logging
 import sys
 import time
@@ -32,7 +33,6 @@ import paho.mqtt.client as mqtt
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 
 __version__ = "2.5.0b1"
 
@@ -168,8 +168,9 @@ def agent_mqtt_main(args: argparse.Namespace) -> int:
         sys.stderr.write(str(e) + "\n")
         return 1
 
-    with SectionWriter("mqtt_statistics") as writer:
-        writer.append_json({args.instance_id: received.topics})
+    section_content = json.dumps({args.instance_id: received.topics})
+    sys.stdout.write("<<<mqtt_statistics:sep(0)>>>\n")
+    sys.stdout.write(f"{section_content}\n")
     return 0
 
 

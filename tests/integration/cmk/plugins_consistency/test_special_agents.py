@@ -189,7 +189,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     ],
     "ibmsvc": ["HOSTNAME"],
     "jenkins": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
-    "jira": ["-P", "PROTOCOL", "-u", "USER", "-s", "PASSWORD", "--hostname", "HOSTNAME"],
+    "jira": ["-P", "PROTOCOL", "-u", "USER", "--password", "PASSWORD", "--hostname", "HOSTNAME"],
     "kube": [
         "--cluster",
         "CLUSTER",

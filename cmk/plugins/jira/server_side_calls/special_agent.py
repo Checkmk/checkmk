@@ -77,10 +77,10 @@ def command_function(params: _Params, host_config: HostConfig) -> Iterable[Speci
     command_arguments: list[str | Secret] = [
         "-P",
         params.protocol,
-        "-u",
+        "--user",
         params.user,
-        "-s",
-        params.password.unsafe(),
+        "--password-id",
+        params.password,
     ]
 
     if params.jql is not None:

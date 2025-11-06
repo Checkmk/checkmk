@@ -54,7 +54,7 @@ HACK_AGENTS = {
     "innovaphone": False,
     "ipmi_sensors": False,
     "jenkins": False,
-    "jira": True,
+    "jira": False,
     "jolokia": False,
     "kube": False,
     "metric_backend_custom_query": False,  # needs no secret

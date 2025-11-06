@@ -16,12 +16,13 @@ from jira import JIRA
 from jira.exceptions import JIRAError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from cmk.utils.password_store import replace_passwords
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+
+PASSWORD_OPTION = "password"
 
 
 def main(argv=None):
     if argv is None:
-        replace_passwords()
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)
@@ -57,7 +58,7 @@ def _handle_jira_connection(args):
 
     jira = JIRA(
         server=jira_url,
-        basic_auth=(args.user, args.password),
+        basic_auth=(args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal()),
         options={"verify": False},
         max_retries=0,
     )
@@ -253,8 +254,8 @@ def parse_arguments(argv):
         help="Use 'http' or 'https' for connection to Jira (default=https)",
     )
     parser.add_argument("-u", "--user", default=None, required=True, help="Username for Jira login")
-    parser.add_argument(
-        "-s", "--password", default=None, required=True, help="Password for Jira login"
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password for Jira login"
     )
     parser.add_argument(
         "--project-workflows-key", nargs=1, action="append", help="The full project name"

@@ -133,6 +133,15 @@ BOM := bill-of-materials.json
 install: $(INSTALL_GLOBAL)
 	$(PIPENV) run ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
 	cd $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5/ ; $(RM) utils.pm ; ln -s ../../../nagios/plugins/utils.pm .
+	python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
+	PYTHONPATH=$(DESTDIR)$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages \
+    PYTHONDONTWRITEBYTECODE=1 \
+    python3 -c "from pysmi.scripts.mibdump import start; start()" \
+	--mib-searcher=$(DESTDIR)$(OMD_ROOT)/share/snmp/mibs \
+	--destination-directory=$(DESTDIR)$(OMD_ROOT)/share/snmp/compiled_mibs \
+	--no-python-compile \
+	--rebuild \
+	$(wildcard $(DESTDIR)$(OMD_ROOT)/share/snmp/mibs/*.txt)
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)
@@ -158,6 +167,7 @@ $(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man1
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/snmp/compiled_mibs
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	$(call log_time,$@,done)
 	touch $@

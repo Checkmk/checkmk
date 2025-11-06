@@ -23,10 +23,12 @@ information about VMs and nodes:
 """
 
 import argparse
+import json
 import logging
 import sys
-from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
+from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from datetime import datetime
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
@@ -40,10 +42,6 @@ from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import CannotRecover, ProxmoxVeAPI
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import (
-    ConditionalPiggybackSection,
-    SectionWriter,
-)
 
 __version__ = "2.5.0b1"
 
@@ -283,156 +281,198 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
     LOGGER.info("Write agent output..")
     for node in data["nodes"]:
         assert node["type"] == "node"
-        piggyback_host = None if args.hostname.startswith(node["node"] + ".") else node["node"]
-        with ConditionalPiggybackSection(piggyback_host):
-            with SectionWriter("proxmox_ve_node_info") as writer:
-                writer.append_json(
-                    SectionNodeInfo(
-                        status=node["status"],
-                        lxc=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
-                        qemu=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
-                        version=node["version"].get("version", "n/a"),
-                        subscription=SubscriptionInfo(
-                            status=node["subscription"]["status"],
-                            next_due_date=node["subscription"].get("nextduedate"),
-                        ),
-                    ).model_dump()
-                )
-            with SectionWriter("proxmox_ve_node_allocation") as writer:
-                running_vms = [
-                    vm
-                    for vm in all_vms.values()
-                    if vm["node"] == node["node"] and vm["status"] == "running"
-                ]
-                writer.append_json(
-                    SectionNodeAllocation(
-                        status=node["status"],
-                        node_total_cpu=node["maxcpu"],
-                        allocated_cpu=sum(vm["maxcpu"] for vm in running_vms),
-                        node_total_mem=node["maxmem"],
-                        allocated_mem=sum(vm["maxmem"] for vm in running_vms),
-                    ).model_dump_json()
-                )
-
-            with SectionWriter("proxmox_ve_replication") as writer:
-                writer.append_json(
-                    SectionReplication(
-                        node=node["node"],
-                        cluster=node_cluster_mapping.get(node["node"]),
-                        replications=[
-                            Replication(
-                                id=repl["id"],
-                                source=repl["source"],
-                                target=repl["target"],
-                                schedule=repl["schedule"],
-                                last_sync=repl["last_sync"],
-                                last_try=repl["last_try"],
-                                next_sync=repl["next_sync"],
-                                duration=repl["duration"],
-                                error=repl.get("error"),
-                            )
-                            for repl in replications.get(node["node"], [])
-                        ],
-                        cluster_has_replications=True if data["cluster"]["replication"] else False,
-                    ).model_dump_json()
-                )
-            with SectionWriter("proxmox_ve_node_storage") as writer:
-                writer.append_json(
-                    SectionNodeStorages(
-                        node=node["node"],
-                        storages=[
-                            storage_data
-                            for storage_data in all_storages.values()
-                            if storage_data.get("node", "") == node["node"]
-                        ],
-                        storage_links=node_storage.get(node["node"], {}),
-                    ).model_dump()
-                )
-            with SectionWriter("proxmox_ve_node_attributes") as writer:
-                writer.append_json(
-                    SectionNodeAttributes(
-                        cluster=node_cluster_mapping.get(node["node"], ""),
-                        node_name=node["node"],
-                    ).model_dump_json()
-                )
-            with SectionWriter("proxmox_ve_ha_manager_status") as writer:
-                writer.append_json(ha_manager_status.model_dump())
-            if "mem" in node and "maxmem" in node:
-                with SectionWriter("proxmox_ve_mem_usage") as writer:
-                    writer.append_json(
-                        {
-                            "mem": node["mem"],
-                            "max_mem": node["maxmem"],
-                        }
-                    )
-            if "uptime" in node:
-                with SectionWriter("uptime", separator=None) as writer:
-                    writer.append(node["uptime"])
+        piggyback_host = "" if args.hostname.startswith(node["node"] + ".") else node["node"]
+        sys.stdout.write(f"<<<<{piggyback_host}>>>>\n")
+        for name, content in _create_node_sections(
+            node,
+            all_vms,
+            node_cluster_mapping,
+            replications,
+            all_storages,
+            node_storage,
+            ha_manager_status,
+            data,
+        ):
+            sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(content)}\n")
+        if "uptime" in node:
+            sys.stdout.write("<<<uptime>>>\n")
+            sys.stdout.write(f"{node['uptime']}\n")
+        sys.stdout.write("<<<<>>>>\n")
 
     for vmid, vm in all_vms.items():
-        with ConditionalPiggybackSection(vm["name"]):
-            with SectionWriter("proxmox_ve_vm_info") as writer:
-                writer.append_json(
-                    SectionVMInfo(
-                        vmid=vmid,
-                        node=vm["node"],
-                        type=vm["type"],
-                        status=vm["status"],
-                        name=vm["name"],
-                        uptime=vm["uptime"],
-                        lock=config_lock_data.get(vmid, {}).get("lock"),
-                    ).model_dump()
-                )
-            if vm["type"] != "qemu":
-                with SectionWriter("proxmox_ve_disk_usage") as writer:
-                    writer.append_json(
-                        {
-                            "disk": vm["disk"],
-                            "max_disk": vm["maxdisk"],
-                        }
-                    )
-            with SectionWriter("proxmox_ve_disk_throughput") as writer:
-                writer.append_json(
-                    {
-                        "disk_read": vm["diskread"],
-                        "disk_write": vm["diskwrite"],
-                        "uptime": vm["uptime"],
-                    }
-                )
-            with SectionWriter("proxmox_ve_mem_usage") as writer:
-                writer.append_json(
-                    {
-                        "mem": vm["mem"],
-                        "max_mem": vm["maxmem"],
-                    }
-                )
-            with SectionWriter("proxmox_ve_network_throughput") as writer:
-                writer.append_json(
-                    {
-                        "net_in": vm["netin"],
-                        "net_out": vm["netout"],
-                        "uptime": vm["uptime"],
-                    }
-                )
-            with SectionWriter("proxmox_ve_cpu_util") as writer:
-                writer.append_json(
-                    {
-                        "cpu": vm["cpu"],
-                        "max_cpu": vm["maxcpu"],
-                        "uptime": vm["uptime"],
-                    }
-                )
-            with SectionWriter("proxmox_ve_vm_backup_status") as writer:
-                writer.append_json(
-                    {
-                        # todo: info about erroneous backups
-                        "last_backup": logged_backup_data.get(vmid),
-                    }
-                )
-            with SectionWriter("proxmox_ve_vm_snapshot_age") as writer:
-                writer.append_json(snapshot_data.get(vmid))
+        sys.stdout.write(f"<<<<{vm['name'] or ''}>>>>\n")
+        for name, content in _create_vm_sections(
+            vmid,
+            vm,
+            config_lock_data,
+            logged_backup_data,
+            snapshot_data,
+        ):
+            sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(content)}\n")
+        sys.stdout.write("<<<<>>>>\n")
 
     return 0
+
+
+def _create_node_sections(
+    node: Any,
+    all_vms: Mapping[str, Mapping[str, Any]],
+    node_cluster_mapping: Mapping[str, Any],
+    replications: Mapping[str, Any],
+    all_storages: Mapping[str, Any],
+    node_storage: Mapping[str, Mapping[str, Sequence[StorageLink]]],
+    ha_manager_status: SectionHaManagerCurrent,
+    data: Any,
+) -> Iterable[tuple[str, object]]:
+    yield (
+        "proxmox_ve_node_info",
+        SectionNodeInfo(
+            status=node["status"],
+            lxc=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
+            qemu=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
+            version=node["version"].get("version", "n/a"),
+            subscription=SubscriptionInfo(
+                status=node["subscription"]["status"],
+                next_due_date=node["subscription"].get("nextduedate"),
+            ),
+        ).model_dump(),
+    )
+
+    running_vms = [
+        vm for vm in all_vms.values() if vm["node"] == node["node"] and vm["status"] == "running"
+    ]
+    yield (
+        "proxmox_ve_node_allocation",
+        SectionNodeAllocation(
+            status=node["status"],
+            node_total_cpu=node["maxcpu"],
+            allocated_cpu=sum(vm["maxcpu"] for vm in running_vms),
+            node_total_mem=node["maxmem"],
+            allocated_mem=sum(vm["maxmem"] for vm in running_vms),
+        ).model_dump_json(),
+    )
+
+    yield (
+        "proxmox_ve_replication",
+        SectionReplication(
+            node=node["node"],
+            cluster=node_cluster_mapping.get(node["node"]),
+            replications=[
+                Replication(
+                    id=repl["id"],
+                    source=repl["source"],
+                    target=repl["target"],
+                    schedule=repl["schedule"],
+                    last_sync=repl["last_sync"],
+                    last_try=repl["last_try"],
+                    next_sync=repl["next_sync"],
+                    duration=repl["duration"],
+                    error=repl.get("error"),
+                )
+                for repl in replications.get(node["node"], [])
+            ],
+            cluster_has_replications=True if data["cluster"]["replication"] else False,
+        ).model_dump_json(),
+    )
+
+    yield (
+        "proxmox_ve_node_storage",
+        SectionNodeStorages(
+            node=node["node"],
+            storages=[
+                storage_data
+                for storage_data in all_storages.values()
+                if storage_data.get("node", "") == node["node"]
+            ],
+            storage_links=node_storage.get(node["node"], {}),
+        ).model_dump(),
+    )
+
+    yield (
+        "proxmox_ve_node_attributes",
+        SectionNodeAttributes(
+            cluster=node_cluster_mapping.get(node["node"], ""),
+            node_name=node["node"],
+        ).model_dump_json(),
+    )
+
+    yield "proxmox_ve_ha_manager_status", ha_manager_status.model_dump()
+    if "mem" in node and "maxmem" in node:
+        yield (
+            "proxmox_ve_mem_usage",
+            {
+                "mem": node["mem"],
+                "max_mem": node["maxmem"],
+            },
+        )
+
+
+def _create_vm_sections(
+    vmid: str,
+    vm: Any,
+    config_lock_data: Mapping[str, Mapping[str, str]],
+    logged_backup_data: Mapping[str, object],
+    snapshot_data: Mapping[str, object],
+) -> Iterable[tuple[str, object]]:
+    yield (
+        "proxmox_ve_vm_info",
+        SectionVMInfo(
+            vmid=vmid,
+            node=vm["node"],
+            type=vm["type"],
+            status=vm["status"],
+            name=vm["name"],
+            uptime=vm["uptime"],
+            lock=config_lock_data.get(vmid, {}).get("lock"),
+        ).model_dump(),
+    )
+    if vm["type"] != "qemu":
+        yield (
+            "proxmox_ve_disk_usage",
+            {
+                "disk": vm["disk"],
+                "max_disk": vm["maxdisk"],
+            },
+        )
+    yield (
+        "proxmox_ve_disk_throughput",
+        {
+            "disk_read": vm["diskread"],
+            "disk_write": vm["diskwrite"],
+            "uptime": vm["uptime"],
+        },
+    )
+    yield (
+        "proxmox_ve_mem_usage",
+        {
+            "mem": vm["mem"],
+            "max_mem": vm["maxmem"],
+        },
+    )
+    yield (
+        "proxmox_ve_network_throughput",
+        {
+            "net_in": vm["netin"],
+            "net_out": vm["netout"],
+            "uptime": vm["uptime"],
+        },
+    )
+    yield (
+        "proxmox_ve_cpu_util",
+        {
+            "cpu": vm["cpu"],
+            "max_cpu": vm["maxcpu"],
+            "uptime": vm["uptime"],
+        },
+    )
+    yield (
+        "proxmox_ve_vm_backup_status",
+        {
+            # todo: info about erroneous backups
+            "last_backup": logged_backup_data.get(vmid),
+        },
+    )
+    yield ("proxmox_ve_vm_snapshot_age", snapshot_data.get(vmid))
 
 
 @report_agent_crashes(AGENT, __version__)

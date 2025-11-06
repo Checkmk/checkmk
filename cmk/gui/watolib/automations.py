@@ -597,7 +597,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str, *, debug
     if isinstance(eval_response, dict):
         if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT and eval_response[
             "edition_short"
-        ] not in ["cme", "ultimatemt"]:
+        ] not in ["cme", cmk_version.Edition.ULTIMATEMT.short]:
             raise MKUserError(
                 None,
                 _(

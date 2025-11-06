@@ -22,6 +22,7 @@ import livestatus
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import Edition
 from cmk.utils import paths
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
@@ -192,11 +193,11 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
 # TODO: Keep until we have a new protocol version which knows about the new edition names
 def _cmk_edition_to_licensing_edition(cmk_edition: str) -> str:
     return {
-        "community": "cre",
-        "pro": "cee",
-        "ultimate": "cce",
-        "ultimatemt": "cme",
-        "cloud": "cse",
+        Edition.COMMUNITY.long: "cre",
+        Edition.PRO.long: "cee",
+        Edition.ULTIMATE.long: "cce",
+        Edition.ULTIMATEMT.long: "cme",
+        Edition.CLOUD.long: "cse",
     }[cmk_edition]
 
 

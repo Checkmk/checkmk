@@ -698,10 +698,20 @@ def _start_remote_automation_job(
 
 
 def _edition_from_short(edition_short: str) -> cmk_version.Edition:
-    for ed in cmk_version.Edition:
-        if ed.short == edition_short:
-            return ed
-    raise ValueError(edition_short)
+    # TODO The legacy edition names can be removed with Checkmk 2.6
+    match edition_short:
+        case "cre" | cmk_version.Edition.COMMUNITY.short:
+            return cmk_version.Edition.COMMUNITY
+        case "cee" | cmk_version.Edition.PRO.short:
+            return cmk_version.Edition.PRO
+        case "cce" | cmk_version.Edition.ULTIMATE.short:
+            return cmk_version.Edition.ULTIMATE
+        case "cme" | cmk_version.Edition.ULTIMATEMT.short:
+            return cmk_version.Edition.ULTIMATEMT
+        case "cse" | cmk_version.Edition.CLOUD.short:
+            return cmk_version.Edition.CLOUD
+        case _:
+            raise ValueError(edition_short)
 
 
 def _compatible_with_central_site(

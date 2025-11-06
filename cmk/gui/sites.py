@@ -217,10 +217,20 @@ def _redacted_site_states_for_logging() -> dict[SiteId, dict[str, object]]:
 
 
 def _edition_from_livestatus(livestatus_edition: str | None) -> Edition | None:
-    for ed in Edition:
-        if ed.long == livestatus_edition:
-            return ed
-    return None
+    # TODO The legacy edition names can be removed with Checkmk 2.6
+    match livestatus_edition:
+        case "cre" | Edition.COMMUNITY.long:
+            return Edition.COMMUNITY
+        case "cee" | Edition.PRO.long:
+            return Edition.PRO
+        case "cce" | Edition.ULTIMATE.long:
+            return Edition.ULTIMATE
+        case "cme" | Edition.ULTIMATEMT.long:
+            return Edition.ULTIMATEMT
+        case "cse" | Edition.CLOUD.long:
+            return Edition.CLOUD
+        case _:
+            return None
 
 
 def _get_distributed_monitoring_compatibility(

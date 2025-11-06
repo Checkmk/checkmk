@@ -66,28 +66,30 @@ class TDSpec:
     color: str
     html_value: HTML
 
-    @property
-    def css(self) -> str:
-        return " ".join(self.css_classes)
-
-    @property
-    def style(self) -> str:
-        parts = []
-        if self.text_align:
-            parts.append(f"text-align: {self.text_align}")
-        if self.background_color:
-            parts.append(f"background-color: {self.background_color}")
-        if self.color:
-            parts.append(f"color: {self.color}")
-        return "; ".join(parts)
-
 
 def compute_cell_spec(td_spec: TDSpec) -> tuple[str, HTML]:
+    css_classes = list(td_spec.css_classes)
+    styles = []
+    if td_spec.text_align:
+        styles.append(f"text-align: {td_spec.text_align};")
+    if td_spec.color:
+        styles.append(f"color: {td_spec.color};")
+    if td_spec.background_color:
+        css_classes.append("inv_cell_no_padding")
+        styles.extend(
+            [
+                f"background-color: {td_spec.background_color};",
+                "height: 100%;",
+                "display: flex;",
+                "align-items: center;",
+                "justify-content: center;",
+            ]
+        )
     return (
-        " ".join(td_spec.css_classes),
+        " ".join(css_classes),
         (
-            HTMLWriter.render_div(td_spec.html_value, style=td_style)
-            if (td_style := td_spec.style)
+            HTMLWriter.render_div(td_spec.html_value, style=" ".join(styles))
+            if styles
             else td_spec.html_value
         ),
     )

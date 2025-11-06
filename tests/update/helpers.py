@@ -16,16 +16,17 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     get_services_with_status,
     get_supported_distros,
-    is_cleanup_enabled,
     parse_files,
     ServiceInfo,
     version_spec_from_env,
 )
 from tests.testlib.version import (
-    CMKEdition,
+    CMKEditionOld,
     CMKPackageInfo,
+    CMKPackageInfoOld,
     CMKVersion,
     edition_from_env,
+    edition_from_env_old,
     get_min_version,
     TypeCMKEdition,
 )
@@ -67,7 +68,7 @@ def get_site_status(site: Site) -> str | None:
     return None
 
 
-def _get_site_factory(package: CMKPackageInfo) -> SiteFactory:
+def _get_site_factory(package: CMKPackageInfo | CMKPackageInfoOld) -> SiteFactory:
     return SiteFactory(
         package=package,
         prefix="update_",
@@ -75,7 +76,7 @@ def _get_site_factory(package: CMKPackageInfo) -> SiteFactory:
     )
 
 
-def create_site(base_package: CMKPackageInfo) -> Site:
+def create_site(base_package: CMKPackageInfoOld) -> Site:
     site_name = "central"
     site_factory = _get_site_factory(base_package)
     site = site_factory.get_existing_site(site_name)
@@ -167,8 +168,10 @@ def inject_rules(site: Site) -> None:
 
 
 def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
-    if is_cleanup_enabled() and not request.config.getoption(name="--skip-uninstall"):
-        site.uninstall_cmk()
+    # TODO: fix package uninstall logic with base packages: CMK-27335
+    # if is_cleanup_enabled() and not request.config.getoption(name="--skip-uninstall"):
+    # site.uninstall_cmk()
+    pass
 
 
 def check_agent_receiver_error_log(site: Site) -> None:
@@ -260,10 +263,11 @@ class BaseVersions:
 
     min_version = get_min_version()
 
-    if edition_from_env().is_cloud_edition():
+    if edition_from_env().is_ultimate_edition():
         base_packages = [
-            CMKPackageInfo(
-                CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"), CMKEdition(CMKEdition.CLOUD)
+            CMKPackageInfoOld(
+                CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"),
+                CMKEditionOld(CMKEditionOld.ULTIMATE),
             )
         ]
     else:
@@ -285,7 +289,7 @@ class BaseVersions:
         )
 
         base_packages = [
-            CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
+            CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
             for base_version_str in base_versions_pb + base_versions_cb
         ]
 

@@ -284,6 +284,11 @@ class PerformanceTest:
                 )
                 if i == 0:
                     first_request_duration = time() - start_time
+                    logger.info(
+                        "UI response first request duration %s (%s)",
+                        first_request_duration,
+                        unique_url,
+                    )
                 if not resp.ok:
                     logger.warning(
                         "UI response request %s failed with status %s (%s)",

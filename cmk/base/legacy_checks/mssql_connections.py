@@ -36,11 +36,10 @@ def inventory_mssql_connections(parsed):
 
 
 def check_mssql_connections(item, params, parsed):
-    if item not in parsed:
-        return None
-
+    # If a database is missing in the agent output there are no
+    # active connections for that database.
     return check_levels(
-        parsed.get[item],
+        parsed.get(item, 0),
         "connections",
         params["levels"],
         human_readable_func=int,

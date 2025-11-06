@@ -233,6 +233,8 @@ def get_omd_distro_name() -> str:
             return "el8"
         if content.startswith("AlmaLinux release 9"):
             return "el9"
+        if content.startswith("AlmaLinux release 10"):
+            return "el10"
         raise NotImplementedError()
 
     os_spec = _read_os_release()
@@ -436,6 +438,7 @@ def code_name(distro_name: str) -> str:
         "centos-7": "el7",
         "centos-8": "el8",
         "almalinux-9": "el9",
+        "almalinux-10": "el10",
         "sles-15sp1": "sles15sp1",
         "sles-15sp2": "sles15sp2",
         "sles-15sp3": "sles15sp3",

@@ -8,6 +8,7 @@ common: &common
     - "ubuntu-24.04"
     - "centos-8"
     - "almalinux-9"
+    - "almalinux-10"
     - "sles-12sp5"
     - "sles-15sp3"
     - "sles-15sp4"

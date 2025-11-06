@@ -40,7 +40,7 @@ export NAGIOS_PLUGIN_STATE_DIRECTORY="$OMD_ROOT/var/monitoring-plugins"
 export MP_STATE_DIRECTORY=$NAGIOS_PLUGIN_STATE_DIRECTORY
 
 if [ -f $OMD_ROOT/etc/environment ]; then
-    eval $(egrep -v '^[[:space:]]*(#|$)' <$OMD_ROOT/etc/environment | sed 's/^/export /')
+    eval $(grep -E -v '^[[:space:]]*(#|$)' <$OMD_ROOT/etc/environment | sed 's/^/export /')
 fi
 
 # Only load bashrc when in a bash shell and not loaded yet.

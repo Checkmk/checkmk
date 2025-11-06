@@ -458,7 +458,8 @@ def _get_expected_paths(
         expected_paths += [
             "etc/check_mk/otel_collector.d",
             "etc/check_mk/otel_collector.d/wato",
-            "etc/check_mk/otel_collector.d/wato/otel_collector.mk",
+            "etc/check_mk/otel_collector.d/wato/otel_collector_receivers.mk",
+            "etc/check_mk/otel_collector.d/wato/otel_collector_prom_scrape.mk",
             "etc/check_mk/otel_collector.d/wato/sitespecific.mk",
         ]
 

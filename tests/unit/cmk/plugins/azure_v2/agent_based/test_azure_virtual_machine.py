@@ -373,17 +373,16 @@ def test_discover_azure_vm_network_io(
         pytest.param(
             interfaces.CHECK_DEFAULT_PARAMETERS,
             Resource(
-                "id",
-                "name",
-                "Microsoft.Compute/virtualMachines",
-                "consulting",
-                None,
-                "westeurope",
-                {},
-                {},
-                {"statuses": ["Max recursion depth reached", "Max recursion depth reached"]},
-                {},
-                "some_hash",
+                id="id",
+                name="name",
+                type="Microsoft.Compute/virtualMachines",
+                group="consulting",
+                kind=None,
+                location="westeurope",
+                specific_info={
+                    "statuses": ["Max recursion depth reached", "Max recursion depth reached"]
+                },
+                subscription="some_hash",
             ),
             [
                 Result(state=State.OK, summary="[0]"),

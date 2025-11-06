@@ -15,7 +15,7 @@ from datetime import datetime
 from enum import auto, Enum
 from typing import Any, NamedTuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v1 import Metric, Result
@@ -41,10 +41,10 @@ from cmk.plugins.lib.labels import ensure_valid_labels
 AZURE_AGENT_SEPARATOR = "|"
 
 
-class AzureMetric(NamedTuple):
+class AzureMetric(BaseModel):
     name: str
     aggregation: str
-    value: float
+    value: float | int
     unit: str
     metadata_mapping: Mapping[str, str] | None = None
     # here we don't care about dimension filters because
@@ -57,17 +57,19 @@ class AzureResourceMetric:
     metric: AzureMetric
 
 
-class Resource(NamedTuple):
+class Resource(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     id: str
     name: str
     type: str
     group: str
     kind: str | None = None
     location: str | None = None
-    tags: Mapping[str, str] = {}
-    properties: Mapping[Any, Any] = {}
-    specific_info: Mapping[Any, Any] = {}
-    metrics: Mapping[str, AzureMetric] = {}
+    tags: Mapping[str, str] = Field(default_factory=dict)
+    properties: Mapping[Any, Any] = Field(default_factory=dict)
+    specific_info: Mapping[Any, Any] = Field(default_factory=dict)
+    metrics: Mapping[str, AzureMetric] = Field(default_factory=dict)
     subscription: str | None = None
     subscription_name: str | None = None
     tenant_id: str | None = None
@@ -175,11 +177,11 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[AzureResourc
         yield AzureResourceMetric(
             cmk_metric_alias=metric_dict["cmk_metric_alias"],
             metric=AzureMetric(
-                metric_dict["name"],
-                metric_dict["aggregation"],
-                metric_dict["value"],
-                metric_dict["unit"],
-                metric_dict.get("metadata_mapping"),
+                name=metric_dict["name"],
+                aggregation=metric_dict["aggregation"],
+                value=metric_dict["value"],
+                unit=metric_dict["unit"],
+                metadata_mapping=metric_dict.get("metadata_mapping"),
             ),
         )
 
@@ -188,19 +190,19 @@ def _get_resource(
     resource: Mapping[str, Any], metrics: Mapping[str, AzureMetric] | None = None
 ) -> Resource:
     return Resource(
-        resource["id"],
-        resource["name"],
-        resource["type"],
-        resource["group"],
-        resource.get("kind"),
-        resource.get("location"),
-        resource.get("tags", {}),
-        resource.get("properties", {}),
-        resource.get("specific_info", {}),
-        metrics or {},
-        resource.get("subscription"),
-        resource.get("subscription_name"),
-        resource.get("tenant_id"),
+        id=resource["id"],
+        name=resource["name"],
+        type=resource["type"],
+        group=resource["group"],
+        kind=resource.get("kind"),  # TODO: remove
+        location=resource.get("location"),
+        tags=resource.get("tags", {}),
+        properties=resource.get("properties", {}),
+        specific_info=resource.get("specific_info", {}),
+        metrics=metrics or {},
+        subscription=resource.get("subscription"),
+        subscription_name=resource.get("subscription_name"),
+        tenant_id=resource.get("tenant_id"),
     )
 
 

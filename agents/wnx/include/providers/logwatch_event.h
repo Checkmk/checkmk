@@ -263,6 +263,9 @@ struct EventFilters {
     std::unordered_map<std::string, IdsFilter> id;
     std::unordered_map<std::string, TagsFilter> source;
 };
+using LogwatchClusterMap =
+    std::unordered_map<std::string,
+                       std::vector<std::string>>;  // cluster name to nodes IPs
 
 class LogWatchEvent final : public Asynchronous {
 public:
@@ -305,11 +308,19 @@ private:
     void setupDefaultEntry();
     size_t addDefaultEntry();
 
+    static std::optional<YAML::Node> getLogwatchSection();
+    void initLogwatchClustersMap();
+    static LogwatchClusterMap parseClustersMap(const YAML::Node &clustersNode);
+    bool isCurrentIpInCluster(const std::string &cluster_name) const;
+
     // limits block
     int64_t max_size_ = cfg::logwatch::kMaxSize;
     int64_t max_line_length_ = cfg::logwatch::kMaxLineLength;
     int64_t max_entries_ = cfg::logwatch::kMaxEntries;
     int64_t timeout_ = cfg::logwatch::kTimeout;
+
+    // clusters block
+    LogwatchClusterMap clusters_;
 };
 
 // ***********************************************************************

@@ -248,6 +248,11 @@ logwatch:
         # - 'Application': ;;SAP           # exclude SAP from Application log
         # - '*': checkmk;ibm;;Microsoft    # include checkmk and ibm, exclude Microsoft from all logs with exception of Application
 
+    clusters: # cluster name and node IPs that belong to the cluster
+       # test_cluster:
+       #    - ip1
+       #    - ip2
+       #    - ip3
 
 plugins:
     # enabled: yes

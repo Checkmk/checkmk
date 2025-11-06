@@ -197,6 +197,12 @@ logwatch:
     filter_ids: # to filter event log by id
         - '*': ;;       # 1;2-10;;3;5-7 means include 1, 2, 4, 8, 9, 10. ;; means nothing
 
+    clusters: # cluster name and node IPs that belong to the cluster
+        # test_cluster:
+        #    - ip1
+        #    - ip2
+        #    - ip3
+
 plugins:
     enabled: yes
 

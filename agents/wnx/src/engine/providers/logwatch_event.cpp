@@ -277,6 +277,7 @@ std::vector<TagsFilter> ProcessEventTags(std::optional<YAML::Node> &log_tags) {
 
 void LogWatchEvent::loadConfig() {
     loadSectionParameters();
+    initLogwatchClustersMap();
     size_t count = 0;
     try {
         auto log_array = readLogEntryArray(cfg::vars::kLogWatchEventLogFile);
@@ -345,22 +346,14 @@ void LogWatchEvent::loadSectionParameters() {
 
 std::optional<YAML::Node> LogWatchEvent::readLogEntryArray(
     std::string_view name) {
-    const auto cfg = cfg::GetLoadedConfig();
-    const auto section = cfg[cfg::groups::kLogWatchEvent];
-
-    // sanity checks:
-    if (!section) {
-        XLOG::t("'{}' section absent", cfg::groups::kLogWatchEvent);
+    const auto section_opt = getLogwatchSection();
+    if (!section_opt.has_value()) {
         return {};
     }
-
-    if (!section.IsMap()) {
-        XLOG::l("'{}' is not correct", cfg::groups::kLogWatchEvent);
-        return {};
-    }
+    const auto &logwatch_section = *section_opt;
 
     // get array, on success, return it
-    const auto log_array = section[name];
+    const auto log_array = logwatch_section[name];
     if (!log_array) {
         XLOG::t("'{}' section has no '{}' member", cfg::groups::kLogWatchEvent,
                 name);
@@ -390,6 +383,87 @@ size_t LogWatchEvent::processLogEntryArray(const YAML::Node &log_array) {
     }
 
     return count;
+}
+
+std::optional<YAML::Node> LogWatchEvent::getLogwatchSection() {
+    const auto cfg = cfg::GetLoadedConfig();
+    const auto section = cfg[cfg::groups::kLogWatchEvent];
+    if (!section || !section.IsDefined() || !section.IsMap()) {
+        XLOG::t("getLogwatchSection: '{}' section is absent or not correct",
+                cfg::groups::kLogWatchEvent);
+        return {};
+    }
+    return section;
+}
+
+LogwatchClusterMap LogWatchEvent::parseClustersMap(
+    const YAML::Node &clusters_node) {
+    if (!clusters_node || !clusters_node.IsMap()) {
+        return {};
+    }
+
+    LogwatchClusterMap clusters_map;
+    clusters_map.reserve(clusters_node.size());
+
+    // Not possible to use range-based loop with structured binding as
+    // YAML::Node doesn't support it yet.
+    // Update in case YAML::Node starts providing such interface.
+    for (const auto &cluster : clusters_node) {
+        auto cluster_name = cluster.first.as<std::string>();
+        const auto &ip_list_node = cluster.second;
+
+        // Add cluster to the map even if it has no IPs
+        if (!ip_list_node || !ip_list_node.IsSequence()) {
+            clusters_map.try_emplace(cluster_name);
+            continue;
+        }
+
+        std::vector<std::string> ip_addresses;
+        ip_addresses.reserve(ip_list_node.size());
+
+        std::ranges::transform(ip_list_node, std::back_inserter(ip_addresses),
+                               [](const YAML::Node &ip_node) {
+                                   return ip_node.as<std::string>();
+                               });
+
+        clusters_map.try_emplace(std::move(cluster_name),
+                                 std::move(ip_addresses));
+    }
+
+    return clusters_map;
+}
+
+void LogWatchEvent::initLogwatchClustersMap() {
+    const auto section_opt = getLogwatchSection();
+    if (!section_opt.has_value()) {
+        return;
+    }
+    const auto &logwatch_section = *section_opt;
+
+    const auto clusters = logwatch_section[cfg::vars::kLogWatchClusters];
+    if (!clusters || !clusters.IsMap()) {
+        XLOG::t(
+            "initLogwatchClustersMap: '{}' section has no '{}' member or is not a valid map",
+            cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchClusters);
+        return;
+    }
+
+    clusters_ = parseClustersMap(clusters);
+}
+
+bool LogWatchEvent::isCurrentIpInCluster(
+    const std::string &cluster_name) const {
+    const auto it = clusters_.find(cluster_name);
+    if (it == clusters_.end()) {
+        return false;
+    }
+
+    const auto &current_ip = ip();
+    if (current_ip.empty()) {
+        return false;
+    }
+
+    return std::ranges::contains(it->second, current_ip);
 }
 
 namespace {
@@ -776,23 +850,47 @@ LogWatchLimits LogWatchEvent::getLogWatchLimits() const noexcept {
 }
 
 std::vector<fs::path> LogWatchEvent::makeStateFilesTable() const {
-    namespace fs = std::filesystem;
-    std::vector<fs::path> statefiles;
-    fs::path state_dir = cfg::GetStateDir();
-    auto ip_addr = ip();
-    if (!ip_addr.empty()) {
-        auto ip_fname = MakeStateFileName(kLogWatchEventStateFileName,
-                                          kLogWatchEventStateFileExt, ip_addr);
-        if (!ip_fname.empty()) {
-            statefiles.push_back(state_dir / ip_fname);
+    const fs::path state_dir = cfg::GetStateDir();
+    std::vector<fs::path> state_files;
+
+    const auto create_state_file = [&state_dir](std::string_view identifier =
+                                                    "") {
+        auto filename = identifier.empty()
+                            ? MakeStateFileName(kLogWatchEventStateFileName,
+                                                kLogWatchEventStateFileExt)
+                            : MakeStateFileName(kLogWatchEventStateFileName,
+                                                kLogWatchEventStateFileExt,
+                                                std::string_view{identifier});
+
+        return filename.empty() ? std::nullopt
+                                : std::make_optional(state_dir / filename);
+    };
+
+    // Priority 1: Check for cluster-specific state file
+    if (const auto cluster_file =
+            rs::find_if(clusters_,
+                        [this](const auto &cluster) {
+                            return isCurrentIpInCluster(cluster.first);
+                        });
+        cluster_file != clusters_.end()) {
+        if (auto cluster_file_path = create_state_file(cluster_file->first)) {
+            state_files.push_back(cluster_file_path.value());
         }
     }
 
-    auto normal_fname = MakeStateFileName(kLogWatchEventStateFileName,
-                                          kLogWatchEventStateFileExt);
+    // Priority 2: Check for IP-specific state file
+    if (auto ip_addr = ip(); !ip_addr.empty()) {
+        if (auto single_ip_file_path = create_state_file(ip_addr)) {
+            state_files.push_back(single_ip_file_path.value());
+        }
+    }
 
-    statefiles.push_back(state_dir / normal_fname);
-    return statefiles;
+    // Priority 3: Default state file
+    if (auto default_file_path = create_state_file()) {
+        state_files.push_back(default_file_path.value());
+    }
+
+    return state_files;
 }
 
 std::optional<IdsFilter> FindIds(std ::string_view name,
@@ -876,8 +974,10 @@ std::string LogWatchEvent::makeBody() {
                                         event_filters_);
 
     // The offsets are persisted in a statefile.
-    // Always use the first available statefile name. In case of a
-    // TCP/IP connection, this is the host-IP-specific statefile, and in
+    // Always use the first available statefile name. In case of a cluster -
+    // it is state file with cluster name,
+    // in case of single-IP address connection over TCP/IP connection,
+    // this is the host-IP-specific statefile, and in
     // case of non-TCP (test / debug run etc.) the general
     // eventstate.txt.
     const auto &statefile = statefiles.front();

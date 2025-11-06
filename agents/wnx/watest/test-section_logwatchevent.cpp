@@ -1233,4 +1233,173 @@ TEST(LogWatchEventTest, TestTagsFromString) {
     }
 }
 
+class LogWatchEventMakeStateFilesTableTest : public ::testing::Test {
+protected:
+    void SetUp() override { temp_fs_ = tst::TempCfgFs::CreateNoIo(); }
+
+    void createConfigWithClusters() const {
+        auto cfg = cfg::GetLoadedConfig();
+        cfg["logwatch"] = YAML::Load(R"(
+enabled: yes
+sendall: no
+vista_api: no
+skip_duplicated: no
+logfile:
+  - '*': warn context
+clusters:
+  cluster1:
+    - "192.168.1.10"
+    - "192.168.1.11"
+  cluster2:
+    - "10.0.0.1"
+    - "10.0.0.2"
+)");
+    }
+
+    void createConfigWithoutClusters() const {
+        auto cfg = cfg::GetLoadedConfig();
+        cfg["logwatch"] = YAML::Load(R"(
+enabled: yes
+sendall: no
+vista_api: no
+skip_duplicated: no
+logfile:
+  - '*': warn context)");
+    }
+
+private:
+    tst::TempCfgFs::ptr temp_fs_;
+};
+
+TEST_F(LogWatchEventMakeStateFilesTableTest, IpInCluster) {
+    createConfigWithClusters();
+
+    LogWatchEvent lwe;
+    lwe.loadConfig();
+
+    // Set IP that belongs to cluster1
+    lwe.registerCommandLine("192.168.1.10 test_section");
+
+    auto state_files = lwe.makeStateFilesTable();
+
+    // Should have 3 files: cluster-specific, IP-specific, and default
+    ASSERT_EQ(state_files.size(), 3);
+
+    auto cluster_filename = state_files[0].filename().string();
+    EXPECT_EQ(cluster_filename, "eventstate_cluster1.txt");
+
+    auto ip_filename = state_files[1].filename().string();
+    EXPECT_EQ(ip_filename, "eventstate_192_168_1_10.txt");
+
+    auto default_filename = state_files[2].filename().string();
+    EXPECT_EQ(default_filename, "eventstate.txt");
+
+    auto state_dir = cfg::GetStateDir();
+    for (const auto &file : state_files) {
+        EXPECT_EQ(file.parent_path(), state_dir);
+    }
+}
+
+TEST_F(LogWatchEventMakeStateFilesTableTest, IpButNoCluster) {
+    createConfigWithClusters();
+
+    LogWatchEvent lwe;
+    lwe.loadConfig();
+
+    // Set IP that doesn't belong to any cluster
+    lwe.registerCommandLine("172.16.0.1 test_section");
+
+    auto state_files = lwe.makeStateFilesTable();
+
+    // Should have 2 files: IP-specific and default (no cluster file)
+    ASSERT_EQ(state_files.size(), 2);
+
+    auto ip_filename = state_files[0].filename().string();
+    EXPECT_EQ(ip_filename, "eventstate_172_16_0_1.txt");
+
+    auto default_filename = state_files[1].filename().string();
+    EXPECT_EQ(default_filename, "eventstate.txt");
+
+    for (const auto &file : state_files) {
+        auto filename = file.filename().string();
+        EXPECT_TRUE(filename.find("cluster") == std::string::npos);
+    }
+}
+
+TEST_F(LogWatchEventMakeStateFilesTableTest, NoIpNoCluster) {
+    createConfigWithClusters();
+
+    LogWatchEvent lwe;
+    lwe.loadConfig();
+
+    auto state_files = lwe.makeStateFilesTable();
+
+    // Should have only 1 file: default
+    ASSERT_EQ(state_files.size(), 1);
+
+    auto default_filename = state_files[0].filename().string();
+    EXPECT_EQ(default_filename, "eventstate.txt");
+
+    EXPECT_EQ(state_files[0].parent_path(), cfg::GetStateDir());
+}
+
+TEST_F(LogWatchEventMakeStateFilesTableTest, NoClustersConfigured) {
+    createConfigWithoutClusters();
+
+    LogWatchEvent lwe;
+    lwe.loadConfig();
+
+    // Set an IP address
+    lwe.registerCommandLine("192.168.1.10 test_section");
+
+    auto state_files = lwe.makeStateFilesTable();
+
+    // Should have 2 files: IP-specific and default (no clusters defined)
+    ASSERT_EQ(state_files.size(), 2);
+
+    auto ip_filename = state_files[0].filename().string();
+    EXPECT_EQ(ip_filename, "eventstate_192_168_1_10.txt");
+
+    auto default_filename = state_files[1].filename().string();
+    EXPECT_EQ(default_filename, "eventstate.txt");
+
+    for (const auto &file : state_files) {
+        auto filename = file.filename().string();
+        EXPECT_TRUE(filename.find("cluster") == std::string::npos);
+    }
+}
+
+TEST_F(LogWatchEventMakeStateFilesTableTest, IpWithPort) {
+    createConfigWithClusters();
+
+    LogWatchEvent lwe;
+    lwe.loadConfig();
+
+    // Although the IP belongs to the cluster, but port not, so IP specific
+    // state file created
+    lwe.registerCommandLine("192.168.1.10:8080 test_section");
+
+    auto state_files = lwe.makeStateFilesTable();
+
+    ASSERT_GE(state_files.size(), 2U);
+
+    auto filename = state_files.front().filename().string();
+    EXPECT_EQ(filename, "eventstate_192_168_1_10_8080.txt");
+}
+
+TEST_F(LogWatchEventMakeStateFilesTableTest, EmptyCommandLine) {
+    createConfigWithClusters();
+
+    LogWatchEvent lwe;
+    lwe.loadConfig();
+
+    lwe.registerCommandLine("");
+
+    auto state_files = lwe.makeStateFilesTable();
+
+    ASSERT_EQ(state_files.size(), 1);
+
+    auto default_filename = state_files[0].filename().string();
+    EXPECT_EQ(default_filename, "eventstate.txt");
+}
 }  // namespace cma::provider

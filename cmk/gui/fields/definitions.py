@@ -1021,7 +1021,7 @@ class _CustomerField(base.String):
         "should_exist": "Customer missing: {customer!r}",
         "should_not_exist": "Customer {customer!r} already exists.",
         "edition_not_supported": "Customer field not supported in this edition.",
-        "required": "This field is required for the Managed edition.",
+        "required": "This field is required for the Checkmk Ultimate with multi-tenancy edition.",
     }
 
     def __init__(

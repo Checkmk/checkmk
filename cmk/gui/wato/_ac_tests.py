@@ -36,7 +36,12 @@ from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
 )
 from cmk.gui.userdb import get_user_attributes, htpasswd
-from cmk.gui.utils.urls import doc_reference_url, DocReference, werk_reference_url, WerkReference
+from cmk.gui.utils.urls import (
+    doc_reference_url,
+    DocReference,
+    werk_reference_url,
+    WerkReference,
+)
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACSingleResult,
@@ -171,7 +176,7 @@ class ACTestLiveproxyd(ACTest):
 
     def help(self) -> str:
         return _(
-            "The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
+            "The Livestatus Proxy Daemon is available with the Checkmk Pro edition "
             "and improves the management of the inter site connections using livestatus. Using "
             "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
             "GUI and will decrease resource usage."

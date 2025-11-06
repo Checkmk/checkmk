@@ -23,7 +23,7 @@ import logging
 import re
 import sys
 from collections import defaultdict, UserDict
-from collections.abc import Collection, Iterator, Mapping, Sequence
+from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
 from typing import Any, Final
 from urllib.parse import urljoin
 
@@ -31,7 +31,6 @@ import requests
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 __version__ = "2.5.0b1"
 
@@ -90,6 +89,17 @@ class HostnameDict(UserDict):
         if (current_count := next(self._keys_seen[key])) >= 1:
             key = f"{key}_{current_count + 1}"
         super().__setitem__(key, value)
+
+
+def deserialize_http_proxy_config(serialized_config: str | None) -> MutableMapping[str, str] | None:
+    match serialized_config:
+        case None | "FROM_ENVIRONMENT":
+            return None
+        case "NO_PROXY":
+            return {"http": "", "https": ""}
+        case str() as url:
+            return {"http": url, "https": url}
+    raise ValueError(f"Invalid serialized proxy config: {serialized_config!r}")
 
 
 def _get_partition_list(opt_string: str) -> list[str]:
@@ -173,8 +183,7 @@ class MobileironAPI:
         self._all_devices: HostnameDict = HostnameDict()
         self._devices_per_request = 200
         self.regex_patterns = regex_patterns
-        self._proxy = deserialize_http_proxy_config(proxy)
-        if _requests_proxy := self._proxy.to_requests_proxies():
+        if _requests_proxy := deserialize_http_proxy_config(proxy):
             self._session.proxies = _requests_proxy
 
     def __enter__(self) -> MobileironAPI:

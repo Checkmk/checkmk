@@ -1830,7 +1830,9 @@ def get_resource_host_labels_section(
         "entity": resource.section,
         "subscription_name": subscription.hostname,
         "subscription_id": subscription.id,
+        **({"region": region} if (region := resource.info.get("location")) else {}),
     }
+
     # for backward compatibility
     if resource.info["type"] == "Microsoft.Compute/virtualMachines":
         labels["vm_instance"] = True
@@ -1890,6 +1892,7 @@ def write_group_info(
                 "subscription_name": subscription.hostname,
                 "subscription_id": subscription.id,
                 "entity": "resource_group",
+                **({"region": region} if (region := group.info.get("location")) else {}),
             },
             tags=group.tags,
         ).write()

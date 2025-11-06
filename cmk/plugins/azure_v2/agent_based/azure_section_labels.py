@@ -53,6 +53,10 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
         cmk/azure/entity:<entity_type>:
             This label is set for all hosts that are monitoring a resource.
 
+        cmk/azure/region:<region>:
+            This label is set for all hosts that are monitoring a resource or a resource group
+            and will report the region of the azure element.
+
         cmk/azure/vm:instance:
             This label is set for all virtual machines monitored as hosts.
 

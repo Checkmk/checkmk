@@ -30,6 +30,7 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/tag/{label}:{value}",
     "cmk/azure/entity:resource_group",
     "cmk/azure/entity:<entity_type>",
+    "cmk/azure/region:<region>",
     "cmk/azure/entity:subscription",
     "cmk/azure/entity:tenant",
     "cmk/azure/vm:instance",

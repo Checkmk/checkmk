@@ -32,7 +32,6 @@ import requests
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
 __version__ = "2.5.0b1"
 
@@ -41,6 +40,8 @@ AGENT = "mobileiron"
 PASSWORD_OPTION = "password"
 
 LOGGER = logging.getLogger(f"agent_{AGENT}")
+
+REGEX_INVALID_HOST_NAME_CHARS: Final = re.compile(r"[^-0-9a-zA-Z_.]")
 
 
 class PlatformType(enum.Enum):
@@ -150,7 +151,7 @@ def _sanitize_hostname(raw_hostname: str) -> str:
     Remove the part with @..., so the "foo@bar" becomes "foo"
     Then apply the standard hostname allowed characters.
     """
-    return regex(f"[^{REGEX_HOST_NAME_CHARS}]").sub("_", raw_hostname.partition("@")[0])
+    return REGEX_INVALID_HOST_NAME_CHARS.sub("_", raw_hostname.partition("@")[0])
 
 
 class MobileironAPI:

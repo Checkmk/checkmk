@@ -9,12 +9,35 @@
 import argparse
 import shlex
 import sys
+from pathlib import Path
 from typing import Any
 
+import paramiko
+
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.utils.ssh_client import get_ssh_client
+from cmk.utils.paths import omd_root
 
 PASSWORD_OPTION = "password"
+
+
+def _get_known_hosts_file_path() -> Path:
+    return omd_root / ".ssh" / "known_hosts"
+
+
+def _assure_known_hosts_file_exists() -> None:
+    _get_known_hosts_file_path().parent.mkdir(parents=True, exist_ok=True)
+    _get_known_hosts_file_path().touch(exist_ok=True)
+
+
+def get_ssh_client() -> paramiko.SSHClient:
+    """Return a configured paramiko.SSHClient instance"""
+
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B507 # BNS:f159c1
+
+    _assure_known_hosts_file_exists()
+    client.load_host_keys(str(_get_known_hosts_file_path()))
+    return client
 
 
 def parse_arguments(argv):

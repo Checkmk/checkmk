@@ -257,10 +257,10 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.paths",
     ),
     "robotmk": ("cmk.nonfree.pro.robotmk",),
-    "sftp": ("cmk.utils.ssh_client",),
+    "sftp": ("cmk.utils.paths",),
     "smb": ("cmk.ccc.hostaddress",),
     "storeonce4x": ("cmk.utils.paths",),
-    "vnx_quotas": ("cmk.utils.ssh_client",),
+    "vnx_quotas": ("cmk.utils.paths",),
     "vsphere": (
         "cmk.agent_based.v1",  # FIXME
         "cmk.utils.paths",

@@ -346,9 +346,8 @@ def registry_credentials_id(edition) {
         case "ultimate":
         case "ultimatemt":
         case "community":
-            return "11fb3d5f-e44e-4f33-a651-274227cc48ab";
         case "pro":
-            return "registry.checkmk.com";
+            return "11fb3d5f-e44e-4f33-a651-274227cc48ab";
         case "cloud":
             return "nexus";
         default:

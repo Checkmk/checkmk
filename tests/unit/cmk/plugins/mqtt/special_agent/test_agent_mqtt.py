@@ -46,7 +46,7 @@ def test_parse_all_arguments() -> None:
     assert args.port == 1337
     assert args.protocol == "MQTTv5"
     assert args.username == "asd"
-    assert args.password == "xyz"
+    assert args.password.reveal() == "xyz"
     assert args.client_id == "ding"
 
 

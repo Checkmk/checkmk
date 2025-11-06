@@ -32,8 +32,8 @@ HOST_CONFIG = HostConfig(
                 command_arguments=[
                     "--client-id",
                     "ding",
-                    "--password",
-                    Secret(33).unsafe(),
+                    "--password-id",
+                    Secret(33),
                     "--port",
                     "1337",
                     "--protocol",
@@ -51,8 +51,8 @@ HOST_CONFIG = HostConfig(
             },
             SpecialAgentCommand(
                 command_arguments=[
-                    "--password",
-                    Secret(id=1, format="%s", pass_safely=False),
+                    "--password-id",
+                    Secret(id=1),
                     "address",
                 ]
             ),

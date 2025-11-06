@@ -26,7 +26,7 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
     command_arguments: list[str | Secret] = []
 
     command_arguments += ["--client-id", params.client_id] if params.client_id else []
-    command_arguments += ["--password", params.password.unsafe()] if params.password else []
+    command_arguments += ["--password-id", params.password] if params.password else []
     command_arguments += ["--port", f"{params.port}"] if params.port else []
     command_arguments += ["--protocol", params.protocol] if params.protocol else []
     command_arguments += ["--username", params.username] if params.username else []

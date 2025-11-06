@@ -59,7 +59,7 @@ HACK_AGENTS = {
     "kube": False,
     "metric_backend_custom_query": False,  # needs no secret
     "mobileiron": False,
-    "mqtt": True,
+    "mqtt": False,
     "netapp_ontap": False,
     "otel": False,  # needs no secret
     "prism": False,

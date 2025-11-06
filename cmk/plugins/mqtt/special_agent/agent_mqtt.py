@@ -30,10 +30,13 @@ from dataclasses import dataclass, field
 
 import paho.mqtt.client as mqtt
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 
 LOGGER = logging.getLogger("agent_mqtt")
+
+PASSWORD_OPTION = "password"
 
 EXPECTED_SYS_TOPICS = [
     "$SYS/broker/version",
@@ -130,10 +133,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         metavar="USER",
         help="Username for broker authentication",
     )
-    parser.add_argument(
-        "--password",
-        type=str,
-        metavar="PASSWORD",
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
+        required=False,
         help="Password for broker authentication",
     )
     parser.add_argument(
@@ -180,7 +183,7 @@ def receive_from_mqtt(args: argparse.Namespace) -> ReceivedData:
     # TODO: mqttc.tls_set
 
     if args.username:
-        mqttc.username_pw_set(args.username, args.password)
+        mqttc.username_pw_set(args.username, resolve_secret_option(args, PASSWORD_OPTION).reveal())
 
     try:
         mqttc.connect(args.address, args.port, keepalive=60)

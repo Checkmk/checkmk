@@ -24,6 +24,16 @@ export default {
       customSyntax: 'postcss-html',
       extends: ['stylelint-config-standard'],
       rules: {
+        // Allow only valid native CSS nesting patterns:
+        // & followed by: . : # [ space > + ~
+        // This prevents SCSS concatenation like &--modifier, &__element
+        'selector-nested-pattern': [
+          '^(&(\\.|:|#|\\[|\\s|>|\\+|~)|[^&])',
+          {
+            message:
+              'Expected "%s" to match CSS nesting pattern. Only native CSS nesting allowed. Use &:hover, & .child, &#id instead of SCSS patterns like &--modifier'
+          }
+        ],
         'keyframes-name-pattern': ['^([a-z][a-z0-9]*)((-|_|--|__)[a-z0-9]+)*$'],
         // https://github.com/ota-meshi/stylelint-config-recommended-vue/blob/main/lib/vue-specific-rules.js
         'declaration-property-value-no-unknown': [

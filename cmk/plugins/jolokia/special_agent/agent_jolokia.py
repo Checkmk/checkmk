@@ -9,8 +9,10 @@
 
 import argparse
 import sys
+from contextlib import suppress
 
 import cmk.utils.paths
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.utils.password_store import replace_passwords
 
@@ -36,11 +38,17 @@ def parse_arguments(argv):
         "--vcrtrace",
         action=vcrtrace(filter_headers=mk_jolokia.JolokiaInstance.FILTER_HEADERS),
     )
+    parser_add_secret_option(
+        parser,
+        long=f"--{mk_jolokia.PASSWORD_OPTION}",
+        help="Password for authentication",
+        required=False,
+    )
 
     opts_with_help: list[tuple[str, str | None | float, str]] = [
-        opt  # type: ignore[misc]
-        for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES
-        if len(opt) == 3
+        (key, default, help_[0])  # type: ignore[misc]
+        for key, default, *help_ in mk_jolokia.DEFAULT_CONFIG_TUPLES
+        if help_ and key != mk_jolokia.PASSWORD_OPTION
     ]
 
     for key, default, help_str in opts_with_help:
@@ -71,8 +79,12 @@ def main(sys_argv=None):
         config["verify"] = False
 
     for key in config:
-        if hasattr(args, key):
-            config[key] = getattr(args, key)
+        if key == mk_jolokia.PASSWORD_OPTION:
+            with suppress(TypeError):
+                config[key] = resolve_secret_option(args, mk_jolokia.PASSWORD_OPTION).reveal()
+        else:
+            with suppress(AttributeError):
+                config[key] = getattr(args, key)
 
     instance = mk_jolokia.JolokiaInstance(config, USER_AGENT)
     try:

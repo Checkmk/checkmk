@@ -18,6 +18,8 @@ __version__ = "2.5.0b1"
 
 USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 
+PASSWORD_OPTION = "password"
+
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
 # If you want to use the old behaviour just use old_stdout.
@@ -271,7 +273,7 @@ DEFAULT_CONFIG_TUPLES = (
     ("port", 8080, "TCP Port of the Jolokia server."),
     ("suburi", "jolokia", "Path-component of the URI to query."),
     ("user", "monitoring", "Username to use for connecting."),
-    ("password", None, "Password to use for connecting."),
+    (PASSWORD_OPTION, None, "Password to use for connecting."),
     ("mode", "digest", 'Authentication mode. Can be "basic", "digest" or "https".'),
     ("instance", None, "Name of the instance in the monitoring. Defaults to port."),
     ("verify", None),
@@ -340,7 +342,7 @@ class JolokiaInstance:
         required_keys = set(("protocol", "server", "port", "suburi", "timeout"))
         auth_mode = config.get("mode")
         if auth_mode in ("digest", "basic", "basic_preemtive"):
-            required_keys |= set(("user", "password"))
+            required_keys |= set(("user", PASSWORD_OPTION))
         elif auth_mode == "https":
             required_keys |= set(("client_cert", "client_key"))
         if config.get("service_url") is not None and config.get("service_user") is not None:
@@ -436,12 +438,12 @@ class JolokiaInstance:
         elif auth_method == "digest":
             session.auth = HTTPDigestAuth(
                 self._config["user"],
-                self._config["password"],
+                self._config[PASSWORD_OPTION],
             )
         elif auth_method in ("basic", "basic_preemptive"):
             session.auth = (
                 self._config["user"],
-                self._config["password"],
+                self._config[PASSWORD_OPTION],
             )
         else:
             raise NotImplementedError("Authentication method %r" % auth_method)

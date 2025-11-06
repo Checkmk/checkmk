@@ -55,7 +55,7 @@ HACK_AGENTS = {
     "ipmi_sensors": False,
     "jenkins": False,
     "jira": True,
-    "jolokia": True,
+    "jolokia": False,
     "kube": False,
     "metric_backend_custom_query": False,  # needs no secret
     "mobileiron": False,

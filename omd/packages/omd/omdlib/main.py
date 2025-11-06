@@ -40,7 +40,6 @@ import omdlib
 import omdlib.backup
 import omdlib.utils
 from omdlib.config_hooks import (
-    _update_cmk_core_config,
     config_set_all,
     config_set_value,
     ConfigHook,
@@ -51,6 +50,7 @@ from omdlib.config_hooks import (
     load_config_hooks,
     load_hook_dependencies,
     save_site_conf,
+    update_cmk_core_config,
 )
 from omdlib.console import ok, show_success
 from omdlib.contexts import RootContext, SiteContext
@@ -2255,7 +2255,7 @@ def finalize_site_as_user(
     initialize_site_ca(site)
     initialize_agent_ca(site)
     save_site_conf(site_home, config)
-    _update_cmk_core_config(config)
+    update_cmk_core_config(config)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         create_instance_id(site_home=Path(site_home), instance_id=uuid4())

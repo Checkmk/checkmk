@@ -189,7 +189,7 @@ def _config_load_hook(
             else:
                 description_active = False
 
-    hook_info = call_hook(site, hook_name, ["choices"], verbose)[1]
+    hook_info = _call_hook(site, hook_name, ["choices"], verbose)[1]
     assert alias is not None, "Implementation error, please contact support"
     return ConfigHook(
         choices=_parse_hook_choices(hook_info),
@@ -235,9 +235,9 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
 def load_hook_dependencies(
     site: "SiteContext", config_hooks: ConfigHooks, verbose: bool
 ) -> ConfigHooks:
-    for hook_name in sort_hooks(list(config_hooks.keys())):
+    for hook_name in _sort_hooks(list(config_hooks.keys())):
         hook = config_hooks[hook_name]
-        exitcode, _content = call_hook(site, hook_name, ["depends"], verbose)
+        exitcode, _content = _call_hook(site, hook_name, ["depends"], verbose)
         if exitcode:
             hook.unstructured["active"] = False
         else:
@@ -254,9 +254,9 @@ def load_config(site: "SiteContext", verbose: bool) -> Config:
     site_home = SitePaths.from_site_name(site.name).home
     config = read_site_config(site_home)
     if site.hook_dir and os.path.exists(site.hook_dir):
-        for hook_name in sort_hooks(os.listdir(site.hook_dir)):
+        for hook_name in _sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
-                config[hook_name] = call_hook(
+                config[hook_name] = _call_hook(
                     site, hook_name, ["default", edition(Path(site_home)).long], verbose
                 )[1]
     return config
@@ -284,18 +284,18 @@ def read_site_config(site_home: str) -> Config:
 
 # Always sort CORE hook to the end because it runs "cmk -U" which
 # relies on files created by other hooks.
-def sort_hooks(hook_names: list[str]) -> Iterable[str]:
+def _sort_hooks(hook_names: list[str]) -> Iterable[str]:
     return sorted(hook_names, key=lambda n: (n == "CORE", n))
 
 
-def hook_exists(site: "SiteContext", hook_name: str) -> bool:
+def _hook_exists(site: "SiteContext", hook_name: str) -> bool:
     if not site.hook_dir:
         return False
     hook_file = site.hook_dir + hook_name
     return os.path.exists(hook_file)
 
 
-def call_hook(
+def _call_hook(
     site: "SiteContext", hook_name: str, args: list[str], verbose: bool
 ) -> ConfigHookResult:
     if not site.hook_dir:
@@ -337,9 +337,9 @@ def call_hook(
 def config_set_all(
     site: "SiteContext", config: Config, verbose: bool, ignored_hooks: Sequence[str]
 ) -> None:
-    for hook_name in sort_hooks(list(config.keys())):
+    for hook_name in _sort_hooks(list(config.keys())):
         # Hooks may vanish after and up- or downdate
-        if not hook_exists(site, hook_name):
+        if not _hook_exists(site, hook_name):
             continue
 
         if hook_name in ignored_hooks:
@@ -351,7 +351,7 @@ def config_set_all(
 def _config_set(site: "SiteContext", config: Config, hook_name: str, verbose: bool) -> None:
     value = config[hook_name]
 
-    exitcode, output = call_hook(site, hook_name, ["set", value], verbose)
+    exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
     if exitcode:
         return
 
@@ -373,13 +373,13 @@ def config_set_value(
     _config_set(site, config, hook_name, verbose)
 
     if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
-        _update_cmk_core_config(config)
+        update_cmk_core_config(config)
 
     if save:
         save_site_conf(SitePaths.from_site_name(site.name).home, config)
 
 
-def _update_cmk_core_config(config: Config) -> None:
+def update_cmk_core_config(config: Config) -> None:
     if config["CORE"] == "none":
         return  # No core config is needed in this case
 

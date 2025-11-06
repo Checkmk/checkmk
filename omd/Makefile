@@ -100,15 +100,15 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
-	  egrep -h "^$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "^$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "^$${P_VAR}_DIR\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "^$${P_VAR}_BUILD(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "^$${P_VAR}_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "^$${P_VAR}_INTERMEDIATE_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "^$${P_VAR}_CACHE_PKG_PROCESS(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  grep -E -h "^$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
+	  grep -E -h "^$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
+	  grep -E -h "^$${P_VAR}_DIR\s+:=\s+" $$inc_path >> $@ ; \
+	  grep -E -h "^$${P_VAR}_BUILD(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  grep -E -h "^$${P_VAR}_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  grep -E -h "^$${P_VAR}_INTERMEDIATE_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  grep -E -h "^$${P_VAR}_CACHE_PKG_PROCESS(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
 	done || true
-	egrep -h "^PACKAGE_PYTHON3_MODULES_PYTHON_DEPS?\s+:=\s+" packages/python3-modules/python3-modules.make >> $@
+	grep -E -h "^PACKAGE_PYTHON3_MODULES_PYTHON_DEPS?\s+:=\s+" packages/python3-modules/python3-modules.make >> $@
 
 
 -include .config

@@ -39,14 +39,17 @@ from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplicati
 from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import CannotRecover, ProxmoxVeAPI
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
-    special_agent_main,
 )
 
-LOGGER = logging.getLogger("agent_proxmox_ve")
+__version__ = "2.5.0b1"
+
+AGENT = "proxmox_ve"
+
+LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 PASSWORD_OPTION = "password"
 
@@ -432,10 +435,11 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
     try:
-        return special_agent_main(parse_arguments, agent_proxmox_ve_main)
+        return agent_proxmox_ve_main(parse_arguments(sys.argv[1:]))
     except CannotRecover as e:
         sys.stderr.write(f"{e}\n")
         return 1

@@ -162,9 +162,9 @@ class CmkPage(LocatorHelper):
 
     def check_no_errors(self, timeout: float = TIMEOUT_ACTIVATE_CHANGES_MS / 4) -> None:
         """Check that no errors are present on the page."""
-        expect(self.locator("div.error"), "Some errors are present on the page").not_to_be_visible(
-            timeout=timeout
-        )
+        expect(
+            self.main_area.locator("div.error"), message="Some errors are present on the page!"
+        ).not_to_be_visible(timeout=timeout)
 
     def go(
         self,

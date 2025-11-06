@@ -32,6 +32,7 @@ from cmk.inventory.structured_data import SDPath
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
+from cmk.utils.password_store import PasswordId
 
 _ContactgroupName = str
 SizePT = NewType("SizePT", float)
@@ -781,3 +782,21 @@ class PasswordPolicy(TypedDict):
 class GraphTimerange(TypedDict):
     title: str
     duration: int
+
+
+# Need to use functional syntax because of the no-cert-check attribute
+NtopConnectionSpec = TypedDict(
+    "NtopConnectionSpec",
+    {
+        "is_activated": bool,
+        # Was introduced later
+        "is_host_filter_activated": NotRequired[bool],
+        "hostaddress": str,
+        "port": int,
+        "protocol": Literal["https", "http"],
+        "no-cert-check": bool,
+        "admin_username": str,
+        "admin_password": PasswordId,
+        "use_custom_attribute_as_ntop_username": Literal[False, "ntop_alias"],
+    },
+)

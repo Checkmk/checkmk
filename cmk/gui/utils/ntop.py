@@ -14,14 +14,15 @@ from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import NtopConnectionSpec
 from cmk.gui.watolib.config_sync import get_site_globals
 
 
-def get_ntop_connection() -> dict | None:
+def get_ntop_connection() -> NtopConnectionSpec | None:
     # Use this function if you *really* want to try accessing the ntop connection settings
     try:
         # ntop is currently part of CEE and will *only* be defined if we are a CEE
-        return active_config.ntop_connection  # type: ignore[attr-defined, unused-ignore]
+        return active_config.ntop_connection
     except AttributeError:
         return None
 
@@ -33,14 +34,34 @@ def get_ntop_connection_by_site() -> dict[SiteId, dict]:
     }
 
 
-def get_ntop_connection_mandatory() -> dict:
+def get_ntop_connection_mandatory() -> NtopConnectionSpec:
     connection = get_ntop_connection()
-    return connection if connection else {}
+    return (
+        connection
+        if connection
+        else NtopConnectionSpec(
+            {
+                "admin_password": ("password", ""),
+                "admin_username": "",
+                "hostaddress": "",
+                "is_activated": False,
+                "is_host_filter_activated": True,
+                "no-cert-check": True,
+                "port": 3000,
+                "protocol": "https",
+                "use_custom_attribute_as_ntop_username": False,
+            }
+        )
+    )
 
 
 def is_ntop_available() -> bool:
-    # Use this function if you want to know if the ntop intergration is available in general
-    return isinstance(get_ntop_connection(), dict)
+    """Use this function if you want to know if the ntop intergration is available in general"""
+    try:
+        active_config.ntop_connection
+        return True
+    except AttributeError:
+        return False
 
 
 def is_ntop_active() -> bool:
@@ -48,7 +69,7 @@ def is_ntop_active() -> bool:
         return False
 
     ntop = get_ntop_connection_mandatory()
-    if not ntop.get("is_activated", False):
+    if not ntop["is_activated"]:
         return False
     return True
 
@@ -61,7 +82,7 @@ def is_ntop_configured() -> bool:
         return False
 
     ntop = get_ntop_connection_mandatory()
-    if not ntop.get("is_activated", False):
+    if not ntop["is_activated"]:
         return False
 
     custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", False)
@@ -76,15 +97,16 @@ def is_ntop_configured() -> bool:
 
 
 def use_ntopng_host_filter() -> bool:
-    return get_ntop_connection_mandatory().get("is_host_filter_activated", True)
+    result = get_ntop_connection_mandatory().get("is_host_filter_activated", True)
+    assert isinstance(result, bool)
+    return result
 
 
 def get_ntop_misconfiguration_reason() -> str:
     if not is_ntop_available():
         return _("ntopng integration is only available in CEE")
     ntop = get_ntop_connection()
-    assert isinstance(ntop, dict)
-    if not ntop.get("is_activated", False):
+    if not ntop or not ntop["is_activated"]:
         return _("ntopng integration is not activated under global settings.")
     custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
     if custom_attribute_name and not user.get_attribute(custom_attribute_name, ""):

@@ -1006,7 +1006,7 @@ class ModeEditUser(WatoMode):
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
                 # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
+                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[typeddict-unknown-key]
                     ntop_username_attribute
                 )
 

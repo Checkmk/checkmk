@@ -33,7 +33,7 @@ from cmk.utils import paths
 from cmk.utils.experimental_config import load_experimental_config
 
 if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
-    from cmk.gui.nonfree.pro.plugins.config.cee import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.nonfree.pro.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CEEConfig,
     )
 else:
@@ -304,14 +304,7 @@ def _config_plugin_modules() -> list[ModuleType]:
     return [
         module
         for name, module in list(sys.modules.items())
-        if (
-            name.startswith("cmk.gui.plugins.config.")
-            or name.startswith("cmk.gui.nonfree.pro.plugins.config.")
-        )
-        and name
-        not in (
-            "cmk.gui.plugins.config.base",
-            "cmk.gui.nonfree.pro.plugins.config.cee",
-        )
+        if name.startswith("cmk.gui.plugins.config.")
+        and name != "cmk.gui.plugins.config.base"
         and module is not None
     ]

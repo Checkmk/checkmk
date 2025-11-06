@@ -105,10 +105,12 @@ watch(
     </div>
 
     <div v-if="items.length > 0">
+      <!-- size attr must not be 1 for multiple select fields as chrome defaults to a dropdown then
+      https://developer.chrome.com/release-notes/142?hl=en#mobile_and_desktop_parity_for_select_element_rendering_modes -->
       <select
         v-model="selected"
-        multiple
-        :size="Math.min(items.length, 10)"
+        multiple="true"
+        :size="Math.max(2, Math.min(items.length, 10))"
         :style="selectStyle"
         :aria-label="props.title"
       >

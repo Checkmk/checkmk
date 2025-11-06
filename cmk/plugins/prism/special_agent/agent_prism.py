@@ -16,16 +16,23 @@ from typing import Any, NotRequired, TypedDict
 import requests
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
+from cmk.server_side_programs.v1_unstable import (
+    HostnameValidationAdapter,
+    report_agent_crashes,
+    vcrtrace,
+)
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
-    special_agent_main,
 )
+
+__version__ = "2.5.0b1"
+
+AGENT = "prism"
 
 PASSWORD_OPTION = "password"
 
-LOGGING = logging.getLogger("agent_prism")
+LOGGING = logging.getLogger(f"agent_{AGENT}")
 
 
 class GatewayData(TypedDict):
@@ -246,9 +253,10 @@ def agent_prism_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_prism_main)
+    return agent_prism_main(parse_arguments(sys.argv[1:]))
 
 
 if __name__ == "__main__":

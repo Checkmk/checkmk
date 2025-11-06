@@ -24,9 +24,11 @@ from tests.testlib.utils import (
 from tests.testlib.version import (
     CMKEdition,
     CMKPackageInfo,
+    CMKPackageInfoOld,
     edition_from_env,
     package_hash_path,
     TypeCMKEdition,
+    TypeCMKEditionOld,
     version_from_env,
 )
 
@@ -50,6 +52,8 @@ DISTRO_CODES = {
     "sles-15sp5": "sles15sp5",
     "sles-15sp6": "sles15sp6",
 }
+TCMKPackageInfos = CMKPackageInfo | CMKPackageInfoOld
+TypeCMKEditions = TypeCMKEdition | TypeCMKEditionOld
 
 
 class ABCPackageManager(abc.ABC):
@@ -99,7 +103,9 @@ class ABCPackageManager(abc.ABC):
         return Path("/etc/debian_version").exists()
 
     def download(
-        self, package_info: CMKPackageInfo | None = None, target_folder: Path | None = None
+        self,
+        package_info: TCMKPackageInfos | None = None,
+        target_folder: Path | None = None,
     ) -> Path:
         """Download a Checkmk package."""
         package_info = (
@@ -124,7 +130,7 @@ class ABCPackageManager(abc.ABC):
 
         return target_path
 
-    def install(self, package_info: CMKPackageInfo) -> None:
+    def install(self, package_info: TCMKPackageInfos) -> None:
         """Install a Checkmk package."""
         edition = package_info.edition
         version = package_info.version.version_rc_aware
@@ -149,24 +155,24 @@ class ABCPackageManager(abc.ABC):
             self._install_package(package_path)
             os.unlink(package_path)
 
-    def uninstall(self, package_info: CMKPackageInfo) -> None:
+    def uninstall(self, package_info: TCMKPackageInfos) -> None:
         package_name = self.installed_package_name(
             package_info.edition, package_info.version.version_rc_aware
         )
         self._uninstall_package(package_name)
 
     def _write_package_hash(
-        self, version: str, edition: TypeCMKEdition, package_path: Path
+        self, version: str, edition: TypeCMKEditions, package_path: Path
     ) -> None:
         pkg_hash = _sha256_file(package_path)
         package_hash_path(version, edition).write_text(f"{pkg_hash}  {package_path.name}\n")
 
     @abc.abstractmethod
-    def package_name(self, edition: TypeCMKEdition, version: str) -> str:
+    def package_name(self, edition: TypeCMKEditions, version: str) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def installed_package_name(self, edition: TypeCMKEdition, version: str) -> str:
+    def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -255,10 +261,10 @@ class PackageManagerDEB(ABCPackageManager):
         distro_name = match.group(1)
         return cls(distro_name)
 
-    def package_name(self, edition: TypeCMKEdition, version: str) -> str:
+    def package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}_0.{self.distro_name}_amd64.deb"
 
-    def installed_package_name(self, edition: TypeCMKEdition, version: str) -> str:
+    def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
 
     def get_edition(self, package_path: Path) -> TypeCMKEdition:
@@ -307,10 +313,10 @@ class ABCPackageManagerRPM(ABCPackageManager):
         # Default to RHEL for other RPM-based distros
         return PackageManagerRHEL(distro_name)
 
-    def package_name(self, edition: TypeCMKEdition, version: str) -> str:
+    def package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name}-38.x86_64.rpm"
 
-    def installed_package_name(self, edition: TypeCMKEdition, version: str) -> str:
+    def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
 
     def get_edition(self, package_path: Path) -> TypeCMKEdition:
@@ -363,10 +369,10 @@ class PackageManagerCMA(PackageManagerDEB):
         distro_name = f"cma-{cma_version}"
         return cls(distro_name)
 
-    def package_name(self, edition: TypeCMKEdition, version: str) -> str:
+    def package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name.split('-')[1]}-x86_64.cma"
 
-    def installed_package_name(self, edition: TypeCMKEdition, version: str) -> str:
+    def installed_package_name(self, edition: TypeCMKEditions, version: str) -> str:
         return f"check-mk-{edition.long}-{version.split('-rc')[0]}"
 
     def get_edition(self, package_path: Path) -> TypeCMKEdition:

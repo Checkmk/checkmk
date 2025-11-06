@@ -300,6 +300,44 @@ class TypeCMKEditionOld:
     def is_cloud_edition(self) -> bool:
         return self.edition_data is self.CLOUD
 
+    def edition_from_text(self, value: str) -> "TypeCMKEditionOld":
+        """Parse Checkmk edition from short or long form of Checkmk edition texts.
+
+        Wraps the method `EditionOld::from_long_edition`.
+
+        Args:
+            value (str): Text corresponding to short / long form of Checkmk editions.
+                Example: 'raw', 'enterprise', 'cloud'
+
+        Raises:
+            excp: `ValueError` when the text can not be parsed.
+
+        Returns:
+            TypeCMKEditionOld: Object specific to the parsed Checkmk edition.
+        """
+        excp = ValueError()
+        try:
+            edition = self.from_long_edition(value)
+        except RuntimeError as excp_short:
+            excp.add_note(str(excp_short))
+            try:
+                edition = getattr(self, value.upper())
+            except AttributeError as excp_long:
+                excp.add_note(str(excp_long))
+                excp.add_note(
+                    f"String: '{value}' neither matches 'short' nor 'long' edition formats!"
+                )
+                raise excp
+        return TypeCMKEditionOld(edition)
+
+    def from_long_edition(self, text: str) -> EditionOld:
+        """Deprecated; use `CMKEditionOld.edition_from_text` instead.
+
+        Parse edition from long-form of edition text and wrap it in an object.
+        Example of long-form of edition text: 'enterprise'.
+        """
+        return self._edition_data.from_long_edition(text)
+
 
 # import this in other modules, rather than 'TypeCMKEditionOld'.
 CMKEditionOld: Final = TypeCMKEditionOld()
@@ -519,7 +557,7 @@ class CMKPackageInfoOld:
         return f"{self._version.version}.{self._edition.short}"
 
 
-def package_hash_path(version: str, edition: TypeCMKEdition) -> Path:
+def package_hash_path(version: str, edition: TypeCMKEdition | TypeCMKEditionOld) -> Path:
     return Path(f"/tmp/cmk_package_hash_{version}_{edition.long}")
 
 
@@ -538,6 +576,17 @@ def edition_from_env(fallback: TypeCMKEdition = CMKEdition(CMKEdition.PRO)) -> T
     value = os.getenv("EDITION", "")
     try:
         edition = CMKEdition.edition_from_text(value)
+    except ValueError:
+        edition = fallback
+    return edition
+
+
+def edition_from_env_old(
+    fallback: TypeCMKEditionOld = CMKEditionOld(CMKEditionOld.PRO),
+) -> TypeCMKEditionOld:
+    value = os.getenv("EDITION", "")
+    try:
+        edition = CMKEditionOld.edition_from_text(value)
     except ValueError:
         edition = fallback
     return edition

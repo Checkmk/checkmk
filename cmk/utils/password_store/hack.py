@@ -64,7 +64,7 @@ HACK_AGENTS = {
     "otel": False,  # needs no secret
     "prism": True,
     "prometheus": False,
-    "proxmox_ve": True,
+    "proxmox_ve": False,
     "pure_storage_fa": True,
     "rabbitmq": True,
     "random": False,  # needs no secret

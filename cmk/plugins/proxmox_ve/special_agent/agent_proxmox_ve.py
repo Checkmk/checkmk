@@ -29,6 +29,7 @@ from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.proxmox_ve.lib.ha_manager_status import SectionHaManagerCurrent
 from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
 from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
@@ -46,6 +47,8 @@ from cmk.special_agents.v0_unstable.agent_common import (
 )
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
+
+PASSWORD_OPTION = "password"
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -73,7 +76,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--timeout", "-t", type=int, default=50, help="API call timeout")
     parser.add_argument("--port", type=int, default=8006, help="IPv4 port to connect to")
     parser.add_argument("--username", "-u", type=str, help="username for connection")
-    parser.add_argument("--password", "-p", type=str, help="password for connection")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=False, help="password for connection"
+    )
     # TODO: warn if log-cutoff-weeks is shorter than actual log length or
     #       shorter than configured check
     parser.add_argument(
@@ -121,7 +126,14 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
     with ProxmoxVeAPI(
         host=args.hostname,
         port=args.port,
-        credentials={k: getattr(args, k) for k in ("username", "password") if getattr(args, k)},
+        credentials=(
+            {
+                "username": args.username,
+                "password": resolve_secret_option(args, PASSWORD_OPTION).reveal(),
+            }
+            if args.username
+            else {}
+        ),
         timeout=args.timeout,
         verify_ssl=not args.no_cert_check,
     ) as session:

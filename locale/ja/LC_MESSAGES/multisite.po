@@ -66780,10 +66780,10 @@ msgstr ""
 "するグラフに役立つ場合があります。このオプションを有効にすると、前の上のデー"
 "タが軸の下に表示され、下のデータがその上に表示されます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"This may partially work in Checkmk %s but will stop working from the next "
-"major version onwards."
+"This may partially work in Checkmk %s but might not work from the next major "
+"version onwards."
 msgstr ""
 "これはCheckmk %sでは一部機能するかもしれませんが、次のメジャーバージョン以降"
 "では機能しなくなります。"

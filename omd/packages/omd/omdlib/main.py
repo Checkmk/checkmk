@@ -40,17 +40,17 @@ import omdlib
 import omdlib.backup
 import omdlib.utils
 from omdlib.config_hooks import (
-    call_hook,
+    _update_cmk_core_config,
+    config_set_all,
+    config_set_value,
     ConfigHook,
     ConfigHookChoices,
     ConfigHooks,
     create_config_environment,
-    hook_exists,
     load_config,
     load_config_hooks,
     load_hook_dependencies,
     save_site_conf,
-    sort_hooks,
 )
 from omdlib.console import ok, show_success
 from omdlib.contexts import RootContext, SiteContext
@@ -1575,46 +1575,6 @@ def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> Result[
     return OK(None)
 
 
-def config_set_all(
-    site: SiteContext, config: Config, verbose: bool, ignored_hooks: Sequence[str]
-) -> None:
-    for hook_name in sort_hooks(list(config.keys())):
-        # Hooks may vanish after and up- or downdate
-        if not hook_exists(site, hook_name):
-            continue
-
-        if hook_name in ignored_hooks:
-            continue
-
-        _config_set(site, config, hook_name, verbose)
-
-
-def _config_set(site: SiteContext, config: Config, hook_name: str, verbose: bool) -> None:
-    value = config[hook_name]
-
-    exitcode, output = call_hook(site, hook_name, ["set", value], verbose)
-    if exitcode:
-        return
-
-    if output and output != value:
-        config[hook_name] = output
-
-    os.environ["CONFIG_" + hook_name] = config[hook_name]
-
-
-def config_set_value(
-    site: SiteContext, config: Config, hook_name: str, value: str, verbose: bool, save: bool = True
-) -> None:
-    config[hook_name] = value
-    _config_set(site, config, hook_name, verbose)
-
-    if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
-        _update_cmk_core_config(config)
-
-    if save:
-        save_site_conf(SitePaths.from_site_name(site.name).home, config)
-
-
 def config_usage() -> None:
     sys.stdout.write(
         """Usage of config command:
@@ -2944,17 +2904,6 @@ def main_update(
             )
 
         sys.stdout.write("Finished update.\n\n")
-
-
-def _update_cmk_core_config(config: Config) -> None:
-    if config["CORE"] == "none":
-        return  # No core config is needed in this case
-
-    sys.stdout.write("Updating core configuration...\n")
-    try:
-        subprocess.check_call(["cmk", "-U"], shell=False)
-    except subprocess.SubprocessError:
-        sys.exit("Could not update core configuration. Aborting.")
 
 
 def main_umount(

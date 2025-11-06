@@ -20,7 +20,7 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from ipaddress import ip_network, IPv4Address, IPv6Address
 from pathlib import Path
 from re import Pattern
@@ -332,3 +332,59 @@ def call_hook(
         sys.stderr.write(f"Error running {subprocess.list2cmdline(cmd)}: {content}\n")
 
     return completed_process.returncode, content
+
+
+def config_set_all(
+    site: "SiteContext", config: Config, verbose: bool, ignored_hooks: Sequence[str]
+) -> None:
+    for hook_name in sort_hooks(list(config.keys())):
+        # Hooks may vanish after and up- or downdate
+        if not hook_exists(site, hook_name):
+            continue
+
+        if hook_name in ignored_hooks:
+            continue
+
+        _config_set(site, config, hook_name, verbose)
+
+
+def _config_set(site: "SiteContext", config: Config, hook_name: str, verbose: bool) -> None:
+    value = config[hook_name]
+
+    exitcode, output = call_hook(site, hook_name, ["set", value], verbose)
+    if exitcode:
+        return
+
+    if output and output != value:
+        config[hook_name] = output
+
+    os.environ["CONFIG_" + hook_name] = config[hook_name]
+
+
+def config_set_value(
+    site: "SiteContext",
+    config: Config,
+    hook_name: str,
+    value: str,
+    verbose: bool,
+    save: bool = True,
+) -> None:
+    config[hook_name] = value
+    _config_set(site, config, hook_name, verbose)
+
+    if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
+        _update_cmk_core_config(config)
+
+    if save:
+        save_site_conf(SitePaths.from_site_name(site.name).home, config)
+
+
+def _update_cmk_core_config(config: Config) -> None:
+    if config["CORE"] == "none":
+        return  # No core config is needed in this case
+
+    sys.stdout.write("Updating core configuration...\n")
+    try:
+        subprocess.check_call(["cmk", "-U"], shell=False)
+    except subprocess.SubprocessError:
+        sys.exit("Could not update core configuration. Aborting.")

@@ -11,51 +11,70 @@
 # MSSQLSERVER tempdb 1
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Mapping
+from typing import NewType, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
+)
 
-check_info = {}
+MSSQLConnections = NewType("MSSQLConnections", Mapping[str, int])
 
 
-def parse_mssql_connections(string_table):
-    parsed = {}
+class CheckParams(TypedDict):
+    levels: tuple[int | float, int | float] | None
+
+
+def parse_mssql_connections(string_table: StringTable) -> MSSQLConnections:
+    parsed: dict[str, int] = {}
     for line in string_table:
         try:
             instance, db_name, connection_count = line
-            connection_count = int(connection_count)
-            parsed.setdefault(f"{instance} {db_name}", connection_count)
+            parsed.setdefault(f"{instance} {db_name}", int(connection_count))
         except ValueError:
             pass
-    return parsed
+    return MSSQLConnections(parsed)
 
 
-def inventory_mssql_connections(parsed):
-    for item in parsed:
-        yield item, {}
+def inventory_mssql_connections(section: MSSQLConnections) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
 
-def check_mssql_connections(item, params, parsed):
-    if item not in parsed:
+def check_mssql_connections(
+    item: str, params: CheckParams, section: MSSQLConnections
+) -> CheckResult:
+    if item not in section:
         return None
 
-    return check_levels(
-        parsed[item],
-        "connections",
-        params["levels"],
-        human_readable_func=int,
-        infoname="Connections",
+    yield from check_levels(
+        value=section[item],
+        metric_name="connections",
+        levels_upper=("fixed", params["levels"]) if params["levels"] else None,
+        render_func=lambda x: str(int(x)),
+        label="Connections",
     )
 
 
-check_info["mssql_connections"] = LegacyCheckDefinition(
+agent_section_mssql_connections = AgentSection(
     name="mssql_connections",
     parse_function=parse_mssql_connections,
+)
+
+
+check_plugin_mssql_connections = CheckPlugin(
+    name="mssql_connections",
     service_name="MSSQL Connections %s",
     discovery_function=inventory_mssql_connections,
     check_function=check_mssql_connections,
     check_ruleset_name="mssql_connections",
-    check_default_parameters={
-        "levels": None,
-    },
+    check_default_parameters=CheckParams(
+        levels=None,
+    ),
 )

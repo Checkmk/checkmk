@@ -8,7 +8,9 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.base.legacy_checks.mssql_connections import (
+    CheckParams,
     inventory_mssql_connections,
+    MSSQLConnections,
     parse_mssql_connections,
 )
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
@@ -33,27 +35,32 @@ STRING_TABLE = [
     [
         pytest.param(
             STRING_TABLE,
-            {
-                "FOO DBa": 25,
-                "FOO DBb": 0,
-            },
+            MSSQLConnections(
+                {
+                    "FOO DBa": 25,
+                    "FOO DBb": 0,
+                }
+            ),
             id="good input",
         ),
         pytest.param(
             [["BAD", "LINE"]],
-            {},
+            MSSQLConnections({}),
             id="no input",
         ),
     ],
 )
-def test_parse_mssql_connections(string_table: StringTable, expected: Mapping[str, str]) -> None:
+def test_parse_mssql_connections(string_table: StringTable, expected: MSSQLConnections) -> None:
     parsed = parse_mssql_connections(string_table)
     assert parsed == expected
 
 
 def test_inventory_mssql_connections() -> None:
     section = parse_mssql_connections(STRING_TABLE)
-    assert {item for item, _ in inventory_mssql_connections(section)} == {"FOO DBa", "FOO DBb"}
+    assert {service.item for service in inventory_mssql_connections(section)} == {
+        "FOO DBa",
+        "FOO DBb",
+    }
 
 
 @pytest.mark.parametrize(
@@ -61,13 +68,13 @@ def test_inventory_mssql_connections() -> None:
     [
         pytest.param(
             "FOO DBa",
-            {"levels": None},
+            CheckParams(levels=None),
             STRING_TABLE,
             [Result(state=State.OK, summary="Connections: 25"), Metric("connections", 25.0)],
         ),
         pytest.param(
             "FOO DBa",
-            {"levels": (20, 30)},
+            CheckParams(levels=(20, 30)),
             STRING_TABLE,
             [
                 Result(state=State.WARN, summary="Connections: 25 (warn/crit at 20/30)"),
@@ -76,7 +83,7 @@ def test_inventory_mssql_connections() -> None:
         ),
         pytest.param(
             "FOO DBa",
-            {"levels": (10, 20)},
+            CheckParams(levels=(10, 20)),
             STRING_TABLE,
             [
                 Result(state=State.CRIT, summary="Connections: 25 (warn/crit at 10/20)"),

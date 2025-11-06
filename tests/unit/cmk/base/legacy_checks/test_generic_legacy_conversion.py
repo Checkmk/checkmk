@@ -731,7 +731,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "msexch_replhealth",
         "msoffice_licenses",
         "msoffice_serviceplans",
-        "mssql_connections",
         "mssql_instance",
         "mysql",
         "mysql_sessions",

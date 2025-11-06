@@ -7,16 +7,13 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.base.legacy_checks.mssql_connections import (
+from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
+from cmk.plugins.mssql.agent_based.mssql_connections import (
     CheckParams,
     inventory_mssql_connections,
     MSSQLConnections,
     parse_mssql_connections,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName
-
-# TODO: Enable mypy rule after plugin migration
-# mypy: disable-error-code="no-untyped-call"
 
 
 @pytest.fixture

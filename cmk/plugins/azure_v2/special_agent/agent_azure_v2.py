@@ -1348,7 +1348,8 @@ async def process_cosmosdb(
                 # create a new resource for the database
                 db_resource_info = {
                     "id": database_name,  # id = name of the database
-                    "name": database_name,
+                    # name: <cosmosdb account name>_<database name>
+                    "name": f"{resource.name}_{database_name}",
                     # fake type to fake the section (last part after /),
                     # this will also be the label "entity"
                     "type": "Microsoft.DocumentDB/databaseAccounts/cosmos_database",

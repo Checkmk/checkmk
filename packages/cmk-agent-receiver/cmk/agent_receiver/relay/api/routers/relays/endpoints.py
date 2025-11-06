@@ -104,7 +104,7 @@ async def unregister_relay(
 
 @router.post(
     "/{relay_id}/monitoring",
-    status_code=fastapi.status.HTTP_200_OK,
+    status_code=fastapi.status.HTTP_204_NO_CONTENT,
     dependencies=[fastapi.Depends(check_relay)],
 )
 async def forward_monitoring_data(
@@ -128,6 +128,4 @@ async def forward_monitoring_data(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             content=f"Failed to forward monitoring data: {e}",
         )
-    return fastapi.Response(
-        status_code=fastapi.status.HTTP_200_OK, content="Monitoring data forwarded successfully"
-    )
+    return fastapi.Response(status_code=fastapi.status.HTTP_204_NO_CONTENT)

@@ -9,7 +9,7 @@ from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
-from cmk.testlib.agent_receiver.mock_socket import create_socket
+from cmk.testlib.agent_receiver.mock_socket import create_socket, MockSocket
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 
 
@@ -40,7 +40,9 @@ def test_forward_monitoring_data(
         f"start_timestamp:{timestamp};"
         f"host_by_name:{host};"
     )
+    saved_socket: MockSocket  # assigned in with-block
     with create_socket() as ms:
+        saved_socket = ms
         with patch.object(Config, "raw_data_socket", ms.socket_path):
             monitoring_data = MonitoringData(
                 serial=cf.serial,
@@ -52,8 +54,11 @@ def test_forward_monitoring_data(
                 relay_id=relay_id,
                 monitoring_data=monitoring_data,
             )
-            assert response.status_code == HTTPStatus.OK, response.text
+            assert response.status_code == HTTPStatus.NO_CONTENT
             received = ms.data_queue.get(timeout=5.0)
             lines = received.splitlines()
             assert lines[0].decode() == expected_header
             assert lines[1] == payload
+
+    # socket should be closed after context manager exits
+    assert saved_socket.fileno == -1, "Socket was not closed"

@@ -72,6 +72,10 @@ class MockSocket:
     def is_running(self) -> bool:
         return self._running_thread is not None and self._running_thread.is_alive()
 
+    @property
+    def fileno(self) -> int:
+        return self._soc.fileno()
+
 
 @contextlib.contextmanager
 def create_socket(buffer_size: int = 1024) -> Iterator[MockSocket]:

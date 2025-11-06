@@ -79,7 +79,7 @@ HACK_AGENTS = {
     "storeonce": True,
     "three_par": False,
     "tinkerforge": False,  # needs no secret
-    "ucs_bladecenter": True,
+    "ucs_bladecenter": False,
     "vnx_quotas": False,
     "vsphere": False,
     "zerto": False,

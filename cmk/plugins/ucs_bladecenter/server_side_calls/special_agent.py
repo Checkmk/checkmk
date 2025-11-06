@@ -8,8 +8,7 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class _Params(BaseModel, frozen=True):
@@ -22,10 +21,10 @@ def agent_ucsbladecenter_arguments(
     params: _Params, host_config: HostConfig
 ) -> Iterable[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = [
-        "-u",
+        "--username",
         params.username,
-        "-p",
-        params.password.unsafe(),
+        "--password-id",
+        params.password,
     ]
 
     if params.certificate_validation is False:

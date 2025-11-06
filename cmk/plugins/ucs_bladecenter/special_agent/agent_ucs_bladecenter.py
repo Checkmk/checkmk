@@ -28,10 +28,12 @@ from typing import Any, Final
 import requests
 import urllib3
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
-from cmk.utils.password_store import replace_passwords
 
 ElementAttributes = dict[str, str]
+
+PASSWORD_OPTION = "password"
 
 # Be aware of
 # root = ET.fromstring(content)
@@ -581,7 +583,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("-v", "--verbose", action="store_true", help="Be more verbose in logging.")
     parser.add_argument("-d", "--debug", action="store_true", help="Raise python exceptions.")
     parser.add_argument("-u", "--username", required=True, help="The username.")
-    parser.add_argument("-p", "--password", required=True, help="The password.")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="The password."
+    )
     parser.add_argument("hostname")
     return parser.parse_args(argv)
 
@@ -593,12 +597,17 @@ def setup_logging(verbose: bool) -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     if argv is None:
-        replace_passwords()
         argv = sys.argv[1:]
 
     args = parse_arguments(argv)
     setup_logging(args.verbose)
-    handle = Server(args.hostname, args.username, args.password, not args.no_cert_check, args.debug)
+    handle = Server(
+        args.hostname,
+        args.username,
+        resolve_secret_option(args, PASSWORD_OPTION).reveal(),
+        not args.no_cert_check,
+        args.debug,
+    )
     try:
         handle.login()
     except Exception as e:

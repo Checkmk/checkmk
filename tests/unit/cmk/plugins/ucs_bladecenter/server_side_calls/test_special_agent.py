@@ -25,10 +25,10 @@ HOST_CONFIG = HostConfig(
             {"username": "username", "password": Secret(23), "certificate_validation": False},
             SpecialAgentCommand(
                 command_arguments=[
-                    "-u",
+                    "--username",
                     "username",
-                    "-p",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(23),
                     "--no-cert-check",
                     "address",
                 ]
@@ -39,10 +39,10 @@ HOST_CONFIG = HostConfig(
             {"username": "username", "password": Secret(23), "certificate_validation": True},
             SpecialAgentCommand(
                 command_arguments=[
-                    "-u",
+                    "--username",
                     "username",
-                    "-p",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(23),
                     "--cert-server-name",
                     "hostname",
                     "address",

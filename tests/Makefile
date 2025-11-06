@@ -165,7 +165,7 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 test-semgrep:
 	$(SEMGREP) scan \
 	    $(SEMGREP_OUTPUT_ARGS) \
-	    --config "$(realpath semgrep/rules)" \
+	    --config "$(realpath semgrep)/rules" \
 	    --quiet \
 	    --oss-only \
 	    --use-git-ignore \
@@ -213,18 +213,18 @@ test-performance-docker:
 	RESULT_PATH=$(realpath ..) $(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
 
 test-gui-crawl: prepare-playwright
-	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl)/test_gui_crawl.py
 
 test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
+	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl)/test_gui_crawl.py --numprocesses=1
 
 test-gui-e2e test-gui-e2e-pro: prepare-playwright # full e2e test is done for pro
 	$(PYTEST) --cmk-edition pro --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/) --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e) --numprocesses=1
 
 test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (pro or higher)
 	$(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath gui_e2e/nonfree/pro) --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath gui_e2e)/nonfree/pro --numprocesses=1
 
 test-gui-e2e-ultimate:
 	EDITION=ultimate $(MAKE) test-gui-e2e-non-free
@@ -256,35 +256,35 @@ test-extension-compatibility:
 	$(PYTEST) -vv $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-community:
-	$(PYTEST) --cmk-edition community $(realpath update/community) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition community $(realpath update)/community $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-pro:
-	$(PYTEST) --cmk-edition pro $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-ultimate:
-	$(PYTEST) --cmk-edition ultimate $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition ultimate $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-ultimatemt:
-	$(PYTEST) --cmk-edition ultimatemt $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition ultimatemt $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cloud:
-	$(PYTEST) --cmk-edition cloud $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
+	$(PYTEST) --cmk-edition cloud $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
 	--session-timeout 5400
 
 test-update-cross-edition-pro-to-ultimate: # from pro to ultimate
-	$(PYTEST) --cmk-edition pro $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/nonfree/pro/test_update.py) \
+	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)/nonfree/pro/test_update.py \
 	--latest-base-version --target-edition=ultimate --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-pro-to-ultimatemt: # from pro to ultimatemt
-	$(PYTEST) --cmk-edition pro $(realpath update/nonfree/pro) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/nonfree/pro/test_update.py) \
+	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)/nonfree/pro/test_update.py \
 	--latest-base-version --target-edition=ultimatemt --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-community-to-pro: # from community to pro
-	$(PYTEST) --cmk-edition community $(realpath update/community/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(PYTEST) --cmk-edition community $(realpath update)/community/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=pro --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-community-to-ultimate: # from community to ultimate
-	$(PYTEST) --cmk-edition community $(realpath update/community/test_update.py) $(PYTEST_SYSTEM_TEST_ARGS) \
+	$(PYTEST) --cmk-edition community $(realpath update)/community/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=ultimate --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:
@@ -298,7 +298,7 @@ test-plugins:
 
 test-plugins-piggyback:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath plugins_integration/test_plugin_piggyback.py) --session-timeout 3600
+	$(realpath plugins_integration)/test_plugin_piggyback.py --session-timeout 3600
 
 test-plugins-siteless:
 	$(PYTEST) --log-cli-level=INFO $(realpath plugins_siteless) \
@@ -315,33 +315,33 @@ $(foreach TEST,$(DOCKERABLE_TESTS),$(TEST)-docker):
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_license_headers.py \
 	--python-files;
 
 test-requirements:
-	$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_requirements.py);
+	$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_requirements.py;
 
 test-py-extensions:
 	# block 1: no changes file given, test all files
 	# block 2: changes file given, test only changed files
 	if test -z "$$CHANGED_FILES_WITH_MODE_FILE"; then \
-		$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_python_extensions.py) --test-all-files -k 'py_extension' --result-out="$$RESULTS_FILE"; \
+		$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_python_extensions.py --test-all-files -k 'py_extension' --result-out="$$RESULTS_FILE"; \
 	else \
-		$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_python_extensions.py) --git-changes="$$CHANGED_FILES_WITH_MODE_FILE" -k 'py_extension' --result-out="$$RESULTS_FILE"; \
+		$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_python_extensions.py --git-changes="$$CHANGED_FILES_WITH_MODE_FILE" -k 'py_extension' --result-out="$$RESULTS_FILE"; \
 	fi
 
 test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
-	    $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
+	    $(PYTEST) --log-cli-level=INFO $(realpath code_quality)/file_content --test-all-files ; \
 	else \
-	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality)/file_content --changed-files ; \
 	fi \
 
 test-format:
 	bazel run //:format.check
 
 test-werks:
-	$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_werks.py);
+	$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_werks.py;
 
 test-code-quality: test-license-headers test-requirements test-file-content test-werks
 

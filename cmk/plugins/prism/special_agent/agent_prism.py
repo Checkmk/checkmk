@@ -15,12 +15,15 @@ from typing import Any, NotRequired, TypedDict
 
 import requests
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
+
+PASSWORD_OPTION = "password"
 
 LOGGING = logging.getLogger("agent_prism")
 
@@ -102,8 +105,8 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--username", type=str, required=True, metavar="USER", help="user account on prism"
     )
-    parser.add_argument(
-        "--password", type=str, required=True, metavar="PASSWORD", help="password for that account"
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="password for that account"
     )
     cert_args = parser.add_mutually_exclusive_group()
     cert_args.add_argument(
@@ -216,7 +219,7 @@ def agent_prism_main(args: argparse.Namespace) -> int:
             server=args.server,
             port=args.port,
             username=args.username,
-            password=args.password,
+            password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
             timeout=args.timeout,
             cert_check=args.cert_server_name or not args.no_cert_check,
         )

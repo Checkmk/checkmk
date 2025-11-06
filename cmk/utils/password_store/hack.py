@@ -62,7 +62,7 @@ HACK_AGENTS = {
     "mqtt": True,
     "netapp_ontap": False,
     "otel": False,  # needs no secret
-    "prism": True,
+    "prism": False,
     "prometheus": False,
     "proxmox_ve": False,
     "pure_storage_fa": True,

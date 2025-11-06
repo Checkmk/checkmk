@@ -25,8 +25,8 @@ def generate_prism_command(
         host_config.primary_ip_config.address,
         "--username",
         str(params["username"]),
-        "--password",
-        secret.unsafe(),
+        "--password-id",
+        secret,
     ]
 
     if "port" in params:

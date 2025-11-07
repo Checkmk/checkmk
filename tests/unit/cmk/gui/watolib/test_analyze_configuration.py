@@ -62,8 +62,9 @@ def test_registered_ac_tests() -> None:
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected_ac_tests += [
             "ACTestAlertHandlerEventTypes",
-            "ACTestSecureAgentUpdaterTransport",
+            "ACTestDeprecatedBakeryPlugins",
             "ACTestMknotifydCommunicationEncrypted",
+            "ACTestSecureAgentUpdaterTransport",
         ]
 
     registered_plugins = sorted(ac_test_registry.keys())

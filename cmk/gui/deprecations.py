@@ -40,7 +40,11 @@ from cmk.gui.userdb import load_users
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult, perform_tests
+from cmk.gui.watolib.analyze_configuration import (
+    ACResultState,
+    ACTestResult,
+    perform_tests,
+)
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
 from cmk.utils import paths
 from cmk.utils.html import replace_state_markers
@@ -375,6 +379,7 @@ def _find_ac_test_result_problems(
                         | "ACTestDeprecatedV1CheckPlugins"
                         | "ACTestDeprecatedCheckPlugins"
                         | "ACTestDeprecatedInventoryPlugins"
+                        | "ACTestDeprecatedBakeryPlugins"
                         | "ACTestDeprecatedCheckManpages"
                         | "ACTestDeprecatedGUIExtensions"
                         | "ACTestDeprecatedLegacyGUIExtensions"

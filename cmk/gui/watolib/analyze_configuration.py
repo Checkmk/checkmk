@@ -27,6 +27,7 @@ from livestatus import LocalConnection, SiteConfigurations
 import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.version import Version
 from cmk.gui import log
 from cmk.gui.config import Config
 from cmk.gui.http import Request
@@ -448,3 +449,92 @@ def merge_tests(
         for site_id, test_results_of_site in test_results_by_site_id.items()
         if (merged := list(_merge_test_results_of_site(site_id, test_results_of_site)))
     }
+
+
+def try_relative_site_path(site_id: SiteId, abs_path: Path) -> Path:
+    try:
+        return abs_path.relative_to(Path("/omd/sites", site_id))
+    except ValueError:
+        # Not a subpath, should not happen
+        return abs_path
+
+
+def compute_deprecation_result(
+    *,
+    version: str,
+    deprecated_version: str,
+    removed_version: str,
+    title_entity: str,
+    title_api: str,
+    site_id: SiteId,
+    path: Path,
+) -> ACSingleResult:
+    base = Version.from_str(version).base
+    deprecated_base = Version.from_str(deprecated_version).base
+    removed_base = Version.from_str(removed_version).base
+    assert base is not None
+    assert removed_base is not None
+    assert deprecated_base is not None
+    assert removed_base > deprecated_base
+
+    rel_path = try_relative_site_path(site_id, path)
+
+    if base > removed_base:
+        return ACSingleResult(
+            state=ACResultState.CRIT,
+            text=(
+                _("%s uses an API (%s) which was removed in Checkmk %s (File: %s).")
+                % (title_entity, title_api, removed_version, rel_path)
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    if base == removed_base:
+        return ACSingleResult(
+            state=ACResultState.CRIT,
+            text=(
+                _(
+                    "%s uses an API (%s) which was marked as deprecated in"
+                    " Checkmk %s and is removed in Checkmk %s (File: %s)."
+                )
+                % (title_entity, title_api, deprecated_version, removed_version, rel_path)
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    if base > deprecated_base:
+        return ACSingleResult(
+            state=ACResultState.WARN,
+            text=(
+                _(
+                    "%s uses an API (%s) which was marked as deprecated in"
+                    " Checkmk %s and will be removed in Checkmk %s (File: %s)."
+                )
+                % (title_entity, title_api, deprecated_version, removed_version, rel_path)
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    if base == deprecated_base:
+        return ACSingleResult(
+            state=ACResultState.WARN,
+            text=(
+                _(
+                    "%s uses an API (%s) which is marked as deprecated in"
+                    " Checkmk %s and will be removed in Checkmk %s (File: %s)."
+                )
+                % (title_entity, title_api, deprecated_version, removed_version, rel_path)
+            ),
+            site_id=site_id,
+            path=path,
+        )
+
+    return ACSingleResult(
+        state=ACResultState.OK,
+        text="",
+        site_id=site_id,
+        path=path,
+    )

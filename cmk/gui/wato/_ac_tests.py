@@ -23,7 +23,7 @@ import cmk.gui.utils
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import __version__, Version
+from cmk.ccc.version import __version__
 from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.backup.handler import BackupConfig
@@ -48,6 +48,8 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTest,
     ACTestCategories,
     ACTestRegistry,
+    compute_deprecation_result,
+    try_relative_site_path,
 )
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
@@ -1209,110 +1211,6 @@ class ACTestESXDatasources(ACTest):
             )
 
 
-def _try_rel_path(site_id: SiteId, abs_path: Path) -> Path:
-    try:
-        return abs_path.relative_to(Path("/omd/sites", site_id))
-    except ValueError:
-        # Not a subpath, should not happen
-        return abs_path
-
-
-def _compute_deprecation_result(
-    *,
-    version: str,
-    deprecated_version: str,
-    removed_version: str,
-    title_entity: str,
-    title_api: str,
-    site_id: SiteId,
-    path: Path,
-) -> ACSingleResult:
-    base = Version.from_str(version).base
-    deprecated_base = Version.from_str(deprecated_version).base
-    removed_base = Version.from_str(removed_version).base
-    assert base is not None
-    assert removed_base is not None
-    assert deprecated_base is not None
-    assert removed_base > deprecated_base
-
-    rel_path = _try_rel_path(site_id, path)
-
-    if base > removed_base:
-        return ACSingleResult(
-            state=ACResultState.CRIT,
-            text=_("%s uses an API (%s) which was removed in Checkmk %s (File: %s).")
-            % (
-                title_entity,
-                title_api,
-                removed_version,
-                rel_path,
-            ),
-            site_id=site_id,
-            path=path,
-        )
-
-    if base == removed_base:
-        return ACSingleResult(
-            state=ACResultState.CRIT,
-            text=_(
-                "%s uses an API (%s) which was marked as deprecated in"
-                " Checkmk %s and is removed in Checkmk %s (File: %s)."
-            )
-            % (
-                title_entity,
-                title_api,
-                deprecated_version,
-                removed_version,
-                rel_path,
-            ),
-            site_id=site_id,
-            path=path,
-        )
-
-    if base > deprecated_base:
-        return ACSingleResult(
-            state=ACResultState.WARN,
-            text=_(
-                "%s uses an API (%s) which was marked as deprecated in"
-                " Checkmk %s and will be removed in Checkmk %s (File: %s)."
-            )
-            % (
-                title_entity,
-                title_api,
-                deprecated_version,
-                removed_version,
-                rel_path,
-            ),
-            site_id=site_id,
-            path=path,
-        )
-
-    if base == deprecated_base:
-        return ACSingleResult(
-            state=ACResultState.WARN,
-            text=_(
-                "%s uses an API (%s) which is marked as deprecated in"
-                " Checkmk %s and will be removed in Checkmk %s (File: %s)."
-            )
-            % (
-                title_entity,
-                title_api,
-                deprecated_version,
-                removed_version,
-                rel_path,
-            ),
-            site_id=site_id,
-            path=path,
-        )
-
-    return ACSingleResult(
-        state=ACResultState.OK,
-        text="",
-        site_id=site_id,
-        path=path,
-    )
-
-
 class ACTestDeprecatedRuleSets(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
@@ -1435,7 +1333,7 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if plugin_files := self._get_files():
             for plugin_filepath in plugin_files:
-                yield _compute_deprecation_result(
+                yield compute_deprecation_result(
                     version=__version__,
                     deprecated_version="2.3.0",
                     removed_version="2.4.0",
@@ -1483,7 +1381,7 @@ class ACTestDeprecatedCheckPlugins(ACTest):
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
-                yield _compute_deprecation_result(
+                yield compute_deprecation_result(
                     version=__version__,
                     deprecated_version="2.3.0",
                     removed_version="2.4.0",
@@ -1527,7 +1425,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
-                yield _compute_deprecation_result(
+                yield compute_deprecation_result(
                     version=__version__,
                     deprecated_version="2.1.0",
                     removed_version="2.2.0",
@@ -1571,7 +1469,7 @@ class ACTestDeprecatedCheckManpages(ACTest):
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
-                yield _compute_deprecation_result(
+                yield compute_deprecation_result(
                     version=__version__,
                     deprecated_version="2.3.0",
                     removed_version="2.4.0",
@@ -1629,7 +1527,10 @@ class ACTestDeprecatedGUIExtensions(ACTest):
                             "GUI extension in %r uses an API which is marked as deprecated and may"
                             " not work anymore due to unknown imports or objects (File: %s)."
                         )
-                        % (plugin_filepath.parent.name, _try_rel_path(site_id, plugin_filepath))
+                        % (
+                            plugin_filepath.parent.name,
+                            try_relative_site_path(site_id, plugin_filepath),
+                        )
                     ),
                     site_id=site_id,
                     path=plugin_filepath,
@@ -1671,7 +1572,7 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
             for plugin_filepath in files:
                 match plugin_filepath.parent.name:
                     case "metrics" | "perfometer":
-                        yield _compute_deprecation_result(
+                        yield compute_deprecation_result(
                             version=__version__,
                             deprecated_version="2.3.0",
                             removed_version="2.4.0",
@@ -1683,7 +1584,7 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
                             path=plugin_filepath,
                         )
                     case "wato":
-                        yield _compute_deprecation_result(
+                        yield compute_deprecation_result(
                             version=__version__,
                             deprecated_version="2.4.0",
                             removed_version="2.5.0",
@@ -1705,7 +1606,7 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
                                 )
                                 % (
                                     plugin_filepath.parent.name,
-                                    _try_rel_path(site_id, plugin_filepath),
+                                    try_relative_site_path(site_id, plugin_filepath),
                                 )
                             ),
                             site_id=site_id,
@@ -1748,10 +1649,13 @@ class ACTestDeprecatedPNPTemplates(ACTest):
             for plugin_filepath in files:
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_(
-                        "PNP template uses an API which was removed in an ealier Checkmk version (File: %s)."
-                    )
-                    % _try_rel_path(site_id, plugin_filepath),
+                    text=(
+                        _(
+                            "PNP template uses an API which was removed in an ealier"
+                            " Checkmk version (File: %s)."
+                        )
+                        % try_relative_site_path(site_id, plugin_filepath)
+                    ),
                     site_id=site_id,
                     path=plugin_filepath,
                 )

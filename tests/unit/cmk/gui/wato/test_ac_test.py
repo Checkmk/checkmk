@@ -9,8 +9,12 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
-from cmk.gui.wato._ac_tests import _compute_deprecation_result, ACTestGenericCheckHelperUsage
-from cmk.gui.watolib.analyze_configuration import ACResultState, ACSingleResult
+from cmk.gui.wato._ac_tests import ACTestGenericCheckHelperUsage
+from cmk.gui.watolib.analyze_configuration import (
+    ACResultState,
+    ACSingleResult,
+    compute_deprecation_result,
+)
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
@@ -86,9 +90,9 @@ def test_local_connection_mocked(
         ),
     ],
 )
-def test__compute_deprecation_result(version: str, result: ACSingleResult) -> None:
+def test_compute_deprecation_result(version: str, result: ACSingleResult) -> None:
     assert (
-        _compute_deprecation_result(
+        compute_deprecation_result(
             version=version,
             deprecated_version="1.2.3",
             removed_version="1.2.5",

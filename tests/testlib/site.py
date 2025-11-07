@@ -957,12 +957,13 @@ class Site:
                         f"{repo_path()}/scripts/run-uvenv",
                         f"{repo_path()}/tests/scripts/install-cmk.py",
                         "--uninstall",
+                        "--old-edition-name" if isinstance(self.package, CMKPackageInfoOld) else "",
                     ],
                     env=dict(os.environ, VERSION=self.version.version, EDITION=self.edition.short),
                 )
             except subprocess.CalledProcessError as excp:
                 excp.add_note(
-                    "Execute 'tests/scripts/install-cmk.py --uninstall' "
+                    "Execute 'tests/scripts/install-cmk.py --uninstall [--old-edition-name]' "
                     "manually to debug the issue."
                 )
                 if excp.returncode == 22:

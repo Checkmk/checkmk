@@ -73,7 +73,7 @@ HACK_AGENTS = {
     "ruckus_spot": False,
     "salesforce": False,  # needs no secret
     "siemens_plc": False,  # needs no secret
-    "smb_share": True,
+    "smb_share": False,
     "splunk": False,
     "storeonce4x": False,
     "storeonce": True,

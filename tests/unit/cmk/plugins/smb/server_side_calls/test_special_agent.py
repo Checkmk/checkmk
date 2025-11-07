@@ -31,8 +31,8 @@ HOST_CONFIG = HostConfig(
                     "1.2.3.4",
                     "--username",
                     "user",
-                    "--password",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(23),
                 ]
             ),
             id="explicit_password_no_ip",
@@ -50,8 +50,8 @@ HOST_CONFIG = HostConfig(
                     "2.3.4",
                     "--username",
                     "user",
-                    "--password",
-                    Secret(23).unsafe(),
+                    "--password-id",
+                    Secret(23),
                     "--recursive",
                 ]
             ),

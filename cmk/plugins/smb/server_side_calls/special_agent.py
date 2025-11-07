@@ -8,8 +8,7 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class Params(BaseModel):
@@ -30,11 +29,15 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
     ]
 
     if params.authentication:
-        command_arguments.append("--username")
-        command_arguments.append(params.authentication["username"])
-        command_arguments.append("--password")
         assert isinstance(password := params.authentication["password"], Secret)
-        command_arguments.append(password.unsafe())
+        command_arguments.extend(
+            (
+                "--username",
+                params.authentication["username"],
+                "--password-id",
+                password,
+            )
+        )
 
     if params.patterns:
         command_arguments.append("--patterns")

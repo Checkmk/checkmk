@@ -21,8 +21,11 @@ from smb.base import NotConnectedError, ProtocolError, SharedFile
 from smb.smb_structs import OperationFailure
 from smb.SMBConnection import SMBConnection
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+
+PASSWORD_OPTION = "password"
 
 
 class SMBShareAgentError(Exception): ...
@@ -83,13 +86,11 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="User that has rights to access shares",
         default="",
     )
-
-    parser.add_argument(
-        "--password",
-        type=str,
-        metavar="PASSWORD",
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
+        required=False,
         help="Password of user used to connect to the shares",
-        default="",
     )
 
     parser.add_argument(
@@ -209,10 +210,12 @@ def write_section(all_files: Generator[tuple[str, set[File]]]) -> None:
 
 @contextmanager
 def connect(
-    username: str, password: str, remote_name: str, ip_address: str
+    username: str, password: Secret[str], remote_name: str, ip_address: str
 ) -> Generator[SMBConnection]:
     logging.debug("Creating SMB connection")
-    conn = SMBConnection(username, password, socket.gethostname(), remote_name, is_direct_tcp=True)
+    conn = SMBConnection(
+        username, password.reveal(), socket.gethostname(), remote_name, is_direct_tcp=True
+    )
 
     try:
         logging.debug("Connecting to %s on port 445", ip_address)
@@ -242,7 +245,12 @@ def connect(
 
 def smb_share_agent(args: argparse.Namespace) -> int:
     try:
-        with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
+        with connect(
+            args.username,
+            resolve_secret_option(args, PASSWORD_OPTION),
+            args.hostname,
+            args.ip_address,
+        ) as conn:
             all_files = get_all_shared_files(conn, args.hostname, args.patterns, args.recursive)
             logging.debug("Querying share files and writing fileinfo section")
             write_section(all_files)

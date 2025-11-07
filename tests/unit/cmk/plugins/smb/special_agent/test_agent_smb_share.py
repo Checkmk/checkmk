@@ -17,6 +17,7 @@ import time_machine
 from smb.base import NotConnectedError, SharedFile  # type: ignore[import-untyped]
 from smb.smb_structs import OperationFailure  # type: ignore[import-untyped]
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.smb.special_agent.agent_smb_share import (
     connect,
     File,
@@ -120,7 +121,7 @@ def test_parse_arguments() -> None:
     assert args.hostname == "hostname"
     assert args.ip_address == "127.0.0.1"
     assert args.username == "username"
-    assert args.password == "password"
+    assert args.password.reveal() == "password"
     assert args.patterns == [
         "\\\\HOSTNAME\\Share Folder 1\\*.log",
         "\\\\HOSTNAME\\Share Folder 2\\file.txt",
@@ -852,7 +853,7 @@ def test_smb_share_agent_operation_failure(
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.SMBConnection.close")
 def test_connect_error(mock_close: mock.Mock, mock_connect: mock.Mock) -> None:
     with pytest.raises(Exception, match="Exception during usage of smb connection"):
-        with connect("username", "password", "hostname", "127.0.0.1"):
+        with connect("username", Secret("password"), "hostname", "127.0.0.1"):
             raise Exception("Exception during usage of smb connection")
 
     mock_close.assert_called_once()

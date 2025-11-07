@@ -10,8 +10,10 @@ from dataclasses import dataclass
 
 import requests
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
-from cmk.utils.password_store import replace_passwords
+
+APIKEY_OPTION = "apikey"
 
 
 # TODO: put into special_agent lib
@@ -38,7 +40,6 @@ def get_agent_info_tcp(host: str) -> bytes:
 
 
 def main() -> int:
-    replace_passwords()
     sys_argv = sys.argv[1:]
 
     args = _parse_arguments(sys_argv)
@@ -73,7 +74,7 @@ def main() -> int:
 class _Arguments:
     address: str
     venueid: str
-    apikey: str
+    apikey: Secret[str]
     agent_port: int | None = None
     cert_server_name: str | None = None
 
@@ -89,10 +90,7 @@ def _parse_arguments(argv: Sequence[str]) -> _Arguments:
         "venueid",
         help="Venue ID",
     )
-    parser.add_argument(
-        "apikey",
-        help="API key",
-    )
+    parser_add_secret_option(parser, long=f"--{APIKEY_OPTION}", required=True, help="API key")
     parser.add_argument(
         "--agent_port",
         type=int,
@@ -107,7 +105,7 @@ def _parse_arguments(argv: Sequence[str]) -> _Arguments:
     return _Arguments(
         address=args.address,
         venueid=args.venueid,
-        apikey=args.apikey,
+        apikey=resolve_secret_option(args, APIKEY_OPTION),
         agent_port=args.agent_port,
         cert_server_name=args.cert_server_name,
     )
@@ -116,9 +114,9 @@ def _parse_arguments(argv: Sequence[str]) -> _Arguments:
 def _fetch_data_and_write_to_stdout(
     session: requests.Session,
     url: str,
-    apikey: str,
+    apikey: Secret[str],
     section_type: str,
 ) -> None:
-    response = session.get(url, auth=(apikey, "X"), timeout=900)
+    response = session.get(url, auth=(apikey.reveal(), "X"), timeout=900)
     sys.stdout.write(f"<<<ruckus_spot_{section_type}:sep(0)>>>\n")
     sys.stdout.write(response.text + "\n")

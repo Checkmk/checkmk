@@ -31,7 +31,7 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
         else f"{params.address[1]}:{params.port}"
     )
 
-    command_arguments: list[str | Secret] = [address, params.venueid, params.api_key.unsafe()]
+    command_arguments: list[str | Secret] = [address, params.venueid, "--apikey-id", params.api_key]
     if params.address[0] == "use_host_address":
         command_arguments += ["--cert-server-name", host_config.name]
     if params.cmk_agent is not None:

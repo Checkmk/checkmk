@@ -30,7 +30,8 @@ HOST_CONFIG = HostConfig(
                 command_arguments=[
                     "address:8443",
                     "venueID",
-                    Secret(23).unsafe(),
+                    "--apikey-id",
+                    Secret(23),
                     "--cert-server-name",
                     "hostname",
                 ]
@@ -49,7 +50,8 @@ HOST_CONFIG = HostConfig(
                 command_arguments=[
                     "addresstest:8443",
                     "venueID",
-                    Secret(23).unsafe(),
+                    "--apikey-id",
+                    Secret(23),
                     "--agent_port",
                     "6556",
                 ]

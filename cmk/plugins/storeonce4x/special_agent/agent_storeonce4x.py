@@ -11,6 +11,7 @@
 
 import argparse
 import datetime as dt
+import json
 import logging
 import sys
 from collections.abc import Callable, Generator, Sequence
@@ -23,7 +24,7 @@ from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 import cmk.utils.paths
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 
 AnyGenerator = Generator[Any]
 ResultFn = Callable[..., AnyGenerator]
@@ -267,14 +268,14 @@ def agent_storeonce4x_main(args: argparse.Namespace) -> int:
     )
 
     for section_basename, function in SECTIONS:
-        with SectionWriter("storeonce4x_%s" % section_basename) as writer:
-            try:
-                writer.append_json(function(oauth_session))
-            except Exception as exc:
-                if args.debug:
-                    raise
-                LOGGER.error("Caught exception: %r", exc)
-                return 1
+        sys.stdout.write(f"<<<storeonce4x_{section_basename}:sep(0)>>>\n")
+        try:
+            sys.stdout.write(f"{json.dumps(function(oauth_session))}\n")
+        except Exception as exc:
+            if args.debug:
+                raise
+            LOGGER.error("Caught exception: %r", exc)
+            return 1
 
     return 0
 

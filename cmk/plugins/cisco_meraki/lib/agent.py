@@ -17,6 +17,7 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
+from pathlib import Path
 from typing import TypedDict
 
 import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
@@ -118,7 +119,7 @@ class _Organisation(TypedDict):
 
 class _ABCGetOrganisationsCache(DataCache):
     def __init__(self, config: MerakiConfig) -> None:
-        super().__init__(BASE_CACHE_FILE_DIR / config.hostname / "organisations", "organisations")
+        super().__init__(config.cache_dir / config.hostname / "organisations", "organisations")
         self._dashboard = config.dashboard
 
     @property
@@ -420,6 +421,7 @@ class MerakiConfig:
     dashboard: meraki.DashboardAPI
     hostname: str
     section_names: Sequence[str]
+    cache_dir: Path
 
 
 def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence[_Organisation]:
@@ -460,6 +462,7 @@ def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
         ),
         hostname=args.hostname,
         section_names=args.sections,
+        cache_dir=BASE_CACHE_FILE_DIR,
     )
 
     sections = _query_meraki_objects(

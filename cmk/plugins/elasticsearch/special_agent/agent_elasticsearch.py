@@ -6,6 +6,7 @@
 # mypy: disable-error-code="possibly-undefined"
 
 import argparse
+import json
 import sys
 from collections.abc import Mapping, Sequence
 
@@ -14,7 +15,6 @@ import requests
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 
 __version__ = "2.5.0b1"
 
@@ -139,9 +139,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def handle_cluster_health(response: Mapping[str, object]) -> None:
-    with SectionWriter("elasticsearch_cluster_health", separator=" ") as writer:
-        for item, value in response.items():
-            writer.append(f"{item} {value}")
+    sys.stdout.write("<<<elasticsearch_cluster_health:sep(32)>>>\n")
+    for item, value in response.items():
+        sys.stdout.write(f"{item} {value}\n")
 
 
 class _CPUResponse(pydantic.BaseModel, frozen=True):
@@ -170,26 +170,25 @@ class _NodesReponse(pydantic.BaseModel, frozen=True):
 
 
 def handle_nodes(response: Mapping[str, object]) -> None:
-    with SectionWriter("elasticsearch_nodes", separator=" ") as writer:
-        for node_response in _NodesReponse.model_validate(response).nodes.values():
-            writer.append(
-                f"{node_response.name} open_file_descriptors {node_response.process.open_file_descriptors}"
-            )
-            writer.append(
-                f"{node_response.name} max_file_descriptors {node_response.process.max_file_descriptors}"
-            )
-            writer.append(f"{node_response.name} cpu_percent {node_response.process.cpu.percent}")
-            writer.append(
-                f"{node_response.name} cpu_total_in_millis {node_response.process.cpu.total_in_millis}"
-            )
-            writer.append(
-                f"{node_response.name} mem_total_virtual_in_bytes {node_response.process.mem.total_virtual_in_bytes}"
-            )
+    sys.stdout.write("<<<elasticsearch_nodes:sep(32)>>>\n")
+    for node_response in _NodesReponse.model_validate(response).nodes.values():
+        sys.stdout.write(
+            f"{node_response.name} open_file_descriptors {node_response.process.open_file_descriptors}\n"
+        )
+        sys.stdout.write(
+            f"{node_response.name} max_file_descriptors {node_response.process.max_file_descriptors}\n"
+        )
+        sys.stdout.write(f"{node_response.name} cpu_percent {node_response.process.cpu.percent}\n")
+        sys.stdout.write(
+            f"{node_response.name} cpu_total_in_millis {node_response.process.cpu.total_in_millis}\n"
+        )
+        sys.stdout.write(
+            f"{node_response.name} mem_total_virtual_in_bytes {node_response.process.mem.total_virtual_in_bytes}\n"
+        )
 
 
 def handle_stats(response: Mapping[str, object]) -> None:
-    with SectionWriter("elasticsearch_indices") as writer:
-        writer.append_json(response["indices"])
+    sys.stdout.write(f"<<<elasticsearch_indices:sep(0)>>>\n{json.dumps(response['indices'])}\n")
 
 
 @report_agent_crashes(AGENT, __version__)

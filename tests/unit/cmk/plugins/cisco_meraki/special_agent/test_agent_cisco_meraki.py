@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.cisco_meraki.special_agent import agent_cisco_meraki
+from cmk.plugins.cisco_meraki.lib import agent as agent_cisco_meraki
 
 _ORGANISATIONS = [
     agent_cisco_meraki._Organisation(id_="123", name="org-name1"),

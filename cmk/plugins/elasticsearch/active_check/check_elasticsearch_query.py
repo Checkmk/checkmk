@@ -10,23 +10,25 @@ import argparse
 import sys
 import urllib.parse
 from collections.abc import Sequence
-from pathlib import Path
 
 import requests
 import urllib3
 
-from cmk.utils.password_store import lookup as password_store_lookup
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # TODO: use these:
 __version__ = "2.5.0b1"
+
 USER_AGENT = f"checkmk-active-elasticsearch-query-{__version__}"
+
+PASSWORD_OPTION = "password"
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_arguments(argv)
-    auth = _make_auth(args.user, args.password, args.password_id)
+    auth = _make_auth(args)
     try:
         msg, state, perfdata = handle_request(args, auth)
     except Exception as exc:
@@ -37,19 +39,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     return state
 
 
-def _make_auth(
-    user: str | None,
-    password: str | None,
-    password_ref: str | None,
-) -> tuple[str, str] | None:
-    if user is None:
+def _make_auth(args: argparse.Namespace) -> tuple[str, str] | None:
+    if args.user is None:
         return None
-    if password is not None:
-        return (user, password)
-    if password_ref is not None:
-        pw_id, pw_file = password_ref.split(":", 1)
-        return (user, password_store_lookup(Path(pw_file), pw_id))
-    return None
+    try:
+        password = resolve_secret_option(args, PASSWORD_OPTION)
+    except TypeError:
+        return None
+    return (args.user, password.reveal())
 
 
 def handle_request(args: argparse.Namespace, auth: tuple[str, str] | None) -> tuple[str, int, str]:
@@ -170,17 +167,11 @@ def parse_arguments(argv=None):
         default=None,
         help="Username for elasticsearch login",
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-s",
-        "--password",
-        default=None,
-        help="Password for easticsearch login. Preferred over --password-id",
-    )
-    group.add_argument(
-        "--password-id",
-        default=None,
-        help="Password store reference to the password for easticsearch login",
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
+        required=False,
+        help="Password for elasticsearch login.",
     )
     parser.add_argument(
         "-P",

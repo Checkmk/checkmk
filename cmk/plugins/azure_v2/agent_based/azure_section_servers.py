@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import AgentSection
-from cmk.plugins.azure_v2.agent_based.lib import parse_resources
+from cmk.plugins.azure_v2.agent_based.lib import parse_resource
 
 # This section contains data for both the postgresql and mysql checks
 agent_section_azure_servers = AgentSection(
     name="azure_v2_servers",
-    parse_function=parse_resources,
+    parse_function=parse_resource,
 )

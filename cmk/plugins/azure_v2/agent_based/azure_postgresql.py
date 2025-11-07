@@ -42,12 +42,18 @@ def discover_azure_postgresql_memory(section: Resource) -> DiscoveryResult:
     )({"Memory": section})
 
 
+def check_azure_postgresql_memory(
+    item: str, params: Mapping[str, object], section: Resource
+) -> CheckResult:
+    yield from check_memory()("Memory", params, {"Memory": section})
+
+
 check_plugin_azure_postgresql_memory = CheckPlugin(
     name="azure_v2_postgresql_memory",
     sections=["azure_v2_servers"],
     service_name="Azure/DB for PostgreSQL %s",
     discovery_function=discover_azure_postgresql_memory,
-    check_function=check_memory(),
+    check_function=check_azure_postgresql_memory,
     check_ruleset_name="memory_utilization",
     check_default_parameters={
         "levels": (80.0, 90.0),

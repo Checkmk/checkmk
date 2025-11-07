@@ -12,6 +12,7 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.azure_v2.agent_based.azure_mysql import (
+    check_azure_mysql_memory,
     check_plugin_azure_mysql_connections,
     check_plugin_azure_mysql_memory,
     check_plugin_azure_mysql_replication,
@@ -247,10 +248,8 @@ def test_check_memory_defaults() -> None:
         ),
         Metric("mem_used_percent", 96.03, levels=(80.0, 90.0)),
     ]
-    assert (
-        list(check_plugin_azure_mysql_memory.check_function("Memory", params, {"Memory": section}))
-        == expected
-    )
+    assert params is not None  # for mypy
+    assert list(check_azure_mysql_memory("Memory", params, section)) == expected
 
 
 def test_azure_mysql_inventory() -> None:

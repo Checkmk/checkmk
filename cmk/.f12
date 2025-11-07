@@ -70,10 +70,11 @@ if [ "$CMK_EDITION" != "cloud" ]; then
     find "${ROOT}/lib/python3" -regex '.*/cloud*' -print0 | xargs --null rm -rf
 fi
 
-# community < pro < ultimate < ultimatemt
+# Edition hierarchy: community < pro < ultimate < ultimatemt
+# cloud includes pro and ultimate functionality
 if [ "$CMK_EDITION" != "ultimatemt" ]; then
     find "${ROOT}/lib/python3" -regex '.*/ultimatemt*' -print0 | xargs --null rm -rf
-    if [ "$CMK_EDITION" != "ultimate" ]; then
+    if [ "$CMK_EDITION" != "ultimate" ] && [ "$CMK_EDITION" != "cloud" ]; then
         find "${ROOT}/lib/python3" -regex '.*/ultimate*' -print0 | xargs --null rm -rf
         if [ "$CMK_EDITION" != "pro" ]; then
             find "${ROOT}/lib/python3" -regex '.*/pro*' -print0 | xargs --null rm -rf

@@ -51,7 +51,9 @@ const done = ref(false)
 function addNextContent(): boolean {
   const nextContent = contentData.value?.shift()
   if (nextContent) {
-    contentsToDisplay.value.push(nextContent)
+    setTimeout(() => {
+      contentsToDisplay.value.push(nextContent)
+    })
 
     return true
   }
@@ -59,13 +61,17 @@ function addNextContent(): boolean {
   return false
 }
 
+function setElementDone() {
+  done.value = true
+  aiTemplate.value?.setAnimationActiveChange(false)
+}
+
 function onContentDone() {
   if (!props.noAnimation) {
     setTimeout(() => {
       if (!addNextContent()) {
-        done.value = true
-
         aiTemplate.value?.setActiveRole(AiRole.user)
+        setElementDone()
       }
     }, 50)
   }
@@ -77,9 +83,11 @@ onMounted(async () => {
   } else if (props.content instanceof Promise) {
     contentData.value = await props.content
   }
+  aiTemplate.value?.setAnimationActiveChange(true)
   awaited.value = true
   if (props.noAnimation) {
     contentsToDisplay.value = contentData.value ?? []
+    setElementDone()
   } else {
     onContentDone()
   }
@@ -88,60 +96,68 @@ onMounted(async () => {
 
 <template>
   <div class="ai-conversation-element" :class="`ai-conversation-element--${role}`">
-    <template v-if="contentData === null">
-      <div class="ai-conversation-element__loader">
-        <CmkIcon name="load-graph" size="xlarge" class="ai-conversation-element__text-loader" />
-        <label>{{ loadingText ?? _t('Generating response...') }}</label>
+    <div v-if="role === AiRole.ai" class="ai-conversation-element__ai-header">
+      <CmkIcon name="sparkle" size="xlarge" />
+      <div class="ai-conversation-element__ai-header-text">
+        <CmkHeading type="h2">{{ _t('Answer') }}</CmkHeading>
+        <div v-if="contentData === null" class="ai-conversation-element__loader">
+          <CmkIcon name="load-graph" size="large" class="ai-conversation-element__text-loader" />
+          <label>{{ loadingText ?? _t('Generating response...') }}</label>
+        </div>
+        <div v-else class="ai-conversation-element__disclaimer">
+          <label>{{ _t('AI-generated answer. Please verify critical facts.') }}</label>
+        </div>
       </div>
-    </template>
-    <template v-else>
+    </div>
+
+    <template v-if="contentData !== null">
       <div v-if="contentData" class="ai-conversation-element__text">
         <template v-for="(cnt, i) in contentsToDisplay" :key="i">
           <CmkHeading
-            v-if="cnt.title && cnt.type !== 'dialog'"
+            v-if="cnt.title && cnt.content_type !== 'dialog'"
             class="ai-conversation-element__text-header"
             type="h2"
           >
             {{ cnt.title }}
           </CmkHeading>
           <AlertContent
-            v-if="cnt.type === 'alert'"
+            v-if="cnt.content_type === 'alert'"
             v-bind="cnt as AlertConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"
           />
           <TextContent
-            v-if="cnt.type === 'text'"
+            v-if="cnt.content_type === 'text'"
             v-bind="cnt as TextConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"
           />
           <CodeContent
-            v-else-if="cnt.type === 'code'"
+            v-else-if="cnt.content_type === 'code'"
             v-bind="cnt as CodeBlockConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"
           />
           <ListContent
-            v-else-if="cnt.type === 'list'"
+            v-else-if="cnt.content_type === 'list'"
             v-bind="cnt as ListConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"
           />
           <DialogContent
-            v-else-if="cnt.type === 'dialog'"
+            v-else-if="cnt.content_type === 'dialog'"
             v-bind="cnt as DialogConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"
           />
           <ImageContent
-            v-else-if="cnt.type === 'image'"
+            v-else-if="cnt.content_type === 'image'"
             v-bind="cnt as ImageConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"
           />
           <MarkdownContent
-            v-else-if="cnt.type === 'markdown'"
+            v-else-if="cnt.content_type === 'markdown'"
             v-bind="cnt as MarkdownConversationElementContent"
             :no-animation="props.noAnimation"
             @done="onContentDone"
@@ -170,9 +186,28 @@ onMounted(async () => {
   margin-bottom: var(--dimension-4);
   display: flex;
   flex-direction: row-reverse;
-  gap: var(--dimension-6);
   width: 60%;
   justify-self: flex-end;
+
+  .ai-conversation-element__ai-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: var(--dimension-4);
+
+    > img {
+      margin-right: var(--dimension-4);
+    }
+
+    label {
+      opacity: 0.5;
+    }
+
+    .ai-conversation-element__ai-header-text {
+      display: flex;
+      flex-direction: column;
+    }
+  }
 
   .ai-conversation-element__loader {
     display: flex;
@@ -194,13 +229,13 @@ onMounted(async () => {
     flex-direction: column;
     position: relative;
     margin-bottom: var(--dimension-10);
-    gap: var(--dimension-10);
+    margin-left: calc(var(--dimension-4) + var(--dimension-7));
 
     .ai-conversation-element__text-header {
       width: 100%;
-      padding-bottom: var(--dimension-4);
+      padding-top: var(--dimension-4);
       margin: var(--dimension-6) 0 var(--dimension-4);
-      border-bottom: 1px solid var(--default-border-color);
+      border-top: 1px solid var(--default-border-color);
     }
 
     .ai-conversation-element__ctrls {
@@ -231,7 +266,7 @@ onMounted(async () => {
     .ai-conversation-element__text {
       background: transparent;
       border: none;
-      width: 90%;
+      width: calc(100% - (var(--dimension-4) + var(--dimension-7)));
     }
   }
 

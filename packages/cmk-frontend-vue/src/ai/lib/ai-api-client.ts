@@ -55,7 +55,7 @@ export interface AiInferenceUsedResource {
 export interface AiExplanationSection {
   title: string
   content: string
-  type: 'markdown' | 'json'
+  content_type: 'markdown' | 'json'
 }
 
 export interface AiInference extends AiBaseLlmResponse {

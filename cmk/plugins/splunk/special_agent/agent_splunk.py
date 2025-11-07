@@ -14,14 +14,15 @@ from typing import Any, NamedTuple
 import requests
 import urllib3
 
-import cmk.utils.password_store
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-cmk.utils.password_store.replace_passwords()
 
 __version__ = "2.5.0b1"
 
 USER_AGENT = f"checkmk-special-splunk-{__version__}"
+
+PASSWORD_OPTION = "password"
 
 
 class Section(NamedTuple):
@@ -81,6 +82,7 @@ def main(argv: None | Sequence[str] = None) -> None | int:
 
 def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> None | int:
     url_base = "%s://%s:%d" % (args.proto, args.hostname, args.port)
+    password = resolve_secret_option(args, PASSWORD_OPTION)
 
     for section in sections:
         if section.name in args.modules:
@@ -89,7 +91,7 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> Non
 
                 response = requests.get(
                     url,
-                    auth=(args.user, args.password),
+                    auth=(args.user, password.reveal()),
                     data={"output_mode": "json"},
                     headers={"User-Agent": USER_AGENT},
                     timeout=900,
@@ -118,7 +120,12 @@ def parse_arguments(argv):
     )
 
     parser.add_argument("-u", "--user", default=None, help="Username for splunk login")
-    parser.add_argument("-s", "--password", default=None, help="Password for splunk login")
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
+        required=False,
+        help="Password for splunk login",
+    )
     parser.add_argument(
         "-P",
         "--proto",

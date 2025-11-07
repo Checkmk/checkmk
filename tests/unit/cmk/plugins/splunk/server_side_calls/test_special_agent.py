@@ -30,10 +30,10 @@ def test_special_agent_splunk_command_creation() -> None:
                 "https",
                 "-m",
                 "jobs health alerts",
-                "-u",
+                "--user",
                 "username",
-                "-s",
-                Secret(23).unsafe(),
+                "--password-id",
+                Secret(23),
                 "testhost",
             ]
         )

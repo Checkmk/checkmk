@@ -74,7 +74,7 @@ HACK_AGENTS = {
     "salesforce": False,  # needs no secret
     "siemens_plc": False,  # needs no secret
     "smb_share": True,
-    "splunk": True,
+    "splunk": False,
     "storeonce4x": True,
     "storeonce": True,
     "three_par": False,

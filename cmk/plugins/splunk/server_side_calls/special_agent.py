@@ -8,8 +8,7 @@ from collections.abc import Iterable, Sequence
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class Params(BaseModel):
@@ -22,13 +21,18 @@ class Params(BaseModel):
 
 
 def command_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
-    command_arguments: list[str | Secret] = []
     hostname = host_config.name
 
-    command_arguments += ["-P", params.protocol]
-    command_arguments += ["-m", " ".join(params.infos)]
-    command_arguments += ["-u", params.user]
-    command_arguments += ["-s", params.password.unsafe()]
+    command_arguments: list[str | Secret] = [
+        "-P",
+        params.protocol,
+        "-m",
+        " ".join(params.infos),
+        "--user",
+        params.user,
+        "--password-id",
+        params.password,
+    ]
 
     if params.port is not None:
         command_arguments += ["-p", str(params.port)]

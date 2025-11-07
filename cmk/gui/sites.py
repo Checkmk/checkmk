@@ -220,19 +220,10 @@ def _redacted_site_states_for_logging() -> dict[SiteId, dict[str, object]]:
 
 
 def _edition_from_livestatus(livestatus_edition: str | None) -> Edition | None:
-    match livestatus_edition:
-        case Edition.CRE.short | "community":
-            return Edition.CRE
-        case Edition.CEE.short | "pro":
-            return Edition.CEE
-        case Edition.CCE.short | "ultimate":
-            return Edition.CCE
-        case Edition.CME.short | "ultimatemt":
-            return Edition.CME
-        case Edition.CSE.short | "cloud":
-            return Edition.CSE
-        case _:
-            return None
+    for ed in Edition:
+        if ed.long == livestatus_edition:
+            return ed
+    return None
 
 
 def _get_distributed_monitoring_compatibility(

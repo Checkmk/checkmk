@@ -17,7 +17,6 @@ import traceback
 from argparse import Namespace
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Literal, NotRequired, TypedDict
 from urllib.parse import urljoin
 
@@ -25,8 +24,11 @@ import requests
 from requests import Response, Session
 from requests.auth import HTTPBasicAuth
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
-from cmk.utils.password_store import lookup
+
+PASSWORD_OPTION = "password"
+TOKEN_OPTION = "token"
 
 
 class ApiSession:
@@ -96,25 +98,12 @@ def authentication_from_args(args: Namespace) -> LoginAuth | TokenAuth | None:
         case "auth_login":
             return LoginAuth(
                 username=args.username,
-                password=(
-                    _lookup_from_password_store(args.password_reference)
-                    if args.password_reference
-                    else args.password
-                ),
+                password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
             )
         case "auth_token":
-            return TokenAuth(
-                _lookup_from_password_store(args.token_reference)
-                if args.token_reference
-                else args.token
-            )
+            return TokenAuth(resolve_secret_option(args, TOKEN_OPTION).reveal())
         case _:
             return None
-
-
-def _lookup_from_password_store(raw_reference: str) -> str:
-    pw_id, pw_file = raw_reference.split(":", 1)
-    return lookup(Path(pw_file), pw_id)
 
 
 def get_api_url(connection: str, protocol: Literal["http", "https"]) -> str:
@@ -176,29 +165,21 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         required=True,
         metavar="USERNAME",
     )
-    group_auth_token = parser_auth_login.add_mutually_exclusive_group(required=True)
-    group_auth_token.add_argument(
-        "--password",
-        metavar="PASSWORD",
-    )
-    group_auth_token.add_argument(
-        "--password-reference",
-        metavar="PASSWORD-REFERENCE",
-        help="Password store reference of the password for API authentication.",
+    parser_add_secret_option(
+        parser_auth_login,
+        long=f"--{PASSWORD_OPTION}",
+        required=True,
+        help="The password for API authentication.",
     )
 
     parser_auth_token = auth_method_subparsers.add_parser(
         "auth_token",
-        help="Authentication with otken",
+        help="Authentication with token",
     )
-    group_auth_token = parser_auth_token.add_mutually_exclusive_group(required=True)
-    group_auth_token.add_argument(
-        "--token",
-        metavar="TOKEN",
-    )
-    group_auth_token.add_argument(
-        "--token-reference",
-        metavar="TOKEN-REFERENCE",
+    parser_add_secret_option(
+        parser_auth_token,
+        long=f"--{TOKEN_OPTION}",
+        required=True,
         help="Password store reference of the token for API authentication.",
     )
     parser.add_argument(

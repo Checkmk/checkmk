@@ -64,13 +64,13 @@ def _commands_function(
                 "auth_login",
                 "--username",
                 username,
-                "--password-reference",
+                "--password-id",
                 password,
             ]
         case ("auth_token", AuthToken(token=token)):
             args += [
                 "auth_token",
-                "--token-reference",
+                "--token-id",
                 token,
             ]
     yield SpecialAgentCommand(command_arguments=args)

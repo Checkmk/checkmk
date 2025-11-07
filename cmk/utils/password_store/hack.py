@@ -66,7 +66,7 @@ HACK_AGENTS = {
     "prometheus": False,
     "proxmox_ve": False,
     "pure_storage_fa": False,
-    "rabbitmq": True,
+    "rabbitmq": False,
     "random": False,  # needs no secret
     "redfish": False,
     "redfish_power": False,

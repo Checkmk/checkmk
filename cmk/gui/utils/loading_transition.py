@@ -24,10 +24,11 @@ def loading_transition(template: LoadingTransition, delay_ms: int = 1000) -> Gen
 
 def with_loading_transition(
     content: HTML,
-    template: LoadingTransition,
+    template: LoadingTransition | None,
     delay_ms: int = 1000,
 ) -> HTML:
+    template_value = "null" if template is None else f"'{template.value}'"
     return HTMLWriter.render_span(
         content,
-        onclick=f"cmk.utils.makeLoadingTransition('{template.value}', {delay_ms});",
+        onclick=f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms});",
     )

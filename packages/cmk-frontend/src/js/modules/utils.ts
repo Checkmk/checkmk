@@ -943,10 +943,15 @@ function getContentBody(): HTMLElement {
     : document.body
 }
 
-export function makeLoadingTransition(template: string, delay: number): void {
+export function makeLoadingTransition(template: string | null, delay: number): void {
   const contentBody = getContentBody()
   contentBody.setAttribute('data-prepare-loading-transition', 'true')
   contentBody.style.cursor = 'wait'
+
+  if (template === null) {
+    return
+  }
+
   setTimeout(() => {
     const body = getContentBody()
     if (!body.hasAttribute('data-prepare-loading-transition')) {

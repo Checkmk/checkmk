@@ -20,7 +20,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.cisco_meraki.lib import load_json, MerakiAPIData
+from cmk.plugins.cisco_meraki.lib.type_defs import MerakiAPIData
+from cmk.plugins.cisco_meraki.lib.utils import load_json
 
 
 @dataclass(frozen=True)

@@ -3,20 +3,76 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.prometheus.lib_form_elements import api_request_authentication, connection
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
     Dictionary,
     List,
+    migrate_to_password,
+    Password,
     SingleChoice,
     SingleChoiceElement,
     String,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+
+
+def connection() -> String:
+    return String(
+        title=Title("URL server address"),
+        help_text=Help("Specify a URL to connect to your server. Do not include the protocol."),
+        custom_validate=(validators.LengthInRange(min_value=1),),
+    )
+
+
+def api_request_authentication() -> CascadingSingleChoice:
+    return CascadingSingleChoice(
+        title=Title("Authentication"),
+        elements=[
+            CascadingSingleChoiceElement(
+                name="auth_login",
+                title=Title("Basic authentication"),
+                parameter_form=Dictionary(
+                    elements={
+                        "username": DictElement(
+                            required=True,
+                            parameter_form=String(
+                                title=Title("Login username"),
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                            ),
+                        ),
+                        "password": DictElement(
+                            required=True,
+                            parameter_form=Password(
+                                title=Title("Password"),
+                                migrate=migrate_to_password,
+                            ),
+                        ),
+                    }
+                ),
+            ),
+            CascadingSingleChoiceElement(
+                name="auth_token",
+                title=Title("Token authentication"),
+                parameter_form=Dictionary(
+                    elements={
+                        "token": DictElement(
+                            required=True,
+                            parameter_form=Password(
+                                title=Title("Login token"),
+                                migrate=migrate_to_password,
+                            ),
+                        ),
+                    },
+                ),
+            ),
+        ],
+    )
 
 
 def _parameter_form() -> Dictionary:

@@ -14,18 +14,141 @@ import json
 import logging
 import sys
 import traceback
-from collections.abc import Sequence
-from typing import Any, NotRequired, TypedDict
+from argparse import Namespace
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Literal, NotRequired, TypedDict
+from urllib.parse import urljoin
 
 import requests
+from requests import Response, Session
+from requests.auth import HTTPBasicAuth
 
-from cmk.plugins.prometheus.lib import (
-    add_authentication_args,
-    authentication_from_args,
-    generate_api_session,
-    get_api_url,
-)
-from cmk.special_agents.v0_unstable.request_helper import ApiSession
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
+from cmk.utils.password_store import lookup
+
+
+class ApiSession:
+    """Class for issuing multiple API calls
+
+    ApiSession behaves similar to requests.Session with the exception that a
+    base URL is provided and persisted.
+    All requests use the base URL and append the provided url to it.
+    """
+
+    def __init__(
+        self,
+        base_url: str,
+        auth: HTTPBasicAuth | None = None,
+        tls_cert_verification: bool | HostnameValidationAdapter = True,
+        additional_headers: Mapping[str, str] | None = None,
+    ):
+        self._session = Session()
+        self._session.auth = auth
+        self._session.headers.update(additional_headers or {})
+        self._base_url = base_url
+
+        if isinstance(tls_cert_verification, HostnameValidationAdapter):
+            self._session.mount(self._base_url, tls_cert_verification)
+            self.verify = True
+        else:
+            self.verify = tls_cert_verification
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self._session.request(
+            method,
+            urljoin(self._base_url, url),
+            params=params,
+            verify=self.verify,
+        )
+
+    def get(
+        self,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self.request(
+            "get",
+            url,
+            params=params,
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class LoginAuth:
+    username: str
+    password: str
+
+
+@dataclass(frozen=True)
+class TokenAuth:
+    token: str
+
+
+def authentication_from_args(args: Namespace) -> LoginAuth | TokenAuth | None:
+    match args.auth_method:
+        case "auth_login":
+            return LoginAuth(
+                username=args.username,
+                password=(
+                    _lookup_from_password_store(args.password_reference)
+                    if args.password_reference
+                    else args.password
+                ),
+            )
+        case "auth_token":
+            return TokenAuth(
+                _lookup_from_password_store(args.token_reference)
+                if args.token_reference
+                else args.token
+            )
+        case _:
+            return None
+
+
+def _lookup_from_password_store(raw_reference: str) -> str:
+    pw_id, pw_file = raw_reference.split(":", 1)
+    return lookup(Path(pw_file), pw_id)
+
+
+def get_api_url(connection: str, protocol: Literal["http", "https"]) -> str:
+    return f"{protocol}://{connection}/api/v1/"
+
+
+def generate_api_session(
+    api_url: str,
+    authentication: LoginAuth | TokenAuth | None,
+    tls_cert_verification: bool | str,
+) -> ApiSession:
+    tls_cert_verification_: bool | HostnameValidationAdapter = (
+        tls_cert_verification
+        if isinstance(tls_cert_verification, bool)
+        else HostnameValidationAdapter(tls_cert_verification)
+    )
+    match authentication:
+        case LoginAuth(username=username, password=password):
+            return ApiSession(
+                api_url,
+                auth=HTTPBasicAuth(username, password),
+                tls_cert_verification=tls_cert_verification_,
+            )
+        case TokenAuth(token):
+            return ApiSession(
+                api_url,
+                tls_cert_verification=tls_cert_verification_,
+                additional_headers={"Authorization": "Bearer " + token},
+            )
+        case _:
+            return ApiSession(
+                api_url,
+                tls_cert_verification=tls_cert_verification_,
+            )
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -38,7 +161,46 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         required=True,
         help="The configuration is passed as repr object. This option will change in the future.",
     )
-    add_authentication_args(parser)
+    auth_method_subparsers = parser.add_subparsers(
+        dest="auth_method",
+        metavar="AUTH-METHOD",
+        help="API authentication method",
+    )
+
+    parser_auth_login = auth_method_subparsers.add_parser(
+        "auth_login",
+        help="Authentication with username and password",
+    )
+    parser_auth_login.add_argument(
+        "--username",
+        required=True,
+        metavar="USERNAME",
+    )
+    group_auth_token = parser_auth_login.add_mutually_exclusive_group(required=True)
+    group_auth_token.add_argument(
+        "--password",
+        metavar="PASSWORD",
+    )
+    group_auth_token.add_argument(
+        "--password-reference",
+        metavar="PASSWORD-REFERENCE",
+        help="Password store reference of the password for API authentication.",
+    )
+
+    parser_auth_token = auth_method_subparsers.add_parser(
+        "auth_token",
+        help="Authentication with otken",
+    )
+    group_auth_token = parser_auth_token.add_mutually_exclusive_group(required=True)
+    group_auth_token.add_argument(
+        "--token",
+        metavar="TOKEN",
+    )
+    group_auth_token.add_argument(
+        "--token-reference",
+        metavar="TOKEN-REFERENCE",
+        help="Password store reference of the token for API authentication.",
+    )
     parser.add_argument(
         "--disable-cert-verification",
         action="store_true",

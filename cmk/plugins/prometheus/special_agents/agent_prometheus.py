@@ -29,11 +29,11 @@ import requests
 from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric, SectionStr
 from cmk.plugins.prometheus.lib import (
     add_authentication_args,
+    ApiSession,
     authentication_from_args,
     generate_api_session,
     get_api_url,
 )
-from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 LOGGER = logging.getLogger()  # root logger for now
 

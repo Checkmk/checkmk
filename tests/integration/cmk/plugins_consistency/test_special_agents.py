@@ -219,7 +219,14 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "splunk": ["HOSTNAME"],
     "vsphere": ["HOSTNAME"],
     "proxmox_ve": ["HOSTNAME"],
-    "mobileiron": ["--hostname", "HOSTNAME"],
+    "mobileiron": [
+        "--username",
+        "USER",
+        "--password",
+        "PASSWORD",
+        "--hostname",
+        "HOSTNAME",
+    ],
     "storeonce4x": ["USER", "PASSWORD", "HOST"],
     "cisco_prime": ["--hostname", "HOSTNAME"],
     "innovaphone": [
@@ -230,9 +237,11 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "netapp_ontap": ["--hostname", "HOSTNAME", "--username", "USERNAME", "--password", "PASSWORD"],
     "activemq": ["--password", "PASSWORD", "server", "1234"],
     "datadog": [
-        "HOSTNAME",
+        "--apikey",
         "API_KEY",
+        "--appkey",
         "APP_KEY",
+        "HOSTNAME",
         "ADDRESS",
     ],
     "mqtt": ["SERVER"],
@@ -306,7 +315,11 @@ def test_parse_arguments(monkeypatch: pytest.MonkeyPatch, name: str, module: Mod
     minimal_args_list = REQUIRED_ARGUMENTS[name]
 
     # Special agents should process their arguments in a function called parse_arguments
-    parsed = module.parse_arguments(minimal_args_list)
+    try:
+        parsed = module.parse_arguments(minimal_args_list)
+    except SystemExit as exc:
+        raise AssertionError from exc
+
     assert isinstance(parsed, Namespace)
 
     # Special agents should support the argument '--debug'

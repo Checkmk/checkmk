@@ -55,7 +55,7 @@ $(PROTOBUF_UNPACK): $(PACKAGE_DIR)/$(PROTOBUF)/protobuf-python-$(PROTOBUF_VERS).
 $(PROTOBUF_CONFIGURE): $(PROTOBUF_PATCHING)
 	cd $(PROTOBUF_BUILD_DIR) && \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
-	    CXXFLAGS="-Wno-stringop-overflow" ./configure --prefix=""
+	    CXXFLAGS="-Wno-stringop-overflow -fPIE" ./configure --prefix=""
 	$(TOUCH) $@
 
 $(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_CONFIGURE)

@@ -26,21 +26,12 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 
 PACKAGES := \
     apache-omd \
-    check_mk
 
-ifeq ($(EDITION),pro)
-PACKAGES += enterprise
-endif
 ifeq ($(EDITION),ultimatemt)
-PACKAGES += enterprise
 PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),ultimate)
-PACKAGES += enterprise
 PACKAGES += otel-collector
-endif
-ifeq ($(EDITION),cloud)
-PACKAGES += enterprise
 endif
 
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))

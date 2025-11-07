@@ -125,8 +125,21 @@ pkg_files(
 
 pkg_files(
     name = "agents",
-    srcs = ["//agents"],
+    srcs = [
+        "//agents",
+    ],
     prefix = "share/check_mk/agents",
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
+pkg_files(
+    name = "agents_linux",
+    srcs = [
+        "//agents:agents-linux",
+    ],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "share/check_mk/agents",
+    strip_prefix = strip_prefix.from_pkg(""),
 )
 
 pkg_files(
@@ -147,9 +160,19 @@ pkg_files(
     prefix = "share/check_mk/agents/sap",
 )
 
+pkg_files(
+    name = "agents_windows_ext_built",
+    srcs = [
+        "//agents/windows:agents",
+    ],
+    prefix = "agents/windows",
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
 pkg_tar(
     name = "agents_windows",
     srcs = [
+        ":agents_windows_ext_built",
         "//agents/windows:cfg_examples",
         "//agents/windows:mrpe",
         "//agents/windows/plugins",
@@ -190,6 +213,7 @@ pkg_files(
     srcs = [
         ":agents",
         ":agents_cfg_examples",
+        ":agents_linux",
         ":agents_plugins",
         ":agents_sap",
         ":agents_scripts",

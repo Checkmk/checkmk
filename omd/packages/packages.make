@@ -174,24 +174,13 @@ debug:
 # Include rules to make packages
 include \
     packages/apache-omd/apache-omd.make \
-    packages/check_mk/check_mk.make \
     packages/appliance/appliance.make \
 
-ifeq ($(EDITION),pro)
-include \
-    packages/enterprise/enterprise.make
-endif
 ifeq ($(EDITION),ultimatemt)
 include \
-    packages/enterprise/enterprise.make \
     $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),ultimate)
 include \
-    packages/enterprise/enterprise.make \
     $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
-endif
-ifeq ($(EDITION),cloud)
-include \
-    packages/enterprise/enterprise.make
 endif

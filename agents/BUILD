@@ -17,8 +17,22 @@ filegroup(
         "mk-job.aix",
         "mk-job.solaris",
         "waitmax",
+    ] + glob([
+        "check-mk-agent-*.noarch.rpm",
+        "check-mk-agent_*_all.deb",
+    ]),
+    visibility = ["//omd:__subpackages__"],
+)
+
+filegroup(
+    name = "agents-linux",
+    srcs = [
+        "linux/cmk-agent-ctl",
+        "linux/cmk-agent-ctl.gz",
+        "linux/cmk-agent-ctl-aarch64",
+        "linux/mk-sql",
     ],
-    visibility = ["//visibility:public"],
+    visibility = ["//omd:__subpackages__"],
 )
 
 filegroup(

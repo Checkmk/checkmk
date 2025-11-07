@@ -1,7 +1,10 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
-exports_files(["diskspace"])
+exports_files([
+    "diskspace",
+    "skel.permissions",
+])
 
 filegroup(
     name = "hooks",
@@ -146,6 +149,7 @@ pkg_tar(
         ":10-mkeventd",
         ":55-automation-helper",
         ":60-ui-job-scheduler",
+        ":90-piggyback-hub",
         ":post_cp",
         ":post_create",
         ":post_mv",

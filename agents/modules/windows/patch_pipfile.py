@@ -8,11 +8,7 @@
 
 import sys
 
-from colorama import (  # type: ignore[import]  # pylint: disable=import-error
-    Fore,
-    init,
-    Style,
-)
+from colorama import Fore, init, Style  # type: ignore[import]  # pylint: disable=import-error
 
 init()
 
@@ -35,8 +31,6 @@ try:
         for l in lines:
             if l.find("psycopg2 = ") == 0:
                 f.write('psycopg2 = "*" # windows need new version \n')
-            elif l.find("pymssql = ") == 0:
-                f.write("# " + l)
             elif l.find("mysqlclient = ") == 0:
                 f.write("# " + l)
             else:

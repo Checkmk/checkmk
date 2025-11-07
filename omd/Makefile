@@ -215,7 +215,7 @@ omd.spec: omd.spec.in
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_INIT_NAME)#g' \
 	    omd.spec.in > omd.spec
-	if [ "$(EDITION)" =  "raw" ]; then \
+	if [ "$(EDITION)" =  "community" ]; then \
 	    sed -i '/icmpsender/d;/icmpreceiver/d' omd.spec ; \
 	fi
 

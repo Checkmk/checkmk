@@ -17,15 +17,15 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
-from pathlib import Path
 from typing import TypedDict
 
 import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1_unstable import parser_add_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 
+from .config import MerakiConfig
 from .constants import (
     AGENT,
     API_NAME_DEVICE_NAME,
@@ -33,7 +33,6 @@ from .constants import (
     API_NAME_ORGANISATION_ID,
     API_NAME_ORGANISATION_NAME,
     APIKEY_OPTION_NAME,
-    BASE_CACHE_FILE_DIR,
     SEC_NAME_DEVICE_INFO,
     SEC_NAME_DEVICE_STATUSES,
     SEC_NAME_LICENSES_OVERVIEW,
@@ -48,30 +47,6 @@ _LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 
 MerakiAPIData = Mapping[str, object]
-
-#   .--dashboard-----------------------------------------------------------.
-#   |              _           _     _                         _           |
-#   |           __| | __ _ ___| |__ | |__   ___   __ _ _ __ __| |          |
-#   |          / _` |/ _` / __| '_ \| '_ \ / _ \ / _` | '__/ _` |          |
-#   |         | (_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| |          |
-#   |          \__,_|\__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|          |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _configure_meraki_dashboard(
-    api_key: str,
-    debug: bool,
-    proxy: str | None,
-) -> meraki.DashboardAPI:
-    return meraki.DashboardAPI(
-        api_key=api_key,
-        print_console=True,
-        output_log=False,
-        suppress_logging=not (debug),
-        requests_proxy=proxy,
-    )
-
 
 # .
 #   .--section-------------------------------------------------------------.
@@ -416,14 +391,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-@dataclass(frozen=True)
-class MerakiConfig:
-    dashboard: meraki.DashboardAPI
-    hostname: str
-    section_names: Sequence[str]
-    cache_dir: Path
-
-
 def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence[_Organisation]:
     if not _need_organisations(config.section_names):
         return []
@@ -454,16 +421,7 @@ def _need_devices(section_names: Sequence[str]) -> bool:
 
 
 def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
-    config = MerakiConfig(
-        dashboard=_configure_meraki_dashboard(
-            resolve_secret_option(args, APIKEY_OPTION_NAME).reveal(),
-            args.debug,
-            args.proxy,
-        ),
-        hostname=args.hostname,
-        section_names=args.sections,
-        cache_dir=BASE_CACHE_FILE_DIR,
-    )
+    config = MerakiConfig.from_args(args)
 
     sections = _query_meraki_objects(
         organisations=[

@@ -11,6 +11,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.cisco_meraki.lib import agent as agent_cisco_meraki
+from cmk.plugins.cisco_meraki.lib import config
 
 _ORGANISATIONS = [
     agent_cisco_meraki._Organisation(id_="123", name="org-name1"),
@@ -213,7 +214,7 @@ def test_agent_cisco_meraki_main(
     orgs: Sequence[str],
 ) -> None:
     monkeypatch.setattr(
-        agent_cisco_meraki,
+        config,
         "_configure_meraki_dashboard",
         lambda a, b, c: FakeDashboard(),
     )

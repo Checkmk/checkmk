@@ -11,21 +11,22 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.cisco_meraki.lib import agent as agent_cisco_meraki
+from cmk.plugins.cisco_meraki.lib.schema import Organisation
 
 _ORGANISATIONS = [
-    agent_cisco_meraki._Organisation(id_="123", name="org-name1"),
-    agent_cisco_meraki._Organisation(id_="456", name="org-name2"),
-    agent_cisco_meraki._Organisation(id_="789", name="org-name3"),
+    Organisation(id_="123", name="org-name1"),
+    Organisation(id_="456", name="org-name2"),
+    Organisation(id_="789", name="org-name3"),
 ]
 
 
 class FakeGetOrganisationsByIDCache:
-    def get_data(self, *args: object) -> Sequence[agent_cisco_meraki._Organisation]:
+    def get_data(self, *args: object) -> Sequence[Organisation]:
         return _ORGANISATIONS
 
 
 class FakeGetOrganisationsCache:
-    def get_data(self, *args: object) -> Sequence[agent_cisco_meraki._Organisation]:
+    def get_data(self, *args: object) -> Sequence[Organisation]:
         return _ORGANISATIONS
 
 

@@ -29,7 +29,11 @@ import { CseOnboardingApiClient } from './onboarding-api-client'
 const { _t } = usei18n()
 
 const slideInOpen = defineModel<boolean>({ required: true })
-const openedTab = usePersistentRef<string | number>('first-host-slideout-opened-tab', 'deb')
+const openedTab = usePersistentRef<string | number>(
+  'first-host-slideout-opened-tab',
+  'deb',
+  (v) => v as string | number
+)
 const currentStep = ref<number>(1)
 const onboardingApiClient = new CseOnboardingApiClient('api/v1/')
 const agentSecret = ref<string | null>(null)

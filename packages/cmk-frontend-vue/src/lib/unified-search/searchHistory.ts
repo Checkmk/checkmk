@@ -28,12 +28,14 @@ export class SearchHistoryService {
     this.entries = usePersistentRef<HistoryEntry[]>(
       'search-history-'.concat(this.searchId),
       [],
+      (v) => v as HistoryEntry[],
       'local'
     )
 
     this.queries = usePersistentRef<UnifiedSearchQueryLike[]>(
       'search-queries-'.concat(this.searchId),
       [],
+      (v) => v as UnifiedSearchQueryLike[],
       'local'
     )
   }

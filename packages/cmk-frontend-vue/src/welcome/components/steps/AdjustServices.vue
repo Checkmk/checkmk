@@ -31,7 +31,12 @@ const props = defineProps<{
 }>()
 const emit = defineEmits(['step-completed'])
 
-const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-currentStep`, 0, 'local')
+const currentStep: Ref<number> = usePersistentRef<number>(
+  `${props.stepId}-currentStep`,
+  0,
+  (v) => v as number,
+  'local'
+)
 </script>
 
 <template>

@@ -229,6 +229,11 @@ export class AiTemplateService extends ServiceBase {
   }
 
   private getPersistentRef(): Ref<boolean> {
-    return usePersistentRef<boolean>(`ai-consent-${this.config.user_id}`, false, 'local')
+    return usePersistentRef<boolean>(
+      `ai-consent-${this.config.user_id}`,
+      false,
+      (v) => v as boolean,
+      'local'
+    )
   }
 }

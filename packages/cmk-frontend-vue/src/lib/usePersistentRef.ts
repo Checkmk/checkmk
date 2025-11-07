@@ -8,9 +8,14 @@ import type { Ref } from 'vue'
 
 import { storageHandler } from './utils'
 
-const usePersistentRef = <T>(key: string, defaultValue: T, storageOpt?: 'session' | 'local') => {
+const usePersistentRef = <T>(
+  key: string,
+  defaultValue: T,
+  parse: (v: unknown) => T,
+  storageOpt?: 'session' | 'local'
+) => {
   const storage = storageOpt === 'session' ? sessionStorage : localStorage
-  const currentValue = storageHandler.get(storage, key, defaultValue) as T
+  const currentValue = parse(storageHandler.get(storage, key, defaultValue))
   const value = ref(currentValue) as Ref<T>
   watch(value, (newValue) => {
     storageHandler.set(storage, key, newValue)

@@ -23,7 +23,7 @@ const props = defineProps<{
 }>()
 
 const dialogHidden = props.dismissal_button
-  ? usePersistentRef(props.dismissal_button.key, false, 'session')
+  ? usePersistentRef(props.dismissal_button.key, false, (v) => v as boolean, 'session')
   : ref(false)
 
 async function hideContent(event?: Event) {

@@ -520,7 +520,8 @@ const handleBackgroundJobLogUpdate = (log: LogUpdate | null) => {
 
 const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
   'quick_setup_wizard_mode',
-  props.mode
+  props.mode,
+  (v) => v as WizardMode
 )
 
 const currentMode = ref<WizardMode>(props.mode)

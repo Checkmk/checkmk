@@ -6,14 +6,19 @@
 import argparse
 import sys
 import xml.etree.ElementTree as ET
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Literal
+from urllib.parse import urljoin
 
+from requests import Response, Session
 from requests.auth import HTTPBasicAuth
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.request_helper import ApiSession
+from cmk.server_side_programs.v1_unstable import (
+    HostnameValidationAdapter,
+    report_agent_crashes,
+    vcrtrace,
+)
 
 __version__ = "2.5.0b1"
 
@@ -81,6 +86,57 @@ def parse_arguments(args: Sequence[str] | None) -> argparse.Namespace:
         help="Password for authenticating at the server",
     )
     return parser.parse_args(args)
+
+
+class ApiSession:
+    """Class for issuing multiple API calls
+
+    ApiSession behaves similar to requests.Session with the exception that a
+    base URL is provided and persisted.
+    All requests use the base URL and append the provided url to it.
+    """
+
+    def __init__(
+        self,
+        base_url: str,
+        auth: HTTPBasicAuth | None = None,
+        tls_cert_verification: bool | HostnameValidationAdapter = True,
+        additional_headers: Mapping[str, str] | None = None,
+    ):
+        self._session = Session()
+        self._session.auth = auth
+        self._session.headers.update(additional_headers or {})
+        self._base_url = base_url
+
+        if isinstance(tls_cert_verification, HostnameValidationAdapter):
+            self._session.mount(self._base_url, tls_cert_verification)
+            self.verify = True
+        else:
+            self.verify = tls_cert_verification
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self._session.request(
+            method,
+            urljoin(self._base_url, url),
+            params=params,
+            verify=self.verify,
+        )
+
+    def get(
+        self,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self.request(
+            "get",
+            url,
+            params=params,
+        )
 
 
 def _parse_api_url(

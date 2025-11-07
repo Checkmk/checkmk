@@ -178,7 +178,7 @@ class MerakiOrganisation:
                     data=licenses_overview,
                 )
 
-        if _need_devices(self.config.section_names):
+        if self.config.devices_required:
             devices_by_serial = self._get_devices_by_serial()
         else:
             devices_by_serial = {}
@@ -392,32 +392,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence[_Organisation]:
-    if not _need_organisations(config.section_names):
+    if not config.organizations_required:
         return []
     return (
         GetOrganisationsByIDCache(config, org_ids) if org_ids else GetOrganisationsCache(config)
     ).get_data(org_ids)
-
-
-def _need_organisations(section_names: Sequence[str]) -> bool:
-    return any(
-        s in section_names
-        for s in [
-            SEC_NAME_LICENSES_OVERVIEW,
-            SEC_NAME_DEVICE_STATUSES,
-            SEC_NAME_SENSOR_READINGS,
-        ]
-    )
-
-
-def _need_devices(section_names: Sequence[str]) -> bool:
-    return any(
-        s in section_names
-        for s in [
-            SEC_NAME_DEVICE_STATUSES,
-            SEC_NAME_SENSOR_READINGS,
-        ]
-    )
 
 
 def agent_cisco_meraki_main(args: argparse.Namespace) -> int:

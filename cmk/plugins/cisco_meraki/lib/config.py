@@ -10,7 +10,7 @@ from typing import Self
 
 from meraki import DashboardAPI  # type: ignore[import-not-found]
 
-from .constants import BASE_CACHE_FILE_DIR
+from . import constants
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,28 @@ class MerakiConfig:
             dashboard=dashboard,
             hostname=hostname,
             section_names=section_names,
-            cache_dir=BASE_CACHE_FILE_DIR,
+            cache_dir=constants.BASE_CACHE_FILE_DIR,
+        )
+
+    @property
+    def organizations_required(self) -> bool:
+        return any(
+            s in self.section_names
+            for s in [
+                constants.SEC_NAME_LICENSES_OVERVIEW,
+                constants.SEC_NAME_DEVICE_STATUSES,
+                constants.SEC_NAME_SENSOR_READINGS,
+            ]
+        )
+
+    @property
+    def devices_required(self) -> bool:
+        return any(
+            s in self.section_names
+            for s in [
+                constants.SEC_NAME_DEVICE_STATUSES,
+                constants.SEC_NAME_SENSOR_READINGS,
+            ]
         )
 
 

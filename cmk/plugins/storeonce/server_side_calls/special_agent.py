@@ -8,8 +8,7 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class Params(BaseModel):
@@ -23,9 +22,11 @@ def commands_function(
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = [
-        f"--address={host_config.name}",
-        f"--user={params.user}",
-        f"--password={params.password.unsafe()}",
+        "--username",
+        params.user,
+        "--password-id",
+        params.password,
+        host_config.name,
     ]
 
     if params.ignore_tls:

@@ -76,7 +76,7 @@ HACK_AGENTS = {
     "smb_share": False,
     "splunk": False,
     "storeonce4x": False,
-    "storeonce": True,
+    "storeonce": False,
     "three_par": False,
     "tinkerforge": False,  # needs no secret
     "ucs_bladecenter": False,

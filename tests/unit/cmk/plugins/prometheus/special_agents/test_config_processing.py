@@ -10,6 +10,7 @@ from io import StringIO
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.prometheus.special_agents.agent_prometheus import process_config_and_args
 
 
@@ -37,8 +38,8 @@ from cmk.plugins.prometheus.special_agents.agent_prometheus import process_confi
                 auth_method="auth_token",
                 disable_cert_verification=False,
                 cert_server_name="prometheus_test",
-                token="token",
-                token_reference=None,
+                token='Secret("token")',
+                token_id=None,
             ),
             id="config with auth token (use of subparser)",
         ),
@@ -52,6 +53,12 @@ def test_process_config_and_args(
 ) -> None:
     monkeypatch.setattr(sys, "stdin", StringIO(stdin_content))
     processed_argv = process_config_and_args(original_argv)
+
+    if "--token" in original_argv:
+        assert isinstance(processed_argv.token, Secret)
+        processed_argv.token = f'Secret("{processed_argv.token.reveal()}")'
+
+    assert isinstance(processed_argv, argparse.Namespace)
     assert processed_argv == expected_argv
 
 

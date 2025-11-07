@@ -136,7 +136,7 @@ TEST_F(LogWatchEventFixture, DumpEventLogWithoutSkip) {
 TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnSameEntry) {
     // special case when cut occurs at the repeating entry
     // we can cut  at the entries+1 !
-    auto lwl = lwl_all_with_skip_and_cut_same;
+    const auto &lwl = lwl_all_with_skip_and_cut_same;
     auto [pos, out] = DumpEventLog(event_log, state, lwl, {});
     EXPECT_EQ(pos, lwl.max_entries);
     auto table = tools::SplitString(out, "\n");
@@ -146,7 +146,7 @@ TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnSameEntry) {
 }
 
 TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnDiffEntry) {
-    auto lwl = lwl_all_with_skip_and_cut_diff;
+    const auto &lwl = lwl_all_with_skip_and_cut_diff;
     auto [pos, out] = DumpEventLog(event_log, state, lwl, {});
     EXPECT_EQ(pos, lwl.max_entries - 1);
     auto table = tools::SplitString(out, "\n");
@@ -182,7 +182,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
         EXPECT_TRUE(out.length() < 20000);
         auto table = cma::tools::SplitString(out, "\n");
         ASSERT_EQ(table.size(), 19);
-        for (auto &t : table) EXPECT_TRUE(t.size() <= 10);
+        for (const auto &t : table) EXPECT_TRUE(t.size() <= 10);
     }
 
     {
@@ -208,7 +208,7 @@ TEST(LogWatchEventTest, UpdateState) {
     EXPECT_FALSE(UpdateState(state, entries));
 
     const auto lwe = *LoadFromString("XX: warn context");
-    entries.emplace_back(LogWatchEntry(lwe));
+    entries.emplace_back(lwe);
 
     EXPECT_TRUE(UpdateState(state, entries));
     EXPECT_EQ(state.level_, cfg::EventLevels::kWarn);
@@ -300,13 +300,12 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
     ASSERT_EQ(sections.size(), LogWatchSections_Main);
 
     // data to be tested against
-    constexpr RawLogWatchData expected[LogWatchSections_Test] = {
-        //{false, "", cfg::EventLevels::kOff, false},
+    const std::array<RawLogWatchData, LogWatchSections_Test> expected = {{
         {true, "Parameters", cfg::EventLevels::kIgnore,
          cfg::EventContext::hide},
         {true, "State", cfg::EventLevels::kIgnore, cfg::EventContext::hide},
         {true, "*", cfg::EventLevels::kWarn, cfg::EventContext::hide},
-    };
+    }};
 
     int pos = 0;
     for (const auto &sec : sections) {
@@ -363,13 +362,13 @@ TEST(LogWatchEventTest, CheckTestConfig) {
     ASSERT_EQ(sections.size(), LogWatchSections_Test);
 
     // data to be tested against
-    const RawLogWatchData base[LogWatchSections_Test] = {
+    const std::array<RawLogWatchData, LogWatchSections_Test> base = {{
         {true, "Application", cfg::EventLevels::kCrit, cfg::EventContext::with},
         {true, "System", cfg::EventLevels::kWarn, cfg::EventContext::hide},
         {true, "Demo", cfg::EventLevels::kAll, cfg::EventContext::hide},
         {false, "", cfg::EventLevels::kOff, cfg::EventContext::hide},
         {true, "*", cfg::EventLevels::kWarn, cfg::EventContext::with},
-    };
+    }};
 
     int pos = 0;
     for (const auto &sec : sections) {
@@ -531,7 +530,7 @@ TEST(LogWatchEventTest, ParseStateLine) {
     }
 }
 
-#define TEST_FILE "test_file.tmp"
+constexpr auto TEST_FILE = "test_file.tmp";
 TEST(LogWatchEventTest, TestStateFileLoad) {
     fs::path p(TEST_FILE);
     std::ofstream f;
@@ -552,7 +551,7 @@ TEST(LogWatchEventTest, TestStateFileLoad) {
     f.close();
 
     PathVector filelist;
-    filelist.push_back(TEST_FILE);
+    filelist.emplace_back(TEST_FILE);
 
     {
         auto states = details::LoadEventlogOffsets(filelist, false);
@@ -561,7 +560,7 @@ TEST(LogWatchEventTest, TestStateFileLoad) {
         EXPECT_EQ(states[9].name_, "Windows PowerShell");
         EXPECT_EQ(states[0].pos_, 396747);
         EXPECT_EQ(states[9].pos_, 22012);
-        for (auto &s : states) {
+        for (const auto &s : states) {
             EXPECT_FALSE(s.presented_);
             EXPECT_FALSE(s.name_.empty());
         }
@@ -570,7 +569,7 @@ TEST(LogWatchEventTest, TestStateFileLoad) {
     {
         auto states = details::LoadEventlogOffsets(filelist, true);
         ASSERT_EQ(states.size(), 10);
-        for (auto &s : states) {
+        for (const auto &s : states) {
             EXPECT_TRUE(s.pos_ == 0)
                 << "with sendall in true we have reset pos to 0!";
         }
@@ -579,7 +578,7 @@ TEST(LogWatchEventTest, TestStateFileLoad) {
 
     {
         PathVector statefiles_bad;
-        filelist.push_back(TEST_FILE);
+        filelist.emplace_back(TEST_FILE);
         auto states = details::LoadEventlogOffsets(statefiles_bad,
                                                    false);  // offsets stored
         EXPECT_EQ(states.size(), 0);
@@ -587,40 +586,42 @@ TEST(LogWatchEventTest, TestStateFileLoad) {
 }
 
 TEST(LogWatchEventTest, TestAddLog) {
-    StateVector states;
-    AddLogState(states, false, "xxx", SendMode::normal);
     {
-        auto &s0 = states[0];
-
-        EXPECT_EQ(s0.context_, cfg::EventContext::hide);  // default
-        EXPECT_EQ(s0.level_, cfg::EventLevels::kCrit);    // default
-        EXPECT_EQ(s0.pos_, cfg::kFromBegin);              // 4 parameter
-        EXPECT_EQ(s0.name_, std::string("xxx"));          // 3 param
-        EXPECT_EQ(s0.in_config_, false);                  // 2 param
-        EXPECT_EQ(s0.presented_, true);                   // default
-
-        s0.presented_ = false;
+        StateVector states;
         AddLogState(states, false, "xxx", SendMode::normal);
-        EXPECT_EQ(s0.presented_, true);  // reset for found
+        {
+            auto &s0 = states[0];
 
-        AddLogState(states, true, "xxx", SendMode::normal);
-        EXPECT_EQ(s0.in_config_, true);  // reset with 2 param
-    }
+            EXPECT_EQ(s0.context_, cfg::EventContext::hide);  // default
+            EXPECT_EQ(s0.level_, cfg::EventLevels::kCrit);    // default
+            EXPECT_EQ(s0.pos_, cfg::kFromBegin);              // 4 parameter
+            EXPECT_EQ(s0.name_, std::string("xxx"));          // 3 param
+            EXPECT_EQ(s0.in_config_, false);                  // 2 param
+            EXPECT_EQ(s0.presented_, true);                   // default
 
-    {
-        AddLogState(states, true, "yyy", SendMode::all);
-        auto &s1 = states[1];
-        EXPECT_EQ(s1.pos_, 0);                    // 4 parameter
-        EXPECT_EQ(s1.name_, std::string("yyy"));  // 3 param
-        EXPECT_EQ(s1.in_config_, true);           // 2 param
-        EXPECT_EQ(s1.presented_, true);           // default
+            s0.presented_ = false;
+            AddLogState(states, false, "xxx", SendMode::normal);
+            EXPECT_EQ(s0.presented_, true);  // reset for found
+
+            AddLogState(states, true, "xxx", SendMode::normal);
+            EXPECT_EQ(s0.in_config_, true);  // reset with 2 param
+        }
+
+        {
+            AddLogState(states, true, "yyy", SendMode::all);
+            const auto &s1 = states[1];
+            EXPECT_EQ(s1.pos_, 0);                    // 4 parameter
+            EXPECT_EQ(s1.name_, std::string("yyy"));  // 3 param
+            EXPECT_EQ(s1.in_config_, true);           // 2 param
+            EXPECT_EQ(s1.presented_, true);           // default
+        }
     }
     {
         StateVector states;
         AddConfigEntry(
             states, LogWatchEntry("a", "off", cfg::EventContext::hide), false);
         {
-            auto &s = states.back();
+            const auto &s = states.back();
             EXPECT_EQ(s.name_, std::string("a"));
             EXPECT_EQ(s.in_config_, true);
             EXPECT_EQ(s.context_, cfg::EventContext::hide);
@@ -632,7 +633,7 @@ TEST(LogWatchEventTest, TestAddLog) {
         AddConfigEntry(
             states, LogWatchEntry("a", "warn", cfg::EventContext::with), true);
         {
-            auto &s = states.back();
+            const auto &s = states.back();
             EXPECT_EQ(s.name_, std::string("a"));
             EXPECT_EQ(s.context_, cfg::EventContext::with);  // changed
             EXPECT_EQ(s.presented_, true);                   // no change
@@ -643,7 +644,7 @@ TEST(LogWatchEventTest, TestAddLog) {
         AddConfigEntry(
             states, LogWatchEntry("b", "crit", cfg::EventContext::with), true);
         {
-            auto &s = states.back();
+            const auto &s = states.back();
             EXPECT_EQ(states.size(), 2);
             EXPECT_EQ(s.name_, std::string("b"));
             EXPECT_EQ(s.in_config_, true);
@@ -752,7 +753,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
     auto states = details::LoadEventlogOffsets(statefiles,
                                                send_all);  // offsets stored
 
-    states.push_back(State("zzz", 1, false));
+    states.emplace_back("zzz", 1, false);
 
     // check by registry, which logs are presented
     auto logs_in_registry = GatherEventLogEntriesFromRegistry();
@@ -766,7 +767,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
             UpdateEventLogStates(st, logs_in, SendMode::normal);
         EXPECT_TRUE(processed == logs_in.size());
         int count = 0;
-        for (auto &s : st) {
+        for (const auto &s : st) {
             auto found = rs::find(logs_in, s.name_);
             if (found == std::end(logs_in)) {
                 EXPECT_FALSE(s.presented_);
@@ -788,7 +789,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
         auto processed = UpdateEventLogStates(st, logs_in, SendMode::all);
         EXPECT_EQ(processed, 1);
         int count = 0;
-        for (auto &s : st) {
+        for (const auto &s : st) {
             auto found = rs::find(logs_in, s.name_);
             if (found == std::end(logs_in)) {
                 EXPECT_FALSE(s.presented_);
@@ -810,7 +811,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
     int system_index = -1;
     bool security_found = false;
     int index = 0;
-    for (auto &s : states) {
+    for (const auto &s : states) {
         if (s.name_ == std::string("Application")) application_index = index;
         if (s.name_ == std::string("System")) system_index = index;
         if (s.name_ == std::string("Security")) security_found = true;
@@ -828,10 +829,10 @@ TEST(LogWatchEventTest, TestMakeBody) {
     int demo_index = -1;
     {
         // add Demo
-        for (auto &e : lwe.entries())
+        for (const auto &e : lwe.entries())
             AddLogState(states, true, e.name(), SendMode::normal);
 
-        for (auto &s : states) {
+        for (const auto &s : states) {
             if (s.name_ == std::string("Demo")) demo_index = index;
         }
 
@@ -939,8 +940,8 @@ std::string WriteStampReadEventLog(const char *stamp) {
 
 constexpr char stamp[] = "EventLog Vista <GTEST>";
 namespace {
-auto is_found_stamp(const std::string &result) {
-    return result.find(stamp) != std::string::npos;
+auto is_found_stamp(const std::string_view &result) {
+    return result.contains(stamp);
 };
 }  // namespace
 

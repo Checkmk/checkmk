@@ -13,7 +13,9 @@ Special agent for monitoring Pure Storage FlashArray via REST API 2.x with Check
 from __future__ import annotations
 
 import argparse
+import json
 import logging
+import sys
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import NamedTuple
@@ -23,7 +25,7 @@ import urllib3
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
 
@@ -300,8 +302,7 @@ def agent_pure_storage_fa(args: argparse.Namespace) -> int:
             if args.debug:
                 return 1
 
-        with SectionWriter(f"pure_storage_fa_{spec.name}") as writer:
-            writer.append_json(data)
+        sys.stdout.write(f"<<<pure_storage_fa_{spec.name}:sep(0)>>>\n{json.dumps(data)}\n")
 
     return 0
 

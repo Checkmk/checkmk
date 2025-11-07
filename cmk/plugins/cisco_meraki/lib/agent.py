@@ -17,42 +17,34 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
-from pathlib import Path
-from typing import Final, TypedDict
+from typing import TypedDict
 
 import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
-from cmk.utils.paths import tmp_dir
+
+from .constants import (
+    AGENT,
+    API_NAME_DEVICE_NAME,
+    API_NAME_DEVICE_SERIAL,
+    API_NAME_ORGANISATION_ID,
+    API_NAME_ORGANISATION_NAME,
+    APIKEY_OPTION_NAME,
+    BASE_CACHE_FILE_DIR,
+    SEC_NAME_DEVICE_INFO,
+    SEC_NAME_DEVICE_STATUSES,
+    SEC_NAME_LICENSES_OVERVIEW,
+    SEC_NAME_SENSOR_READINGS,
+    SECTION_NAME_MAP,
+)
 
 __version__ = "2.5.0b1"
 
-AGENT = "cisco_meraki"
 
 _LOGGER = logging.getLogger(f"agent_{AGENT}")
 
-APIKEY_OPTION_NAME: Final = "apikey"
-
-_BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / f"agent_{AGENT}"
-
-_API_NAME_ORGANISATION_ID: Final = "id"
-_API_NAME_ORGANISATION_NAME: Final = "name"
-_API_NAME_DEVICE_SERIAL: Final = "serial"
-_API_NAME_DEVICE_NAME: Final = "name"
-
-_SEC_NAME_LICENSES_OVERVIEW: Final = "licenses-overview"
-_SEC_NAME_DEVICE_INFO: Final = "_device_info"  # Not configurable, needed for piggyback
-_SEC_NAME_DEVICE_STATUSES: Final = "device-statuses"
-_SEC_NAME_SENSOR_READINGS: Final = "sensor-readings"
-
-_SECTION_NAME_MAP = {
-    _SEC_NAME_LICENSES_OVERVIEW: "licenses_overview",
-    _SEC_NAME_DEVICE_INFO: "device_info",
-    _SEC_NAME_DEVICE_STATUSES: "device_status",
-    _SEC_NAME_SENSOR_READINGS: "sensor_readings",
-}
 
 MerakiAPIData = Mapping[str, object]
 
@@ -126,7 +118,7 @@ class _Organisation(TypedDict):
 
 class _ABCGetOrganisationsCache(DataCache):
     def __init__(self, config: MerakiConfig) -> None:
-        super().__init__(_BASE_CACHE_FILE_DIR / config.hostname / "organisations", "organisations")
+        super().__init__(BASE_CACHE_FILE_DIR / config.hostname / "organisations", "organisations")
         self._dashboard = config.dashboard
 
     @property
@@ -160,8 +152,8 @@ class GetOrganisationsByIDCache(_ABCGetOrganisationsCache):
                 _LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
                 return _Organisation(id_=org_id, name="")
             return _Organisation(
-                id_=org[_API_NAME_ORGANISATION_ID],
-                name=org[_API_NAME_ORGANISATION_NAME],
+                id_=org[API_NAME_ORGANISATION_ID],
+                name=org[API_NAME_ORGANISATION_NAME],
             )
 
         return [_get_organisation(org_id) for org_id in self._org_ids]
@@ -172,8 +164,8 @@ class GetOrganisationsCache(_ABCGetOrganisationsCache):
         try:
             return [
                 _Organisation(
-                    id_=organisation[_API_NAME_ORGANISATION_ID],
-                    name=organisation[_API_NAME_ORGANISATION_NAME],
+                    id_=organisation[API_NAME_ORGANISATION_ID],
+                    name=organisation[API_NAME_ORGANISATION_NAME],
                 )
                 for organisation in self._dashboard.organizations.getOrganizations()
             ]
@@ -203,10 +195,10 @@ class MerakiOrganisation:
         return self.organisation["id_"]
 
     def query(self) -> Iterator[Section]:
-        if _SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
+        if SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
             if licenses_overview := self._get_licenses_overview():
                 yield self._make_section(
-                    name=_SEC_NAME_LICENSES_OVERVIEW,
+                    name=SEC_NAME_LICENSES_OVERVIEW,
                     data=licenses_overview,
                 )
 
@@ -217,7 +209,7 @@ class MerakiOrganisation:
 
         for device in devices_by_serial.values():
             try:
-                device_piggyback = str(device[_API_NAME_DEVICE_NAME])
+                device_piggyback = str(device[API_NAME_DEVICE_NAME])
             except KeyError as e:
                 _LOGGER.debug(
                     "Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e
@@ -225,12 +217,12 @@ class MerakiOrganisation:
                 continue
 
             yield self._make_section(
-                name=_SEC_NAME_DEVICE_INFO,
+                name=SEC_NAME_DEVICE_INFO,
                 data=device,
                 piggyback=device_piggyback,
             )
 
-        if _SEC_NAME_DEVICE_STATUSES in self.config.section_names:
+        if SEC_NAME_DEVICE_STATUSES in self.config.section_names:
             for device_status in self._get_device_statuses():
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
@@ -238,12 +230,12 @@ class MerakiOrganisation:
                     piggyback := self._get_device_piggyback(device_status, devices_by_serial)
                 ) is not None:
                     yield self._make_section(
-                        name=_SEC_NAME_DEVICE_STATUSES,
+                        name=SEC_NAME_DEVICE_STATUSES,
                         data=device_status,
                         piggyback=piggyback or None,
                     )
 
-        if _SEC_NAME_SENSOR_READINGS in self.config.section_names:
+        if SEC_NAME_SENSOR_READINGS in self.config.section_names:
             for sensor_reading in self._get_sensor_readings():
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
@@ -251,7 +243,7 @@ class MerakiOrganisation:
                     piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial)
                 ) is not None:
                     yield self._make_section(
-                        name=_SEC_NAME_SENSOR_READINGS,
+                        name=SEC_NAME_SENSOR_READINGS,
                         data=sensor_reading,
                         piggyback=piggyback or None,
                     )
@@ -292,7 +284,7 @@ class MerakiOrganisation:
 
         try:
             return {
-                str(device[_API_NAME_DEVICE_SERIAL]): _update_device(device)
+                str(device[API_NAME_DEVICE_SERIAL]): _update_device(device)
                 for device in self.config.dashboard.organizations.getOrganizationDevices(
                     self.organisation_id, total_pages="all"
                 )
@@ -323,8 +315,8 @@ class MerakiOrganisation:
         self, device: MerakiAPIData, devices_by_serial: Mapping[str, MerakiAPIData]
     ) -> str | None:
         try:
-            serial = str(device[_API_NAME_DEVICE_SERIAL])
-            return str(devices_by_serial[serial][_API_NAME_DEVICE_NAME])
+            serial = str(device[API_NAME_DEVICE_SERIAL])
+            return str(devices_by_serial[serial][API_NAME_DEVICE_NAME])
         except KeyError as e:
             _LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e)
             return None
@@ -334,7 +326,7 @@ class MerakiOrganisation:
     ) -> Section:
         return Section(
             api_data_source=MerakiAPIDataSource.org,
-            name=_SECTION_NAME_MAP[name],
+            name=SECTION_NAME_MAP[name],
             data=data,
             piggyback=piggyback,
         )
@@ -408,8 +400,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--sections",
         nargs="+",
-        choices=list(_SECTION_NAME_MAP),
-        default=list(_SECTION_NAME_MAP),
+        choices=list(SECTION_NAME_MAP),
+        default=list(SECTION_NAME_MAP),
         help="Explicit sections that are collected.",
     )
 
@@ -442,9 +434,9 @@ def _need_organisations(section_names: Sequence[str]) -> bool:
     return any(
         s in section_names
         for s in [
-            _SEC_NAME_LICENSES_OVERVIEW,
-            _SEC_NAME_DEVICE_STATUSES,
-            _SEC_NAME_SENSOR_READINGS,
+            SEC_NAME_LICENSES_OVERVIEW,
+            SEC_NAME_DEVICE_STATUSES,
+            SEC_NAME_SENSOR_READINGS,
         ]
     )
 
@@ -453,8 +445,8 @@ def _need_devices(section_names: Sequence[str]) -> bool:
     return any(
         s in section_names
         for s in [
-            _SEC_NAME_DEVICE_STATUSES,
-            _SEC_NAME_SENSOR_READINGS,
+            SEC_NAME_DEVICE_STATUSES,
+            SEC_NAME_SENSOR_READINGS,
         ]
     )
 

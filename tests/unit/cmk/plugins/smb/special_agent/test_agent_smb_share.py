@@ -23,7 +23,6 @@ from cmk.plugins.smb.special_agent.agent_smb_share import (
     File,
     get_all_shared_files,
     iter_shared_files,
-    main,
     parse_arguments,
     smb_share_agent,
     SMBShareAgentError,
@@ -839,11 +838,6 @@ def test_connect_error(mock_close: mock.Mock, mock_connect: mock.Mock) -> None:
             raise Exception("Exception during usage of smb connection")
 
     mock_close.assert_called_once()
-
-
-@mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.special_agent_main", return_value=0)
-def test_main(mock_agent: mock.Mock) -> None:
-    assert main() == 0
 
 
 @pytest.mark.parametrize(

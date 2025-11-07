@@ -23,7 +23,7 @@ from smb.SMBConnection import SMBConnection
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 
 PASSWORD_OPTION = "password"
 
@@ -190,22 +190,19 @@ def get_all_shared_files(
 
 
 def write_section(all_files: Generator[tuple[str, set[File]]]) -> None:
-    with SectionWriter("fileinfo", separator="|") as writer:
-        now = datetime.now(tz=UTC)
-        writer.append(int(datetime.timestamp(now)))
-        writer.append("[[[header]]]")
-        writer.append("name|status|size|time")
-        writer.append("[[[content]]]")
-        for pattern, shared_files in all_files:
-            if not shared_files:
-                writer.append(f"{pattern}|missing")
-                continue
+    now = int(datetime.timestamp(datetime.now(tz=UTC)))
+    sys.stdout.write(
+        f"<<<fileinfo:sep(124)>>>\n{now}\n[[[header]]]\nname|status|size|time\n[[[content]]]\n"
+    )
+    for pattern, shared_files in all_files:
+        if not shared_files:
+            sys.stdout.write(f"{pattern}|missing\n")
+            continue
 
-            for shared_file in sorted(shared_files):
-                file_obj = shared_file.file
-                age = int(file_obj.last_write_time)
-                file_info = f"{shared_file.path}|ok|{file_obj.file_size}|{age}"
-                writer.append(file_info)
+        for shared_file in sorted(shared_files):
+            file_obj = shared_file.file
+            age = int(file_obj.last_write_time)
+            sys.stdout.write(f"{shared_file.path}|ok|{file_obj.file_size}|{age}\n")
 
 
 @contextmanager

@@ -91,19 +91,6 @@ class MockSMBConnection:
         pass
 
 
-class MockSectionWriter:
-    writer: list[str] = []
-
-    def __init__(self, _section_name: str, separator: str | None = None) -> None:
-        self.writer.clear()
-
-    def __enter__(self):
-        return self.writer
-
-    def __exit__(self, *args):
-        pass
-
-
 def test_parse_arguments() -> None:
     args = parse_arguments(
         [
@@ -766,21 +753,19 @@ def test_get_all_shared_files_errors(
                     [],
                 ),
             ],
-            [
-                1641020400,
-                "[[[header]]]",
-                "name|status|size|time",
-                "[[[content]]]",
-                "\\Share Folder 1\\error.log|ok|200|0",
-                "\\Share Folder 1\\smb_share.log|ok|100|0",
-                "\\Share Folder 2\\file.txt|missing",
-            ],
+            (
+                "<<<fileinfo:sep(124)>>>\n1641020400\n[[[header]]]\nname|status|size|time\n"
+                "[[[content]]]\n\\Share Folder 1\\error.log|ok|200|0\n"
+                "\\Share Folder 1\\smb_share.log|ok|100|0\n"
+                "\\Share Folder 2\\file.txt|missing\n"
+            ),
         )
     ],
 )
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.SMBConnection", MockSMBConnection)
 @time_machine.travel(datetime(2022, 1, 1, 7, 0, 0, 0))
 def test_smb_share_agent(
+    capsys: pytest.CaptureFixture[str],
     arg_list: Sequence[str] | None,
     files: tuple[str, Sequence[File]],
     expected_result: Sequence[object],
@@ -789,12 +774,9 @@ def test_smb_share_agent(
     with mock.patch(
         "cmk.plugins.smb.special_agent.agent_smb_share.get_all_shared_files", return_value=files
     ):
-        with mock.patch(
-            "cmk.plugins.smb.special_agent.agent_smb_share.SectionWriter", MockSectionWriter
-        ):
-            smb_share_agent(args)
+        smb_share_agent(args)
 
-    assert MockSectionWriter.writer == expected_result
+    assert capsys.readouterr().out == expected_result
 
 
 def test_smb_share_agent_error(capsys: pytest.CaptureFixture) -> None:

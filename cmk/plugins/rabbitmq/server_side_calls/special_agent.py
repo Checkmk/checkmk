@@ -32,10 +32,10 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
         params.protocol,
         "-m",
         ",".join(params.sections),
-        "-u",
+        "--user",
         params.user,
-        "-s",
-        params.password.unsafe(),
+        "--password-id",
+        params.password,
         "--hostname",
         (
             replace_macros(params.instance, host_config.macros)

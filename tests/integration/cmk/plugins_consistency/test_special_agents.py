@@ -210,7 +210,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "SECTIONS",
         "-u",
         "USER",
-        "-s",
+        "--password",
         "PASSWORD",
         "--hostname",
         "HOSTNAME",

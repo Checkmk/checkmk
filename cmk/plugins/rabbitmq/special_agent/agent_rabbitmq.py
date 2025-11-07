@@ -10,14 +10,14 @@ import argparse
 import json
 import logging
 import sys
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import requests
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-import cmk.utils.password_store
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 
-cmk.utils.password_store.replace_passwords()
+PASSWORD_OPTION = "password"
 
 
 class Section(NamedTuple):
@@ -131,13 +131,14 @@ def main(argv=None):
 
 def _handle_rabbitmq_connection(args, sections):
     url_base = f"{args.proto}://{args.hostname}:{args.port}/api"
+    password = resolve_secret_option(args, PASSWORD_OPTION)
 
     for section in sections:
         if section.name not in args.sections:
             logging.warning('Ignoring unknown section "%s"', section.name)
             continue
 
-        section_data = _handle_request(f"{url_base}/{section.uri}", args)
+        section_data = _handle_request(f"{url_base}/{section.uri}", args.user, password)
         _handle_output(section.name, section_data)
 
 
@@ -153,10 +154,10 @@ def _handle_output(section, section_data):
         sys.stdout.write("%s\n" % json.dumps(section_data))
 
 
-def _handle_request(url, args):
+def _handle_request(url: str, user: str, password: Secret[str]) -> Any:
     response = requests.get(
         url,
-        auth=(args.user, args.password),
+        auth=(user, password.reveal()),
         timeout=900,
     )
 
@@ -221,10 +222,9 @@ def parse_arguments(argv):
         required=True,
         help="Username for RabbitMQ login",
     )
-    parser.add_argument(
-        "-s",
-        "--password",
-        default=None,
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
         required=True,
         help="Password for RabbitMQ login",
     )

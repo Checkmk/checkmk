@@ -10,7 +10,7 @@ from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand
 def test_agent_rabbitmq() -> None:
     params = {
         "user": "username",
-        "password": Secret(id=1, format="%s", pass_safely=False),
+        "password": Secret(1),
         "sections": ["nodes", "cluster"],
         "protocol": "https",
     }
@@ -21,10 +21,10 @@ def test_agent_rabbitmq() -> None:
                 "https",
                 "-m",
                 "nodes,cluster",
-                "-u",
+                "--user",
                 "username",
-                "-s",
-                Secret(id=1, format="%s", pass_safely=False),
+                "--password-id",
+                Secret(1),
                 "--hostname",
                 "testhost",
             ]

@@ -23,7 +23,7 @@ CMK_URL=${2:-http://localhost:5000}
 
 # Write cognito configuration file
 sudo mkdir -p /etc/cse
-"$(dirname "$0")/create_cognito_config_cse.sh" "${URL}" "${CMK_URL}" "notused" "092fd467-0d2f-4e0a-90b8-4ee6494f7453" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
+"$(dirname "$0")/create_cognito_config_cloud.sh" "${URL}" "${CMK_URL}" "notused" "092fd467-0d2f-4e0a-90b8-4ee6494f7453" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
 
 CSE_UAP_URL=https://admin-panel.saas-prod.cloudsandbox.checkmk.cloud/
 json_string=$(jq --null-input \

@@ -27,7 +27,10 @@ interface GeneralSettingsProps {
 defineProps<GeneralSettingsProps>()
 const name = defineModel<string>('name', { required: true })
 const description = defineModel<string | null>('description', { required: true })
-const addFilterSuffix = defineModel<boolean>('addFilterSuffix', { required: true })
+const addFilterSuffix = defineModel<boolean>('addFilterSuffix', {
+  required: false,
+  default: undefined
+})
 const createUniqueId = defineModel<boolean>('createUniqueId', { required: true })
 const uniqueId = defineModel<string>('uniqueId', { required: true })
 const dashboardIcon = defineModel<string | null>('dashboardIcon', {
@@ -56,11 +59,10 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
     v-model:unique-id="uniqueId"
     v-model:dashboard-icon="dashboardIcon"
     v-model:dashboard-emblem="dashboardEmblem"
+    v-model:add-filter-suffix="addFilterSuffix"
     :name-validation-errors="[]"
-    :add-filter-suffix="addFilterSuffix"
     :unique-id-validation-errors="[]"
     :original-dashboard-id="originalDashboardId"
-    @update:add-filter-suffix="(value) => value || addFilterSuffix"
   />
 
   <ContentSpacer />

@@ -133,7 +133,7 @@ class UpdateDnsCacheLoadingContainer:
         html.open_div(id=cls.div_load_container_id, style="display: none")
         html.show_message_by_msg_type(
             msg=_("Updating site DNS cache"),
-            msg_type="message",
+            msg_type="waiting",
             flashed=True,
         )
         html.close_div()

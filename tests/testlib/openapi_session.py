@@ -1354,9 +1354,34 @@ class PasswordsAPI(BaseAPI):
 
 
 class LicenseAPI(BaseAPI):
+    def configure(self, settings: Mapping[str, str | Mapping[str, str]]) -> requests.Response:
+        response = self.session.put(
+            "/domain-types/licensing/actions/configure/invoke",
+            json={"settings": settings} if settings else {},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
     def download(self) -> requests.Response:
         response = self.session.get("/domain-types/license_request/actions/download/invoke")
         if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def upload(self, verification_response: object) -> requests.Response:
+        response = self.session.post(
+            url="/domain-types/license_response/actions/upload/invoke",
+            json=verification_response,
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def verify(self) -> requests.Response:
+        """Trigger the license verification and receive its results"""
+        response = self.session.post("/domain-types/licensing/actions/verify/invoke")
+        if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
         return response
 

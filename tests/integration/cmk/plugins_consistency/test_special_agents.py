@@ -228,7 +228,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--hostname",
         "HOSTNAME",
     ],
-    "storeonce4x": ["USER", "PASSWORD", "HOST"],
+    "storeonce4x": ["--user", "USER", "--password", "PASSWORD", "HOST"],
     "cisco_prime": ["--hostname", "HOSTNAME"],
     "innovaphone": [
         "--user",

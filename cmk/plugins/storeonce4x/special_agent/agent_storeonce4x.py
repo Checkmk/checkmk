@@ -21,6 +21,7 @@ from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 
 import cmk.utils.paths
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 
@@ -28,6 +29,8 @@ AnyGenerator = Generator[Any]
 ResultFn = Callable[..., AnyGenerator]
 
 LOGGER = logging.getLogger("agent_storeonce4x")
+
+PASSWORD_OPTION = "password"
 
 StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
@@ -55,7 +58,9 @@ class StoreOnceOauth2Session:
     _token_endpoint = "/pml/login/authenticate"
     _dt_fmt = "%Y-%m-%d %H:%M:%S.%f"
 
-    def __init__(self, host: str, port: str, user: str, secret: str, verify_ssl: bool) -> None:
+    def __init__(
+        self, host: str, port: str, user: str, secret: Secret[str], verify_ssl: bool
+    ) -> None:
         self._host = host
         self._token_file = f"{str(self._token_dir)}/{self._token_file_suffix % self._host}"
         self._port = port
@@ -67,7 +72,7 @@ class StoreOnceOauth2Session:
 
         # We need to use LegacyClient due to grant_type==password
         self._client = LegacyApplicationClient("")
-        self._client.prepare_request_body(username=self._user, password=self._secret)
+        self._client.prepare_request_body(username=self._user, password=self._secret.reveal())
         self._oauth_session = OAuth2Session(
             self._user,
             client=self._client,
@@ -79,7 +84,7 @@ class StoreOnceOauth2Session:
             self._oauth_session.fetch_token(
                 token_url=f"https://{self._host}:{self._port}{self._token_endpoint}",
                 username=self._user,
-                password=self._secret,
+                password=self._secret.reveal(),
                 verify=self._verify_ssl,
             )
         )
@@ -234,8 +239,12 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
             filter_headers=[("authorization", "****")],
         ),
     )
-    parser.add_argument("user", metavar="USER", help="""Username for Observer Role""")
-    parser.add_argument("password", metavar="PASSWORD", help="""Password for Observer Role""")
+    parser.add_argument(
+        "--user", metavar="USER", required=True, help="""Username for Observer Role"""
+    )
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password for Observer Role"
+    )
     parser.add_argument(
         "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
     )
@@ -253,7 +262,7 @@ def agent_storeonce4x_main(args: argparse.Namespace) -> int:
         args.host,
         args.port,
         args.user,
-        args.password,
+        resolve_secret_option(args, PASSWORD_OPTION),
         args.verify_ssl,
     )
 

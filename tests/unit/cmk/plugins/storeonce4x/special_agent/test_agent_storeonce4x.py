@@ -7,6 +7,7 @@
 import responses
 import time_machine
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.storeonce4x.special_agent.agent_storeonce4x import StoreOnceOauth2Session
 
 #   .--defines-------------------------------------------------------------.
@@ -45,7 +46,7 @@ def test_invalid_tokenfile() -> None:
         status=200,
     )
 
-    mysession = StoreOnceOauth2Session(HOST, PORT, "user", "secret", False)
+    mysession = StoreOnceOauth2Session(HOST, PORT, "user", Secret("secret"), False)
 
     assert mysession._json_token["expires_in"] == EXPIRES_IN
     assert mysession._json_token["expires_in_abs"] == "1988-06-08 17:00:10.000000"
@@ -69,7 +70,7 @@ def test_REST_call() -> None:
         },
         status=200,
     )
-    mysession = StoreOnceOauth2Session(HOST, PORT, "user", "secret", False)
+    mysession = StoreOnceOauth2Session(HOST, PORT, "user", Secret("secret"), False)
     resp = mysession.get("/api/v1/data-services/d2d-service/status")
 
     assert resp["random_answer"] == "foo-bar"

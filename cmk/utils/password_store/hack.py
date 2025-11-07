@@ -75,7 +75,7 @@ HACK_AGENTS = {
     "siemens_plc": False,  # needs no secret
     "smb_share": True,
     "splunk": False,
-    "storeonce4x": True,
+    "storeonce4x": False,
     "storeonce": True,
     "three_par": False,
     "tinkerforge": False,  # needs no secret

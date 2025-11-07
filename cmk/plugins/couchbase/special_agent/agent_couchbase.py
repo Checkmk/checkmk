@@ -19,7 +19,6 @@ import requests
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 
 __version__ = "2.5.0b1"
 
@@ -277,8 +276,9 @@ def sections_node(client: CouchbaseClient) -> None:
             ),
         ),
     ]:
-        with SectionWriter(section_name, separator=None) as section_writer:
-            section_writer.append(section_generator_str)
+        sys.stdout.write(f"<<<{section_name}>>>\n")
+        for line in section_generator_str:
+            sys.stdout.write(f"{line}\n")
 
     for section_name, section_generator_dict in [
         (
@@ -322,8 +322,9 @@ def sections_node(client: CouchbaseClient) -> None:
             ),
         ),
     ]:
-        with SectionWriter(section_name) as section_writer:
-            section_writer.append_json(section_generator_dict)
+        sys.stdout.write(f"<<<{section_name}:sep(0)>>>\n")
+        for element in section_generator_dict:
+            sys.stdout.write(f"{json.dumps(element)}\n")
 
 
 def fetch_bucket_data(

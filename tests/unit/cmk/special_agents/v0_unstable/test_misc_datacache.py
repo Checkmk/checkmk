@@ -48,6 +48,7 @@ def test_datacache_timestamp(tmp_path: Path) -> None:
 def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     tcache = KeksDose(tmp_path, "test")
     tcache._write_to_cache("cached data")
+    assert tcache.cache_timestamp is not None
 
     valid_time = tcache.cache_timestamp + tcache.cache_interval - 1
     monkeypatch.setattr("time.time", lambda: valid_time)
@@ -66,6 +67,7 @@ def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 def test_datacache_validity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     tcache = KeksDose(tmp_path, "test")
     tcache._write_to_cache("cached data")
+    assert tcache.cache_timestamp is not None
 
     invalid_time = tcache.cache_timestamp + tcache.cache_interval + 1
     monkeypatch.setattr("time.time", lambda: invalid_time)

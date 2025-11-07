@@ -12,9 +12,12 @@ from typing import Literal
 from requests.auth import HTTPBasicAuth
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.request_helper import ApiSession
+
+__version__ = "2.5.0b1"
+
+AGENT = "activemq"
 
 PASSWORD_OPTION = "password"
 
@@ -149,10 +152,7 @@ def agent_activemq_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(
-        parse_arguments,
-        agent_activemq_main,
-        apply_password_store_hack=False,
-    )
+    return agent_activemq_main(parse_arguments(sys.argv[1:]))

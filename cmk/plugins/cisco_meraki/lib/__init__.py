@@ -12,6 +12,7 @@ from collections.abc import Mapping, Sequence
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
 
+# TODO: plan to drop this once we are returning typed sections.
 MerakiAPIData = Mapping[str, object]
 
 
@@ -41,3 +42,10 @@ def check_last_reported_ts(
         levels_upper=levels_upper,
         render_func=render.timespan,
     )
+
+
+__all__ = [
+    "MerakiAPIData",
+    "load_json",
+    "check_last_reported_ts",
+]

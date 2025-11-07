@@ -21,11 +21,11 @@ from typing import TypedDict
 
 import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
-from cmk.password_store.v1_unstable import parser_add_secret_option
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 
-from .config import MerakiConfig
+from .config import get_meraki_dashboard, MerakiConfig
 from .constants import (
     AGENT,
     API_NAME_DEVICE_NAME,
@@ -421,7 +421,9 @@ def _need_devices(section_names: Sequence[str]) -> bool:
 
 
 def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
-    config = MerakiConfig.from_args(args)
+    api_key = resolve_secret_option(args, APIKEY_OPTION_NAME).reveal()
+    dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
+    config = MerakiConfig.build(dashboard, args.hostname, args.sections)
 
     sections = _query_meraki_objects(
         organisations=[

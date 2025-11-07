@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from argparse import Namespace
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,9 +10,7 @@ from typing import Self
 
 from meraki import DashboardAPI  # type: ignore[import-not-found]
 
-from cmk.password_store.v1_unstable import resolve_secret_option
-
-from .constants import APIKEY_OPTION_NAME, BASE_CACHE_FILE_DIR
+from .constants import BASE_CACHE_FILE_DIR
 
 
 @dataclass(frozen=True)
@@ -25,20 +22,16 @@ class MerakiConfig:
     cache_dir: Path
 
     @classmethod
-    def from_args(cls, args: Namespace) -> Self:
+    def build(cls, dashboard: DashboardAPI, hostname: str, section_names: Sequence[str]) -> Self:
         return cls(
-            dashboard=_configure_meraki_dashboard(
-                resolve_secret_option(args, APIKEY_OPTION_NAME).reveal(),
-                args.debug,
-                args.proxy,
-            ),
-            hostname=args.hostname,
-            section_names=args.sections,
+            dashboard=dashboard,
+            hostname=hostname,
+            section_names=section_names,
             cache_dir=BASE_CACHE_FILE_DIR,
         )
 
 
-def _configure_meraki_dashboard(api_key: str, debug: bool, proxy: str | None) -> DashboardAPI:
+def get_meraki_dashboard(api_key: str, debug: bool, proxy: str | None) -> DashboardAPI:
     return DashboardAPI(
         api_key=api_key,
         print_console=True,

@@ -8,9 +8,7 @@
 # mypy: disable-error-code="redundant-expr"
 
 import importlib
-import sys
 import traceback
-from collections.abc import Iterator
 from pathlib import Path
 from types import ModuleType
 from typing import assert_never
@@ -18,7 +16,20 @@ from typing import assert_never
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.ccc.version import Edition
-from cmk.gui import utils
+from cmk.gui import (
+    dashboard,
+    graphing_main,
+    hooks,
+    notifications,
+    pages,
+    sidebar,
+    userdb,
+    utils,
+    views,
+    visuals,
+    wato,
+    watolib,
+)
 from cmk.gui.log import logger
 from cmk.utils import paths
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
@@ -56,38 +67,35 @@ match edition := cmk_version.edition(paths.omd_root):
 tracer = trace.get_tracer()
 
 
-def _imports() -> Iterator[str]:
-    """Returns a list of names of all currently imported python modules"""
-    for val in globals().values():
-        if isinstance(val, ModuleType):
-            yield val.__name__
-
-
 @tracer.instrument("main_modules.load_plugins")
 def load_plugins() -> None:
-    """Loads and initializes main modules and plug-ins into the application
-    Only built-in main modules are already imported."""
-    local_main_modules = _import_local_main_modules()
-    main_modules = _cmk_gui_top_level_modules() + local_main_modules
-    _import_main_module_plugins(main_modules)
-    _call_load_plugins_hooks(main_modules)
-
-
-def _import_local_main_modules() -> list[ModuleType]:
-    """Imports all site local main modules
-
-    We essentially load the site local pages plug-ins (`local/share/check_mk/web/plugins/pages`)
-    which are expected to contain the actual imports of the main modules.
-
-    Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
-    above. Until then we'll have to live with it.
-    """
-    module_names_prev = set(_imports())
-
-    # Load all multisite pages which will also perform imports of the needed modules
+    """Loads and initializes main modules and into the application"""
+    _import_main_module_plugins(
+        [
+            watolib,
+            userdb,
+            visuals,
+            views,
+            wato,
+            dashboard,
+            sidebar,
+            pages,
+        ]
+    )
     utils.load_web_plugins("pages", globals())
-
-    return [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
+    _call_load_plugins_hooks(
+        [
+            hooks,
+            userdb,
+            visuals,
+            views,
+            wato,
+            dashboard,
+            sidebar,
+            graphing_main,
+            notifications,
+        ]
+    )
 
 
 def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
@@ -156,15 +164,3 @@ def _call_load_plugins_hooks(main_modules: list[ModuleType]) -> None:
         module.load_plugins()
 
     logger.debug("Finished executing load_plugin hooks")
-
-
-def _cmk_gui_top_level_modules() -> list[ModuleType]:
-    return [
-        module
-        for name, module in sys.modules.items()
-        # None entries are only an import optimization of cPython and can be removed:
-        # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
-        if module is not None
-        # top level modules only, please...
-        if name.startswith("cmk.gui.") and len(name.split(".")) == 3
-    ]

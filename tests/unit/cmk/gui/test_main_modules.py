@@ -74,7 +74,6 @@ def test_load_local_plugin(main_module_name: str) -> None:
         "watolib",
         "sidebar",
         "userdb",
-        "main_modules",
         "dashboard",
         "visuals",
         "config",

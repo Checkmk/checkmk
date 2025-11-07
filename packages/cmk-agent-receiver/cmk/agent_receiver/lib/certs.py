@@ -40,7 +40,7 @@ def current_time_naive() -> datetime:
     return datetime.now(tz=UTC).replace(tzinfo=None)
 
 
-def sign_agent_csr(
+def sign_csr(
     csr: CertificateSigningRequest,
     lifetime_in_months: int,
     keypair: tuple[Certificate, CertificateIssuerPrivateKeyTypes],

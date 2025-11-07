@@ -66,7 +66,7 @@ from cmk.agent_receiver.lib.certs import (
     current_time_naive,
     extract_cn_from_csr,
     serialize_to_pem,
-    sign_agent_csr,
+    sign_csr,
     site_root_certificate,
 )
 from cmk.agent_receiver.lib.config import get_config
@@ -87,7 +87,7 @@ def _validate_uuid_against_csr(uuid: UUID4, csr_field: CsrField) -> None:
 
 
 def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
-    return sign_agent_csr(
+    return sign_csr(
         csr_field.csr,
         controller_certificate_settings(
             f"uuid={uuid} Querying agent controller certificate settings failed",

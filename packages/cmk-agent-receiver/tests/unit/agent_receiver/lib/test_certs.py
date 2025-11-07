@@ -7,7 +7,7 @@ import datetime
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 
-from cmk.agent_receiver.lib.certs import agent_root_ca, sign_agent_csr
+from cmk.agent_receiver.lib.certs import agent_root_ca, sign_csr
 
 from .certs import (
     check_certificate_against_private_key,
@@ -20,7 +20,7 @@ from .certs import (
 def test_sign_csr() -> None:
     root_ca = agent_root_ca()
     key, csr = generate_csr_pair("peter")
-    cert = sign_agent_csr(csr, 12, root_ca, datetime.datetime.fromtimestamp(100, tz=datetime.UTC))
+    cert = sign_csr(csr, 12, root_ca, datetime.datetime.fromtimestamp(100, tz=datetime.UTC))
 
     assert check_cn(cert, "peter")
     assert str(cert.not_valid_before_utc) == "1970-01-01 00:01:40+00:00"

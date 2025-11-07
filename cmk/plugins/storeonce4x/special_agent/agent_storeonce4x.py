@@ -23,13 +23,16 @@ from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 
 import cmk.utils.paths
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
 AnyGenerator = Generator[Any]
 ResultFn = Callable[..., AnyGenerator]
 
-LOGGER = logging.getLogger("agent_storeonce4x")
+__version__ = "2.5.0b1"
+
+AGENT = "storeonce4x"
+
+LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 PASSWORD_OPTION = "password"
 
@@ -280,9 +283,10 @@ def agent_storeonce4x_main(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_storeonce4x_main)
+    return agent_storeonce4x_main(parse_arguments(sys.argv[1:]))
 
 
 if __name__ == "__main__":

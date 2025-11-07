@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
+from cmk.plugins.cisco.agent_based.cisco_ucs_fault_section import parse_cisco_ucs_fault
 from cmk.plugins.cisco.lib_ucs import Fault
-from cmk.plugins.collection.agent_based.cisco_ucs_fault_section import parse_cisco_ucs_fault
 from cmk.plugins.collection.agent_based.cisco_ucs_psu import (
     check_cisco_ucs_psu,
     discover_cisco_ucs_psu,

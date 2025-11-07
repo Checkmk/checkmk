@@ -129,8 +129,61 @@ def _allow(
 
 
 _CLEAN_PLUGIN_FAMILIES = {
+    "acme",
+    "activemq",
+    "alertmanager",
+    "allnet_ip_sensoric",
+    "appdynamics",
+    # "aws",  # :cmk.ccc.store
+    "azure_status",
+    "azure",
+    # "azure_v2",  # :DataCache, Edition, HostAddress
+    # "bazel",  # :DataCache
+    # "cisco_meraki",  # : DataCache
+    "cisco",
+    "couchbase",
+    # "datadog", This cannot be fixed easily. It bypasses APIs to talk to the EC
+    "ddn_s2a",
+    "elasticsearch",
+    "fritzbox",
+    # "gcp",  # : Edition
+    # "gerrit",  # :DataCache
+    "graylog",
+    "hivemanager_ng",
+    "hivemanager",
+    "hp_msa",
+    "hpe_par",
+    "ibmsvc",
+    "innovaphone",
+    "ipmi",
+    "jenkins",
+    "jira",
+    # "jolokia",  # : import hack. resolve by migrating the bakery plugin
+    # "kube",  # :HostAddress, Edition, cmk.gui.form_specs.unstable.ListExtended, omd_root,
+    "metric_backend",
+    "mobileiron",
+    # "mqtt",  # :HostAddress
     "netapp",
+    # "otel", # :
+    "prism",
+    # "prometheus",  # :HostAddress
+    "proxmox_ve",
+    "pure_storage_fa",
+    "rabbitmq",
+    "random",
     "redfish",
+    "ruckus_spot",
+    "salesforce",
+    "siemens_plc",
+    # "smb",  # :cmk.ccc.hostaddress.HostAddress
+    "splunk",
+    "storeonce4x",
+    "storeonce",
+    "tinkerforge",
+    "ucs_bladecenter",
+    # "vnx_quotas", TODO. make the authorized keys configurable?
+    "vsphere",
+    "zerto",
 }
 
 
@@ -796,15 +849,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_MESSAGING,
         "cmk.utils.paths",
     ),
-    # These are ready to be moved to a package.
-    # PLEASE DO NOT INTRODUCE NEW DEPENDENCIES!
-    **{
-        Component(f"cmk.plugins.{family}"): _allow(
-            *PACKAGE_PLUGIN_APIS,
-            "cmk.plugins.lib",
-        )
-        for family in _CLEAN_PLUGIN_FAMILIES
-    },
     **{  # some plugin families that refuse to play by the rules:
         Component(f"cmk.plugins.{family}"): _allow(
             *PACKAGE_PLUGIN_APIS,
@@ -813,6 +857,15 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
             *violations,
         )
         for family, violations in _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS.items()
+    },
+    # These are ready to be moved to a package.
+    # PLEASE DO NOT INTRODUCE NEW DEPENDENCIES!
+    **{
+        Component(f"cmk.plugins.{family}"): _allow(
+            *PACKAGE_PLUGIN_APIS,
+            "cmk.plugins.lib",
+        )
+        for family in _CLEAN_PLUGIN_FAMILIES
     },
     Component("cmk.plugins"): _allow(
         *PACKAGE_PLUGIN_APIS,

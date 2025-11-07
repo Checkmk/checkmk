@@ -17,8 +17,6 @@ import snap7
 from snap7.common import load_library
 from snap7.type import Areas
 
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter
-
 # prevent snap7 logger to log errors directly to console
 snap7.common.logger.setLevel(logging.CRITICAL + 10)
 
@@ -323,13 +321,13 @@ def main(sys_argv=None):
 
             parsed_area_values.extend(_cast_values(values, start_address, area_value))
 
-        with SectionWriter("siemens_plc_cpu_state", None) as writer:
-            if cpu_state is not None:
-                writer.append(cpu_state)
+        sys.stdout.write("<<<siemens_plc_cpu_state>>>\n")
+        if cpu_state is not None:
+            sys.stdout.write(f"{cpu_state}\n")
 
-        with SectionWriter("siemens_plc", None) as writer:
-            for values in parsed_area_values:
-                writer.append("{} {} {} {}".format(hostname, *values))
+        sys.stdout.write("<<<siemens_plc>>>\n")
+        for values in parsed_area_values:
+            sys.stdout.write("{} {} {} {}\n".format(hostname, *values))
 
 
 if __name__ == "__main__":

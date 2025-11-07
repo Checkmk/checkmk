@@ -46225,6 +46225,10 @@ msgstr "ユーザーのパスワード"
 msgid "Password policy for local accounts"
 msgstr "ローカルアカウントのパスワードポリシー"
 
+#, fuzzy
+msgid "Password properties"
+msgstr "ダッシュボードのプロパティ"
+
 msgid "Password:"
 msgstr "パスワード:"
 

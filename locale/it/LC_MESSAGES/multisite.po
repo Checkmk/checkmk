@@ -48901,6 +48901,10 @@ msgstr "Password dell'utente"
 msgid "Password policy for local accounts"
 msgstr "Politica delle password per gli account locali"
 
+#, fuzzy
+msgid "Password properties"
+msgstr "Proprietà del cruscotto"
+
 msgid "Password:"
 msgstr "Password:"
 

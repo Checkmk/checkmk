@@ -49717,6 +49717,10 @@ msgstr "Mot de passe de l'utilisateur"
 msgid "Password policy for local accounts"
 msgstr "Politique de mot de passe pour les comptes locaux"
 
+#, fuzzy
+msgid "Password properties"
+msgstr "Propriétés du tableau de bord"
+
 msgid "Password:"
 msgstr "Mot de passe :"
 

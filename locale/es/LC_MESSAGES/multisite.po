@@ -49681,6 +49681,10 @@ msgstr "Contraseña del usuario"
 msgid "Password policy for local accounts"
 msgstr "Política de contraseñas para las cuentas locales"
 
+#, fuzzy
+msgid "Password properties"
+msgstr "Propiedades del cuadro de mandos"
+
 msgid "Password:"
 msgstr "Contraseña:"
 

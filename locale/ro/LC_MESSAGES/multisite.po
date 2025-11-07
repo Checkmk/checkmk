@@ -49372,6 +49372,10 @@ msgstr "Parola utilizatorului"
 msgid "Password policy for local accounts"
 msgstr "Politica de parole pentru conturile locale"
 
+#, fuzzy
+msgid "Password properties"
+msgstr "Proprietățile tabloului de bord"
+
 msgid "Password:"
 msgstr "Parola:"
 

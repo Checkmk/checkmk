@@ -49272,6 +49272,10 @@ msgstr "Senha do usuário"
 msgid "Password policy for local accounts"
 msgstr "Política de senha para contas locais"
 
+#, fuzzy
+msgid "Password properties"
+msgstr "Propriedades do painel de controlo"
+
 msgid "Password:"
 msgstr "Senha:"
 

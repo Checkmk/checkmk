@@ -49308,6 +49308,10 @@ msgstr "Wachtwoord van de gebruiker"
 msgid "Password policy for local accounts"
 msgstr "Wachtwoordbeleid voor lokale accounts"
 
+#, fuzzy
+msgid "Password properties"
+msgstr "Eigenschappen van het dashboard"
+
 msgid "Password:"
 msgstr "Wachtwoord:"
 

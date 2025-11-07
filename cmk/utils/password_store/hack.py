@@ -77,7 +77,7 @@ HACK_AGENTS = {
     "splunk": True,
     "storeonce4x": True,
     "storeonce": True,
-    "three_par": True,
+    "three_par": False,
     "tinkerforge": False,  # needs no secret
     "ucs_bladecenter": True,
     "vnx_quotas": False,

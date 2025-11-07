@@ -16,8 +16,10 @@ import sys
 import requests
 import urllib3
 
-import cmk.utils.password_store
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.rulesets.v1 import Title
+
+PASSWORD_OPTION = "password"
 
 DEFAULT_VALUES = {
     "system": Title("System: Storage Array Configuration"),
@@ -53,7 +55,9 @@ def _get_values_list(opt_string):
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-u", "--user", required=True, help="Username for 3par login")
-    parser.add_argument("-p", "--password", required=True, help="Password for 3par login")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password for 3par login"
+    )
     parser.add_argument("-P", "--port", required=True, help="Port for connection to 3par")
     parser.add_argument(
         "--no-cert-check",
@@ -72,11 +76,8 @@ def parse_arguments(argv):
     return args
 
 
-def main(argv=None):
-    if argv is None:
-        cmk.utils.password_store.replace_passwords()
-        argv = sys.argv[1:]
-    args = parse_arguments(argv)
+def main():
+    args = parse_arguments(sys.argv[1:])
 
     url = f"https://{args.host}:{args.port}/api/v1"
     headers = {
@@ -93,7 +94,10 @@ def main(argv=None):
     try:
         req = requests.post(
             "%s/credentials" % url,
-            json={"user": args.user, "password": args.password},
+            json={
+                "user": args.user,
+                "password": resolve_secret_option(args, PASSWORD_OPTION).reveal(),
+            },
             headers=headers,
             timeout=10,
             verify=not args.no_cert_check,

@@ -26,8 +26,8 @@ def generate_hpe_3par_command(
     args: list[str | Secret] = [
         "--user",
         params.user,
-        "--password",
-        params.password.unsafe(),
+        "--password-id",
+        params.password,
         "--port",
         str(params.port),
     ]

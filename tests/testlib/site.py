@@ -2659,7 +2659,7 @@ def connection(
     }
     # stay backwards-compatible for performance tests:
     # only set message_broker_port for CMK2.4.0+
-    if central_site.version == remote_site.version >= CMKVersion("2.4.0"):
+    if remote_site.version >= CMKVersion("2.4.0"):
         configuration_connection["message_broker_port"] = remote_site.message_broker_port
     site_config: dict[str, object] = {
         "basic_settings": basic_settings,

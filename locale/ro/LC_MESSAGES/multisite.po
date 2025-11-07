@@ -3986,6 +3986,10 @@ msgstr "Adăugați un nou interval IP"
 msgid "Add Event Source filter rule"
 msgstr "Adaugă filtre"
 
+#, fuzzy
+msgid "Add Event User filter rule"
+msgstr "Adaugă filtre"
+
 msgid "Add Exception"
 msgstr "Adaugă Excepție"
 
@@ -4043,6 +4047,10 @@ msgstr "Sursa"
 
 msgid "Add Suffix"
 msgstr "Adăugați sufixul"
+
+#, fuzzy
+msgid "Add User"
+msgstr "Adăugați un utilizator"
 
 msgid "Add a comment or describe this host"
 msgstr "Adaugă un comentariu sau descrie această gazdă"
@@ -12148,10 +12156,10 @@ msgstr ""
 "Nu se pot încărca arborii de inventar HW/SW %s. Vă rugăm să eliminați "
 "fișierele corupte."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Cannot move folder. Some of its elements have specifically other customers "
-"set (<i>%s</i>). This violates the CME folder hierarchy."
+"set (<i>%s</i>). This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Nu se poate muta folderul. Unele dintre elementele sale au în mod specific "
 "alți clienți setați (<i>%s</i>). Acest lucru încalcă ierarhia dosarelor CME."
@@ -25067,6 +25075,10 @@ msgid "Exclude messages from Sources:"
 msgstr "Excludeți volumul din numele serviciului"
 
 #, fuzzy
+msgid "Exclude messages from Users:"
+msgstr "Excludeți volumul din numele serviciului"
+
+#, fuzzy
 msgid "Exclude messages with ids:"
 msgstr "Excludeți spațiile de nume care corespund"
 
@@ -26721,6 +26733,10 @@ msgstr "Șirul final de trimis"
 #, fuzzy
 msgid "Filtering by Event Source"
 msgstr "Filtrați selecția %s în funcție de serviciu: "
+
+#, fuzzy
+msgid "Filtering by Event User"
+msgstr "Șirul final de trimis"
 
 #, fuzzy
 msgid "Filtering tags enabled but no tags defined."
@@ -29342,6 +29358,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Here you can configure messages filtering parameters"
+msgstr "Aici puteți configura setările de temporizare."
+
+#, fuzzy
+msgid "Here you can configure messages filtering parameters using Event User"
 msgstr "Aici puteți configura setările de temporizare."
 
 msgid ""
@@ -32985,7 +33005,7 @@ msgid "Icons and Actions"
 msgstr "%d pictograme și acțiuni"
 
 msgid ""
-"Id entryField smay contain either numeric event id or pair of numeric event "
+"Id entryFields may contain either numeric event id or pair of numeric event "
 "ids separated by dash."
 msgstr ""
 
@@ -35647,6 +35667,10 @@ msgstr "Includeți gazdele conectate indirect (recursiv)"
 
 msgid "Include messages only from Sources:"
 msgstr ""
+
+#, fuzzy
+msgid "Include messages only from Users:"
+msgstr "Excludeți volumul din numele serviciului"
 
 #, fuzzy
 msgid "Include only messages with ids:"
@@ -54488,6 +54512,10 @@ msgstr "Depreciat"
 msgid "RCC Remote server address"
 msgstr "Adresa serverului URL personalizat"
 
+#, fuzzy
+msgid "RCC configuration"
+msgstr "Configurația RRA"
+
 msgid "RCC profile configuration"
 msgstr "Configurația profilului RCC"
 
@@ -57781,6 +57809,10 @@ msgstr "Timp de execuție"
 #, fuzzy
 msgid "Runtime (peak attempt)"
 msgstr "Încercare de verificare curentă"
+
+#, fuzzy
+msgid "Runtime limit (total)"
+msgstr "Rata de succes a regulilor"
 
 msgid "Runtime run queue"
 msgstr "Coadă de execuție în timp de execuție"
@@ -66827,13 +66859,6 @@ msgstr ""
 "port și trebuie să cunoască secretul care a fost folosit pentru a cripta "
 "datele trimise pentru a le putea primi și decripta."
 
-msgid ""
-"The Checkmk Managed Services Edition can only be connected with other sites "
-"using the CME."
-msgstr ""
-"Checkmk Managed Services Edition poate fi conectat numai cu alte site-uri "
-"care utilizează CME."
-
 #, fuzzy
 msgid ""
 "The Checkmk Micro Core uses Checkmk checker processes to process the results "
@@ -66848,6 +66873,14 @@ msgstr ""
 "verificator primește o unitate centrală dedicată. Configurarea mai multor "
 "verificatori decât numărul de unități centrale de procesare disponibile are "
 "un efect negativ, deoarece crește numărul de comutări de context."
+
+#, fuzzy
+msgid ""
+"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
+"other sites using the Checkmk Ultimate with multi-tenancy edition."
+msgstr ""
+"Checkmk Managed Services Edition poate fi conectat numai cu alte site-uri "
+"care utilizează CME."
 
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
@@ -67249,9 +67282,10 @@ msgstr ""
 "fișierului de specificații RPM. Aici, puteți specifica manual aceste "
 "etichete."
 
+#, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
-"and improves the management of the inter site connections using livestatus. "
+"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
+"improves the management of the inter site connections using livestatus. "
 "Using the Livestatus Proxy Daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
@@ -68133,21 +68167,21 @@ msgstr ""
 "numai pe site-urile cunoscute de site-ul central, deoarece controlerul va "
 "avea încredere numai în certificatele semnate de CA-ul site-ului central."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The configured target site <i>%s</i> for this folder is invalid. The folder "
-"<i>%s</i> already belongs to the customer <i>%s</i>. This violates the CME "
-"folder hierarchy. You may choose the following sites <i>%s</i>."
+"<i>%s</i> already belongs to the customer <i>%s</i>. This violates the multi-"
+"tenancy folder hierarchy. You may choose the following sites <i>%s</i>."
 msgstr ""
 "Site-ul țintă configurat <i>%s</i> pentru acest dosar nu este valid. Dosarul "
 "<i>%s</i> aparține deja clientului <i>%s</i> . Acest lucru încalcă ierarhia "
 "dosarelor CME. Puteți alege următoarele site-uri <i>%s</i> ."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The configured target site refers to the default customer <i>%s</i>. The "
 "parent folder however, already have the specific customer <i>%s</i> set. "
-"This violates the CME folder hierarchy."
+"This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Site-ul țintă configurat se referă la clientul implicit <i>%s</i>. Cu toate "
 "acestea, dosarul părinte are deja clientul specific <i>%s</i> setat. Acest "
@@ -68994,10 +69028,10 @@ msgstr "Autentificarea nu este permisă pe acest site."
 msgid "The host '%s' does not exist"
 msgstr "Gazda \"%s\" nu există"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
-"customer <i>%s</i>. This violates the CME folder hierarchy."
+"customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Gazda <i>%s</i> are setul explicit de site-uri <i>%s</i>, care aparține "
 "clientului <i>%s</i>. Acest lucru încalcă ierarhia dosarelor CME."
@@ -70876,6 +70910,13 @@ msgid "The ruleset \"%s\" does not exist."
 msgstr "Setul de reguli \"%s\" nu există."
 
 msgid ""
+"The runtime limit (total) is the total runtime of all attempts in relation "
+"to the limit per attempt. These thresholds apply to the total runtime of all "
+"execution attempts. If there are multiple execution attempts, the thresholds "
+"apply to the total runtime."
+msgstr ""
+
+msgid ""
 "The runtime-limit ratio (peak attempt) is the longest attempt runtime in "
 "relation to the limit per attempt. These thresholds apply to the runtime of "
 "a single execution attempt. If there are multiple execution attempts, the "
@@ -71240,10 +71281,10 @@ msgstr ""
 "pictogramă indică dacă agregatul este înghețat. Această pictogramă poate fi, "
 "de asemenea, utilizată pentru a actualiza structura înghețată a agregatelor."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
-"to customer <i>%s</i>. This violates the CME folder hierarchy."
+"to customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Subfolderul <i>%s</i> are setul explicit de site-uri <i>%s</i>, care "
 "aparține clientului <i>%s</i>. Acest lucru încalcă ierarhia dosarelor CME."
@@ -80535,6 +80576,10 @@ msgid "Total running on-demand z1d.xlarge instances"
 msgstr "Total instanțe On-Demand z1d.xlarge care rulează la cerere"
 
 #, fuzzy
+msgid "Total runtime"
+msgstr "Timpul de execuție a testului"
+
+#, fuzzy
 msgid "Total sent notifications"
 msgstr "Notificări de testare"
 
@@ -81355,21 +81400,21 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Nu se poate potrivi conexiunea"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
-"customer <i>%s</i>, which owns this folder. This violates the CME folder "
-"hierarchy. You may choose the sites: %s"
+"customer <i>%s</i>, which owns this folder. This violates the multi-tenancy "
+"folder hierarchy. You may choose the sites: %s"
 msgstr ""
 "Nu se poate modifica gazda <i>%s</i>. Id-ul său de site <i>%s</i> intră în "
 "conflict cu clientul <i>%s</i>, care deține acest dosar. Acest lucru încalcă "
 "ierarhia dosarelor CME. Puteți alege site-urile: %s."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
 "belongs to customer <i>%s</i>. The target folder however, belongs to "
-"customer <i>%s</i>. This violates the folder CME folder hierarchy."
+"customer <i>%s</i>. This violates the folder multi-tenancy folder hierarchy."
 msgstr ""
 "Nu se poate muta gazda <i>%s</i>. Atributul său explicit de site stabilit "
 "<i>%s</i> aparține clientului <i>%s</i>. Cu toate acestea, dosarul țintă "
@@ -82012,6 +82057,10 @@ msgstr "Actualizările vor fi activate pentru această gazdă."
 
 msgid "Updating of search index started"
 msgstr "A început actualizarea indexului de căutare"
+
+#, fuzzy
+msgid "Updating site DNS cache"
+msgstr "Actualizarea cache-ului DNS al site-ului"
 
 msgid ""
 "Updating the sites DNS cache is necessary in order to reflect IP address "
@@ -93718,11 +93767,11 @@ msgid "Additional graph options"
 msgstr "Opțiuni adiționale"
 
 #, fuzzy
-msgid "Add & place widget"
+msgid "Save widget"
 msgstr "Adăugați o țintă"
 
 #, fuzzy
-msgid "Update widget"
+msgid "Add & place widget"
 msgstr "Adăugați o țintă"
 
 #, fuzzy
@@ -93778,10 +93827,6 @@ msgstr "Clonarea graficului personalizat"
 #, fuzzy
 msgid "Widget visualization"
 msgstr "Vizualizare BI"
-
-#, fuzzy
-msgid "Save widget"
-msgstr "Adăugați o țintă"
 
 #, fuzzy
 msgid "Clone & review dashboard filters"
@@ -95008,6 +95053,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Update widget"
+#~ msgstr "Adăugați o țintă"
 
 #, fuzzy, python-format
 #~ msgid "%s all ids"

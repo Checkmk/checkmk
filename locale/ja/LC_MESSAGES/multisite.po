@@ -3776,6 +3776,10 @@ msgstr "新しいIP範囲を追加する"
 msgid "Add Event Source filter rule"
 msgstr "フィルタを追加"
 
+#, fuzzy
+msgid "Add Event User filter rule"
+msgstr "フィルタを追加"
+
 msgid "Add Exception"
 msgstr "例外を追加"
 
@@ -3830,6 +3834,10 @@ msgstr "ソース"
 
 msgid "Add Suffix"
 msgstr "サフィックスを追加する"
+
+#, fuzzy
+msgid "Add User"
+msgstr "ユーザーを追加する"
 
 msgid "Add a comment or describe this host"
 msgstr "このホストのコメントまたは説明追加"
@@ -11373,10 +11381,10 @@ msgstr ""
 "ホストのHW/SWインベントリツリー %s をロードできません。破損したファイルを削除"
 "してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Cannot move folder. Some of its elements have specifically other customers "
-"set (<i>%s</i>). This violates the CME folder hierarchy."
+"set (<i>%s</i>). This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "フォルダを移動できません。いくつかの要素が他の顧客設定を持っています(<i>%s</"
 "i>)。これはCMEのフォルダー階層に違反しています。"
@@ -23589,6 +23597,10 @@ msgid "Exclude messages from Sources:"
 msgstr "サービス名からボリュームを除外する"
 
 #, fuzzy
+msgid "Exclude messages from Users:"
+msgstr "サービス名からボリュームを除外する"
+
+#, fuzzy
 msgid "Exclude messages with ids:"
 msgstr "名前空間の一致を除外する"
 
@@ -25154,6 +25166,10 @@ msgstr "送信する最後の文字列"
 #, fuzzy
 msgid "Filtering by Event Source"
 msgstr "サービスによるフィルター選択:"
+
+#, fuzzy
+msgid "Filtering by Event User"
+msgstr "送信する最後の文字列"
 
 msgid "Filtering tags enabled but no tags defined."
 msgstr "タグのフィルタリングは有効だが、タグが定義されていない。"
@@ -27664,6 +27680,10 @@ msgstr ""
 "れ設定することができます。"
 
 msgid "Here you can configure messages filtering parameters"
+msgstr "ここで、メッセージフィルタリングのパラメーターを設定できます"
+
+#, fuzzy
+msgid "Here you can configure messages filtering parameters using Event User"
 msgstr "ここで、メッセージフィルタリングのパラメーターを設定できます"
 
 msgid ""
@@ -30861,7 +30881,7 @@ msgid "Icons and Actions"
 msgstr "アイコンとアクション"
 
 msgid ""
-"Id entryField smay contain either numeric event id or pair of numeric event "
+"Id entryFields may contain either numeric event id or pair of numeric event "
 "ids separated by dash."
 msgstr ""
 
@@ -33373,6 +33393,10 @@ msgstr "間接的に接続されたホストを含める（再帰的に）"
 
 msgid "Include messages only from Sources:"
 msgstr ""
+
+#, fuzzy
+msgid "Include messages only from Users:"
+msgstr "サービス名からボリュームを除外する"
 
 #, fuzzy
 msgid "Include only messages with ids:"
@@ -50945,6 +50969,10 @@ msgstr "RCC(非推奨)"
 msgid "RCC Remote server address"
 msgstr "RCC リモートサーバーのアドレス"
 
+#, fuzzy
+msgid "RCC configuration"
+msgstr "設定の追加"
+
 msgid "RCC profile configuration"
 msgstr "RCCプロファイル設定"
 
@@ -54051,6 +54079,10 @@ msgstr "ランタイム"
 
 msgid "Runtime (peak attempt)"
 msgstr "ランタイム（ピーク時）"
+
+#, fuzzy
+msgid "Runtime limit (total)"
+msgstr "ランタイムリミットレート（ピークトライ）"
 
 msgid "Runtime run queue"
 msgstr "ランタイム実行キュー"
@@ -62511,13 +62543,6 @@ msgstr ""
 "を知る必要があります。"
 
 msgid ""
-"The Checkmk Managed Services Edition can only be connected with other sites "
-"using the CME."
-msgstr ""
-"Checkmk Managed Services Editionは、CMEを使用して他のサイトにのみ接続できま"
-"す。"
-
-msgid ""
 "The Checkmk Micro Core uses Checkmk checker processes to process the results "
 "from the Checkmk fetchers. Since the checker processes are not IO bound, "
 "they are most effective when each checker gets a dedicated CPU. Configuring "
@@ -62529,6 +62554,14 @@ msgstr ""
 "チェッカーが専用CPUを取得するときに最も効果的です。使用可能なCPUの数よりも多"
 "くのチェッカーを構成すると、コンテキストスイッチの数が増えるため、悪影響があ"
 "ります。"
+
+#, fuzzy
+msgid ""
+"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
+"other sites using the Checkmk Ultimate with multi-tenancy edition."
+msgstr ""
+"Checkmk Managed Services Editionは、CMEを使用して他のサイトにのみ接続できま"
+"す。"
 
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
@@ -62910,9 +62943,10 @@ msgstr ""
 "<tt>DISTRIBUTION</tt> タグと <tt>DISTTAG</tt>タグはRPM specファイル内で空のま"
 "まになります。ここでは、これらのタグを手動で指定できます。"
 
+#, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
-"and improves the management of the inter site connections using livestatus. "
+"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
+"improves the management of the inter site connections using livestatus. "
 "Using the Livestatus Proxy Daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
@@ -63779,21 +63813,21 @@ msgstr ""
 "サイトのCAによって署名された証明書のみを信頼するため、セントラルサイトに知ら"
 "れているサイトにのみ登録することができます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The configured target site <i>%s</i> for this folder is invalid. The folder "
-"<i>%s</i> already belongs to the customer <i>%s</i>. This violates the CME "
-"folder hierarchy. You may choose the following sites <i>%s</i>."
+"<i>%s</i> already belongs to the customer <i>%s</i>. This violates the multi-"
+"tenancy folder hierarchy. You may choose the following sites <i>%s</i>."
 msgstr ""
 "このフォルダに設定されているターゲットサイト<i>%s</i>が無効です。フォルダ"
 "<i>%s</i>は、すでにカスタマー<i>%s</i>に属しています。これは、CMEフォルダー階"
 "層に違反します。次のサイト<i>%s</i>を選択できます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The configured target site refers to the default customer <i>%s</i>. The "
 "parent folder however, already have the specific customer <i>%s</i> set. "
-"This violates the CME folder hierarchy."
+"This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "設定されたターゲット サイトはデフォルトの顧客<i>%s</i>を参照していますが、親"
 "フォルダにはすでに特定の顧客<i>%s</i> が設定されています。これはCMEのフォル"
@@ -64609,10 +64643,10 @@ msgstr "ホスト%sはこのサイトでは監視されていません"
 msgid "The host '%s' does not exist"
 msgstr "ホスト '%s' は存在しません"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
-"customer <i>%s</i>. This violates the CME folder hierarchy."
+"customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "ホスト<i>%s</i>は、サイト<i>%s</i>（顧客<i>%s</i>に属する）を明示的に設定して"
 "いるため、CMEのフォルダ階層に違反します。"
@@ -66418,6 +66452,20 @@ msgstr ""
 msgid "The ruleset \"%s\" does not exist."
 msgstr "ルールセット \"%s\" は存在しません。"
 
+#, fuzzy
+msgid ""
+"The runtime limit (total) is the total runtime of all attempts in relation "
+"to the limit per attempt. These thresholds apply to the total runtime of all "
+"execution attempts. If there are multiple execution attempts, the thresholds "
+"apply to the total runtime."
+msgstr ""
+"Runtime-limit比（ピーク試行）は、試行ごとの制限に対する最長の試行実行時間のこ"
+"とです。これらのしきい値は、1回の実行試行の実行時間に適用されます。複数の実行"
+"試行がある場合、閾値は最長の実行時間に適用されます。比率のしきい値を超えた場"
+"合のアラームは、1 回の試行の最大実行時間が低く設定されすぎているか、テスト自"
+"体を再調整（キーワードのタイムアウトを減らすなど）する必要があることを意味し"
+"ます。 "
+
 msgid ""
 "The runtime-limit ratio (peak attempt) is the longest attempt runtime in "
 "relation to the limit per attempt. These thresholds apply to the runtime of "
@@ -66772,10 +66820,10 @@ msgstr ""
 "るかどうかを示します。このアイコンは、アグリゲートの凍結された構造を更新する"
 "ためにも使用できる。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
-"to customer <i>%s</i>. This violates the CME folder hierarchy."
+"to customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "サブフォルダ <i>%s</i> には明示的なサイト <i>%s</i> が設定されていて、これは"
 "カスタマー <i>%s</i>に属します。これは、CMEフォルダー階層に違反します。"
@@ -75259,6 +75307,10 @@ msgstr "稼動中のオンデマンドz1d.metal インスタンスの総数"
 msgid "Total running on-demand z1d.xlarge instances"
 msgstr "稼動中のオンデマンドz1d.xlarge インスタンスの総数"
 
+#, fuzzy
+msgid "Total runtime"
+msgstr "テストランタイム"
+
 msgid "Total sent notifications"
 msgstr "総送信通知"
 
@@ -76034,21 +76086,21 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "接続を一致させることができません"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
-"customer <i>%s</i>, which owns this folder. This violates the CME folder "
-"hierarchy. You may choose the sites: %s"
+"customer <i>%s</i>, which owns this folder. This violates the multi-tenancy "
+"folder hierarchy. You may choose the sites: %s"
 msgstr ""
 "ホスト<i>%s</i>を変更できません。サイトID<i>%s</i>は、このフォルダーを所有す"
 "る顧客<i>%s</i>と競合しています。これはCMEのフォルダー階層に違反しています。"
 "次のサイトを選択することができます:%s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
 "belongs to customer <i>%s</i>. The target folder however, belongs to "
-"customer <i>%s</i>. This violates the folder CME folder hierarchy."
+"customer <i>%s</i>. This violates the folder multi-tenancy folder hierarchy."
 msgstr ""
 "ホスト<i>%s</i>を移動できません。その明示的に設定されたサイト属性<i>%s</i>"
 "は、顧客<i>%s</i>に属しています。ただし、ターゲットフォルダは顧客<i>%s</i>に"
@@ -76658,6 +76710,10 @@ msgstr "このホストの更新が有効になります。"
 
 msgid "Updating of search index started"
 msgstr "検索インデックスの更新を開始しました"
+
+#, fuzzy
+msgid "Updating site DNS cache"
+msgstr "サイトのDNSキャッシュを更新する"
 
 msgid ""
 "Updating the sites DNS cache is necessary in order to reflect IP address "
@@ -87665,11 +87721,11 @@ msgid "Additional graph options"
 msgstr "追加オプション"
 
 #, fuzzy
-msgid "Add & place widget"
+msgid "Save widget"
 msgstr "ターゲットを追加"
 
 #, fuzzy
-msgid "Update widget"
+msgid "Add & place widget"
 msgstr "ターゲットを追加"
 
 #, fuzzy
@@ -87724,10 +87780,6 @@ msgstr "カスタムグラフのクローンを作成する"
 #, fuzzy
 msgid "Widget visualization"
 msgstr "BIの視覚化"
-
-#, fuzzy
-msgid "Save widget"
-msgstr "ターゲットを追加"
 
 #, fuzzy
 msgid "Clone & review dashboard filters"
@@ -88904,6 +88956,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Update widget"
+#~ msgstr "ターゲットを追加"
 
 #, python-format
 #~ msgid "%s all ids"

@@ -3968,6 +3968,10 @@ msgstr "Adicionar nova faixa de IP"
 msgid "Add Event Source filter rule"
 msgstr "Adicionar filtro"
 
+#, fuzzy
+msgid "Add Event User filter rule"
+msgstr "Adicionar filtro"
+
 msgid "Add Exception"
 msgstr "Adicionar Exceção"
 
@@ -4025,6 +4029,10 @@ msgstr "Fonte"
 
 msgid "Add Suffix"
 msgstr "Adicionar Sufixo"
+
+#, fuzzy
+msgid "Add User"
+msgstr "Adicionar usuário"
 
 msgid "Add a comment or describe this host"
 msgstr "Adicionar um comentário ou descrever este anfitrião"
@@ -12109,10 +12117,10 @@ msgstr ""
 "Não é possível carregar árvores de inventário HW/SW %s. Por favor, remova os "
 "arquivos corrompidos."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Cannot move folder. Some of its elements have specifically other customers "
-"set (<i>%s</i>). This violates the CME folder hierarchy."
+"set (<i>%s</i>). This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Não é possível mover a pasta. Alguns dos seus elementos têm especificamente "
 "outros clientes definidos (<i>%s</i>). Isto viola a hierarquia de pastas CME."
@@ -24974,6 +24982,10 @@ msgid "Exclude messages from Sources:"
 msgstr "Excluir volume do nome do serviço"
 
 #, fuzzy
+msgid "Exclude messages from Users:"
+msgstr "Excluir volume do nome do serviço"
+
+#, fuzzy
 msgid "Exclude messages with ids:"
 msgstr "Excluir correspondência de espaços nominais"
 
@@ -26628,6 +26640,10 @@ msgstr "Cadeia final a enviar"
 #, fuzzy
 msgid "Filtering by Event Source"
 msgstr "Filtrar %s seleção por serviço: "
+
+#, fuzzy
+msgid "Filtering by Event User"
+msgstr "Cadeia final a enviar"
 
 #, fuzzy
 msgid "Filtering tags enabled but no tags defined."
@@ -29271,6 +29287,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Here you can configure messages filtering parameters"
+msgstr "Aqui você pode configurar as configurações de tempo limite."
+
+#, fuzzy
+msgid "Here you can configure messages filtering parameters using Event User"
 msgstr "Aqui você pode configurar as configurações de tempo limite."
 
 msgid ""
@@ -32913,7 +32933,7 @@ msgid "Icons and Actions"
 msgstr "%d icons e ações"
 
 msgid ""
-"Id entryField smay contain either numeric event id or pair of numeric event "
+"Id entryFields may contain either numeric event id or pair of numeric event "
 "ids separated by dash."
 msgstr ""
 
@@ -35521,6 +35541,10 @@ msgstr ""
 
 msgid "Include messages only from Sources:"
 msgstr ""
+
+#, fuzzy
+msgid "Include messages only from Users:"
+msgstr "Excluir volume do nome do serviço"
 
 #, fuzzy
 msgid "Include only messages with ids:"
@@ -54346,6 +54370,10 @@ msgid "RCC Remote server address"
 msgstr "Endereço de servidor URL personalizado"
 
 #, fuzzy
+msgid "RCC configuration"
+msgstr "Configuração RRA"
+
+#, fuzzy
 msgid "RCC profile configuration"
 msgstr "Configuração remota"
 
@@ -57656,6 +57684,10 @@ msgstr "Tempo de execução"
 #, fuzzy
 msgid "Runtime (peak attempt)"
 msgstr "Tentativa de verificação atual"
+
+#, fuzzy
+msgid "Runtime limit (total)"
+msgstr "Taxa de acerto de regras"
 
 msgid "Runtime run queue"
 msgstr "Fila de execução em tempo real"
@@ -66621,13 +66653,6 @@ msgstr ""
 "utilizado para encriptar os dados enviados para os poder receber e "
 "desencriptar."
 
-msgid ""
-"The Checkmk Managed Services Edition can only be connected with other sites "
-"using the CME."
-msgstr ""
-"O Checkmk Managed Services Edition só pode ser ligado a outros sites "
-"utilizando o CME."
-
 #, fuzzy
 msgid ""
 "The Checkmk Micro Core uses Checkmk checker processes to process the results "
@@ -66642,6 +66667,14 @@ msgstr ""
 "verificador recebe uma CPU dedicada. A configuração de mais verificadores do "
 "que o número de CPUs disponíveis tem um efeito negativo, pois aumenta a "
 "quantidade de trocas de contexto."
+
+#, fuzzy
+msgid ""
+"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
+"other sites using the Checkmk Ultimate with multi-tenancy edition."
+msgstr ""
+"O Checkmk Managed Services Edition só pode ser ligado a outros sites "
+"utilizando o CME."
 
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
@@ -67042,9 +67075,10 @@ msgstr ""
 "arquivo de especificação do RPM. Aqui, você pode especificar manualmente "
 "estas tags."
 
+#, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
-"and improves the management of the inter site connections using livestatus. "
+"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
+"improves the management of the inter site connections using livestatus. "
 "Using the Livestatus Proxy Daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
@@ -67920,21 +67954,21 @@ msgstr ""
 "em sítios conhecidos pelo sítio central, porque o controlador só confiará em "
 "certificados assinados pela CA do sítio central."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The configured target site <i>%s</i> for this folder is invalid. The folder "
-"<i>%s</i> already belongs to the customer <i>%s</i>. This violates the CME "
-"folder hierarchy. You may choose the following sites <i>%s</i>."
+"<i>%s</i> already belongs to the customer <i>%s</i>. This violates the multi-"
+"tenancy folder hierarchy. You may choose the following sites <i>%s</i>."
 msgstr ""
 "O site alvo configurado <i>%s</i> para esta pasta é inválido. A pasta <i>%s</"
 "i> já pertence ao cliente <i>%s</i>. Isto viola a hierarquia de pastas CME. "
 "Você pode escolher os seguintes sites <i>%s</i>."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The configured target site refers to the default customer <i>%s</i>. The "
 "parent folder however, already have the specific customer <i>%s</i> set. "
-"This violates the CME folder hierarchy."
+"This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "O site alvo configurado refere-se ao cliente padrão <i>%s</i>. A pasta "
 "principal, no entanto, já tem o cliente específico <i>%s</i> definido. Isso "
@@ -68769,10 +68803,10 @@ msgstr "O login não é permitido neste site."
 msgid "The host '%s' does not exist"
 msgstr "O \"%s\" anfitrião não existe"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
-"customer <i>%s</i>. This violates the CME folder hierarchy."
+"customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "O anfitrião <i>%s</i> tem o site explícito <i>%s</i> conjunto, que pertence "
 "ao cliente <i>%s</i>. Isto viola a hierarquia de pastas CME."
@@ -70628,6 +70662,13 @@ msgid "The ruleset \"%s\" does not exist."
 msgstr "O conjunto de regras \"%s\" não existe."
 
 msgid ""
+"The runtime limit (total) is the total runtime of all attempts in relation "
+"to the limit per attempt. These thresholds apply to the total runtime of all "
+"execution attempts. If there are multiple execution attempts, the thresholds "
+"apply to the total runtime."
+msgstr ""
+
+msgid ""
 "The runtime-limit ratio (peak attempt) is the longest attempt runtime in "
 "relation to the limit per attempt. These thresholds apply to the runtime of "
 "a single execution attempt. If there are multiple execution attempts, the "
@@ -70985,10 +71026,10 @@ msgstr ""
 "ícone indica se o agregado está congelado. Este ícone também pode ser "
 "utilizado para actualizar a estrutura congelada dos agregados."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
-"to customer <i>%s</i>. This violates the CME folder hierarchy."
+"to customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "A subpasta <i>%s</i> tem o site explícito <i>%s</i> definido, que pertence "
 "ao cliente <i>%s</i>. Isto viola a hierarquia de pastas CME."
@@ -80257,6 +80298,10 @@ msgid "Total running on-demand z1d.xlarge instances"
 msgstr "Total de Instâncias a Pedido"
 
 #, fuzzy
+msgid "Total runtime"
+msgstr "Tempo de execução do teste"
+
+#, fuzzy
 msgid "Total sent notifications"
 msgstr "última notificação"
 
@@ -81078,21 +81123,21 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Incapaz de igualar a conexão"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
-"customer <i>%s</i>, which owns this folder. This violates the CME folder "
-"hierarchy. You may choose the sites: %s"
+"customer <i>%s</i>, which owns this folder. This violates the multi-tenancy "
+"folder hierarchy. You may choose the sites: %s"
 msgstr ""
 "Incapaz de modificar o anfitrião <i>%s</i>. Seu site id <i>%s</i> entra em "
 "conflito com o cliente <i>%s</i>, que possui esta pasta. Isto viola a "
 "hierarquia de pastas CME. Você pode escolher os sites: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
 "belongs to customer <i>%s</i>. The target folder however, belongs to "
-"customer <i>%s</i>. This violates the folder CME folder hierarchy."
+"customer <i>%s</i>. This violates the folder multi-tenancy folder hierarchy."
 msgstr ""
 "Incapaz de mover o anfitrião <i>%s</i>. Seu atributo explícito de conjunto "
 "de site <i>%s</i> pertence ao cliente <i>%s</i>. A pasta de destino, porém, "
@@ -81736,6 +81781,10 @@ msgstr "As actualizações serão activadas para este anfitrião."
 
 msgid "Updating of search index started"
 msgstr "Atualização do índice de pesquisa iniciada"
+
+#, fuzzy
+msgid "Updating site DNS cache"
+msgstr "Atualizar cache DNS do site"
 
 msgid ""
 "Updating the sites DNS cache is necessary in order to reflect IP address "
@@ -93354,11 +93403,11 @@ msgid "Additional graph options"
 msgstr "Opções adicionais"
 
 #, fuzzy
-msgid "Add & place widget"
+msgid "Save widget"
 msgstr "Adicionar alvo"
 
 #, fuzzy
-msgid "Update widget"
+msgid "Add & place widget"
 msgstr "Adicionar alvo"
 
 #, fuzzy
@@ -93414,10 +93463,6 @@ msgstr "Clonar gráfico personalizado"
 #, fuzzy
 msgid "Widget visualization"
 msgstr "visualização do BI"
-
-#, fuzzy
-msgid "Save widget"
-msgstr "Adicionar alvo"
 
 #, fuzzy
 msgid "Clone & review dashboard filters"
@@ -94638,6 +94683,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Update widget"
+#~ msgstr "Adicionar alvo"
 
 #, fuzzy, python-format
 #~ msgid "%s all ids"

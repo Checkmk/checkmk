@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-11-05 20:34+0000\n"
+"PO-Revision-Date: 2025-11-07 00:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3889,16 +3889,18 @@ msgstr "Counter hinzufügen"
 msgid "Add Counter Object"
 msgstr "Leistungsindikatorobjekt hinzufügen"
 
-#, fuzzy
 msgid "Add Event Id filter rule"
-msgstr "Filterregel hinzufügen"
+msgstr "Filterregel für Ereignis-ID hinzufügen"
 
 msgid "Add Event Id or Event Id range"
 msgstr "Ereignis-ID oder Ereignis-ID-Bereich hinzufügen"
 
-#, fuzzy
 msgid "Add Event Source filter rule"
-msgstr "Filterregel hinzufügen"
+msgstr "Filterregel für Ereignisquelle hinzufügen"
+
+#, fuzzy
+msgid "Add Event User filter rule"
+msgstr "Filterregel für Ereignis-ID hinzufügen"
 
 msgid "Add Exception"
 msgstr "Exception ergänzen"
@@ -3946,12 +3948,15 @@ msgstr "Regel-ID hinzufügen"
 msgid "Add SLA"
 msgstr "SLA hinzufügen"
 
-#, fuzzy
 msgid "Add Source"
-msgstr "Quelle"
+msgstr "Quelle hinzufügen"
 
 msgid "Add Suffix"
 msgstr "Endung hinzufügen"
+
+#, fuzzy
+msgid "Add User"
+msgstr "Benutzer hinzufügen"
 
 msgid "Add a comment or describe this host"
 msgstr "Kommentar/Beschreibung für Host hinzufügen"
@@ -7521,9 +7526,8 @@ msgstr "Anhängen von bis zu"
 msgid "Attempt to interpret OEM data"
 msgstr "Versuch der Interpretation von OEM-Daten"
 
-#, fuzzy
 msgid "Attempted concurrent connections"
-msgstr "Anzahl aktueller Verbindungen"
+msgstr "Versuchte gleichzeitige Verbindungen"
 
 msgid "Atto Fibrebridge FC port"
 msgstr "Atto Fibrebridge FC Port"
@@ -8715,16 +8719,14 @@ msgstr "Azure Cosmos DB Datenbank-Anfragen"
 msgid "Azure Cosmos DB Database Throughput"
 msgstr "Azure Cosmos DB Datenbank-Durchsatz"
 
-#, fuzzy
 msgid "Azure Cosmos DB Requests"
-msgstr "Web ACL Anfragen"
+msgstr "Azure Cosmos DB Anfragen"
 
 msgid "Azure Cosmos DB Storage"
 msgstr "Azure Cosmos DB Speicher"
 
-#, fuzzy
 msgid "Azure Cosmos DB Throughput"
-msgstr "Web ACL Anfragen"
+msgstr "Azure Cosmos DB Durchsatz"
 
 msgid "Azure DB Storage"
 msgstr "Azure DB Speicher"
@@ -8741,13 +8743,11 @@ msgstr "Azure Load Balancer Gesundheit"
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Azure Load Balancer Gesundheit (veraltet)"
 
-#, fuzzy
 msgid "Azure NAT Gateways Connections"
-msgstr "Azure Datenbank-Verbindungen"
+msgstr "Azure NAT Gateways Verbindungen"
 
-#, fuzzy
 msgid "Azure NAT Gateways Throughput"
-msgstr "Durchsatz der Azure SQL-Datenbank"
+msgstr "Azure NAT Gateways Durchsatz"
 
 msgid "Azure NAT Gateways datapath availability"
 msgstr "Verfügbarkeit des Azure NAT Gateways Datapath"
@@ -8893,9 +8893,8 @@ msgstr "Azure-Webserver (IIS)"
 msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Azure-Webserver (IIS) (veraltet)"
 
-#, fuzzy
 msgid "Azure/Cosmos DB Database Container"
-msgstr "Web ACL Anfragen"
+msgstr "Azure/Cosmos DB Datenbank-Container"
 
 msgid "B"
 msgstr "B"
@@ -10984,9 +10983,8 @@ msgstr "CPU-Ressourcen: Namespace"
 msgid "CPU resources: StatefulSet"
 msgstr "CPU-Ressourcen: StatefulSet"
 
-#, fuzzy
 msgid "CPU threads"
-msgstr "Threads"
+msgstr "CPU-Threads"
 
 msgid "CPU time"
 msgstr "CPU-Zeit"
@@ -11045,40 +11043,32 @@ msgstr "CPU-Auslastung (95te Percentile)"
 msgid "CPU utilization (99th percentile)"
 msgstr "CPU-Auslastung (99te Percentile)"
 
-#, fuzzy
 msgid "CPU utilization (Average)"
 msgstr "CPU-Auslastung (Durchschnitt)"
 
-#, fuzzy
 msgid "CPU utilization (Caching engine)"
-msgstr "CPU-Auslastung (Durchschnitt)"
+msgstr "CPU-Auslastung (Caching-Maschine)"
 
-#, fuzzy
 msgid "CPU utilization (Last minutes)"
-msgstr "CPU-Auslastung in der letzten Minute"
+msgstr "CPU-Auslastung (letzte Minuten)"
 
-#, fuzzy
 msgid "CPU utilization (Percentiles)"
-msgstr "CPU-Auslastung (50te Percentile)"
+msgstr "CPU-Auslastung (Percentilen)"
 
-#, fuzzy
 msgid "CPU utilization (User, system)"
-msgstr "CPU-Auslastung (Durchschnitt)"
+msgstr "CPU-Auslastung (Benutzer, System)"
 
-#, fuzzy
 msgid "CPU utilization (User, system, IO wait & levels)"
-msgstr "CPU-Auslastung in den letzten 5 Minuten"
+msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten & Levels)"
 
-#, fuzzy
 msgid "CPU utilization (User, system, IO wait)"
-msgstr "CPU-Auslastung (Durchschnitt)"
+msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten)"
 
 msgid "CPU utilization (User, system, IO wait, guest & levels)"
 msgstr ""
 
-#, fuzzy
 msgid "CPU utilization (User, system, IO wait, guest)"
-msgstr "CPU-Auslastung (Durchschnitt)"
+msgstr "CPU-Auslastung (Benutzer, System, E/A-Warten, Gast)"
 
 msgid "CPU utilization (User, system, IO wait, guest, steal & levels)"
 msgstr ""
@@ -11089,21 +11079,17 @@ msgstr ""
 msgid "CPU utilization (User, system, IO wait, steal & levels)"
 msgstr ""
 
-#, fuzzy
 msgid "CPU utilization (User, system, IO wait, steal)"
-msgstr "CPU-Auslastung (Durchschnitt)"
+msgstr ""
 
-#, fuzzy
 msgid "CPU utilization (User, system, idle, IO wait)"
-msgstr "CPU-Auslastung (50te Percentile)"
+msgstr ""
 
-#, fuzzy
 msgid "CPU utilization (User, system, idle, nice)"
-msgstr "CPU-Auslastung für einfache Geräte"
+msgstr ""
 
-#, fuzzy
 msgid "CPU utilization (User, system, interrupt)"
-msgstr "CPU-Auslastung in der letzten Minute"
+msgstr ""
 
 msgid "CPU utilization (Windows)"
 msgstr "CPU-Auslastung (Windows)"
@@ -11631,10 +11617,10 @@ msgstr ""
 "Kann HW-/SW-Inventur-Baum des Hosts %s nicht laden. Bitte entfernen Sie die "
 "beschädigte Datei."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Cannot move folder. Some of its elements have specifically other customers "
-"set (<i>%s</i>). This violates the CME folder hierarchy."
+"set (<i>%s</i>). This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Der Ordner kann nicht verschoben werden. Einige seiner Elemente gehören "
 "anderen Kunden (<i>%s</i>). Die Operation würde die CME Ordner Hierarchie "
@@ -12168,9 +12154,8 @@ msgstr "Zeichen"
 msgid "Chassis"
 msgstr "Gehäuse"
 
-#, fuzzy
 msgid "Check"
-msgstr "Geprüft"
+msgstr "Check"
 
 msgid "Check / Uncheck all"
 msgstr "Alle Häkchen setzen/entfernen"
@@ -12588,9 +12573,8 @@ msgstr ""
 msgid "Checkmk Appliance information"
 msgstr "Checkmk Appliance Information"
 
-#, fuzzy
 msgid "Checkmk Cloud is not allowed in distributed monitoring."
-msgstr "CSE ist im verteilten Monitoring nicht erlaubt."
+msgstr "Checkmk Cloud ist im verteilten Monitoring nicht erlaubt."
 
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
@@ -14216,9 +14200,8 @@ msgstr "Übertragungslatenz"
 msgid "Commit charge"
 msgstr "Commit Charge"
 
-#, fuzzy
 msgid "Commit charge (Absolute)"
-msgstr "Commit Charge Levels"
+msgstr "Commit Charge (absolut)"
 
 msgid "Commit charge (averaged)"
 msgstr "Commit Charge (gemittelt)"
@@ -14426,13 +14409,11 @@ msgstr "Raten für alle monotonen Zähler berechnen"
 msgid "Computing differences"
 msgstr "Berechne Unterschiede"
 
-#, fuzzy
 msgid "Concurrent SNAT connections"
-msgstr "Aktuelle Verbindungen"
+msgstr "Gleichzeitige SNAT-Verbindungen"
 
-#, fuzzy
 msgid "Concurrent connections"
-msgstr "Aktuelle Verbindungen"
+msgstr "Gleichzeitige Verbindungen"
 
 msgid "Concurrent executions"
 msgstr "Gleichzeitige Ausführungen"
@@ -15359,9 +15340,8 @@ msgstr "Verbindungstyp"
 msgid "Connections"
 msgstr "Verbindungen"
 
-#, fuzzy
 msgid "Connections (Azure, Redis)"
-msgstr "Geöffnete Verbindungen"
+msgstr ""
 
 msgid "Connections closed rate"
 msgstr "Rate an geschlossenen Verbindungen"
@@ -24096,13 +24076,15 @@ msgstr "Hosts ausschließen, deren Agent nicht erreichbar ist"
 msgid "Exclude instances"
 msgstr "Instanzen ausschließen"
 
-#, fuzzy
 msgid "Exclude messages from Sources:"
-msgstr "Volume nicht in Service-Namen aufnehmen"
+msgstr "Nachrichten aus den Quellen ausschließen:"
 
 #, fuzzy
+msgid "Exclude messages from Users:"
+msgstr "Nachrichten aus den Quellen ausschließen:"
+
 msgid "Exclude messages with ids:"
-msgstr "Übereinstimmende Namespaces ausschließen"
+msgstr "Nachrichten mit IDs ausschließen:"
 
 msgid "Exclude namespaces matching"
 msgstr "Übereinstimmende Namespaces ausschließen"
@@ -25679,6 +25661,10 @@ msgstr "Zu sendende Zeichenkette"
 #, fuzzy
 msgid "Filtering by Event Source"
 msgstr "Nach Service filtern"
+
+#, fuzzy
+msgid "Filtering by Event User"
+msgstr "Zu sendende Zeichenkette"
 
 msgid "Filtering tags enabled but no tags defined."
 msgstr ""
@@ -28231,6 +28217,10 @@ msgstr ""
 "Limits-Auslastung und Knoten-Auslastung einzeln konfigurieren."
 
 msgid "Here you can configure messages filtering parameters"
+msgstr "Hier können Sie Parameter für die Nachrichtenfilterung konfigurieren"
+
+#, fuzzy
+msgid "Here you can configure messages filtering parameters using Event User"
 msgstr "Hier können Sie Parameter für die Nachrichtenfilterung konfigurieren"
 
 msgid ""
@@ -31484,7 +31474,7 @@ msgid "Icons and Actions"
 msgstr "Symbole und Aktionen"
 
 msgid ""
-"Id entryField smay contain either numeric event id or pair of numeric event "
+"Id entryFields may contain either numeric event id or pair of numeric event "
 "ids separated by dash."
 msgstr ""
 
@@ -34138,8 +34128,11 @@ msgid "Include messages only from Sources:"
 msgstr ""
 
 #, fuzzy
+msgid "Include messages only from Users:"
+msgstr "Nachrichten aus den Quellen ausschließen:"
+
 msgid "Include only messages with ids:"
-msgstr "Alle Meldungen in %s quittiert."
+msgstr "Nur Nachrichten mit IDs einschließen:"
 
 msgid "Include pattern"
 msgstr "Pattern einschließen"
@@ -51961,6 +51954,10 @@ msgstr "RCC (veraltet)"
 msgid "RCC Remote server address"
 msgstr "Adresse des RCC Remote-Servers"
 
+#, fuzzy
+msgid "RCC configuration"
+msgstr "MAC-Konfiguration"
+
 msgid "RCC profile configuration"
 msgstr "RCC-Profil-Konfiguration"
 
@@ -52253,7 +52250,7 @@ msgid "Rate timewindow"
 msgstr "Rate Zeitfenster"
 
 msgid "Raw Bytes (HEXSTR)"
-msgstr "Rohbytes (HEXSTR)"
+msgstr "Roh-Bytes (HEXSTR)"
 
 msgid "Rcvd"
 msgstr "Empfangen"
@@ -55092,6 +55089,10 @@ msgstr "Laufzeit"
 
 msgid "Runtime (peak attempt)"
 msgstr "Laufzeit (Peak-Versuch)"
+
+#, fuzzy
+msgid "Runtime limit (total)"
+msgstr "Laufzeit-Limit-Verhältnis (Peak-Versuch)"
 
 msgid "Runtime run queue"
 msgstr "Laufzeit-Warteschlange"
@@ -63760,13 +63761,6 @@ msgstr ""
 "wurde, um sie empfangen und entschlüsseln zu können."
 
 msgid ""
-"The Checkmk Managed Services Edition can only be connected with other sites "
-"using the CME."
-msgstr ""
-"Die Checkmk Managed Services Edition kann nur mit anderen Instanzen "
-"verbunden werden, die ebenfalls die CME verwenden."
-
-msgid ""
 "The Checkmk Micro Core uses Checkmk checker processes to process the results "
 "from the Checkmk fetchers. Since the checker processes are not IO bound, "
 "they are most effective when each checker gets a dedicated CPU. Configuring "
@@ -63779,6 +63773,14 @@ msgstr ""
 "erhält. Die Konfiguration von mehr Checkmk-Prozessen als die Anzahl der "
 "verfügbaren CPUs hat einen negativen Effekt, weil dadurch die Anzahl der "
 "Kontextwechsel erhöht wird."
+
+#, fuzzy
+msgid ""
+"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
+"other sites using the Checkmk Ultimate with multi-tenancy edition."
+msgstr ""
+"Die Checkmk Managed Services Edition kann nur mit anderen Instanzen "
+"verbunden werden, die ebenfalls die CME verwenden."
 
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
@@ -64184,9 +64186,10 @@ msgstr ""
 "<tt>DISTRIBUTION</tt> und <tt>DISTTAG</tt> innerhalb der RPM-Spec-Datei "
 "leer. Hier können Sie diese Merkmale manuell angeben."
 
+#, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
-"and improves the management of the inter site connections using livestatus. "
+"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
+"improves the management of the inter site connections using livestatus. "
 "Using the Livestatus Proxy Daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
@@ -65107,21 +65110,21 @@ msgstr ""
 "Controller nur Zertifikaten vertraut, die von der CA der Zentralinstanz "
 "signiert wurden."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The configured target site <i>%s</i> for this folder is invalid. The folder "
-"<i>%s</i> already belongs to the customer <i>%s</i>. This violates the CME "
-"folder hierarchy. You may choose the following sites <i>%s</i>."
+"<i>%s</i> already belongs to the customer <i>%s</i>. This violates the multi-"
+"tenancy folder hierarchy. You may choose the following sites <i>%s</i>."
 msgstr ""
 "Die konfigurierte Instanz <i>%s</i> ist für diesen Ordner ungültig. Der "
 "Ordner <i>%s</i> gehört bereits dem Kunden <i>%s</i>. Dies verletzt die CME "
 "Ordner Hierarchie. Sie können die folgenden Instanzen wählen <i>%s</i>."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The configured target site refers to the default customer <i>%s</i>. The "
 "parent folder however, already have the specific customer <i>%s</i> set. "
-"This violates the CME folder hierarchy."
+"This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Die konfigurierte Zielinstanz gehört dem Default-Kunden <i>%s</i>. Der "
 "übergeordnete Ordner jedoch, hat bereits den spezifischen Kunden <i>%s</i> "
@@ -66007,10 +66010,10 @@ msgstr "Der Host %s wird auf dieser Instanz nicht überwacht."
 msgid "The host '%s' does not exist"
 msgstr "Der Host '%s' existiert nicht"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
-"customer <i>%s</i>. This violates the CME folder hierarchy."
+"customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Der Host <i>%s</i> hat die Instanz <i>%s</i> explizit konfiguriert, die zu "
 "dem Kunden <i>%s</i> gehört. Dies ist in der CME nicht erlaubt."
@@ -67930,6 +67933,22 @@ msgstr ""
 msgid "The ruleset \"%s\" does not exist."
 msgstr "Der Regelsatz \"%s\" existiert nicht."
 
+#, fuzzy
+msgid ""
+"The runtime limit (total) is the total runtime of all attempts in relation "
+"to the limit per attempt. These thresholds apply to the total runtime of all "
+"execution attempts. If there are multiple execution attempts, the thresholds "
+"apply to the total runtime."
+msgstr ""
+"Das Laufzeit-Limit-Verhältnis (Peak Attempt) ist die längste "
+"Versuchslaufzeit im Verhältnis zum Limit pro Versuch. Diese Schwellwerte "
+"gelten für die Laufzeit eines einzelnen Ausführungsversuchs. Gibt es mehrere "
+"Ausführungsversuche, gelten die Schwellwerte für die längste Laufzeit. "
+"Alarme für eine Überschreitung des Verhältnisschwellwerts bedeuten, dass die "
+"maximale Laufzeit für einen einzelnen Versuch zu niedrig angesetzt wurde "
+"oder dass der Test selbst nachjustiert werden sollte (z. B. durch "
+"Verringerung der Keyword-Timeouts). "
+
 msgid ""
 "The runtime-limit ratio (peak attempt) is the longest attempt runtime in "
 "relation to the limit per attempt. These thresholds apply to the runtime of "
@@ -68314,10 +68333,10 @@ msgstr ""
 "verwendet werden, um die eingefrorene Struktur der Aggregate zu "
 "aktualisieren."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
-"to customer <i>%s</i>. This violates the CME folder hierarchy."
+"to customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Der Unterordner <i>%s</i> hat die explizite Instanz <i>%s</i> gesetzt, "
 "welche dem Kunden <i>%s</i> gehört. Das verletzt die CME Ordner Hierarchie."
@@ -77142,6 +77161,10 @@ msgstr "Insgesamt laufende On-Demand z1d.metal-Instanzen"
 msgid "Total running on-demand z1d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.xlarge-Instanzen"
 
+#, fuzzy
+msgid "Total runtime"
+msgstr "Testlaufzeit"
+
 msgid "Total sent notifications"
 msgstr "Gesamtzahl gesendeter Benachrichtigungen"
 
@@ -77930,21 +77953,21 @@ msgstr ""
 msgid "Unable to match connection"
 msgstr "Kann Verbindung nicht abgleichen"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the "
-"customer <i>%s</i>, which owns this folder. This violates the CME folder "
-"hierarchy. You may choose the sites: %s"
+"customer <i>%s</i>, which owns this folder. This violates the multi-tenancy "
+"folder hierarchy. You may choose the sites: %s"
 msgstr ""
 "Kann Host <i>%s</i> nicht modifizieren. Seine Instanz-ID <i>%s</i> steht im "
 "Konflikt mit dem Kunden <i>%s</i>, dem dieser Ordner gehört. Dies verletzt "
 "die CME Ordnerhierarchie. Sie können die folgenden Instanzen wählen: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
 "belongs to customer <i>%s</i>. The target folder however, belongs to "
-"customer <i>%s</i>. This violates the folder CME folder hierarchy."
+"customer <i>%s</i>. This violates the folder multi-tenancy folder hierarchy."
 msgstr ""
 "Kann Host <i>%s</i> nicht verschieben. Seine explizit gesetzte Instanz ID "
 "<i>%s</i> gehört dem Kunden <i>%s</i>. Der Zielordner jedoch gehört dem "
@@ -78567,6 +78590,10 @@ msgstr "Updates werden für diesen Host aktiviert."
 
 msgid "Updating of search index started"
 msgstr "Aktualisierung des Suchindex gestartet"
+
+#, fuzzy
+msgid "Updating site DNS cache"
+msgstr "DNS-Cache der Instanz aktualisieren"
 
 msgid ""
 "Updating the sites DNS cache is necessary in order to reflect IP address "
@@ -89829,11 +89856,12 @@ msgstr "Benachrichtigungen für Regelanalyse speichern"
 msgid "Additional graph options"
 msgstr "Zusätzliche Graph-Optionen"
 
+#, fuzzy
+msgid "Save widget"
+msgstr "Widget aktualisieren"
+
 msgid "Add & place widget"
 msgstr "Widget hinzufügen & platzieren"
-
-msgid "Update widget"
-msgstr "Widget aktualisieren"
 
 msgid "Unrestricted"
 msgstr "Unbegrenzt"
@@ -89879,10 +89907,6 @@ msgstr "Benutzerdefinierten Graph klonen"
 
 msgid "Widget visualization"
 msgstr "Widget-Visualisierung"
-
-#, fuzzy
-msgid "Save widget"
-msgstr "Widget aktualisieren"
 
 msgid "Clone & review dashboard filters"
 msgstr "Schließen & Dashboard-Filter prüfen"
@@ -89933,9 +89957,8 @@ msgstr "Sechseckgröße"
 msgid "Small"
 msgstr ""
 
-#, fuzzy
 msgid "Loading widget visualization settings..."
-msgstr "Standard BI Visualisierungseinstellungen"
+msgstr "Widget Visualisierungseinstellungen laden..."
 
 msgid "Metric selection"
 msgstr "Metrik-Auswahl"
@@ -90938,6 +90961,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Update widget"
+#~ msgstr "Widget aktualisieren"
 
 #, python-format
 #~ msgid "%s all ids"

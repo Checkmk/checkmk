@@ -39,7 +39,7 @@ def commands_function(
         ssl_server = replace_macros(str(ssl_config_value), host_config.macros)
         command_arguments += ["--cert-server-name", ssl_server]
 
-    command_arguments += ["--api-token", params.api_token.unsafe()]
+    command_arguments += ["--apitoken-id", params.api_token]
 
     yield SpecialAgentCommand(
         command_arguments=[*command_arguments, host_config.primary_ip_config.address]

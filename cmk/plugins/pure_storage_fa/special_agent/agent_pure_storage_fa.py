@@ -21,6 +21,7 @@ from typing import NamedTuple
 import requests
 import urllib3
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 
@@ -29,6 +30,8 @@ _LOGGER = logging.getLogger("agent_pure_storage_fa")
 __version__ = "2.5.0b1"
 
 USER_AGENT = f"checkmk-special-purefa-{__version__}"
+
+API_TOKEN_OPTION = "apitoken"
 
 
 class _RestVersion(NamedTuple):
@@ -111,9 +114,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "--cert-server-name",
         help="""Expect this as the servers name in the ssl certificate. Overrides '--no-cert-check'.""",
     )
-    parser.add_argument(
-        "--api-token",
-        type=str,
+    parser_add_secret_option(
+        parser,
+        long=f"--{API_TOKEN_OPTION}",
         required=True,
         help=(
             "Generate the API token through the Purity user interface"
@@ -183,14 +186,14 @@ class PureStorageFlashArray:
     def __init__(self, server: str, cert_check: bool | str, timeout: int) -> None:
         self._session = _PureStorageFlashArraySession(server, cert_check, timeout)
 
-    def login(self, api_token: str) -> None:
+    def login(self, api_token: Secret[str]) -> None:
         try:
             login_response = self._session.post(
                 f"{_REST_VERSION}/login",
                 {
                     "Content-Type": "application/json",
                     "User-Agent": USER_AGENT,
-                    "api-token": api_token,
+                    "api-token": api_token.reveal(),
                 },
             )
         except requests.exceptions.ConnectionError as e:
@@ -281,7 +284,7 @@ def agent_pure_storage_fa(args: argparse.Namespace) -> int:
     )
 
     try:
-        pure_storage_fa.login(args.api_token)
+        pure_storage_fa.login(resolve_secret_option(args, API_TOKEN_OPTION))
     except AuthError:
         return 1
 

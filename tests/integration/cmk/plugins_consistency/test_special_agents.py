@@ -266,7 +266,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "azure_status": ["REGION1 REGION2"],
     "aws_status": [],
     "gcp_status": [],
-    "pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
+    "pure_storage_fa": ["--apitoken", "API-TOKEN", "SERVER"],
     "bazel_cache": ["--host", "SERVER"],
     "otel": ["HOSTNAME"],
     "metric_backend_custom_query": [

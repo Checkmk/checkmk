@@ -2525,6 +2525,13 @@ class DcdMetricBackendClient(RestApiClient):
     domain: Literal["dcd_metric_backend"] = "dcd_metric_backend"
     default_version = APIVersion.INTERNAL
 
+    def get(self, dcd_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{dcd_id}",
+            expect_ok=expect_ok,
+        )
+
     def create(
         self,
         dcd_id: str,

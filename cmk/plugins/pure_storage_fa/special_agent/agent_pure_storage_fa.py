@@ -24,12 +24,17 @@ import requests
 import urllib3
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-
-_LOGGER = logging.getLogger("agent_pure_storage_fa")
+from cmk.server_side_programs.v1_unstable import (
+    HostnameValidationAdapter,
+    report_agent_crashes,
+    vcrtrace,
+)
 
 __version__ = "2.5.0b1"
+
+AGENT = "pure_storage_fa"
+
+_LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 USER_AGENT = f"checkmk-special-purefa-{__version__}"
 
@@ -307,5 +312,6 @@ def agent_pure_storage_fa(args: argparse.Namespace) -> int:
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(parse_arguments, agent_pure_storage_fa)
+    return agent_pure_storage_fa(parse_arguments(sys.argv[1:]))

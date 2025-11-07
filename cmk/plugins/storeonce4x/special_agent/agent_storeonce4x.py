@@ -21,7 +21,6 @@ import urllib3
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 
-import cmk.utils.paths
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
@@ -56,8 +55,6 @@ def to_token_dict(data: Any) -> TokenDict:
 
 
 class StoreOnceOauth2Session:
-    _token_dir = cmk.utils.paths.tmp_dir / "special_agents/agent_storeonce4x"
-    _token_file_suffix = "%s_oAuthToken.json"
     _refresh_endpoint = "/pml/login/refresh"
     _token_endpoint = "/pml/login/authenticate"
     _dt_fmt = "%Y-%m-%d %H:%M:%S.%f"
@@ -66,7 +63,6 @@ class StoreOnceOauth2Session:
         self, host: str, port: str, user: str, secret: Secret[str], verify_ssl: bool
     ) -> None:
         self._host = host
-        self._token_file = f"{str(self._token_dir)}/{self._token_file_suffix % self._host}"
         self._port = port
         self._user = user
         self._secret = secret

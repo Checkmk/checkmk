@@ -12,7 +12,6 @@ from __future__ import annotations
 import abc
 import argparse
 import json
-import logging
 import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -39,11 +38,9 @@ from .constants import (
     SEC_NAME_SENSOR_READINGS,
     SECTION_NAME_MAP,
 )
+from .log import LOGGER
 
 __version__ = "2.5.0b1"
-
-
-_LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 
 MerakiAPIData = Mapping[str, object]
@@ -125,7 +122,7 @@ class GetOrganisationsByIDCache(_ABCGetOrganisationsCache):
             try:
                 org = self._dashboard.organizations.getOrganization(org_id)
             except meraki.exceptions.APIError as e:
-                _LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
+                LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
                 return _Organisation(id_=org_id, name="")
             return _Organisation(
                 id_=org[API_NAME_ORGANISATION_ID],
@@ -146,7 +143,7 @@ class GetOrganisationsCache(_ABCGetOrganisationsCache):
                 for organisation in self._dashboard.organizations.getOrganizations()
             ]
         except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Get organisations: %r", e)
+            LOGGER.debug("Get organisations: %r", e)
             return []
 
 
@@ -187,7 +184,7 @@ class MerakiOrganisation:
             try:
                 device_piggyback = str(device[API_NAME_DEVICE_NAME])
             except KeyError as e:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e
                 )
                 continue
@@ -245,7 +242,7 @@ class MerakiOrganisation:
                 )
             )
         except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Organisation ID: %r: Get license overview: %r", self.organisation_id, e)
+            LOGGER.debug("Organisation ID: %r: Get license overview: %r", self.organisation_id, e)
             return None
 
     def _get_devices_by_serial(self) -> Mapping[str, MerakiAPIData]:
@@ -266,7 +263,7 @@ class MerakiOrganisation:
                 )
             }
         except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Organisation ID: %r: Get devices: %r", self.organisation_id, e)
+            LOGGER.debug("Organisation ID: %r: Get devices: %r", self.organisation_id, e)
             return {}
 
     def _get_device_statuses(self) -> Sequence[MerakiAPIData]:
@@ -275,7 +272,7 @@ class MerakiOrganisation:
                 self.organisation_id, total_pages="all"
             )
         except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Organisation ID: %r: Get device statuses: %r", self.organisation_id, e)
+            LOGGER.debug("Organisation ID: %r: Get device statuses: %r", self.organisation_id, e)
             return []
 
     def _get_sensor_readings(self) -> Sequence[MerakiAPIData]:
@@ -284,7 +281,7 @@ class MerakiOrganisation:
                 self.organisation_id, total_pages="all"
             )
         except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Organisation ID: %r: Get sensor readings: %r", self.organisation_id, e)
+            LOGGER.debug("Organisation ID: %r: Get sensor readings: %r", self.organisation_id, e)
             return []
 
     def _get_device_piggyback(
@@ -294,7 +291,7 @@ class MerakiOrganisation:
             serial = str(device[API_NAME_DEVICE_SERIAL])
             return str(devices_by_serial[serial][API_NAME_DEVICE_NAME])
         except KeyError as e:
-            _LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e)
+            LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e)
             return None
 
     def _make_section(

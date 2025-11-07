@@ -2532,6 +2532,13 @@ class DcdMetricBackendClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
     def create(
         self,
         dcd_id: str,

@@ -2428,6 +2428,28 @@ class SiteFactory:
                 site.stop()
                 site.rm()
 
+    @contextmanager
+    def connected_remote_site(
+        self,
+        site_name: str,
+        central_site: Site,
+        site_description: str = "",
+    ) -> Iterator[Site]:
+        """Use a dynamically created, connected a remote site.
+
+        Clean up site and connection during teardown."""
+        with self.get_test_site_ctx(
+            site_name,
+            description=site_description,
+            auto_restart_httpd=True,
+            tracing_config=tracing_config_from_env(os.environ),
+        ) as remote_site:
+            with connection(
+                central_site=central_site,
+                remote_site=remote_site,
+            ):
+                yield remote_site
+
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:
             site_id = f"{self._base_ident}{name}"

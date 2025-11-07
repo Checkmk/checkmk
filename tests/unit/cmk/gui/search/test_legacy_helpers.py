@@ -5,6 +5,7 @@
 
 from cmk.gui.search.legacy_helpers import transform_legacy_results_to_unified
 from cmk.gui.type_defs import SearchResult
+from cmk.gui.utils.loading_transition import LoadingTransition
 
 
 def test_transform_legacy_results_to_unified() -> None:
@@ -13,6 +14,7 @@ def test_transform_legacy_results_to_unified() -> None:
         SearchResult(context="", title="Hosts", url="/hosts"),
         SearchResult(context="", title="Notifications", url="/notifications"),
         SearchResult(context="", title="User", url="/users"),
+        SearchResult(context="", title="Foo", url="/foo", loading_transition="table"),
     ]
 
     value = [
@@ -25,7 +27,10 @@ def test_transform_legacy_results_to_unified() -> None:
             "provider": "setup",
             "title": "Hosts",
             "topic": "common",
-            "url": "/hosts",
+            "target": {
+                "url": "/hosts",
+                "transition": None,
+            },
             "icon": "main-setup-active",
         },
         {
@@ -33,7 +38,10 @@ def test_transform_legacy_results_to_unified() -> None:
             "provider": "setup",
             "title": "Notifications",
             "topic": "common",
-            "url": "/notifications",
+            "target": {
+                "url": "/notifications",
+                "transition": None,
+            },
             "icon": "main-setup-active",
         },
         {
@@ -41,7 +49,21 @@ def test_transform_legacy_results_to_unified() -> None:
             "provider": "setup",
             "title": "User",
             "topic": "common",
-            "url": "/users",
+            "target": {
+                "url": "/users",
+                "transition": None,
+            },
+            "icon": "main-setup-active",
+        },
+        {
+            "context": "",
+            "provider": "setup",
+            "title": "Foo",
+            "topic": "common",
+            "target": {
+                "url": "/foo",
+                "transition": LoadingTransition.table,
+            },
             "icon": "main-setup-active",
         },
     ]

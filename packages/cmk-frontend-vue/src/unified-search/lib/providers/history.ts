@@ -50,7 +50,7 @@ export class SearchHistorySearchProvider extends SearchProvider {
               (hist.query as UnifiedSearchQueryLike).input.indexOf(query.input) >= 0 ||
               hist.element.topic.indexOf(query.input) >= 0 ||
               hist.element.title.indexOf(query.input) >= 0 ||
-              hist.element.url.indexOf(query.input) >= 0
+              hist.element.target.url.indexOf(query.input) >= 0
             )
           })
           .sort((a, b) => b.date - a.date),

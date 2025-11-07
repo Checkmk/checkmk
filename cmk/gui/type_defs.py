@@ -613,6 +613,7 @@ class SearchResult:
     title: str
     url: str
     context: str = ""
+    loading_transition: str | None = None
 
 
 SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]

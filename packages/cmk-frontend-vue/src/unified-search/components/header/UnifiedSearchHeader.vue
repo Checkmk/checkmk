@@ -94,7 +94,7 @@ function onInputEnter() {
       searchUtils.history?.add(
         new HistoryEntry(searchUtils.query.toQueryLike(), {
           title: searchUtils.query.input.value,
-          url,
+          target: { url },
           topic: 'Host/service search',
           provider: 'monitoring',
           context: '',

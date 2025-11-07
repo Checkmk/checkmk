@@ -43,6 +43,7 @@ from cmk.gui.pages import get_page_handler, PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
@@ -71,6 +72,7 @@ class MatchItem:
     topic: str
     url: str
     match_texts: Iterable[str]
+    loading_transition: LoadingTransition | None = None
 
     def __post_init__(self) -> None:
         self.match_texts = [match_text.lower() for match_text in self.match_texts]
@@ -257,6 +259,9 @@ class IndexBuilder:
                     "title": match_item.title,
                     "topic": match_item.topic,
                     "url": match_item.url,
+                    "loading_transition": match_item.loading_transition.value
+                    if match_item.loading_transition
+                    else "",
                 },
             )
 
@@ -505,11 +510,17 @@ class IndexSearcher:
                 # "Hosts" in French is "Hôtes". Without this call to translate_to_current_language,
                 # found hosts would be displayed under the topic "Hosts" instead of "Hôtes" in the
                 # setup search.
+                transition_value = match_item_dict.get("loading_transition", "")
+                loading_transition = (
+                    LoadingTransition(transition_value) if transition_value else None
+                )
+
                 results[translate_to_current_language(match_item_dict["topic"])].append(
                     _SearchResultWithVisibilityCheck(
                         SearchResult(
                             match_item_dict["title"],
                             match_item_dict["url"],
+                            loading_transition=loading_transition,
                         ),
                         visibility_check,
                     )

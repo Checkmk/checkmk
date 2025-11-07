@@ -6,8 +6,9 @@
 from collections.abc import Iterable
 
 from cmk.gui.search.icon_mapping import get_icon_for_topic
-from cmk.gui.search.type_defs import Provider, UnifiedSearchResultItem
+from cmk.gui.search.type_defs import Provider, UnifiedSearchResultItem, UnifiedSearchResultTarget
 from cmk.gui.type_defs import SearchResult
+from cmk.gui.utils.loading_transition import LoadingTransition
 
 # TODO: drop this module when search engines are fully migrated.
 
@@ -18,7 +19,12 @@ def transform_legacy_results_to_unified(
     return (
         UnifiedSearchResultItem(
             title=result.title,
-            url=result.url,
+            target=UnifiedSearchResultTarget(
+                url=result.url,
+                transition=None
+                if not result.loading_transition
+                else LoadingTransition(result.loading_transition),
+            ),
             topic=topic,
             provider=provider,
             context=result.context,

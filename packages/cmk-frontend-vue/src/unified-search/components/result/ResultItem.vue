@@ -12,6 +12,10 @@ import type { CmkIconProps } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon'
 import CmkZebra from '@/components/CmkZebra.vue'
 
+import {
+  type LoadingTransition,
+  showLoadingTransition
+} from '@/loading-transition/loadingTransition'
 import type { UnifiedSearchResultElementInlineButton } from '@/unified-search/lib/providers/unified'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
@@ -22,7 +26,7 @@ export interface ResultItemProps {
   icon?: CmkIconProps | undefined
   title: string
   html?: string | undefined
-  url?: string | undefined
+  target?: { url: string; transition?: LoadingTransition | undefined } | undefined
   inlineButtons?: UnifiedSearchResultElementInlineButton[] | undefined
   context?: string | undefined
   focus?: boolean | undefined
@@ -102,12 +106,13 @@ onBeforeUnmount(() => {
   <li class="result-item">
     <CmkZebra :num="idx" class="result-item-handler-wrapper">
       <a
-        v-if="props.url"
+        v-if="props.target"
         ref="item-focus"
-        :href="props.url"
+        :href="props.target.url"
         target="main"
         class="result-item-handler"
         :class="{ focus: props.focus }"
+        @click="target?.transition !== undefined && showLoadingTransition(target.transition)"
       >
         <div v-if="props.icon" class="result-item-inner-start">
           <CmkIcon
@@ -148,9 +153,10 @@ onBeforeUnmount(() => {
         v-for="(ib, i) in props.inlineButtons"
         ref="item-focus-inline"
         :key="i"
-        :href="ib.url"
+        :href="ib.target.url"
         target="main"
         class="result-item-handler inline"
+        @click="ib.target?.transition !== undefined && showLoadingTransition(ib.target.transition)"
       >
         <div v-if="ib.icon" class="result-item-inner-start">
           <CmkIcon

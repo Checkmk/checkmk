@@ -5,6 +5,7 @@
  */
 import type { CmkIconProps, SimpleIcons } from '@/components/CmkIcon'
 
+import type { LoadingTransition } from '@/loading-transition/loadingTransition'
 import { SearchProvider, type SearchProviderResult } from '@/unified-search/lib/unified-search'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
@@ -13,12 +14,12 @@ export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchResu
 export interface UnifiedSearchResultElementInlineButton {
   icon?: CmkIconProps | undefined
   title: string
-  url: string
+  target: { url: string; transition?: LoadingTransition | undefined }
 }
 
 export interface UnifiedSearchResultElement {
   title: string
-  url: string
+  target: { url: string; transition?: LoadingTransition | undefined }
   inlineButtons?: UnifiedSearchResultElementInlineButton[]
   topic: string
   provider: UnifiedSearchProviderIdentifier

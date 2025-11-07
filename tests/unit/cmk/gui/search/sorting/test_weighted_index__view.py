@@ -6,9 +6,11 @@
 import functools
 
 from cmk.gui.search.sorting import get_sorter
-from cmk.gui.search.type_defs import UnifiedSearchResultItem
+from cmk.gui.search.type_defs import UnifiedSearchResultItem, UnifiedSearchResultTarget
 
-I = functools.partial(UnifiedSearchResultItem, url="", provider="setup", icon="")
+I = functools.partial(
+    UnifiedSearchResultItem, target=UnifiedSearchResultTarget(url=""), provider="setup", icon=""
+)
 
 
 def get_results_alphabetically() -> list[UnifiedSearchResultItem]:

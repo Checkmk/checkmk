@@ -17,7 +17,7 @@ test('Add hist entry on search history service', async () => {
     { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
-      url: 'www.google.com',
+      target: { url: 'www.google.com' },
       context: 'test-context',
       provider: 'monitoring',
       topic: 'testTopic',
@@ -35,7 +35,7 @@ test('Add hist entry twice on search history service', async () => {
     { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
-      url: 'www.google.com',
+      target: { url: 'www.google.com' },
       context: 'test-context',
       provider: 'monitoring',
       topic: 'testTopic',
@@ -55,7 +55,7 @@ test('Test SearchHistorySearchProvider', async () => {
     { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
-      url: 'www.google.com',
+      target: { url: 'www.google.com' },
       context: 'test-context',
       provider: 'monitoring',
       topic: 'testTopic',
@@ -67,7 +67,7 @@ test('Test SearchHistorySearchProvider', async () => {
     { input: 'abc', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'abcTitle',
-      url: 'www.abc.com',
+      target: { url: 'www.abc.com' },
       context: 'abc-context',
       provider: 'setup',
       topic: 'testTopic',

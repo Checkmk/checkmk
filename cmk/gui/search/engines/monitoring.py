@@ -1357,6 +1357,7 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
             SearchResult(
                 title=main_menu_item.title,
                 url=main_menu_item.url,
+                loading_transition=main_menu_item.loading_transition,
             )
             for main_menu_topic in (
                 main_menu_registry["monitoring"].topics(user_permissions)

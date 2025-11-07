@@ -29,7 +29,9 @@ export class SearchHistoryService {
     this.entries = usePersistentRef<HistoryEntry[]>(
       'search-history-'.concat(this.searchId),
       [],
-      (v) => v as HistoryEntry[],
+      // Migration helper for all people running 2.5 daily builds, could be
+      // removed just before release
+      (entries) => (entries as HistoryEntry[]).filter((entry) => 'target' in entry.element),
       'local'
     )
 

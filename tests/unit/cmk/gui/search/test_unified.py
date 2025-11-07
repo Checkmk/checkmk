@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.search.type_defs import Provider, UnifiedSearchResultItem
+from cmk.gui.search.type_defs import Provider, UnifiedSearchResultItem, UnifiedSearchResultTarget
 from cmk.gui.search.unified import UnifiedSearch
 
 
@@ -59,7 +59,7 @@ def _generate_fake_result_items(provider: Provider) -> list[UnifiedSearchResultI
             provider=provider,
             title=title,
             topic="",
-            url=title,
+            target=UnifiedSearchResultTarget(url=title),
             icon="",
         )
 

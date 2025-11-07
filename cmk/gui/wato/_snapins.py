@@ -158,6 +158,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                     main_menu_item.title,
                     *main_menu_item.main_menu_search_terms,
                 ],
+                loading_transition=main_menu_item.loading_transition,
             )
             for main_menu_topic in (
                 self._topic_generator(user_permissions) if self._topic_generator else []

@@ -671,7 +671,7 @@ class ResultDistributorS3Limits(ResultDistributor):
 
     def __init__(self) -> None:
         super().__init__()
-        self._received_results: dict = {}
+        self._received_results: dict[str, tuple[AWSSection, AWSComputedContent]] = {}
 
     def add(self, sender_name: str, colleague: "AWSSection") -> None:
         super().add(sender_name, colleague)
@@ -747,7 +747,7 @@ class AWSSection(DataCache):
         self._region = region
         self._config = config
         self._distributor = ResultDistributor() if distributor is None else distributor
-        self._received_results: dict[str, Any] = {}
+        self._received_results: dict[str, AWSComputedContent] = {}
 
     @property
     @abc.abstractmethod
@@ -829,7 +829,10 @@ class AWSSection(DataCache):
 
         raw_data = self.get_data(colleague_contents, use_cache=use_cache)
         raw_content = AWSRawContent(
-            raw_data, self.cache_timestamp if use_cache else NOW.timestamp()
+            raw_data,
+            self.cache_timestamp
+            if (use_cache and self.cache_timestamp is not None)
+            else NOW.timestamp(),
         )
 
         computed_content = self._compute_content(raw_content, colleague_contents)

@@ -136,7 +136,7 @@ class DataCache(abc.ABC):
         """
 
     @property
-    def cache_timestamp(self):
+    def cache_timestamp(self) -> float | None:
         if not self._cache_file.exists():
             return None
 

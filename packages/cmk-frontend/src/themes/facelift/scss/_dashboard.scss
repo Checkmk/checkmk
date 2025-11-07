@@ -860,7 +860,8 @@ div.stats_dashlet {
     }
 
     td {
-      padding: 3px;
+      padding: 3px 3px 0;
+      vertical-align: top;
     }
 
     td:last-child {

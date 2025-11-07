@@ -152,6 +152,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .db-content-figure__wrapper {
+  display: flex;
   width: 100%;
   height: 100%;
 }

@@ -20,7 +20,8 @@ test('Add hist entry on search history service', async () => {
       url: 'www.google.com',
       context: 'test-context',
       provider: 'monitoring',
-      topic: 'testTopic'
+      topic: 'testTopic',
+      icon: 'topic-search'
     }
   )
   searchHistory.add(histE)
@@ -37,7 +38,8 @@ test('Add hist entry twice on search history service', async () => {
       url: 'www.google.com',
       context: 'test-context',
       provider: 'monitoring',
-      topic: 'testTopic'
+      topic: 'testTopic',
+      icon: 'topic-search'
     }
   )
   searchHistory.add(histE)
@@ -56,7 +58,8 @@ test('Test SearchHistorySearchProvider', async () => {
       url: 'www.google.com',
       context: 'test-context',
       provider: 'monitoring',
-      topic: 'testTopic'
+      topic: 'testTopic',
+      icon: 'topic-search'
     }
   )
 
@@ -67,7 +70,8 @@ test('Test SearchHistorySearchProvider', async () => {
       url: 'www.abc.com',
       context: 'abc-context',
       provider: 'setup',
-      topic: 'testTopic'
+      topic: 'testTopic',
+      icon: 'topic-search'
     }
   )
   searchHistory.add(histE1)

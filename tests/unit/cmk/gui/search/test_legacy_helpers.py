@@ -26,6 +26,7 @@ def test_transform_legacy_results_to_unified() -> None:
             "title": "Hosts",
             "topic": "common",
             "url": "/hosts",
+            "icon": "main-setup-active",
         },
         {
             "context": "",
@@ -33,6 +34,7 @@ def test_transform_legacy_results_to_unified() -> None:
             "title": "Notifications",
             "topic": "common",
             "url": "/notifications",
+            "icon": "main-setup-active",
         },
         {
             "context": "",
@@ -40,6 +42,7 @@ def test_transform_legacy_results_to_unified() -> None:
             "title": "User",
             "topic": "common",
             "url": "/users",
+            "icon": "main-setup-active",
         },
     ]
 

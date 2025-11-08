@@ -18,6 +18,7 @@ class UnifiedSearchResultItemSerialized(TypedDict):
     topic: str
     provider: Provider
     context: str
+    icon: str
 
 
 @dataclass(frozen=True, kw_only=True, order=True)
@@ -26,6 +27,7 @@ class UnifiedSearchResultItem:
     url: str
     topic: str
     provider: Provider
+    icon: str
     context: str = ""
 
     def serialize(self) -> UnifiedSearchResultItemSerialized:
@@ -35,6 +37,7 @@ class UnifiedSearchResultItem:
             "topic": self.topic,
             "provider": self.provider,
             "context": self.context,
+            "icon": self.icon,
         }
 
 

@@ -11,11 +11,9 @@ import { computed } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton.vue'
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
-
-import { mapIcon } from '@/unified-search/providers/search-utils'
-import type { SearchProviderKeys } from '@/unified-search/providers/search-utils.types'
 
 import { getInjectedMainMenu } from '../../provider/main-menu'
 import NavItemTopicEntry from './NavItemTopicEntry.vue'
@@ -31,9 +29,7 @@ const props = defineProps<{
   flexGrow?: boolean | undefined
 }>()
 
-const icon = computed(() => {
-  return mapIcon(props.topic.icon, props.navItemId as SearchProviderKeys)
-})
+const icon = computed(() => props.topic.icon as SimpleIcons)
 
 function getEntries2Render() {
   if (props.isShowAll) {
@@ -61,12 +57,7 @@ function getEntries2Render() {
       </CmkButton>
     </div>
     <CmkHeading type="h3" class="mm-nav-item-topic__header">
-      <CmkIcon
-        :name="icon.name"
-        :rotate="icon.rotate"
-        size="large"
-        class="mm-nav-item-topic__icon"
-      ></CmkIcon>
+      <CmkIcon :name="icon" size="large" class="mm-nav-item-topic__icon"></CmkIcon>
       <span>{{ topic.title }}</span>
     </CmkHeading>
     <ul>

@@ -14,6 +14,7 @@ import {
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
 
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
@@ -121,7 +122,7 @@ function searchResultNotEmpty(): boolean {
           :idx="idx"
           :title="item.title"
           :context="item.context"
-          :icon="searchUtils.mapIcon(item.topic, item.provider)"
+          :icon="{ name: item.icon as SimpleIcons }"
           :inline-buttons="item.inlineButtons"
           :url="item.url"
           :html="searchUtils.highlightQuery(item.title)"

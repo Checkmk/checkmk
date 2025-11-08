@@ -5,6 +5,7 @@
 
 from collections.abc import Iterable
 
+from cmk.gui.search.icon_mapping import get_icon_for_topic
 from cmk.gui.search.type_defs import Provider, UnifiedSearchResultItem
 from cmk.gui.type_defs import SearchResult
 
@@ -21,6 +22,7 @@ def transform_legacy_results_to_unified(
             topic=topic,
             provider=provider,
             context=result.context,
+            icon=get_icon_for_topic(topic, provider),
         )
         for result in results
     )

@@ -11,6 +11,7 @@ import { type UnifiedSearchResultElement } from '@/lib/unified-search/providers/
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
 
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { getSearchUtils } from '../../providers/search-utils'
@@ -70,7 +71,7 @@ immediateWatch(
         :idx="idx"
         :title="item.element.title"
         :context="item.element.context"
-        :icon="searchUtils.mapIcon(item.element.topic, item.element.provider)"
+        :icon="{ name: item.element.icon as SimpleIcons }"
         :inline-buttons="item.element.inlineButtons"
         :url="item.element.url"
         :html="searchUtils.highlightQuery(item.element.title)"

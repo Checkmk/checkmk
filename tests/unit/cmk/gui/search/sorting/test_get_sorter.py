@@ -9,9 +9,13 @@ from cmk.gui.search.type_defs import UnifiedSearchResultItem
 
 def get_unsorted_results() -> list[UnifiedSearchResultItem]:
     return [
-        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Charlie", url="/charlie", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Alpha", url="/alpha", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code", icon=""),
+        UnifiedSearchResultItem(
+            title="Charlie", url="/charlie", provider="setup", topic="Code", icon=""
+        ),
+        UnifiedSearchResultItem(
+            title="Alpha", url="/alpha", provider="setup", topic="Code", icon=""
+        ),
     ]
 
 
@@ -20,9 +24,13 @@ def test_no_op_sorter() -> None:
     get_sorter(None)(results)
 
     expected = [
-        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Charlie", url="/charlie", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Alpha", url="/alpha", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code", icon=""),
+        UnifiedSearchResultItem(
+            title="Charlie", url="/charlie", provider="setup", topic="Code", icon=""
+        ),
+        UnifiedSearchResultItem(
+            title="Alpha", url="/alpha", provider="setup", topic="Code", icon=""
+        ),
     ]
 
     assert results == expected
@@ -33,9 +41,13 @@ def test_alphabetical_sorter() -> None:
     get_sorter("alphabetic")(results)
 
     expected = [
-        UnifiedSearchResultItem(title="Alpha", url="/alpha", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Charlie", url="/charlie", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(
+            title="Alpha", url="/alpha", provider="setup", topic="Code", icon=""
+        ),
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code", icon=""),
+        UnifiedSearchResultItem(
+            title="Charlie", url="/charlie", provider="setup", topic="Code", icon=""
+        ),
     ]
 
     assert results == expected
@@ -46,9 +58,13 @@ def test_weighted_sorter() -> None:
     get_sorter("weighted_index", query="beta")(results)
 
     expected = [
-        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Alpha", url="/alpha", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Charlie", url="/charlie", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code", icon=""),
+        UnifiedSearchResultItem(
+            title="Alpha", url="/alpha", provider="setup", topic="Code", icon=""
+        ),
+        UnifiedSearchResultItem(
+            title="Charlie", url="/charlie", provider="setup", topic="Code", icon=""
+        ),
     ]
 
     assert results == expected
@@ -56,14 +72,18 @@ def test_weighted_sorter() -> None:
 
 def test_exact_match_in_parenthesis_ranks_higher_than_starts_with_query() -> None:
     results = [
-        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Alpha(bet)", url="/alpha", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code", icon=""),
+        UnifiedSearchResultItem(
+            title="Alpha(bet)", url="/alpha", provider="setup", topic="Code", icon=""
+        ),
     ]
     get_sorter("weighted_index", query="bet")(results)
 
     expected = [
-        UnifiedSearchResultItem(title="Alpha(bet)", url="/alpha", provider="setup", topic="Code"),
-        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(
+            title="Alpha(bet)", url="/alpha", provider="setup", topic="Code", icon=""
+        ),
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code", icon=""),
     ]
 
     assert results == expected

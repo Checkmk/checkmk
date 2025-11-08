@@ -5,6 +5,7 @@
 
 from collections.abc import Iterable
 
+from ..icon_mapping import get_icon_for_topic
 from ..type_defs import UnifiedSearchResultItem
 
 
@@ -29,7 +30,13 @@ class CustomizeSearchEngine:
 
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
         return (
-            UnifiedSearchResultItem(provider="customize", title=title, topic=topic, url=url)
+            UnifiedSearchResultItem(
+                provider="customize",
+                title=title,
+                topic=topic,
+                url=url,
+                icon=get_icon_for_topic(topic, "customize"),
+            )
             for topic, title, url in self._result_store
             if query.lower() in title.lower()
         )

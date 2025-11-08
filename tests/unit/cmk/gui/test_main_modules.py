@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
-from cmk.gui import main_modules
+from cmk.gui.utils import plugins
 
 
 def _plugin_path(main_module_name: str) -> Path:
@@ -52,7 +52,7 @@ def test_load_local_plugin(main_module_name: str) -> None:
 
     try:
         # Special case: watolib plug-in loading is triggered by wato main module
-        main_modules._call_load_plugins_hooks(
+        plugins._call_load_plugins_hooks(
             [
                 (
                     main_module
@@ -77,7 +77,6 @@ def test_load_local_plugin(main_module_name: str) -> None:
         "dashboard",
         "visuals",
         "config",
-        "bi",
         "views",
         "views/icons",
     ],
@@ -87,9 +86,6 @@ def fixture_plugin_module_dir(request):
 
 
 def test_plugins_loaded(plugin_module_dir: str) -> None:
-    if plugin_module_dir == "bi":
-        raise pytest.skip("No plug-in at the moment")
-
     loaded_module_names = [
         module_name
         for module_name in sys.modules

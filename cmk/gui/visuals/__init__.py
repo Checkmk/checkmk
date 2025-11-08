@@ -138,7 +138,7 @@ def register(
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plugin initialization hook (Called by cmk.gui.utils.plugins.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("visuals", globals())
 

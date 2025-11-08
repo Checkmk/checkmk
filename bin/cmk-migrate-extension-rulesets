@@ -170,7 +170,9 @@ def _discover_load_plugins(modules: set[str]) -> set[str]:
 
 
 def _load_and_transform_rulesets(discovered_names: set[str]) -> None:
-    main_modules.load_plugins()
+    if errors := main_modules.get_failed_plugins():
+        logger.error("The following errors occurred during plug-in loading: %r", errors)
+
     with disable_redis(), gui_context(), SuperUserContext():
         all_rulesets = AllRulesets.load_all_rulesets()
         discovered_rulesets = {

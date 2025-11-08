@@ -8,6 +8,7 @@ import sys
 from cmk.gui import main_modules
 from cmk.gui.watolib.config_domain_name import config_domain_registry
 
-main_modules.load_plugins()
+if errors := main_modules.get_failed_plugins():
+    sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")
 
 sys.stdout.write(f"{'test' in config_domain_registry}\n")

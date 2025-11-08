@@ -109,7 +109,9 @@ def run(debug: bool, old_site_id: SiteId, new_site_id: SiteId) -> bool:
     has_errors = False
     logger.debug("Initializing application...")
 
-    main_modules.load_plugins()
+    if errors := main_modules.get_failed_plugins():
+        logger.error("The following errors occurred during plug-in loading: %r", errors)
+        return True
 
     with _force_automations_cli_interface(), gui_context(), SuperUserContext():
         logger.debug("Starting actions...")

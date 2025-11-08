@@ -130,7 +130,7 @@ def register(
 
 
 def load_plugins() -> None:
-    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    """Plug-in initialization hook (Called by cmk.gui.utils.plugins.load_plugins())"""
     _register_pre_21_plugin_api()
     load_web_plugins("sidebar", globals())
     transform_old_dict_based_snapins()

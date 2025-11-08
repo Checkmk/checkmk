@@ -8,5 +8,7 @@ import sys
 from cmk.gui import main_modules
 from cmk.gui.graphing._from_api import metrics_from_api
 
-main_modules.load_plugins()
+if errors := main_modules.get_failed_plugins():
+    sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")
+
 sys.stdout.write(f"{'metric_int_test' in metrics_from_api}\n")

@@ -17,7 +17,6 @@ import cmk.gui.watolib.password_store
 import cmk.utils.log
 from cmk.ccc.user import UserId
 from cmk.gui import hooks, http, main_modules
-from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from tests.unit.cmk.web_test_app import (
     WebTestAppForCMK,
@@ -107,6 +106,5 @@ def perform_load_config() -> Iterator[config_module.Config]:
 
 
 def perform_load_plugins() -> None:
-    main_modules.load_plugins()
-    if errors := get_failed_plugins():
+    if errors := main_modules.get_failed_plugins():
         raise Exception(f"The following errors occured during plug-in loading: {errors}")

@@ -207,7 +207,7 @@ def process_result(
     """process and output a fetched result set"""
     for key, value in result.items():
         content = value if isinstance(value, list) else [value]
-        sys.stdout.write(f"<<<redfish_{key.lower()}:sep(0)>>> \n")
+        sys.stdout.write(f"<<<redfish_{key.lower()}:sep(0)>>>\n")
         for entry in content:
             sys.stdout.write(f"{json.dumps(entry, sort_keys=True)}\n")
 
@@ -303,10 +303,10 @@ def get_information(redfishobj):
     systems_data = list([fetch_data(redfishobj, systems_url, "PowerEquipment")])
 
     if manager_data:
-        sys.stdout.write("<<<redfish_manager:sep(0)>>> \n")
+        sys.stdout.write("<<<redfish_manager:sep(0)>>>\n")
         sys.stdout.write(f"{json.dumps(manager_data, sort_keys=True)}\n")
 
-    sys.stdout.write("<<<redfish_system:sep(0)>>> \n")
+    sys.stdout.write("<<<redfish_system:sep(0)>>>\n")
     sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
 
     resulting_sections: tuple[SectionName, ...] = ("RackPDUs",)

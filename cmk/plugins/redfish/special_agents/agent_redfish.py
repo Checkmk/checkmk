@@ -570,10 +570,10 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
                         redfishobj.section_data.setdefault("FirmwareInventory", firmwares)
 
     if manager_data:
-        sys.stdout.write("<<<redfish_manager:sep(0)>>> \n")
+        sys.stdout.write("<<<redfish_manager:sep(0)>>>\n")
         sys.stdout.write(f"{json.dumps(manager_data, sort_keys=True)}\n")
 
-    sys.stdout.write("<<<redfish_system:sep(0)>>> \n")
+    sys.stdout.write("<<<redfish_system:sep(0)>>>\n")
     sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
 
     systems_sections = list(
@@ -653,7 +653,7 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     # fetch chassis
     chassis_col = fetch_data(redfishobj.redfish_connection, chassis_url, "Chassis")
     chassis_data = fetch_collection(redfishobj.redfish_connection, chassis_col, "Chassis")
-    sys.stdout.write("<<<redfish_chassis:sep(0)>>> \n")
+    sys.stdout.write("<<<redfish_chassis:sep(0)>>>\n")
     sys.stdout.write(f"{json.dumps(chassis_data, sort_keys=True)}\n")
 
     chassis_sections = [

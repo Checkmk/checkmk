@@ -12,17 +12,17 @@ from cmk.utils import paths
 
 match edition := cmk_version.edition(paths.omd_root):
     case Edition.PRO:
-        import cmk.gui.nonfree.pro.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.pro.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
         cmk.gui.nonfree.pro.registration.register(edition)
 
     case Edition.ULTIMATEMT:
-        import cmk.gui.nonfree.ultimatemt.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.ultimatemt.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
         cmk.gui.nonfree.ultimatemt.registration.register(edition)
 
     case Edition.ULTIMATE:
-        import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
         cmk.gui.nonfree.ultimate.registration.register(edition)
 

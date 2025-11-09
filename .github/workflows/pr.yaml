@@ -33,6 +33,31 @@ jobs:
                     - name: mypy tests
                       target: test-mypy-gpl
         steps:
+            - name: Remove unnecessary build tools
+              run: |
+                  echo "Remove unnecessary directories:"
+                  # to avoid running out of disk space we remove
+                  # tools we don't need for this project
+                  declare -i used_disk_before=$(df --block-size=$((1024*1024)) --output="used" / | tail -n 1)
+                  declare -a tool_dirs=(
+                    "/opt/ghc" # Haskell
+                    "/usr/lib/google-cloud-sdk" # Google SDK
+                    "/usr/lib/jvm" # Java
+                    "/usr/local/.ghcup" # Haskell
+                    "/usr/local/lib/android" # Android SDK
+                    "/usr/local/share/chromium" # Chrome Browser
+                    "/usr/local/share/powershell" # PowerShell
+                    "/usr/share/dotnet" # .NET
+                    "/usr/share/swift" # Swift
+                  )
+                  for tool_dir in ${tool_dirs[@]}; do
+                    if [ -d "${tool_dir}" ]; then
+                      echo "- ${tool_dir}"
+                      sudo rm -rf "${tool_dir}"
+                    fi
+                  done
+                  declare -i used_disk_after=$(df --block-size=$((1024*1024)) --output="used" / | tail -n 1)
+                  echo "Saved disk space: $(((used_disk_before-used_disk_after)/1024))G"
             - name: Set Environment Variables
               run: |
                   # Using existing environment variables within another variables is not working in the jobs.*.env section

@@ -172,6 +172,6 @@ __all__ = [
 ]
 
 
-def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.utils.plugins.load_plugins())"""
+def register() -> None:
+    """Plugin initialization hook"""
     utils.load_web_plugins("userdb", globals())

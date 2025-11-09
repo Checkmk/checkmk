@@ -29,14 +29,8 @@ class Hook(NamedTuple):
 hooks: dict[str, list[Hook]] = {}
 
 
-def load_plugins() -> None:
-    """Plug-in initialization hook (Called by cmk.gui.utils.plugins.load_plugins())"""
-    # Cleanup all plug-in hooks. They need to be renewed by load_plugins()
-    # of the other modules
-    unregister_plugin_hooks()
-
-
 def unregister_plugin_hooks() -> None:
+    """Cleanup all plug-in hooks. They need to be renewed by load_plugins()"""
     old_hooks = hooks.copy()
     for name, registered_hooks in old_hooks.items():
         hooks_left = [h for h in registered_hooks if h.is_builtin]

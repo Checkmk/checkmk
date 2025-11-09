@@ -14,53 +14,70 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
-from cmk.gui.utils import plugins
 
 
 def _plugin_path(main_module_name: str) -> Path:
     return cmk.utils.paths.local_web_dir / "plugins" / main_module_name
 
 
-@pytest.fixture(
-    name="main_module_name",
-    params=[
-        "dashboard",
-        "sidebar",
-        "userdb",
-        "views",
-        "visuals",
-        "wato",
-        "watolib",
-    ],
-)
-def fixture_main_module_name(request):
-    return request.param
-
-
-@pytest.fixture(name="local_plugin")
-def fixture_local_plugin(main_module_name):
-    plugin_file = _plugin_path(main_module_name) / "test_plugin.py"
+def write_local_plugin(namespace: str) -> None:
+    plugin_file = _plugin_path(namespace) / "test_plugin.py"
     plugin_file.parent.mkdir(parents=True, exist_ok=True)
     with plugin_file.open("w") as f:
         f.write('ding = "dong"\n')
 
 
-@pytest.mark.usefixtures("local_plugin")
-def test_load_local_plugin(main_module_name: str) -> None:
-    main_module = importlib.import_module(f"cmk.gui.{main_module_name}")
+def test_load_legacy_dashboard_plugin() -> None:
+    write_local_plugin("dashboard")
+    main_module = importlib.import_module("cmk.gui.dashboard")
     assert "ding" not in main_module.__dict__
-
     try:
-        # Special case: watolib plug-in loading is triggered by wato main module
-        plugins._call_load_plugins_hooks(
-            [
-                (
-                    main_module
-                    if main_module_name != "watolib"
-                    else importlib.import_module("cmk.gui.wato")
-                )
-            ]
-        )
+        main_module.register()
+        assert main_module.ding == "dong"
+    finally:
+        del main_module.__dict__["ding"]
+
+
+def test_load_legacy_wato_plugin() -> None:
+    write_local_plugin("wato")
+    main_module = importlib.import_module("cmk.gui.wato")
+    assert "ding" not in main_module.__dict__
+    try:
+        main_module.register()
+        assert main_module.ding == "dong"
+    finally:
+        del main_module.__dict__["ding"]
+
+
+def test_load_legacy_watolib_plugin() -> None:
+    write_local_plugin("watolib")
+    wato_module = importlib.import_module("cmk.gui.wato")
+    main_module = importlib.import_module("cmk.gui.watolib")
+    assert "ding" not in main_module.__dict__
+    try:
+        wato_module.register()
+        assert main_module.ding == "dong"
+    finally:
+        del main_module.__dict__["ding"]
+
+
+def test_load_legacy_userdb_plugin() -> None:
+    write_local_plugin("userdb")
+    main_module = importlib.import_module("cmk.gui.userdb")
+    assert "ding" not in main_module.__dict__
+    try:
+        main_module.register()
+        assert main_module.ding == "dong"
+    finally:
+        del main_module.__dict__["ding"]
+
+
+def test_load_legacy_views_plugin() -> None:
+    write_local_plugin("views")
+    main_module = importlib.import_module("cmk.gui.views")
+    assert "ding" not in main_module.__dict__
+    try:
+        main_module.register()
         assert main_module.ding == "dong"
     finally:
         del main_module.__dict__["ding"]

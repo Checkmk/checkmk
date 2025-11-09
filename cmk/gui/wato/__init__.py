@@ -185,8 +185,7 @@ subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
 subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
-def load_plugins() -> None:
-    """Plug-in initialization hook (Called by cmk.gui.utils.plugins.load_plugins())"""
+def register() -> None:
     # Initialize watolib things which are needed before loading the Setup plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()

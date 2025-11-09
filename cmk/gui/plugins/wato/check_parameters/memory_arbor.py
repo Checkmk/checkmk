@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -24,7 +22,7 @@ from cmk.gui.valuespec import CascadingDropdown, Dictionary, Filesize, Percentag
 #     ))
 
 
-def UsedSize() -> Tuple:
+def UsedSize() -> Tuple[tuple[int, int]]:
     GB = 1024 * 1024 * 1024
     return Tuple(
         elements=[
@@ -34,7 +32,7 @@ def UsedSize() -> Tuple:
     )
 
 
-def FreeSize() -> Tuple:
+def FreeSize() -> Tuple[tuple[int, int]]:
     GB = 1024 * 1024 * 1024
     return Tuple(
         elements=[
@@ -44,7 +42,9 @@ def FreeSize() -> Tuple:
     )
 
 
-def UsedPercentage(default_percents=None, of_what=None):
+def UsedPercentage(
+    default_percents: tuple[float, float] | None = None, of_what: str | None = None
+) -> Tuple[tuple[float, float]]:
     if of_what:
         unit = _("%% of %s") % of_what
         maxvalue = None
@@ -69,7 +69,9 @@ def UsedPercentage(default_percents=None, of_what=None):
     )
 
 
-def FreePercentage(default_percents=None, of_what=None):
+def FreePercentage(
+    default_percents: tuple[float, float] | None = None, of_what: str | None = None
+) -> Tuple[tuple[float, float]]:
     if of_what:
         unit = _("%% of %s") % of_what
     else:
@@ -90,7 +92,9 @@ def FreePercentage(default_percents=None, of_what=None):
     )
 
 
-def DualMemoryLevels(what, default_percents=None):
+def DualMemoryLevels(
+    what: str, default_percents: tuple[float, float] | None = None
+) -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Levels for %s") % what,
         choices=[
@@ -108,7 +112,7 @@ def DualMemoryLevels(what, default_percents=None):
     )
 
 
-def _parameter_valuespec_memory_arbor():
+def _parameter_valuespec_memory_arbor() -> Dictionary:
     return Dictionary(
         elements=[
             ("levels_ram", DualMemoryLevels(_("RAM"))),

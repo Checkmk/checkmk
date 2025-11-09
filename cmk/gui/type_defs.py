@@ -3,17 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 
 import uuid
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, Any, Literal, NamedTuple, NewType, NotRequired, override, TypedDict
+from typing import (
+    Annotated,
+    Any,
+    Literal,
+    NamedTuple,
+    NewType,
+    NotRequired,
+    override,
+    TypedDict,
+    TypeVar,
+)
 
 from pydantic import BaseModel, PlainValidator, WithJsonSchema
 
@@ -566,7 +575,11 @@ class GroupSpec(TypedDict):
     min_items: int
 
 
-class SetOnceDict(dict):
+K = TypeVar("K", bound=Hashable)
+V = TypeVar("V")
+
+
+class SetOnceDict(dict[K, V]):
     """A subclass of `dict` on which every key can only ever be set once.
 
     Apart from preventing keys to be set again, and the fact that keys can't be removed it works
@@ -584,13 +597,13 @@ class SetOnceDict(dict):
     """
 
     @override
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: K, value: V) -> None:
         if key in self:
             raise ValueError(f"key {key!r} already set")
         dict.__setitem__(self, key, value)
 
     @override
-    def __delitem__(self, key):
+    def __delitem__(self, key: K) -> None:
         raise NotImplementedError("Deleting items are not supported.")
 
 

@@ -25,7 +25,8 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
-from cmk.utils.semantic_version import SemanticVersion
+
+from .semantic_version import SemanticVersion
 
 __version__ = "2.5.0b1"
 

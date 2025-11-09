@@ -159,10 +159,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
-    "bazel": (
-        "cmk.utils.semantic_version",
-        "cmk.utils.paths",
-    ),
+    "bazel": ("cmk.utils.paths",),
     "checkmk": (
         "cmk.agent_based.v1",  # FIXME
         # These plugins are tightly coupled to Checkmk.
@@ -203,10 +200,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.paths",  # edition detection
         "cmk.plugins.lib",  # diskstat + X
     ),
-    "gerrit": (
-        "cmk.utils.semantic_version",
-        "cmk.utils.paths",
-    ),
+    "gerrit": ("cmk.utils.paths",),
     "jolokia": ("cmk.utils.paths",),
     "kube": (
         "cmk.ccc.hostaddress",

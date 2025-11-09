@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.plugins.gerrit.lib.collectors.version import LatestVersions
-from cmk.utils.semantic_version import SemanticVersion
+from cmk.plugins.gerrit.lib.semantic_version import SemanticVersion
 
 _AVAILABLE_GERRIT_VERSIONS = (
     "4.0.0",

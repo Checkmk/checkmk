@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.semantic_version import SemanticVersion
+from cmk.plugins.gerrit.lib.semantic_version import SemanticVersion
 
 
 @pytest.mark.parametrize(

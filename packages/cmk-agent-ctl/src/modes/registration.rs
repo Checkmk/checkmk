@@ -241,6 +241,15 @@ impl RegistrationEndpointCall for RegistrationCallNew<'_> {
     }
 }
 
+#[derive(Clone)]
+pub struct UpdaterRegistrationInput {
+    pub site_id: site_spec::SiteID,
+    pub username: String,
+    pub password: String,
+    pub protocol: Protocol,
+    pub hostname: String,
+}
+
 fn direct_registration(
     config: &config::RegistrationConnectionConfig,
     registry: &mut config::Registry,
@@ -490,24 +499,48 @@ fn process_pre_configured_connection(
         }
     }
 
-    let connection_config = config::RegistrationConnectionConfig {
-        site_id: site_id.clone(),
-        receiver_port,
-        username: pre_configured.credentials.username.clone(),
-        password: Some(pre_configured.credentials.password.clone()),
-        root_certificate: Some(pre_configured.root_cert.clone()),
-        trust_server_cert: false,
-        client_config: client_config.clone(),
-    };
-    let registration_config =
-        config::RegisterNewConfig::new(connection_config.clone(), agent_labels.clone())?;
+    let registration_config = config::RegisterNewConfig::new(
+        config::RegistrationConnectionConfig {
+            site_id: site_id.clone(),
+            receiver_port,
+            username: pre_configured.credentials.username.clone(),
+            password: Some(pre_configured.credentials.password.clone()),
+            root_certificate: Some(pre_configured.root_cert.clone()),
+            trust_server_cert: false,
+            client_config: client_config.clone(),
+        },
+        agent_labels.clone(),
+    )?;
 
     registration_pre_configured.register(&registration_config, registry)?;
     info!("Registered new connection {}", site_id);
 
     if pre_configured.enable_auto_update.unwrap_or(false) {
         let protocol = site_spec::discover_protocol(site_id, client_config)?;
-        register_updater_subprocess(site_id, protocol, &connection_config)?;
+
+        let response = registration_pre_configured.registration_status_v2(
+            site_id,
+            registry.get_connection_as_mut(site_id).unwrap(),
+            client_config,
+        )?;
+
+        let hostname = match response {
+            agent_receiver_api::RegistrationStatusV2Response::Registered(registered_response) => {
+                registered_response.hostname
+            }
+            _ => {
+                error!("Cannot get hostname from registration status response for site {}. Skipping updater registration.", site_id);
+                return Ok(());
+            }
+        };
+
+        register_updater_subprocess(&UpdaterRegistrationInput {
+            site_id: site_id.clone(),
+            username: pre_configured.credentials.username.clone(),
+            password: pre_configured.credentials.password.clone(),
+            hostname,
+            protocol,
+        })?;
     }
 
     Ok(())
@@ -541,9 +574,7 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
 }
 
 fn _prepare_register_updater_cmd(
-    site_id: &site_spec::SiteID,
-    protocol: Protocol,
-    registration_config: &config::RegistrationConnectionConfig,
+    updater_registration_config: &UpdaterRegistrationInput,
 ) -> AnyhowResult<Command> {
     let mut cmd = Command::new(CMK_UPDATE_AGENT_CMD);
     #[cfg(windows)]
@@ -552,37 +583,24 @@ fn _prepare_register_updater_cmd(
     }
     cmd.arg("register")
         .arg("-s")
-        .arg(&site_id.server)
+        .arg(&updater_registration_config.site_id.server)
         .arg("-i")
-        .arg(&site_id.site)
+        .arg(&updater_registration_config.site_id.site)
         .arg("-H")
-        .arg(
-            // should use the hostname returned from registration_status_v2 API call,
-            // but for now we use the local hostname
-            gethostname::gethostname()
-                .to_str()
-                .context("Failed to get hostname for updater registration")?,
-        )
+        .arg(&updater_registration_config.hostname)
         .arg("-U")
-        .arg(&registration_config.username)
+        .arg(&updater_registration_config.username)
         .arg("-p")
-        .arg(protocol.as_str())
+        .arg(updater_registration_config.protocol.as_str())
         // this is a temporary solution, will be replaced with a more secure one in the future
         .arg("-P")
-        .arg(
-            registration_config
-                .password
-                .as_ref()
-                .expect("Password is required"),
-        );
+        .arg(&updater_registration_config.password);
     cmd.stdin(std::process::Stdio::null());
     Ok(cmd)
 }
 
 pub fn register_updater_subprocess(
-    site_id: &site_spec::SiteID,
-    protocol: Protocol,
-    registration_config: &config::RegistrationConnectionConfig,
+    updater_registration_config: &UpdaterRegistrationInput,
 ) -> AnyhowResult<()> {
     let check_cmd = if cfg!(windows) {
         Command::new("where").arg(CMK_UPDATE_AGENT_CMD).output()
@@ -600,7 +618,7 @@ pub fn register_updater_subprocess(
         }
     };
 
-    let mut cmd = match _prepare_register_updater_cmd(site_id, protocol, registration_config) {
+    let mut cmd = match _prepare_register_updater_cmd(updater_registration_config) {
         Ok(cmd) => cmd,
         Err(e) => {
             error!(
@@ -611,7 +629,10 @@ pub fn register_updater_subprocess(
         }
     };
 
-    info!("Registering updater for site {}", site_id);
+    info!(
+        "Registering updater for site {}",
+        updater_registration_config.site_id
+    );
     let output = cmd.output().context(format!(
         "Failed to execute {CMK_UPDATE_AGENT_CMD} register command"
     ))?;
@@ -621,7 +642,10 @@ pub fn register_updater_subprocess(
         bail!("Updater registration failed: {}", stderr);
     }
 
-    info!("Successfully registered updater for site {}", site_id);
+    info!(
+        "Successfully registered updater for site {}",
+        updater_registration_config.site_id
+    );
     Ok(())
 }
 
@@ -1253,25 +1277,19 @@ mod tests {
                 server: "test-server".to_string(),
                 site: "test-site".to_string(),
             };
-            let protocol = Protocol::Http;
-            let config = config::RegistrationConnectionConfig {
-                site_id: site_id.clone(),
-                receiver_port: 8000,
-                username: "test-user".to_string(),
-                password: Some("test-password".to_string()),
-                root_certificate: None,
-                trust_server_cert: false,
-                client_config: config::ClientConfig {
-                    use_proxy: false,
-                    validate_api_cert: false,
-                },
-            };
+            let protocol = site_spec::Protocol::Http;
 
-            let cmd = _prepare_register_updater_cmd(&site_id, protocol, &config).unwrap();
+            let cmd = _prepare_register_updater_cmd(&UpdaterRegistrationInput {
+                site_id: site_id.clone(),
+                username: "test-user".to_string(),
+                password: "test-password".to_string(),
+                hostname: "test-host".to_string(),
+                protocol,
+            })
+            .unwrap();
 
             let args: Vec<&OsStr> = cmd.get_args().collect();
 
-            let hostname = gethostname::gethostname();
             #[cfg(windows)]
             let expected_args = [
                 "updater",
@@ -1281,7 +1299,7 @@ mod tests {
                 "-i",
                 "test-site",
                 "-H",
-                hostname.to_str().unwrap(),
+                "test-host",
                 "-U",
                 "test-user",
                 "-p",
@@ -1297,7 +1315,7 @@ mod tests {
                 "-i",
                 "test-site",
                 "-H",
-                hostname.to_str().unwrap(),
+                "test-host",
                 "-U",
                 "test-user",
                 "-p",

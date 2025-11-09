@@ -61,7 +61,7 @@ from cmk.plugins.aws.constants import (
     AWSRegions,
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.misc import DataCache, datetime_serializer
+from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
 
 if TYPE_CHECKING:
@@ -290,6 +290,14 @@ TagsOption = str | Literal[TagsImportPatternOption.ignore_all, TagsImportPattern
 # '-- ElastiCacheSummary
 #     |
 #     '-- ElastiCache
+
+
+def datetime_serializer(obj):
+    """Custom serializer to pass to json dump functions"""
+    if isinstance(obj, datetime):
+        return str(obj)
+    # fall back to json default behaviour:
+    raise TypeError("%r is not JSON serializable" % obj)
 
 
 def get_seconds_since_midnight(current_time: datetime) -> float:

@@ -49,7 +49,6 @@ import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
-from cmk.ccc.store import save_text_to_file
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.aws.constants import (
     AWSEC2InstFamilies,
@@ -60,7 +59,7 @@ from cmk.plugins.aws.constants import (
     AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
 
@@ -317,7 +316,8 @@ class AWSConfig:
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
         self.service_config: dict = {}
-        self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
+        self._config_hash_storage = Storage(AGENT, hostname)
+        self._config_hash_key = "config_hash"
         self._current_config_hash = self._compute_config_hash(sys_argv)
         self.piggyback_naming_convention = piggyback_naming_convention
         self.tags_option = tags_option
@@ -387,14 +387,10 @@ class AWSConfig:
         return True
 
     def _load_config_hash(self) -> str | None:
-        try:
-            with self._config_hash_file.open(mode="r", encoding="utf-8") as f:
-                return f.read().strip()
-        except FileNotFoundError:
-            return None
+        return self._config_hash_storage.read(self._config_hash_key, default=None)
 
     def _write_config_hash(self) -> None:
-        save_text_to_file(self._config_hash_file, f"{self._current_config_hash}\n")
+        self._config_hash_storage.write(self._config_hash_key, f"{self._current_config_hash}\n")
 
 
 # .

@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-any-return"
 
 import argparse
+import json
 import pathlib
 import sys
 from collections.abc import Sequence
@@ -13,7 +14,6 @@ from collections.abc import Sequence
 from cmk.plugins.gerrit.lib import collectors, storage
 from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 from cmk.utils.password_store import lookup as password_store_lookup
 
 __version__ = "2.5.0b1"
@@ -100,8 +100,8 @@ def get_password_from_args(args: argparse.Namespace) -> str:
 
 def write_sections(sections: Sections) -> None:
     for name, data in sections.items():
-        with SectionWriter(f"gerrit_{name}") as writer:
-            writer.append_json(data)
+        section_payload = json.dumps(data, sort_keys=True)
+        sys.stdout.write(f"<<<gerrit_{name}:sep(0)>>>\n{section_payload}\n")
 
 
 if __name__ == "__main__":

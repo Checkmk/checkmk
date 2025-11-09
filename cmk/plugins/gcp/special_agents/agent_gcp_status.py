@@ -18,8 +18,12 @@ from collections.abc import Sequence
 import pydantic
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable import agent_common
+
+__version__ = "2.5.0b1"
+
+AGENT = "gcp_status"
 
 
 class DiscoveryParam(pydantic.BaseModel):
@@ -49,7 +53,7 @@ def _health_serializer(section: AgentOutput) -> None:
         w.append(section.model_dump_json())
 
 
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -98,8 +102,9 @@ def write_section(
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return agent_common.special_agent_main(parse_arguments, write_section)
+    return write_section(parse_arguments(sys.argv[1:]))
 
 
 if __name__ == "__main__":

@@ -810,11 +810,20 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         job_interface.send_result_message(_("Finished."))
 
 
-def _edition_from_short(edition_short: str) -> cmk_version.Edition:
-    for ed in cmk_version.Edition:
-        if ed.short == edition_short:
-            return ed
-    raise ValueError(edition_short)
+def _edition_from_short(edition_str: str) -> cmk_version.Edition:
+    match edition_str:
+        case cmk_version.Edition.CRE.short | "community":
+            return cmk_version.Edition.CRE
+        case cmk_version.Edition.CEE.short | "pro":
+            return cmk_version.Edition.CEE
+        case cmk_version.Edition.CCE.short | "ultimate":
+            return cmk_version.Edition.CCE
+        case cmk_version.Edition.CME.short | "ultimatemt":
+            return cmk_version.Edition.CME
+        case cmk_version.Edition.CSE.short | "cloud":
+            return cmk_version.Edition.CSE
+        case _:
+            raise ValueError(edition_str)
 
 
 def compatible_with_central_site(

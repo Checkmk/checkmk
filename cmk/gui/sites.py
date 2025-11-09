@@ -219,11 +219,37 @@ def _redacted_site_states_for_logging() -> dict[SiteId, dict[str, object]]:
     }
 
 
-def _edition_from_livestatus(livestatus_edition: str | None) -> Edition | None:
-    for ed in Edition:
-        if ed.long == livestatus_edition:
-            return ed
-    return None
+def _edition_from_livestatus(*, version_str: str, edition_str: str | None) -> Edition | None:
+    version = Version.from_str(version_str)
+    if version is None or version.base is None:
+        return None
+    if version.base.major > 2 or (version.base.major == 2 and version.base.minor >= 5):
+        match edition_str:
+            case "community":
+                return Edition.CRE
+            case "pro":
+                return Edition.CEE
+            case "ultimate":
+                return Edition.CCE
+            case "ultimatemt":
+                return Edition.CME
+            case "cloud":
+                return Edition.CSE
+            case _:
+                return None
+    match edition_str:
+        case Edition.CRE.long:
+            return Edition.CRE
+        case Edition.CEE.long:
+            return Edition.CEE
+        case Edition.CCE.long:
+            return Edition.CCE
+        case Edition.CME.long:
+            return Edition.CME
+        case Edition.CSE.long:
+            return Edition.CSE
+        case _:
+            return None
 
 
 def _get_distributed_monitoring_compatibility(
@@ -335,7 +361,9 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
 
         central_edition = edition(paths.omd_root)
         central_version = __version__
-        remote_edition = _edition_from_livestatus(remote_edition)
+        remote_edition = _edition_from_livestatus(
+            version_str=livestatus_version, edition_str=remote_edition
+        )
         central_license_state = get_license_state()
 
         compatibility = _get_distributed_monitoring_compatibility(

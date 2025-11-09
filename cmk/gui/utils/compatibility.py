@@ -52,7 +52,7 @@ def make_site_version_info(
     license_state: LicenseState | None,
 ) -> str:
     if edition_short == cmk_version.Edition.COMMUNITY.short:
-        # No licensing in CRE, information not necessary
+        # No licensing in Checkmk Community, information not necessary
         return _("Version: %s, Edition: %s") % (
             version,
             edition_short.upper() if edition_short else _("unknown"),

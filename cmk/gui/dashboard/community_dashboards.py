@@ -17,8 +17,8 @@ from .type_defs import DashboardConfig, DashboardName, LinkedViewDashletConfig, 
 def register_builtin_dashboards(builtin: dict[DashboardName, DashboardConfig]) -> None:
     builtin["problems"] = ProblemsDashboard
 
-    # CEE uses specific "main" dashboard with new CEE specific dashlets.
-    # CRE should use the problem dashboard as main dashboard
+    # The commercial editions use specific "main" dashboard with new commercial edition
+    # specific dashlets. Checkmk Community should use the problem dashboard as main dashboard
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
         main_dashboard = builtin["main"] = builtin.pop("problems")
         main_dashboard["title"] = _l("Main dashboard")

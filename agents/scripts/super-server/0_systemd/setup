@@ -28,7 +28,7 @@ Commands:
   deploy      Deploy the unit files found in ${RESOURCES} to the
               "most suitable" of: $(_destination --all)
   cleanup     Disable and remove the deployed systemd units
-  purge       cleanup and additionally remove leftover CRE systemd units
+  purge       cleanup and additionally remove leftover Checkmk Community systemd units
   trigger     Enable or disable systemd units
   isdeployed  Exit successfully if and only if files are deployed
 

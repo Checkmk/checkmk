@@ -126,7 +126,7 @@ def _determine_pysaml2_log_level(log_levels: Mapping[str, int]) -> Mapping[str, 
     """Note this sets the log level for the pysaml2 client, an external
     dependency used by SAML.
 
-    The SAML log level is missing in the CRE editions, and at the time when
+    The SAML log level is missing in Checkmk Community, and at the time when
     cmk-update-config is run after an update from Checmk version 2.1.
 
     The log level of the pysaml2 package should be set to debug if the

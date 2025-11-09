@@ -96,7 +96,7 @@ def get_licensing_notification_handler() -> NotificationHandler:
 
 
 def register_cre_licensing_handler() -> None:
-    # There is no license management planned for the CRE -> Always licensed
+    # There is no license management planned for Checkmk Community -> Always licensed
     licensing_handler_registry.register(
         cmk_edition=Edition.COMMUNITY,
         licensing_handler=CRELicensingHandler,

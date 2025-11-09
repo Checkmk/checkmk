@@ -286,7 +286,7 @@ class ModeUsers(WatoMode):
                 item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
             )
 
-        # The SAML2 config mode is only registered under non-CRE, non-CSE editions
+        # The SAML2 config mode is only registered under commercial (non cloud) editions
         if mode_registry.get("saml_config") is not None:
             yield PageMenuEntry(
                 title=_("SAML authentication"),

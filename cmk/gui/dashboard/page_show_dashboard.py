@@ -209,7 +209,7 @@ def _get_default_dashboard_name() -> str:
     and service problems that are relevant for the user.
     """
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
-        return "main"  # problems = main in raw edition
+        return "main"  # problems = main in community edition
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
 

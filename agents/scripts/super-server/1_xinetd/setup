@@ -30,7 +30,7 @@ Commands:
   deploy      Deploy the service file to ${DESTINATION},
               using the template ${TEMPLATE}
   cleanup     Remove the deployed service file
-  purge       cleanup and additionally remove leftover (CRE) service files
+  purge       cleanup and additionally remove leftover (Checkmk Community) service files
   trigger     Reload or start xinetd
   isdeployed  Exit successfully if and only if files are deployed
 HERE
@@ -61,7 +61,7 @@ _header() {
     cat <<HERE
 # This file is created automatically.
 # Changes will be overwritten by \`${MYSELF} deploy\` (e.g. during an Checkmk Agent update).
-# CRE users can modify the service by modifying ${TEMPLATE} and running
+# Checkmk Community users can modify the service by modifying ${TEMPLATE} and running
 # ${MYSELF} deploy
 # ${MYSELF} trigger
 #
@@ -91,7 +91,7 @@ deploy() {
 
 cleanup() {
 
-    # migrate CRE pre 2.1 xinetd service
+    # migrate Checkmk Community pre 2.1 xinetd service
     if [ -e "/etc/xinetd.d/check_mk" ]; then
         printf "migrating old /etc/xinetd.d/check_mk ... "
         sed 's/service check_mk/service check-mk-agent/' "/etc/xinetd.d/check_mk" >"${TEMPLATE}" && rm "/etc/xinetd.d/check_mk" && printf "OK\n"

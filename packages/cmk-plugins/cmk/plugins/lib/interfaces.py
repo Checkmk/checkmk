@@ -1675,7 +1675,7 @@ _METRICS_TO_LEGACY_MAP = {
 # This is a workaround for the following problem: livestatus in combination with the Nagios core
 # only reports those metrics which are currently still updated. Metrics which were once produced but
 # are not updated anylonger are currently not reported in the livestatus metrics column. Hence,
-# renaming metrics currently leads to a loss of historic data in the CRE, even if there is a
+# renaming metrics currently leads to a loss of historic data in Checkmk Community, even if there is a
 # corresponding translation. This issue will hopefully be eliminated in the 2.3. Once this is the
 # case, we can remove _rename_metrics_to_legacy.
 def _rename_metrics_to_legacy(

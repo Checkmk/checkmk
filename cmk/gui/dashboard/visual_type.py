@@ -106,8 +106,8 @@ class VisualTypeDashboards(VisualType):
             return
 
         if add_type == "pnpgraph" and context is None:
-            # Raw Edition graphs are added correctly by htdocs/js/checkmk.js create_pnp_graph().
-            # Enterprise Edition graphs:
+            # Checkmk Community graphs are added correctly by htdocs/js/checkmk.js create_pnp_graph().
+            # Commercial editions graphs:
             #
             # Context will always be None here, but the specification (in parameters)
             # will contain it. Transform the data to the format needed by the dashlets.

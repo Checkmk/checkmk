@@ -60,7 +60,7 @@ HEADER_CHECKMK_EDITION: OpenAPIParameter = {
     "schema": {
         "type": "string",
     },
-    "example": "cre",
+    "example": "community",
 }
 
 HEADER_CHECKMK_VERSION: OpenAPIParameter = {

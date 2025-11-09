@@ -12,6 +12,7 @@ the utils_kubernetes/performance
 
 import itertools
 import logging
+import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, NewType, TypeVar
@@ -19,7 +20,6 @@ from typing import Generic, NewType, TypeVar
 from pydantic import BaseModel
 
 from cmk.plugins.kube.schemata import section
-from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
 
 LOGGER = logging.getLogger()
 RawMetrics = Mapping[str, str]
@@ -75,10 +75,11 @@ def write_sections(items: Iterable[WriteableSection]) -> None:
 
     # Optimize for size of agent output
     for key, group in itertools.groupby(sorted(items, key=key_function), key_function):
-        with ConditionalPiggybackSection(key):
-            for item in group:
-                with SectionWriter(item.section_name) as writer:
-                    writer.append(item.section.json())
+        sys.stdout.write(f"<<<<{key}>>>>\n")
+        for item in group:
+            section_payload = item.section.model_dump_json()
+            sys.stdout.write(f"<<<{item.section_name}:sep(0)>>>\n{section_payload}\n")
+    sys.stdout.write("<<<<>>>>\n")
 
 
 T_co = TypeVar("T_co", covariant=True, bound=IdentifiableSample)

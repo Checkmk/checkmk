@@ -7,18 +7,19 @@
 
 import argparse
 import json
-import pathlib
 import sys
 from collections.abc import Sequence
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.gerrit.lib import collectors, storage
 from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.utils.password_store import lookup as password_store_lookup
 
 __version__ = "2.5.0b1"
 
 AGENT = "gerrit"
+
+PASSWORD_OPTION = "password"
 
 
 @report_agent_crashes(AGENT, __version__)
@@ -49,12 +50,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
 
     parser.add_argument("-u", "--user", default="", help="Username for Gerrit login")
-    group_password = parser.add_mutually_exclusive_group(required=True)
-    group_password.add_argument(
-        "--password-ref",
-        help="Password store reference to the secret password for your Gerrit account.",
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password for Gerrit login"
     )
-    group_password.add_argument("-s", "--password", help="Password for Gerrit login")
     parser.add_argument(
         "--version-cache",
         default=28800.0,  # 8 hours
@@ -76,7 +74,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 def run_agent(args: argparse.Namespace) -> int:
     api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
-    auth = (args.user, get_password_from_args(args))
+    auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
 
     sections: Sections = {}
 
@@ -87,15 +85,6 @@ def run_agent(args: argparse.Namespace) -> int:
     write_sections(sections)
 
     return 0
-
-
-def get_password_from_args(args: argparse.Namespace) -> str:
-    if args.password:
-        return args.password
-
-    pw_id, pw_file = args.password_ref.split(":", maxsplit=1)
-
-    return password_store_lookup(pathlib.Path(pw_file), pw_id)
 
 
 def write_sections(sections: Sections) -> None:

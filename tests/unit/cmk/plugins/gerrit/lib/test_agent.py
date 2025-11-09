@@ -14,7 +14,7 @@ from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
 
 
 def test_parse_arguments() -> None:
-    argv = ["--user", "abc", "--password", "123", "review.gerrit.com"]
+    argv = ["--user", "abc", "--password-id", "foo:bar", "review.gerrit.com"]
 
     value = agent.parse_arguments(argv)
     expected = argparse.Namespace(
@@ -22,8 +22,8 @@ def test_parse_arguments() -> None:
         verbose=0,
         vcrtrace=False,
         user="abc",
-        password_ref=None,
-        password="123",
+        password_id="foo:bar",
+        password=None,
         version_cache=28800.0,
         proto="https",
         port=443,

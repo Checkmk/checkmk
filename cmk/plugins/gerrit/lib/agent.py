@@ -12,16 +12,21 @@ from collections.abc import Sequence
 
 from cmk.plugins.gerrit.lib import collectors, storage
 from cmk.plugins.gerrit.lib.shared_typing import Sections
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 from cmk.utils.password_store import lookup as password_store_lookup
 
+__version__ = "2.5.0b1"
 
+AGENT = "gerrit"
+
+
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(parse_arguments, run_agent)
+    return run_agent(parse_arguments(sys.argv[1:]))
 
 
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )

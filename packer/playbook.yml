@@ -7,7 +7,7 @@
     - role: checkmk
       vars:
         state: absent
-        checkmk_server_edition: cce
+        checkmk_server_edition: ultimate
     - "change-motd"
     - configure-apache
 

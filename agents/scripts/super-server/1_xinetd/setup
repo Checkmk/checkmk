@@ -12,7 +12,7 @@ SERVICE_FILE="check-mk-agent"
 
 if [ -n "${MK_INSTALLDIR}" ]; then
     TEMPLATE="${MK_INSTALLDIR}/package/config/xinetd-service-template.cfg"
-    # In a CCE you can configure auto registration, that cannot be achieved with xinetd
+    # In a Checkmk Ultimate you can configure auto registration, that cannot be achieved with xinetd
     # if this file exists we assume that was configured. (See CMK-12997)
     PREDEFINED_CONNECTIONS_PATH="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
 else

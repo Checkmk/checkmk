@@ -50,7 +50,7 @@ Options:
     job_names                List of job names to process.
 
 Example:
-    python perftest_plot.py --dbhost qa.lan.checkmk.net 2.5.0-2025.09.10.cce
+    python perftest_plot.py --dbhost qa.lan.checkmk.net 2.5.0-2025.09.10.ultimate
 """
 
 import argparse

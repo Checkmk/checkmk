@@ -263,8 +263,9 @@ def _convert_to_legacy_check_parameter_rulespec(
             ),
             is_deprecated=to_convert.is_deprecated,
             create_manual_check=False,
-            # weird field since the CME, as well as the CSE is based on a CCE, but we currently only
-            # want to mark rulespecs that are available in both the CCE and CME as such
+            # weird field since Checkmk Ultimate with multi-tenancy, as well as the Checkmk Cloud
+            # are based on a Checkmk Ultimate, but we currently only want to mark rulespecs that
+            # are available in both the Checkmk Ultimate and Checkmk Ultimate with multi-ten as such
             is_ultimate_and_ultimatemt_only=edition_only is Edition.ULTIMATE,
             form_spec_definition=FormSpecDefinition(
                 to_convert.parameter_form, lambda: item_form_spec

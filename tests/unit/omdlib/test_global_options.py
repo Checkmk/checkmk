@@ -37,24 +37,24 @@ from omdlib.global_options import GlobalOptions, parse_global_opts
             [],
         ),
         (
-            ["-V", "2.4.0p8.cce", "create", "s"],
+            ["-V", "2.4.0p8.ultimate", "create", "s"],
             GlobalOptions(
-                version="2.4.0p8.cce",
+                version="2.4.0p8.ultimate",
             ),
             ["create", "s"],
         ),
         (
-            ["-f", "-V", "2.4.0p8.cce", "create", "s"],
+            ["-f", "-V", "2.4.0p8.ultimate", "create", "s"],
             GlobalOptions(
-                version="2.4.0p8.cce",
+                version="2.4.0p8.ultimate",
                 force=True,
             ),
             ["create", "s"],
         ),
         (
-            ["--force", "-V", "2.4.0p8.cce", "create", "s"],
+            ["--force", "-V", "2.4.0p8.ultimate", "create", "s"],
             GlobalOptions(
-                version="2.4.0p8.cce",
+                version="2.4.0p8.ultimate",
                 force=True,
             ),
             ["create", "s"],
@@ -65,9 +65,9 @@ from omdlib.global_options import GlobalOptions, parse_global_opts
             ["create", "s"],
         ),
         (
-            ["-fv", "-V", "2.4.0p8.cce", "create", "s"],
+            ["-fv", "-V", "2.4.0p8.ultimate", "create", "s"],
             GlobalOptions(
-                version="2.4.0p8.cce",
+                version="2.4.0p8.ultimate",
                 force=True,
                 verbose=True,
             ),
@@ -103,7 +103,7 @@ def test_parse_global_options_valid(
             "Option V needs an argument",
         ),
         (
-            ["--if", "-v", "-V", "2.4.0p8.cce", "create", "s"],
+            ["--if", "-v", "-V", "2.4.0p8.ultimate", "create", "s"],
             "Invalid global option --if",
         ),
     ],

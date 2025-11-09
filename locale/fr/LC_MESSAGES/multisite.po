@@ -9717,6 +9717,10 @@ msgid "Baked host specific agent"
 msgstr "Agent spécifique de l'hôte cuit"
 
 #, fuzzy
+msgid "Bakery plug-in"
+msgstr "Nom du plugin"
+
+#, fuzzy
 msgid "Bakery rules"
 msgstr "Règles de découverte"
 
@@ -20425,6 +20429,10 @@ msgid "Deprecated PNP templates"
 msgstr "Jeux de règles obsolètes"
 
 #, fuzzy
+msgid "Deprecated bakery plug-ins"
+msgstr "Plugin obsolète : %s"
+
+#, fuzzy
 msgid "Deprecated check man pages"
 msgstr "Plugins de contrôle obsolètes"
 
@@ -24103,6 +24111,16 @@ msgstr ""
 "qui répertorie tous les problèmes réels, par exemple dans un seul courriel. "
 "Cela permet de réduire le nombre de notifications dans les cas où de "
 "nombreux problèmes (liés) surviennent dans un court laps de temps."
+
+msgid ""
+"Enabling this option lets Checkmk create safe host names for piggyback "
+"hosts. This avoids conflicts caused by entities having the same name in "
+"Azure, which could lead to monitoring data being overwritten or lost. The "
+"option works by appending a unique hash to the Checkmk piggyback host names "
+"(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, "
+"resources, or resource groups with the same name across multiple Azure "
+"tenants or subscriptions."
+msgstr ""
 
 msgid ""
 "Enabling this option results in additional performance data for the Checkmk "
@@ -28996,6 +29014,13 @@ msgstr "Réponses fixes HTTP"
 msgid "HTTP method"
 msgstr "Méthode HTTP"
 
+#, fuzzy
+msgid "HTTP port"
+msgstr "Port TCP"
+
+msgid "HTTP port (useful for accessing web UI)"
+msgstr ""
+
 msgid "HTTP proxies"
 msgstr "Proxies HTTP"
 
@@ -29033,10 +29058,6 @@ msgid "HTTP(S) load balancer"
 msgstr "Équilibreurs de charge"
 
 #, fuzzy
-msgid "HTTP(S) port"
-msgstr "Port TCP"
-
-#, fuzzy
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, Email, ..."
 
@@ -29062,6 +29083,10 @@ msgstr ""
 "SSL valide de votre serveur web Apache sur votre serveur de surveillance. En "
 "utilisant HTTP, les données confidentielles contenues dans les agents de "
 "cuisson peuvent être espionnées (comme les mots de passe des plugins)."
+
+#, fuzzy
+msgid "HTTPS port"
+msgstr "Port TCP"
 
 msgid "HW Information"
 msgstr "Informations sur HW"
@@ -43300,6 +43325,10 @@ msgstr "Métriques"
 msgid "Metrics Group"
 msgstr "Métriques"
 
+#, fuzzy
+msgid "Metrics backend is disabled."
+msgstr "Instances Oracle"
+
 msgid "Metrics graph of a single service"
 msgstr "Graphique des métriques d'un seul service"
 
@@ -45825,6 +45854,10 @@ msgstr "Aucun code de sauvegarde n'a encore été créé."
 msgid "No baked agent for this host available"
 msgstr "Aucun agent de cuisson n'est disponible pour cet hôte"
 
+#, fuzzy
+msgid "No bakery plug-ins using the deprecated API"
+msgstr "Pas de contrôle des plugins utilisant l'API obsolète"
+
 msgid "No broken extensions were found."
 msgstr "Aucune extension cassée n'a été trouvée."
 
@@ -45881,6 +45914,10 @@ msgstr "Aucune donnée provenant d'un site quelconque"
 #, fuzzy
 msgid "No data from time provider"
 msgstr "Aucune donnée provenant d'un site quelconque"
+
+#, python-format
+msgid "No data generator found for figure type name '%s'"
+msgstr ""
 
 #, fuzzy
 msgid "No data was found with the current parameters of this widget."
@@ -55698,6 +55735,10 @@ msgstr "Regex pour le nom d'hôte"
 msgid "Regex sets"
 msgstr "Jeux de regex"
 
+#, fuzzy
+msgid "Region"
+msgstr "Nom de la région"
+
 msgid "Region name"
 msgstr "Nom de la région"
 
@@ -57167,6 +57208,10 @@ msgstr "Attribut du rôle"
 #, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Consommation de ressources des processus Windows"
+
+#, fuzzy
+msgid "Resource group"
+msgstr "Groupe de ressources"
 
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
@@ -65666,6 +65711,10 @@ msgid "Subscription Status"
 msgstr "Abonnement"
 
 #, fuzzy
+msgid "Subscription name"
+msgstr "Abonnement"
+
+#, fuzzy
 msgid "Subscriptions matching tag based criteria"
 msgstr "ressources correspondant aux critères basés sur les étiquettes"
 
@@ -66345,6 +66394,10 @@ msgid "TLS certificate verification"
 msgstr "Vérification du certificat SSL"
 
 #, fuzzy
+msgid "TLS port"
+msgstr "Port TCP"
+
+#, fuzzy
 msgid "TLS processed bytes"
 msgstr "Octets traités par TLS"
 
@@ -66847,6 +66900,10 @@ msgstr "Système de fichiers temporaire monté"
 
 msgid "Temporary local destination"
 msgstr "Destination locale temporaire"
+
+#, fuzzy
+msgid "Tenant ID"
+msgstr "ID du locataire"
 
 msgid "Tenant ID / Directory ID"
 msgstr "ID locataire / ID répertoire"
@@ -67431,6 +67488,11 @@ msgid ""
 "The HTTP password can be generated from the settings page in Gerrit under '/"
 "settings/#HTTPCredentials' or from the REST API. NOTE: you should NOT enter "
 "your account credentials here!"
+msgstr ""
+
+msgid ""
+"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
+"for standard operations."
 msgstr ""
 
 msgid "The HTTP resource path on which to fetch metrics from targets."
@@ -70595,6 +70657,16 @@ msgstr ""
 "Le décalage de l'information par rapport à la base du compteur. Vous pouvez "
 "obtenir une liste détaillée des compteurs disponibles dans un shell Windows "
 "avec la commande 'lodctr /s:counters.txt' ;."
+
+#, fuzzy, python-format
+msgid ""
+"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
+"new API."
+msgstr ""
+"L'ancienne API de plugin d'inventaire a été supprimée dans la version 2.2 de "
+"Checkmk. Les fichiers de plugins dans <tt>'%s'</tt> sont ignorés. Veuillez "
+"migrer les plugins vers la nouvelle API."
 
 #, fuzzy, python-format
 msgid ""
@@ -84776,14 +84848,6 @@ msgstr ""
 "utilisateurs."
 
 msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
-
-msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -93463,6 +93527,11 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "Non trouvé"
+
+#, fuzzy
+msgid "Something went wrong. Please try again later."
+msgstr ""
+"Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
 
 msgid "Toggle accordion item %{item}"
 msgstr ""

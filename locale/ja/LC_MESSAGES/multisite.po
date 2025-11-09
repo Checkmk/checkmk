@@ -9041,6 +9041,10 @@ msgstr "ベーキングエージェント"
 msgid "Baked host specific agent"
 msgstr "ベイクされたホストの特定エージェント"
 
+#, fuzzy
+msgid "Bakery plug-in"
+msgstr "プラグイン名"
+
 msgid "Bakery rules"
 msgstr "ベーカリールール"
 
@@ -19139,6 +19143,10 @@ msgstr "非推奨のHW/SW Inventoryプラグイン"
 msgid "Deprecated PNP templates"
 msgstr "非推奨のPNPテンプレート"
 
+#, fuzzy
+msgid "Deprecated bakery plug-ins"
+msgstr "非推奨のプラグイン: %s"
+
 msgid "Deprecated check man pages"
 msgstr "非推奨のチェックmanページ"
 
@@ -22574,6 +22582,16 @@ msgstr ""
 "一括通知を有効にすると、同じ連絡先に対するその後の複数の通知を1つの通知に集"
 "め、例えば1通のメールに実際の問題点をすべて列挙します。これにより、短時間に多"
 "くの（関連する）問題が発生した場合、通知の数を減らすことができます。"
+
+msgid ""
+"Enabling this option lets Checkmk create safe host names for piggyback "
+"hosts. This avoids conflicts caused by entities having the same name in "
+"Azure, which could lead to monitoring data being overwritten or lost. The "
+"option works by appending a unique hash to the Checkmk piggyback host names "
+"(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, "
+"resources, or resource groups with the same name across multiple Azure "
+"tenants or subscriptions."
+msgstr ""
 
 msgid ""
 "Enabling this option results in additional performance data for the Checkmk "
@@ -27211,6 +27229,13 @@ msgstr "HTTP固定応答"
 msgid "HTTP method"
 msgstr "HTTPメソッド"
 
+#, fuzzy
+msgid "HTTP port"
+msgstr "TCPポート"
+
+msgid "HTTP port (useful for accessing web UI)"
+msgstr ""
+
 msgid "HTTP proxies"
 msgstr "HTTPプロキシ"
 
@@ -27241,10 +27266,6 @@ msgstr "監視するHTTPウェブサービスのエンドポイント"
 msgid "HTTP(S) load balancer"
 msgstr "HTTP(S)ロードバランサー"
 
-#, fuzzy
-msgid "HTTP(S) port"
-msgstr "TCPポート"
-
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, Eメール, ..."
 
@@ -27266,6 +27287,10 @@ msgstr ""
 "ここでは、HTTPSの設定を推奨します。ただし、監視サーバ上の Apache ウェブサーバ"
 "に有効な SSL 設定が必要です。HTTP を使用する場合、ベイクドエージェントに含ま"
 "れる機密データ（プラグインのパスワードなど）が盗み見される可能性があります。"
+
+#, fuzzy
+msgid "HTTPS port"
+msgstr "TCPポート"
 
 msgid "HW Information"
 msgstr "HW情報"
@@ -40432,6 +40457,10 @@ msgstr "メトリクス"
 msgid "Metrics Group"
 msgstr "メトリクスグループ"
 
+#, fuzzy
+msgid "Metrics backend is disabled."
+msgstr "Oracleインスタンス"
+
 msgid "Metrics graph of a single service"
 msgstr "単一サービスのメトリクスグラフ"
 
@@ -42778,6 +42807,10 @@ msgstr "バックアップコードはまだ作成されていません。"
 msgid "No baked agent for this host available"
 msgstr "このホストのベイクドエージェントは利用できません"
 
+#, fuzzy
+msgid "No bakery plug-ins using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
 msgid "No broken extensions were found."
 msgstr "壊れた拡張機能は見つかりませんでした。"
 
@@ -42830,6 +42863,10 @@ msgstr "どのサイトからのデータもありません"
 #, fuzzy
 msgid "No data from time provider"
 msgstr "どのサイトからのデータもありません"
+
+#, python-format
+msgid "No data generator found for figure type name '%s'"
+msgstr ""
 
 #, fuzzy
 msgid "No data was found with the current parameters of this widget."
@@ -51785,6 +51822,10 @@ msgstr "ホスト名の正規表現"
 msgid "Regex sets"
 msgstr "正規表現セット"
 
+#, fuzzy
+msgid "Region"
+msgstr "リージョン名"
+
 msgid "Region name"
 msgstr "リージョン名"
 
@@ -53156,6 +53197,10 @@ msgstr "属性をリセット"
 
 msgid "Resource consumption of Windows processes"
 msgstr "Windowsプロセスのリソース消費"
+
+#, fuzzy
+msgid "Resource group"
+msgstr "リソースグループ"
 
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr "リソースの固定: 監視対象のリソースが変更されていないことを確認します"
@@ -61134,6 +61179,10 @@ msgid "Subscription Status"
 msgstr "サブスクリプション"
 
 #, fuzzy
+msgid "Subscription name"
+msgstr "サブスクリプション"
+
+#, fuzzy
 msgid "Subscriptions matching tag based criteria"
 msgstr "タグベースの基準に一致するリソース"
 
@@ -61758,6 +61807,10 @@ msgstr "TLS 証明書の検証"
 msgid "TLS certificate verification"
 msgstr "TLS 証明書の検証"
 
+#, fuzzy
+msgid "TLS port"
+msgstr "TCPポート"
+
 msgid "TLS processed bytes"
 msgstr "TLS処理されたバイト"
 
@@ -62211,6 +62264,10 @@ msgstr "一時ファイルシステムがマウントされました"
 
 msgid "Temporary local destination"
 msgstr "ローカルでの一時的な保存先"
+
+#, fuzzy
+msgid "Tenant ID"
+msgstr "テナントID"
 
 msgid "Tenant ID / Directory ID"
 msgstr "テナントID / ディレクトリID"
@@ -62745,6 +62802,11 @@ msgstr ""
 "HTTPパスワードは、Gerritの設定ページ内の'/settings/#HTTPCredentials'から、ま"
 "たはREST APIから生成できます。注意：ここにはアカウントの認証情報を入力しない"
 "でください！"
+
+msgid ""
+"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
+"for standard operations."
+msgstr ""
 
 msgid "The HTTP resource path on which to fetch metrics from targets."
 msgstr "ターゲットからメトリクスを取得するためのHTTPリソースパス。"
@@ -65784,6 +65846,16 @@ msgstr ""
 "カウンタベースからの相対的な情報のオフセットです。Windows シェルで 'lodctr /"
 "s:counters.txt' コマンドを実行すると、利用可能なカウンターの詳細なリストが得"
 "られます。"
+
+#, fuzzy, python-format
+msgid ""
+"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
+"new API."
+msgstr ""
+"古いインベントリプラグイン API は、Checkmk バージョン 2.2 で削除されました。"
+"<tt>'%s'</tt> にあるプラグインファイルは無視されます。プラグインを新しい API "
+"に移行してください。"
 
 #, python-format
 msgid ""
@@ -78770,14 +78842,6 @@ msgstr ""
 "によるログインを有効にするには、このプロパティを使用します。"
 
 msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
-
-msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -86878,6 +86942,10 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "見つかりません"
+
+#, fuzzy
+msgid "Something went wrong. Please try again later."
+msgstr "何か問題が発生しました: %s"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""

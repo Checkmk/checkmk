@@ -9202,6 +9202,10 @@ msgstr "Gebackene Agenten"
 msgid "Baked host specific agent"
 msgstr "Gebackener Host-spezifischer Agent"
 
+#, fuzzy
+msgid "Bakery plug-in"
+msgstr "Name des Plugins"
+
 msgid "Bakery rules"
 msgstr "Bakery-Regeln"
 
@@ -19520,6 +19524,10 @@ msgstr "Veraltete Plugins der HW-/SW-Inventur"
 msgid "Deprecated PNP templates"
 msgstr "Veraltete PNP-Vorlagen"
 
+#, fuzzy
+msgid "Deprecated bakery plug-ins"
+msgstr "Veraltetes Plugin: %s"
+
 msgid "Deprecated check man pages"
 msgstr "Veraltete Handbuchseiten des Checks"
 
@@ -23025,6 +23033,22 @@ msgstr ""
 "Probleme auflistet. Dadurch kann bei einem kurzzeitigen Auftreten vieler "
 "verwandter Probleme die Anzahl der Benachrichtigungen deutlich reduziert "
 "werden."
+
+#, fuzzy
+msgid ""
+"Enabling this option lets Checkmk create safe host names for piggyback "
+"hosts. This avoids conflicts caused by entities having the same name in "
+"Azure, which could lead to monitoring data being overwritten or lost. The "
+"option works by appending a unique hash to the Checkmk piggyback host names "
+"(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, "
+"resources, or resource groups with the same name across multiple Azure "
+"tenants or subscriptions."
+msgstr ""
+"Mit dieser Option erstellt Checkmk sichere Host-Namen für Piggyback-Hosts, "
+"um Konflikte mit Entitätsnamen aus Azure zu vermeiden. Diese Option stellt "
+"den Host-Namen 'azr-' voran und fügt den letzten Teil der Abonnement-ID an. "
+"Beispiel: 'azr-my-vm-1a2b3c4d'. Aktivieren Sie diese Option, wenn Sie "
+"Ressourcen oder Ressourcengruppen mit demselben Namen haben."
 
 msgid ""
 "Enabling this option results in additional performance data for the Checkmk "
@@ -27747,6 +27771,13 @@ msgstr "Festgelegte HTTP-Antworten"
 msgid "HTTP method"
 msgstr "HTTP Methode"
 
+#, fuzzy
+msgid "HTTP port"
+msgstr "HTTP(S) Port"
+
+msgid "HTTP port (useful for accessing web UI)"
+msgstr ""
+
 msgid "HTTP proxies"
 msgstr "HTTP-Proxies"
 
@@ -27777,9 +27808,6 @@ msgstr "Zu überwachende HTTP Webdienst-Endpunkte"
 msgid "HTTP(S) load balancer"
 msgstr "HTTP(S) Loadbalancer"
 
-msgid "HTTP(S) port"
-msgstr "HTTP(S) Port"
-
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, E-Mail, ..."
 
@@ -27802,6 +27830,10 @@ msgstr ""
 "SSL-Installation des Apache-Webservers auf Ihrem Monitoring-Server. Bei der "
 "Verwendung von HTTP könnten vertrauliche Daten, die in den gebackenen "
 "Agenten enthalten sind, ausgespäht werden (z. B. Passwörter für Plug-ins)."
+
+#, fuzzy
+msgid "HTTPS port"
+msgstr "HTTP(S) Port"
 
 msgid "HW Information"
 msgstr "HW-Informationen"
@@ -41247,6 +41279,10 @@ msgstr "Metriken"
 msgid "Metrics Group"
 msgstr "Gruppe der Metriken"
 
+#, fuzzy
+msgid "Metrics backend is disabled."
+msgstr "Instanz des Metrik-Backend"
+
 msgid "Metrics graph of a single service"
 msgstr "Graph eines einzelnen Services"
 
@@ -43600,6 +43636,10 @@ msgstr "Es wurden noch keine Sicherungs-Codes erstellt."
 msgid "No baked agent for this host available"
 msgstr "Für diesen Host ist kein gebackener Agent vefügbar"
 
+#, fuzzy
+msgid "No bakery plug-ins using the deprecated API"
+msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+
 msgid "No broken extensions were found."
 msgstr "Es wurden keine defekten Erweiterungen gefunden."
 
@@ -43651,6 +43691,10 @@ msgstr "Keine Daten von irgendeiner Instanz verfügbar"
 
 msgid "No data from time provider"
 msgstr "Keine Daten vom Zeitlieferanten"
+
+#, python-format
+msgid "No data generator found for figure type name '%s'"
+msgstr ""
 
 #, fuzzy
 msgid "No data was found with the current parameters of this widget."
@@ -52778,6 +52822,10 @@ msgstr "Regulärer Ausdruck für Host-Namen"
 msgid "Regex sets"
 msgstr "Regex-Sets"
 
+#, fuzzy
+msgid "Region"
+msgstr "Name der Region"
+
 msgid "Region name"
 msgstr "Name der Region"
 
@@ -54143,6 +54191,10 @@ msgstr "Ressource-Attribute"
 
 msgid "Resource consumption of Windows processes"
 msgstr "Ressourcenverbrauch von Windows-Prozessen"
+
+#, fuzzy
+msgid "Resource group"
+msgstr "Ressourcengruppe"
 
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
@@ -62310,6 +62362,10 @@ msgstr "Subskriptions-ID"
 msgid "Subscription Status"
 msgstr "Subskription"
 
+#, fuzzy
+msgid "Subscription name"
+msgstr "Subskription"
+
 msgid "Subscriptions matching tag based criteria"
 msgstr "Subskriptionen, die den merkmalsbasierten Kriterien entsprechen"
 
@@ -62939,6 +62995,10 @@ msgstr "TLS-Zertifikatsüberprüfung"
 msgid "TLS certificate verification"
 msgstr "Verifizierung des TLS-Zertifikats"
 
+#, fuzzy
+msgid "TLS port"
+msgstr "TCP Port"
+
 msgid "TLS processed bytes"
 msgstr "Verarbeitete Bytes über TLS"
 
@@ -63403,6 +63463,10 @@ msgstr "Temporäres Dateisystem eingebunden"
 
 msgid "Temporary local destination"
 msgstr "Vorläufiges lokales Ziel"
+
+#, fuzzy
+msgid "Tenant ID"
+msgstr "TenantID"
 
 msgid "Tenant ID / Directory ID"
 msgstr "Tenant-ID / Verzeichnis-ID"
@@ -63975,6 +64039,11 @@ msgstr ""
 "Das HTTP-Passwort kann über die Einstellungsseite in Gerrit unter '/settings/"
 "#HTTPCredentials' oder über die REST-API erstellt werden. HINWEIS: Sie "
 "sollten hier NICHT Ihre Anmeldedaten für das Konto eingeben!"
+
+msgid ""
+"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
+"for standard operations."
+msgstr ""
 
 msgid "The HTTP resource path on which to fetch metrics from targets."
 msgstr ""
@@ -67235,6 +67304,16 @@ msgstr ""
 "Der Offset der Information relativ zur Zählerbasis. Sie können mit dem "
 "Befehl 'lodctr /s:counters.txt' eine detaillierte Liste der verfügbaren "
 "Zähler in einer Windows-Shell erhalten."
+
+#, fuzzy, python-format
+msgid ""
+"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
+"new API."
+msgstr ""
+"Die alte Inventar-Plugin-API wurde in Checkmk Version 2.2 entfernt. Plugin-"
+"Dateien in <tt>'%s'</tt> werden ignoriert. Bitte stellen Sie die Plugins auf "
+"die neue API um."
 
 #, python-format
 msgid ""
@@ -80706,19 +80785,6 @@ msgstr ""
 "um die Anmeldung über die GET-Methode für alle Benutzer zu aktivieren."
 
 msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
-"Mit dieser Option erstellt Checkmk sichere Host-Namen für Piggyback-Hosts, "
-"um Konflikte mit Entitätsnamen aus Azure zu vermeiden. Diese Option stellt "
-"den Host-Namen 'azr-' voran und fügt den letzten Teil der Abonnement-ID an. "
-"Beispiel: 'azr-my-vm-1a2b3c4d'. Aktivieren Sie diese Option, wenn Sie "
-"Ressourcen oder Ressourcengruppen mit demselben Namen haben."
-
-msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -89123,6 +89189,10 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "Nicht gefunden"
+
+#, fuzzy
+msgid "Something went wrong. Please try again later."
+msgstr "Etwas ist schief gelaufen: %s"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""

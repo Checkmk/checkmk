@@ -9668,6 +9668,10 @@ msgid "Baked host specific agent"
 msgstr "Gebakken gastheer-specifiek middel"
 
 #, fuzzy
+msgid "Bakery plug-in"
+msgstr "Naam van plugin"
+
+#, fuzzy
 msgid "Bakery rules"
 msgstr "Ontdekking regels"
 
@@ -20290,6 +20294,10 @@ msgid "Deprecated PNP templates"
 msgstr "Afgeschreven regelsets"
 
 #, fuzzy
+msgid "Deprecated bakery plug-ins"
+msgstr "Verouderde controleplugins"
+
+#, fuzzy
 msgid "Deprecated check man pages"
 msgstr "Verouderde controleplugins"
 
@@ -23926,6 +23934,16 @@ msgstr ""
 "werkelijke problemen opsomt, bv. in één enkele e-mail. Dit vermindert het "
 "aantal meldingen in gevallen waar veel (gerelateerde) problemen zich in een "
 "korte tijd voordoen."
+
+msgid ""
+"Enabling this option lets Checkmk create safe host names for piggyback "
+"hosts. This avoids conflicts caused by entities having the same name in "
+"Azure, which could lead to monitoring data being overwritten or lost. The "
+"option works by appending a unique hash to the Checkmk piggyback host names "
+"(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, "
+"resources, or resource groups with the same name across multiple Azure "
+"tenants or subscriptions."
+msgstr ""
 
 msgid ""
 "Enabling this option results in additional performance data for the Checkmk "
@@ -28784,6 +28802,13 @@ msgstr "HTTP vaste antwoorden"
 msgid "HTTP method"
 msgstr "HTTP Methode"
 
+#, fuzzy
+msgid "HTTP port"
+msgstr "TCP-poort"
+
+msgid "HTTP port (useful for accessing web UI)"
+msgstr ""
+
 msgid "HTTP proxies"
 msgstr "HTTP proxies"
 
@@ -28821,10 +28846,6 @@ msgid "HTTP(S) load balancer"
 msgstr "Load balancers"
 
 #, fuzzy
-msgid "HTTP(S) port"
-msgstr "TCP-poort"
-
-#, fuzzy
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, E-mail, ..."
 
@@ -28850,6 +28871,10 @@ msgstr ""
 "setup van uw Apache webserver op uw monitoring server. Bij gebruik van HTTP "
 "zouden vertrouwelijke gegevens die in de gebakken agents staan kunnen worden "
 "bespioneerd (zoals wachtwoorden voor plugins)."
+
+#, fuzzy
+msgid "HTTPS port"
+msgstr "TCP-poort"
 
 msgid "HW Information"
 msgstr "HW Informatie"
@@ -42980,6 +43005,10 @@ msgstr "Metriek"
 msgid "Metrics Group"
 msgstr "Metriek"
 
+#, fuzzy
+msgid "Metrics backend is disabled."
+msgstr "Oracle gevallen"
+
 msgid "Metrics graph of a single service"
 msgstr "Metriekgrafiek van een enkele dienst"
 
@@ -45486,6 +45515,10 @@ msgstr "Er zijn nog geen back-up codes aangemaakt."
 msgid "No baked agent for this host available"
 msgstr "Geen gebakken agent voor deze host beschikbaar"
 
+#, fuzzy
+msgid "No bakery plug-ins using the deprecated API"
+msgstr "Geen controleplugins die de verouderde API gebruiken"
+
 msgid "No broken extensions were found."
 msgstr "Er werden geen gebroken extensies gevonden."
 
@@ -45542,6 +45575,10 @@ msgstr "Geen gegevens van een site"
 #, fuzzy
 msgid "No data from time provider"
 msgstr "Geen gegevens van een site"
+
+#, python-format
+msgid "No data generator found for figure type name '%s'"
+msgstr ""
 
 #, fuzzy
 msgid "No data was found with the current parameters of this widget."
@@ -55278,6 +55315,10 @@ msgstr "Regex voor hostnaam"
 msgid "Regex sets"
 msgstr "Regex-reeksen"
 
+#, fuzzy
+msgid "Region"
+msgstr "Naam van de regio"
+
 msgid "Region name"
 msgstr "Naam van de regio"
 
@@ -56709,6 +56750,10 @@ msgstr "Rolkenmerk"
 #, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Hulpbronnenverbruik van Windows-processen"
+
+#, fuzzy
+msgid "Resource group"
+msgstr "Hulpbron Groep"
 
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
@@ -65128,6 +65173,10 @@ msgid "Subscription Status"
 msgstr "Abonnement"
 
 #, fuzzy
+msgid "Subscription name"
+msgstr "Abonnement"
+
+#, fuzzy
 msgid "Subscriptions matching tag based criteria"
 msgstr "bronnen die overeenkomen met op tags gebaseerde criteria"
 
@@ -65800,6 +65849,10 @@ msgid "TLS certificate verification"
 msgstr "SSL-certificaat verificatie"
 
 #, fuzzy
+msgid "TLS port"
+msgstr "TCP-poort"
+
+#, fuzzy
 msgid "TLS processed bytes"
 msgstr "TLS Verwerkte bytes"
 
@@ -66299,6 +66352,10 @@ msgstr "Tijdelijk bestandssysteem gemount"
 
 msgid "Temporary local destination"
 msgstr "Tijdelijke lokale bestemming"
+
+#, fuzzy
+msgid "Tenant ID"
+msgstr "TenantID"
 
 msgid "Tenant ID / Directory ID"
 msgstr "Huurder ID / Directory ID"
@@ -66872,6 +66929,11 @@ msgid ""
 "The HTTP password can be generated from the settings page in Gerrit under '/"
 "settings/#HTTPCredentials' or from the REST API. NOTE: you should NOT enter "
 "your account credentials here!"
+msgstr ""
+
+msgid ""
+"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
+"for standard operations."
 msgstr ""
 
 msgid "The HTTP resource path on which to fetch metrics from targets."
@@ -70004,6 +70066,16 @@ msgstr ""
 "De offset van de informatie ten opzichte van de tellerbasis. U kunt een "
 "gedetailleerde lijst van beschikbare tellers krijgen in een windows shell "
 "met het commando 'lodctr /s:counters.txt'."
+
+#, fuzzy, python-format
+msgid ""
+"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
+"new API."
+msgstr ""
+"De oude inventaris plugin API is verwijderd in Checkmk versie 2.2. Plugin "
+"bestanden in <tt>'%s'</tt> worden genegeerd. Gelieve de plugins te migreren "
+"naar de nieuwe API."
 
 #, fuzzy, python-format
 msgid ""
@@ -84037,14 +84109,6 @@ msgstr ""
 "schakelen."
 
 msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
-
-msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -92644,6 +92708,10 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "Niet gevonden"
+
+#, fuzzy
+msgid "Something went wrong. Please try again later."
+msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
 
 msgid "Toggle accordion item %{item}"
 msgstr ""

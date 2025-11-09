@@ -9666,6 +9666,10 @@ msgid "Baked host specific agent"
 msgstr "Agent specific gazdei coapte"
 
 #, fuzzy
+msgid "Bakery plug-in"
+msgstr "Numele plugin-ului"
+
+#, fuzzy
 msgid "Bakery rules"
 msgstr "Reguli de descoperire"
 
@@ -20339,6 +20343,10 @@ msgid "Deprecated PNP templates"
 msgstr "Seturi de reguli depreciate"
 
 #, fuzzy
+msgid "Deprecated bakery plug-ins"
+msgstr "Plugin-uri de verificare depreciate"
+
+#, fuzzy
 msgid "Deprecated check man pages"
 msgstr "Plugin-uri de verificare depreciate"
 
@@ -24009,6 +24017,16 @@ msgstr ""
 "problemele reale, de exemplu, într-un singur e-mail. Acest lucru reduce "
 "numărul de notificări în cazurile în care apar mai multe probleme (legate "
 "între ele) într-un interval scurt de timp."
+
+msgid ""
+"Enabling this option lets Checkmk create safe host names for piggyback "
+"hosts. This avoids conflicts caused by entities having the same name in "
+"Azure, which could lead to monitoring data being overwritten or lost. The "
+"option works by appending a unique hash to the Checkmk piggyback host names "
+"(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, "
+"resources, or resource groups with the same name across multiple Azure "
+"tenants or subscriptions."
+msgstr ""
 
 msgid ""
 "Enabling this option results in additional performance data for the Checkmk "
@@ -28863,6 +28881,13 @@ msgstr "Răspunsuri fixe HTTP"
 msgid "HTTP method"
 msgstr "Metoda HTTP"
 
+#, fuzzy
+msgid "HTTP port"
+msgstr "Port TCP"
+
+msgid "HTTP port (useful for accessing web UI)"
+msgstr ""
+
 msgid "HTTP proxies"
 msgstr "Proxies HTTP"
 
@@ -28896,10 +28921,6 @@ msgid "HTTP(S) load balancer"
 msgstr "Solicitări GCP/HTTP(S) load balancer"
 
 #, fuzzy
-msgid "HTTP(S) port"
-msgstr "Port TCP"
-
-#, fuzzy
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, e-mail, ..."
 
@@ -28924,6 +28945,10 @@ msgstr ""
 "SSL validă a serverului web Apache de pe serverul de monitorizare. Atunci "
 "când se utilizează HTTP, atunci datele confidențiale care sunt conținute în "
 "agenții coapte ar putea fi spionate (cum ar fi parolele pentru pluginuri)."
+
+#, fuzzy
+msgid "HTTPS port"
+msgstr "Port TCP"
 
 msgid "HW Information"
 msgstr "Informații HW"
@@ -43078,6 +43103,10 @@ msgstr "Metrici"
 msgid "Metrics Group"
 msgstr "Metrici"
 
+#, fuzzy
+msgid "Metrics backend is disabled."
+msgstr "Instanțe Oracle"
+
 msgid "Metrics graph of a single service"
 msgstr "Graficul de măsurători al unui singur serviciu"
 
@@ -45602,6 +45631,10 @@ msgstr "Nu s-au generat încă coduri de rezervă."
 msgid "No baked agent for this host available"
 msgstr "Nu este disponibil niciun agent copt pentru această gazdă"
 
+#, fuzzy
+msgid "No bakery plug-ins using the deprecated API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
 msgid "No broken extensions were found."
 msgstr "Nu au fost găsite extensii rupte."
 
@@ -45657,6 +45690,10 @@ msgstr "Nu există date din niciun site"
 #, fuzzy
 msgid "No data from time provider"
 msgstr "Nu există date din niciun site"
+
+#, python-format
+msgid "No data generator found for figure type name '%s'"
+msgstr ""
 
 #, fuzzy
 msgid "No data was found with the current parameters of this widget."
@@ -55389,6 +55426,10 @@ msgstr "Regex pentru numele de gazdă"
 msgid "Regex sets"
 msgstr "Seturi Regex"
 
+#, fuzzy
+msgid "Region"
+msgstr "Numele regiunii"
+
 msgid "Region name"
 msgstr "Numele regiunii"
 
@@ -56818,6 +56859,10 @@ msgstr "Resetarea atributelor"
 #, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Consumul de resurse al proceselor Windows"
+
+#, fuzzy
+msgid "Resource group"
+msgstr "Grupul de resurse"
 
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
@@ -65343,6 +65388,10 @@ msgid "Subscription Status"
 msgstr "Abonament"
 
 #, fuzzy
+msgid "Subscription name"
+msgstr "Abonament"
+
+#, fuzzy
 msgid "Subscriptions matching tag based criteria"
 msgstr "resurse care corespund criteriilor bazate pe etichete"
 
@@ -66002,6 +66051,10 @@ msgstr "Validarea certificatului SSL"
 msgid "TLS certificate verification"
 msgstr "Verificarea certificatului SSL"
 
+#, fuzzy
+msgid "TLS port"
+msgstr "Port TCP"
+
 msgid "TLS processed bytes"
 msgstr "Byte procesați TLS"
 
@@ -66497,6 +66550,10 @@ msgstr "Sistem de fișiere temporar montat"
 
 msgid "Temporary local destination"
 msgstr "Destinație locală temporară"
+
+#, fuzzy
+msgid "Tenant ID"
+msgstr "TenantID"
 
 msgid "Tenant ID / Directory ID"
 msgstr "ID-ul chiriașului / ID-ul directorului"
@@ -67067,6 +67124,11 @@ msgid ""
 "The HTTP password can be generated from the settings page in Gerrit under '/"
 "settings/#HTTPCredentials' or from the REST API. NOTE: you should NOT enter "
 "your account credentials here!"
+msgstr ""
+
+msgid ""
+"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
+"for standard operations."
 msgstr ""
 
 msgid "The HTTP resource path on which to fetch metrics from targets."
@@ -70226,6 +70288,16 @@ msgstr ""
 "Decalajul informației în raport cu baza de contorizare. Puteți obține o "
 "listă detaliată a contoarelor disponibile într-un shell Windows cu comanda "
 "'lodctr /s:counters.txt'."
+
+#, fuzzy, python-format
+msgid ""
+"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
+"new API."
+msgstr ""
+"Vechiul plugin de inventar API a fost eliminat în versiunea 2.2 a Checkmk. "
+"Fișierele plugin din <tt>'%s'</tt> sunt ignorate. Vă rugăm să migrați plugin-"
+"urile la noul API."
 
 #, fuzzy, python-format
 msgid ""
@@ -84276,14 +84348,6 @@ msgstr ""
 "pentru toți utilizatorii."
 
 msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
-
-msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -92899,6 +92963,12 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "Nu a fost găsit"
+
+#, fuzzy
+msgid "Something went wrong. Please try again later."
+msgstr ""
+"Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
+"de căutare."
 
 msgid "Toggle accordion item %{item}"
 msgstr ""

@@ -93,6 +93,10 @@ pub struct RegisterOpts {
     // We are consistent with agent updater, which uses "hostname", not "host-name".
     #[arg(long, short = 'H', long, value_parser = clap::value_parser!(String))]
     pub hostname: String,
+
+    /// Enable automatic updates for the Checkmk agent
+    #[arg(long = "automatic-updates")]
+    pub automatic_updates: bool,
 }
 
 #[derive(Parser)]
@@ -153,6 +157,10 @@ pub struct RegisterNewOpts {
     /// User-defined agent labels in the form KEY:VALUE. These labels supersede the automatic labels.
     #[arg(long = "agent-labels", name = "KEY:VALUE",  value_parser = parse_agent_labels, )]
     pub agent_labels_raw: Vec<(String, String)>,
+
+    /// Enable automatic updates for the Checkmk agent
+    #[arg(long = "automatic-updates")]
+    pub automatic_updates: bool,
 }
 
 //https://github.com/clap-rs/clap/blob/master/examples/tutorial_derive/04_02_validate.rs

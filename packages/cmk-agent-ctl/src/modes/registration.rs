@@ -252,16 +252,14 @@ pub struct UpdaterRegistrationInput {
 
 fn direct_registration(
     config: &config::RegistrationConnectionConfig,
+    registration_input: &RegistrationInput,
     registry: &mut config::Registry,
     agent_rec_api: &impl agent_receiver_api::Registration,
-    trust_establisher: &impl TrustEstablishing,
     endpoint_call: &impl RegistrationEndpointCall,
 ) -> AnyhowResult<()> {
-    let registration_input = prepare_registration(config, trust_establisher)?;
-
     let registration_result = endpoint_call.call(
         &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
-        &registration_input,
+        registration_input,
         agent_rec_api,
     )?;
 
@@ -271,7 +269,7 @@ fn direct_registration(
         config::TrustedConnectionWithRemote {
             trust: config::TrustedConnection {
                 uuid: registration_input.uuid,
-                private_key: registration_input.private_key,
+                private_key: registration_input.private_key.clone(),
                 certificate: registration_result.agent_cert,
                 root_cert: registration_result.root_cert,
             },
@@ -337,18 +335,33 @@ pub fn register_existing(
     config: &config::RegisterExistingConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
+    let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
     direct_registration(
         &config.connection_config,
+        &registration_input,
         registry,
         &agent_receiver_api::Api {
             use_proxy: config.connection_config.client_config.use_proxy,
         },
-        &InteractiveTrust {},
         &RegistrationCallExisting {
             host_name: &config.host_name,
         },
     )?;
     println!("Registration complete.");
+
+    if config.automatic_updates {
+        let protocol = site_spec::discover_protocol(
+            &config.connection_config.site_id,
+            &config.connection_config.client_config,
+        )?;
+        register_updater_subprocess(&UpdaterRegistrationInput {
+            site_id: config.connection_config.site_id.clone(),
+            username: config.connection_config.username.clone(),
+            password: registration_input.credentials.password.clone(),
+            hostname: config.host_name.clone(),
+            protocol,
+        })?;
+    }
     Ok(())
 }
 
@@ -356,13 +369,14 @@ pub fn register_new(
     config: &config::RegisterNewConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
+    let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
     direct_registration(
         &config.connection_config,
+        &registration_input,
         registry,
         &agent_receiver_api::Api {
             use_proxy: config.connection_config.client_config.use_proxy,
         },
-        &InteractiveTrust {},
         &RegistrationCallNew {
             agent_labels: &config.agent_labels,
         },
@@ -856,17 +870,23 @@ mod tests {
         fn test_existing() {
             let mut r = TestRegistry::new();
             let registry = &mut r.registry;
+            let registration_config = registration_connection_config(None, None, false);
+            let registration_input = prepare_registration(
+                &registration_config,
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: true,
+                    expect_password_prompt: true,
+                },
+            )
+            .unwrap();
             assert!(!registry.path().exists());
             assert!(direct_registration(
-                &registration_connection_config(None, None, false),
+                &registration_config,
+                &registration_input,
                 registry,
                 &MockApi {
                     expect_root_cert: false,
                     expected_registration_method: Some(RegistrationMethod::Existing),
-                },
-                &MockInteractiveTrust {
-                    expect_server_cert_prompt: true,
-                    expect_password_prompt: true,
                 },
                 &RegistrationCallExisting {
                     host_name: HOST_NAME
@@ -881,21 +901,27 @@ mod tests {
         fn test_new() {
             let mut r = TestRegistry::new();
             let registry = &mut r.registry;
+            let registration_config = registration_connection_config(
+                Some(String::from("root_certificate")),
+                Some(String::from("password")),
+                false,
+            );
+            let registration_input = prepare_registration(
+                &registration_config,
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: false,
+                },
+            )
+            .unwrap();
             assert!(!registry.path().exists());
             assert!(direct_registration(
-                &registration_connection_config(
-                    Some(String::from("root_certificate")),
-                    Some(String::from("password")),
-                    false
-                ),
+                &registration_config,
+                &registration_input,
                 registry,
                 &MockApi {
                     expect_root_cert: true,
                     expected_registration_method: Some(RegistrationMethod::New),
-                },
-                &MockInteractiveTrust {
-                    expect_server_cert_prompt: false,
-                    expect_password_prompt: false,
                 },
                 &RegistrationCallNew {
                     agent_labels: &agent_labels()
@@ -912,6 +938,7 @@ mod tests {
                 &config::RegisterExistingConfig {
                     connection_config: registration_connection_config(None, None, true),
                     host_name: String::from(HOST_NAME),
+                    automatic_updates: false
                 },
                 &MockApi {
                     expect_root_cert: false,

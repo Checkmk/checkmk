@@ -134,9 +134,9 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "alertmanager": ["--config", "{}"],
     "allnet_ip_sensoric": ["HOSTNAME"],
     "aws": [
-        "--access-key-id",
+        "--access-key-identity",
         "ACCESS_KEY_ID",
-        "--secret-access-key",
+        "--secret",
         "SECRET_ACCESS_KEY",
         "--hostname",
         "HOSTNAME",

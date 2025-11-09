@@ -130,6 +130,7 @@ def test_quick_setup_aws_transform_to_valuespec() -> None:
     assert aws_transform_to_disk(QUICK_SETUP_PARAMS) == EXPECTED_RULE_CONFIG
 
 
+# I don't think this test belongs here.
 def test_quick_setup_aws_to_ssc() -> None:
     # WHEN
     special_agent_calls = list(special_agent_aws(PLUGIN_PARAMS, HostConfig(name="foo")))
@@ -138,9 +139,9 @@ def test_quick_setup_aws_to_ssc() -> None:
     assert len(special_agent_calls) == 1
     special_agent_call = special_agent_calls[0]
     assert special_agent_call.command_arguments == [
-        "--access-key-id",
+        "--access-key-identity",
         "my_access_key",
-        "--secret-access-key-reference",
+        "--secret-id",
         Secret(1),
         "--regions",
         "eu-central-1",

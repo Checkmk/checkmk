@@ -32,7 +32,6 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
-from pathlib import Path
 from time import sleep
 from typing import (
     Any,
@@ -51,6 +50,7 @@ from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
 from cmk.ccc.store import save_text_to_file
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.aws.constants import (
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
@@ -62,7 +62,6 @@ from cmk.plugins.aws.constants import (
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache, datetime_serializer
-from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
 
 if TYPE_CHECKING:
@@ -71,6 +70,10 @@ if TYPE_CHECKING:
 __version__ = "2.5.0b1"
 
 AGENT = "aws"
+
+ACCESS_KEY_SECRET_OPTION = "secret"
+
+PROXY_SECRET_OPTION = "proxysecret"
 
 NOW = datetime.now()
 
@@ -7293,30 +7296,24 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten.",
     )
     parser.add_argument(
-        "--access-key-id",
+        "--access-key-identity",
         required=False,
-        help="The access key ID for your AWS account",
+        help="The AWS identity of your AWS account access key",
     )
-    group_secret_access_key = parser.add_mutually_exclusive_group(required=False)
-    group_secret_access_key.add_argument(
-        "--secret-access-key-reference",
-        help="Password store reference to the secret access key for your AWS account.",
-    )
-    group_secret_access_key.add_argument(
-        "--secret-access-key",
-        help="The secret access key for your AWS account.",
+    parser_add_secret_option(
+        parser,
+        long=f"--{ACCESS_KEY_SECRET_OPTION}",
+        required=False,
+        help="The secret AWS access key for your AWS account.",
     )
     parser.add_argument("--proxy-host", help="The address of the proxy server")
     parser.add_argument("--proxy-port", help="The port of the proxy server")
     parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
-    group_proxy_password = parser.add_mutually_exclusive_group()
-    group_proxy_password.add_argument(
-        "--proxy-password-reference",
-        help="Password store reference to the password for authentication of the proxy server",
-    )
-    group_proxy_password.add_argument(
-        "--proxy-password",
-        help="The password for authentication of the proxy server",
+    parser_add_secret_option(
+        parser,
+        long=f"--{PROXY_SECRET_OPTION}",
+        required=False,
+        help="The password for authentication of the proxy server.",
     )
     parser.add_argument(
         "--global-service-region",
@@ -7590,12 +7587,9 @@ def _proxy_address(
 
 def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     if args.proxy_host:
-        if args.proxy_password:
-            proxy_password = args.proxy_password
-        elif args.proxy_password_reference:
-            pw_id, pw_file = args.proxy_password_reference.split(":", 1)
-            proxy_password = password_store_lookup(Path(pw_file), pw_id)
-        else:
+        try:
+            proxy_password = resolve_secret_option(args, PROXY_SECRET_OPTION).reveal()
+        except TypeError:
             proxy_password = None
         return botocore.config.Config(
             proxies={
@@ -7679,16 +7673,14 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
 def _create_session_from_args(
     args: argparse.Namespace, region: str, config: botocore.config.Config | None
 ) -> boto3.session.Session:
-    secret_access_key = None
-    if args.secret_access_key:
-        secret_access_key = args.secret_access_key
-    elif args.secret_access_key_reference:
-        pw_id, pw_file = args.secret_access_key_reference.split(":", 1)
-        secret_access_key = password_store_lookup(Path(pw_file), pw_id)
+    try:
+        secret_access_key = resolve_secret_option(args, ACCESS_KEY_SECRET_OPTION).reveal()
+    except TypeError:
+        secret_access_key = None
 
     if args.assume_role:
         return _sts_assume_role(
-            args.access_key_id,
+            args.access_key_identity,
             secret_access_key,
             args.role_arn,
             args.external_id,
@@ -7696,7 +7688,7 @@ def _create_session_from_args(
             config,
         )
 
-    return _create_session(args.access_key_id, secret_access_key, region, config=config)
+    return _create_session(args.access_key_identity, secret_access_key, region, config=config)
 
 
 def _get_account_id(args: argparse.Namespace, config: botocore.config.Config | None) -> str:

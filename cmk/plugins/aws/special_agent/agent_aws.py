@@ -60,16 +60,17 @@ from cmk.plugins.aws.constants import (
     AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import (
-    special_agent_main,
-)
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache, datetime_serializer
 from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
 
 if TYPE_CHECKING:
     from mypy_boto3_logs.client import CloudWatchLogsClient
+
+__version__ = "2.5.0b1"
+
+AGENT = "aws"
 
 NOW = datetime.now()
 
@@ -7794,9 +7795,9 @@ class AwsAccessError(Exception):
     pass
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_aws_main)
+    return agent_aws_main(parse_arguments(sys.argv[1:]))
 
 
 if __name__ == "__main__":

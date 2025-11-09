@@ -21,13 +21,16 @@ class Storage:
         """
         Initializes the storage interface. program_ident and host provide an identifier to namespace
         the storage.
-
-        Raises a RuntimeError if OMD_ROOT environment variable is not set.
         """
-        self._full_dir = Path(
+        self._ident: Final = program_ident
+        self._host: Final = host
+
+    @property
+    def _full_dir(self) -> Path:
+        return Path(
             self._get_base_path(),
-            self._sanitize_key(program_ident),
-            self._sanitize_key(host),
+            self._sanitize_key(self._ident),
+            self._sanitize_key(self._host),
         )
 
     @staticmethod
@@ -50,6 +53,8 @@ class Storage:
     def write(self, key: str, content: str) -> None:
         """
         Write text content to the storage.
+
+        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -58,6 +63,8 @@ class Storage:
     def unset(self, key: str) -> None:
         """
         Remove key and its content from the storage.
+
+        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         path.unlink(missing_ok=True)
@@ -67,6 +74,8 @@ class Storage:
         Read content from the storage.
 
         If the key is unknown or the content is corrupted, return default.
+
+        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         try:

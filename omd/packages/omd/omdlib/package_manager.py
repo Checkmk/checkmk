@@ -7,23 +7,7 @@ import abc
 import os
 import subprocess
 import sys
-from collections.abc import Sequence
 from typing import Literal, override
-
-
-def select_matching_packages(version: str, installed_packages: Sequence[str]) -> list[str]:
-    raw_version = version[:-4]
-    target_package_name = f"{get_edition(version)}-{raw_version}"
-    with_version_str = [package for package in installed_packages if target_package_name in package]
-    if "p" in raw_version:
-        return with_version_str
-    if "-" in raw_version:
-        return with_version_str
-    return [
-        package
-        for package in with_version_str
-        if f"{raw_version}p" not in package and f"{raw_version}-" not in package
-    ]
 
 
 def get_edition(
@@ -84,7 +68,7 @@ class PackageManager(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_all_installed_packages(self, verbose: bool) -> list[str]:
+    def get_package(self, version_path: str, verbose: bool) -> list[str]:
         raise NotImplementedError()
 
     def _execute_uninstall(self, cmd: list[str], verbose: bool) -> None:
@@ -114,35 +98,24 @@ class _PackageManagerDEB(PackageManager):
         self._execute_uninstall(["apt-get", "-y", "purge", package_name], verbose)
 
     @override
-    def get_all_installed_packages(self, verbose: bool) -> list[str]:
-        p = self._execute(["dpkg", "-l"], verbose)
-        output = p.communicate()[0]
-        if p.wait() != 0:
-            sys.exit("Failed to get all installed packages:\n%s" % output)
-
-        packages: list[str] = []
-        for package in output.split("\n"):
-            if not package.startswith("ii"):
-                continue
-
-            packages.append(package.split()[1])
-
-        return packages
+    def get_package(self, version_path: str, verbose: bool) -> list[str]:
+        process = self._execute(["dpkg", "-S", version_path], verbose)
+        stdout = process.communicate()[0]
+        if process.wait() != 0:
+            sys.stderr.write(f"Failed to get packages owning {version_path}\n {stdout}")
+            return []
+        return stdout.split(":", maxsplit=1)[0].split(",")
 
 
 class _PackageManagerRPM(PackageManager):
     def uninstall(self, package_name: str, verbose: bool) -> None:
         self._execute_uninstall(["rpm", "-e", package_name], verbose)
 
-    def get_all_installed_packages(self, verbose: bool) -> list[str]:
-        p = self._execute(["rpm", "-qa"], verbose)
-        output = p.communicate()[0]
-
-        if p.wait() != 0:
-            sys.exit("Failed to find packages:\n%s" % output)
-
-        packages: list[str] = []
-        for package in output.split("\n"):
-            packages.append(package)
-
-        return packages
+    @override
+    def get_package(self, version_path: str, verbose: bool) -> list[str]:
+        process = self._execute(["rpm", "-qf", version_path], verbose)
+        stdout = process.communicate()[0]
+        if process.wait() != 0:
+            sys.stderr.write(f"Failed to get packages owning {version_path}\n {stdout}")
+            return []
+        return stdout.splitlines()

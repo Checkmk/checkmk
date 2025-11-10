@@ -74,7 +74,7 @@ from omdlib.options import (
     main_help,
     parse_args_or_exec_other_omd,
 )
-from omdlib.package_manager import get_edition, PackageManager, select_matching_packages
+from omdlib.package_manager import get_edition, PackageManager
 from omdlib.restore import prepare_restore_as_root, prepare_restore_as_site_user
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
@@ -3411,8 +3411,6 @@ def main_cleanup(
     if package_manager is None:
         sys.exit("Command is not supported on this platform")
 
-    all_installed_packages = package_manager.get_all_installed_packages(global_opts.verbose)
-
     for version in omd_versions(versions_path):
         if version == default_version(versions_path):
             sys.stdout.write(
@@ -3437,7 +3435,9 @@ def main_cleanup(
             )
             continue
 
-        matching_installed_packages = select_matching_packages(version, all_installed_packages)
+        matching_installed_packages = package_manager.get_package(
+            f"{version_info.OMD_PHYSICAL_BASE}/versions/{version}", global_opts.verbose
+        )
 
         if len(matching_installed_packages) != 1:
             sys.stdout.write(

@@ -87,6 +87,7 @@ const {
   monitorMenuTopic,
   sortIndex,
   validateGeneralSettings,
+  addFilterSuffix,
   buildSettings
 } = useDashboardGeneralSettings(props.referenceDashboardGeneralSettings)
 
@@ -189,6 +190,7 @@ const cancel = () => {
             v-model:unique-id="uniqueId"
             v-model:dashboard-icon="dashboardIcon"
             v-model:dashboard-emblem="dashboardEmblem"
+            v-model:add-filter-suffix="addFilterSuffix"
             :name-validation-errors="nameErrors"
             :unique-id-validation-errors="uniqueIdErrors"
           />

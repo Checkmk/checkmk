@@ -22,6 +22,9 @@ configure_make(
     configure_options = [
         "--with-ssl=$EXT_BUILD_DEPS/openssl",
     ],
+    copts = [
+        "-Wno-implicit-function-declaration",
+    ],
     lib_source = ":all_srcs",
     out_bin_dir = "lib/nagios/plugins",
     out_binaries = [

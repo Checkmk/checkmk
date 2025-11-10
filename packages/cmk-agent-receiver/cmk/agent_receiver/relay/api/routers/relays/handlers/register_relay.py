@@ -4,15 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 
-from cryptography.x509 import load_pem_x509_csr
+from cryptography.x509 import CertificateSigningRequest
 from pydantic import SecretStr
 
 from cmk.agent_receiver.lib.certs import (
     agent_root_ca,
     current_time_naive,
+    extract_cn_from_csr,
     serialize_to_pem,
     sign_csr,
     site_root_certificate,
+    validate_csr,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
@@ -29,26 +31,36 @@ class RegisterRelayHandler:
         return serialize_to_pem(site_root_certificate())
 
     @staticmethod
-    def sign_csr(csr: str) -> str:
+    def sign_csr(csr: CertificateSigningRequest) -> str:
         return serialize_to_pem(
             sign_csr(
-                csr=load_pem_x509_csr(csr.encode()),
+                csr=csr,
                 lifetime_in_months=15,
                 keypair=agent_root_ca(),
                 valid_from=current_time_naive(),
             )
         )
 
+    @staticmethod
+    def validate_csr(csr: str, relay_id: RelayID) -> CertificateSigningRequest:
+        csr_obj = validate_csr(csr)
+        cn = extract_cn_from_csr(csr_obj)
+        if cn != relay_id:
+            raise ValueError("CN does not match relay ID")
+        return csr_obj
+
     def process(
         self, authorization: SecretStr, request: RelayRegistrationRequest
     ) -> RelayRegistrationResponse:
+        relay_id = RelayID(request.relay_id)
         # Important: First authenticate
         auth = UserAuth(authorization)
+        csr = self.validate_csr(request.csr, relay_id)
         # Then sign the CSR
         root_cert = self.get_root_cert()
-        client_cert = self.sign_csr(request.csr)
+        client_cert = self.sign_csr(csr)
         # before relay registration
-        relay_id = self.relays_repository.add_relay(auth, RelayID(request.relay_id), request.alias)
+        self.relays_repository.add_relay(auth, relay_id, request.alias)
 
         return RelayRegistrationResponse(
             relay_id=relay_id, root_cert=root_cert, client_cert=client_cert

@@ -11,6 +11,7 @@ from cryptography.x509 import (
     Certificate,
     CertificateSigningRequest,
     CertificateSigningRequestBuilder,
+    load_pem_x509_certificate,
     Name,
     NameAttribute,
 )
@@ -157,3 +158,7 @@ def check_certificate_against_public_key(
         PKCS1v15(),
         cert.signature_hash_algorithm,
     )
+
+
+def read_certificate(pem_data: str) -> Certificate:
+    return load_pem_x509_certificate(pem_data.encode())

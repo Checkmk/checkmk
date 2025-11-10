@@ -1544,6 +1544,39 @@ class ACTestDeprecatedGUIExtensions(ACTest):
         )
 
 
+def _compute_deprecation_result_of_views_plugin(
+    site_id: SiteId, plugin_filepath: Path
+) -> ACSingleResult:
+    with plugin_filepath.open() as fp:
+        content = fp.read()
+    if "inventory_displayhints.update(" in content:
+        return compute_deprecation_result(
+            version=__version__,
+            deprecated_version="2.6.0",
+            removed_version="2.7.0",
+            title_entity=(_("HW/SW Inventory display hints in %r") % plugin_filepath.parent.name),
+            title_api=_("legacy"),
+            site_id=site_id,
+            path=plugin_filepath,
+        )
+    return ACSingleResult(
+        state=ACResultState.WARN,
+        text=(
+            _(
+                "Legacy GUI extension in %r uses an API which is marked as"
+                " deprecated and may not work anymore due to unknown imports or"
+                " objects (File: %s)."
+            )
+            % (
+                plugin_filepath.parent.name,
+                try_relative_site_path(site_id, plugin_filepath),
+            )
+        ),
+        site_id=site_id,
+        path=plugin_filepath,
+    )
+
+
 class ACTestDeprecatedLegacyGUIExtensions(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
@@ -1595,6 +1628,8 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
                             site_id=site_id,
                             path=plugin_filepath,
                         )
+                    case "views":
+                        yield _compute_deprecation_result_of_views_plugin(site_id, plugin_filepath)
                     case _:
                         yield ACSingleResult(
                             state=ACResultState.WARN,

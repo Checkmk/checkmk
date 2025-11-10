@@ -8,6 +8,7 @@ from tests.unit.cmk.gui.conftest import (  # noqa: F401
     gui_cleanup_after_test,
     load_plugins,
     request_context,
+    run_as_superuser,
     with_admin,
     with_admin_login,
     with_user,

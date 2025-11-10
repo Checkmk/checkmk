@@ -327,7 +327,12 @@ class PainterCrashException(Painter):
         return ["crash_exc_type", "crash_exc_value"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"])
+        return (
+            None,
+            "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"])
+            if user.may("general.see_crash_reports")
+            else _("Insufficient permissions to view exception details."),
+        )
 
 
 def _sort_crash_time(

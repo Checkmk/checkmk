@@ -154,8 +154,6 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
     }
 
     del crash.crash_info["exc_traceback"]
-    if user.may("general.see_crash_reports"):
-        crash.crash_info["exc_traceback"] = traceback.format_exc().split("\n")  # type: ignore[typeddict-item]
 
     crash_msg = (
         exc.description
@@ -163,16 +161,21 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         else crash.crash_info["exc_value"]
     )
 
-    return problem(
-        status=500,
-        title="Internal Server Error",
-        detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
-        ext=EXT(
+    ext_info = EXT({"id": crash.crash_info["id"]})
+    if user.may("general.see_crash_reports"):
+        crash.crash_info["exc_traceback"] = traceback.format_exc().split("\n")  # type: ignore[typeddict-item]
+        ext_info = EXT(
             {
                 **crash.crash_info,
                 **{"time": datetime.fromtimestamp(float(crash.crash_info["time"])).isoformat()},
             }
-        ),
+        )
+
+    return problem(
+        status=500,
+        title="Internal Server Error",
+        detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
+        ext=ext_info,
     )
 
 

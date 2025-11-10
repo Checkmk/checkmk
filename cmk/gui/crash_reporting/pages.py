@@ -146,7 +146,6 @@ class PageCrash(Page):
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
         if not user.may("general.see_crash_reports"):
-            html.show_error("<b>{}:</b> {}".format(_("Internal error"), report.info["exc_value"]))
             html.p(
                 _(
                     "An internal error occurred while processing your request. "

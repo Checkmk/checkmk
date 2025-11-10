@@ -203,7 +203,7 @@ def check_update_possible(
         resolution.confirm_edition is ConfirmEdition.ASK
         and from_edition != to_edition
         and not dialog_yesno(
-            text=f"You are updating from {from_edition.title()} Edition to {to_edition.title()} Edition. Is this intended?",
+            text=f"You are updating from {from_edition.title()} to {to_edition.title()}. Is this intended?",
             default_no=True,
         )
     ):

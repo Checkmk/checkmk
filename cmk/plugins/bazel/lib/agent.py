@@ -60,30 +60,34 @@ class VersionCache(DataCache):
         return True
 
     def get_live_data(self, commit_hash: str) -> Any:
-        resp = requests.get(self._url, timeout=30)
-        resp.raise_for_status()
-        items = resp.json()
-        versions = {
-            item["commit"]["sha"]: SemanticVersion.from_string(item["name"]) for item in items
-        }
-        current_version = versions.get(commit_hash)
+        return _fetch_version_info(self._url, commit_hash)
 
-        if current_version is not None:
-            newer_versions = {v for k, v in versions.items() if v > current_version}
-            majors = {v for v in newer_versions if v.major > current_version.major}
-            minors = {v for v in newer_versions if v.minor > current_version.minor} - majors
-            patches = (
-                {v for v in newer_versions if v.patch > current_version.patch} - majors - minors
-            )
-            return {
-                "current": str(current_version),
-                "latest": {
-                    "major": str(max(majors, default="")) or None,
-                    "minor": str(max(minors, default="")) or None,
-                    "patch": str(max(patches, default="")) or None,
-                },
-            }
+
+def _fetch_version_info(tags_url: str, commit_hash: str) -> Any:
+    try:
+        resp = requests.get(tags_url, timeout=30)
+    except requests.exceptions.RequestException:
         return None
+    resp.raise_for_status()
+    items = resp.json()
+    versions = {item["commit"]["sha"]: SemanticVersion.from_string(item["name"]) for item in items}
+    current_version = versions.get(commit_hash)
+
+    if current_version is None:
+        return None
+
+    newer_versions = {v for k, v in versions.items() if v > current_version}
+    majors = {v for v in newer_versions if v.major > current_version.major}
+    minors = {v for v in newer_versions if v.minor > current_version.minor} - majors
+    patches = {v for v in newer_versions if v.patch > current_version.patch} - majors - minors
+    return {
+        "current": str(current_version),
+        "latest": {
+            "major": str(max(majors, default="")) or None,
+            "minor": str(max(minors, default="")) or None,
+            "patch": str(max(patches, default="")) or None,
+        },
+    }
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -214,18 +218,14 @@ def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Nam
     if endpoint.data_format == "json":
         data = {_camel_to_snake(key): value for key, value in res.json().items()}
         if endpoint.name == "status" and "git_commit" in data:
-            try:
-                version_cache = VersionCache(
-                    tags_url=args.bazel_cache_tags_url, interval=args.version_cache
-                )
-                version_data = version_cache.get_data(data["git_commit"])
+            version_cache = VersionCache(
+                tags_url=args.bazel_cache_tags_url, interval=args.version_cache
+            )
+            version_data = version_cache.get_data(data["git_commit"])
 
-                if version_data is not None:
-                    sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
-                    sys.stdout.write(f"{json.dumps(version_data)}\n")
-
-            except requests.exceptions.RequestException:
-                pass
+            if version_data is not None:
+                sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
+                sys.stdout.write(f"{json.dumps(version_data)}\n")
 
         sys.stdout.write(f"<<<bazel_cache_{endpoint.name}:sep(0)>>>\n")
         sys.stdout.write(f"{json.dumps(data)}\n")

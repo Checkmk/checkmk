@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import abc
 import errno
 import fcntl
 import io
@@ -23,7 +22,7 @@ import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from enum import auto, Enum
 from pathlib import Path
 from typing import (
@@ -69,6 +68,7 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.package_manager import PackageManager
 from omdlib.skel_permissions import (
     get_skel_permissions,
     load_skel_permissions_from,
@@ -3877,21 +3877,6 @@ def postprocess_restore_as_site_user(
     )
 
 
-def select_matching_packages(version: str, installed_packages: Sequence[str]) -> list[str]:
-    raw_version = _get_raw_version(version)
-    target_package_name = f"{_get_edition(version)}-{raw_version}"
-    with_version_str = [package for package in installed_packages if target_package_name in package]
-    if "p" in raw_version:
-        return with_version_str
-    if "-" in raw_version:
-        return with_version_str
-    return [
-        package
-        for package in with_version_str
-        if f"{raw_version}p" not in package and f"{raw_version}-" not in package
-    ]
-
-
 def main_cleanup(
     version_info: VersionInfo,
     site: SiteContext,
@@ -3899,11 +3884,9 @@ def main_cleanup(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    package_manager = PackageManager.factory(version_info)
+    package_manager = PackageManager.factory(version_info.DISTRO_CODE)
     if package_manager is None:
         bail_out("Command is not supported on this platform")
-
-    all_installed_packages = package_manager.get_all_installed_packages()
 
     for version in omd_versions():
         if version == default_version():
@@ -3925,7 +3908,9 @@ def main_cleanup(
             )
             continue
 
-        matching_installed_packages = select_matching_packages(version, all_installed_packages)
+        matching_installed_packages = package_manager.get_package(
+            f"{version_info.OMD_PHYSICAL_BASE}/versions/{version}", global_opts.verbose
+        )
 
         if len(matching_installed_packages) != 1:
             sys.stdout.write(
@@ -3935,7 +3920,7 @@ def main_cleanup(
             continue
 
         sys.stdout.write("%s%-20s%s Uninstalling\n" % (tty.bold, version, tty.normal))
-        package_manager.uninstall(matching_installed_packages[0])
+        package_manager.uninstall(matching_installed_packages[0], global_opts.verbose)
 
         # In case there were modifications made to the version the uninstall may leave
         # some files behind. Remove the whole version directory
@@ -3966,83 +3951,6 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 
     if group_exists("omd"):
         groupdel("omd")
-
-
-class PackageManager(abc.ABC):
-    @classmethod
-    def factory(cls, version_info: VersionInfo) -> PackageManager | None:
-        if os.path.exists("/etc/cma"):
-            return None
-
-        distro_code = version_info.DISTRO_CODE
-        if distro_code.startswith("el") or distro_code.startswith("sles"):
-            return PackageManagerRPM()
-        return PackageManagerDEB()
-
-    @abc.abstractmethod
-    def uninstall(self, package_name: str) -> None:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_all_installed_packages(self) -> list[str]:
-        raise NotImplementedError()
-
-    def _execute_uninstall(self, cmd: list[str]) -> None:
-        p = self._execute(cmd)
-        output = p.communicate()[0]
-        if p.wait() != 0:
-            bail_out("Failed to uninstall package:\n%s" % output)
-
-    def _execute(self, cmd: list[str]) -> subprocess.Popen:
-        logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
-
-        return subprocess.Popen(
-            cmd,
-            shell=False,
-            close_fds=True,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-        )
-
-
-class PackageManagerDEB(PackageManager):
-    def uninstall(self, package_name: str) -> None:
-        self._execute_uninstall(["apt-get", "-y", "purge", package_name])
-
-    def get_all_installed_packages(self) -> list[str]:
-        p = self._execute(["dpkg", "-l"])
-        output = p.communicate()[0]
-        if p.wait() != 0:
-            bail_out("Failed to get all installed packages:\n%s" % output)
-
-        packages: list[str] = []
-        for package in output.split("\n"):
-            if not package.startswith("ii"):
-                continue
-
-            packages.append(package.split()[1])
-
-        return packages
-
-
-class PackageManagerRPM(PackageManager):
-    def uninstall(self, package_name: str) -> None:
-        self._execute_uninstall(["rpm", "-e", package_name])
-
-    def get_all_installed_packages(self) -> list[str]:
-        p = self._execute(["rpm", "-qa"])
-        output = p.communicate()[0]
-
-        if p.wait() != 0:
-            bail_out("Failed to find packages:\n%s" % output)
-
-        packages: list[str] = []
-        for package in output.split("\n"):
-            packages.append(package)
-
-        return packages
 
 
 class Option(NamedTuple):

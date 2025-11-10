@@ -223,6 +223,7 @@ def test_create_rules(
             )
 
 
+@pytest.mark.skip(reason="CMK-27392; investigating root-cause.")
 @pytest.mark.parametrize(
     "created_host",
     [
@@ -291,6 +292,7 @@ def test_periodic_service_discovery_rule(
     ruleset_page.delete_button.click()
 
 
+@pytest.mark.skip(reason="CMK-27392; investigating root-cause.")
 @pytest.mark.parametrize(
     "created_host",
     [

@@ -15,16 +15,13 @@ from . import constants
 
 @dataclass(frozen=True)
 class MerakiConfig:
-    # TODO: maybe not rely on the concrete type in the future.
-    dashboard: DashboardAPI
     hostname: str
     section_names: Sequence[str]
     cache_dir: Path
 
     @classmethod
-    def build(cls, dashboard: DashboardAPI, hostname: str, section_names: Sequence[str]) -> Self:
+    def build(cls, hostname: str, section_names: Sequence[str]) -> Self:
         return cls(
-            dashboard=dashboard,
             hostname=hostname,
             section_names=section_names,
             cache_dir=constants.BASE_CACHE_FILE_DIR,

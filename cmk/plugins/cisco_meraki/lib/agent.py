@@ -18,8 +18,6 @@ from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Protocol
 
-import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
-
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
@@ -140,6 +138,7 @@ class GetOrganisationsCache(_ABCGetOrganisationsCache):
 @dataclass(frozen=True)
 class MerakiOrganisation:
     config: MerakiConfig
+    clients: MerakiClients
     organisation: Organisation
 
     @property
@@ -148,14 +147,14 @@ class MerakiOrganisation:
 
     def query(self) -> Iterator[Section]:
         if SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
-            if licenses_overview := self._get_licenses_overview():
+            if licenses_overview := self.clients.licenses.get_overview(self.organisation):
                 yield self._make_section(
                     name=SEC_NAME_LICENSES_OVERVIEW,
                     data=licenses_overview,
                 )
 
         if self.config.devices_required:
-            devices_by_serial = self._get_devices_by_serial()
+            devices_by_serial = self.clients.devices.get_all(self.organisation)
         else:
             devices_by_serial = {}
 
@@ -175,7 +174,7 @@ class MerakiOrganisation:
             )
 
         if SEC_NAME_DEVICE_STATUSES in self.config.section_names:
-            for device_status in self._get_device_statuses():
+            for device_status in self.clients.devices_statuses.get_all(self.organisation):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (
@@ -188,7 +187,7 @@ class MerakiOrganisation:
                     )
 
         if SEC_NAME_SENSOR_READINGS in self.config.section_names:
-            for sensor_reading in self._get_sensor_readings():
+            for sensor_reading in self.clients.sensor_readings.get_all(self.organisation):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (
@@ -199,69 +198,6 @@ class MerakiOrganisation:
                         data=sensor_reading,
                         piggyback=piggyback or None,
                     )
-
-    def _get_licenses_overview(self) -> MerakiAPIData | None:
-        def _update_licenses_overview(
-            licenses_overview: dict[str, object] | None,
-        ) -> MerakiAPIData | None:
-            if not licenses_overview:
-                return None
-            licenses_overview.update(
-                {
-                    "organisation_id": self.organisation["id_"],
-                    "organisation_name": self.organisation["name"],
-                }
-            )
-            return licenses_overview
-
-        try:
-            return _update_licenses_overview(
-                self.config.dashboard.organizations.getOrganizationLicensesOverview(
-                    self.organisation_id,
-                )
-            )
-        except meraki.exceptions.APIError as e:
-            LOGGER.debug("Organisation ID: %r: Get license overview: %r", self.organisation_id, e)
-            return None
-
-    def _get_devices_by_serial(self) -> Mapping[str, MerakiAPIData]:
-        def _update_device(device: dict[str, object]) -> MerakiAPIData:
-            device.update(
-                {
-                    "organisation_id": self.organisation["id_"],
-                    "organisation_name": self.organisation["name"],
-                }
-            )
-            return device
-
-        try:
-            return {
-                str(device[API_NAME_DEVICE_SERIAL]): _update_device(device)
-                for device in self.config.dashboard.organizations.getOrganizationDevices(
-                    self.organisation_id, total_pages="all"
-                )
-            }
-        except meraki.exceptions.APIError as e:
-            LOGGER.debug("Organisation ID: %r: Get devices: %r", self.organisation_id, e)
-            return {}
-
-    def _get_device_statuses(self) -> Sequence[MerakiAPIData]:
-        try:
-            return self.config.dashboard.organizations.getOrganizationDevicesStatuses(
-                self.organisation_id, total_pages="all"
-            )
-        except meraki.exceptions.APIError as e:
-            LOGGER.debug("Organisation ID: %r: Get device statuses: %r", self.organisation_id, e)
-            return []
-
-    def _get_sensor_readings(self) -> Sequence[MerakiAPIData]:
-        try:
-            return self.config.dashboard.sensor.getOrganizationSensorReadingsLatest(
-                self.organisation_id, total_pages="all"
-            )
-        except meraki.exceptions.APIError as e:
-            LOGGER.debug("Organisation ID: %r: Get sensor readings: %r", self.organisation_id, e)
-            return []
 
     def _get_device_piggyback(
         self, device: MerakiAPIData, devices_by_serial: Mapping[str, MerakiAPIData]
@@ -388,7 +324,7 @@ def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
 
     sections = _query_meraki_objects(
         organisations=[
-            MerakiOrganisation(config, organisation)
+            MerakiOrganisation(config, clients, organisation)
             for organisation in _get_organisations(config, clients, org_ids=args.orgs)
         ]
     )

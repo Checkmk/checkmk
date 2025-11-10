@@ -3,9 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._devices import Device, RawDevice
+from ._devices_statuses import RawDevicesStatus
+from ._licenses import LicensesOverview, RawLicensesOverview
 from ._organizations import Organisation, RawOrganisation
+from ._sensor_readings import RawSensorReadings
 
 __all__ = [
+    "Device",
+    "LicensesOverview",
     "Organisation",
+    "RawDevice",
+    "RawDevicesStatus",
+    "RawLicensesOverview",
     "RawOrganisation",
+    "RawSensorReadings",
 ]

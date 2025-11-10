@@ -4,11 +4,27 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type VariantProps, cva } from 'class-variance-authority'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
 import { nextTick, ref, watch } from 'vue'
 
+const slideInVariants = cva('', {
+  variants: {
+    size: {
+      medium: 'cmk-slide-in--size-medium',
+      small: 'cmk-slide-in--size-small'
+    }
+  },
+  defaultVariants: {
+    size: 'medium'
+  }
+})
+
+export type SlideInVariants = VariantProps<typeof slideInVariants>
+
 export interface CmkSlideInProps {
   open: boolean
+  size?: SlideInVariants['size']
   isIndexPage?: boolean | undefined // will be removed after the removal of the iframe
 }
 
@@ -38,6 +54,7 @@ watch(
       <DialogContent
         ref="dialogContentRef"
         class="cmk-vue-app cmk-slide-in__container"
+        :class="slideInVariants({ size: props.size })"
         :aria-describedby="undefined"
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
@@ -63,6 +80,10 @@ watch(
   border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);
 
+  &.cmk-slide-in--size-small {
+    max-width: 768px;
+  }
+
   &[data-state='open'] {
     animation: cmk-slide-in__container-show 0.2s ease-in-out;
   }
@@ -74,7 +95,14 @@ watch(
 
 /* Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
 @media screen and (width <= 1024px) {
-  .cmk-slide-in__container {
+  .cmk-slide-in--size-medium {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media screen and (width <= 768px) {
+  .cmk-slide-in--size-small {
     width: 100%;
     max-width: 100%;
   }

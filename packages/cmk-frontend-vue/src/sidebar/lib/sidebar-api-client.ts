@@ -6,8 +6,8 @@
 import type { SidebarSnapin } from 'cmk-shared-typing/typescript/sidebar'
 
 import { Api, type ApiResponseBody } from '@/lib/api-client'
+import type { AjaxResponse } from '@/lib/main-menu/service/type-defs'
 
-import type { AjaxResponse } from '../main-menu/service/type-defs'
 import type { AddSnapinResponse, SidebarSnapinContents } from './type-defs'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

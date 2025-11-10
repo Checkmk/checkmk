@@ -6,8 +6,9 @@
 import type { SidebarSnapin } from 'cmk-shared-typing/typescript/sidebar'
 import { type Ref, ref } from 'vue'
 
-import type { KeyShortcutService } from '../keyShortcuts'
-import { ServiceBase } from '../service/base'
+import type { KeyShortcutService } from '@/lib/keyShortcuts'
+import { ServiceBase } from '@/lib/service/base'
+
 import { SidebarApiClient } from './sidebar-api-client'
 import type { OnUpdateSnapinContent, SidebarSnapinContents } from './type-defs'
 

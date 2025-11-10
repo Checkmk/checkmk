@@ -9,11 +9,12 @@ import type { NavItemShortcut } from 'cmk-shared-typing/typescript/main_menu'
 import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import { SidebarService } from '@/lib/sidebar/sidebar'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { CmkMultitoneIconColor } from '@/components/CmkIcon/types'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
+
+import { SidebarService } from '@/sidebar/lib/sidebar'
 
 import { getInjectedMainMenu } from '../provider/main-menu'
 

@@ -9,13 +9,14 @@ import type { SidebarSnapin } from 'cmk-shared-typing/typescript/sidebar'
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import type { TSidebarSnapin } from '@/lib/sidebar/type-defs'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 
-import { getInjectedSidebar } from '../provider/sidebar'
+import type { TSidebarSnapin } from '@/sidebar/lib/type-defs'
+import { getInjectedSidebar } from '@/sidebar/provider/sidebar'
+
 import AddSidebarSnapin from './snapin/AddSidebarSnapin.vue'
 
 const { _t } = usei18n()

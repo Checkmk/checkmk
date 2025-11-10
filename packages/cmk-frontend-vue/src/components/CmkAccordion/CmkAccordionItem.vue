@@ -9,7 +9,7 @@ import { AccordionContent, AccordionHeader, AccordionItem } from 'radix-vue'
 import CmkAccordionTrigger from './CmkAccordionTrigger.vue'
 
 export interface CmkAccordionItemProps {
-  value: string
+  value?: string
   headerAs?: string
   disabled?: boolean | undefined
 }

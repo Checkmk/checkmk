@@ -23,20 +23,13 @@ interface Labels {
   tooltip: TranslatedString
 }
 
-interface Props {
+defineProps<{
   objectType: ObjectType
   objectSelectionMode: ElementSelection
   objectConfiguredFilters: FilterConfigState
   inFocus: boolean
   filterLabels: Labels
-}
-
-withDefaults(defineProps<Props>(), {
-  filterLabels: () => ({
-    title: 'Filter' as TranslatedString,
-    tooltip: '' as TranslatedString
-  })
-})
+}>()
 
 const emit = defineEmits<{
   (e: 'set-focus', target: ObjectType): void

@@ -53,7 +53,6 @@ test.each([
   const testComponent = defineComponent({
     components: { CmkHtml },
     props: {
-      // eslint-disable-next-line vue/require-default-prop
       html: String
     },
     setup(props) {

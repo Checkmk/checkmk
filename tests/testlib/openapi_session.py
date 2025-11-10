@@ -1799,8 +1799,8 @@ class AgentReceiverRelayAPI(ARBaseAPI):
     def base_url(self) -> str:
         return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"
 
-    def register(self, alias: str, csr: str) -> str:
-        body = RelayRegistrationRequest(relay_name=alias, csr=csr)
+    def register(self, relay_id: str, alias: str, csr: str) -> str:
+        body = RelayRegistrationRequest(relay_id=relay_id, alias=alias, csr=csr)
         response = self.session.post(
             url=urllib.parse.urljoin(self.base_url, "relays/"),
             json=body.model_dump(),

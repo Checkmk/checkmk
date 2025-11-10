@@ -24,6 +24,49 @@ from omdlib.version_info import VersionInfo
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 
 
+def get_edition(
+    omd_version: str,
+) -> Literal[
+    "raw",
+    "enterprise",
+    "managed",
+    "cloud",
+    "saas",
+    "unknown",
+    "community",
+    "pro",
+    "ultimate",
+    "ultimatemt",
+]:
+    """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
+    edition_short = omd_version.split(".")[-1]
+
+    if edition_short == "community":
+        return "community"
+    if edition_short == "pro":
+        return "pro"
+    if edition_short == "ultimate":
+        return "ultimate"
+    if edition_short == "ultimatemt":
+        return "ultimatemt"
+    if edition_short == "cloud":
+        return "cloud"
+
+    # TODO: Needs to be able to deal with 2.4 edition names in 2.5. Can be removed with 2.6
+    if edition_short == "cre":
+        return "raw"
+    if edition_short == "cee":
+        return "enterprise"
+    if edition_short == "cme":
+        return "managed"
+    if edition_short == "cce":
+        return "cloud"
+    if edition_short == "cse":
+        return "saas"
+
+    return "unknown"
+
+
 def store(site_home: Path, relpath: Path | str, backup_dir: Path) -> None:
     # `store` is only valid on files, symlinks and empty dirs.
     source = site_home / relpath

@@ -17,6 +17,7 @@ from omdlib.update import (
     _store_version_meta_dir,
     file_type,
     get_conflict_mode_update,
+    get_edition,
     ManagedTypes,
     ManageUpdate,
     PreFlight,
@@ -25,6 +26,8 @@ from omdlib.update import (
     walk_in_DFS_order,
     walk_managed,
 )
+
+from cmk.ccc import version
 
 
 @dataclasses.dataclass(frozen=True)
@@ -426,3 +429,8 @@ def test_get_conflict_mode_update(
     options: CommandOptions, expected: tuple[Skeleton, PreFlight]
 ) -> None:
     assert get_conflict_mode_update(options) == expected
+
+
+@pytest.mark.parametrize("edition", list(version.Edition))
+def test_get_edition(edition: version._EditionValue) -> None:
+    assert get_edition(f"1.2.3.{edition.long}") != "unknown"

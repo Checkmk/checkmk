@@ -74,7 +74,7 @@ from omdlib.options import (
     main_help,
     parse_args_or_exec_other_omd,
 )
-from omdlib.package_manager import get_edition, PackageManager
+from omdlib.package_manager import PackageManager
 from omdlib.restore import prepare_restore_as_root, prepare_restore_as_site_user
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
@@ -100,7 +100,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs,
 )
 from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements, Skeleton
-from omdlib.update import get_conflict_mode_update, ManageUpdate, PreFlight
+from omdlib.update import get_conflict_mode_update, get_edition, ManageUpdate, PreFlight
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
 from omdlib.users_and_groups import (

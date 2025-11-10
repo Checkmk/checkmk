@@ -240,6 +240,7 @@ public:
         const std::string &host_name, const std::string &service_description,
         const Metric::Name &var) const override;
     [[nodiscard]] bool pnp4nagiosEnabled() const override;
+    [[nodiscard]] bool isShuttingDown() const override;
 
     // specific for NebCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
@@ -277,10 +278,6 @@ private:
     // Nagios is not thread-safe, so this mutex protects calls to
     // process_external_command1 / submit_external_command.
     std::mutex _command_mutex;
-
-    // TODO(sp): Avoid the suppression below.
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-    void *implInternal() const override { return const_cast<NebCore *>(this); }
 
     void logRequest(const std::string &line,
                     const std::vector<std::string> &lines);

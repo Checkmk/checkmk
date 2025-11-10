@@ -14803,7 +14803,8 @@ msgid ""
 msgstr ""
 "CheckmkをLDAPまたはActiveDirectoryに接続して、Checkmkでユーザーを作成します。"
 
-msgid "Connect directly (not available in CRE)"
+#, fuzzy
+msgid "Connect directly (not available in Checkmk Community)"
 msgstr "直接接続します(CREでは使用できません)"
 
 msgid "Connect directly to the destination instead of using a proxy."

@@ -15714,7 +15714,8 @@ msgstr ""
 "Conecte a Checkmk ao seu LDAP ou Active Directory para criar usuários na "
 "Checkmk."
 
-msgid "Connect directly (not available in CRE)"
+#, fuzzy
+msgid "Connect directly (not available in Checkmk Community)"
 msgstr "Conectar diretamente (não disponível no CRE)"
 
 msgid "Connect directly to the destination instead of using a proxy."

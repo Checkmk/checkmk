@@ -815,9 +815,9 @@ google-cloud-os-config==1.22.0 \
     --hash=sha256:92afa402aa3b94d765751907fded1ef5908a6a5322f1fc88dee9e4c7f1cd7e54 \
     --hash=sha256:d79a310f6fa1ce7470aaa084c70e38dc05d98531f468f821b3a526e4d33a70e4
     # via google-cloud-asset
-googleapis-common-protos[grpc]==1.71.0 \
-    --hash=sha256:1aec01e574e29da63c80ba9f7bbf1ccfaacf1da877f23609fe236ca7c72a2e2e \
-    --hash=sha256:59034a1d849dc4d18971997a72ac56246570afdd17f9369a0ff68218d50ab78c
+googleapis-common-protos[grpc]==1.72.0 \
+    --hash=sha256:4299c5a82d5ae1a9702ada957347726b167f9f8d1fc352477702a1e851ff4038 \
+    --hash=sha256:e55a601c1b32b52d7a3e65f43563e2aa61bcd737998ee672ac9b951cd49319f5
     # via
     #   google-api-core
     #   grpc-google-iam-v1

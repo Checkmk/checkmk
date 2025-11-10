@@ -1,5 +1,5 @@
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "RRDLIB_MAJOR", "RRDLIB_MAJOR_DOT_MINOR")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 MAKE_PARALLEL = "-j4"
 

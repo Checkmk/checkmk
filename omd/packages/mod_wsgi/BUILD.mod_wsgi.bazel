@@ -1,5 +1,5 @@
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
     name = "all_srcs",

@@ -13,8 +13,6 @@ APIKEY_OPTION_NAME: Final = "apikey"
 
 BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / "agent_cisco_meraki"
 
-API_NAME_ORGANISATION_ID: Final = "id"
-API_NAME_ORGANISATION_NAME: Final = "name"
 API_NAME_DEVICE_SERIAL: Final = "serial"
 API_NAME_DEVICE_NAME: Final = "name"
 

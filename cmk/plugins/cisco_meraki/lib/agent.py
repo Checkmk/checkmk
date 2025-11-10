@@ -16,6 +16,7 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
+from typing import Protocol
 
 import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
@@ -23,13 +24,12 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 
+from .clients import MerakiClients
 from .config import get_meraki_dashboard, MerakiConfig
 from .constants import (
     AGENT,
     API_NAME_DEVICE_NAME,
     API_NAME_DEVICE_SERIAL,
-    API_NAME_ORGANISATION_ID,
-    API_NAME_ORGANISATION_NAME,
     APIKEY_OPTION_NAME,
     SEC_NAME_DEVICE_INFO,
     SEC_NAME_DEVICE_STATUSES,
@@ -82,10 +82,15 @@ class Section:
 #   '----------------------------------------------------------------------'
 
 
+class SupportsOrganizationsClient(Protocol):
+    def get_all(self) -> Sequence[Organisation]: ...
+    def get_by_id(self, org_id: str) -> Organisation: ...
+
+
 class _ABCGetOrganisationsCache(DataCache):
-    def __init__(self, config: MerakiConfig) -> None:
+    def __init__(self, config: MerakiConfig, client: SupportsOrganizationsClient) -> None:
         super().__init__(config.cache_dir / config.hostname / "organisations", "organisations")
-        self._dashboard = config.dashboard
+        self._client = client
 
     @property
     def cache_interval(self) -> int:
@@ -106,38 +111,19 @@ class _ABCGetOrganisationsCache(DataCache):
 
 
 class GetOrganisationsByIDCache(_ABCGetOrganisationsCache):
-    def __init__(self, config: MerakiConfig, org_ids: Sequence[str]) -> None:
-        super().__init__(config)
+    def __init__(
+        self, config: MerakiConfig, client: SupportsOrganizationsClient, *, org_ids: Sequence[str]
+    ) -> None:
+        super().__init__(config, client)
         self._org_ids = org_ids
 
     def get_live_data(self, *args: object) -> Sequence[Organisation]:
-        def _get_organisation(org_id: str) -> Organisation:
-            try:
-                org = self._dashboard.organizations.getOrganization(org_id)
-            except meraki.exceptions.APIError as e:
-                LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
-                return Organisation(id_=org_id, name="")
-            return Organisation(
-                id_=org[API_NAME_ORGANISATION_ID],
-                name=org[API_NAME_ORGANISATION_NAME],
-            )
-
-        return [_get_organisation(org_id) for org_id in self._org_ids]
+        return [self._client.get_by_id(org_id) for org_id in self._org_ids]
 
 
 class GetOrganisationsCache(_ABCGetOrganisationsCache):
     def get_live_data(self, *args: object) -> Sequence[Organisation]:
-        try:
-            return [
-                Organisation(
-                    id_=organisation[API_NAME_ORGANISATION_ID],
-                    name=organisation[API_NAME_ORGANISATION_NAME],
-                )
-                for organisation in self._dashboard.organizations.getOrganizations()
-            ]
-        except meraki.exceptions.APIError as e:
-            LOGGER.debug("Get organisations: %r", e)
-            return []
+        return self._client.get_all()
 
 
 # .
@@ -381,23 +367,29 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence[Organisation]:
+def _get_organisations(
+    config: MerakiConfig, clients: MerakiClients, *, org_ids: Sequence[str]
+) -> Sequence[Organisation]:
     if not config.organizations_required:
         return []
-    return (
-        GetOrganisationsByIDCache(config, org_ids) if org_ids else GetOrganisationsCache(config)
-    ).get_data(org_ids)
+
+    if org_ids:
+        GetOrganisationsByIDCache(config, clients.organizations, org_ids=org_ids).get_data(org_ids)
+
+    return GetOrganisationsCache(config, clients.organizations).get_data()
 
 
 def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
     api_key = resolve_secret_option(args, APIKEY_OPTION_NAME).reveal()
     dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
+
     config = MerakiConfig.build(dashboard, args.hostname, args.sections)
+    clients = MerakiClients.build(dashboard)
 
     sections = _query_meraki_objects(
         organisations=[
             MerakiOrganisation(config, organisation)
-            for organisation in _get_organisations(config, args.orgs)
+            for organisation in _get_organisations(config, clients, org_ids=args.orgs)
         ]
     )
 

@@ -221,7 +221,6 @@ LEGACY_CHECKS = [
     "enterasys_temp",
     "entersekt",
     "epson_beamer_lamp",
-    "esx_vsphere_datastores",
     "etherbox2_temp",
     "f5_bigip_apm",
     "f5_bigip_chassis_temp",

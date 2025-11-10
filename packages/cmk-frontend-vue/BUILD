@@ -103,6 +103,7 @@ TOOLING = [
     "//:node_modules/eslint-plugin-vue",
     "//:node_modules/jsdom",
     "//:node_modules/postcss-html",
+    "//:node_modules/sass-embedded",
     "//:node_modules/stylelint",
     "//:node_modules/stylelint-config-standard",
     "//:node_modules/typescript-eslint",

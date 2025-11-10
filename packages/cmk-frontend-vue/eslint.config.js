@@ -83,6 +83,7 @@ export default [
       'vue/prefer-template': 'error',
       'vue/prop-name-casing': 'off',
       'vue/require-default-prop': 'off',
+      'vue/no-import-compiler-macros': 'error',
       'vue/no-bare-strings-in-template': [
         'error',
         {

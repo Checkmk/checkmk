@@ -42,3 +42,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:4607da`    | `B302`         | Intended usage of marshal.loads().                                                                                                                                                   |
 | `BNS:f60b87`    | `B608`         | False positive hardcoded SQL.                                                                                                                                                        |
 | `BNS:6f5399`    | `B202`         | False positive, it's a zipfile not tarfile.                                                                                                                                          |
+| `BNS:f9349e`    | `B108`         | `/var/tmp` and `/tmp` used for logging the sqlite operation(vaccum).                                                                                                                 |

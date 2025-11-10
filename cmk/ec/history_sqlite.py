@@ -162,9 +162,9 @@ def _unix_temp_file_dir(logger: Logger) -> Path | None:
     for path_candidate in [
         os.getenv("SQLITE_TMPDIR"),
         os.getenv("TMPDIR"),
-        "/var/tmp",  # nosec B108
+        "/var/tmp",  # nosec B108 # BNS:f9349e
         "/usr/tmp",
-        "/tmp",  # nosec B108
+        "/tmp",  # nosec B108 # BNS:f9349e
         ".",
     ]:
         try:

@@ -13,7 +13,7 @@ import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { CmkMultitoneIconColor, OneColorIcons } from '@/components/CmkIcon/types'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 
-import { getInjectedMainMenu } from '../provider/main-menu'
+import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 
 const mainMenu = getInjectedMainMenu()
 

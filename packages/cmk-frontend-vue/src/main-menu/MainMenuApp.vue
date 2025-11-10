@@ -11,12 +11,13 @@ import { provide, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
-import { MainMenuService } from '@/lib/main-menu/service/main-menu'
-import { type UserPopupMessageRef } from '@/lib/main-menu/service/type-defs'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 import CmkPopupDialog from '@/components/CmkPopupDialog.vue'
+
+import { MainMenuService } from '@/main-menu/lib/main-menu-service'
+import { type UserPopupMessageRef } from '@/main-menu/lib/type-defs'
 
 import NavItem from './components/NavItem.vue'
 import SidebarToggle from './components/SidebarToggle.vue'

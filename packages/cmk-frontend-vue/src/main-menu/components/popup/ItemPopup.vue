@@ -8,9 +8,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { NavItem, NavItemTopic } from 'cmk-shared-typing/typescript/main_menu'
 import { computed, onMounted, ref } from 'vue'
 
-import DefaultPopup from '../../components/popup/DefaultPopup.vue'
-import { definedMainMenuItemVueApps } from '../../provider/item-vue-apps.ts'
-import { getInjectedMainMenu } from '../../provider/main-menu'
+import DefaultPopup from '@/main-menu/components/popup/DefaultPopup.vue'
+import { definedMainMenuItemVueApps } from '@/main-menu/provider/item-vue-apps.ts'
+import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
+
 import ItemTopic from './NavItemTopic.vue'
 
 const mainMenu = getInjectedMainMenu()

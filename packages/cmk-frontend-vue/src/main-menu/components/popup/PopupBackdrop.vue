@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { getInjectedMainMenu } from '../../provider/main-menu'
+import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 
 const mainMenu = getInjectedMainMenu()
 </script>

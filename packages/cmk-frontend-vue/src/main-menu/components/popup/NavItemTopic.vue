@@ -15,7 +15,8 @@ import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import { getInjectedMainMenu } from '../../provider/main-menu'
+import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
+
 import NavItemTopicEntry from './NavItemTopicEntry.vue'
 
 const maxEntriesPerTopic = 10

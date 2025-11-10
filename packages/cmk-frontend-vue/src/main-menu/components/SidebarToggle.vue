@@ -14,9 +14,8 @@ import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { CmkMultitoneIconColor } from '@/components/CmkIcon/types'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 
+import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 import { SidebarService } from '@/sidebar/lib/sidebar'
-
-import { getInjectedMainMenu } from '../provider/main-menu'
 
 const { _t } = usei18n()
 const mainMenu = getInjectedMainMenu()

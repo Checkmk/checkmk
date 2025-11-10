@@ -5,7 +5,7 @@
  */
 import { type InjectionKey, inject } from 'vue'
 
-import type { MainMenuService } from '@/lib/main-menu/service/main-menu'
+import type { MainMenuService } from '@/main-menu/lib/main-menu-service'
 
 export const mainMenuKey = Symbol() as InjectionKey<MainMenuService>
 

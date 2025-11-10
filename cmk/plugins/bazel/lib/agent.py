@@ -215,23 +215,23 @@ def _camel_to_snake(name: str) -> str:
 
 
 def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Namespace) -> None:
-    if endpoint.data_format == "json":
-        data = {_camel_to_snake(key): value for key, value in res.json().items()}
-        if endpoint.name == "status" and "git_commit" in data:
-            version_cache = VersionCache(
-                tags_url=args.bazel_cache_tags_url, interval=args.version_cache
-            )
-            version_data = version_cache.get_data(data["git_commit"])
-
-            if version_data is not None:
-                sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
-                sys.stdout.write(f"{json.dumps(version_data)}\n")
-
-        sys.stdout.write(f"<<<bazel_cache_{endpoint.name}:sep(0)>>>\n")
-        sys.stdout.write(f"{json.dumps(data)}\n")
-
-    else:
+    if endpoint.data_format != "json":
         _process_txt_data(res=res, section_name=endpoint.name)
+        return
+
+    data = {_camel_to_snake(key): value for key, value in res.json().items()}
+    sys.stdout.write(f"<<<bazel_cache_{endpoint.name}:sep(0)>>>\n")
+    sys.stdout.write(f"{json.dumps(data)}\n")
+
+    if endpoint.name != "status" or "git_commit" not in data:
+        return
+
+    version_cache = VersionCache(tags_url=args.bazel_cache_tags_url, interval=args.version_cache)
+    version_data = version_cache.get_data(data["git_commit"])
+
+    if version_data is not None:
+        sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
+        sys.stdout.write(f"{json.dumps(version_data)}\n")
 
 
 def _process_txt_data(res: requests.Response, section_name: str) -> None:

@@ -30,7 +30,7 @@ from cmk.agent_receiver.agent_receiver.models import (
 from cmk.agent_receiver.agent_receiver.utils import R4R
 from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.config import get_config
-from tests.unit.agent_receiver.lib.certs import generate_csr_pair
+from cmk.testlib.agent_receiver.certs import generate_csr_pair
 
 
 @pytest.fixture(name="symlink_push_host")

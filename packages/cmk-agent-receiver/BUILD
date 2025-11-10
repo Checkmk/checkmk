@@ -87,6 +87,7 @@ py_library(
     imports = ["."],
     deps = [
         ":cmk-agent-receiver",
+        requirement("cryptography"),
         requirement("fastapi"),
         requirement("httpx"),
     ],

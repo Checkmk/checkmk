@@ -17,7 +17,7 @@ import re
 import subprocess
 import sys
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -102,24 +102,6 @@ def edition_supports_nagvis(ed: Edition, /) -> bool:
 
 def edition_supports_relay(ed: Edition, /) -> bool:
     return ed in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.CLOUD)
-
-
-def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
-    """
-    >>> mark_edition_only("Feature", [Edition.COMMUNITY])
-    'Feature (Checkmk Community (formerly Raw))'
-    >>> mark_edition_only("Feature", [Edition.PRO])
-    'Feature (Checkmk Pro (formerly Enterprise))'
-    >>> mark_edition_only("Feature", [Edition.ULTIMATE])
-    'Feature (Checkmk Ultimate (formerly Cloud))'
-    >>> mark_edition_only("Feature", [Edition.ULTIMATEMT])
-    'Feature (Checkmk Ultimate with multi-tenancy (formerly MSP))'
-    >>> mark_edition_only("Feature", [Edition.ULTIMATE, Edition.ULTIMATEMT])
-    'Feature (Checkmk Ultimate)'
-    """
-    if exclusive_to == [Edition.ULTIMATE, Edition.ULTIMATEMT]:
-        return f"{feature_to_mark} (Checkmk Ultimate)"
-    return f"{feature_to_mark} ({', '.join([e.title for e in exclusive_to])})"
 
 
 # Version string: <major>.<minor>.<sub><vtype><patch>-<year>.<month>.<day>

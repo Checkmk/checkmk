@@ -11,14 +11,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, override, Self
-from uuid import UUID
 
-from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
+from cryptography.x509 import CertificateSigningRequest
 from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, GetCoreSchemaHandler, UUID4
 from pydantic_core import core_schema
 
-from cmk.agent_receiver.lib.certs import extract_cn_from_csr
+from cmk.agent_receiver.lib.certs import validate_csr
 
 
 @dataclass(frozen=True)
@@ -37,23 +36,9 @@ class CsrField:
 
     @classmethod
     def validate(cls, v: object) -> Self:
-        if isinstance(v, CertificateSigningRequest):
-            csr = v
-        else:
-            if not isinstance(v, str):
-                raise TypeError("CertificateSigningRequest or string required")
-            csr = load_pem_x509_csr(v.encode())
-        if not csr.is_signature_valid:
-            raise ValueError("Invalid CSR (signature and public key do not match)")
-        try:
-            cn = extract_cn_from_csr(csr)
-        except IndexError as e:
-            raise ValueError("CSR contains no CN") from e
-        try:
-            UUID(cn)
-        except ValueError as e:
-            raise ValueError(f"CN {cn} is not a valid version-4 UUID") from e
-        return cls(csr)
+        if not isinstance(v, (CertificateSigningRequest, str)):
+            raise TypeError("CertificateSigningRequest or string required")
+        return cls(validate_csr(v))
 
 
 class CertificateRenewalBody(BaseModel, frozen=True):

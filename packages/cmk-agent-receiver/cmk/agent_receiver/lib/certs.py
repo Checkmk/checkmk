@@ -5,6 +5,7 @@
 
 from datetime import datetime, UTC
 from functools import cache
+from uuid import UUID
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from cryptography.hazmat.primitives.asymmetric.types import CertificateIssuerPrivateKeyTypes
@@ -17,6 +18,7 @@ from cryptography.x509 import (
     CertificateSigningRequest,
     DNSName,
     load_pem_x509_certificate,
+    load_pem_x509_csr,
     random_serial_number,
     SubjectAlternativeName,
 )
@@ -81,6 +83,24 @@ def extract_cn_from_csr(csr: CertificateSigningRequest) -> str:
     v = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
     assert isinstance(v, str)
     return v
+
+
+def validate_csr(csr: CertificateSigningRequest | str) -> CertificateSigningRequest:
+    if not isinstance(csr, CertificateSigningRequest):
+        csr = load_pem_x509_csr(csr.encode())
+
+    if not csr.is_signature_valid:
+        raise ValueError("Invalid CSR (signature and public key do not match)")
+    try:
+        cn = extract_cn_from_csr(csr)
+    except IndexError as e:
+        raise ValueError("CSR contains no CN") from e
+    try:
+        UUID(cn)
+    except ValueError as e:
+        raise ValueError(f"CN {cn} is not a valid version-4 UUID") from e
+
+    return csr
 
 
 @cache

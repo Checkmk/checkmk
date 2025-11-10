@@ -254,8 +254,8 @@ def main() {
                     if (branch_name.contains("sandbox")) {
                         print("Skip uploading ${filename} due to sandbox branch");
                         perform_public_upload = false;
-                    } else if ("${EDITION}" == "saas") {
-                        print("Skip uploading ${filename} due to saas edition");
+                    } else if ("${EDITION}" == "cloud") {
+                        print("Skip uploading ${filename} due to cloud edition");
                         perform_public_upload = false;
                     }
 

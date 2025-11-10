@@ -261,11 +261,11 @@ def main() {
             );
         }
 
-        if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
+        if (EDITION.toLowerCase() == "cloud" && versioning.is_official_release(cmk_version_rc_aware)) {
             // uploads distro packages, source.tar.gz and hashes
             artifacts_helper.upload_files_to_nexus(
-                "${deliverables_dir}/check-mk-saas-${cmk_version}*",
-                "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",
+                "${deliverables_dir}/check-mk-cloud-${cmk_version}*",
+                "${ARTIFACT_STORAGE}/repository/cloud-patch-releases/",
             );
         }
     }

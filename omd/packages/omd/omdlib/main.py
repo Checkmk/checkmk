@@ -2744,10 +2744,11 @@ def main_update(
     # Target version: the version of the OMD binary
     to_version = omdlib.__version__
 
-    from_edition, to_edition = get_edition(from_version), get_edition(to_version)
+    old_from_edition, new_from_edition = get_edition(from_version)
+    _old_to_edition, new_to_edition = get_edition(to_version)
     check_update_possible(
-        from_edition,
-        to_edition,
+        new_from_edition,
+        new_to_edition,
         from_version,
         to_version,
         site.name,
@@ -2792,8 +2793,8 @@ def main_update(
                     skeleton_mode,
                     from_version,
                     to_version,
-                    from_edition,
-                    to_edition,
+                    old_from_edition,
+                    new_to_edition,
                     old_permissions,
                     new_permissions,
                 )
@@ -2806,8 +2807,8 @@ def main_update(
                     skeleton_mode,
                     from_version,
                     to_version,
-                    from_edition,
-                    to_edition,
+                    old_from_edition,
+                    new_to_edition,
                     old_permissions,
                     new_permissions,
                 )
@@ -2831,9 +2832,9 @@ def main_update(
             )
 
             additional_update_env = {
-                "OMD_FROM_EDITION": from_edition,
+                "OMD_FROM_EDITION": new_from_edition,
                 "OMD_FROM_VERSION": from_version,
-                "OMD_TO_EDITION": to_edition,
+                "OMD_TO_EDITION": new_to_edition,
                 "OMD_TO_VERSION": to_version,
             }
             if conflict_mode != PreFlight.IGNORE:
@@ -2864,8 +2865,8 @@ def main_update(
             add_env=additional_update_env,
         )
 
-        if from_edition != to_edition and edition_has_enforced_licensing(
-            to_ed := Edition.from_long_edition(to_edition)
+        if new_from_edition != new_to_edition and edition_has_enforced_licensing(
+            to_ed := Edition.from_long_edition(new_to_edition)
         ):
             sys.stdout.write(
                 f"{tty.bold}You have now upgraded your product to {to_ed.title}. If you have not "

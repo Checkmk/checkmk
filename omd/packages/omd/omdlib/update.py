@@ -26,45 +26,45 @@ from cmk.ccc.crash_reporting import make_crash_report_base_path
 
 def get_edition(
     omd_version: str,
-) -> Literal[
-    "raw",
-    "enterprise",
-    "managed",
-    "cloud",
-    "saas",
-    "unknown",
-    "community",
-    "pro",
-    "ultimate",
-    "ultimatemt",
+) -> tuple[
+    Literal[
+        "raw",
+        "enterprise",
+        "managed",
+        "cloud",
+        "saas",
+        "unknown",
+        "community",
+        "pro",
+        "ultimate",
+        "ultimatemt",
+    ],
+    Literal[
+        "cloud",
+        "community",
+        "pro",
+        "ultimate",
+        "ultimatemt",
+        "unknown",
+    ],
 ]:
     """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
-    edition_short = omd_version.split(".")[-1]
-
-    if edition_short == "community":
-        return "community"
-    if edition_short == "pro":
-        return "pro"
-    if edition_short == "ultimate":
-        return "ultimate"
-    if edition_short == "ultimatemt":
-        return "ultimatemt"
-    if edition_short == "cloud":
-        return "cloud"
-
     # TODO: Needs to be able to deal with 2.4 edition names in 2.5. Can be removed with 2.6
-    if edition_short == "cre":
-        return "raw"
-    if edition_short == "cee":
-        return "enterprise"
-    if edition_short == "cme":
-        return "managed"
-    if edition_short == "cce":
-        return "cloud"
-    if edition_short == "cse":
-        return "saas"
-
-    return "unknown"
+    match omd_version.split(".")[-1]:
+        case "community" | "pro" | "ultimate" | "ultimatemt" | "cloud" as new_edition:
+            return new_edition, new_edition
+        case "cre":
+            return "raw", "community"
+        case "cee":
+            return "enterprise", "pro"
+        case "cce":
+            return "cloud", "ultimate"
+        case "cme":
+            return "managed", "ultimatemt"
+        case "cse":
+            return "saas", "cloud"
+        case _:
+            return "unknown", "unknown"
 
 
 def store(site_home: Path, relpath: Path | str, backup_dir: Path) -> None:

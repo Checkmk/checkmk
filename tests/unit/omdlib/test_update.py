@@ -433,4 +433,5 @@ def test_get_conflict_mode_update(
 
 @pytest.mark.parametrize("edition", list(version.Edition))
 def test_get_edition(edition: version._EditionValue) -> None:
-    assert get_edition(f"1.2.3.{edition.long}") != "unknown"
+    unknown = "unknown", "unknown"
+    assert get_edition(f"1.2.3.{edition.long}") != unknown

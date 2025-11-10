@@ -9,7 +9,6 @@
 
 from __future__ import annotations
 
-import abc
 import argparse
 import json
 import sys
@@ -82,10 +81,9 @@ class Section:
 
 class SupportsOrganizationsClient(Protocol):
     def get_all(self) -> Sequence[Organisation]: ...
-    def get_by_id(self, org_id: str) -> Organisation: ...
 
 
-class _ABCGetOrganisationsCache(DataCache):
+class OrganizationsCache(DataCache):
     def __init__(self, config: MerakiConfig, client: SupportsOrganizationsClient) -> None:
         super().__init__(config.cache_dir / "organisations", "organisations")
         self._client = client
@@ -96,30 +94,8 @@ class _ABCGetOrganisationsCache(DataCache):
         return 86400
 
     def get_validity_from_args(self, *args: object) -> bool:
-        (org_ids,) = args
-        try:
-            cache_ids = [org["id_"] for org in self.get_cached_data()]
-        except FileNotFoundError:
-            cache_ids = []
-        return cache_ids == org_ids
+        return True
 
-    @abc.abstractmethod
-    def get_live_data(self, *args: object) -> Sequence[Organisation]:
-        raise NotImplementedError()
-
-
-class GetOrganisationsByIDCache(_ABCGetOrganisationsCache):
-    def __init__(
-        self, config: MerakiConfig, client: SupportsOrganizationsClient, *, org_ids: Sequence[str]
-    ) -> None:
-        super().__init__(config, client)
-        self._org_ids = org_ids
-
-    def get_live_data(self, *args: object) -> Sequence[Organisation]:
-        return [self._client.get_by_id(org_id) for org_id in self._org_ids]
-
-
-class GetOrganisationsCache(_ABCGetOrganisationsCache):
     def get_live_data(self, *args: object) -> Sequence[Organisation]:
         return self._client.get_all()
 
@@ -309,12 +285,12 @@ def _get_organisations(
     if not config.organizations_required:
         return []
 
-    if org_ids:
-        return GetOrganisationsByIDCache(config, clients.organizations, org_ids=org_ids).get_data(
-            org_ids
-        )
+    orgs = OrganizationsCache(config, clients.organizations).get_data()
 
-    return GetOrganisationsCache(config, clients.organizations).get_data()
+    if org_ids:
+        return [org for org in orgs if org["id_"] in org_ids]
+
+    return orgs
 
 
 def agent_cisco_meraki_main(args: argparse.Namespace) -> int:

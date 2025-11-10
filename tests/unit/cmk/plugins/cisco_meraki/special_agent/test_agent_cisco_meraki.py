@@ -20,12 +20,7 @@ _ORGANISATIONS = [
 ]
 
 
-class FakeGetOrganisationsByIDCache:
-    def get_data(self, *args: object) -> Sequence[Organisation]:
-        return _ORGANISATIONS
-
-
-class FakeGetOrganisationsCache:
+class FakeOrganizationsCache:
     def get_data(self, *args: object) -> Sequence[Organisation]:
         return _ORGANISATIONS
 
@@ -220,13 +215,8 @@ def test_agent_cisco_meraki_main(
     )
     monkeypatch.setattr(
         agent_cisco_meraki,
-        "GetOrganisationsByIDCache",
-        lambda *args, **kwargs: FakeGetOrganisationsByIDCache(),
-    )
-    monkeypatch.setattr(
-        agent_cisco_meraki,
-        "GetOrganisationsCache",
-        lambda *args, **kwargs: FakeGetOrganisationsCache(),
+        "OrganizationsCache",
+        lambda *args, **kwargs: FakeOrganizationsCache(),
     )
 
     agent_cisco_meraki.agent_cisco_meraki_main(

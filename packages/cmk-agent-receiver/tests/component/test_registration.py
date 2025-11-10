@@ -5,18 +5,12 @@
 from http import HTTPStatus
 
 from cmk.agent_receiver.lib.config import Config
-from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import FetchAdHocTask
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay import random_relay_id
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
-
-
-def register_relay(ar: AgentReceiverClient, name: str) -> str:
-    resp = ar.register_relay(name)
-    parsed = RelayRegistrationResponse.model_validate_json(resp.text)
-    return parsed.relay_id
 
 
 def test_a_relay_can_be_registered(
@@ -27,11 +21,11 @@ def test_a_relay_can_be_registered(
     """
     Register a relay and check if we can obtain a list of pending tasks for it.
     """
-    site.set_scenario([], [("relay1", OP.ADD)])
-    resp = agent_receiver.register_relay("relay1")
+    relay_id = random_relay_id()
+    site.set_scenario([], [(relay_id, OP.ADD)])
+    resp = agent_receiver.register_relay(relay_id, "relay1")
     assert resp.status_code == HTTPStatus.OK
-    parsed = RelayRegistrationResponse.model_validate_json(resp.text)
-    relay_id = parsed.relay_id
+
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
@@ -44,22 +38,24 @@ def test_registering_a_relay_does_not_affect_other_relays(
     site: SiteMock,
     site_context: Config,
 ) -> None:
-    site.set_scenario([], [("relay1", OP.ADD), ("relay2", OP.ADD)])
-    relay_id_A = register_relay(agent_receiver, "relay1")
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id_A])
+    relay_1_id = random_relay_id()
+    relay_2_id = random_relay_id()
+    site.set_scenario([], [(relay_1_id, OP.ADD), (relay_2_id, OP.ADD)])
+    register_relay(agent_receiver, "relay1", relay_1_id)
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_1_id])
     agent_receiver.set_serial(cf.serial)
 
     push_task(
         agent_receiver=agent_receiver,
-        relay_id=relay_id_A,
+        relay_id=relay_1_id,
         spec=FetchAdHocTask(payload=".."),
     )
 
-    relay_id = register_relay(agent_receiver, "relay2")
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id_A, relay_id])
+    register_relay(agent_receiver, "relay2", relay_2_id)
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_1_id, relay_2_id])
     agent_receiver.set_serial(cf.serial)
 
-    tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
+    tasks_A = get_relay_tasks(agent_receiver, relay_1_id)
     assert len(tasks_A.tasks) == 1
 
 
@@ -68,8 +64,9 @@ def test_a_relay_can_be_unregistered(
     site: SiteMock,
     site_context: Config,
 ) -> None:
-    site.set_scenario([], [("relay1", OP.ADD), ("relay1", OP.DEL)])
-    relay_id = register_relay(agent_receiver, "relay1")
+    relay_id = random_relay_id()
+    site.set_scenario([], [(relay_id, OP.ADD), (relay_id, OP.DEL)])
+    register_relay(agent_receiver, "relay1", relay_id)
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
@@ -94,15 +91,17 @@ def test_unregistering_a_relay_does_not_affect_other_relays(
     site: SiteMock,
     site_context: Config,
 ) -> None:
-    site.set_scenario([], [("relay1", OP.ADD), ("relay2", OP.ADD), ("relay1", OP.DEL)])
-    relay_id_A = register_relay(agent_receiver, "relay1")
-    relay_id_B = register_relay(agent_receiver, "relay2")
+    relay_1_id = random_relay_id()
+    relay_2_id = random_relay_id()
+    site.set_scenario([], [(relay_1_id, OP.ADD), (relay_2_id, OP.ADD), (relay_1_id, OP.DEL)])
+    register_relay(agent_receiver, "relay1", relay_1_id)
+    register_relay(agent_receiver, "relay2", relay_2_id)
 
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id_A, relay_id_B])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_1_id, relay_2_id])
     agent_receiver.set_serial(cf.serial)
 
-    agent_receiver.unregister_relay(relay_id_A)
+    agent_receiver.unregister_relay(relay_1_id)
 
     # Verify relay B have tasks queue
-    resp = agent_receiver.get_relay_tasks(relay_id_B)
+    resp = agent_receiver.get_relay_tasks(relay_2_id)
     assert resp.status_code == HTTPStatus.OK

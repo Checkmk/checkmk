@@ -45,11 +45,12 @@ class RelaysRepository:
         )
         return cls(client, site_name, helper_config_dir)
 
-    def add_relay(self, auth: SiteAuth, alias: str) -> RelayID:
+    def add_relay(self, auth: SiteAuth, relay_id: RelayID, alias: str) -> RelayID:
         resp = self.client.post(
             "/domain-types/relay/collections/all",
             auth=auth,
             json={
+                "relay_id": str(relay_id),
                 "alias": alias,
                 "siteid": self.siteid,
                 "num_fetchers": default_num_fetchers,
@@ -59,7 +60,8 @@ class RelaysRepository:
         if resp.status_code != HTTPStatus.OK:
             logger.error("could not register relay %s : %s", resp.status_code, resp.text)
             raise CheckmkAPIError(resp.text)
-        return RelayID(resp.json()["id"])
+        assert relay_id == resp.json()["id"]
+        return relay_id
 
     def has_relay(self, relay_id: RelayID, auth: SiteAuth) -> bool:
         resp = self.client.get(url=f"objects/relay/{relay_id}", auth=auth)

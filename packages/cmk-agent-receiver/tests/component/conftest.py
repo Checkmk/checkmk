@@ -13,6 +13,7 @@ from cmk.agent_receiver.lib.auth import internal_credentials
 from cmk.agent_receiver.lib.config import Config, CONFIG_FILE
 from cmk.agent_receiver.main import main_app
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.certs import set_up_ca_certs
 from cmk.testlib.agent_receiver.container import Container, run_container
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.wiremock import Wiremock
@@ -43,6 +44,8 @@ def site_context(
     site_context.log_path.touch()
 
     (site_context.omd_root / CONFIG_FILE).write_text(site_context.model_dump_json())
+
+    set_up_ca_certs(config=site_context)
 
     return site_context
 

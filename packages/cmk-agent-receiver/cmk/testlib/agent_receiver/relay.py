@@ -2,17 +2,11 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import uuid
 
-from pydantic import BaseModel
-
-
-class RelayRegistrationRequest(BaseModel, frozen=True):
-    relay_id: str
-    alias: str
-    csr: str
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 
 
-class RelayRegistrationResponse(BaseModel, frozen=True):
-    relay_id: str
-    root_cert: str
-    client_cert: str
+def random_relay_id() -> RelayID:
+    """Generates a random RelayID for testing purposes."""
+    return RelayID(str(uuid.uuid4()))

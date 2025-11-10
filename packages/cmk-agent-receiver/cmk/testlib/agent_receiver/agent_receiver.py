@@ -9,9 +9,14 @@ from typing import final
 import httpx
 from fastapi.testclient import TestClient
 
+from cmk.agent_receiver.lib.certs import serialize_to_pem
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.monitoring_data import MonitoringData
+from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequestSpec
 
+from .certs import generate_csr_pair
+from .relay import random_relay_id
 from .site_mock import User
 
 
@@ -40,12 +45,14 @@ class AgentReceiverClient:
             except KeyError:
                 pass
 
-    def register_relay(self, name: str) -> httpx.Response:
+    def register_relay(self, relay_id: str, name: str) -> httpx.Response:
+        csr_pair = generate_csr_pair(cn=relay_id)
         return self.client.post(
             f"/{self.site_name}/relays/",
             json={
-                "relay_name": name,
-                "csr": "CSR for Relay A",
+                "relay_id": relay_id,
+                "alias": name,
+                "csr": serialize_to_pem(csr_pair[1]),
             },
         )
 
@@ -92,3 +99,10 @@ class AgentReceiverClient:
             f"/{self.site_name}/relays/{relay_id}/monitoring",
             json=monitoring_data.model_dump(mode="json"),
         )
+
+
+def register_relay(ar: AgentReceiverClient, name: str, relay_id: RelayID | None) -> str:
+    relay_id = relay_id or random_relay_id()
+    resp = ar.register_relay(relay_id=relay_id, name=name)
+    parsed = RelayRegistrationResponse.model_validate_json(resp.text)
+    return parsed.relay_id

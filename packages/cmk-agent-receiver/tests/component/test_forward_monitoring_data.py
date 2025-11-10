@@ -20,9 +20,9 @@ from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
     SOCKET_TIMEOUT,
 )
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.monitoring_data import MonitoringData
-from cmk.relay_protocols.relays import RelayRegistrationResponse
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.mock_socket import (
     create_non_listening_socket,
@@ -502,14 +502,9 @@ def test_connection_refused(
 @pytest.fixture
 def relay_id(agent_receiver: AgentReceiverClient, site: SiteMock) -> str:
     relay_name = str(uuid.uuid4())
-    site.set_scenario([], [(relay_name, OP.ADD)])
-    return register_relay(agent_receiver, relay_name)
-
-
-def register_relay(ar: AgentReceiverClient, name: str) -> str:
-    resp = ar.register_relay(name)
-    parsed = RelayRegistrationResponse.model_validate_json(resp.text)
-    return parsed.relay_id
+    _relay_id = RelayID(str(uuid.uuid4()))
+    site.set_scenario([], [(_relay_id, OP.ADD)])
+    return register_relay(agent_receiver, relay_name, _relay_id)
 
 
 @pytest.fixture

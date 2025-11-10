@@ -9,9 +9,9 @@ import { ref, useTemplateRef } from 'vue'
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { ProviderOption, QueryProvider } from '@/unified-search/providers/search-utils.types'
 
-import { getSearchUtils } from '../../providers/search-utils'
 import DropDownIndicator from './DropDownIndicator.vue'
 import ProviderOptionEntry from './ProviderOptionEntry.vue'
 import { availableProviderOptions } from './QueryOptions'

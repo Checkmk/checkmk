@@ -5,9 +5,8 @@
  */
 import type { CmkIconProps, SimpleIcons } from '@/components/CmkIcon'
 
+import { SearchProvider, type SearchProviderResult } from '@/unified-search/lib/unified-search'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
-
-import { SearchProvider, type SearchProviderResult } from '../unified-search'
 
 export type UnifiedSearchProviderResult = SearchProviderResult<UnifiedSearchResultResponse>
 

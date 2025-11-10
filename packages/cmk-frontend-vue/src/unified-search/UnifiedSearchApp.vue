@@ -8,23 +8,23 @@ import { type UnifiedSearchConfig } from 'cmk-shared-typing/typescript/unified_s
 import { onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
+
+import DefaultPopup from '@/main-menu/changes/components/DefaultPopup.vue'
 import {
   SearchHistorySearchProvider,
   type SearchHistorySearchResult
-} from '@/lib/unified-search/providers/history'
+} from '@/unified-search/lib/providers/history'
 import {
   UnifiedSearchProvider,
   type UnifiedSearchProviderIdentifier,
   type UnifiedSearchResultResponse
-} from '@/lib/unified-search/providers/unified'
-import { SearchHistoryService } from '@/lib/unified-search/searchHistory'
+} from '@/unified-search/lib/providers/unified'
+import { SearchHistoryService } from '@/unified-search/lib/searchHistory'
 import {
   type SearchProviderResult,
   UnifiedSearch,
   type UnifiedSearchResult
-} from '@/lib/unified-search/unified-search'
-
-import DefaultPopup from '@/main-menu/changes/components/DefaultPopup.vue'
+} from '@/unified-search/lib/unified-search'
 
 import UnifiedSearchInputInjector from './components/UnifiedSearchInputInjector.vue'
 import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'

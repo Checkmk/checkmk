@@ -7,17 +7,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onBeforeUnmount, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import type { SearchHistorySearchResult } from '@/lib/unified-search/providers/history'
-import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ResultItem from '@/unified-search/components/result/ResultItem.vue'
+import ResultList from '@/unified-search/components/result/ResultList.vue'
+import type { SearchHistorySearchResult } from '@/unified-search/lib/providers/history'
+import type { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
-import { getSearchUtils } from '../../providers/search-utils'
-import ResultItem from '../result/ResultItem.vue'
-import ResultList from '../result/ResultList.vue'
 import UnifiedSearchEmptyStart from './UnifiedSearchEmptyStart.vue'
 import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
 

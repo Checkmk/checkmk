@@ -7,16 +7,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import { type UnifiedSearchResultElement } from '@/lib/unified-search/providers/unified'
-import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
 
 import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import { getSearchUtils } from '../../providers/search-utils'
-import ResultItem from '../result/ResultItem.vue'
-import ResultList from '../result/ResultList.vue'
+import ResultItem from '@/unified-search/components/result/ResultItem.vue'
+import ResultList from '@/unified-search/components/result/ResultList.vue'
+import { type UnifiedSearchResultElement } from '@/unified-search/lib/providers/unified'
+import { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
 const { _t } = usei18n()
 

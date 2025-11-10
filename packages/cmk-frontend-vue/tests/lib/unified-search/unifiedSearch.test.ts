@@ -4,8 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { Api } from '@/lib/api-client'
-import { UnifiedSearchProvider } from '@/lib/unified-search/providers/unified'
-import { UnifiedSearch } from '@/lib/unified-search/unified-search'
+
+import { UnifiedSearchProvider } from '@/unified-search/lib/providers/unified'
+import { UnifiedSearch } from '@/unified-search/lib/unified-search'
 
 const api = new Api()
 const mockLegacyGetResponse = vitest.fn()

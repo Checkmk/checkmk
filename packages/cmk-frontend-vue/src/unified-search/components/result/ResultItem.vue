@@ -6,14 +6,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
-import type { UnifiedSearchResultElementInlineButton } from '@/lib/unified-search/providers/unified'
 import { immediateWatch } from '@/lib/watch'
 
 import type { CmkIconProps } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon'
 import CmkZebra from '@/components/CmkZebra.vue'
 
-import { getSearchUtils } from '../../providers/search-utils'
+import type { UnifiedSearchResultElementInlineButton } from '@/unified-search/lib/providers/unified'
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
+
 import ResultItemTitle from './ResultItemTitle.vue'
 
 export interface ResultItemProps {

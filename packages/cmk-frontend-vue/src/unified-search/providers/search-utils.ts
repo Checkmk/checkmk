@@ -8,9 +8,10 @@ import { type InjectionKey, inject, provide, ref } from 'vue'
 
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import { randomId } from '@/lib/randomId'
-import type { UnifiedSearchProviderIdentifier } from '@/lib/unified-search/providers/unified'
-import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
-import type { UnifiedSearch } from '@/lib/unified-search/unified-search'
+
+import type { UnifiedSearchProviderIdentifier } from '@/unified-search/lib/providers/unified'
+import type { SearchHistoryService } from '@/unified-search/lib/searchHistory'
+import type { UnifiedSearch } from '@/unified-search/lib/unified-search'
 
 import type {
   FilterOption,

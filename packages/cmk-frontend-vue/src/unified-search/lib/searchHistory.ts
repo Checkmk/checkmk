@@ -5,9 +5,10 @@
  */
 import type { Ref } from 'vue'
 
+import usePersistentRef from '@/lib/usePersistentRef'
+
 import type { UnifiedSearchQueryLike } from '@/unified-search/providers/search-utils.types'
 
-import usePersistentRef from '../usePersistentRef'
 import type { UnifiedSearchResultElement } from './providers/unified'
 
 export class HistoryEntry {

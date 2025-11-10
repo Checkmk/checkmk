@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { SearchHistorySearchProvider } from '@/lib/unified-search/providers/history'
-import { HistoryEntry, SearchHistoryService } from '@/lib/unified-search/searchHistory'
+import { SearchHistorySearchProvider } from '@/unified-search/lib/providers/history'
+import { HistoryEntry, SearchHistoryService } from '@/unified-search/lib/searchHistory'
 
 beforeEach(() => {
   localStorage.clear()

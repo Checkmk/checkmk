@@ -162,7 +162,7 @@ _CLEAN_PLUGIN_FAMILIES = {
     # "kube",  # :HostAddress, Edition, cmk.gui.form_specs.unstable.ListExtended, omd_root,
     "metric_backend",
     "mobileiron",
-    # "mqtt",  # :HostAddress
+    "mqtt",
     "netapp",
     # "otel", # :
     "prism",

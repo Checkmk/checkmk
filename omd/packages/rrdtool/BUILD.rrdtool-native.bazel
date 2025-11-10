@@ -81,7 +81,7 @@ cc_library(
     ],
     deps = [
         ":rrd_config",
-        "@glib",
+        "@glib//glib",
         "@libxml2",
     ],
 )
@@ -150,7 +150,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":rrd_library",
-        "@glib",
+        "@glib//glib",
+        "@glib//gobject",
     ],
 )
 
@@ -199,7 +200,7 @@ cc_binary(
     deps = [
         ":rrd_library",
         ":rrdupd",
-        "@glib",
+        "@glib//glib",
     ],
 )
 

@@ -15,16 +15,14 @@ from . import constants
 
 @dataclass(frozen=True)
 class MerakiConfig:
-    hostname: str
     section_names: Sequence[str]
     cache_dir: Path
 
     @classmethod
     def build(cls, hostname: str, section_names: Sequence[str]) -> Self:
         return cls(
-            hostname=hostname,
             section_names=section_names,
-            cache_dir=constants.BASE_CACHE_FILE_DIR,
+            cache_dir=constants.BASE_CACHE_FILE_DIR / hostname,
         )
 
     @property

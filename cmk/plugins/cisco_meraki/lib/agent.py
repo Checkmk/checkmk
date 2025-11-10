@@ -87,7 +87,7 @@ class SupportsOrganizationsClient(Protocol):
 
 class _ABCGetOrganisationsCache(DataCache):
     def __init__(self, config: MerakiConfig, client: SupportsOrganizationsClient) -> None:
-        super().__init__(config.cache_dir / config.hostname / "organisations", "organisations")
+        super().__init__(config.cache_dir / "organisations", "organisations")
         self._client = client
 
     @property

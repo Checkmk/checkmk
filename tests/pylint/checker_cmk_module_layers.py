@@ -667,6 +667,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui",
         "cmk.shared_typing",
         "cmk.livestatus_client",
+        "cmk.utils.agent_registration",
         "cmk.utils.caching",
         "cmk.utils.nonfree.pro",
         "cmk.utils.certs",

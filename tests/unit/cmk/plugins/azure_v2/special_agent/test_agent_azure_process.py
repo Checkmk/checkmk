@@ -79,7 +79,7 @@ Args = argparse.Namespace
             (
                 [
                     '{"cloud": "azure", "resource_group": "burningman", "entity": "virtualmachines", "subscription_name": "mock_subscription_name",'
-                    ' "subscription_id": "mock_subscription_id", "region": "westeurope", "vm_instance": true}\n',
+                    ' "subscription": "mock_subscription_id", "region": "westeurope", "vm_instance": true}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "burningman"}\n',
                 ],
                 ["MyVM"],
@@ -118,7 +118,7 @@ Args = argparse.Namespace
             (
                 [
                     '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
-                    ' "subscription_id": "mock_subscription_id", "region": "westeurope"}\n',
+                    ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
                 ["my_resource"],
@@ -154,7 +154,7 @@ Args = argparse.Namespace
             (
                 [
                     '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
-                    ' "subscription_id": "mock_subscription_id", "region": "westeurope"}\n',
+                    ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     "{}\n",
                 ],
                 ["my_resource"],
@@ -193,7 +193,7 @@ Args = argparse.Namespace
             (
                 [
                     '{"cloud": "azure", "resource_group": "resource_group_name", "entity": "loadbalancers", "subscription_name": "mock_subscription_name",'
-                    ' "subscription_id": "mock_subscription_id", "region": "westeurope"}\n',
+                    ' "subscription": "mock_subscription_id", "region": "westeurope"}\n',
                     '{"my-unique-tag": "unique", "tag4all": "True", "resource_group": "resource_group_name", "another_group_tag": "another_value"}\n',
                 ],
                 ["my_resource-06d4fb04"],
@@ -438,12 +438,12 @@ async def test_write_resource_groups_sections(
         == """<<<<resource_group_1>>>>
 <<<azure_v2_resourcegroups:sep(124)>>>
 Resource
-{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1", "name": "resource_group_1", "type": "Microsoft.Resources/resourceGroups", "location": "eastus", "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_1": "group_tag_value_1"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "group": "resource_group_1"}
+{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1", "name": "resource_group_1", "type": "Microsoft.Resources/resourceGroups", "location": "eastus", "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_1": "group_tag_value_1"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "group": "resource_group_1"}
 <<<<>>>>
 <<<<resource_group_2>>>>
 <<<azure_v2_resourcegroups:sep(124)>>>
 Resource
-{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2", "name": "resource_group_2", "type": "Microsoft.Resources/resourceGroups", "location": "westeurope", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_2": "group_tag_value_2"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "group": "resource_group_2"}
+{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2", "name": "resource_group_2", "type": "Microsoft.Resources/resourceGroups", "location": "westeurope", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_2": "group_tag_value_2"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "group": "resource_group_2"}
 <<<<>>>>
 """
     )
@@ -524,7 +524,7 @@ async def test_filter_tags(
             ],
             "<<<<burningman>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<mock_subscription_name>>>>\n"
@@ -575,12 +575,12 @@ async def test_filter_tags(
             ],
             "<<<<burningman>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<resource_group_name>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "resource_group_name", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "resource_group": "resource_group_name", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<mock_subscription_name>>>>\n"
@@ -621,7 +621,7 @@ async def test_filter_tags(
             ],
             "<<<<burningman-5c39e784>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
             "<<<<>>>>\n"
             "<<<<mock_subscription_name-3d63024c>>>>\n"
@@ -648,7 +648,7 @@ async def test_filter_tags(
             [],
             "<<<<burningman-5c39e784>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
-            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
+            '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription": "mock_subscription_id", "entity": "resource_group"}\n'
             "{}\n"
             "<<<<>>>>\n"
             "<<<<mock_subscription_name-3d63024c>>>>\n"

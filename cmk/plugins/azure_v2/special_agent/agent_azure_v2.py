@@ -228,7 +228,7 @@ class AzureResourceGroup(_AzureEntity):
             **info,
             "tenant_id": subscription.tenant_id,
             "subscription_name": subscription.name,
-            "subscription_id": subscription.id,
+            "subscription": subscription.id,
             "group": info["name"].lower(),
         }
         self.subscription = subscription
@@ -1840,7 +1840,7 @@ def get_resource_host_labels_section(
         "resource_group": resource.group,
         "entity": resource.section,
         "subscription_name": subscription.hostname,
-        "subscription_id": subscription.id,
+        "subscription": subscription.id,
         **({"region": region} if (region := resource.info.get("location")) else {}),
     }
 
@@ -1901,7 +1901,7 @@ def write_group_info(
             labels={
                 "resource_group": group_name,
                 "subscription_name": subscription.hostname,
-                "subscription_id": subscription.id,
+                "subscription": subscription.id,
                 "entity": "resource_group",
                 **({"region": region} if (region := group.info.get("location")) else {}),
             },
@@ -1928,7 +1928,7 @@ def write_subscription_info(subscription: AzureSubscription) -> None:
         subscription.piggytarget,
         labels={
             "subscription_name": subscription.hostname,
-            "subscription_id": subscription.id,
+            "subscription": subscription.id,
             "entity": "subscription",
         },
         tags=subscription.tags,

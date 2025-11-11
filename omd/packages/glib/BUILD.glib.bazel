@@ -1,0 +1,42 @@
+cc_library(
+    name = "glibconfig",
+    hdrs = select(
+        {
+            "@cmk//filesystem_layout:lsb": ["lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h"],
+            "@cmk//filesystem_layout:fhs": ["lib64/glib-2.0/include/glibconfig.h"],
+        },
+        no_match_error = "Please build with lsb or fhs filesystem layout",
+    ),
+    includes = select(
+        {
+            "@cmk//filesystem_layout:lsb": ["lib/x86_64-linux-gnu/glib-2.0/include"],
+            "@cmk//filesystem_layout:fhs": ["lib64/glib-2.0/include"],
+        },
+        no_match_error = "Please build with lsb or fhs filesystem layout",
+    ),
+    tags = ["manual"],
+)
+
+cc_import(
+    name = "libglib",
+    shared_library = select(
+        {
+            "@cmk//filesystem_layout:lsb": "lib/x86_64-linux-gnu/libglib-2.0.so",
+            "@cmk//filesystem_layout:fhs": "lib64/libglib-2.0.so",
+        },
+        no_match_error = "Please build with lsb or fhs filesystem layout",
+    ),
+    tags = ["manual"],
+)
+
+cc_library(
+    name = "glib",
+    hdrs = glob(["include/glib-2.0/**"]),
+    includes = ["include/glib-2.0"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":glibconfig",
+        ":libglib",
+    ],
+)

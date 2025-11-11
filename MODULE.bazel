@@ -69,19 +69,9 @@ bazel_dep(
     repo_name = "httplib",
 )
 bazel_dep(
-    name = "glib",
-    version = "2.82.2.bcr.6",
-    dev_dependency = True,
-)
-bazel_dep(
     # Hedron's Compile Commands Extractor for Bazel
     # https://github.com/hedronvision/bazel-compile-commands-extractor
     name = "hedron_compile_commands",
-    dev_dependency = True,
-)
-bazel_dep(
-    name = "libxml2",
-    version = "2.15.1",
     dev_dependency = True,
 )
 
@@ -177,6 +167,18 @@ single_version_override(
 local_path_override(
     module_name = "cmk",
     path = "bazel/cmk",
+)
+
+new_local_repository(
+    name = "glib",
+    build_file = "@//omd/packages/glib:BUILD.glib.bazel",
+    path = "/usr",
+)
+
+new_local_repository(
+    name = "libxml2",
+    build_file = "@//omd/packages/libxml2:BUILD.libxml2.bazel",
+    path = "/usr",
 )
 
 #TODO: This should be removed by using proper toolchain definitions: CMK-24205

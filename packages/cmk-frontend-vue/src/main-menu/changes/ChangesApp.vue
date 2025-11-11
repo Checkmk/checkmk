@@ -225,7 +225,7 @@ async function fetchPendingChangesAjax(): Promise<void> {
 
 function openActivateChangesPage() {
   cmk.popup_menu.close_popup()
-  showLoadingTransition('table')
+  showLoadingTransition('table', _t('Activate pending changes'))
   window.open(props.activate_changes_url, 'main')
 }
 

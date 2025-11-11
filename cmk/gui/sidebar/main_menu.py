@@ -425,7 +425,7 @@ oncontextmenu = e => e.preventDefault();"""
 
     def _show_item(self, item: MainMenuItem) -> None:
         with (
-            loading_transition(template=item.loading_transition)
+            loading_transition(template=item.loading_transition, title=item.title)
             if item.loading_transition
             else nullcontext()
         ):

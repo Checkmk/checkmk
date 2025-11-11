@@ -847,7 +847,7 @@ class DropdownEntryRenderer:
             onclick = (
                 None
                 if item.link.transition is None
-                else loading_transition_onclick(item.link.transition)
+                else loading_transition_onclick(item.link.transition, title=title)
             )
         else:
             url = "javascript:void(0)"

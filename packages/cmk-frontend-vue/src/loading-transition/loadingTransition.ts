@@ -12,10 +12,10 @@ export type LoadingTransition = _LoadingTransition
  */
 declare const cmk: {
   utils: {
-    makeLoadingTransition: (template: string | null, delay: number) => void
+    makeLoadingTransition: (template: string | null, delay: number, title?: string) => void
   }
 }
 
-export function showLoadingTransition(loadingTransition: LoadingTransition) {
-  cmk.utils.makeLoadingTransition(loadingTransition, 1000)
+export function showLoadingTransition(loadingTransition: LoadingTransition, title?: string): void {
+  cmk.utils.makeLoadingTransition(loadingTransition, 1000, title)
 }

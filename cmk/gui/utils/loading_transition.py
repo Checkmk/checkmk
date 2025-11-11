@@ -13,12 +13,16 @@ from cmk.shared_typing.loading_transition import LoadingTransition as LoadingTra
 
 
 @contextmanager
-def loading_transition(template: LoadingTransition, delay_ms: int = 1000) -> Generator[None]:
+def loading_transition(
+    template: LoadingTransition,
+    delay_ms: int = 1000,
+    title: str | None = None,
+) -> Generator[None]:
     with output_funnel.plugged():
         yield
         html.span(
             HTML(output_funnel.drain(), False),
-            onclick=loading_transition_onclick(template, delay_ms),
+            onclick=loading_transition_onclick(template, delay_ms, title),
         )
 
 
@@ -26,16 +30,18 @@ def with_loading_transition(
     content: HTML,
     template: LoadingTransition | None,
     delay_ms: int = 1000,
+    title: str | None = None,
 ) -> HTML:
     return HTMLWriter.render_span(
         content,
-        onclick=loading_transition_onclick(template, delay_ms),
+        onclick=loading_transition_onclick(template, delay_ms, title),
     )
 
 
 def loading_transition_onclick(
     template: LoadingTransition | None,
     delay_ms: int = 1000,
+    title: str | None = None,
 ) -> str:
     template_value = "null" if template is None else f"'{template.value}'"
-    return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms});"
+    return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms}, {title});"

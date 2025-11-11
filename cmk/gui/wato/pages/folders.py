@@ -1139,7 +1139,7 @@ class ModeFolder(WatoMode):
         html.a(
             hostname,
             href=host.edit_url(),
-            onclick=loading_transition_onclick(LoadingTransition.catalog),
+            onclick=loading_transition_onclick(LoadingTransition.catalog, title=hostname),
         )
 
         # Show attributes

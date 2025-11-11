@@ -112,7 +112,9 @@ onBeforeUnmount(() => {
         target="main"
         class="result-item-handler"
         :class="{ focus: props.focus }"
-        @click="target?.transition !== undefined && showLoadingTransition(target.transition)"
+        @click="
+          target?.transition !== undefined && showLoadingTransition(target.transition, props.title)
+        "
       >
         <div v-if="props.icon" class="result-item-inner-start">
           <CmkIcon
@@ -156,7 +158,10 @@ onBeforeUnmount(() => {
         :href="ib.target.url"
         target="main"
         class="result-item-handler inline"
-        @click="ib.target?.transition !== undefined && showLoadingTransition(ib.target.transition)"
+        @click="
+          ib.target?.transition !== undefined &&
+          showLoadingTransition(ib.target.transition, ib.title)
+        "
       >
         <div v-if="ib.icon" class="result-item-inner-start">
           <CmkIcon

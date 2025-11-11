@@ -279,16 +279,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _get_organisations(
-    config: MerakiConfig, client: MerakiClient, *, org_ids: Sequence[str]
-) -> Sequence[Organisation]:
+def _get_organisations(config: MerakiConfig, client: MerakiClient) -> Sequence[Organisation]:
     if not config.organizations_required:
         return []
 
     orgs = OrganizationsCache(config, client).get_data()
 
-    if org_ids:
-        return [org for org in orgs if org["id_"] in org_ids]
+    if config.org_ids:
+        return [org for org in orgs if org["id_"] in config.org_ids]
 
     return orgs
 
@@ -297,13 +295,13 @@ def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
     api_key = resolve_secret_option(args, APIKEY_OPTION_NAME).reveal()
     dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
 
-    config = MerakiConfig.build(args.hostname, args.sections)
+    config = MerakiConfig.build(args.hostname, args.orgs, args.sections)
     client = MerakiClient.build(dashboard)
 
     sections = _query_meraki_objects(
         organisations=[
             MerakiOrganisation(config, client, organisation)
-            for organisation in _get_organisations(config, client, org_ids=args.orgs)
+            for organisation in _get_organisations(config, client)
         ]
     )
 

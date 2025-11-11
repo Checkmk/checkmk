@@ -132,6 +132,7 @@ def IndividualOrStoredPassword(
     help: valuespec.ValueSpecHelp | None = None,
     allow_empty: bool = True,
     size: int = 25,
+    validate: ValueSpecValidateFunc | None = None,
 ) -> valuespec.CascadingDropdown:
     """ValueSpec for a password that can be entered directly or selected from a password store
 
@@ -167,6 +168,7 @@ def IndividualOrStoredPassword(
             ),
         ],
         orientation="horizontal",
+        validate=validate,
     )
 
 
@@ -208,6 +210,7 @@ def postprocessable_ios_password(
     *,
     title: str | None,
     help_text: str | None = None,
+    validate: ValueSpecValidateFunc | None = None,
 ) -> Transform:
     return Transform(
         IndividualOrStoredPassword(
@@ -217,6 +220,7 @@ def postprocessable_ios_password(
         ),
         forth=_transform_password_forth,
         back=_transform_password_back,
+        validate=validate,
     )
 
 

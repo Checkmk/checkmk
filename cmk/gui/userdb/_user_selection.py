@@ -15,6 +15,7 @@ from cmk.gui.valuespec import (
     ValueSpecDefault,
     ValueSpecHelp,
     ValueSpecText,
+    ValueSpecValidateFunc,
 )
 
 from .store import load_users
@@ -27,6 +28,7 @@ def UserSelection(
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[UserId] = DEF_VALUE,
+    validate: ValueSpecValidateFunc[UserId | None] | None = None,
 ) -> Transform[UserId | None]:
     # this has been ported to formspec be carfule about changes!
     return Transform(
@@ -39,6 +41,7 @@ def UserSelection(
         ),
         to_valuespec=lambda raw_str: None if raw_str is None else UserId(raw_str),
         from_valuespec=lambda uid: None if uid is None else str(uid),
+        validate=validate,
     )
 
 

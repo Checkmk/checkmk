@@ -49,6 +49,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.regex import validate_regex
@@ -1135,7 +1136,11 @@ class ModeFolder(WatoMode):
             html.icon("cluster", _("This host is a cluster of %s") % ", ".join(nodes))
             html.nbsp()
 
-        html.a(hostname, href=host.edit_url())
+        html.a(
+            hostname,
+            href=host.edit_url(),
+            onclick=loading_transition_onclick(LoadingTransition.catalog),
+        )
 
         # Show attributes
         for attr in host_attributes.values():

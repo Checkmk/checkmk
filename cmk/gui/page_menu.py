@@ -29,6 +29,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables, Icon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.selection_id import SelectionId
@@ -53,6 +54,7 @@ class Link:
     url: str | None = None
     target: str | None = None
     onclick: str | None = None
+    transition: LoadingTransition | None = None
 
 
 class ABCPageMenuItem(abc.ABC):
@@ -68,8 +70,8 @@ class PageMenuLink(ABCPageMenuItem):
     link: Link
 
 
-def make_simple_link(url: str) -> PageMenuLink:
-    return PageMenuLink(Link(url=url))
+def make_simple_link(url: str, *, transition: LoadingTransition | None = None) -> PageMenuLink:
+    return PageMenuLink(Link(url=url, transition=transition))
 
 
 def make_external_link(url: str) -> PageMenuLink:
@@ -842,7 +844,11 @@ class DropdownEntryRenderer:
     def _show_link_item(self, title: str, icon: Icon, item: PageMenuLink) -> None:
         if item.link.url is not None:
             url = item.link.url
-            onclick = None
+            onclick = (
+                None
+                if item.link.transition is None
+                else loading_transition_onclick(item.link.transition)
+            )
         else:
             url = "javascript:void(0)"
             onclick = item.link.onclick

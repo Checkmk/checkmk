@@ -23,6 +23,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
@@ -554,7 +555,8 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
                     request,
                     [("mode", "object_parameters"), ("host", host_name)],
                     filename="wato.py",
-                )
+                ),
+                transition=LoadingTransition.catalog,
             ),
         )
 

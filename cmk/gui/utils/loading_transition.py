@@ -18,7 +18,7 @@ def loading_transition(template: LoadingTransition, delay_ms: int = 1000) -> Gen
         yield
         html.span(
             HTML(output_funnel.drain(), False),
-            onclick=f"cmk.utils.makeLoadingTransition('{template.value}', {delay_ms});",
+            onclick=loading_transition_onclick(template, delay_ms),
         )
 
 
@@ -27,8 +27,15 @@ def with_loading_transition(
     template: LoadingTransition | None,
     delay_ms: int = 1000,
 ) -> HTML:
-    template_value = "null" if template is None else f"'{template.value}'"
     return HTMLWriter.render_span(
         content,
-        onclick=f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms});",
+        onclick=loading_transition_onclick(template, delay_ms),
     )
+
+
+def loading_transition_onclick(
+    template: LoadingTransition | None,
+    delay_ms: int = 1000,
+) -> str:
+    template_value = "null" if template is None else f"'{template.value}'"
+    return f"cmk.utils.makeLoadingTransition({template_value}, {delay_ms});"

@@ -53,6 +53,7 @@ from cmk.gui.utils.agent_commands import (
 )
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     make_confirm_delete_link,
@@ -744,7 +745,8 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             item=make_simple_link(
                 folder_preserving_link(
                     [("mode", "object_parameters"), (ABCHostMode.VAR_HOST, host.name())]
-                )
+                ),
+                transition=LoadingTransition.catalog,
             ),
         )
 

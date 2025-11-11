@@ -345,12 +345,6 @@ COMMANDS: Final = [
                 "force OMD to update despite the target edition being incompatible. These types are of updates are not supported and may leave the site in an irreparable state",
             ),
             Option(
-                UpdateOption.confirm_requires_root,
-                None,
-                False,
-                "suppress the confirmation dialog, which is shown in case root priviledges are required for the update",
-            ),
-            Option(
                 UpdateOption.ignore_versions_incompatible,
                 None,
                 False,

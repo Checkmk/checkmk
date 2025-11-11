@@ -10,8 +10,6 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from omdlib.dialog import dialog_menu, dialog_yesno
-from omdlib.site_paths import SitePaths
-from omdlib.system_apache import is_apache_hook_up_to_date
 from omdlib.utils import exec_other_omd
 from omdlib.version import omd_versions
 
@@ -33,11 +31,6 @@ class IgnoreEditionsIncompatible(enum.StrEnum):
     ABORT = "abort"
 
 
-class ConfirmRequiresRoot(enum.StrEnum):
-    INSTALL = "install"
-    ASK = "ask"
-
-
 class IgnoreVersionsIncompatible(enum.StrEnum):
     INSTALL = "install"
     ABORT = "abort"
@@ -46,7 +39,6 @@ class IgnoreVersionsIncompatible(enum.StrEnum):
 class OptionName(enum.StrEnum):
     confirm_version = "confirm-version"
     confirm_edition = "confirm-edition"
-    confirm_requires_root = "confirm-requires-root"
     ignore_versions_incompatible = "ignore-versions-incompatible"
     ignore_editions_incompatible = "ignore-editions-incompatible"
 
@@ -63,10 +55,6 @@ class ConflictResolution(BaseModel, frozen=True, extra="forbid"):
     ignore_editions_incompatible: IgnoreEditionsIncompatible = Field(
         IgnoreEditionsIncompatible.ABORT,
         validation_alias=OptionName.ignore_editions_incompatible,
-    )
-    confirm_requires_root: ConfirmRequiresRoot = Field(
-        ConfirmRequiresRoot.ASK,
-        validation_alias=OptionName.confirm_requires_root,
     )
     ignore_versions_incompatible: IgnoreVersionsIncompatible = Field(
         IgnoreVersionsIncompatible.ABORT,
@@ -100,7 +88,6 @@ def _obtain_force_options(force: bool) -> dict[str, str]:
             OptionName.confirm_version: ConfirmVersion.INSTALL,
             OptionName.confirm_edition: ConfirmEdition.INSTALL,
             OptionName.ignore_editions_incompatible: IgnoreEditionsIncompatible.INSTALL,
-            OptionName.confirm_requires_root: ConfirmRequiresRoot.INSTALL,
             OptionName.ignore_versions_incompatible: IgnoreVersionsIncompatible.INSTALL,
         }
     return {}
@@ -113,7 +100,6 @@ def prepare_conflict_resolution(options: Mapping[str, object], force: bool) -> C
             (OptionName.confirm_version, ConfirmVersion.INSTALL),
             (OptionName.confirm_edition, ConfirmEdition.INSTALL),
             (OptionName.ignore_editions_incompatible, IgnoreEditionsIncompatible.INSTALL),
-            (OptionName.confirm_requires_root, ConfirmRequiresRoot.INSTALL),
             (OptionName.ignore_versions_incompatible, IgnoreVersionsIncompatible.INSTALL),
         ]
         if option in options
@@ -205,26 +191,6 @@ def check_update_possible(
         and not dialog_yesno(
             text=f"You are updating from {from_edition.title()} to {to_edition.title()}. Is this intended?",
             default_no=True,
-        )
-    ):
-        sys.exit("Aborted.")
-
-    try:
-        hook_up_to_date = is_apache_hook_up_to_date(SitePaths.from_site_name(site_name).apache_conf)
-    except PermissionError:
-        # In case the hook can not be read, assume the hook needs to be updated
-        hook_up_to_date = False
-
-    if (
-        resolution.confirm_requires_root is ConfirmRequiresRoot.ASK
-        and not hook_up_to_date
-        and not dialog_yesno(
-            "This update requires additional actions: The system apache configuration has changed "
-            "with the new version and needs to be updated.\n\n"
-            f"You will have to execute 'omd update-apache-config {site_name}' as root user.\n\n"
-            "Please do it right after 'omd update' to prevent inconsistencies. Have a look at "
-            "#14281 for further information.\n\n"
-            "Do you want to proceed?"
         )
     ):
         sys.exit("Aborted.")

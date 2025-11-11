@@ -46,6 +46,7 @@ RUN apt-get install -y --fix-missing \
     gettext \
     git-buildpackage \
     gtk-doc-tools \
+    iproute2 \
     iputils-ping \
     joe \
     jq \

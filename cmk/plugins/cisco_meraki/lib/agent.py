@@ -295,7 +295,7 @@ def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
     api_key = resolve_secret_option(args, APIKEY_OPTION_NAME).reveal()
     dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
 
-    config = MerakiConfig.build(args.hostname, args.orgs, args.sections)
+    config = MerakiConfig.build(args)
     client = MerakiClient.build(dashboard)
 
     sections = _query_meraki_objects(

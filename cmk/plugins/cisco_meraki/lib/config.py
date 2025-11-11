@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from argparse import Namespace
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,11 +21,11 @@ class MerakiConfig:
     cache_dir: Path
 
     @classmethod
-    def build(cls, hostname: str, org_ids: Sequence[str], section_names: Sequence[str]) -> Self:
+    def build(cls, args: Namespace) -> Self:
         return cls(
-            org_ids=org_ids,
-            section_names=section_names,
-            cache_dir=constants.BASE_CACHE_FILE_DIR / hostname,
+            org_ids=args.orgs,
+            section_names=args.sections,
+            cache_dir=constants.BASE_CACHE_FILE_DIR / args.hostname,
         )
 
     @property

@@ -576,22 +576,18 @@ def version_from_env(
 
 def edition_from_env(fallback: TypeCMKEdition = CMKEdition(CMKEdition.PRO)) -> TypeCMKEdition:
     value = os.getenv("EDITION", "")
-    try:
-        edition = CMKEdition.edition_from_text(value)
-    except ValueError:
-        edition = fallback
-    return edition
+    if not value:
+        return fallback
+    return CMKEdition.edition_from_text(value)
 
 
 def edition_from_env_old(
     fallback: TypeCMKEditionOld = CMKEditionOld(CMKEditionOld.PRO),
 ) -> TypeCMKEditionOld:
     value = os.getenv("EDITION", "")
-    try:
-        edition = CMKEditionOld.edition_from_text(value)
-    except ValueError:
-        edition = fallback
-    return edition
+    if not value:
+        return fallback
+    return CMKEditionOld.edition_from_text(value)
 
 
 def get_min_version() -> CMKVersion:

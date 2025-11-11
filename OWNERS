@@ -1,0 +1,10 @@
+# AI Agent Configuration and Documentation
+#
+# This file is auto-generated but won't be kept up to date automatically.
+# So it might contain errors or lack information and has to be maintained manually.
+# Find information about code-owners (+ find-owners syntax) here:
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
+
+per-file AGENTS.md=file:/component_owners/ai_tools/OWNERS_DEFINITION
+per-file .claude/*=file:/component_owners/ai_tools/OWNERS_DEFINITION

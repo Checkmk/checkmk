@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
-
 import ipaddress
 from collections.abc import Iterable, Mapping
 from typing import cast, Literal, NotRequired, TypedDict
@@ -25,9 +23,12 @@ class TranslationOptions(TypedDict, total=False):
 
 def _parse_case(raw_case: object) -> Literal["lower", "upper"] | None:
     match raw_case:
-        case "lower" | "upper" | None as case_value:
-            return case_value
-    raise (ValueError if isinstance(raw_case, str) else TypeError)(raw_case)
+        case "lower" | "upper" | None:
+            return raw_case
+        case str():
+            raise ValueError(raw_case)
+        case _:
+            raise TypeError(raw_case)
 
 
 def _parse_list_of_tuples(raw: object) -> Iterable[tuple[str, str]]:

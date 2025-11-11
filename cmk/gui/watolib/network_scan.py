@@ -154,18 +154,16 @@ def _add_scanned_hosts_to_folder(
     if (network_scan_properties := folder.attributes.get("network_scan")) is None:
         return
 
-    translate_names = network_scan_properties.get("translate_names")
-    if translate_names is None:
-        translation = TranslationOptions({})
-    else:
-        translation = TranslationOptions(
-            {
-                "case": translate_names.get("case"),
-                "mapping": translate_names.get("mapping", []),
-                "drop_domain": translate_names.get("drop_domain", False),
-                "regex": translate_names.get("regex", []),
-            }
+    translation = (
+        TranslationOptions()
+        if (translate_names := network_scan_properties.get("translate_names")) is None
+        else TranslationOptions(
+            case=translate_names.get("case"),
+            mapping=translate_names.get("mapping", []),
+            drop_domain=translate_names.get("drop_domain", False),
+            regex=translate_names.get("regex", []),
         )
+    )
 
     entries = []
     for host_name, ipaddr in found:

@@ -401,7 +401,6 @@ pkg_tar(
 [pkg_deb(
     name = "deb_" + edition,
     architecture = "amd64",
-    changelog = "//omd/packages/changelog:changelog_" + edition,
     config = "//omd/debian:config",
     #control = "//omd/debian:control", Field does not exist, do we need it?
     data = "deps_install_" + edition,

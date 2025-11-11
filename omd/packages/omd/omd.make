@@ -24,6 +24,7 @@ ifneq ($(filter sles15% el10, $(DISTRO_CODE)),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/scp
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/pdftoppm
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/curl
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/zypper
 endif
 ifneq ($(filter trixie,$(DISTRO_CODE)),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/curl

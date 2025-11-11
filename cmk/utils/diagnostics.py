@@ -12,6 +12,8 @@ from typing import Any, Literal, NamedTuple, TypedDict
 
 from livestatus import SiteId
 
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.structured_data import SDRawTree
 
@@ -20,6 +22,7 @@ _JSONSerializable = (
     str | float | list[str] | list[tuple[str, bool]] | Mapping[str, str] | Mapping[str, list[str]]
 )
 
+OSWalk = list[tuple[str, list[str], list[str]]]
 DiagnosticsCLParameters = list[str]
 DiagnosticsModesParameters = dict[str, Any]
 DiagnosticsOptionalParameters = dict[str, Any]
@@ -42,7 +45,10 @@ class FileMapConfig(TypedDict):
     file_type: Literal["config", "core", "licensing", "log"]
     component_folder: Path
     base_folder: Path
-    map_generator: Callable[[Path, Path], CheckmkFilesMap]
+    map_generator: Callable[
+        [Path, Path, list[tuple[str, list[str], list[str]]], str | None],
+        dict[str, Path],
+    ]
 
 
 OPT_BI_RUNTIME_DATA = "bi-runtime-data"
@@ -239,9 +245,19 @@ def deserialize_modes_parameters(
     return deserialized_parameters
 
 
-def _get_checkmk_config_files_map(base_folder: Path, component_folder: Path) -> CheckmkFilesMap:
+def _get_site_specific_base_folder(base_folder: Path, site: str | None) -> Path:
+    if site:
+        return Path(str(base_folder).replace(omd_site(), site))
+
+    return base_folder
+
+
+def _get_checkmk_config_files_map(
+    base_folder: Path, component_folder: Path, walk: OSWalk, site: str | None
+) -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(str(component_folder)):
+    base_folder = _get_site_specific_base_folder(base_folder, site)
+    for root, _dirs, files in walk:
         for file_name in files:
             if file_name == "ca-certificates.mk":
                 continue
@@ -252,9 +268,12 @@ def _get_checkmk_config_files_map(base_folder: Path, component_folder: Path) -> 
     return files_map
 
 
-def _get_checkmk_core_files_map(base_folder: Path, component_folder: Path) -> CheckmkFilesMap:
+def _get_checkmk_core_files_map(
+    base_folder: Path, component_folder: Path, walk: OSWalk, site: str | None
+) -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(str(component_folder)):
+    base_folder = _get_site_specific_base_folder(base_folder, site)
+    for root, _dirs, files in walk:
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
             if filepath.stem in ("state", "history", "config"):
@@ -263,9 +282,12 @@ def _get_checkmk_core_files_map(base_folder: Path, component_folder: Path) -> Ch
     return files_map
 
 
-def _get_checkmk_licensing_files_map(base_folder: Path, component_folder: Path) -> CheckmkFilesMap:
+def _get_checkmk_licensing_files_map(
+    base_folder: Path, component_folder: Path, walk: OSWalk, site: str | None
+) -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(str(component_folder)):
+    base_folder = _get_site_specific_base_folder(base_folder, site)
+    for root, _dirs, files in walk:
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
             rel_filepath = str(filepath.relative_to(base_folder))
@@ -273,9 +295,12 @@ def _get_checkmk_licensing_files_map(base_folder: Path, component_folder: Path) 
     return files_map
 
 
-def _get_checkmk_log_files_map(base_folder: Path, component_folder: Path) -> CheckmkFilesMap:
+def _get_checkmk_log_files_map(
+    base_folder: Path, component_folder: Path, walk: OSWalk, site: str | None
+) -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(str(component_folder)):
+    base_folder = _get_site_specific_base_folder(base_folder, site)
+    for root, _dirs, files in walk:
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
             if (
@@ -353,7 +378,9 @@ def _get_sensitivity_suffix(sensitivity: CheckmkFileSensitivity) -> str:
             return "(L)"
 
 
-def get_checkmk_file_description(rel_filepath: str | None = None) -> Sequence[tuple[str, str]]:
+def get_checkmk_file_description(
+    rel_filepath: str | None = None,
+) -> Sequence[tuple[str, str]]:
     cmk_file_info = {**CheckmkFileInfoByNameMap, **CheckmkFileInfoByRelFilePathMap}
     if rel_filepath is not None:
         return [(rel_filepath, cmk_file_info[rel_filepath].description)]

@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+
+# mypy: disable-error-code="type-arg"
+
+import json
+import os
 import tarfile
 import uuid
 from collections.abc import Collection, Iterator, Sequence
@@ -42,6 +48,7 @@ from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
+    OSWalk,
     serialize_wato_parameters,
 )
 
@@ -72,7 +79,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.transaction_manager import transactions
@@ -80,11 +86,11 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
-    DropdownChoice,
     DualListChoice,
     FixedValue,
     Integer,
     MonitoredHostname,
+    SetupSiteChoice,
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -118,6 +124,7 @@ def register(
     page_registry.register_page("download_diagnostics_dump")(PageDownloadDiagnosticsDump)
     mode_registry.register(ModeDiagnostics)
     automation_command_registry.register(AutomationDiagnosticsDumpGetFile)
+    automation_command_registry.register(AutomationDiagnosticsDumpOsWalk)
     job_registry.register(DiagnosticsDumpBackgroundJob)
 
 
@@ -131,33 +138,52 @@ class ModeDiagnostics(WatoMode):
         return ["diagnostics"]
 
     def _from_vars(self) -> None:
+        self._site = request.var("site")
         self._checkmk_files_map: dict[str, CheckmkFilesMap] = {}
         for file_map in _FILE_MAPS:
             self._checkmk_files_map[file_map["file_type"]] = file_map["map_generator"](
-                file_map["base_folder"], file_map["component_folder"]
+                file_map["base_folder"],
+                file_map["component_folder"],
+                _os_walk_of_folder(self._site, file_map["base_folder"], 10),
+                self._site,
             )
 
         self._collect_dump = bool(request.get_ascii_input("_collect_dump"))
         self._diagnostics_parameters = self._get_diagnostics_parameters()
         self._job = DiagnosticsDumpBackgroundJob()
 
-    def _get_diagnostics_parameters(self) -> DiagnosticsParameters | None:
+    def _get_diagnostics_parameters(
+        self,
+    ) -> DiagnosticsParameters | None:
+        if self._site is None:
+            return None
+
         if self._collect_dump:
             params = self._vs_diagnostics().from_html_vars("diagnostics")
-            return {
-                "site": params["site"],
-                "timeout": params.get("timing", {}).get("timeout", timeout_default),
-                "general": params["general"],
-                "opt_info": params["opt_info"],
-                "comp_specific": params["comp_specific"],
-                "checkmk_server_host": params["checkmk_server_host"],
-            }
+            return DiagnosticsParameters(
+                site=SiteId(self._site),
+                general=params["general"],
+                timeout=params.get("timing", {}).get("timeout", timeout_default),
+                opt_info=params["opt_info"],
+                comp_specific=params["comp_specific"],
+                checkmk_server_host=params["checkmk_server_host"],
+            )
+
         return None
 
     def title(self) -> str:
         return _("Support diagnostics")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        if not request.has_var("site"):
+            return make_simple_form_page_menu(
+                _("Site"),
+                breadcrumb,
+                form_name="select",
+                button_name="_do_select",
+                save_title=_("Select"),
+            )
+
         menu = make_simple_form_page_menu(
             _("Diagnostics"),
             breadcrumb,
@@ -193,6 +219,11 @@ class ModeDiagnostics(WatoMode):
         if not transactions.check_transaction():
             return None
 
+        if request.has_var("_do_select"):
+            site = request.get_str_input_mandatory("site")
+            request.set_var("site", site)
+            return None
+
         if self._job.is_active() or self._diagnostics_parameters is None:
             return redirect(self._job.detail_url())
 
@@ -217,14 +248,28 @@ class ModeDiagnostics(WatoMode):
         return redirect(self._job.detail_url())
 
     def page(self) -> None:
-        if self._job.is_active():
-            raise HTTPRedirect(self._job.detail_url())
+        if not request.has_var("site"):
+            self._select_site_form()
+        else:
+            if self._job.is_active():
+                raise HTTPRedirect(self._job.detail_url())
 
-        with html.form_context("diagnostics", method="POST"):
-            vs_diagnostics = self._vs_diagnostics()
-            vs_diagnostics.render_input("diagnostics", {})
+            with html.form_context("diagnostics", method="POST"):
+                vs_diagnostics = self._vs_diagnostics()
+                vs_diagnostics.render_input("diagnostics", {})
 
+                html.hidden_fields()
+
+    def _select_site_form(self) -> None:
+        with html.form_context("select", method="POST"):
+            self._vs_select_site().render_input("site", None)
             html.hidden_fields()
+
+    def _vs_select_site(self) -> SetupSiteChoice:
+        return SetupSiteChoice(
+            title=_("Select site"),
+            encode_value=False,
+        )
 
     def _vs_diagnostics(self) -> Dictionary:
         return Dictionary(
@@ -235,49 +280,13 @@ class ModeDiagnostics(WatoMode):
             elements=[
                 (
                     "site",
-                    DropdownChoice(
+                    FixedValue(
+                        value=self._site,
                         title=_("Site"),
-                        choices=get_activation_site_choices(),
+                        totext=self._site,
+                        help=_("The site to create a dump for."),
                     ),
                 ),
-                # TODO: provide the possibility to chose multiple sites
-                # (
-                #    "sites",
-                #    CascadingDropdown(
-                #        title="Sites",
-                #        sorted=False,
-                #        help="",
-                #        choices=[
-                #            (
-                #                "all",
-                #                _("Collect diagnostics data from all sites"),
-                #                FixedValue(
-                #                    [s for s, si in get_activation_site_choices()],
-                #                    totext="<br>".join([si for s, si in get_activation_site_choices()])
-                #                ),
-                #            ),
-                #            (
-                #                "local",
-                #                _("Collect diagnostics data from local site only"),
-                #                FixedValue(
-                #                    [omd_site()],
-                #                    #totext="%s - %s" % site_choices(omd_site())
-                #                    totext=[si for s, si in get_activation_site_choices() if s == omd_site()][0]
-                #                ),
-                #            ),
-                #            (
-                #                "explicit_list_of_sites",
-                #                _("Select individual sites from list"),
-                #                DualListChoice(
-                #                    choices=get_activation_site_choices(),
-                #                    size=80,
-                #                    rows=10,
-                #                ),
-                #            ),
-                #        ],
-                #        default_value="local",
-                #    )
-                # ),
                 (
                     "timing",
                     Dictionary(
@@ -576,7 +585,11 @@ class ModeDiagnostics(WatoMode):
         ]
 
     def _get_cs_elements_for(
-        self, component: str, element_id: str, element_title: str, files_map: CheckmkFilesMap
+        self,
+        component: str,
+        element_id: str,
+        element_title: str,
+        files_map: CheckmkFilesMap,
     ) -> Iterator[tuple[str, ValueSpec]]:
         files = [
             (f, fi)
@@ -639,7 +652,8 @@ class ModeDiagnostics(WatoMode):
                 insensitive_files.append((rel_filepath, file_info))
 
         sorted_files = sorted(
-            high_sensitive_files + sensitive_files + insensitive_files, key=lambda t: t[0]
+            high_sensitive_files + sensitive_files + insensitive_files,
+            key=lambda t: t[0],
         )
         sorted_non_high_sensitive_files = sorted(
             sensitive_files + insensitive_files, key=lambda t: t[0]
@@ -700,7 +714,10 @@ class ModeDiagnostics(WatoMode):
         files: list[tuple[str, CheckmkFileInfo]],
     ) -> list[tuple[str, str]]:
         return [
-            (rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info))
+            (
+                rel_filepath,
+                get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info),
+            )
             for rel_filepath, file_info in files
         ]
 
@@ -745,10 +762,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
 
         chunks = serialize_wato_parameters(diagnostics_parameters)
 
-        # TODO: Currently, selecting multiple sites is not possible.
-        # sites = diagnostics_parameters["sites"][1]
         site = diagnostics_parameters["site"]
-
         results = []
         for chunk in chunks:
             chunk_result = create_diagnostics_dump(
@@ -880,6 +894,38 @@ class PageDownloadDiagnosticsDump(Page):
         response.set_content_type("application/x-tgz")
         response.set_content_disposition(ContentDispositionType.ATTACHMENT, tarfile_name)
         response.set_data(file_content)
+
+
+class AutomationDiagnosticsDumpOsWalk(AutomationCommand[str]):
+    def command_name(self) -> str:
+        return "diagnostics-dump-os-walk"
+
+    def execute(self, api_request: str) -> str:
+        return json.dumps(list(os.walk(api_request)))
+
+    def get_request(self) -> str:
+        return request.get_ascii_input_mandatory("folder")
+
+
+def _os_walk_of_folder(site: str | None, base_folder: Path, timeout: int) -> OSWalk:
+    if not site:
+        return list(os.walk(base_folder))
+
+    site_id = SiteId(site)
+    if site_is_local(active_config, site_id):
+        return list(os.walk(base_folder))
+
+    base_folder = Path(str(base_folder).replace(omd_site(), site))
+    json_response = do_remote_automation(
+        get_site_config(active_config, site_id),
+        "diagnostics-dump-os-walk",
+        [
+            ("folder", str(base_folder)),
+        ],
+        timeout=timeout,
+    )
+    assert isinstance(json_response, str)
+    return OSWalk(json.loads(json_response))
 
 
 class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):

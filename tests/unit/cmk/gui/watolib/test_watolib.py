@@ -55,6 +55,7 @@ def test_registered_automation_commands() -> None:
         "check-analyze-config",
         "create-broker-certs",
         "diagnostics-dump-get-file",
+        "diagnostics-dump-os-walk",
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
         "fetch-agent-output-start",

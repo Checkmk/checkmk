@@ -490,7 +490,12 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
 
         try:
             output = subprocess.check_output(
-                [rpm_binary, "-qa", "--queryformat", r"%{NAME};%{VERSION};%{RELEASE};%{ARCH}\n"],
+                [
+                    rpm_binary,
+                    "-qa",
+                    "--queryformat",
+                    r"%{NAME};%{VERSION};%{RELEASE};%{ARCH}\n",
+                ],
                 text=True,
                 stderr=subprocess.STDOUT,
             )
@@ -963,6 +968,8 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         return self.file_map_config["map_generator"](
             self.file_map_config["base_folder"],
             self.file_map_config["component_folder"],
+            list(os.walk(self.file_map_config["base_folder"])),
+            None,
         )
 
     @property

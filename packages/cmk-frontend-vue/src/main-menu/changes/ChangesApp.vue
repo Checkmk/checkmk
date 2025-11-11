@@ -16,6 +16,7 @@ import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon'
 
+import { showLoadingTransition } from '@/loading-transition/loadingTransition'
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
 import type {
@@ -224,6 +225,7 @@ async function fetchPendingChangesAjax(): Promise<void> {
 
 function openActivateChangesPage() {
   cmk.popup_menu.close_popup()
+  showLoadingTransition('table')
   window.open(props.activate_changes_url, 'main')
 }
 

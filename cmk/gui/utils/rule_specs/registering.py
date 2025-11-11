@@ -22,8 +22,9 @@ def register_plugin(loaded_rule_spec: LoadedRuleSpec) -> None:
             loaded_rule_spec.rule_spec, loaded_rule_spec.edition_only, _
         )
         if legacy_rulespec.name in rulespec_registry.keys():
-            logger.debug("Duplicate rule_spec '%s', keeping legacy rulespec", legacy_rulespec.name)
-            return
+            logger.debug(
+                "Duplicate rule_spec '%s', overriding legacy rulespec", legacy_rulespec.name
+            )
 
         rulespec_registry.register(legacy_rulespec)
     except Exception as e:

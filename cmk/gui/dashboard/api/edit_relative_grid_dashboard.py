@@ -20,13 +20,13 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import AnnotatedUserId
 
-from ..store import get_all_dashboards, save_all_dashboards
+from ..store import get_all_dashboards
 from ._family import DASHBOARD_FAMILY
 from ._utils import (
     get_permitted_user_id,
     PERMISSIONS_DASHBOARD,
+    save_dashboard_to_file,
     serialize_relative_grid_dashboard,
-    sync_user_to_remotes,
 )
 from .model.dashboard import BaseRelativeGridDashboardRequest, RelativeGridDashboardResponse
 from .model.response_model import RelativeGridDashboardDomainObject
@@ -67,9 +67,9 @@ def edit_relative_grid_dashboard_v1(
     embedded_views = dashboards[key].get("embedded_views", {})
     body.validate(api_context, embedded_views=embedded_views)
 
-    dashboards[key] = body.to_internal(user_id, dashboard_id, embedded_views)
-    save_all_dashboards()
-    sync_user_to_remotes(api_context.config.sites)
+    save_dashboard_to_file(
+        api_context.config.sites, body.to_internal(user_id, dashboard_id, embedded_views), user_id
+    )
     return serialize_relative_grid_dashboard(
         dashboard_id, RelativeGridDashboardResponse.from_internal(dashboards[key])
     )

@@ -136,20 +136,23 @@ def serialize_relative_grid_dashboard(
     )
 
 
-def save_dashboard_to_file(sites: SiteConfigurations, dashboard: DashboardConfig) -> None:
+def save_dashboard_to_file(
+    sites: SiteConfigurations, dashboard: DashboardConfig, user_id: UserId
+) -> None:
     dashboard_id = dashboard["name"]
     store = DashboardStore.get_instance()
-    store.all[(user.id, dashboard_id)] = dashboard
+    store.all[(user_id, dashboard_id)] = dashboard
 
-    save_all_dashboards()
-    sync_user_to_remotes(sites)
+    save_all_dashboards(user_id)
+    sync_user_to_remotes(sites, user_id)
 
 
-def sync_user_to_remotes(sites: SiteConfigurations) -> None:
+def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId | None) -> None:
     """Synchronize the logged-in user profile and their dashboards to all enabled remote sites.
 
     This does not handle other users or visuals."""
-    if (user_id := user.id) is None:
+    user_id = user_id or user.id  # default to the logged-in user
+    if user_id is None:
         return
 
     user_remote_sites = get_enabled_remote_sites_for_logged_in_user(user, sites)

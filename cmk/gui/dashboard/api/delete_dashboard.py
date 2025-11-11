@@ -51,8 +51,8 @@ def delete_dashboard_v1(
             detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{user_id}'.",
         )
     del dashboards[key]
-    save_all_dashboards()
-    sync_user_to_remotes(api_context.config.sites)
+    save_all_dashboards(user_id)
+    sync_user_to_remotes(api_context.config.sites, user_id)
 
 
 ENDPOINT_DELETE_DASHBOARD = VersionedEndpoint(

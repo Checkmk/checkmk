@@ -144,13 +144,26 @@ class TypeCMKEdition:
         return self.edition_data.title
 
     @property
+    def old_edition_data(self) -> EditionOld:
+        """Return the legacy edition matching the new edition.
+
+        Raises:
+            KeyError: raised when the edition is not found.
+        """
+        return EditionOld(
+            {
+                Edition.COMMUNITY: EditionOld.CRE,
+                Edition.PRO: EditionOld.CEE,
+                Edition.ULTIMATE: EditionOld.CCE,
+                Edition.ULTIMATEMT: EditionOld.CME,
+                Edition.CLOUD: EditionOld.CSE,
+            }[self.edition_data]
+        )
+
+    @property
     def license_edition(self) -> str:
         """Return the legacy edition short name used in the licensing logic."""
-        return {
-            "ultimate": "cce",
-            "ultimatemt": "cme",
-            "cloud": "cse",
-        }.get(self.short, "cee")
+        return self.old_edition_data.short
 
     def is_ultimatemt_edition(self) -> bool:
         return self.edition_data is self.ULTIMATEMT
@@ -286,6 +299,23 @@ class TypeCMKEditionOld:
     def title(self) -> str:
         """Return edition as displayed on Checkmk UI."""
         return self.edition_data.title
+
+    @property
+    def new_edition_data(self) -> Edition:
+        """Return the new edition matching the legacy edition.
+
+        Raises:
+            KeyError: raised when the edition is not found.
+        """
+        return Edition(
+            {
+                EditionOld.CRE: Edition.COMMUNITY,
+                EditionOld.CEE: Edition.PRO,
+                EditionOld.CCE: Edition.ULTIMATE,
+                EditionOld.CME: Edition.ULTIMATEMT,
+                EditionOld.CSE: Edition.CLOUD,
+            }[self.edition_data]
+        )
 
     def is_ultimatemt_edition(self) -> bool:
         return self.edition_data is self.ULTIMATEMT

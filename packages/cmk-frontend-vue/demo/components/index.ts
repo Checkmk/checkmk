@@ -9,6 +9,7 @@ import DemoCmkWizard from '@demo/components/CmkWizard/DemoCmkWizard.vue'
 
 import { pages as CmkAccordionPages } from './CmkAccordion'
 import { pages as CmkAccordionStepPanelPages } from './CmkAccordionStepPanel'
+import { pages as CmkIconPages } from './CmkIcon'
 import { pages as CmkTabPages } from './CmkTabs'
 import DemoCmkAlertBox from './DemoCmkAlertBox.vue'
 import DemoCmkBadge from './DemoCmkBadge.vue'
@@ -22,11 +23,9 @@ import DemoCmkDialog from './DemoCmkDialog.vue'
 import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkDualList from './DemoCmkDualList.vue'
 import DemoCmkHtml from './DemoCmkHtml.vue'
-import DemoCmkIcon from './DemoCmkIcon.vue'
 import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkList from './DemoCmkList.vue'
-import DemoCmkMultitoneIcon from './DemoCmkMultitoneIcon.vue'
 import DemoCmkPopupDialog from './DemoCmkPopupDialog.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
@@ -42,6 +41,7 @@ import { pages as userInputPages } from './user-input'
 export const pages = [
   new Folder('CmkAccordion', DemoEmpty, CmkAccordionPages),
   new Folder('CmkAccordionStepPanel', DemoEmpty, CmkAccordionStepPanelPages),
+  new Folder('CmkIcons', DemoEmpty, CmkIconPages),
   new Folder('CmkTabs', DemoEmpty, CmkTabPages),
   new Folder('typography', DemoEmpty, typographyPages),
   new Folder('user-input', DemoEmpty, userInputPages),
@@ -59,11 +59,9 @@ export const pages = [
   new Page('CmkErrorBoundary', DemoErrorBoundary),
   new Page('CmkHelpText', DemoHelp),
   new Page('CmkHtml', DemoCmkHtml),
-  new Page('CmkIcon', DemoCmkIcon),
   new Page('CmkKeyboardKey', DemoCmkKeyboardKey),
   new Page('CmkLinkCard', DemoCmkLinkCard),
   new Page('CmkList', DemoCmkList),
-  new Page('CmkMultitoneIcon', DemoCmkMultitoneIcon),
   new Page('CmkPopupDialog', DemoCmkPopupDialog),
   new Page('CmkProgressbar', DemoCmkProgressbar),
   new Page('CmkSkeleton', DemoCmkSkeleton),

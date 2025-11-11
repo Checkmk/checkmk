@@ -50,7 +50,7 @@ Remember to login to the registry once by
 In case of a SUSE image you might need to pull it from the SUSE registry and use the following command
 
 ```bash
-./register.py IMAGES_SLES_15SP5 registry.suse.com/suse/sle15:15.5
+./register.py IMAGES_SLES_15SP7 registry.suse.com/suse/sle15:15.7
 ```
 
 A directory named after the image alias containing a `Dockerfile` and `meta.yml` gets created.

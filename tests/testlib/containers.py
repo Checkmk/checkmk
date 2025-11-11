@@ -244,6 +244,7 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             "sles-12sp5": "sles12sp5",
             "sles-15sp5": "sles15sp5",
             "sles-15sp6": "sles15sp6",
+            "sles-15sp7": "sles15sp7",
         }.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
         pkg_pattern = rf"check-mk-{version.edition.long}-{version.version}.*{os_name}.*\.(deb|rpm)"
         if not re.match(f"^{pkg_pattern}$", package_name):

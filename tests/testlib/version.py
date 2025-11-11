@@ -446,6 +446,7 @@ def code_name(distro_name: str) -> str:
         "sles-12sp5": "sles12sp5",
         "sles-15sp5": "sles15sp5",
         "sles-15sp6": "sles15sp6",
+        "sles-15sp7": "sles15sp7",
     }.get(distro_name):
         return code
     raise RuntimeError(f"Unknown distro: {distro_name}")

@@ -165,4 +165,5 @@ def recompose(
         from_disk=_transform_from_disk,
         to_disk=_transform_to_disk,
         migrate=form_spec.migrate,
+        custom_validate=form_spec.custom_validate,  # type: ignore[arg-type]
     )

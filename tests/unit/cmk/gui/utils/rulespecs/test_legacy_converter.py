@@ -74,12 +74,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help text"),
                 prefill=api_v1.form_specs.DefaultValue(1),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.HostState(
                 sorted=False,
                 title=_("title"),
                 help=_("help text"),
                 default_value=1,
+                validate=lambda x, y: None,
             ),
             id="MonitoringState",
         ),
@@ -92,11 +94,13 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.ServiceState(
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help text"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.MonitoringState(
                 title=_("title"),
                 help=_("help text"),
                 default_value=0,
+                validate=lambda x, y: None,
             ),
             id="MonitoringState",
         ),
@@ -121,6 +125,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Help("Helpful description"),
                 ignored_elements=("old_key", "another_old_key"),
                 no_elements_text=api_v1.Message("No elements specified"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Transform(
                 legacy_valuespecs.Dictionary(
@@ -135,6 +140,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     show_more_keys=[],
                     hidden_keys=["key_read_only"],
                     ignored_keys=["old_key", "another_old_key"],
+                    validate=lambda x, y: None,
                 )
             ),
             id="Dictionary",
@@ -395,6 +401,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     display=api_v1.Title("invalid choice title"),
                     error_msg=api_v1.Message("invalid choice msg"),
                 ),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.DropdownChoice(
                 choices=[("true", _("Enabled")), ("false", _("Disabled"))],
@@ -408,6 +415,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 invalid_choice=None,
                 invalid_choice_title=_("invalid choice title"),
                 invalid_choice_error=_("invalid choice msg"),
+                validate=lambda x, y: None,
             ),
             id="DropdownChoice",
         ),
@@ -429,6 +437,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Help("parent help"),
                 label=api_v1.Label("parent label"),
                 prefill=api_v1.form_specs.DefaultValue("first"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.CascadingDropdown(
                 choices=[
@@ -438,6 +447,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help=_("parent help"),
                 label=_("parent label"),
                 default_value=("first", ""),
+                validate=lambda x, y: None,
             ),
             id="CascadingDropdown",
         ),
@@ -469,6 +479,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 add_element_label=api_v1.Label("Add item"),
                 remove_element_label=api_v1.Label("Remove item"),
                 no_element_label=api_v1.Label("No items"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.ListOf(
                 valuespec=legacy_valuespecs.Transform(
@@ -485,6 +496,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 del_label="Remove item",
                 movable=False,
                 text_if_empty="No items",
+                validate=lambda x, y: None,
             ),
             id="ListOf",
         ),
@@ -499,12 +511,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Title("Enable the option"),
                 label=api_v1.Label("The option is enabled"),
                 help_text=api_v1.Help("Help text"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.FixedValue(
                 value="enabled",
                 title=_("Enable the option"),
                 totext=_("The option is enabled"),
                 help=_("Help text"),
+                validate=lambda x, y: None,
             ),
             id="FixedValue",
         ),
@@ -528,6 +542,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.TimeMagnitude.SECOND,
                 ],
                 prefill=api_v1.form_specs.DefaultValue(100),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.TimeSpan(
                 title=_("age title"),
@@ -535,6 +550,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help=_("help text"),
                 display=["days", "hours", "minutes", "seconds"],
                 default_value=100,
+                validate=lambda x, y: None,
             ),
             id="TimeSpan",
         ),
@@ -607,6 +623,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ),
                 title=api_v1.Title("age title"),
                 help_text=api_v1.Help("help text"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Transform(
                 legacy_valuespecs.CascadingDropdown(
@@ -660,6 +677,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     ],
                     sorted=False,
                 ),
+                validate=lambda x, y: None,
             ),
             id="HTTPProxy",
         ),
@@ -674,12 +692,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Label("boolean choice label"),
                 help_text=api_v1.Help("help text"),
                 prefill=api_v1.form_specs.DefaultValue(True),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Checkbox(
                 title=_("boolean choice title"),
                 label=_("boolean choice label"),
                 help=_("help text"),
                 default_value=True,
+                validate=lambda x, y: None,
             ),
             id="BooleanChoice",
         ),
@@ -694,6 +714,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Help("help text"),
                 extensions=("txt", "rst"),
                 mime_types=("text/plain",),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.FileUpload(
                 title=_("my title"),
@@ -701,6 +722,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 allowed_extensions=("txt", "rst"),
                 mime_types=("text/plain",),
                 allow_empty=True,
+                validate=lambda x, y: None,
             ),
             id="FileUpload",
         ),
@@ -716,10 +738,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.Metric(
                 title=api_v1.Title("metric title"),
                 help_text=api_v1.Help("help text"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_graphing_valuespecs.MetricName(
                 title=_("metric title"),
                 help=_("help text"),
+                validate=lambda x, y: None,
             ),
             id="Metric",
         ),
@@ -740,6 +764,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.MonitoredHost(
                 title=api_v1.Title("host title"),
                 help_text=api_v1.Help("help text"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.MonitoredHostname(
                 title=_("host title"),
@@ -749,6 +774,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     strict=True,
                     show_independent_of_context=True,
                 ),
+                validate=lambda x, y: None,
             ),
             id="MonitoredHost",
         ),
@@ -769,6 +795,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.MonitoredService(
                 title=api_v1.Title("service title"),
                 help_text=api_v1.Help("help text"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.MonitoredServiceDescription(
                 title=_("service title"),
@@ -778,6 +805,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     strict=True,
                     show_independent_of_context=True,
                 ),
+                validate=lambda x, y: None,
             ),
             id="MonitoredService",
         ),
@@ -792,6 +820,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.Password(
                 title=api_v1.Title("password title"),
                 help_text=api_v1.Help("help text"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Transform(
                 legacy_page_groups.IndividualOrStoredPassword(
@@ -799,6 +828,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     help=_("help text"),
                     allow_empty=False,
                 ),
+                validate=lambda x, y: None,
             ),
             id="Password",
         ),
@@ -829,6 +859,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ],
                 show_toggle_all=True,
                 prefill=api_v1.form_specs.DefaultValue(("first", "second")),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Transform(
                 legacy_valuespecs.ListChoice(
@@ -837,6 +868,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     title=_("my title"),
                     help=_("help text"),
                     default_value=["first", "second"],
+                    validate=lambda x, y: None,
                 )
             ),
             id="MultipleChoice",
@@ -882,6 +914,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ],
                 show_toggle_all=True,
                 prefill=api_v1.form_specs.DefaultValue(("first", "third")),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Transform(
                 legacy_valuespecs.DualListChoice(
@@ -903,7 +936,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     help=_("help text"),
                     default_value=["first", "third"],
                     rows=11,
-                )
+                    validate=lambda x, y: None,
+                ),
             ),
             id="large MultipleChoice",
         ),
@@ -920,6 +954,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Label("label"),
                 prefill=api_v1.form_specs.DefaultValue("default text"),
                 macro_support=True,
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.TextAreaUnicode(
                 monospaced=True,
@@ -929,6 +964,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ),
                 label=_("label"),
                 default_value="default text",
+                validate=lambda x, y: None,
             ),
             id="MultilineText",
         ),
@@ -941,12 +977,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.TimePeriod(
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help text"),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Transform(
                 legacy_timeperiods.TimeperiodSelection(
                     title="title",
                     help="help text",
                 ),
+                validate=lambda x, y: None,
             ),
             id="TimePeriod",
         ),
@@ -975,6 +1013,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.String(),
                     api_v1.form_specs.Integer(),
                 ],
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Tuple(
                 title="title",
@@ -985,6 +1024,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     legacy_valuespecs.TextInput(placeholder="", size=35),
                     legacy_valuespecs.Integer(),
                 ],
+                validate=lambda x, y: None,
             ),
             id="Tuple",
         ),
@@ -1000,6 +1040,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 autocompleter=Autocompleter(
                     data=AutocompleterData(ident="test-autocompleter", params=AutocompleterParams())
                 ),
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.AjaxDropdownChoice(
                 title="title",
@@ -1007,6 +1048,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 autocompleter=AutocompleterConfig(
                     ident="test-autocompleter",
                 ),
+                validate=lambda x, y: None,
             ),
             id="StringAutocompleter",
         ),

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._crash_reporting import report_agent_crashes as report_agent_crashes
+from ._crash_reporting import report_check_crashes as report_check_crashes
 from ._host_name_validation import (
     HostnameValidationAdapter as HostnameValidationAdapter,
 )

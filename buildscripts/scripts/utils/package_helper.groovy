@@ -10,6 +10,8 @@
 /// values which should not be here. If that gets on `master`, it should be gotten
 /// rid of as soon as possible
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 /// Returns the Jenkins 'branch folder' of the currently running job, either with or without
 /// the 'Testing/..' prefix
 /// So "Testing/bla.blubb/checkmk/2.4.0/some_job" will result in
@@ -30,6 +32,9 @@ def directory_sha256sum(directories) {
 }
 
 def provide_agent_binaries(Map args) {
+    // always download and move artifacts unless specified differently
+    def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();
+
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
     // and https://review.lan.tribe29.com/c/check_mk/+/67387
@@ -114,40 +119,89 @@ def provide_agent_binaries(Map args) {
         ],
     ];
 
-    def artifacts_base_dir = "tmp_artifacts";
+    // upstream_job_details.collect { job_name, details ->
+    def stages = upstream_job_details.collectEntries { job_name, details ->
+        [("${job_name}".toString()) : {
+            def run_condition = details.get("condition", true);
+            def build_instance = null;
 
-    upstream_job_details.collect { job_name, details ->
-        if ( ! details.get("condition", true) ) {
-            return;
-        }
+            if (! run_condition) {
+                Utils.markStageSkippedForConditional("${distro}");
+            }
 
-        def all_directory_hash = "";
-        dir("${checkout_dir}") {
-            def all_directory_hash_map = directory_sha256sum(details.dependency_paths);
-            all_directory_hash = all_directory_hash_map.collect { k, v -> "${k}=${v}" }.join('-');
-        }
+            smart_stage(
+                name: job_name,
+                condition: run_condition,
+                raiseOnError: true,
+            ) {
+                def this_parameters = [
+                    use_upstream_build: true,
+                    relative_job_name: details.relative_job_name,
+                    download: false,
+                ];
 
-        upstream_build(
-            relative_job_name: details.relative_job_name,
-            build_params: [
-                CIPARAM_PATH_HASH: all_directory_hash,
-                DISABLE_CACHE: args.disable_cache,
-                VERSION: args.version,
-            ],
-            build_params_no_check: [
-                CUSTOM_GIT_REF: effective_git_ref,
-                CIPARAM_BISECT_COMMENT: args.bisect_comment,
-                CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-            ],
-            no_venv: true,          // run ci-artifacts call without venv
-            omit_build_venv: true,  // do not check or build a venv first
-            dest: "${artifacts_base_dir}/${job_name}",
-        );
-        dir("${checkout_dir}/${artifacts_base_dir}/${job_name}") {
-            sh(details.install_cmd);
-        }
+                if (details.dependency_paths) {
+                    // if dependency_paths are specified these will be used as unique identifier
+                    // CUSTOM_GIT_REF is handed over as well, but not activly checked by ci-artifacts
+                    def all_directory_hash = "";
+                    dir("${checkout_dir}") {
+                        def all_directory_hash_map = directory_sha256sum(details.dependency_paths);
+                        all_directory_hash = all_directory_hash_map.collect { k, v -> "${k}=${v}" }.join('-');
+                    }
+                    this_parameters += [
+                        build_params: [
+                            CIPARAM_PATH_HASH: all_directory_hash,
+                            VERSION: args.version,
+                            DISABLE_CACHE: args.disable_cache,
+                        ],
+                        build_params_no_check: [
+                            CUSTOM_GIT_REF: effective_git_ref,
+                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                            CIPARAM_BISECT_COMMENT: args.bisect_comment,
+                        ],
+                    ]
+                } else {
+                    this_parameters += [
+                        build_params: [
+                            CUSTOM_GIT_REF: effective_git_ref,
+                            VERSION: args.version,
+                            DISABLE_CACHE: args.disable_cache,
+                        ],
+                        build_params_no_check: [
+                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                            CIPARAM_BISECT_COMMENT: args.bisect_comment,
+                        ],
+                    ]
+                }
+
+                if (move_artifacts) {
+                    // specify to download artifacts to desired destination
+                    this_parameters += [
+                        download: true,
+                        dest: "${args.artifacts_base_dir}/${job_name}",
+                        no_remove_others: true, // do not delete other files in the dest dir
+                    ];
+                }
+
+                build_instance = smart_build(this_parameters);
+            }
+
+            smart_stage(
+                name: "Move artifacts around",
+                condition: run_condition && build_instance,
+                raiseOnError: true,
+            ) {
+                dir("${checkout_dir}/${args.artifacts_base_dir}/${job_name}") {
+                    sh(details.install_cmd);
+                }
+            }
+        }]
     }
 
+    return stages;
+}
+
+def cleanup_provided_agent_binaries(artifacts_base_dir) {
     /// Cleanup
     sh("""
         # needed only because upstream_build() only downloads relative

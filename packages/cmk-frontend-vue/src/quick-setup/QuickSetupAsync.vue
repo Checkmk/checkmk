@@ -27,7 +27,7 @@ import {
 } from '@/lib/rest-api-client/quick-setup/response_schemas'
 import usePersistentRef from '@/lib/usePersistentRef'
 
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
 import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 
@@ -553,7 +553,7 @@ showQuickSetup.value = true
 </script>
 
 <template>
-  <ToggleButtonGroup
+  <CmkToggleButtonGroup
     v-if="toggle_enabled"
     v-model="currentMode"
     :options="[

@@ -19,7 +19,7 @@ import CmkDropdown from '@/components/CmkDropdown'
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import FormIndent from '@/components/CmkIndent.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { useFormEditDispatcher } from '@/form/private/FormEditDispatcher/useFormEditDispatcher'
@@ -135,7 +135,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       </FormLabel>
       <template v-if="props.spec.layout === 'button_group'">
         <CmkSpace v-if="$props.spec.label" size="small" :direction="'vertical'" />
-        <ToggleButtonGroup
+        <CmkToggleButtonGroup
           v-model="selectedOption"
           :options="buttonGroupButtons"
           class="form-cascading-single-choice__button-group"

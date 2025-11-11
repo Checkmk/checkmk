@@ -33,9 +33,9 @@ import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
 import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
+import DemoCmkToggleButtonGroup from './DemoCmkToggleButtonGroup.vue'
 import DemoErrorBoundary from './DemoErrorBoundary.vue'
 import DemoHelp from './DemoHelp.vue'
-import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import { pages as typographyPages } from './typography'
 import { pages as userInputPages } from './user-input'
 
@@ -71,5 +71,5 @@ export const pages = [
   new Page('CmkSpace', DemoCmkSpace),
   new Page('CmkSwitch', DemoCmkSwitch),
   new Page('CmkWizard', DemoCmkWizard),
-  new Page('ToggleButtonGroup', DemoToggleButtonGroup)
+  new Page('CmkToggleButtonGroup', DemoCmkToggleButtonGroup)
 ]

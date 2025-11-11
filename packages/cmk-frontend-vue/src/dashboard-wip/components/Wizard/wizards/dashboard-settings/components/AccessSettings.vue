@@ -10,7 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import type { DualListElement } from '@/components/CmkDualList'
 import CmkDualList from '@/components/CmkDualList/CmkDualList.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
 import { type DashboardShare } from '@/dashboard-wip/types/shared'
 
@@ -118,7 +118,7 @@ if (shareMode.value === 'with_contact_groups' || shareMode.value === 'with_sites
 </script>
 
 <template>
-  <ToggleButtonGroup
+  <CmkToggleButtonGroup
     v-model="shareMode"
     :options="[
       { label: _t('Only me (private)'), value: 'no' },

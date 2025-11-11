@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -15,7 +15,7 @@ const model = ref<string>('1')
 </script>
 
 <template>
-  <ToggleButtonGroup
+  <CmkToggleButtonGroup
     v-model="model"
     :options="[
       { label: 'label1', value: '1' },

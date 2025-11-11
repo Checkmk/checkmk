@@ -8,7 +8,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
@@ -42,7 +42,7 @@ const _updateMetricType = (value: string) => {
 </script>
 
 <template>
-  <ToggleButtonGroup
+  <CmkToggleButtonGroup
     :model-value="metricType"
     :options="[
       { label: _t('Metric (single)'), value: MetricSelection.SINGLE_METRIC },

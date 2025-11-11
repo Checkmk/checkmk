@@ -440,7 +440,7 @@ class MainArea(LocatorHelper):
     @property
     def page_title_locator(self) -> Locator:
         """Return the page title locator."""
-        return self.locator(".titlebar a>>nth=0")
+        return self.locator(".titlebar a.title")
 
     def check_page_title(self, title: str | Pattern[str]) -> None:
         """check the page title"""

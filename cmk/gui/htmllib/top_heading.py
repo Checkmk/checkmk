@@ -37,6 +37,9 @@ def top_heading(
     writer.open_div(class_="titlebar")
     writer.open_div()
 
+    if breadcrumb:
+        BreadcrumbRenderer().show(breadcrumb)
+
     # We don't want to handle "title" permissive.
     html_title = HTML.with_escaping(title)
     writer.a(
@@ -46,9 +49,6 @@ def top_heading(
         onfocus="if (this.blur) this.blur();",
         onclick="this.innerHTML='%s'; document.location.reload();" % _("Reloading..."),
     )
-
-    if breadcrumb:
-        BreadcrumbRenderer().show(breadcrumb)
 
     writer.close_div()
 

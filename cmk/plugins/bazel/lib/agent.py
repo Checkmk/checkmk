@@ -157,13 +157,7 @@ def agent_bazel_cache_main(args: argparse.Namespace) -> int:
         ),
     ]
 
-    try:
-        return handle_requests(args, endpoints)
-    except Exception as e:
-        if args.debug:
-            raise e
-
-    return 0
+    return handle_requests(args, endpoints)
 
 
 def handle_requests(args: argparse.Namespace, endpoints: list[Endpoint]) -> int:

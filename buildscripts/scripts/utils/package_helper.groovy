@@ -29,7 +29,7 @@ def directory_sha256sum(directories) {
     });
 }
 
-def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
+def provide_agent_binaries(Map args) {
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
     // and https://review.lan.tribe29.com/c/check_mk/+/67387
@@ -54,8 +54,8 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
                 cp *.deb *.rpm ${checkout_dir}/agents/
                 # artifact file flags are not being kept - building a tar would be better..
                 install -m 755 -D cmk-agent-ctl* mk-sql -t ${checkout_dir}/agents/linux/
-                if [ "${edition}" != "raw" ]; then
-                    echo "edition is ${edition} => copy Linux agent updaters"
+                if [ "${args.edition}" != "raw" ]; then
+                    echo "edition is ${args.edition} => copy Linux agent updaters"
                     install -m 755 -D cmk-update-agent* -t ${checkout_dir}/non-free/cmk-update-agent/
                 fi
                 """.stripIndent(),
@@ -131,12 +131,12 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             relative_job_name: details.relative_job_name,
             build_params: [
                 CIPARAM_PATH_HASH: all_directory_hash,
-                DISABLE_CACHE: disable_cache,
-                VERSION: version,
+                DISABLE_CACHE: args.disable_cache,
+                VERSION: args.version,
             ],
             build_params_no_check: [
                 CUSTOM_GIT_REF: effective_git_ref,
-                CIPARAM_BISECT_COMMENT: bisect_comment,
+                CIPARAM_BISECT_COMMENT: args.bisect_comment,
                 CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
             ],
             no_venv: true,          // run ci-artifacts call without venv

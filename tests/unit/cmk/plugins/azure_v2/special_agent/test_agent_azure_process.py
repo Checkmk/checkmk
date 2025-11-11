@@ -619,7 +619,7 @@ async def test_filter_tags(
                     use_safe_names=True,
                 ),
             ],
-            "<<<<burningman-3d63024c>>>>\n"
+            "<<<<burningman-5c39e784>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
             '{"my-resource-tag": "my-resource-value"}\n'
@@ -646,7 +646,7 @@ async def test_filter_tags(
                 )
             },
             [],
-            "<<<<burningman-3d63024c>>>>\n"
+            "<<<<burningman-5c39e784>>>>\n"
             "<<<azure_v2_labels:sep(0)>>>\n"
             '{"cloud": "azure", "resource_group": "burningman", "subscription_name": "mock_subscription_name", "subscription_id": "mock_subscription_id", "entity": "resource_group"}\n'
             "{}\n"

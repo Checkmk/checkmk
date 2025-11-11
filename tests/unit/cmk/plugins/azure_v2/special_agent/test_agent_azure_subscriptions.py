@@ -144,7 +144,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             },
             RESOURCE_SUBSCRIPTION,
             True,
-            "myresourcegroup-2c08a2b6",
+            "myresourcegroup-0887b2b7",
             id="Resourcegroup with safe names",
         ),
         pytest.param(
@@ -157,7 +157,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             },
             RESOURCE_SUBSCRIPTION_2,
             True,
-            "myresourcegroup-2a69b329",
+            "myresourcegroup-bdc6fb59",
             id="Resourcegroup with safe names, different subscription, ensures subscription uniqueness",
         ),
         pytest.param(
@@ -170,7 +170,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
             },
             RESOURCE_SUBSCRIPTION,
             True,
-            "productionrg-2c08a2b6",
+            "productionrg-0887b2b7",
             id="Resourcegroup with safe names different_name",
         ),
     ],
@@ -188,6 +188,36 @@ def test_azureresourcegroup_piggytarget(
         use_safe_names=use_safe_names,
     )
     assert resource_group.piggytarget == expected_piggytarget
+
+
+def test_ensure_different_hashes_subscription_resourcegroups() -> None:
+    for use_safe_names in (True, False):
+        subscription = AzureSubscription(
+            id="subscription_id",
+            name="my_subscription",
+            tags={},
+            use_safe_names=use_safe_names,
+            tenant_id="tenant_id_123",
+        )
+
+        resource_group = AzureResourceGroup(
+            info={
+                "id": "/subscriptions/subscription_id/resourceGroups/ProductionRG",
+                "name": "my_subscription",  # same name as subscription!
+                "type": "Microsoft.Resources/resourceGroups",
+                "location": "eastus",
+                "tags": {"env": "prod"},
+            },
+            tag_key_pattern=TagsImportPatternOption.import_all,
+            subscription=subscription,
+            use_safe_names=use_safe_names,
+        )
+        # with safe names, the hashes must be different because of different types
+        # without safe names, the piggytarget are identical because names are identical
+        if use_safe_names:
+            assert resource_group.piggytarget != subscription.piggytarget
+        else:
+            assert resource_group.piggytarget == subscription.piggytarget
 
 
 @pytest.mark.parametrize(

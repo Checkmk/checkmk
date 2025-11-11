@@ -234,7 +234,15 @@ class AzureResourceGroup(_AzureEntity):
         self.subscription = subscription
 
     def _safename(self) -> str:
-        return self._compute_safename((self.subscription.tenant_id, self.subscription.id))
+        return self._compute_safename(
+            # adding type because a resource-group can have the same name of a subscription
+            # the type add more uniqueness
+            (
+                self.subscription.tenant_id,
+                self.subscription.id,
+                self.info["type"],  # "Microsoft.Resources/resourceGroups"
+            )
+        )
 
 
 class TagsImportPatternOption(enum.Enum):

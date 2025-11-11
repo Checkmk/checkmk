@@ -233,11 +233,13 @@ class TypeCMKEdition:
 class TypeCMKEditionOld:
     """Wrap `EditionOld` and extend with test-framework functionality."""
 
-    COMMUNITY = EditionOld.CRE
-    PRO = EditionOld.CEE
-    ULTIMATE = EditionOld.CCE
-    CLOUD = EditionOld.CSE
-    ULTIMATEMT = EditionOld.CME
+    # map new attribute-names to old edition values
+    # keep old attribute-names for backward-compatibility
+    COMMUNITY = CRE = EditionOld.CRE
+    PRO = CEE = EditionOld.CEE
+    ULTIMATE = CCE = EditionOld.CCE
+    CLOUD = CSE = EditionOld.CSE
+    ULTIMATEMT = CME = EditionOld.CME
 
     def __init__(self, edition: EditionOld | None = None) -> None:
         self._edition_data: type[EditionOld] | EditionOld

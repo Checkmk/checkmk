@@ -81,6 +81,7 @@ def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> No
     register_log_filters(filter_registry)
     register_tag_and_label_filters(filter_registry)
     register_kubernetes_filters(filter_registry)
+    register_azure_filters(filter_registry)
     register_custom_attribute_filters(filter_registry)
     register_starred_filters(filter_registry)
     register_discovery_filters(filter_registry)
@@ -1485,6 +1486,32 @@ def filter_kubernetes_register(
             ),
             query_filter=query_filters.KubernetesQuery(
                 ident=f"kubernetes_{object_name}", kubernetes_object_type=object_name
+            ),
+        )
+    )
+
+
+def register_azure_filters(filter_registry: FilterRegistry) -> None:
+    _filter_azure_register(filter_registry, _("Azure subscription"), "subscription")
+
+
+def _filter_azure_register(
+    filter_registry: FilterRegistry,
+    title: str,
+    object_name: Literal["subscription"],
+) -> None:
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=title,
+            sort_index=551,
+            info="host",
+            autocompleter=GroupAutocompleterConfig(
+                ident="azure_labels",
+                group_type=object_name,
+                strict=True,
+            ),
+            query_filter=query_filters.AzureQuery(
+                ident=f"azure_{object_name}", azure_object_type=object_name
             ),
         )
     )

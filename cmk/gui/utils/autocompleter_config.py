@@ -113,6 +113,8 @@ class GroupAutocompleterConfig(AutocompleterConfig):
             "namespace",
             "daemonset",
             "statefulset",
+            # azure:
+            "subscription",
         ],
         strict: bool = True,
         dynamic_params_callback_name: DynamicParamsCallbackName | None = None,

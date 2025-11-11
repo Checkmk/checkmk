@@ -1272,8 +1272,8 @@ def register_display_hints(
 ) -> None:
     non_canonical_filters = find_non_canonical_filters(legacy_hints)
 
-    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
-        inv_display_hints.add(_parse_node_from_api(node, non_canonical_filters))
-
     for hint in _parse_legacy_display_hints(legacy_hints, non_canonical_filters):
         inv_display_hints.add(hint)
+
+    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
+        inv_display_hints.add(_parse_node_from_api(node, non_canonical_filters))

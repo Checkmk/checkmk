@@ -9,6 +9,7 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkIcon from '@/components/CmkIcon'
+import CmkIconButton from '@/components/CmkIconButton.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 </script>
@@ -80,6 +81,11 @@ defineProps<{ screenshotMode: boolean }>()
     </dt>
     <dd>
       <CmkButton><CmkIcon name="about-checkmk" variant="inline" />button</CmkButton>
+    </dd>
+
+    <dt><code>&lt;CmkIconButton name="iconName"&gt;button&lt;/CmkIconButton&gt;</code></dt>
+    <dd>
+      <CmkIconButton name="checkmark"></CmkIconButton>
     </dd>
   </dl>
 </template>

@@ -23,16 +23,22 @@ import DemoCmkDialog from './DemoCmkDialog.vue'
 import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkDualList from './DemoCmkDualList.vue'
 import DemoCmkHtml from './DemoCmkHtml.vue'
+import DemoCmkIndent from './DemoCmkIndent.vue'
 import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkList from './DemoCmkList.vue'
+import DemoCmkLoading from './DemoCmkLoading.vue'
 import DemoCmkPopupDialog from './DemoCmkPopupDialog.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
+import DemoCmkScrollContainer from './DemoCmkScrollContainer.vue'
 import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
+import DemoCmkSlideIn from './DemoCmkSlideIn.vue'
 import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkToggleButtonGroup from './DemoCmkToggleButtonGroup.vue'
+import DemoCmkTooltip from './DemoCmkTooltip.vue'
+import DemoCmkZebra from './DemoCmkZebra.vue'
 import DemoErrorBoundary from './DemoErrorBoundary.vue'
 import DemoHelp from './DemoHelp.vue'
 import { pages as typographyPages } from './typography'
@@ -69,5 +75,11 @@ export const pages = [
   new Page('CmkSpace', DemoCmkSpace),
   new Page('CmkSwitch', DemoCmkSwitch),
   new Page('CmkWizard', DemoCmkWizard),
-  new Page('CmkToggleButtonGroup', DemoCmkToggleButtonGroup)
+  new Page('CmkToggleButtonGroup', DemoCmkToggleButtonGroup),
+  new Page('CmkLoading', DemoCmkLoading),
+  new Page('CmkIndent', DemoCmkIndent),
+  new Page('CmkZebra', DemoCmkZebra),
+  new Page('CmkScrollContainer', DemoCmkScrollContainer),
+  new Page('CmkSlideIn', DemoCmkSlideIn),
+  new Page('CmkTooltip', DemoCmkTooltip)
 ]

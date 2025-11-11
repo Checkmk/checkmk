@@ -311,9 +311,9 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
         try:
             (
                 site_id,
-                v1,
-                v2,
-                ps,
+                livestatus_version,
+                program_version,
+                program_start,
                 num_hosts,
                 num_services,
                 max_long_output_size,
@@ -348,7 +348,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
                 central_version,
                 central_edition,
                 central_license_state,
-                v2,
+                program_version,
                 remote_edition,
                 compatibility,
             )
@@ -356,13 +356,13 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             g.site_status[site_id].update(
                 {
                     "state": "online",
-                    "livestatus_version": v1,
-                    "program_version": v2,
-                    "program_start": ps,
+                    "livestatus_version": livestatus_version,
+                    "program_version": program_version,
+                    "program_start": program_start,
                     "num_hosts": num_hosts,
                     "num_services": num_services,
                     "max_long_output_size": max_long_output_size,
-                    "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+                    "core": program_version.startswith("Check_MK") and "cmc" or "nagios",
                     "core_pid": pid,
                 }
             )

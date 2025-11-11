@@ -156,7 +156,7 @@ def fixture_host(
     setup_host_page.activate_changes(test_site)
 
 
-@pytest.fixture(name="agent_dump_hosts", scope="session")
+@pytest.fixture(name="agent_dump_hosts", scope="module")
 def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     """Create hosts which will use data from agent dump.
 
@@ -246,13 +246,13 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
         test_site.delete_dir(test_site_dump_path)
 
 
-@pytest.fixture(name="linux_hosts", scope="session")
+@pytest.fixture(name="linux_hosts", scope="module")
 def fixture_linux_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
     """Return the list of linux hosts created using agent dump."""
     return agent_dump_hosts["linux-2.4.0-2024.08.27"]
 
 
-@pytest.fixture(name="windows_hosts", scope="session")
+@pytest.fixture(name="windows_hosts", scope="module")
 def fixture_windows_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
     """Return the list of windows hosts created using agent dump."""
     return agent_dump_hosts["windows-2.3.0p10"]

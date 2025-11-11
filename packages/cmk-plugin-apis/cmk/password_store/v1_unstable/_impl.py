@@ -167,7 +167,13 @@ def dereference_secret(raw: str, /) -> Secret[str]:
     """Look up the password with id <id> in the file <file> and return it.
 
     Raises:
-        ValueError
+        PasswordStoreError: If the password store cannot be loaded or
+            the password id is not found.
+
+    Args:
+        raw: A string of the form "<id>:<file>" where <file> is the path to
+            the password store file and <id> is the identifier of the password
+            in that store.
 
     Returns:
         The password as found in the password store.

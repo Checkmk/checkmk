@@ -12,16 +12,20 @@ _STORAGE_PATH_ENV: Final = "SERVER_SIDE_PROGRAM_STORAGE_PATH"
 
 class Storage:
     """
-    Storage interface for server side programs (special agents and active checks).
+    Storage interface for special agents and active checks.
+
     These programs may have the need to save some form of data in between runs.
-    Therefore, this interface transparently provides a possibility to read and write text to a persistent storage.
+    This interface provides a possibility to read and write text to a persistent storage.
+    You can instantiate the storage interface with a program identifier and a host name,
+    these are used to namespace the storage.
+
+    Args:
+        program_ident: A string identifying the program using the storage. This is used to
+            namespace the storage.
+        host: The host name the program is working for. This is used to namespace the storage.
     """
 
     def __init__(self, program_ident: str, host: str) -> None:
-        """
-        Initializes the storage interface. program_ident and host provide an identifier to namespace
-        the storage.
-        """
         self._ident: Final = program_ident
         self._host: Final = host
 

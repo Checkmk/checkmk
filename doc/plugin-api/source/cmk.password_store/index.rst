@@ -1,8 +1,8 @@
-============
-Inventory UI
-============
+==============
+Password store
+==============
 
-.. automodule:: cmk.inventory_ui
+.. automodule:: cmk.password_store
    :members:
 
 Version 1 (UNSTABLE)

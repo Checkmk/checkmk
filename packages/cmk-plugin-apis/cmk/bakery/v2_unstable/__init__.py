@@ -10,6 +10,8 @@ WARNING
 It might not even work at all.
 It is not recommended to use this version in production systems.**
 
+**However: we do intend to stabilize this API version in the future and release it,
+so you are encouraged to experiment and give us feedback.**
 
 
 New in this version

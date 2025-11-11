@@ -59,7 +59,7 @@ def _parameter_valuespec_proxmox_ve_network_throughput():
 
 rule_spec_proxmox_ve_network_throughput = CheckParameters(
     name="proxmox_ve_network_throughput",
-    topic=Topic.VIRTUALIZATION,
+    topic=Topic.CLOUD,
     parameter_form=_parameter_valuespec_proxmox_ve_network_throughput,
     title=Title("Proxmox VE network throughput"),
     condition=HostCondition(),

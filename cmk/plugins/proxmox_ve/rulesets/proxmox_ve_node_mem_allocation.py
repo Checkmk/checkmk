@@ -34,7 +34,7 @@ def _parameter_valuespec_proxmox_ve_node_mem_allocation():
 
 rule_spec_proxmox_ve_node_mem_allocation = CheckParameters(
     name="proxmox_ve_node_mem_allocation",
-    topic=Topic.VIRTUALIZATION,
+    topic=Topic.CLOUD,
     parameter_form=_parameter_valuespec_proxmox_ve_node_mem_allocation,
     title=Title("Proxmox VE Node Memory Allocation"),
     condition=HostCondition(),

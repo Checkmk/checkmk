@@ -115,6 +115,7 @@ class GroupAutocompleterConfig(AutocompleterConfig):
             "statefulset",
             # azure:
             "subscription",
+            "resource_group",
         ],
         strict: bool = True,
         dynamic_params_callback_name: DynamicParamsCallbackName | None = None,

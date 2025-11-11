@@ -230,6 +230,14 @@ def _get_paths_from_package(path_to_package: str) -> list[str]:
             ).splitlines()
         ]
 
+    if path_to_package.endswith(".tar.gz") and "-docker-" not in path_to_package:
+        return [
+            line
+            for line in subprocess.check_output(
+                ["tar", "tzf", path_to_package], encoding="utf-8"
+            ).splitlines()
+        ]
+
     raise NotImplementedError()
 
 

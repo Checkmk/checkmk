@@ -4,10 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import IconWithEmblem from '@/components/CmkIcon/CmkIconWithEmblem.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import IconWithEmblem from '../IconWithEmblem.vue'
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 
 defineProps<WorkflowItem>()

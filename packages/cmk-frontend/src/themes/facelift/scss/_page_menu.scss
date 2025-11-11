@@ -182,18 +182,28 @@ div#top_heading {
       &:last-child:after {
         content: '';
       }
+    }
 
-      color: $font-color-dimmed;
+    span {
+      color: $font-color-breadcrumb-inactive;
       text-decoration: none;
     }
 
-    a:hover {
-      color: $font-color;
+    a {
+      color: $font-color-breadcrumb-interactive;
+      text-decoration: underline;
+      &:hover {
+        color: $font-color-breadcrumb-hover;
+      }
     }
 
     > :after {
+      color: $font-color-breadcrumb-inactive;
+      content: '>';
+      cursor: default;
+      display: inline-block;
+      padding: 0 $spacing-half;
       text-decoration: none;
-      content: ' > ';
     }
   }
 

@@ -3032,6 +3032,12 @@ msgstr "Abortar com um erro"
 msgid "Abort your modifications."
 msgstr "Aborte as suas modificações."
 
+#, python-format
+msgid ""
+"Aborting because the number of hosts (%d) exceeds the configured maximum "
+"number of hosts (%d). You can adjust this limit in the connector settings."
+msgstr ""
+
 msgid "Aborting change."
 msgstr "A abortar a mudança."
 
@@ -23648,6 +23654,10 @@ msgid "Enable TLS"
 msgstr "Activar TLS"
 
 #, fuzzy
+msgid "Enable TLS certificate revocation checks"
+msgstr "verificação do certificado SSL"
+
+#, fuzzy
 msgid "Enable TLS certificate validation"
 msgstr "Desactivar a validação do certificado SSL"
 
@@ -25997,6 +26007,10 @@ msgstr ""
 "O valor de uma regra é incompatível com a especificação da regra atual. Você "
 "pode tentar corrigir isso abrindo a regra para edição e salvando a regra "
 "novamente sem modificação."
+
+#, fuzzy
+msgid "Failed to query hosts from metric backend"
+msgstr "Adicionar configuração do estado"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Falha ao ler o ID do processo do Apache"
@@ -39347,6 +39361,11 @@ msgid ""
 msgstr ""
 "Limitar o tempo de execução da consulta, a fim de evitar um sistema suspenso."
 
+#, fuzzy
+msgid ""
+"Limit the maximum number of hosts that can be created by this connection."
+msgstr "Número máximo de clientes"
+
 msgid "Limit the number of rows"
 msgstr "Limitar o número de filas"
 
@@ -42280,6 +42299,10 @@ msgstr "Número máximo de clientes"
 
 msgid "Maximum number of firewall connections"
 msgstr "Número máximo de conexões de firewall"
+
+#, fuzzy
+msgid "Maximum number of hosts"
+msgstr "Número máximo de clientes"
 
 msgid "Maximum number of messages"
 msgstr "Número máximo de mensagens"
@@ -51783,6 +51806,18 @@ msgstr "Opções de desempenho"
 #, fuzzy
 msgid "Performance: IO stats"
 msgstr "Dados de desempenho"
+
+#, fuzzy
+msgid "Performing license online verification..."
+msgstr "Verificação em linha do licenciamento"
+
+#, fuzzy
+msgid "Performing license test verification..."
+msgstr "Verificação em linha do licenciamento"
+
+#, fuzzy
+msgid "Performing test authentication..."
+msgstr "Testar a autenticação"
 
 msgid "Period"
 msgstr "Período"
@@ -65149,6 +65184,10 @@ msgstr "Apresentar um pedido e obter uma resposta"
 
 msgid "Submitting crash report..."
 msgstr "Apresentar relatório de acidente..."
+
+#, fuzzy
+msgid "Submitting license usage online..."
+msgstr "Submeter a utilização da licença em linha"
 
 msgid "Subnet groups"
 msgstr "Grupos de sub-redes"
@@ -92594,9 +92633,15 @@ msgstr "Confirmar sobregravar"
 msgid "Decline"
 msgstr "Dispositivo online"
 
+msgid "Answer"
+msgstr ""
+
 #, fuzzy
 msgid "Generating response..."
 msgstr "A gerar relatório..."
+
+msgid "AI-generated answer. Please verify critical facts."
+msgstr ""
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -94272,6 +94317,10 @@ msgstr ""
 #, fuzzy
 msgid "Continue to add host"
 msgstr "Contagem de hospedeiros degradados"
+
+#, fuzzy
+msgid "Go to relay overview"
+msgstr "Visão geral do anfitrião"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"

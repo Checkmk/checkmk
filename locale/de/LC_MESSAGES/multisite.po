@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-11-07 00:34+0000\n"
+"PO-Revision-Date: 2025-11-10 21:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3017,6 +3017,12 @@ msgstr "Abbruch mit Fehler"
 msgid "Abort your modifications."
 msgstr "Breche Veränderungen ab."
 
+#, python-format
+msgid ""
+"Aborting because the number of hosts (%d) exceeds the configured maximum "
+"number of hosts (%d). You can adjust this limit in the connector settings."
+msgstr ""
+
 msgid "Aborting change."
 msgstr "Breche Änderung ab."
 
@@ -3898,9 +3904,8 @@ msgstr "Ereignis-ID oder Ereignis-ID-Bereich hinzufügen"
 msgid "Add Event Source filter rule"
 msgstr "Filterregel für Ereignisquelle hinzufügen"
 
-#, fuzzy
 msgid "Add Event User filter rule"
-msgstr "Filterregel für Ereignis-ID hinzufügen"
+msgstr "Regel für den Benutzerfilter für Ereignisse hinzufügen"
 
 msgid "Add Exception"
 msgstr "Exception ergänzen"
@@ -3954,7 +3959,6 @@ msgstr "Quelle hinzufügen"
 msgid "Add Suffix"
 msgstr "Endung hinzufügen"
 
-#, fuzzy
 msgid "Add User"
 msgstr "Benutzer hinzufügen"
 
@@ -9202,9 +9206,8 @@ msgstr "Gebackene Agenten"
 msgid "Baked host specific agent"
 msgstr "Gebackener Host-spezifischer Agent"
 
-#, fuzzy
 msgid "Bakery plug-in"
-msgstr "Name des Plugins"
+msgstr "Bakery-Plugin"
 
 msgid "Bakery rules"
 msgstr "Bakery-Regeln"
@@ -11621,14 +11624,14 @@ msgstr ""
 "Kann HW-/SW-Inventur-Baum des Hosts %s nicht laden. Bitte entfernen Sie die "
 "beschädigte Datei."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Cannot move folder. Some of its elements have specifically other customers "
 "set (<i>%s</i>). This violates the multi-tenancy folder hierarchy."
 msgstr ""
-"Der Ordner kann nicht verschoben werden. Einige seiner Elemente gehören "
-"anderen Kunden (<i>%s</i>). Die Operation würde die CME Ordner Hierarchie "
-"verletzen."
+"Der Ordner kann nicht verschoben werden. Für einige seiner Elemente sind "
+"spezifisch anderen Kunden (<i>%s</i>) gesetzt. Dies gefährdet die "
+"Ordnerhierarchie des Mehr-Mandanten-Systems."
 
 msgid "Cannot move folder: A folder can not be moved into itself."
 msgstr ""
@@ -15124,9 +15127,8 @@ msgstr ""
 "Verbinden Sie Checkmk mit Ihrem LDAP oder Active Directory, um Benutzer in "
 "Checkmk zu erstellen."
 
-#, fuzzy
 msgid "Connect directly (not available in Checkmk Community)"
-msgstr "Direkt verbinden (nicht in CRE verfügbar)"
+msgstr "Direkt verbinden (nicht in Checkmk Community verfügbar)"
 
 msgid "Connect directly to the destination instead of using a proxy."
 msgstr ""
@@ -16144,9 +16146,8 @@ msgstr "Land (L)"
 msgid "Cr"
 msgstr "Cr"
 
-#, fuzzy
 msgid "Crash Checkmk version"
-msgstr "Absturz-Checkmk-Version"
+msgstr "Checkmk-Version des Absturzes"
 
 msgid "Crash ID"
 msgstr "Absturz-ID"
@@ -16160,25 +16161,20 @@ msgstr "Absturzberichte"
 msgid "Crash Type"
 msgstr "Absturztyp"
 
-#, fuzzy
 msgid "Crash check type"
-msgstr "Check-Typen abgleichen"
+msgstr "Check-Typ des Absturzes"
 
-#, fuzzy
 msgid "Crash exception"
-msgstr "Absturz-Exception"
+msgstr "Exception des Absturzes"
 
-#, fuzzy
 msgid "Crash host"
-msgstr "Absturzbericht"
+msgstr "Host des Absturzes"
 
-#, fuzzy
 msgid "Crash ident"
-msgstr "Absturz-Identifikator"
+msgstr "Identifikation des Absturzes"
 
-#, fuzzy
 msgid "Crash item"
-msgstr "Absturz-Zeit"
+msgstr "Absturz-Item"
 
 msgid "Crash report"
 msgstr "Absturzbericht"
@@ -16196,13 +16192,11 @@ msgstr "Absturzbericht: %s"
 msgid "Crash reports"
 msgstr "Absturzberichte"
 
-#, fuzzy
 msgid "Crash service item"
-msgstr "Dieser Service ist veraltet"
+msgstr "Service-Item des Absturzes"
 
-#, fuzzy
 msgid "Crash service name"
-msgstr "Der Service-Name"
+msgstr "Service-Name des Absturzes"
 
 msgid "Crash source"
 msgstr "Absturzursache"
@@ -16213,9 +16207,8 @@ msgstr "Absturz-Zeit"
 msgid "Crash type"
 msgstr "Absturz-Typ"
 
-#, fuzzy
 msgid "Crash version"
-msgstr "Absturz-Checkmk-Version"
+msgstr "Version des Absturzes"
 
 msgid "Crashed check"
 msgstr "abgestürzter Check"
@@ -16910,13 +16903,11 @@ msgstr "Obergrenzen für aktuelle Verbindungen"
 msgid "Current date"
 msgstr "Aktuelles Datum"
 
-#, fuzzy
 msgid "Current disk size"
-msgstr "Aktuelle Größe"
+msgstr "Aktuelle Festplattengröße"
 
-#, fuzzy
 msgid "Current disk size %"
-msgstr "Aktuelle Größe"
+msgstr "Aktuelle Festplattengröße %"
 
 msgid "Current events"
 msgstr "Aktuelle Ereignisse"
@@ -17053,9 +17044,8 @@ msgstr ""
 msgid "Custom Action"
 msgstr "Angepasste Aktion"
 
-#, fuzzy
 msgid "Custom CA certificate"
-msgstr "CA-Zertifikat"
+msgstr "Benutzerdefiniertes CA-Zertifikat"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -18059,9 +18049,8 @@ msgstr "Tagesrate"
 msgid "Days"
 msgstr "Tage"
 
-#, fuzzy
 msgid "Days until Subscription Expiration"
-msgstr "Ablauf der Authentifizierung"
+msgstr "Tage bis zum Ablauf der Subskription"
 
 msgid "Deactivated"
 msgstr "Deaktiviert"
@@ -19525,9 +19514,8 @@ msgstr "Veraltete Plugins der HW-/SW-Inventur"
 msgid "Deprecated PNP templates"
 msgstr "Veraltete PNP-Vorlagen"
 
-#, fuzzy
 msgid "Deprecated bakery plug-ins"
-msgstr "Veraltetes Plugin: %s"
+msgstr "Veraltete Bakery-Plugins"
 
 msgid "Deprecated check man pages"
 msgstr "Veraltete Handbuchseiten des Checks"
@@ -20256,9 +20244,8 @@ msgstr "Festplatten E/A-Levels (Checks nach altem Muster)"
 msgid "Disk Latency"
 msgstr "Plattenlatenz"
 
-#, fuzzy
 msgid "Disk Metrics"
-msgstr "Metriken"
+msgstr "Festplatten-Metriken"
 
 msgid "Disk Read Latency"
 msgstr "Latenzzeit beim Lesen von Datenträgern"
@@ -20329,17 +20316,14 @@ msgstr "Plattendurchsatz"
 msgid "Disk usage"
 msgstr "Festplattennutzung"
 
-#, fuzzy
 msgid "Disk usage (Podman containers)"
-msgstr "Anzahl der Podman-Container"
+msgstr "Festplatten-Auslastung (Podman-Container)"
 
-#, fuzzy
 msgid "Disk usage (Podman images)"
-msgstr "Anzahl der Podman Images"
+msgstr "Festplatten-Auslastung (Podman Images)"
 
-#, fuzzy
 msgid "Disk usage (Podman volumes)"
-msgstr "Anzahl der Podman Volumes"
+msgstr "Festplatten-Auslastung (Podman Volumes)"
 
 msgid "Disk utilization"
 msgstr "Festplattenauslastung"
@@ -21060,13 +21044,11 @@ msgstr "Keinen Host-Namen anzeigen"
 msgid "Do not encrypt the backup"
 msgstr "Die Sicherung nicht verschlüsseln"
 
-#, fuzzy
 msgid "Do not exclude"
-msgstr "Nicht überprüfen"
+msgstr "Nicht ausschließen"
 
-#, fuzzy
 msgid "Do not exclude messages"
-msgstr "Nachrichten löschen"
+msgstr "Nachrichten nicht ausschließen"
 
 msgid ""
 "Do not forget to activate the plug-in (i.e., deploy with or without "
@@ -21216,9 +21198,8 @@ msgstr "Kein Präfix verwenden"
 msgid "Do not use absolute levels"
 msgstr "Keine absoluten Levels benutzen"
 
-#, fuzzy
 msgid "Do not validate TLS certificates"
-msgstr "TLS-Zertifikate validieren"
+msgstr "TLS-Zertifikate nicht validieren"
 
 msgid "Do not validate server certificate during port query"
 msgstr "Serverzertifikat bei Portabfrage nicht validieren"
@@ -21291,9 +21272,8 @@ msgstr "URL zur Dokumentation"
 msgid "Documentation files"
 msgstr "Dokumentation Dateien"
 
-#, fuzzy
 msgid "Documents"
-msgstr "Dokumentation"
+msgstr "Dokumente"
 
 msgid "Documents fragmentation"
 msgstr "Dokumentation Fragmentation"
@@ -22427,9 +22407,8 @@ msgstr "Benutzerattribut bearbeiten"
 msgid "Edit view of user %s"
 msgstr "Tabellenansicht des Benutzers %s bearbeiten"
 
-#, fuzzy
 msgid "Edit: Relay"
-msgstr "Layout bearbeiten"
+msgstr "Bearbeiten: Relais"
 
 msgid "Editable by"
 msgstr "Editierbar durch"
@@ -22738,6 +22717,10 @@ msgstr "Aktivierung von SNMPv2c für Verwaltungsansichten"
 
 msgid "Enable TLS"
 msgstr "TLS einschalten"
+
+#, fuzzy
+msgid "Enable TLS certificate revocation checks"
+msgstr "Verifizierung des TLS-Zertifikats"
 
 msgid "Enable TLS certificate validation"
 msgstr "TLS-Zertifikatsüberprüfung aktivieren"
@@ -23311,9 +23294,8 @@ msgstr ""
 "Geben Sie Metriken ein, die in Benachrichtigungen usw. angezeigt werden "
 "sollen ..."
 
-#, fuzzy
 msgid "Enter source name"
-msgstr "Benutzernamen eingeben"
+msgstr "Quellenname eingeben"
 
 #, python-format
 msgid ""
@@ -23608,9 +23590,8 @@ msgstr "Fehler: Unbekannte Zeitperioden-ID '%s'"
 msgid "Errors"
 msgstr "Fehler"
 
-#, fuzzy
 msgid "Errors (Detailed)"
-msgstr "Host-Details"
+msgstr "Fehler (detailliert)"
 
 msgid "Errors (Discards)"
 msgstr ""
@@ -24444,9 +24425,8 @@ msgstr "Läuft ab am"
 msgid "Expire time"
 msgstr "Ablaufzeit"
 
-#, fuzzy
 msgid "Expired"
-msgstr "Läuft ab"
+msgstr "Abgelaufen"
 
 msgid "Expired keys"
 msgstr "Abgelaufene Schlüssel"
@@ -24836,9 +24816,8 @@ msgstr "Fehlgeschlagene Anrufe durch unerwarteter Interaktion des Proxy"
 msgid "Failed certificate validations"
 msgstr "Fehlgeschlagene Zertifikatsprüfungen"
 
-#, fuzzy
 msgid "Failed concurrent connections"
-msgstr "Fehlgeschlagene Verbindungen"
+msgstr "Fehlgeschlagene gleichzeitige Verbindungen"
 
 msgid "Failed connections"
 msgstr "Fehlgeschlagene Verbindungen"
@@ -24876,9 +24855,8 @@ msgstr "Fehlgeschlagene Bereitstellungen"
 msgid "Failed requests"
 msgstr "Fehlgeschlagene Anfragen"
 
-#, fuzzy
 msgid "Failed requests (404)"
-msgstr "Fehlgeschlagene Anfragen"
+msgstr "Fehlgeschlagene Anfragen (404)"
 
 msgid "Failed requests to adress book files"
 msgstr "Fehlgeschlagene Anfragen an Adressbuchdateien"
@@ -25049,6 +25027,10 @@ msgstr ""
 "Regelspezifikation kompatibel. Sie können versuchen, dies zu beheben, indem "
 "Sie die Regel zur Bearbeitung öffnen und die Regel ohne Änderung erneut "
 "speichern."
+
+#, fuzzy
+msgid "Failed to query hosts from metric backend"
+msgstr "Metrik-Backend anfragen"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Lesen der Apache-Prozess-ID fehlgeschlagen"
@@ -25679,17 +25661,14 @@ msgstr "Filter Ansicht"
 msgid "Filtering and computation options"
 msgstr "Filter- und Berechnungsoptionen"
 
-#, fuzzy
 msgid "Filtering by Event Id"
-msgstr "Zu sendende Zeichenkette"
+msgstr "Nach Ereignis-ID filtern"
 
-#, fuzzy
 msgid "Filtering by Event Source"
-msgstr "Nach Service filtern"
+msgstr "Nach Ereignisquelle filtern"
 
-#, fuzzy
 msgid "Filtering by Event User"
-msgstr "Zu sendende Zeichenkette"
+msgstr "Nach Ereignis-Benutzer filtern"
 
 msgid "Filtering tags enabled but no tags defined."
 msgstr ""
@@ -27772,9 +27751,8 @@ msgstr "Festgelegte HTTP-Antworten"
 msgid "HTTP method"
 msgstr "HTTP Methode"
 
-#, fuzzy
 msgid "HTTP port"
-msgstr "HTTP(S) Port"
+msgstr "HTTP-Port"
 
 msgid "HTTP port (useful for accessing web UI)"
 msgstr ""
@@ -27832,9 +27810,8 @@ msgstr ""
 "Verwendung von HTTP könnten vertrauliche Daten, die in den gebackenen "
 "Agenten enthalten sind, ausgespäht werden (z. B. Passwörter für Plug-ins)."
 
-#, fuzzy
 msgid "HTTPS port"
-msgstr "HTTP(S) Port"
+msgstr "HTTPS-Port"
 
 msgid "HW Information"
 msgstr "HW-Informationen"
@@ -28252,9 +28229,10 @@ msgstr ""
 msgid "Here you can configure messages filtering parameters"
 msgstr "Hier können Sie Parameter für die Nachrichtenfilterung konfigurieren"
 
-#, fuzzy
 msgid "Here you can configure messages filtering parameters using Event User"
-msgstr "Hier können Sie Parameter für die Nachrichtenfilterung konfigurieren"
+msgstr ""
+"Hier können Sie Nachrichten konfigurieren, die Parameter anhand von Ereignis-"
+"Benutzern filtern"
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -31004,9 +30982,8 @@ msgstr "Hyper-V VM Netzwerkadapter"
 msgid "Hyper-V VM RAM"
 msgstr "Hyper-V VM RAM"
 
-#, fuzzy
 msgid "Hyper-V VM VHD"
-msgstr "Hyper-V VM RAM"
+msgstr "Hyper-V VM VHD"
 
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V VM Integrationsdienste"
@@ -34131,16 +34108,14 @@ msgstr "Pattern einschließen"
 msgid "Include WAFs in front of CloudFront resources in the monitoring."
 msgstr "WAFs vor CloudFront-Resourcen in das Monitoring einschließen."
 
-#, fuzzy
 msgid "Include all"
-msgstr "Alle Knoten einbeziehen"
+msgstr "Alle einbeziehen"
 
 msgid "Include all Nodes"
 msgstr "Alle Knoten einbeziehen"
 
-#, fuzzy
 msgid "Include all messages"
-msgstr "Alle Knoten einbeziehen"
+msgstr "Alle Benachrichtigungen einbeziehen"
 
 msgid "Include all subfolders"
 msgstr "Schließe alle Unterordner ein"
@@ -34350,9 +34325,8 @@ msgstr "Prozentuale Levels für Index-Bloat"
 msgid "Index space"
 msgstr "Index-Platz"
 
-#, fuzzy
 msgid "Index usage"
-msgstr "Index-Platz"
+msgstr "Index-Auslastung"
 
 msgid "Indexes to search"
 msgstr "Zu durchsuchende Indizes"
@@ -37637,13 +37611,11 @@ msgstr "Lizenzierte Phase: zu viele Services."
 msgid "Licensed services"
 msgstr "Lizenzierte Services"
 
-#, fuzzy
 msgid "Licenses (Maximum)"
-msgstr "Kunden maximal"
+msgstr "Lizenzen (Maximum)"
 
-#, fuzzy
 msgid "Licenses (Total)"
-msgstr "Lizenzdetails"
+msgstr "Lizenzen (gesamt)"
 
 msgid "Licensing"
 msgstr "Lizenzierung"
@@ -37771,6 +37743,11 @@ msgid ""
 msgstr ""
 "Begrenzen Sie die Ausführungszeit der Anfrage, um ein hängendes System zu "
 "vermeiden."
+
+#, fuzzy
+msgid ""
+"Limit the maximum number of hosts that can be created by this connection."
+msgstr "Maximale Anzahl an Anfragen, die pro Verbindung ausgeführt werden."
 
 msgid "Limit the number of rows"
 msgstr "Die Anzahl der Zeilen begrenzen"
@@ -40457,9 +40434,8 @@ msgid "Maximum concurrent executions for forwarded messages"
 msgstr ""
 "Maximale Anzahl gleichzeitiger Ausführungen für weitergeleitete Meldungen"
 
-#, fuzzy
 msgid "Maximum concurrent fetchers"
-msgstr "Maximale gleichzeitige Checkmk Fetcher"
+msgstr "Maximale Anzahl gleichzeitiger Fetcher"
 
 msgid "Maximum concurrent real-time checks"
 msgstr "Maximalzahl gleichzeitiger Echtzeitchecks"
@@ -40479,9 +40455,8 @@ msgstr "Maximale Anzahl"
 msgid "Maximum critical level"
 msgstr "Maximales kritisches Level"
 
-#, fuzzy
 msgid "Maximum disk size"
-msgstr "Maximale Größe"
+msgstr "Maximale Festplattengröße"
 
 msgid "Maximum distance (TTL) to gateway"
 msgstr "Maximale Entfernung (TTL) zum Gateway"
@@ -40589,6 +40564,10 @@ msgstr "Maximale Anzahl an Ausführungen"
 
 msgid "Maximum number of firewall connections"
 msgstr "Maximale Anzahl von Firewall-Verbindungen"
+
+#, fuzzy
+msgid "Maximum number of hosts"
+msgstr "Maximale Anzahl an Clients"
 
 msgid "Maximum number of messages"
 msgstr "Maximale Anzahl von Meldungen"
@@ -40872,13 +40851,11 @@ msgstr "Mitglieder der Kontaktgruppe:"
 msgid "Memory"
 msgstr "Arbeitsspeicher (RAM)"
 
-#, fuzzy
 msgid "Memory (Azure, Redis)"
-msgstr "Speichersystem Redis"
+msgstr "Speicher (Azure, Redis)"
 
-#, fuzzy
 msgid "Memory (Kube)"
-msgstr "Belegter Speicher"
+msgstr "Speicher (Kube)"
 
 msgid "Memory (RAM)"
 msgstr "Arbeitsspeicher (RAM)"
@@ -41057,9 +41034,8 @@ msgstr "Speicherauslastung (95te Percentile)"
 msgid "Memory utilization (99th percentile)"
 msgstr "Speicherauslastung (99te Percentile)"
 
-#, fuzzy
 msgid "Memory utilization (Azure, Redis)"
-msgstr "Speicherauslastung"
+msgstr "Speicherauslastung (Azure, Redis)"
 
 #, fuzzy
 msgid "Memory utilization (Percentiles)"
@@ -41280,9 +41256,8 @@ msgstr "Metriken"
 msgid "Metrics Group"
 msgstr "Gruppe der Metriken"
 
-#, fuzzy
 msgid "Metrics backend is disabled."
-msgstr "Instanz des Metrik-Backend"
+msgstr "Metrik-Backend ist deaktiviert."
 
 msgid "Metrics graph of a single service"
 msgstr "Graph eines einzelnen Services"
@@ -49512,6 +49487,18 @@ msgstr "Performance-Einstellungen"
 
 msgid "Performance: IO stats"
 msgstr "Performance: E/A-Statistiken"
+
+#, fuzzy
+msgid "Performing license online verification..."
+msgstr "Online-Verifizierung der Lizenzierung"
+
+#, fuzzy
+msgid "Performing license test verification..."
+msgstr "Online-Verifizierung der Lizenzierung"
+
+#, fuzzy
+msgid "Performing test authentication..."
+msgstr "Test-Authentifizierung"
 
 msgid "Period"
 msgstr "Periode"
@@ -62344,6 +62331,10 @@ msgstr "Anfrage übermitteln und Antwort erhalten"
 msgid "Submitting crash report..."
 msgstr "Absturzbericht wird übermittelt..."
 
+#, fuzzy
+msgid "Submitting license usage online..."
+msgstr "Lizenznutzung online übermitteln"
+
 msgid "Subnet groups"
 msgstr "Subnetzgruppen"
 
@@ -68013,21 +68004,16 @@ msgstr ""
 msgid "The ruleset \"%s\" does not exist."
 msgstr "Der Regelsatz \"%s\" existiert nicht."
 
-#, fuzzy
 msgid ""
 "The runtime limit (total) is the total runtime of all attempts in relation "
 "to the limit per attempt. These thresholds apply to the total runtime of all "
 "execution attempts. If there are multiple execution attempts, the thresholds "
 "apply to the total runtime."
 msgstr ""
-"Das Laufzeit-Limit-Verhältnis (Peak Attempt) ist die längste "
-"Versuchslaufzeit im Verhältnis zum Limit pro Versuch. Diese Schwellwerte "
-"gelten für die Laufzeit eines einzelnen Ausführungsversuchs. Gibt es mehrere "
-"Ausführungsversuche, gelten die Schwellwerte für die längste Laufzeit. "
-"Alarme für eine Überschreitung des Verhältnisschwellwerts bedeuten, dass die "
-"maximale Laufzeit für einen einzelnen Versuch zu niedrig angesetzt wurde "
-"oder dass der Test selbst nachjustiert werden sollte (z. B. durch "
-"Verringerung der Keyword-Timeouts). "
+"Das Laufzeit-Limit-Verhältnis (absolut) ist die Gesamtlaufzeit aller "
+"Versuche im Verhältnis zum Limit pro Versuch. Diese Schwellwerte gelten für "
+"die Gesamtlaufzeit aller Ausführungsversuche. Gibt es mehrere "
+"Ausführungsversuche, gelten die Schwellwerte für die Gesamtlaufzeit."
 
 msgid ""
 "The runtime-limit ratio (peak attempt) is the longest attempt runtime in "
@@ -89180,9 +89166,15 @@ msgstr "Überschreiben bestätigen"
 msgid "Decline"
 msgstr "Gerät online"
 
+msgid "Answer"
+msgstr ""
+
 #, fuzzy
 msgid "Generating response..."
 msgstr "Erstelle Bericht..."
+
+msgid "AI-generated answer. Please verify critical facts."
+msgstr ""
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -89191,9 +89183,8 @@ msgstr ""
 msgid "No actions found"
 msgstr "Nicht gefunden"
 
-#, fuzzy
 msgid "Something went wrong. Please try again later."
-msgstr "Etwas ist schief gelaufen: %s"
+msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es später noch einmal."
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -90616,6 +90607,10 @@ msgstr ""
 #, fuzzy
 msgid "Continue to add host"
 msgstr "Anzahl degraded Hosts"
+
+#, fuzzy
+msgid "Go to relay overview"
+msgstr "Gehe zu %s Übersicht"
 
 msgid "Already installed the Checkmk agent?"
 msgstr "Ist der Checkmk-Agent bereits installiert?"

@@ -3056,6 +3056,12 @@ msgstr "Renunț cu o eroare"
 msgid "Abort your modifications."
 msgstr "Renunță la modificările tale."
 
+#, python-format
+msgid ""
+"Aborting because the number of hosts (%d) exceeds the configured maximum "
+"number of hosts (%d). You can adjust this limit in the connector settings."
+msgstr ""
+
 msgid "Aborting change."
 msgstr "Renunț la modificări."
 
@@ -23714,6 +23720,10 @@ msgid "Enable TLS"
 msgstr "Activați TLS"
 
 #, fuzzy
+msgid "Enable TLS certificate revocation checks"
+msgstr "Verificarea certificatului SSL"
+
+#, fuzzy
 msgid "Enable TLS certificate validation"
 msgstr "Dezactivați validarea certificatului SSL"
 
@@ -26093,6 +26103,10 @@ msgstr ""
 "\"%s\". Valoarea unei reguli este incompatibilă cu specificația curentă a "
 "regulii. Puteți încerca să remediați acest lucru deschizând regula pentru "
 "editare și salvând din nou regula fără modificări."
+
+#, fuzzy
+msgid "Failed to query hosts from metric backend"
+msgstr "Configurația stilului selectat"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Nu a reușit să citească ID-ul procesului Apache"
@@ -39473,6 +39487,11 @@ msgstr ""
 "Limitați timpul de execuție a interogării, pentru a evita ca sistemul să se "
 "blocheze."
 
+#, fuzzy
+msgid ""
+"Limit the maximum number of hosts that can be created by this connection."
+msgstr "Numărul maxim de re-executări"
+
 msgid "Limit the number of rows"
 msgstr "Limitarea numărului de rânduri"
 
@@ -42384,6 +42403,10 @@ msgstr "Numărul maxim de execuții"
 
 msgid "Maximum number of firewall connections"
 msgstr "Numărul maxim de conexiuni firewall"
+
+#, fuzzy
+msgid "Maximum number of hosts"
+msgstr "Numărul maxim de clienți"
 
 msgid "Maximum number of messages"
 msgstr "Numarul maxim de mesaje"
@@ -51916,6 +51939,18 @@ msgstr "Opțiuni de performanță"
 #, fuzzy
 msgid "Performance: IO stats"
 msgstr "Date de performanță"
+
+#, fuzzy
+msgid "Performing license online verification..."
+msgstr "Verificarea online a licențelor"
+
+#, fuzzy
+msgid "Performing license test verification..."
+msgstr "Verificarea online a licențelor"
+
+#, fuzzy
+msgid "Performing test authentication..."
+msgstr "Test de autentificare"
 
 msgid "Period"
 msgstr "Perioada"
@@ -65368,6 +65403,10 @@ msgstr "Trimiteți o cerere și primiți un răspuns"
 
 msgid "Submitting crash report..."
 msgstr "Transmiterea raportului de accident..."
+
+#, fuzzy
+msgid "Submitting license usage online..."
+msgstr "Trimiteți utilizarea licenței online"
 
 msgid "Subnet groups"
 msgstr "Grupuri de subrețele"
@@ -92954,9 +92993,15 @@ msgstr "Confirmați suprascrierea"
 msgid "Decline"
 msgstr "Dispozitiv online"
 
+msgid "Answer"
+msgstr ""
+
 #, fuzzy
 msgid "Generating response..."
 msgstr "Generarea de rapoarte..."
+
+msgid "AI-generated answer. Please verify critical facts."
+msgstr ""
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -94642,6 +94687,10 @@ msgstr ""
 #, fuzzy
 msgid "Continue to add host"
 msgstr "Numărul de gazde degradate"
+
+#, fuzzy
+msgid "Go to relay overview"
+msgstr "Prezentare generală a gazdei"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"

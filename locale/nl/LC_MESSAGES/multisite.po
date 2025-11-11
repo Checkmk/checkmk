@@ -3029,6 +3029,12 @@ msgstr "Afbreken met een fout"
 msgid "Abort your modifications."
 msgstr "Breek uw wijzigingen af."
 
+#, python-format
+msgid ""
+"Aborting because the number of hosts (%d) exceeds the configured maximum "
+"number of hosts (%d). You can adjust this limit in the connector settings."
+msgstr ""
+
 msgid "Aborting change."
 msgstr "Verandering afbreken."
 
@@ -23651,6 +23657,10 @@ msgid "Enable TLS"
 msgstr "TLS inschakelen"
 
 #, fuzzy
+msgid "Enable TLS certificate revocation checks"
+msgstr "SSL-certificaat verificatie"
+
+#, fuzzy
 msgid "Enable TLS certificate validation"
 msgstr "Uitschakelen SSL-certificaat validatie"
 
@@ -26000,6 +26010,10 @@ msgstr ""
 "De waarde van een regel is niet compatibel met de huidige regel "
 "specificatie. Je kan dit proberen te verhelpen door de regel te openen voor "
 "bewerking en de regel opnieuw op te slaan zonder wijziging."
+
+#, fuzzy
+msgid "Failed to query hosts from metric backend"
+msgstr "Configuratie toestand toevoegen"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Het is niet gelukt om de Apache proces-ID te lezen"
@@ -39367,6 +39381,11 @@ msgstr ""
 "Beperk de uitvoeringstijd van de query, om te voorkomen dat het systeem "
 "vastloopt."
 
+#, fuzzy
+msgid ""
+"Limit the maximum number of hosts that can be created by this connection."
+msgstr "Maximum aantal cliënten"
+
 msgid "Limit the number of rows"
 msgstr "Beperk het aantal rijen"
 
@@ -42288,6 +42307,10 @@ msgstr "Maximum aantal cliënten"
 
 msgid "Maximum number of firewall connections"
 msgstr "Maximum aantal firewall verbindingen"
+
+#, fuzzy
+msgid "Maximum number of hosts"
+msgstr "Maximum aantal cliënten"
 
 msgid "Maximum number of messages"
 msgstr "Maximum aantal berichten"
@@ -51819,6 +51842,18 @@ msgstr "Prestatie-opties"
 #, fuzzy
 msgid "Performance: IO stats"
 msgstr "Prestatiegegevens"
+
+#, fuzzy
+msgid "Performing license online verification..."
+msgstr "Online verificatie van vergunningen"
+
+#, fuzzy
+msgid "Performing license test verification..."
+msgstr "Online verificatie van vergunningen"
+
+#, fuzzy
+msgid "Performing test authentication..."
+msgstr "Token authenticatie"
 
 msgid "Period"
 msgstr "Periode"
@@ -65153,6 +65188,10 @@ msgstr "Verzoek indienen en antwoord krijgen"
 
 msgid "Submitting crash report..."
 msgstr "Het indienen van een crash rapport..."
+
+#, fuzzy
+msgid "Submitting license usage online..."
+msgstr "Licentiegebruik online indienen"
 
 msgid "Subnet groups"
 msgstr "Subnetgroepen"
@@ -92699,9 +92738,15 @@ msgstr "Bevestig overschrijven"
 msgid "Decline"
 msgstr "Apparaat online"
 
+msgid "Answer"
+msgstr ""
+
 #, fuzzy
 msgid "Generating response..."
 msgstr "Het genereren van rapport..."
+
+msgid "AI-generated answer. Please verify critical facts."
+msgstr ""
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -94377,6 +94422,10 @@ msgstr ""
 #, fuzzy
 msgid "Continue to add host"
 msgstr "Aantal gedegradeerde hosts"
+
+#, fuzzy
+msgid "Go to relay overview"
+msgstr "Overzicht gastheren"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"

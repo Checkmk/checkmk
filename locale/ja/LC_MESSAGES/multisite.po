@@ -2906,6 +2906,12 @@ msgstr "エラーで中止"
 msgid "Abort your modifications."
 msgstr "変更を中止します。"
 
+#, python-format
+msgid ""
+"Aborting because the number of hosts (%d) exceeds the configured maximum "
+"number of hosts (%d). You can adjust this limit in the connector settings."
+msgstr ""
+
 msgid "Aborting change."
 msgstr "変更を中止します。"
 
@@ -22296,6 +22302,10 @@ msgstr "マネジメントボードのSNMPv2cを有効化する"
 msgid "Enable TLS"
 msgstr "TLSを有効にする"
 
+#, fuzzy
+msgid "Enable TLS certificate revocation checks"
+msgstr "TLS 証明書の検証"
+
 msgid "Enable TLS certificate validation"
 msgstr "TLS証明書の検証を有効にする"
 
@@ -24558,6 +24568,10 @@ msgstr ""
 "ルール #%d の処理に失敗 ルールセット内 \"%s\" フォルダ内 \"%s\"。ルールの値"
 "は、現在のルール仕様と互換性がありません。ルールを開いて編集し、変更せずに"
 "ルールを再度保存することで、これを修正してみることができます。"
+
+#, fuzzy
+msgid "Failed to query hosts from metric backend"
+msgstr "OpenTelemetryメトリック名"
 
 msgid "Failed to read the Apache process ID"
 msgstr "ApacheプロセスIDの読み取りに失敗しました"
@@ -36989,6 +37003,11 @@ msgid ""
 "Limit the execution time of the query, in order to avoid a hanging system."
 msgstr "システムのハングを回避するために、クエリの実行時間を制限します。"
 
+#, fuzzy
+msgid ""
+"Limit the maximum number of hosts that can be created by this connection."
+msgstr "１接続あたりに実行可能な最大クエリ数。"
+
 msgid "Limit the number of rows"
 msgstr "行数を制限する"
 
@@ -39773,6 +39792,10 @@ msgstr "最大実行回数"
 
 msgid "Maximum number of firewall connections"
 msgstr "ファイアウォール接続の最大数"
+
+#, fuzzy
+msgid "Maximum number of hosts"
+msgstr "最大クライアント数"
 
 msgid "Maximum number of messages"
 msgstr "メッセージの最大数"
@@ -48583,6 +48606,18 @@ msgstr "パフォーマンスオプション"
 
 msgid "Performance: IO stats"
 msgstr "パフォーマンス: IO ステータス"
+
+#, fuzzy
+msgid "Performing license online verification..."
+msgstr "ライセンスオンライン検証"
+
+#, fuzzy
+msgid "Performing license test verification..."
+msgstr "ライセンスオンライン検証"
+
+#, fuzzy
+msgid "Performing test authentication..."
+msgstr "テスト認証"
 
 msgid "Period"
 msgstr "ピリオド"
@@ -61159,6 +61194,10 @@ msgstr "リクエストの送信と回答の取得"
 
 msgid "Submitting crash report..."
 msgstr "クラッシュレポートを送信しています..."
+
+#, fuzzy
+msgid "Submitting license usage online..."
+msgstr "ライセンスの使用状況をオンラインで提出する"
 
 msgid "Subnet groups"
 msgstr "サブネットグループ"
@@ -86933,9 +86972,15 @@ msgstr "上書きを確認する"
 msgid "Decline"
 msgstr "オンラインデバイス"
 
+msgid "Answer"
+msgstr ""
+
 #, fuzzy
 msgid "Generating response..."
 msgstr "レポートを生成しています..."
+
+msgid "AI-generated answer. Please verify critical facts."
+msgstr ""
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -88556,6 +88601,10 @@ msgstr ""
 #, fuzzy
 msgid "Continue to add host"
 msgstr "デグレードしたホストの数"
+
+#, fuzzy
+msgid "Go to relay overview"
+msgstr "%s概要へ"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"

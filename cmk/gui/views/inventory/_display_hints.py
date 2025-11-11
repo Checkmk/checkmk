@@ -199,7 +199,6 @@ class _PaintBool:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, bool):
-            # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(self._field.style(value), self.default_alignment),
@@ -252,7 +251,6 @@ class _PaintNumber:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float)):
-            # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
 
         match self._field.render:
@@ -279,7 +277,6 @@ class _PaintText:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, str):
-            # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(self._field.style(value), self.default_alignment),
@@ -297,7 +294,6 @@ class _PaintChoice:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float | str)):
-            # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(self._field.style(value), self.default_alignment),

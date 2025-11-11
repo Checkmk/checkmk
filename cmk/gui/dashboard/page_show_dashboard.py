@@ -381,7 +381,10 @@ def _get_dashlets(name: DashboardName, owner: UserId, board: DashboardConfig) ->
                     **dashlet_spec,
                     **embedded_views[reference_view],
                     "type": "view",
-                    "add_context_to_title": False,  # required but has no effect since title not used
+                    # the following are required but have no influence since it's an iframe context
+                    "sort_index": 100,
+                    "is_show_more": False,
+                    "add_context_to_title": False,
                 }
 
             dashlet_type = get_dashlet_type(dashlet_spec)
@@ -1359,7 +1362,10 @@ def ajax_dashlet(ctx: PageContext) -> None:
             **dashlet_spec,
             **embedded_views[reference_view],
             "type": "view",
-            "add_context_to_title": False,  # required but has no effect since title not used
+            # the following are required but have no influence since it's an iframe context
+            "sort_index": 100,
+            "is_show_more": False,
+            "add_context_to_title": False,
         }
 
     dashlet = None

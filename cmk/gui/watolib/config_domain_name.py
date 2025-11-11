@@ -428,39 +428,3 @@ def configvar_order() -> dict[str, int]:
     raise NotImplementedError(
         "Please don't use this API anymore. Have a look at werk #6911 for further information."
     )
-
-
-# TODO: This function has been replaced with config_variable_registry and
-# ConfigVariable() in 1.6. Drop this API with 1.7 latest.
-def register_configvar(
-    group,
-    varname,
-    valuespec,
-    domain=None,
-    need_restart=None,
-    allow_reset=True,
-    in_global_settings=True,
-):
-    if domain is None:
-        domain = config_domain_registry["check_mk"]
-
-    # New API is to hand over the class via domain argument. But not all calls have been
-    # migrated. Perform the translation here.
-    if isinstance(domain, str):
-        domain = get_config_domain(domain)
-
-    # New API is to hand over the class via group argument
-    if isinstance(group, str):
-        group = config_variable_group_registry[group]
-
-    config_variable_registry.register(
-        ConfigVariable(
-            ident=varname,
-            group=group,
-            primary_domain=domain,
-            valuespec=valuespec,
-            need_restart=need_restart,
-            allow_reset=allow_reset,
-            in_global_settings=in_global_settings,
-        )
-    )

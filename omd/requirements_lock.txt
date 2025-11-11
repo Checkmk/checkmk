@@ -114,9 +114,9 @@ charset-normalizer==3.4.2 \
     --hash=sha256:fcbe676a55d7445b22c10967bceaaf0ee69407fbe0ece4d032b6eb8d4565982a \
     --hash=sha256:fdb20a30fe1175ecabed17cbf7812f7b804b8a315a25f24678bcdf120a90077f
     # via requests
-checkmk-dev-tools==1.1.0 \
-    --hash=sha256:883fa35f96fa0d8d53f22b81615348929e136f3e604f14269065c86fe45ab744 \
-    --hash=sha256:96105cfad2149dfa0bdde93f0e146b0e273786f37127db1ecf5520dcf35d9a85
+checkmk-dev-tools==1.2.0 \
+    --hash=sha256:00f811f8ef55fde4028ef008a7b1f336170ae998be0fcfd22c8d73e376c7bbaa \
+    --hash=sha256:13bad068542f10c3d65dc670e492fec97746dd7a14c5b7d140bf9ef0e85b7e32
     # via -r omd/requirements.txt
 docutils==0.20.1 \
     --hash=sha256:96f387a2c5562db4476f09f13bbab2192e764cac08ebbf3a34a95d9b1e4a59d6 \

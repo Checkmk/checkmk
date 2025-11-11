@@ -53,10 +53,8 @@ def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
             )
             if legacy_rulespec.name in rulespec_registry.keys():
                 logger.debug(
-                    "Duplicate rule_spec '%s', keeping legacy rulespec",
-                    legacy_rulespec.name,
+                    "Duplicate rule_spec '%s', overriding legacy rulespec", legacy_rulespec.name
                 )
-                continue
             # This isn't actually a "real" registry
             # Just some lookup for the experimental formspec rendering
             form_spec_registry[loaded_rule_spec.rule_spec.name] = loaded_rule_spec

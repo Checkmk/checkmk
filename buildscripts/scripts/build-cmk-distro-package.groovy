@@ -61,6 +61,9 @@ def main() {
 
     def bazel_log_prefix = "bazel_log_";
 
+    def package_type = distro_package_type(distro);
+    def package_name = "";
+
     print(
         """
         |===== CONFIGURATION ===============================
@@ -72,6 +75,7 @@ def main() {
         |docker_tag:............... │${docker_tag}│
         |checkout_dir:............. │${checkout_dir}│
         |container_name:........... │${checkout_dir}│
+        |package_type:............. │${package_type}│
         |===================================================
         """.stripMargin());
 
@@ -170,41 +174,65 @@ def main() {
 
     stage("Build package") {
         lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
-            inside_container(
-                image: docker.image("${distro}:${docker_tag}"),
-                args: [
-                    "--name ${container_name}",
-                    " -v ${checkout_dir}:${checkout_dir}",
-                    " --hostname ${distro}",
-                ],
-            ) {
-                sh("""
-                    cd ${checkout_dir}
-                    make .venv
-                """);
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'nexus',
-                        passwordVariable: 'NEXUS_PASSWORD',
-                        usernameVariable: 'NEXUS_USERNAME'),
-                    usernamePassword(
-                        credentialsId: 'bazel-caching-credentials',
-                        /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
-                        passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                        usernameVariable: 'BAZEL_CACHE_USER'),
-                ]) {
+            dir("${checkout_dir}") {
+                inside_container(
+                    image: docker.image("${distro}:${docker_tag}"),
+                    args: [
+                        "--name ${container_name}",
+                        " --hostname ${distro}",
+                    ],
+                ) {
                     versioning.print_image_tag();
-                    // Don't use withEnv, see
-                    // https://issues.jenkins.io/browse/JENKINS-43632
-                    sh("""
-                        cd ${checkout_dir}/omd
-                        ${omd_env_vars.join(' ')} \
-                        make ${distro_package_type(distro)}
-                    """);
 
-                    bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix)
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'nexus',
+                            passwordVariable: 'NEXUS_PASSWORD',
+                            usernameVariable: 'NEXUS_USERNAME'),
+                        usernamePassword(
+                            credentialsId: 'bazel-caching-credentials',
+                            /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
+                            passwordVariable: 'BAZEL_CACHE_PASSWORD',
+                            usernameVariable: 'BAZEL_CACHE_USER'),
+                    ]) {
+                        // Don't use withEnv, see
+                        // https://issues.jenkins.io/browse/JENKINS-43632
+                        sh("""
+                            ${omd_env_vars.join(' ')} \
+                            make -C omd ${package_type}
+                        """);
+
+                        package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
+                        if (!package_type) {
+                            error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}");
+                        }
+
+                        bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix)
+                    }
                 }
             }
+        }
+    }
+
+    inside_container(ulimit_nofile: 2048) {
+        stage("Sign package") {
+            package_helper.sign_package(
+                checkout_dir,
+                "${checkout_dir}/${package_name}"
+            );
+        }
+
+        stage("Test package") {
+            // quell ewiger freude: venv created by another container not usable by this container
+            sh("rm -rf ${checkout_dir}/.venv");
+
+            package_helper.test_package(
+                "${checkout_dir}/${package_name}",
+                distro,
+                WORKSPACE,
+                checkout_dir,
+                cmk_version
+            );
         }
     }
 

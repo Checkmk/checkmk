@@ -211,4 +211,38 @@ def cleanup_provided_agent_binaries(artifacts_base_dir) {
     """);
 }
 
+def sign_package(source_dir, package_path) {
+    print("FN sign_package(source_dir=${source_dir}, package_path=${package_path})");
+    withCredentials([file(
+        credentialsId: "Check_MK_Release_Key",
+        variable: "GPG_KEY",)]) {
+        /// --batch is needed to awoid ioctl error
+        sh("gpg --batch --import ${GPG_KEY}");
+    }
+    withCredentials([
+        usernamePassword(
+            credentialsId: "9d7aca31-0043-4cd0-abeb-26a249d68261",
+            passwordVariable: "GPG_PASSPHRASE",
+            usernameVariable: "GPG_USERNAME",)
+    ]) {
+        sh("${source_dir}/buildscripts/scripts/sign-packages.sh ${package_path}");
+    }
+}
+
+def test_package(package_path, name, workspace, source_dir, cmk_version) {
+    def junit_file = "junit-${name}.xml";
+    try {
+        sh("""
+            PACKAGE_PATH=${package_path} \
+            PYTEST_ADDOPTS='--junitxml=${workspace}/${junit_file}' \
+            make -C '${source_dir}/tests' VERSION=${cmk_version} test-packaging
+        """);
+    } finally {
+        step([
+            $class: "JUnitResultArchiver",
+            testResults: junit_file,
+        ]);
+    }
+}
+
 return this;

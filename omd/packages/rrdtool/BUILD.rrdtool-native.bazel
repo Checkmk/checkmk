@@ -8,8 +8,9 @@ NUMVERS = "1.7002"
 
 cc_library(
     name = "rrd_config",
-    hdrs = ["src/rrd_config.h"],
+    hdrs = ["@omd_packages//omd/packages/rrdtool:rrd_config.h"],
     includes = ["src"],
+    strip_include_prefix = "omd/packages/rrdtool",
 )
 
 cc_library(
@@ -60,7 +61,6 @@ cc_library(
         "src/rrd_restore.h",
         "src/rrd_create.h",
         "src/fnv.h",
-        "src/rrd_graph.h",
         "src/rrd_is_thread_safe.h",
         "src/rrd_modify.h",
         "src/rrd_update.h",
@@ -81,7 +81,7 @@ cc_library(
     ],
     deps = [
         ":rrd_config",
-        "@glib",
+        "@glib//glib",
         "@libxml2",
     ],
 )
@@ -116,44 +116,6 @@ cc_library(
     ],
 )
 
-# libbdi
-# librados
-
-cc_library(
-    name = "rrdgraph",
-    srcs = [
-        "src/pngsize.c",
-        "src/rrd_gfx.c",
-        "src/rrd_graph.c",
-        "src/rrd_graph_helper.c",
-        "src/rrd_xport.c",
-    ],
-    copts = [
-        "-I/usr/include/cairo",
-        "-I/usr/include/pango-1.0",
-        "-I/usr/include/harfbuzz",
-        "-Wno-format-truncation",
-        "-Wno-implicit-function-declaration",
-        "-Wno-strict-aliasing",
-        "-Wno-stringop-overflow",
-        "-Wno-unknown-warning",
-        "-Wno-unused-but-set-variable",
-        "-O2",
-    ],
-    linkopts = [
-        "-lcairo",
-        "-lgobject-2.0",
-        "-lpango-1.0",
-        "-lpangocairo-1.0",
-        "-lpng",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":rrd_library",
-        "@glib",
-    ],
-)
-
 cc_binary(
     name = "rrdupdate",
     srcs = ["src/rrdupdate.c"],
@@ -182,7 +144,8 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "rrdgraph",
+        ":rrd_library",
+        ":rrdupd",
     ],
 )
 
@@ -202,7 +165,7 @@ cc_binary(
     deps = [
         ":rrd_library",
         ":rrdupd",
-        "@glib",
+        "@glib//glib",
     ],
 )
 
@@ -212,7 +175,6 @@ cc_shared_library(
     visibility = ["@omd_packages//omd/packages/rrdtool:__pkg__"],
     deps = [
         "rrd_library",
-        "rrdgraph",
         "rrdupd",
     ],
 )
@@ -221,6 +183,11 @@ cc_library(
     name = "rrdtoolmodule",
     srcs = [
         "bindings/python/rrdtoolmodule.c",
+        "src/optparse.h",
+        "src/rrd.h",
+        "src/rrd_config_bottom.h",
+        "src/rrd_format.h",
+        "src/rrd_tool.h",
     ],
     copts = [
         "-Wno-discarded-qualifiers",
@@ -232,7 +199,6 @@ cc_library(
     features = ["strip_debug"],
     deps = [
         ":rrd_config",
-        ":rrdgraph",
         "@rules_python//python/cc:current_py_cc_headers",
     ],
     alwayslink = True,
@@ -240,6 +206,7 @@ cc_library(
 
 cc_shared_library(
     name = "rrdtoolmodule_shared",
+    dynamic_deps = [":rrd_shared"],
     shared_lib_name = "rrdtool.so",
     deps = [":rrdtoolmodule"],
 )

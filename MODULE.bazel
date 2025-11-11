@@ -2,8 +2,6 @@ http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "ht
 
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
-new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
-
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
 snap7_repository = use_repo_rule("//omd/packages/snap7:snap7_repository.bzl", "snap7_repository")
@@ -94,11 +92,22 @@ bazel_dep(
     repo_name = "httplib",
 )
 bazel_dep(
+    name = "glib",
+    version = "2.82.2.bcr.6",
+    dev_dependency = True,
+)
+bazel_dep(
     # Hedron's Compile Commands Extractor for Bazel
     # https://github.com/hedronvision/bazel-compile-commands-extractor
     name = "hedron_compile_commands",
     dev_dependency = True,
 )
+bazel_dep(
+    name = "libxml2",
+    version = "2.15.1",
+    dev_dependency = True,
+)
+
 git_override(
     module_name = "hedron_compile_commands",
     # No tags, no releases.  Let's go with today's head.
@@ -212,18 +221,6 @@ single_version_override(
 local_path_override(
     module_name = "cmk",
     path = "bazel/cmk",
-)
-
-new_local_repository(
-    name = "glib",
-    build_file = "@//omd/packages/glib:BUILD.glib.bazel",
-    path = "/usr",
-)
-
-new_local_repository(
-    name = "libxml2",
-    build_file = "@//omd/packages/libxml2:BUILD.libxml2.bazel",
-    path = "/usr",
 )
 
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel

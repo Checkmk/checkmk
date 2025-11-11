@@ -4,7 +4,10 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree")
 
-exports_files(["skel.permissions"])
+exports_files([
+    "rrd_config.h",
+    "skel.permissions",
+])
 
 rrd_cli_symlinks = [
     "rrdcreate",

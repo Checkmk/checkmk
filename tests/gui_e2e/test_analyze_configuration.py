@@ -73,7 +73,7 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
         test_site.delete_file(f"{path}/fake.py")
 
 
-@pytest.mark.skip(reason="CMK-27392; investigating root-cause.")
+@pytest.mark.skip(reason="CMK-25794; wait for change in valuespecs.")
 def test_analyze_configuration_page(
     dashboard_page: MainDashboard, simulate_deprecations: None
 ) -> None:

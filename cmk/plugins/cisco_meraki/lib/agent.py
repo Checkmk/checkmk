@@ -310,7 +310,9 @@ def _get_organisations(
         return []
 
     if org_ids:
-        GetOrganisationsByIDCache(config, clients.organizations, org_ids=org_ids).get_data(org_ids)
+        return GetOrganisationsByIDCache(config, clients.organizations, org_ids=org_ids).get_data(
+            org_ids
+        )
 
     return GetOrganisationsCache(config, clients.organizations).get_data()
 

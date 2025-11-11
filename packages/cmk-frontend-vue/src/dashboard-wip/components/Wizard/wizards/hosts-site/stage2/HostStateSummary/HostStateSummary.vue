@@ -33,7 +33,7 @@ const displayVisualizationSettings = ref<boolean>(true)
 const states: [string, string][] = [
   ['UP', 'UP'],
   ['DOWN', 'DOWN'],
-  ['UNREACH', 'UNREACH']
+  ['UNREACHABLE', 'UNREACH']
 ]
 const widgetProps = computed(() => handler.value.widgetProps)
 </script>

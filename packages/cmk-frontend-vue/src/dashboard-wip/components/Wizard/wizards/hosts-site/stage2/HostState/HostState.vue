@@ -61,7 +61,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
               :label="_t('Show background in status color and label')"
             />
           </div>
-          <div class="db-host-state__item">
+          <div v-if="handler.showBackgroundInStatusColorAndLabel.value" class="db-host-state__item">
             <CmkIndent>
               <div class="db-host-state__item">
                 <RadioButton
@@ -76,7 +76,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
                 <RadioButton
                   v-model="handler.colorizeStates.value"
                   name="colorize"
-                  value="not_up"
+                  value="not_ok"
                   :label="_t('Colorize not UP states')"
                 />
               </div>

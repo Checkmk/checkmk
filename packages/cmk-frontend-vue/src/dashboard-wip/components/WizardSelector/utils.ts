@@ -30,6 +30,9 @@ export function widgetTypeToSelectorMatcher(
       return 'views'
     }
 
+    case 'host_stats':
+    case 'host_state':
+    case 'host_state_summary':
     case 'site_overview': {
       return 'host_site_overview'
     }

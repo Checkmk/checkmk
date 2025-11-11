@@ -94,7 +94,20 @@ const availableWidgets: WidgetItemList = [
   { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'folder' }
 ]
 
-const selectedWidget = ref<Graph>(Graph.SITE_OVERVIEW)
+function getSelectedWidget(): Graph {
+  switch (props.editWidgetSpec?.content?.type) {
+    case 'site_overview':
+      return Graph.SITE_OVERVIEW
+    case 'host_stats':
+      return Graph.HOST_STATISTICS
+    case 'host_state':
+      return Graph.HOST_STATE
+    case 'host_state_summary':
+      return Graph.HOST_STATE_SUMMARY
+  }
+  return Graph.SITE_OVERVIEW
+}
+const selectedWidget = ref<Graph>(getSelectedWidget())
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   [Graph.HOST_STATE]: await useHostState(

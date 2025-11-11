@@ -60,6 +60,7 @@ def test_registered_automation_commands() -> None:
         "create-broker-certs",
         "diagnostics-dump-get-file",
         "discovered-host-label-sync",
+        "diagnostics-dump-os-walk",
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
         "fetch-agent-output-start",

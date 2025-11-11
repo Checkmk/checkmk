@@ -3420,6 +3420,7 @@ class MonitoredHostname(AjaxDropdownChoice):
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
         super().__init__(
             strict=strict,
@@ -3429,7 +3430,7 @@ class MonitoredHostname(AjaxDropdownChoice):
             title=title,
             help=help,
             default_value=default_value,
-            validate=_validate_hostname,
+            validate=_validate_hostname if validate is None else validate,
         )
 
     def value_to_html(self, value: str | None) -> ValueSpecText:

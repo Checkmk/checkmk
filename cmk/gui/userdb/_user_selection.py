@@ -15,6 +15,7 @@ from cmk.gui.valuespec import (
     ValueSpecDefault,
     ValueSpecHelp,
     ValueSpecText,
+    ValueSpecValidateFunc,
 )
 
 from .store import load_users
@@ -28,6 +29,7 @@ def UserSelection(  # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[UserId] = DEF_VALUE,
+    validate: ValueSpecValidateFunc[UserId | None] | None = None,
 ) -> Transform[UserId | None]:
     return Transform(
         valuespec=_UserSelection(
@@ -40,6 +42,7 @@ def UserSelection(  # pylint: disable=redefined-builtin
         ),
         to_valuespec=lambda raw_str: None if raw_str is None else UserId(raw_str),
         from_valuespec=lambda uid: None if uid is None else str(uid),
+        validate=validate,
     )
 
 

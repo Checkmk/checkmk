@@ -566,6 +566,7 @@ div#page_menu_popups {
       padding: 16px;
       background-color: $headline-color;
       margin-bottom: $spacing;
+      box-shadow: none;
 
       button.confirm_question,
       button.confirm_success,

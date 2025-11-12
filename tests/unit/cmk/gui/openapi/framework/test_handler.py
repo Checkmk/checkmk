@@ -25,7 +25,7 @@ from cmk.gui.openapi.framework import (
     PathParam,
     QueryParam,
 )
-from cmk.gui.openapi.framework.handler import _dump_response, handle_endpoint_request
+from cmk.gui.openapi.framework.handler import dump_body, handle_endpoint_request
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
 from cmk.gui.openapi.framework.model.response import ApiResponse
@@ -56,26 +56,26 @@ class _TestResponseOmitted:
 
 
 def test_dump_response_empty() -> None:
-    result = _dump_response(None, None, is_testing=True)
+    result = dump_body(None, None, is_testing=True)
     assert result is None
 
 
 def test_dump_response_simple() -> None:
-    result = _dump_response(_TestResponse(field=123), _TestResponse, is_testing=True)
+    result = dump_body(_TestResponse(field=123), _TestResponse, is_testing=True)
     assert result == b'{"field":123}'
 
 
 def test_dump_response_omitted() -> None:
-    result = _dump_response(_TestResponseOmitted(field=123), _TestResponseOmitted, is_testing=True)
+    result = dump_body(_TestResponseOmitted(field=123), _TestResponseOmitted, is_testing=True)
     assert result == b'{"field":123}'
-    result = _dump_response(
+    result = dump_body(
         _TestResponseOmitted(field=123, omitted="no"), _TestResponseOmitted, is_testing=True
     )
     assert result == b'{"field":123,"omitted":"no"}'
 
 
 def test_dump_response_annotated() -> None:
-    result = _dump_response(
+    result = dump_body(
         _TestResponse(field=123),
         cast(type[_TestResponse], Annotated[_TestResponse, "foo"]),
         is_testing=True,
@@ -88,7 +88,7 @@ def test_dump_response_pydantic_annotated() -> None:
         # both aliasing and changing types work
         return {"custom_name": str(value.field * 2)}
 
-    result = _dump_response(
+    result = dump_body(
         _TestResponse(field=123),
         cast(type[_TestResponse], Annotated[_TestResponse, PlainSerializer(_serializer)]),
         is_testing=True,

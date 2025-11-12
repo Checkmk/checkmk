@@ -42,24 +42,26 @@ type ApiResponseModel[T: DataclassInstance] = T
 """Some dataclass that was returned from the endpoint."""
 
 
-def _dump_response[T: DataclassInstance](
-    response_body: T | None, response_body_type: type[T] | None, *, is_testing: bool
+def dump_body[T: DataclassInstance](
+    body: T | None,
+    body_type: type[T] | None,
+    *,
+    is_testing: bool,
+    body_kind: str = "Response body",
 ) -> bytes | None:
-    if response_body is None and response_body_type is None:
+    if body is None and body_type is None:
         return None
 
-    if response_body is None:
-        raise ValueError(f"Response body is None, but should be of type: {response_body_type}")
+    if body is None:
+        raise ValueError(f"{body_kind} is None, but should be of type: {body_type}")
 
-    if response_body_type is None:
-        raise ValueError(f"Response body is of type: {type(response_body)}, but should be None")
+    if body_type is None:
+        raise ValueError(f"{body_kind} is of type: {type(body)}, but should be None")
 
-    if not isinstance(response_body, get_stripped_origin(response_body_type)):
-        raise ValueError(
-            f"Response body is of type: {type(response_body)}, but should be {response_body_type}"
-        )
+    if not isinstance(body, get_stripped_origin(body_type)):
+        raise ValueError(f"{body_kind} is of type: {type(body)}, but should be {body_type}")
 
-    return json_dump_without_omitted(response_body_type, response_body, is_testing=is_testing)
+    return json_dump_without_omitted(body_type, body, is_testing=is_testing)
 
 
 def _create_response(
@@ -72,13 +74,13 @@ def _create_response(
 ) -> Response:
     """Create a Flask response from the endpoint response."""
     if isinstance(endpoint_response, ApiResponse):
-        json_text: str | bytes | None = _dump_response(
+        json_text: str | bytes | None = dump_body(
             endpoint_response.body, response_body_type, is_testing=is_testing
         )
         status_code = endpoint_response.status_code
         headers = endpoint_response.headers
     else:
-        json_text = _dump_response(endpoint_response, response_body_type, is_testing=is_testing)
+        json_text = dump_body(endpoint_response, response_body_type, is_testing=is_testing)
         status_code = 204 if json_text is None else 200
         headers = {}
 

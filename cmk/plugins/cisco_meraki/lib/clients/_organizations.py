@@ -14,7 +14,6 @@ from cmk.plugins.cisco_meraki.lib.schema import Organisation, RawOrganisation
 
 class OrganizationsSDK(Protocol):
     def getOrganizations(self) -> Sequence[RawOrganisation]: ...
-    def getOrganization(self, organizationId: str) -> RawOrganisation: ...
 
 
 class OrganizationsClient:
@@ -30,11 +29,3 @@ class OrganizationsClient:
         except APIError as e:
             LOGGER.debug("Get organisations: %r", e)
             return []
-
-    def get_by_id(self, org_id: str) -> Organisation:
-        try:
-            org = self._sdk.getOrganization(org_id)
-        except APIError as e:
-            LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
-            return Organisation(id_=org_id, name="")
-        return Organisation(id_=org["id"], name=org["name"])

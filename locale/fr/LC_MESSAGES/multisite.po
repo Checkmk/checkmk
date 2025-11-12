@@ -47025,6 +47025,10 @@ msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr ""
 "Nécessaire uniquement si vous avez plusieurs instances MySQL sur un serveur"
 
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
+
 msgid "Only one tag may be empty."
 msgstr "Une seule balise peut être vide."
 

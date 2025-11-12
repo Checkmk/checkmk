@@ -46241,6 +46241,10 @@ msgstr "Monitora solo i seguenti SID (se rilevati o aggiunti manualmente)"
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Necessario solo se si hanno più istanze MySQL su un server"
 
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
+
 msgid "Only one tag may be empty."
 msgstr "Solo un tag può essere vuoto."
 

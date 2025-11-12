@@ -43840,6 +43840,10 @@ msgstr ""
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "1つのサーバーに複数のMySQLインスタンスがある場合にのみ必要"
 
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
+
 msgid "Only one tag may be empty."
 msgstr "空にすることができるタグは1つだけです。"
 

@@ -46702,6 +46702,10 @@ msgstr ""
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Este necesar doar dacă aveți mai multe instanțe MySQL pe un server"
 
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
+
 msgid "Only one tag may be empty."
 msgstr "Numai o singură etichetă poate fi goală."
 

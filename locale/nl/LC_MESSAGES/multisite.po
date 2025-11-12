@@ -46632,6 +46632,10 @@ msgstr "Vraag alleen naar de volgende SID's (indien gevonden)"
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Alleen nodig als u meerdere MySQL Instances op één server heeft"
 
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
+
 msgid "Only one tag may be empty."
 msgstr "Slechts één tag mag leeg zijn."
 

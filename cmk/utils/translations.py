@@ -5,7 +5,7 @@
 
 import ipaddress
 from collections.abc import Iterable, Mapping
-from typing import cast, Literal, NotRequired, TypedDict
+from typing import cast, Literal, TypedDict
 
 from cmk.ccc.regex import regex
 
@@ -42,15 +42,6 @@ def parse_translation_options(raw: Mapping[str, object]) -> TranslationOptions:
         mapping=_parse_list_of_tuples(raw.get("mapping", [])),
         regex=_parse_list_of_tuples(raw.get("regex", [])),
     )
-
-
-# Similar to TranslationOptions, but not the same. This aims to
-# cover exactly the structure that is configured with the valuespec.
-class TranslationOptionsSpec(TypedDict):
-    case: NotRequired[Literal["lower", "upper"] | None]
-    drop_domain: NotRequired[bool]
-    mapping: NotRequired[list[tuple[str, str]]]
-    regex: NotRequired[list[tuple[str, str]]]
 
 
 def translate(translation: TranslationOptions, name: str) -> str:

@@ -599,12 +599,28 @@ class ModeEditHost(ABCHostMode):
                 if n == 1
                 else _("Site DNS cache updated for %d hosts.") % n
             )
+            flash(infotext)
 
             if update_dns_cache_result.failed_hosts:
-                infotext += "<br><br><b>Host names failed to lookup:</b> " + ", ".join(
-                    ["<tt>%s</tt>" % h for h in update_dns_cache_result.failed_hosts]
-                )
-            flash(infotext)
+                failed_hosts = update_dns_cache_result.failed_hosts
+                display_limit = 5
+
+                if len(failed_hosts) <= display_limit:
+                    hosts_display = ", ".join(["<code>%s</code>" % h for h in failed_hosts])
+                else:
+                    hosts_display = ", ".join(
+                        ["<code>%s</code>" % h for h in failed_hosts[:display_limit]]
+                    )
+                    remaining = len(failed_hosts) - display_limit
+                    hosts_display += _(", +%d more") % remaining
+
+                failed_warning_message = _(
+                    "<b>Lookup IPv4 addresses of %d hosts failed.</b><br>"
+                    "Monitoring for these hosts may be incomplete.<br><br>"
+                    "<b>Affected hosts:</b> %s"
+                ) % (len(failed_hosts), hosts_display)
+
+                flash(failed_warning_message, msg_type="warning")
             return None
 
         if request.var("delete"):  # Delete this host

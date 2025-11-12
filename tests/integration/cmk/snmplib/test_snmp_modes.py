@@ -28,7 +28,6 @@ from tests.testlib.site import Site
 from .snmp_helpers import default_config, get_single_oid
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid_ipv6(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
@@ -43,7 +42,6 @@ def test_get_single_oid_ipv6(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid_snmpv3(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
@@ -63,7 +61,6 @@ def test_get_single_oid_snmpv3(site: Site, backend_type: SNMPBackendEnum) -> Non
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-@pytest.mark.usefixtures("snmpsim")
 @pytest.mark.parametrize("priv_proto, port", [("DES", 1341), ("AES-256", 1342), ("AES-192", 1343)])
 def test_get_single_oid_snmpv3_higher_encryption(
     site: Site, backend_type: SNMPBackendEnum, priv_proto: str, port: int
@@ -92,7 +89,6 @@ def test_get_single_oid_snmpv3_higher_encryption(
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid_wrong_credentials(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
@@ -103,7 +99,6 @@ def test_get_single_oid_wrong_credentials(site: Site, backend_type: SNMPBackendE
     assert result is None
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid(site: Site, backend_type: SNMPBackendEnum) -> None:
     result, _ = get_single_oid(
         site, ".1.3.6.1.2.1.1.1.0", backend_type, default_config(backend_type)
@@ -112,7 +107,6 @@ def test_get_single_oid(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert isinstance(result, str)
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid_cache(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid = ".1.3.6.1.2.1.1.1.0"
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -125,14 +119,12 @@ def test_get_single_oid_cache(site: Site, backend_type: SNMPBackendEnum) -> None
     assert isinstance(cached_oid, str)
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_non_prefixed_oid(site: Site, backend_type: SNMPBackendEnum) -> None:
     with pytest.raises(CalledProcessError) as e:
         get_single_oid(site, "1.3.6.1.2.1.1.1.0", backend_type, default_config(backend_type))
     assert "does not begin with" in e.value.stderr
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid_next(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert (
         get_single_oid(site, ".1.3.6.1.2.1.1.9.1.*", backend_type, default_config(backend_type))[0]
@@ -141,12 +133,10 @@ def test_get_single_oid_next(site: Site, backend_type: SNMPBackendEnum) -> None:
 
 
 # The get_single_oid function currently does not support OID_BIN handling
-# @pytest.mark.usefixtures("snmpsim")
 # def test_get_single_oid_hex(snmp_config) -> None:
 #    assert get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2")[0] == b"\x00\x12yb\xf9@"
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid_value(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert (
         get_single_oid(site, ".1.3.6.1.2.1.1.9.1.2.1", backend_type, default_config(backend_type))[
@@ -156,7 +146,6 @@ def test_get_single_oid_value(site: Site, backend_type: SNMPBackendEnum) -> None
     )
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid_not_existing(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert (
         get_single_oid(site, ".1.3.100.200.300.400", backend_type, default_config(backend_type))[0]
@@ -164,7 +153,6 @@ def test_get_single_oid_not_existing(site: Site, backend_type: SNMPBackendEnum) 
     )
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
@@ -232,7 +220,6 @@ def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum
         ),
     ],
 )
-@pytest.mark.usefixtures("snmpsim")
 def test_walk_for_export(
     site: Site, backend_type: SNMPBackendEnum, oid: OID, expected_table: Sequence[tuple[OID, str]]
 ) -> None:

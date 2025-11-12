@@ -42,6 +42,7 @@ from cmk.utils import log
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
+from tests.testlib.utils import is_containerized
 
 TIMEOUT_AFTER = 120  # seconds
 logger = logging.getLogger(__name__)
@@ -319,8 +320,17 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
 
 
 @pytest.fixture(name="backend_type", params=SNMPBackendEnum)
-def backend_type_fixture(site: Site, request: pytest.FixtureRequest) -> SNMPBackendEnum:
+def backend_type_fixture(
+    site: Site, request: pytest.FixtureRequest, snmpsim: None
+) -> SNMPBackendEnum:
     backend_type: SNMPBackendEnum = request.param
     if site.edition.is_community_edition() and backend_type is SNMPBackendEnum.INLINE:
         return pytest.skip("Commercial editions only")
+    return backend_type
+
+
+@pytest.fixture(name="backend_type_dockerized")
+def backend_type_dockerized_fixture(backend_type: SNMPBackendEnum) -> SNMPBackendEnum:
+    if backend_type is SNMPBackendEnum.STORED_WALK and not is_containerized():
+        pytest.skip("Allow only dockerized runs!")
     return backend_type

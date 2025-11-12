@@ -233,7 +233,6 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             "debian-10": "buster",
             "debian-11": "bullseye",
             "debian-12": "bookworm",
-            "debian-13": "trixie",
             "ubuntu-20.04": "focal",
             "ubuntu-22.04": "jammy",
             "ubuntu-24.04": "noble",

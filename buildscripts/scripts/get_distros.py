@@ -70,7 +70,7 @@ def test_distro_lists():
         "almalinux-9",
         "centos-8",
         "cma-3", "cma-4",
-        "debian-10", "debian-11", "debian-12", "debian-13",
+        "debian-10", "debian-11", "debian-12",
         "sles-12sp5", "sles-15sp3", "sles-15sp4", "sles-15sp5", "sles-15sp6",
         "ubuntu-20.04", "ubuntu-22.04", "ubuntu-24.04",
     ]
@@ -78,7 +78,7 @@ def test_distro_lists():
         "almalinux-9",
         "centos-8",
         "cma-3", "cma-4",
-        "debian-10", "debian-11", "debian-12", "debian-13",
+        "debian-10", "debian-11", "debian-12",
         "sles-12sp5", "sles-15sp3", "sles-15sp4", "sles-15sp5", "sles-15sp6",
         "ubuntu-20.04", "ubuntu-22.04", "ubuntu-23.10", "ubuntu-24.04",
     ]
@@ -86,7 +86,7 @@ def test_distro_lists():
         "almalinux-9",
         "centos-8",
         "cma-3", "cma-4",
-        "debian-10", "debian-11", "debian-12", "debian-13",
+        "debian-10", "debian-11", "debian-12",
         "sles-12sp5", "sles-15sp3", "sles-15sp4", "sles-15sp5", "sles-15sp6",
         "ubuntu-20.04", "ubuntu-22.04", "ubuntu-23.10", "ubuntu-24.04"
     ]

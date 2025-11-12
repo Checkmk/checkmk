@@ -151,6 +151,39 @@ def _table_name(table: type[Table]) -> str:
     return table.__tablename__
 
 
+def get_multiple_edition_description(editions: typing.Iterable[Edition]) -> str:
+    """Get an *untranslated* description for multiple editions."""
+    ordered_editions = tuple(
+        edition for edition in Edition.__members__.values() if edition in editions
+    )
+    special_cases = {
+        tuple(Edition.__members__.values()): "all",
+        (
+            Edition.COMMUNITY,
+            Edition.PRO,
+            Edition.ULTIMATE,
+            Edition.ULTIMATEMT,
+        ): "all self-hosted editions",
+        (
+            Edition.PRO,
+            Edition.ULTIMATE,
+            Edition.ULTIMATEMT,
+            Edition.CLOUD,
+        ): "all commercial editions",
+    }
+    if special_case := special_cases.get(ordered_editions):
+        return special_case
+
+    edition_titles = {
+        Edition.COMMUNITY: "Community",
+        Edition.PRO: "Enterprise",
+        Edition.ULTIMATE: "Ultimate",
+        Edition.ULTIMATEMT: "Ultimate with multi-tenancy",
+        Edition.CLOUD: "Cloud",
+    }
+    return ", ".join(edition_titles[edition] for edition in ordered_editions)
+
+
 def edition_field_description(
     description: str,
     supported_editions: set[Edition] | None = None,
@@ -167,28 +200,21 @@ def edition_field_description(
         '[Enterprise, Cloud editions only] This is a test description. This field is required for the following editions: Enterprise, Cloud.'
 
     """
-    if not supported_editions and not excluded_editions:
-        raise ValueError("Either supported_editions or excluded_editions must be provided.")
-
     if supported_editions and excluded_editions:
         raise ValueError("supported_editions and excluded_editions are mutually exclusive.")
 
     if supported_editions:
-        ordered_editions = [
-            edition for edition in Edition.__members__.values() if edition in supported_editions
-        ]
+        editions: typing.Iterable[Edition] = supported_editions
     elif excluded_editions:
-        ordered_editions = [
+        editions = [
             edition for edition in Edition.__members__.values() if edition not in excluded_editions
         ]
+    else:
+        raise ValueError("Either supported_editions or excluded_editions must be provided.")
 
-    edition_capitalized_titles = ", ".join(
-        [edition.value.long.capitalize() for edition in ordered_editions]
-    )
-    description = f"[{edition_capitalized_titles} edition{'s' if len(ordered_editions) > 1 else ''} only] {description}"
+    editions_string = get_multiple_edition_description(editions)
+    description = f"[Only in editions: {editions_string}] {description}"
 
     if field_required:
-        description += (
-            f" This field is required for the following editions: {edition_capitalized_titles}."
-        )
+        description += f" This field is required for the following editions: {editions_string}."
     return description

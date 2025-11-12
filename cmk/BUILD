@@ -11,11 +11,13 @@ load("//bazel/rules:package_wheel.bzl", "package_wheel")
 # echo "LEGACY_CHECKS = [" > legacy_checks_list.bzl;for F in $(ls *.py); do echo $F | sed 's/\(.*\)\.py/    "\1",/' >> legacy_checks_list.bzl; done; echo "]" >> legacy_checks_list.bzl
 load("legacy_checks_list.bzl", "LEGACY_CHECKS")
 
+LEGACY_CHECKS_DICT = {"base/legacy_checks/" + name + ".py": name for name in LEGACY_CHECKS}
+
 exports_files([
     "requirements.in",
     "utils/password_store/cli.py",
     "gui/openapi/spec/spec_generator/generate_api_spec.py",
-])
+] + LEGACY_CHECKS_DICT.keys())
 
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order
@@ -384,8 +386,6 @@ py_binary(
         "lib_cmk_repo",
     ],
 )
-
-LEGACY_CHECKS_DICT = {"base/legacy_checks/" + name + ".py": name for name in LEGACY_CHECKS}
 
 pkg_files(
     name = "legacy_checks_pkg",

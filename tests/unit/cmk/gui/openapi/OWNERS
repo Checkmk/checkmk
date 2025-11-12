@@ -9,3 +9,6 @@
 set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/rest_api/OWNERS_DEFINITION
+
+per-file test_openapi_host_config.py=file:/component_owners/rest_api/OWNERS_DEFINITION
+per-file test_openapi_host_config.py=set noparent

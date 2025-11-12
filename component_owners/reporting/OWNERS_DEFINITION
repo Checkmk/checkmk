@@ -1,8 +1,9 @@
-# OpenTelemetry Integration
+# Reporting
 #
 # Find information about code-owners (+ find-owners syntax) here:
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-rebekka.seltmann@checkmk.com  # component lead
+gavin.mcguigan@checkmk.com  # component lead
 
+ronny.bruska@checkmk.com

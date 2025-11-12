@@ -1,8 +1,11 @@
-# OpenTelemetry Integration
+# Component UI - Setup
+#
+# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #
 # Find information about code-owners (+ find-owners syntax) here:
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-rebekka.seltmann@checkmk.com  # component lead
 
+per-file test_rulesets.py=file:/component_owners/ui_setup/OWNERS_DEFINITION
+per-file test_rulesets.py=set noparent

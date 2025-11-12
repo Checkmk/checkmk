@@ -1,4 +1,4 @@
-# AI Agent Configuration and Documentation
+# Component AI Tools
 #
 # Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #
@@ -8,4 +8,4 @@
 
 
 per-file AGENTS.md=file:/component_owners/ai_tools/OWNERS_DEFINITION
-per-file .claude/*=file:/component_owners/ai_tools/OWNERS_DEFINITION
+per-file AGENTS.md=set noparent

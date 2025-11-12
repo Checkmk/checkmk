@@ -600,9 +600,9 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str, *, debug
         ] not in ["cme", cmk_version.Edition.ULTIMATEMT.short]:
             raise MKUserError(
                 None,
-                _(
-                    "The Checkmk Ultimate with multi-tenancy edition can only "
-                    "be connected with other sites using the Checkmk Ultimate with multi-tenancy edition."
+                (
+                    "Checkmk Ultimate with multi-tenancy can only be connected with other sites"
+                    " using Checkmk Ultimate with multi-tenancy."
                 ),
             )
         return eval_response["login_secret"]

@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Event Console
 
-# mypy: disable-error-code="exhaustive-match"
-
-# mypy: disable-error-code="possibly-undefined"
-
 With the Event Console (EC for short), Checkmk provides a fully integrated system for monitoring events
 from sources including syslog, SNMP traps, Windows Event Logs, log files and own applications. Events are
 not simply defined as states, but they form a category of their own and are in fact displayed as separate
@@ -24,6 +20,9 @@ The event console endpoints allow for
     * Query the event console table using filters, id or live status query and archive those events.
 
 """
+
+# mypy: disable-error-code="exhaustive-match"
+# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping
 from typing import Any

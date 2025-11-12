@@ -5,13 +5,13 @@
 """
 Quick setup
 
-# mypy: disable-error-code="type-arg"
-
 * GET quick setup guided stages or overview stages
 * GET a quick setup stage structure
 * POST validate stage
 * POST complete the quick setup and save
 """
+
+# mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict

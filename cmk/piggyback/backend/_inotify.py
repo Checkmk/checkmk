@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Small wrapper for the kernels `inotify` feature
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 Existing libraries seem to be rather unmaintained or lack
 features that we want (type annotations).
 
@@ -15,6 +12,9 @@ rather than being a comprehensive interface to what the kernel offers.
 
 As this is currently only needed for the piggyback hub, we put it here.
 """
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import enum
 import os

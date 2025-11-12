@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Configuration entities / Passwordstore Password
 
-# mypy: disable-error-code="mutable-override"
-
 These endpoints can be used to manipulate passwordstore passwords via the
 configuration entity API, for more information see "Configuration entities"
 endpoints."""
+
+# mypy: disable-error-code="mutable-override"
 
 from collections.abc import Mapping
 from typing import Any

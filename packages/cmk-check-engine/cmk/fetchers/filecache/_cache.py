@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Persisted sections type and store.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-
 Cache hierarchy
 
 .. uml::
@@ -45,6 +42,9 @@ Cache hierarchy
     SNMPFileCache *-- SNMPFetcher
 
 """
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 

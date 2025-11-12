@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host tag groups
 
-# mypy: disable-error-code="no-untyped-def"
-
 Host tag groups are, besides the static folder structure, another more flexible way to
 organize hosts in Checkmk for configuration.
 A host tag group is a collection of different host tags, with each host receiving exactly one
@@ -14,6 +12,8 @@ tag from the group.
 You can find an introduction to hosts including host tags and host tag groups in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
+
+# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
 from typing import Any

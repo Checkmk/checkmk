@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to help generate pydantic based Kubernetes models
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-
 Notice (for polyfactory):
     For models which make use of validator such as api.StorageRequirement, the build function will
     first generate the field value before passing it through the validator function. This will in
@@ -16,6 +13,9 @@ Notice (for polyfactory):
     option is tied to the model so won't be applied to nested models. See how APIDataFactory
     resolves this with persistent_volume_claims.
 """
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 import itertools
 import random

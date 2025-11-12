@@ -11,7 +11,7 @@ import time_machine
 
 import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_vm_info as pvvi
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
+from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
 
 VM_DATA = SectionVMInfo(
     vmid="133",
@@ -29,7 +29,7 @@ VM_DATA_WITH_LOCK = SectionVMInfo(
     type="qemu",
     name="aq-test.lan.mathias-kettner.de",
     uptime=12345,
-    lock="backup",
+    lock=LockState.BACKUP,
 )
 
 

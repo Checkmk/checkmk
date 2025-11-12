@@ -8,6 +8,7 @@ load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
 load("//bazel/rules:pkg_name_info.bzl", "pkg_name_info")
 
 exports_files([
@@ -398,19 +399,30 @@ pkg_tar(
     "cloud",
 ]]
 
+[md5sums_from_archive(
+    name = "md5sums_" + edition,
+    src = "//omd/packages/heirloom-mailx",
+    out = "md5_" + edition,
+) for edition in [
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
+    "cloud",
+]]
+
 [pkg_deb(
     name = "deb_" + edition,
     architecture = "amd64",
     config = "//omd/debian:config",
-    #control = "//omd/debian:control", Field does not exist, do we need it?
     data = "deps_install_" + edition,
-    #data = "//omd/packages/heirloom-mailx",
     depends_file = "//omd/distros:dependencies",
     description = "Checkmk - Best-in-class infrastructure & application monitoring",
     homepage = "https://checkmk.com",
     maintainer = "Checkmk team <feedback@checkmk.com>",
+    md5sums = ":md5sums_" + edition,
     # check-mk-pro-2.5.0-2025.06.26_0.noble_amd64.deb
-    package = "check-mk-" + edition,
+    package = "check-mk-" + edition + "{version}",
     package_file_name = "{package}-{cmk_version}_{version}_{architecture}.deb",
     package_variables = ":cmk_pkg_variables_" + edition,
     postinst = "//omd/debian:postinst",

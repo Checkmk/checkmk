@@ -1,0 +1,124 @@
+From df80ac75efb9ff0d8f854d3392d633a3ed379eca Mon Sep 17 00:00:00 2001
+From: Adam Azarchs <adam.azarchs@10xgenomics.com>
+Date: Mon, 7 Jul 2025 19:19:06 -0700
+Subject: [PATCH] pkg_deb: add support for md5sums control file (#960)
+
+This adds a new, optional attribute to the pkg_deb rule allowing a user
+to supply an md5sums file.
+
+Closes #959
+---
+ pkg/private/deb/deb.bzl     | 10 ++++++++++
+ pkg/private/deb/make_deb.py |  7 +++++++
+ tests/deb/BUILD             |  8 ++++++++
+ tests/deb/pkg_deb_test.py   |  1 +
+ 4 files changed, 26 insertions(+)
+
+diff --git a/pkg/private/deb/deb.bzl b/pkg/private/deb/deb.bzl
+index 53bc2eb..c4b090a 100644
+--- a/pkg/private/deb/deb.bzl
++++ b/pkg/private/deb/deb.bzl
+@@ -76,6 +76,9 @@ def _pkg_deb_impl(ctx):
+     if ctx.attr.triggers:
+         args.append("--triggers=@" + ctx.file.triggers.path)
+         files.append(ctx.file.triggers)
++    if ctx.attr.md5sums:
++        args.append("--md5sums=@" + ctx.file.md5sums.path)
++        files.append(ctx.file.md5sums)
+ 
+     # Conffiles can be specified by a file or a string list
+     if ctx.attr.conffiles_file:
+@@ -276,6 +279,13 @@ pkg_deb_impl = rule(
+             See https://wiki.debian.org/DpkgTriggers.""",
+             allow_single_file = True,
+         ),
++        "md5sums": attr.label(
++            doc = """A file listing md5 checksums of files in the data archive.
++            This file is optional.
++            See https://manpages.debian.org/bookworm/dpkg-dev/deb-md5sums.5.en.html.
++            """,
++            allow_single_file = True,
++        ),
+         "built_using": attr.string(
+             doc = """The tool that were used to build this package provided either inline (with built_using) or from a file (with built_using_file).""",
+         ),
+diff --git a/pkg/private/deb/make_deb.py b/pkg/private/deb/make_deb.py
+index 84748c5..c1ce2b8 100644
+--- a/pkg/private/deb/make_deb.py
++++ b/pkg/private/deb/make_deb.py
+@@ -198,6 +198,7 @@ def CreateDeb(output,
+               config=None,
+               templates=None,
+               triggers=None,
++              md5sums=None,
+               conffiles=None,
+               changelog=None,
+               **kwargs):
+@@ -217,6 +218,8 @@ def CreateDeb(output,
+     extrafiles['templates'] = (templates, 0o644)
+   if triggers:
+     extrafiles['triggers'] = (triggers, 0o644)
++  if md5sums:
++    extrafiles['md5sums'] = (md5sums, 0o644)
+   if conffiles:
+     extrafiles['conffiles'] = ('\n'.join(conffiles) + '\n', 0o644)
+   if changelog:
+@@ -366,6 +369,9 @@ def main():
+   parser.add_argument(
+       '--triggers',
+       help='The triggers file (prefix with @ to provide a path).')
++  parser.add_argument(
++      '--md5sums',
++      help='The md5sums file (prefix with @ to provide a path).')
+   # see
+   # https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-conffile
+   parser.add_argument(
+@@ -387,6 +393,7 @@ def main():
+       config=helpers.GetFlagValue(options.config, False),
+       templates=helpers.GetFlagValue(options.templates, False),
+       triggers=helpers.GetFlagValue(options.triggers, False),
++      md5sums=helpers.GetFlagValue(options.md5sums, False),
+       conffiles=GetFlagValues(options.conffile),
+       changelog=helpers.GetFlagValue(options.changelog, False),
+       package=options.package,
+#diff --git a/tests/deb/BUILD b/tests/deb/BUILD
+#index 5df0ab2..fa53244 100644
+#--- a/tests/deb/BUILD
+#+++ b/tests/deb/BUILD
+#@@ -33,6 +33,13 @@ genrule(
+#     cmd = "for i in $(OUTS); do echo 1 >$$i; done",
+# )
+# 
+#+genrule(
+#+    name = "generate_md5sums",
+#+    srcs = [":generate_files"],
+#+    outs = ["md5sums"],
+#+    cmd = "md5sum $(SRCS) | sed 's|$(RULEDIR)/||' > $@",
+#+)
+#+
+# my_package_naming(
+#     name = "my_package_variables",
+#     label = "some_value",
+#@@ -80,6 +87,7 @@ pkg_deb(
+#     distribution = "trusty",
+#     license = "Apache-2.0",
+#     maintainer = "soméone@somewhere.com",
+#+    md5sums = ":generate_md5sums",
+#     package = "fizzbuzz",
+#     preinst = "deb_preinst",
+#     provides = ["hello"],
+#diff --git a/tests/deb/pkg_deb_test.py b/tests/deb/pkg_deb_test.py
+#index 8a2e653..8a4e249 100644
+#--- a/tests/deb/pkg_deb_test.py
+#+++ b/tests/deb/pkg_deb_test.py
+#@@ -177,6 +177,7 @@ class PkgDebTest(unittest.TestCase):
+#         {'name': './config', 'mode': 0o755},
+#         {'name': './control', 'mode': 0o644},
+#         {'name': './preinst', 'mode': 0o755},
+#+        {'name': './md5sums', 'mode': 0o644},
+#         {'name': './templates', 'mode': 0o644},
+#         {'name': './triggers', 'mode': 0o644},
+#     ]
+#-- 
+#2.43.0
+#

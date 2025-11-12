@@ -155,6 +155,12 @@ single_version_override(
 )
 
 single_version_override(
+    module_name = "rules_pkg",
+    patch_strip = 1,
+    patches = ["//bazel/patches:rules_pkg1-pkg_deb-add-support-for-md5sums.patch"],
+)
+
+single_version_override(
     module_name = "rules_python",
     patch_strip = 1,
     patches = [

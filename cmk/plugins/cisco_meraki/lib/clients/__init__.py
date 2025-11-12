@@ -18,17 +18,21 @@ class OrganizationSDK(
     DevicesStatusesSDK,
     LicensesSDK,
     OrganizationsSDK,
+    Protocol,
 ): ...
 
 
 class SensorSDK(
     SensorReadingsSDK,
+    Protocol,
 ): ...
 
 
 class MerakiSDK(Protocol):
-    organizations: OrganizationSDK
-    sensor: SensorSDK
+    @property
+    def organizations(self) -> OrganizationSDK: ...
+    @property
+    def sensor(self) -> SensorSDK: ...
 
 
 @dataclass(frozen=True, kw_only=True)

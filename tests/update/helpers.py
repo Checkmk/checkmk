@@ -263,11 +263,11 @@ class BaseVersions:
 
     min_version = get_min_version()
 
-    if edition_from_env().is_ultimate_edition():
+    if edition_from_env().is_cloud_edition():
         base_packages = [
             CMKPackageInfoOld(
                 CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"),
-                CMKEditionOld(CMKEditionOld.ULTIMATE),
+                CMKEditionOld(CMKEditionOld.CLOUD),
             )
         ]
     else:

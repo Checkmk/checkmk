@@ -40,6 +40,7 @@ RUN zypper ref -s \
     groff \
     gtk-doc \
     intltool \
+    iproute2 \
     iputils \
     jq \
     libXpm-devel \

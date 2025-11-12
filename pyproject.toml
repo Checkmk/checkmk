@@ -3,6 +3,9 @@ extend-exclude = ["doc/**/*.py"]
 target-version = "py313"
 line-length = 100
 
+[pytest]
+xfail_strict = true
+
 [tool.ruff.lint]
 select = [
   "A",      # flake8: builtins

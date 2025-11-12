@@ -50,7 +50,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div :id="`main_menu_${props.item.id}`">
     <template v-if="props.item.vue_app"
       ><component :is="vueApp" v-bind="props.item.vue_app.data"
     /></template>

@@ -45,7 +45,7 @@ from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
-from cmk.utils.translations import TranslationOptionsSpec
+from cmk.utils.translations import TranslationOptions
 
 _ContactgroupName = str
 
@@ -94,7 +94,7 @@ class NetworkScanSpec(TypedDict):
     tag_criticality: NotRequired[str]
     max_parallel_pings: NotRequired[int]
     run_as: UserId
-    translate_names: NotRequired[TranslationOptionsSpec]
+    translate_names: NotRequired[TranslationOptions]
 
 
 class NetworkScanResult(TypedDict):

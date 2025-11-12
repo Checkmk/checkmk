@@ -47,7 +47,7 @@ from cmk.gui.watolib.host_attributes import (
     NetworkScanResult,
     NetworkScanSpec,
 )
-from cmk.utils.translations import TranslationOptionsSpec
+from cmk.utils.translations import TranslationOptions
 
 
 @api_model
@@ -459,7 +459,7 @@ class TranslateNamesModel:
         return value
 
     @classmethod
-    def from_internal(cls, value: TranslationOptionsSpec) -> "TranslateNamesModel":
+    def from_internal(cls, value: TranslationOptions) -> "TranslateNamesModel":
         return cls(
             case=TranslateNamesModel.case_from_internal(value.get("case")),
             drop_domain=value["drop_domain"] if "drop_domain" in value else ApiOmitted(),
@@ -467,7 +467,7 @@ class TranslateNamesModel:
             mapping=[DirectMappingModel.from_internal(entry) for entry in value["mapping"]],
         )
 
-    def to_internal(self) -> TranslationOptionsSpec:
+    def to_internal(self) -> TranslationOptions:
         if not isinstance(self.regex, ApiOmitted):
             regex = [entry.to_internal() for entry in self.regex]
         else:
@@ -476,7 +476,7 @@ class TranslateNamesModel:
             mapping = [entry.to_internal() for entry in self.mapping]
         else:
             mapping = []
-        spec = TranslationOptionsSpec(
+        spec = TranslationOptions(
             case=TranslateNamesModel.case_to_internal(self.case),
             regex=regex,
             mapping=mapping,

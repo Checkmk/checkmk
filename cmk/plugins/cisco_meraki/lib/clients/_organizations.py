@@ -16,7 +16,7 @@ class OrganizationsSDK(Protocol):
     def getOrganizations(self) -> Sequence[RawOrganisation]: ...
 
 
-class OrganizationsClient:
+class Organizations:
     def __init__(self, sdk: OrganizationsSDK) -> None:
         self._sdk = sdk
 

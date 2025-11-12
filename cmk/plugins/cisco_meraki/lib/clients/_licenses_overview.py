@@ -10,22 +10,23 @@ from typing import Protocol
 from meraki.exceptions import APIError  # type: ignore[import-not-found]
 
 from cmk.plugins.cisco_meraki.lib.log import LOGGER
-from cmk.plugins.cisco_meraki.lib.schema import LicensesOverview, RawLicensesOverview
+from cmk.plugins.cisco_meraki.lib.schema import LicensesOverview as LicensesOverview_
+from cmk.plugins.cisco_meraki.lib.schema import RawLicensesOverview
 
 
 class LicensesOverviewSDK(Protocol):
     def getOrganizationLicensesOverview(self, organizationId: str) -> RawLicensesOverview: ...
 
 
-class LicensesOverviewClient:
+class LicensesOverview:
     def __init__(self, sdk: LicensesOverviewSDK) -> None:
         self._sdk = sdk
 
-    def __call__(self, id_: str, name: str) -> LicensesOverview | None:
+    def __call__(self, id_: str, name: str) -> LicensesOverview_ | None:
         if not (raw_overview := self._get_raw_overview(id_)):
             return None
 
-        return LicensesOverview(
+        return LicensesOverview_(
             organisation_id=id_,
             organisation_name=name,
             **raw_overview,

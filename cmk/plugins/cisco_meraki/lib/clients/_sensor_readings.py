@@ -21,7 +21,7 @@ class SensorReadingsSDK(Protocol):
     ) -> Sequence[RawSensorReadings]: ...
 
 
-class SensorReadingsClient:
+class SensorReadings:
     def __init__(self, sdk: SensorReadingsSDK) -> None:
         self._sdk = sdk
 

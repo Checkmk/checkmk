@@ -18,7 +18,7 @@ class DevicesSDK(Protocol):
     ) -> Sequence[RawDevice]: ...
 
 
-class DevicesClient:
+class Devices:
     def __init__(self, sdk: DevicesSDK) -> None:
         self._sdk = sdk
 

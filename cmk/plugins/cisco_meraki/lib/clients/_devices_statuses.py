@@ -21,7 +21,7 @@ class DevicesStatusesSDK(Protocol):
     ) -> Sequence[RawDevicesStatus]: ...
 
 
-class DevicesStatusesClient:
+class DevicesStatuses:
     def __init__(self, sdk: DevicesStatusesSDK) -> None:
         self._sdk = sdk
 

@@ -55,12 +55,11 @@ def prepare_restore_as_root(
         uid = options.get("uid")
         gid = options.get("gid")
         useradd(version_info, site, uid, gid)  # None for uid/gid means: let Linux decide
+        os.mkdir(site_home)
     else:
         sys.stdout.write("Deleting existing site data...\n")
-        shutil.rmtree(site_home)
+        _remove_site_home(Path(site_home))
         ok()
-
-    os.mkdir(site_home)
 
 
 def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, verbose: bool) -> None:
@@ -77,12 +76,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, ver
     unmount_tmpfs(site.name, site_home, site.tmp_dir)
 
     sys.stdout.write("Deleting existing site data...")
-    for f in os.listdir(site_home):
-        path = site_home + "/" + f
-        if os.path.islink(path) or os.path.isfile(path):
-            os.unlink(path)
-        else:
-            shutil.rmtree(path)
+    _remove_site_home(Path(site_home))
     ok()
 
 
@@ -106,3 +100,12 @@ def _verify_directory_write_access(site_home: str) -> None:
             "the backup. Missing write access on the following paths:\n\n"
             "    %s" % "\n    ".join(wrong)
         )
+
+
+def _remove_site_home(site_home: Path) -> None:
+    for f in os.listdir(Path(site_home)):
+        fullpath = Path(site_home, f)
+        if os.path.islink(fullpath) or os.path.isfile(fullpath):
+            os.unlink(fullpath)
+        else:
+            shutil.rmtree(fullpath)

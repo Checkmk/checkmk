@@ -49,8 +49,8 @@ fips_distros: &fips_distros
 editions:
     pro:
         release: [*common, *cma_distros]
-        daily: [*common, *cma_distros]
-        daily_tests: [*common]
+        daily: *daily_reduced
+        daily_tests: *daily_reduced
         fips: [*fips_distros]
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*common]
@@ -67,8 +67,8 @@ editions:
         testbuild: []
     ultimatemt:
         release: [*common, *cma_distros]
-        daily: *daily_reduced
-        daily_tests: *daily_reduced
+        daily: [*common, *cma_distros]
+        daily_tests: [*common]
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]

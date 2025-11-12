@@ -7561,6 +7561,10 @@ msgstr "Alocarea la gazda care face interogarea"
 msgid "Assign via regular expressions"
 msgstr "Atribuirea prin expresii regulate"
 
+#, fuzzy
+msgid "Assigned to host"
+msgstr "Atribuiți grupului"
+
 msgid "Assignee"
 msgstr ""
 
@@ -9167,27 +9171,27 @@ msgid "Azure Redis Cache effectiveness"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
-msgid "Azure Redis connections"
+msgid "Azure Redis Connections"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
-msgid "Azure Redis latency"
+msgid "Azure Redis Latency"
 msgstr "Latența medie a discului"
 
 #, fuzzy
-msgid "Azure Redis memory"
+msgid "Azure Redis Memory"
 msgstr "Memorie absolută utilizată"
 
 #, fuzzy
-msgid "Azure Redis replication"
+msgid "Azure Redis Replication"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
-msgid "Azure Redis server load"
+msgid "Azure Redis Server load"
 msgstr "Numele serverului Redis"
 
 #, fuzzy
-msgid "Azure Redis throughput"
+msgid "Azure Redis Throughput"
 msgstr "Viteză de citire"
 
 #, fuzzy
@@ -24491,6 +24495,10 @@ msgstr "Intrări pe rând"
 
 msgid "Entry"
 msgstr "Intrare"
+
+#, fuzzy
+msgid "Env Creation"
+msgstr "Creație"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -42354,6 +42362,10 @@ msgid "Maximum number of access points"
 msgstr "Numărul maxim de puncte de acces"
 
 #, fuzzy
+msgid "Maximum number of attempts"
+msgstr "Numărul maxim de încercări de livrare"
+
+#, fuzzy
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -48588,6 +48600,10 @@ msgstr ""
 #, fuzzy
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Este necesar doar dacă aveți mai multe instanțe MySQL pe un server"
+
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "Numai o singură etichetă poate fi goală."
@@ -57343,6 +57359,9 @@ msgstr "Unități Rittal CMC-III: Curent"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unități Rittal CMC-III: Temperaturi"
 
+msgid "Robot"
+msgstr ""
+
 msgid "Robot Framework parameters"
 msgstr "Parametrii cadrului robotului"
 
@@ -58681,6 +58700,14 @@ msgstr ""
 
 msgid "Scheduler"
 msgstr "Programator"
+
+#, fuzzy
+msgid "Scheduler Interval"
+msgstr "Intervalul de cache"
+
+#, fuzzy
+msgid "Scheduler Plan Configs"
+msgstr "Programați o perioadă de pauză?"
 
 #, fuzzy
 msgid "Scheduler job name"
@@ -67386,23 +67413,23 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
-"improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
+"The Livestatus Proxy is not only good for remote sites, enable it for your "
+"central site"
+msgstr ""
+"Proxy-ul Livestatus nu este bun doar pentru site-urile slave, activați-l "
+"pentru site-ul principal."
+
+#, fuzzy
+msgid ""
+"The Livestatus proxy daemon is available with all commercial editions and "
+"improves the management of the inter site connections using Livestatus. "
+"Using the Livestatus proxy daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
 "Livestatus Proxy Daemon este disponibil cu Checkmk Enterprise Edition și "
 "îmbunătățește gestionarea conexiunilor între site-uri folosind livestatus. "
 "Utilizarea Livestatus Proxy Daemon îmbunătățește capacitatea de reacție și "
 "performanța interfeței grafice și va reduce utilizarea resurselor."
-
-#, fuzzy
-msgid ""
-"The Livestatus Proxy is not only good for remote sites, enable it for your "
-"central site"
-msgstr ""
-"Proxy-ul Livestatus nu este bun doar pentru site-urile slave, activați-l "
-"pentru site-ul principal."
 
 msgid "The Logfile"
 msgstr "Fișierul jurnal"
@@ -94164,6 +94191,21 @@ msgstr "Copierea vizualizării existente"
 #, fuzzy
 msgid "explicit password"
 msgstr "Parolă nouă"
+
+#, fuzzy
+msgid "~Enter regex (pattern match)"
+msgstr "Încercați potrivirea modelului"
+
+msgid "Enter plain text (single match)"
+msgstr ""
+
+#, fuzzy
+msgid "show preview"
+msgstr "arată mai mult"
+
+#, fuzzy
+msgid "Preview of matches:"
+msgstr "Această regulă se potrivește cu"
 
 #, fuzzy
 msgid "Auto"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-11-10 21:34+0000\n"
+"PO-Revision-Date: 2025-11-11 19:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -1868,7 +1868,7 @@ msgstr ""
 "Timeouts verringern können</li><li>Prüfen Sie, welche Checks/Plugins <a "
 "href=\"view.py?view_name=service_check_durations\">viel Zeit der Helper-"
 "Prozesse verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk "
+"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk-"
 "Fetcher</a></li></ul></p><p>Sie müssen jedoch darauf achten, dass Sie nicht "
 "zu viele Checkmk-Fetcher-Helper konfigurieren, da diese Ressourcen "
 "verbrauchen. Ein zusätzliches Problem ist, dass die Checkmk-Fetcher beim "
@@ -1904,7 +1904,7 @@ msgstr ""
 "verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view.py?"
 "view_name=service_check_durations\">viel Zeit der Helper-Prozesse "
 "verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Helper</"
+"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk-Helper</"
 "a></li></ul></p><p>Sie müssen jedoch darauf achten, dass Sie nicht zu viele "
 "Checkmk-Check-Helper konfigurieren, da diese viel Speicher verbrauchen. Ihr "
 "System muss in der Lage sein, den Speicherbedarf für alle auf einmal zu "
@@ -2309,13 +2309,15 @@ msgstr "Eine Überschrift für die Ansicht"
 msgid ""
 "A host filter requires an attribute key. Please choose one (e.g., host.name)"
 msgstr ""
-"Ein Host-Filter benötigt einen Attributschlüssel. Bitte wählen Sie einen "
+"Ein Host-Filter benötigt einen Attribut-Schlüssel. Bitte wählen Sie einen "
 "(z.B. host.name)"
 
 msgid ""
 "A host filter requires an attribute value. Please choose one (e.g., "
 "example.com)"
 msgstr ""
+"Ein Host-Filter benötigt einen Attribut-Wert. Bitte wählen Sie einen (z.B. "
+"example.com)"
 
 #, python-format
 msgid ""
@@ -4583,7 +4585,7 @@ msgid "Add user"
 msgstr "Benutzer hinzufügen"
 
 msgid "Add user attribute"
-msgstr "Benutzerattribut hinzufügen"
+msgstr "Benutzer-Attribut hinzufügen"
 
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "InfluxDB-Verbindungen hinzufügen, bearbeiten und löschen."
@@ -7352,6 +7354,10 @@ msgstr "Anfragende Hosts zuordnen"
 msgid "Assign via regular expressions"
 msgstr "Zuweisung über reguläre Ausdrücke"
 
+#, fuzzy
+msgid "Assigned to host"
+msgstr "Ordne einer Gruppe zu"
+
 msgid "Assignee"
 msgstr "Adressat"
 
@@ -7540,10 +7546,10 @@ msgid "Attribute"
 msgstr "Attribut"
 
 msgid "Attribute filters"
-msgstr "Attributfilter"
+msgstr "Attribut-Filter"
 
 msgid "Attribute key"
-msgstr "Attributschlüssel"
+msgstr "Attribut-Schlüssel"
 
 msgid "Attribute match value"
 msgstr "Attribut-Match-Wert"
@@ -7552,16 +7558,16 @@ msgid "Attribute sync plug-ins"
 msgstr "Sync-Plugins für Attribute"
 
 msgid "Attribute to search"
-msgstr "Zu suchende Attribute"
+msgstr "Zu suchendes Attribut"
 
 msgid "Attribute to set"
-msgstr "Zu setzende Attribute"
+msgstr "Zu setzendes Attribut"
 
 msgid "Attribute type"
-msgstr "Attributtyp"
+msgstr "Attribut-Typ"
 
 msgid "Attribute value"
-msgstr "Attributwert"
+msgstr "Attribut-Wert"
 
 #, python-brace-format
 msgid "Attribute {diff_path} with value {val_t1} removed."
@@ -8762,22 +8768,28 @@ msgstr "Azure Redis CPU-Auslastung"
 msgid "Azure Redis Cache effectiveness"
 msgstr "Effektivität des Azure Redis Caches"
 
-msgid "Azure Redis connections"
+#, fuzzy
+msgid "Azure Redis Connections"
 msgstr "Azure Redis Verbindungen"
 
-msgid "Azure Redis latency"
+#, fuzzy
+msgid "Azure Redis Latency"
 msgstr "Azure Redis Latenz"
 
-msgid "Azure Redis memory"
+#, fuzzy
+msgid "Azure Redis Memory"
 msgstr "Azure Redis Speicherplatz"
 
-msgid "Azure Redis replication"
+#, fuzzy
+msgid "Azure Redis Replication"
 msgstr "Azure Redis Replikation"
 
-msgid "Azure Redis server load"
+#, fuzzy
+msgid "Azure Redis Server load"
 msgstr "Azure Redis Serverauslastung"
 
-msgid "Azure Redis throughput"
+#, fuzzy
+msgid "Azure Redis Throughput"
 msgstr "Azure Redis Durchsatz"
 
 msgid "Azure SQL database CPU usage"
@@ -10635,7 +10647,6 @@ msgstr ""
 msgid "Bypass Proxy for certain hosts"
 msgstr "Umgehung des Proxys für bestimmte Hosts"
 
-#, fuzzy
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
 "adresses which should not be accessed through the given proxy.<br>The proxy "
@@ -10643,12 +10654,12 @@ msgid ""
 "the installation files from. (In order to access a page through a proxy "
 "inside of the test suite, use the libraries capabilities)"
 msgstr ""
-"Umgehung des Proxys für bestimmte Hosts: Spezifiziert eine Liste von "
-"Zielhosts/-adressen, auf die nicht über den angegebenen Proxy zugegriffen "
-"werden soll. <br>Die Proxy-Einstellung wird für den Zugriff auf das Internet "
-"verwendet, von dem RCC die Installationsdateien herunterladen muss. (Um eine "
-"Seite über einen Proxy innerhalb der Test-Suite aufzurufen, verwenden Sie "
-"die Bibliotheksfunktionen.)"
+"Umgehung des Proxys für bestimmte Hosts: Spezifiziert eine Liste von Ziel-"
+"Hosts/-adressen, auf die nicht über den angegebenen Proxy zugegriffen werden "
+"soll.<br>Die Proxy-Einstellung wird für den Zugriff auf das Internet "
+"verwendet, aus dem Conda die Installationsdateien herunterladen muss. (Um "
+"eine Seite über einen Proxy innerhalb der Test-Suite aufzurufen, verwenden "
+"Sie die Bibliotheksfunktionen.)"
 
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
@@ -13998,7 +14009,7 @@ msgid "Collections"
 msgstr "Collectionen"
 
 msgid "Collector NodePort / Ingress endpoint"
-msgstr "Collector NodePort / Ingress-Endpunkt"
+msgstr "Kollektor NodePort / Ingress-Endpunkt"
 
 msgid "Color"
 msgstr "Farbe"
@@ -16516,10 +16527,10 @@ msgid "Create view"
 msgstr "Erstelle Ansicht"
 
 msgid "Create your own host related attributes"
-msgstr "eigenes hostbezogenes Attribut erstellen"
+msgstr "Erstellen Sie Ihre eigenen hostbezogenen Attribute"
 
 msgid "Create your own user related attributes"
-msgstr "eigene benutzerbezogene Attribute erstellen"
+msgstr "Erstellen Sie Ihre eigenen benutzerbezogenen Attribute"
 
 msgid ""
 "Create, remove and edit tags. Removing tags also might remove rules, so this "
@@ -17085,7 +17096,7 @@ msgid "Custom address"
 msgstr "Benutzerdefinierte Adresse"
 
 msgid "Custom attributes"
-msgstr "Eigene Attribute"
+msgstr "Benutzerdefinierte Attribute"
 
 msgid "Custom checks - defined via rule"
 msgstr "Benutzerdefinierter Check - definiert über eine Regel"
@@ -17112,7 +17123,7 @@ msgid "Custom host"
 msgstr "Benutzerdefinierter Host"
 
 msgid "Custom host attributes"
-msgstr "Eigene Host-Attribute"
+msgstr "Benutzerdefinierte Host-Attribute"
 
 msgid "Custom host name computation"
 msgstr "Benutzerdefinierte Berechnung von Host-Namen"
@@ -17194,7 +17205,7 @@ msgid "Custom sender (\"From\")"
 msgstr "Benutzerdefinierter Absender (\"Von\")"
 
 msgid "Custom service attributes"
-msgstr "Benutzerdefinierte Serviceattribute"
+msgstr "Benutzerdefinierte Service-Attribute"
 
 msgid "Custom service configuration update"
 msgstr "Update der benutzerdefinierten Service-Konfiguration"
@@ -17227,7 +17238,7 @@ msgid "Custom title"
 msgstr "Angepasster Titel"
 
 msgid "Custom user attributes"
-msgstr "Benutzerattribute"
+msgstr "Benutzerdefinierte Benutzer-Attribute"
 
 #, python-format
 msgid "Custom variable: %s"
@@ -18505,15 +18516,14 @@ msgid ""
 "certain cases the autocomplete feature may be unavailable. "
 msgstr ""
 "Legen Sie hier den zu überwachenden Metriknamen als exakten Match fest. "
-"Metriknamen werden aus <a href='https://checkmk.com/werk/"
-"18209'>OpenTelemetry-Datenpunktattributen</a> oder dem <a href='https://"
-"checkmk.com/werk/18249'>OpenTelemetry-Metriknamen</a> und der <a "
-"href='https://checkmk.com/werk/18249'>OpenTelemetry-Metrikeinheit</a> "
-"berechnet. Dies muss ein exakter Match mit dem Metriknamen im Service sein."
-"<br><br>Die Vorschläge der Autovervollständigung können unvollständig sein. "
-"Ein unbekannter metrischer Name kann manuell angegeben werden.<br><br>In "
-"bestimmten Fällen kann die Funktion zur automatischen Vervollständigung "
-"nicht verfügbar sein. "
+"Metriknamen werden aus <a href='https://checkmk.com/werk/18209'>Attribute "
+"des OpenTelemetry-Datenpunkts</a> oder dem <a href='https://checkmk.com/werk/"
+"18249'>OpenTelemetry-Metriknamen</a> und der <a href='https://checkmk.com/"
+"werk/18249'>OpenTelemetry-Metrikeinheit</a> berechnet. Dies muss ein exakter "
+"Match mit dem Metriknamen im Service sein.<br><br>Die Vorschläge der "
+"Autovervollständigung können unvollständig sein. Ein unbekannter metrischer "
+"Name kann manuell angegeben werden.<br><br>In bestimmten Fällen kann die "
+"Funktion zur automatischen Vervollständigung nicht verfügbar sein. "
 
 msgid ""
 "Define the periodicity in which the repetition of the measured data is "
@@ -21326,7 +21336,7 @@ msgid "Don't forget the instance: instance:dbname"
 msgstr "Vergessen Sie nicht den Instanznamen: instance:dbname"
 
 msgid "Don't handle real-time checks"
-msgstr "Echtzeitchecks nicht verarbeiten"
+msgstr "Realtime-Checks nicht verarbeiten"
 
 msgid "Don't import"
 msgstr "Nicht importieren"
@@ -22185,7 +22195,7 @@ msgid "Edit graph tuning"
 msgstr "Graph-Tuning bearbeiten"
 
 msgid "Edit host attribute"
-msgstr "Host-Attribut editieren"
+msgstr "Host-Attribute bearbeiten"
 
 msgid "Edit host group"
 msgstr "Host-Gruppe bearbeiten"
@@ -22401,7 +22411,7 @@ msgid "Edit user %s"
 msgstr "Bearbeite Benutzer %s"
 
 msgid "Edit user attribute"
-msgstr "Benutzerattribut bearbeiten"
+msgstr "Benutzer-Attribut bearbeiten"
 
 #, python-format
 msgid "Edit view of user %s"
@@ -22626,7 +22636,7 @@ msgid "Email address"
 msgstr "E-Mail-Adresse"
 
 msgid "Email address attribute"
-msgstr "Attribute der E-Mail-Adresse"
+msgstr "Attribut der E-Mail-Adresse"
 
 msgid "Email address used for account identification"
 msgstr "E-Mail-Adresse, die zur Kontoidentifizierung verwendet wird"
@@ -22718,9 +22728,8 @@ msgstr "Aktivierung von SNMPv2c für Verwaltungsansichten"
 msgid "Enable TLS"
 msgstr "TLS einschalten"
 
-#, fuzzy
 msgid "Enable TLS certificate revocation checks"
-msgstr "Verifizierung des TLS-Zertifikats"
+msgstr "TLS Certificate Revocation Checks aktivieren"
 
 msgid "Enable TLS certificate validation"
 msgstr "TLS-Zertifikatsüberprüfung aktivieren"
@@ -22792,7 +22801,7 @@ msgstr ""
 "Sicherung erstellt wurden, werden während der Sicherung mit GZIP gepackt."
 
 msgid "Enable handling of real-time checks"
-msgstr "Bearbeitung von Echtzeit-Checks einschalten"
+msgstr "Bearbeitung von Realtime-Checks aktivieren"
 
 msgid "Enable host notifications"
 msgstr "Host-Benachrichtigungen ein"
@@ -23327,7 +23336,7 @@ msgid ""
 "contact group with the identical name must exist in Checkmk. Otherwise they "
 "can't be mapped."
 msgstr ""
-"Geben Sie den Claim-Namen ein, dessen Attributwert Sie als Distinguished "
+"Geben Sie den Claim-Namen ein, dessen Attribut-Wert Sie als Distinguished "
 "Name (DN) erwarten und dessen Common Name (CN) Sie als Kontaktgruppe "
 "verwenden möchten. Eine Kontaktgruppe mit dem gleichen Namen muss in Checkmk "
 "existieren. Andernfalls können sie nicht verknüpft werden."
@@ -23337,19 +23346,19 @@ msgid ""
 "identity provider to a contact group. A contact group with the identical "
 "name must exist in Checkmk. Otherwise they cannot be mapped."
 msgstr ""
-"Geben Sie den Claim-Namen ein, dessen Attributwert Sie verwenden möchten, um "
-"Ihren Identitätsanbieter einer Kontaktgruppe zuzuordnen. Eine Kontaktgruppe "
-"mit dem gleichen Namen muss in Checkmk existieren. Andernfalls können sie "
-"nicht verknüpft werden."
+"Geben Sie den Claim-Namen ein, dessen Attribut-Wert Sie verwenden möchten, "
+"um Ihren Identitätsanbieter einer Kontaktgruppe zuzuordnen. Eine "
+"Kontaktgruppe mit dem gleichen Namen muss in Checkmk existieren. Andernfalls "
+"können sie nicht verknüpft werden."
 
 msgid ""
 "Enter the claim name whose attribute value you want to use. The user will "
 "only be assigned to contact groups in case of a match between the specified "
 "attribute match value and the returned claim attribute value."
 msgstr ""
-"Geben Sie den Claim-Namen ein, dessen Attributwert Sie verwenden möchten. "
+"Geben Sie den Claim-Namen ein, dessen Attribut-Wert Sie verwenden möchten. "
 "Der Benutzer wird nur dann einer Kontaktgruppe zugeordnet, wenn der "
-"angegebene Attributwert mit dem zurückgegebenen Attributwert des Claims "
+"angegebene Attribut-Wert mit dem zurückgegebenen Attribut-Wert des Claims "
 "übereinstimmt."
 
 msgid ""
@@ -23486,6 +23495,10 @@ msgstr "Einträge pro Zeile"
 
 msgid "Entry"
 msgstr "Eintrag"
+
+#, fuzzy
+msgid "Env Creation"
+msgstr "Erstellung"
 
 msgid "Environment Sensors"
 msgstr "Umgebungssensoren"
@@ -24083,14 +24096,13 @@ msgid "Exclude instances"
 msgstr "Instanzen ausschließen"
 
 msgid "Exclude messages from Sources:"
-msgstr "Nachrichten aus den Quellen ausschließen:"
+msgstr "Nachrichten ausschließen aus den Quellen:"
 
-#, fuzzy
 msgid "Exclude messages from Users:"
-msgstr "Nachrichten aus den Quellen ausschließen:"
+msgstr "Nachrichten ausschließen von Benutzern:"
 
 msgid "Exclude messages with ids:"
-msgstr "Nachrichten mit IDs ausschließen:"
+msgstr "Nachrichten ausschließen mit IDs:"
 
 msgid "Exclude namespaces matching"
 msgstr "Übereinstimmende Namespaces ausschließen"
@@ -25028,9 +25040,8 @@ msgstr ""
 "Sie die Regel zur Bearbeitung öffnen und die Regel ohne Änderung erneut "
 "speichern."
 
-#, fuzzy
 msgid "Failed to query hosts from metric backend"
-msgstr "Metrik-Backend anfragen"
+msgstr "Der Aufruf von Hosts vom Metrik-Backend ist fehlgeschlagen"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Lesen der Apache-Prozess-ID fehlgeschlagen"
@@ -25924,8 +25935,8 @@ msgstr "Ordnerauswahl"
 msgid ""
 "Folder attributes are locked (You cannot edit the attributes of this folder)"
 msgstr ""
-"Ordnerattribute sind gesperrt (Sie können die Attribute dieses Ordners nicht "
-"bearbeiten)"
+"Ordner-Attribute sind gesperrt (Sie können die Attribute dieses Ordners "
+"nicht bearbeiten)"
 
 msgid "Folder does not exist"
 msgstr "Dieser Ordner existiert nicht"
@@ -26151,7 +26162,7 @@ msgid ""
 "the fetcher helpers."
 msgstr ""
 "Für die Durchführung von Checkmk-basierten Checks hält der Micro Core einen "
-"Pool von spezialisierten Helper-Prozessen vor, welche die von den Fetcher "
+"Pool von spezialisierten Helper-Prozessen vor, welche die von den Fetcher-"
 "Helpern gesammelten Informationen interpretieren und auswerten."
 
 msgid ""
@@ -26160,11 +26171,11 @@ msgid ""
 "size of this pool is configured here. This is identical with the maximum "
 "number of concurrent real-time checks."
 msgstr ""
-"Für die Durchführung von Checkmk-basierten Checks über den Micro Core wird "
-"ein Pool von spezialisierten Helpers vorgehalten, die Checkmk beschleunigen, "
-"indem sie das Anlegen von Prozessen vermeiden. Die Größe dieses Pools wird "
-"hier konfiguriert. Sie ist identisch mit der maximalen Anzahl gleichzeitiger "
-"Real-Time-Prüfungen."
+"Für die Ausführung von Checkmk-basierten Checks hält der Checkmk Micro Core "
+"einen Pool spezialisierter Helper bereit, die Checkmk beschleunigen, indem "
+"sie die Erstellung von Prozessen vermeiden. Die Größe dieses Pools wird hier "
+"konfiguriert. Diese entspricht der maximalen Anzahl gleichzeitiger Realtime-"
+"Checks."
 
 msgid ""
 "For sake of optimal performance Checkmk Micro Core keeps all current state "
@@ -26715,7 +26726,7 @@ msgid "Full name"
 msgstr "Vollständiger Name"
 
 msgid "Full name attribute"
-msgstr "Attribut Vollständiger Name"
+msgstr "Attribut des vollständigen Namens"
 
 msgid "Full name or alias of the user"
 msgstr "Vollständiger Name oder Alias des Benutzers"
@@ -27566,7 +27577,7 @@ msgid "Groups on single host"
 msgstr "Gruppen auf einem einzelnen Host"
 
 msgid "Groups to custom user attributes"
-msgstr "Gruppen zu Benutzerdefinierten Attributen"
+msgstr "Gruppen zu benutzerdefinierten Benutzer-Attributen"
 
 msgid "Groups to synchronize"
 msgstr "Zu synchronisierende Gruppen"
@@ -30084,7 +30095,7 @@ msgstr ""
 "erstellen, bearbeiten oder löschen)"
 
 msgid "Host attributes locked (You cannot edit this host)"
-msgstr "Host gesperrt (keine Veränderung möglich)"
+msgstr "Host-Attribute gesperrt (Sie können diesen Host nicht bearbeiten)"
 
 msgid "Host attributes to set"
 msgstr "Zu setzende Host-Attribute"
@@ -30141,13 +30152,13 @@ msgid "Host creation"
 msgstr "Host-Erstellung"
 
 msgid "Host custom attribute"
-msgstr "Host-Benutzerattribut"
+msgstr "Benutzerdefiniertes Attribut des Hosts"
 
 msgid "Host custom attribute (regex)"
-msgstr "Host-Benutzerattribut (regex)"
+msgstr "Benutzerdefiniertes Attribut des Hosts (regex)"
 
 msgid "Host custom attributes"
-msgstr "Eigene Host-Attribute"
+msgstr "Benutzerdefinierte Attribute des Hosts"
 
 msgid "Host custom field ID"
 msgstr "ID des benutzerdefinierten Host Feldes"
@@ -30397,7 +30408,7 @@ msgid "Host name or alias (regex)"
 msgstr "Host-Name oder Alias (regex)"
 
 msgid "Host name resource attribute"
-msgstr ""
+msgstr "Ressourcen-Attribut des Host-Namens"
 
 msgid "Host name rules"
 msgstr "Regeln für Host-Namen"
@@ -31658,6 +31669,7 @@ msgstr ""
 "der Steuerungsebene betrachtet. Andernfalls wird er als Arbeitsknoten "
 "betrachtet."
 
+#, fuzzy
 msgid ""
 "If a selection is set to <i>This value differs between the selected hosts.</"
 "i> then currenty not all selected hosts share the same setting for this "
@@ -34081,9 +34093,8 @@ msgstr "Eingehende NAT-Regeln"
 msgid "Inbound and Outbound Messages"
 msgstr "Eingehende und ausgehende Meldungen"
 
-#, fuzzy
 msgid "Inbound data"
-msgstr "Daten senden"
+msgstr "Eingehende Daten"
 
 msgid "Inbound levels (per second)"
 msgstr "Eingangslevels (pro Sekunde)"
@@ -34091,13 +34102,11 @@ msgstr "Eingangslevels (pro Sekunde)"
 msgid "Inbound messages"
 msgstr "Eingehende Meldungen"
 
-#, fuzzy
 msgid "Inbound throughput lower levels (/sec)"
-msgstr "Untergrenzen für 5 Volt Ausgang"
+msgstr "Untergrenzen des eingehenden Durchsatzes (/sec)"
 
-#, fuzzy
 msgid "Inbound throughput upper levels (/sec)"
-msgstr "Obergrenzen für 5 Volt Ausgabe"
+msgstr "Obergrenzen eingehenden Durchsatzes (/sec)"
 
 msgid "Incident"
 msgstr "Ereignis"
@@ -34135,9 +34144,8 @@ msgstr "Indirekt verbundene Hosts einbeziehen (rekursiv)"
 msgid "Include messages only from Sources:"
 msgstr ""
 
-#, fuzzy
 msgid "Include messages only from Users:"
-msgstr "Nachrichten aus den Quellen ausschließen:"
+msgstr "Nachrichten nur einschließen von Benutzern:"
 
 msgid "Include only messages with ids:"
 msgstr "Nur Nachrichten mit IDs einschließen:"
@@ -35008,8 +35016,8 @@ msgid ""
 "Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
 msgstr ""
-"Ungültiger Attributname. Erlaubte Zeichen: a-z, A-Z, 0-9, <tt>-</tt> und "
-"<tt>_</tt>."
+"Ungültiger Attribut-Name. Nur die Zeichen a-z, A-Z, 0-9, _ und - sind "
+"erlaubt."
 
 #, python-format
 msgid "Invalid automation command: %s."
@@ -35637,7 +35645,7 @@ msgid ""
 "The user options which get imported into Checkmk from LDAP will be locked in "
 "Setup."
 msgstr ""
-"Sie können verschiedene Benutzerattribute, wie E-Mail oder vollständigen "
+"Sie können verschiedene Benutzer-Attribute, wie E-Mail oder vollständigen "
 "Namen, aus dem LDAP-Verzeichnis holen. Dies erledigen Plugins, die einzeln "
 "aktiviert oder deaktiviert werden können. Wenn ein Plugin aktiviert ist, "
 "wird es bei der nächsten Synchronisierung der Benutzerkonten verwendet, um "
@@ -35645,7 +35653,9 @@ msgstr ""
 "importiert werden, sind im Setup gesperrt."
 
 msgid "It is possible to let users edit their custom attributes."
-msgstr "Hier können sie einstellen, ob der Benutzer sein Attribut ändern kann."
+msgstr ""
+"Sie können Benutzern erlauben ihre benutzerdefinierten Attribute zu "
+"bearbeiten."
 
 #, python-format
 msgid ""
@@ -36353,13 +36363,14 @@ msgid "LDAP [%s]: Removed user %s"
 msgstr "LDAP [%s]: Benutzer %s entfernt"
 
 msgid "LDAP attribute to be used as indicator"
-msgstr "LDAP Attribut, das als Indikator fungiert"
+msgstr "LDAP-Attribut, das als Indikator fungiert"
 
 msgid "LDAP attribute to search, the default is <tt>(objectclass=*)</tt>."
-msgstr "LDAP Attribut für Suche, der Standard lautet <tt>(objectclass=*)</tt>."
+msgstr ""
+"LDAP-Attribut für die Suche, der Standard lautet <tt>(objectclass=*)</tt>."
 
 msgid "LDAP attribute to sync"
-msgstr "LDAP Attribut für Synchronisation"
+msgstr "LDAP-Attribut für die Synchronisation"
 
 msgid "LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"
 msgstr "LDAP Base, z.B. ou=Development, o=Checkmk GmbH, c=de"
@@ -37744,10 +37755,11 @@ msgstr ""
 "Begrenzen Sie die Ausführungszeit der Anfrage, um ein hängendes System zu "
 "vermeiden."
 
-#, fuzzy
 msgid ""
 "Limit the maximum number of hosts that can be created by this connection."
-msgstr "Maximale Anzahl an Anfragen, die pro Verbindung ausgeführt werden."
+msgstr ""
+"Maximale Anzahl an Hosts begrenzen, die durch diese Verbindung erstellt "
+"werden können."
 
 msgid "Limit the number of rows"
 msgstr "Die Anzahl der Zeilen begrenzen"
@@ -39526,8 +39538,8 @@ msgid ""
 "Make this custom attribute available to check commands, notifications and "
 "the status GUI"
 msgstr ""
-"Dieses benutzerdefinierte Attribut Befehlen, Benachrichtigungen und der "
-"Status-GUI zur Verfügung stellen"
+"Dieses benutzerdefinierte Attribut Check-Kommandos, Benachrichtigungen und "
+"der Status-GUI zur Verfügung stellen"
 
 msgid "Make this rule pack available in the Extension Packages module"
 msgstr "Dieses Regelpaket in der Erweiterungspaketverwaltung verfügbar machen"
@@ -39604,7 +39616,7 @@ msgid "Manage custom attributes"
 msgstr "Benutzerdefinierte Attribute verwalten"
 
 msgid "Manage custom host- and user attributes"
-msgstr "Benutzerdefinierte Host- und Benutzerattribute verwalten"
+msgstr "Benutzerdefinierte Host- und Benutzer-Attribute verwalten"
 
 msgid "Manage custom icons"
 msgstr "Benutzerdefinierte Symbole verwalten"
@@ -39768,10 +39780,10 @@ msgstr ""
 "konfigurierte Schwellwert ist."
 
 msgid "Map Attribute 'Frozen'"
-msgstr "States für die Eigenschaft 'Eingefroren'"
+msgstr "Attribut 'Frozen' abgleichen"
 
 msgid "Map Attribute 'State'"
-msgstr "States für die Eigenschaft 'State'"
+msgstr "Attribut 'State' abgleichen"
 
 msgid "Map Database States"
 msgstr "Bilde Datenbankzustand ab"
@@ -40180,16 +40192,14 @@ msgstr "maximale Länge"
 msgid "Max levels for ram"
 msgstr "Maximale Levels für RAM"
 
-#, fuzzy
 msgid "Max size for image file"
-msgstr "Maximale Größe einer Datei"
+msgstr "Maximale Größe einer Bilddatei"
 
 msgid "Max size for image file (absolute value)"
 msgstr ""
 
-#, fuzzy
 msgid "Max size for image file (relative to max disk size)"
-msgstr "Feste Breite (relativ zur Schriftgröße) verwenden"
+msgstr "Maximale Größe einer Bilddatei (relativ zur max. Festplattengröße)"
 
 msgid "Max time for last reported"
 msgstr "Maximale Zeit für die letzte Meldung"
@@ -40419,7 +40429,7 @@ msgid "Maximum concurrent Checkmk checkers"
 msgstr "Maximale gleichzeitige Checkmk-Checkers"
 
 msgid "Maximum concurrent Checkmk fetchers"
-msgstr "Maximale gleichzeitige Checkmk Fetcher"
+msgstr "Maximale gleichzeitige Checkmk-Fetcher"
 
 msgid "Maximum concurrent Livestatus connections"
 msgstr "Maximale gleichzeitige Livestatus-Verbindungen"
@@ -40516,6 +40526,10 @@ msgstr "Maxmale Anzahl von RPCs pro Sekunde"
 msgid "Maximum number of access points"
 msgstr "Maximale Anzahl von Zugangspunkten"
 
+#, fuzzy
+msgid "Maximum number of attempts"
+msgstr "Maximale Anzahl Zustellungsversuche"
+
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -40565,9 +40579,8 @@ msgstr "Maximale Anzahl an Ausführungen"
 msgid "Maximum number of firewall connections"
 msgstr "Maximale Anzahl von Firewall-Verbindungen"
 
-#, fuzzy
 msgid "Maximum number of hosts"
-msgstr "Maximale Anzahl an Clients"
+msgstr "Maximale Anzahl an Hosts"
 
 msgid "Maximum number of messages"
 msgstr "Maximale Anzahl von Meldungen"
@@ -40837,7 +40850,7 @@ msgid "Meinberg Lantime State"
 msgstr "Meinberg Lantime Zustand"
 
 msgid "Member attribute"
-msgstr "Mitglieder-Attribute"
+msgstr "Mitglied-Attribut"
 
 msgid "Members"
 msgstr "Mitglieder"
@@ -41037,9 +41050,8 @@ msgstr "Speicherauslastung (99te Percentile)"
 msgid "Memory utilization (Azure, Redis)"
 msgstr "Speicherauslastung (Azure, Redis)"
 
-#, fuzzy
 msgid "Memory utilization (Percentiles)"
-msgstr "Speicherauslastung (50te Percentile)"
+msgstr "Speicherauslastung (Percentilen)"
 
 msgid "Memory utilization: Cluster"
 msgstr "Speicherauslastung: Cluster"
@@ -41508,6 +41520,8 @@ msgid ""
 "Missing attribute filter configuration. Please configure at least one "
 "attribute filter"
 msgstr ""
+"Fehlende Konfiguration des Attribut-Filters. Bitte konfigurieren Sie "
+"mindestens einen Attribut-Filter"
 
 #, python-format
 msgid "Missing config file for agent %s%s"
@@ -41532,6 +41546,8 @@ msgid ""
 "Missing hostname attribute. Please configure a resource attribute (e.g., "
 "host.name) so the system can determine the hostname"
 msgstr ""
+"Fehlendes Attribut des Host-Namen. Bitte konfigurieren Sie ein Ressourcen-"
+"Attribut (z.B. host.name), damit das System den Host-Namen bestimmen kann"
 
 msgid "Missing identity provider information in metadata"
 msgstr "Fehlende Identitätsanbieter-Informationen in den Metadaten"
@@ -43242,9 +43258,8 @@ msgstr "Netzwerkadresse"
 msgid "Network address:"
 msgstr "Netzwerkadresse:"
 
-#, fuzzy
 msgid "Network connections"
-msgstr "Neue Verbindungen"
+msgstr "Netzwerkverbindungen"
 
 msgid "Network containers"
 msgstr "Netzwerk-Container"
@@ -43612,9 +43627,8 @@ msgstr "Es wurden noch keine Sicherungs-Codes erstellt."
 msgid "No baked agent for this host available"
 msgstr "Für diesen Host ist kein gebackener Agent vefügbar"
 
-#, fuzzy
 msgid "No bakery plug-ins using the deprecated API"
-msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
+msgstr "Keine Bakery-Plugins, welche die veraltete API verwenden"
 
 msgid "No broken extensions were found."
 msgstr "Es wurden keine defekten Erweiterungen gefunden."
@@ -43654,7 +43668,7 @@ msgid "No contact groups assigned."
 msgstr "Keine Kontakt-Gruppen zugewiesen."
 
 msgid "No custom attributes are defined yet."
-msgstr "Keine Benutzer-Attribute definiert."
+msgstr "Es wurden noch keine Benutzer-Attribute definiert."
 
 msgid "No data"
 msgstr "Keine Daten"
@@ -43672,10 +43686,9 @@ msgstr "Keine Daten vom Zeitlieferanten"
 msgid "No data generator found for figure type name '%s'"
 msgstr ""
 
-#, fuzzy
 msgid "No data was found with the current parameters of this widget."
 msgstr ""
-"Es wurden keine Daten mit den aktuellen Parametern für dieses Dashlet "
+"Es wurden keine Daten mit den aktuellen Parametern für dieses Widget "
 "gefunden."
 
 msgid "No data."
@@ -44135,7 +44148,7 @@ msgstr "Nominelle Frequenzen"
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
-msgstr "Im Attribut \"%s\" sind nur ASCII-Zeichen erlaubt."
+msgstr "Im Attribut \"%s\" sind keine Nicht-ASCII-Zeichen erlaubt."
 
 msgid "Non-Critical Event Rate"
 msgstr "Rate nicht-kritischer Ereignisse"
@@ -44221,17 +44234,14 @@ msgstr "Normal-/Wiederholungs-Intervall"
 msgid "Normal: Regular push notification (default)"
 msgstr "Normal: reguläre Push-Benachrichtigung (Standard)"
 
-#, fuzzy
 msgid "Normalized RU consumption"
-msgstr "Speicher E/A-Nutzung"
+msgstr "Normalisierter RU-Verbrauch"
 
-#, fuzzy
 msgid "Normalized RU consumption lower levels"
-msgstr "Speicher E/A-Nutzung"
+msgstr "Untergrenzen des normalisierten RU-Verbrauchs"
 
-#, fuzzy
 msgid "Normalized RU consumption upper levels"
-msgstr "Speicher E/A-Nutzung"
+msgstr "Obergrenzen des normalisierten RU-Verbrauchs"
 
 msgid ""
 "Normally a user can login to the GUI from unlimited number of clients at the "
@@ -44389,7 +44399,6 @@ msgstr "Nicht"
 msgid "Not Before: %s - Not After: %s"
 msgstr "Nicht vor: %s - nicht nach: %s"
 
-#, fuzzy
 msgid "Not Found"
 msgstr "Nicht gefunden"
 
@@ -46255,13 +46264,12 @@ msgstr "Online-Verifizierungsprozedur war erfolgreich"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Nur A-Z, a-z, 0-9 und Minus (-) sind erlaubt."
 
-#, fuzzy
 msgid ""
 "Only Checkmk Ultimate remote sites can be added to a Checkmk Ultimate "
 "central site"
 msgstr ""
-"Nur CCE Remote-Instanzen können zu einer CCE-Zentralinstanz hinzugefügt "
-"werden"
+"Nur Checkmk Ultimate Remote-Instanzen können zu einer Checkmk Ultimate "
+"Zentralinstanz hinzugefügt werden"
 
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
@@ -46423,6 +46431,10 @@ msgstr ""
 
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Nur nötig, wenn Sie mehrere MySQL-Instanzen auf einem Server haben"
+
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "Nur ein Merkmal darf leer sein."
@@ -46633,9 +46645,8 @@ msgstr "OpenTelemetry"
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry (experimentell)"
 
-#, fuzzy
 msgid "OpenTelemetry Collector Memory Limit"
-msgstr "OpenTelemetry Collector (experimentell)"
+msgstr "OpenTelemetry Collector Speicherlimit"
 
 msgid "OpenTelemetry collector (experimental)"
 msgstr "OpenTelemetry Collector (experimentell)"
@@ -47821,9 +47832,8 @@ msgstr "Bedingung für Anzahl der Ausfälle"
 msgid "Outage statistics"
 msgstr "Ausfall-Statistiken"
 
-#, fuzzy
 msgid "Outbound data"
-msgstr "Ausgangsregel"
+msgstr "Ausgehende Daten"
 
 msgid "Outbound levels (per second)"
 msgstr "Ausgangslevels (pro Sekunde)"
@@ -49488,17 +49498,14 @@ msgstr "Performance-Einstellungen"
 msgid "Performance: IO stats"
 msgstr "Performance: E/A-Statistiken"
 
-#, fuzzy
 msgid "Performing license online verification..."
-msgstr "Online-Verifizierung der Lizenzierung"
+msgstr "Online-Verifizierung der Lizenzierung wird durchgeführt..."
 
-#, fuzzy
 msgid "Performing license test verification..."
-msgstr "Online-Verifizierung der Lizenzierung"
+msgstr "Test-Verifizierung der Lizenzierung wird durchgeführt..."
 
-#, fuzzy
 msgid "Performing test authentication..."
-msgstr "Test-Authentifizierung"
+msgstr "Test-Authentifizierung wird durchgeführt..."
 
 msgid "Period"
 msgstr "Periode"
@@ -50207,7 +50214,7 @@ msgstr ""
 msgid ""
 "Please note: Connector specific user attributes may be set on the next %s."
 msgstr ""
-"Bitte beachten Sie: Connector-spezifische Benutzerattribute können auf den "
+"Bitte beachten Sie: Connector-spezifische Benutzer-Attribute können auf den "
 "nächsten %s gesetzt werden."
 
 msgid ""
@@ -50417,7 +50424,7 @@ msgid "Please specify a host name."
 msgstr "Bitte Namen für Host angeben."
 
 msgid "Please specify a name for the new attribute."
-msgstr "Bitte geben sie einen Namen für das neue Atrribut an."
+msgstr "Bitte legen Sie einen Namen für das neue Attribut fest."
 
 msgid "Please specify a name of the new group."
 msgstr "Bitte Namen für die neue Gruppe angeben."
@@ -53311,7 +53318,7 @@ msgid "Remove downtimes"
 msgstr "Wartungszeiten entfernen"
 
 msgid "Remove explicit attribute settings"
-msgstr "Explizite Attributeinstellungen entfernen"
+msgstr "Explizite Attribut-Einstellungen entfernen"
 
 msgid "Remove explicit setting"
 msgstr "Entferne explizite Einstellungen"
@@ -54623,6 +54630,9 @@ msgstr "Rittal CMC-III Units: Strom"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III Units: Temperaturen"
 
+msgid "Robot"
+msgstr ""
+
 msgid "Robot Framework parameters"
 msgstr "Robot-Framework-Parameter"
 
@@ -55872,6 +55882,14 @@ msgstr ""
 msgid "Scheduler"
 msgstr "Planer"
 
+#, fuzzy
+msgid "Scheduler Interval"
+msgstr "Check-Intervall"
+
+#, fuzzy
+msgid "Scheduler Plan Configs"
+msgstr "Eine Wartungszeit planen?"
+
 msgid "Scheduler job name"
 msgstr "Name des Scheduler-Jobs"
 
@@ -55894,10 +55912,10 @@ msgid "Scope"
 msgstr "Umfang"
 
 msgid "Scope attribute"
-msgstr ""
+msgstr "Umfang-Attribut"
 
 msgid "Scope attributes"
-msgstr ""
+msgstr "Umfang-Attribute"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -56422,7 +56440,7 @@ msgid ""
 "and corresponding mappings."
 msgstr ""
 "Wählen Sie aus, ob Rollen zugeordnet werden sollen. Geben Sie für jede Rolle "
-"den Attributnamen und die entsprechenden Zuordnungen an."
+"den Attribut-Namen und die entsprechenden Zuordnungen an."
 
 msgid "Select individual files from list"
 msgstr "Wähle individuelle Dateien aus Liste"
@@ -56642,8 +56660,8 @@ msgid ""
 "Select the software the LDAP directory is based on. Depending on the "
 "selection e.g. the attribute names used in LDAP queries will be altered."
 msgstr ""
-"Wählen Sie die Software auf der das LDAP Verzeichnis basiert. Abhängig von "
-"der Auswahl werden z.B. Attributnamen in LDAP Anfragen geändert."
+"Wählen Sie die Software auf der das LDAP-Verzeichnis basiert. Abhängig von "
+"der Auswahl werden z.B. Attribut-Namen in LDAP-Anfragen geändert."
 
 msgid "Select the subscriptions you want to monitor."
 msgstr "Wählen Sie die Subskriptionen aus, die Sie überwachen wollen."
@@ -57158,13 +57176,13 @@ msgid "Service criticality"
 msgstr "Kritikalität des Service"
 
 msgid "Service custom attribute"
-msgstr "Eigenes Service-Attribut"
+msgstr "Benutzerdefiniertes Attribut des Services"
 
 msgid "Service custom attribute (regex)"
-msgstr "Eigenes Service-Attribut (regex)"
+msgstr "Benutzerdefiniertes Attribut des Services (regex)"
 
 msgid "Service custom attributes"
-msgstr "Eigene Service-Attribute"
+msgstr "Benutzerdefinierte Attribute des Services"
 
 msgid "Service custom field ID"
 msgstr "ID des benutzerdefinierten Service Feldes"
@@ -58138,9 +58156,9 @@ msgid ""
 "all users which are member of a group in LDAP. The specified group name must "
 "match the common name (CN) of the LDAP group."
 msgstr ""
-"Legt benutzerdefinierte Benutzerattribute basierend auf den "
+"Legt benutzerdefinierte Benutzer-Attribute basierend auf den "
 "Gruppenmitgliedschaften in LDAP fest. Dieses Plugin kann verwendet werden, "
-"um benutzerdefinierte Benutzerattribute für alle Benutzer, die Mitglied "
+"um benutzerdefinierte Benutzer-Attribute für alle Benutzer, die Mitglied "
 "einer Gruppe in LDAP sind, auf bestimmte Werte zu setzen. Der angegebene "
 "Gruppenname muss mit dem Common Name (CN) der LDAP-Gruppe übereinstimmen."
 
@@ -58815,7 +58833,7 @@ msgid "Show the service problems contained in this branch"
 msgstr "Service-Probleme in diesem Zweig anzeigen"
 
 msgid "Show this attribute in host tables of the setup menu"
-msgstr "Zeige dieses Attribut in Host-Tabellen in den Einstellungen"
+msgstr "Dieses Attribut in Host-Tabellen des Setup-Menüs anzeigen"
 
 msgid "Show this attribute in the user table of the setup menu"
 msgstr "Dieses Attribut in der Benutzertabelle des Setup-Menüs anzeigen"
@@ -59904,7 +59922,7 @@ msgstr ""
 "beginnen."
 
 msgid "Sorry, spaces are not allowed in attribute names."
-msgstr "Leerzeichen sind in Attributsnamen leider nicht erlaubt."
+msgstr "Leerzeichen sind in Attribut-Namen leider nicht erlaubt."
 
 msgid "Sorry, spaces are not allowed in group names."
 msgstr "Leerzeichen sind in Gruppennamen nicht erlaubt."
@@ -59921,7 +59939,7 @@ msgid "Sorry, there is already a group with that name"
 msgstr "Gruppe mit diesem Namen ist bereits vorhanden"
 
 msgid "Sorry, there is already an attribute with that name."
-msgstr "Es gibt schon ein Attribut mit diesem Namen."
+msgstr "Es gibt leider schon ein Attribut mit diesem Namen."
 
 msgid "Sorry, uploading TAR/GZ files is not yet implemented."
 msgstr "Leider ist der Hochladen von TAR/GZ-Dateien noch nicht umgesetzt."
@@ -60513,7 +60531,7 @@ msgid ""
 "multiple of these groups, the later plug-in in the list will override the "
 "others."
 msgstr ""
-"Geben Sie die Gruppen an, die den Wert eines gegebenen Benutzerattributes "
+"Geben Sie die Gruppen an, die den Wert eines gegebenen Benutzer-Attributes "
 "kontrollieren sollen. Wenn ein Benutzer nicht Mitglied einer Gruppe ist, "
 "bleibt das Attribut auf seinem Defaultwert. Wenn ein einzelnes Attribut von "
 "mehreren Gruppen gesetzt wird und ein Benutzer Mitglied von mehreren dieser "
@@ -61643,13 +61661,13 @@ msgid "State when build result is: running"
 msgstr "Zustand bei Build-Ergebnis: laufend"
 
 msgid "State when collector is in state failing"
-msgstr "Zustand, wenn Kollektor im Zustand 'failing' ist"
+msgstr "Zustand, wenn der Kollektor im Zustand 'failing' ist"
 
 msgid "State when collector is in state running"
-msgstr "Zustand, wenn Kollektor im Zustand 'running' ist"
+msgstr "Zustand, wenn der Kollektor im Zustand 'running' ist"
 
 msgid "State when collector is in state stopped"
-msgstr "Zustand, wenn Kollektor im Zustand 'stopped' ist"
+msgstr "Zustand, wenn der Kollektor im Zustand 'stopped' ist"
 
 msgid "State when file is missing"
 msgstr "Zustand, wenn die Datei fehlt"
@@ -62331,9 +62349,8 @@ msgstr "Anfrage übermitteln und Antwort erhalten"
 msgid "Submitting crash report..."
 msgstr "Absturzbericht wird übermittelt..."
 
-#, fuzzy
 msgid "Submitting license usage online..."
-msgstr "Lizenznutzung online übermitteln"
+msgstr "Lizenznutzung wird online übermittelt..."
 
 msgid "Subnet groups"
 msgstr "Subnetzgruppen"
@@ -63631,8 +63648,8 @@ msgid ""
 "The \"authentication expiration\" attribute (%s) could not be fetched from "
 "the LDAP server for user %s."
 msgstr ""
-"Das Attribut \"Authentifizierungsablauf\" (%s) konnte für Benutzer %s nicht "
-"vom LDAP Server geholt werden."
+"Das Attribut \"Ablauf der Authentifizierung\" (%s) konnte für Benutzer %s "
+"nicht vom LDAP-Server geholt werden."
 
 #, python-format
 msgid "The %s does not exist."
@@ -64189,18 +64206,19 @@ msgstr ""
 "Auslösung des check_mk_agent wird er erneut gestartet."
 
 msgid "The LDAP attribute containing the alias of the user."
-msgstr "LDAP Attribut das den Benutzer-Alias enthält."
+msgstr "Das LDAP-Attribut, das den Benutzer-Alias enthält."
 
 msgid "The LDAP attribute containing the mail address of the user."
-msgstr "Das LDAP Attribut, das die E-Mail-Adresse des Benutzers enthält."
+msgstr "Das LDAP-Attribut, das die E-Mail-Adresse des Benutzers enthält."
 
 msgid "The LDAP attribute containing the pager number of the user."
-msgstr "LDAP Attribut das die Pager Nummer des Benutzers enthält."
+msgstr "Das LDAP-Attribut, das die Pager-Nummer des Benutzers enthält."
 
 msgid ""
 "The LDAP attribute whose contents shall be synced into this custom attribute."
 msgstr ""
-"LDAP Attribut, dessen Inhalt in das Benutzerattribut übertragen werden soll."
+"Das LDAP-Attribut, dessen Inhalt in das Benutzer-Attribut übertragen werden "
+"soll."
 
 msgid ""
 "The LDAP connection suffix can be used to distinguish equal named objects "
@@ -64247,11 +64265,18 @@ msgstr ""
 "<tt>DISTRIBUTION</tt> und <tt>DISTTAG</tt> innerhalb der RPM-Spec-Datei "
 "leer. Hier können Sie diese Merkmale manuell angeben."
 
+msgid ""
+"The Livestatus Proxy is not only good for remote sites, enable it for your "
+"central site"
+msgstr ""
+"Der Livestatus Proxy ist nicht nur für Remote-Instanzen gut, aktivieren Sie "
+"ihn für Ihre Zentralinstanz"
+
 #, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
-"improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
+"The Livestatus proxy daemon is available with all commercial editions and "
+"improves the management of the inter site connections using Livestatus. "
+"Using the Livestatus proxy daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
 "Der Livestatus Proxy Daemon ist in der Checkmk Enterprise Edition enthalten "
@@ -64259,13 +64284,6 @@ msgstr ""
 "durch die Nutzung von Livestatus. Durch die Nutzung des Livestatus Proxy "
 "Daemon verbessern Sie die Antwortzeit und die Performance Ihrer Oberfläche "
 "bei gleichzeitiger Reduktion der Ressourcennutzung."
-
-msgid ""
-"The Livestatus Proxy is not only good for remote sites, enable it for your "
-"central site"
-msgstr ""
-"Der Livestatus Proxy ist nicht nur für Remote-Instanzen gut, aktivieren Sie "
-"ihn für Ihre Zentralinstanz"
 
 msgid "The Logfile"
 msgstr "Die Log-Datei"
@@ -64753,8 +64771,8 @@ msgid ""
 "The attribute can be added to the contact definiton in order to use it for "
 "notifications."
 msgstr ""
-"Sie können das Attribut der Kontakt-Definition im Monitoring hinzufügen und "
-"es so für Benachrichtigungen nutzbar machen."
+"Das Attribut kann der Kontakt-Definition hinzugefügt werden, um es für "
+"Benachrichtigungen zu nutzen."
 
 msgid ""
 "The attribute can be added to the host definition in order to use it as "
@@ -64772,7 +64790,7 @@ msgid "The attribute does not exist."
 msgstr "Das Attribut existiert nicht."
 
 msgid "The attribute is added to this section in the edit dialog."
-msgstr "Das Attribut wird im Edit-Dialog zu folgendem Abschnitt hinzugefügt."
+msgstr "Das Attribut wird diesem Abschnitt im Edit-Dialog hinzugefügt."
 
 msgid "The attribute used as the email of the user."
 msgstr "Das Attribut, das als E-Mail des Benutzers verwendet wird."
@@ -64793,11 +64811,14 @@ msgid ""
 "The attribute used to identify the individual users. It must have unique "
 "values to make an user identifyable by the value of this attribute."
 msgstr ""
-"Merkmal um einzelne Benutzer zu identifizieren. Es muss sich um eindeutige "
-"Werte handeln um Benutzer identifizierbar zu machen."
+"Das Attribut, das genutzt wird, um den einzelnen Benutzer zu identifizieren. "
+"Es muss eindeutige Werte haben, um einen Benutzer durch den Wert dieses "
+"Attributs identifizierbar zu machen."
 
 msgid "The attribute used to identify users group memberships."
-msgstr "Merkmal um Gruppenmitgliedschaften festzustellen."
+msgstr ""
+"Das Attribut, das genutzt wird, um Mitgliedschaften in Benutzergruppen "
+"festzustellen."
 
 #, python-format
 msgid ""
@@ -65014,7 +65035,7 @@ msgstr ""
 "verfügbar ist"
 
 msgid "The choosen attribute type is invalid."
-msgstr "Der gewählte Attributstyp ist ungültig."
+msgstr "Der gewählte Attribut-Typ ist ungültig."
 
 msgid ""
 "The choosen group is either not existant anymore or you are not a member of "
@@ -65115,7 +65136,8 @@ msgstr ""
 #, python-format
 msgid ""
 "The configured User-ID attribute \"%s\" does not exist for the user \"%s\""
-msgstr "Das User-ID Attribute \"%s\" existiert nicht für Benutzer \"%s\""
+msgstr ""
+"Das konfigurierte User-ID-Attribut \"%s\" existiert nicht für Benutzer \"%s\""
 
 msgid "The configured custom graph does not exist."
 msgstr "Der konfigurierte benutzerdefinierte Graph existiert nicht."
@@ -66142,7 +66164,7 @@ msgstr ""
 "einem Feld \"Wert des Attributs: container.name\", setzt „%s” auf den Wert "
 "dieses Attributs, sofern es vorhanden ist und \"%s\" nicht durch die "
 "vorherige Regel gesetzt wurde. </li><li>Eine dritte Regel, bestehend aus "
-"zwei Feldern \"Ressourcenattributwert: custom_attr\" und \"Literalstring: "
+"zwei Feldern \"Ressourcen-Attribut-Wert: custom_attr\" und \"Literalstring: "
 "some_suffix\", setzt \"%s\" auf \"VALUEsome_suffix\", wenn das Attribut "
 "vorhanden ist und \"%s\" nicht durch die vorherigen Regeln gesetzt wurde. </"
 "li><li>Eine letzte Regel, bestehend aus einem Feld \"Literal string: "
@@ -66768,6 +66790,12 @@ msgid ""
 "is also dependent on the configured processors, it is important to put "
 "checks in place regarding memory usage."
 msgstr ""
+"Der Prozessor für die Speicherbegrenzung wird verwendet, um "
+"Speicherüberlastungen auf dem Collector zu verhindern. Die Menge und Art der "
+"Daten, die der Collector verarbeitet, ist umgebungsspezifisch. Die "
+"Ressourcennutzung des Collectors hängt auch von den konfigurierten "
+"Prozessoren ab. Daher ist es wichtig, Kontrollen hinsichtlich der "
+"Speichernutzung einzurichten."
 
 #, no-python-format
 msgid ""
@@ -67244,8 +67272,9 @@ msgid ""
 "notification will fail."
 msgstr ""
 "Die numerische JIRA Ausgabetyp-ID. Wenn nicht festgelegt, wird sie von einem "
-"benutzerdefinierten Attribut namens <tt> jiraissuetype </tt> abgerufen. Wenn "
-"dieses Attribut nicht festgelegt ist, schlägt die Benachrichtigung fehl."
+"benutzerdefinierten Benutzer-Attribut namens <tt> jiraissuetype </tt> "
+"abgerufen. Wenn dieses Attribut nicht festgelegt ist, schlägt die "
+"Benachrichtigung fehl."
 
 msgid ""
 "The numerical Jira priority ID. If not set, it will be retrieved from a "
@@ -67253,7 +67282,7 @@ msgid ""
 "standard priority will be used."
 msgstr ""
 "Die numerische JIRA Prioritäts-ID. Wenn nicht festgelegt, wird sie von einem "
-"benutzerdefinierten Attribut mit dem Namen <tt> jirapriority </tt> "
+"benutzerdefinierten Benutzer-Attribut namens <tt> jirapriority </tt> "
 "abgerufen. Wenn dieses Attribut nicht festgelegt ist, wird die "
 "Standardpriorität genutzt."
 
@@ -67263,8 +67292,9 @@ msgid ""
 "notification will fail."
 msgstr ""
 "Die numerische JIRA Projekt-ID. Wenn nicht festgelegt, wird sie von einem "
-"benutzerdefinierten Attribut mit dem Namen <tt> jiraproject </tt> abgerufen. "
-"Wenn dieses Attribut nicht festgelegt ist, schlägt die Benachrichtigung fehl."
+"benutzerdefinierten Benutzer-Attribut namens <tt> jiraproject </tt> "
+"abgerufen. Wenn dieses Attribut nicht festgelegt ist, schlägt die "
+"Benachrichtigung fehl."
 
 msgid ""
 "The numerical Jira resolution transition ID. 11 - 'To Do', 21 - 'In "
@@ -68100,7 +68130,7 @@ msgstr ""
 "Die ausgewählte Datei ist leer. Bitte wähle eine nicht leere Datei aus."
 
 msgid "The selected hosts have no explicit attributes"
-msgstr "Ausgewählten Hosts habe keine expliziten Merkmale"
+msgstr "Die ausgewählten Hosts haben keine expliziten Attribute"
 
 msgid "The selected icon does not exist."
 msgstr "Das ausgewählte Symbol ist nicht vorhanden."
@@ -68632,7 +68662,7 @@ msgstr ""
 "Warnungen: <ul>%s</ul>"
 
 msgid "The title is used to label this attribute."
-msgstr "Der wird zum Markieren des Attributes verwendet."
+msgstr "Der Titel wird zum Markieren des Attributes verwendet."
 
 msgid "The title of an exported rule pack cannot be modified."
 msgstr ""
@@ -68690,7 +68720,7 @@ msgid "The type must be list, but is %s"
 msgstr "Typ muss eine Liste sein - ist aber %s"
 
 msgid "The type of information to be stored in this attribute."
-msgstr "Welche Art von Information in diesem Attribut gespeichert wird."
+msgstr "Die Art von Information, die in diesem Attribut gespeichert wird."
 
 #, python-format
 msgid "The type of the timestamp must be int or float, but is %s"
@@ -69769,8 +69799,9 @@ msgid ""
 "This allows a user to edit his personal user attributes. You also need the "
 "permission <i>Edit the user profile</i> in order to do this."
 msgstr ""
-"Der Benutzer kann seine persönlichen Einstellungen bearbeiten. Dafür ist "
-"auch die Berechtigung <i>Benutzerprofil bearbeiten</i> erforderlich."
+"Dies erlaubt einem Benutzer seine persönlichen Benutzer-Attribute zu "
+"bearbeiten. Dafür ist auch die Berechtigung <i>Benutzerprofil bearbeiten</i> "
+"erforderlich."
 
 msgid "This allows the user to add, move and remove sidebar snap-ins."
 msgstr ""
@@ -69790,8 +69821,8 @@ msgid ""
 "This attribute is mandatory and there is no value defined in the host list "
 "or any parent folder."
 msgstr ""
-"Das ist ein Pflicht-Attribut. In der Hosts-Liste oder dem übergeordneten "
-"Verzeichnis wurde noch kein Wert definiert."
+"Dieses Attribut ist zwingend erforderlich, und es ist kein Wert in der Host-"
+"Liste oder einem übergeordneten Ordner definiert."
 
 msgid ""
 "This attribute is only visibile in the edit host and folder pages by "
@@ -74335,6 +74366,11 @@ msgid ""
 "the check interval or increase spike limit to avoid memory usage going over "
 "the hard limit."
 msgstr ""
+"Zeit zwischen den Messungen der Speicherauslastung. Der empfohlene Wert "
+"beträgt 1 Sekunde. Wenn der erwartete Datenverkehr zum Collector sehr stark "
+"schwankt, verringern Sie das Check-Intervall oder erhöhen Sie das "
+"Schwankungslimit, um zu vermeiden, dass die Speichernutzung das feste Limit "
+"überschreitet."
 
 msgid "Time between new checks of type Check_MK"
 msgstr "Zeit zwischen neuen Checks vom Typ Check_MK"
@@ -78029,15 +78065,15 @@ msgstr ""
 "Konflikt mit dem Kunden <i>%s</i>, dem dieser Ordner gehört. Dies verletzt "
 "die CME Ordnerhierarchie. Sie können die folgenden Instanzen wählen: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
 "belongs to customer <i>%s</i>. The target folder however, belongs to "
 "customer <i>%s</i>. This violates the folder multi-tenancy folder hierarchy."
 msgstr ""
-"Kann Host <i>%s</i> nicht verschieben. Seine explizit gesetzte Instanz ID "
-"<i>%s</i> gehört dem Kunden <i>%s</i>. Der Zielordner jedoch gehört dem "
-"Kunden <i>%s</i>. Dies verletzt die CME Ordner Hierarchie."
+"Kann Host <i>%s</i> nicht verschieben. Sein explizit gesetztes Instanz-"
+"Attribut <i>%s</i> gehört dem Kunden <i>%s</i>. Der Zielordner jedoch gehört "
+"dem Kunden <i>%s</i>. Dies verletzt die CME Ordner Hierarchie."
 
 #, python-format
 msgid "Unable to parse provided data: %s"
@@ -78480,7 +78516,7 @@ msgid "Unreserved concurrent executions in percent"
 msgstr "Unbeschränkte gleichzeitige Ausführungen in Prozent"
 
 msgid "Unset user attributes on migration"
-msgstr "Benutzerattribute bei der Migration zurücksetzen"
+msgstr "Benutzer-Attribute bei der Migration zurücksetzen"
 
 msgid "Unspecific backup"
 msgstr "Unspezifische Sicherung"
@@ -79674,7 +79710,7 @@ msgid "Use any network address"
 msgstr "Beliebige Netzwerkadresse verwenden"
 
 msgid "Use attribute value"
-msgstr "Attributwert verwenden"
+msgstr "Attribut-Wert verwenden"
 
 msgid "Use authenticator app"
 msgstr "Authenticator-App nutzen"
@@ -80546,7 +80582,7 @@ msgid "User ID"
 msgstr "Benutzername"
 
 msgid "User ID attribute"
-msgstr "Benutzer-ID Eigenschaft"
+msgstr "Attribut der Benutzer-ID"
 
 msgid "User ID for web login"
 msgstr "Benutzer-ID für Web-Login"
@@ -80658,7 +80694,7 @@ msgid "User who performed action"
 msgstr "Benutzer der Aktion ausführt"
 
 msgid "User-ID attribute"
-msgstr "Benutzer-ID Eigenschaft"
+msgstr "Attribut der Benutzer-ID"
 
 msgid "User:"
 msgstr "Benutzer:"
@@ -83282,10 +83318,10 @@ msgid ""
 "again. By default this field uses the fields which hold the time of the last "
 "password change of the user."
 msgstr ""
-"Wenn sich der Wert dieser Benutzer-Eigenschaft verändert, dann werden alle "
-"Sitzungen dieses Benutzers ungültig. Der Benutzer muss sich neu anmelden. In "
-"der Grundeinstellungen wird hier der Zeitpunkt der letzten Passwort-"
-"Änderungen abgelegt."
+"Wenn sich der Wert dieses Attributs für ein Benutzer-Konto ändert, dann "
+"werden alle Sitzungen dieses Benutzers ungültig. Der Benutzer muss sich neu "
+"anmelden. In der Grundeinstellungen wird hier der Zeitpunkt der letzten "
+"Passwort-Änderungen abgelegt."
 
 msgid ""
 "When this is checked, the backup ensures that the configured path is a "
@@ -84064,9 +84100,9 @@ msgid ""
 "during its initial login gets added. For example, the default is to add the "
 "role \"user\" to all automatically created users."
 msgstr ""
-"Hier legen Sie alle Eigenschaften fest, die einem neu erstellten Benutzer "
-"beim ersten Login zugeordnet werden. So wird z. B. automatisch erstellten "
-"Benutzern die Rolle \"user\" zugewiesen."
+"Mit dieser Option legen Sie alle Attribute fest, die einem neu erstellten "
+"Benutzer beim ersten Login zugeordnet werden. So wird z. B. automatisch "
+"erstellten Benutzern die Rolle \"user\" zugewiesen."
 
 msgid ""
 "With this option you can specify, whether the oldest (default) or the newest "
@@ -85609,11 +85645,11 @@ msgstr ""
 "li><li><tt>$_HOSTADDRESS_4$</tt>: Die IPv4-Adresse des Hosts</"
 "li><li><tt>$_HOSTADDRESS_6$</tt>: Die IPv6-Adresse des Hosts</"
 "li><li><tt>$_HOSTADDRESS_FAMILY$</tt>: Die primäre Adress-Familie des Hosts</"
-"li></ul>Alle individuellen Attribute des Hosts sind per <tt>$_HOST[VARNAME]"
-"$</tt> verfügbar. Ersetzen Sie <tt>[VARNAME]</tt> mit dem <i>groß "
-"geschriebenen</i> Namen Ihrer Variable. Beispielsweise wird bei einem Host-"
-"Attribut <tt>foo</tt> mit dem Wert <tt>bar</tt> das Makro <tt>$_HOSTFOO$</"
-"tt> durch <tt>bar</tt> ersetzt. "
+"li></ul>Alle benutzerdefinierten Attribute des Hosts sind per "
+"<tt>$_HOST[VARNAME]$</tt> verfügbar. Ersetzen Sie <tt>[VARNAME]</tt> mit dem "
+"<i>groß geschriebenen</i> Namen Ihrer Variable. Beispielsweise wird bei "
+"einem Host-Attribut <tt>foo</tt> mit dem Wert <tt>bar</tt> das Makro "
+"<tt>$_HOSTFOO$</tt> durch <tt>bar</tt> ersetzt. "
 
 msgid ""
 "You can use other time period definitions to exclude the times defined in "
@@ -86143,7 +86179,7 @@ msgid ""
 "default values."
 msgstr ""
 "Sie haben <b>%d</b> Hosts für Bulk-Cleanup gewählt. Dies bedeutet, dass "
-"explizite Attributwerte von Hosts entfernt werden. Die Hosts erben dann die "
+"explizite Attribut-Werte von Hosts entfernt werden. Die Hosts erben dann die "
 "in der Host-Liste oder den Ordnern konfigurierten Attribute oder greifen "
 "einfach auf die mitgelieferten Standardwerte zurück."
 
@@ -86327,7 +86363,7 @@ msgstr ""
 "einen Informationstext mitzugeben."
 
 msgid "You might want to add some helpful description for the attribute."
-msgstr "Hier können sie eine Beschreibung des Attributs hinzufügen."
+msgstr "Hier können Sie eine Beschreibung des Attributs hinzufügen."
 
 #, python-format
 msgid "You must not provide more than %d characters."
@@ -89293,7 +89329,7 @@ msgid "Runtime filters are required to load data."
 msgstr ""
 
 msgid "Values apply across all widgets."
-msgstr ""
+msgstr "Werte gelten für alle Widgets."
 
 msgid "Apply to dashboard"
 msgstr "Auf das Dashboard anwenden"
@@ -89614,6 +89650,9 @@ msgid ""
 "and applies to this widget. You can override the value by setting a widget "
 "specific filter."
 msgstr ""
+"Ein als Dashboard- oder Laufzeitfilter ausgewählter %{n}-zielgerichteter "
+"Filter wird hier angezeigt und gilt für dieses Widget. Sie können den Wert "
+"überschreiben, indem Sie einen widgetspezifischen Filter festlegen."
 
 msgid "Applied %{n} filters"
 msgstr "%{n} Filter angewendet"
@@ -89631,12 +89670,16 @@ msgid ""
 "apply to this widget. You can override the values by setting widget specific "
 "filters. "
 msgstr ""
+"Dashboard- oder Laufzeitfilter %{n}, die auf Dashboard-Ebene ausgewählt "
+"wurden, werden angezeigt und gelten für dieses Widget. Sie können die Werte "
+"überschreiben, indem Sie widgetspezifische Filter festlegen. "
 
 msgid "Widget filters"
 msgstr "Widget-Filter"
 
 msgid "Widget configured filters override dashboard and runtime filters"
 msgstr ""
+"Vom Widget konfigurierte Filter überschreiben Dashboard- und Laufzeitfilter"
 
 msgid "See all"
 msgstr "Alle ansehen"
@@ -89896,9 +89939,8 @@ msgstr "Dateneinstellungen"
 msgid "Limit objects to"
 msgstr "Objekte begrenzen"
 
-#, fuzzy
 msgid "Widget settings"
-msgstr "Einstellungen bearbeiten"
+msgstr "Widget-Einstellungen"
 
 msgid "Choose a visualization type."
 msgstr "Wählen Sie einen Visualisierungstyp."
@@ -89918,9 +89960,8 @@ msgstr "Benachrichtigungen für Regelanalyse speichern"
 msgid "Additional graph options"
 msgstr "Zusätzliche Graph-Optionen"
 
-#, fuzzy
 msgid "Save widget"
-msgstr "Widget aktualisieren"
+msgstr "Widget speichern"
 
 msgid "Add & place widget"
 msgstr "Widget hinzufügen & platzieren"
@@ -90020,7 +90061,7 @@ msgid "Small"
 msgstr ""
 
 msgid "Loading widget visualization settings..."
-msgstr "Widget Visualisierungseinstellungen laden..."
+msgstr "Visualisierungseinstellungen für das Widget werden geladen..."
 
 msgid "Metric selection"
 msgstr "Metrik-Auswahl"
@@ -90062,9 +90103,8 @@ msgstr "Fester Datenbereich"
 msgid "Show colored status label"
 msgstr "Farbiges Status-Label anzeigen"
 
-#, fuzzy
 msgid "Show colored metric background"
-msgstr "Widget-Hintergrund anzeigen"
+msgstr "Farbigen Metrik-Hintergrund anzeigen"
 
 msgid "Additional scatterplot options"
 msgstr ""
@@ -90094,9 +90134,8 @@ msgstr "Laden der Seitenleistenelement ist fehlgeschlagen."
 msgid "Select sidebar element"
 msgstr "Seitenleistenelement"
 
-#, fuzzy
 msgid "Sidebar widget"
-msgstr "Widget aktualisieren"
+msgstr "Widget der Seitenleiste"
 
 msgid "Embed URL"
 msgstr ""
@@ -90144,6 +90183,21 @@ msgstr "Vorhandene Ansicht kopieren: %{viewName}"
 
 msgid "explicit password"
 msgstr "explizites Passwort"
+
+#, fuzzy
+msgid "~Enter regex (pattern match)"
+msgstr "Teste Pattern Match"
+
+msgid "Enter plain text (single match)"
+msgstr ""
+
+#, fuzzy
+msgid "show preview"
+msgstr "mehr anzeigen"
+
+#, fuzzy
+msgid "Preview of matches:"
+msgstr "Regel trifft zu"
 
 msgid "Auto"
 msgstr "Auto"
@@ -90534,8 +90588,7 @@ msgstr "Speichern & zu 'Änderungen aktivieren' wechseln"
 
 msgid "Select the site where the OpenTelemetry collector will run."
 msgstr ""
-"Geben Sie die Instanz an, auf welcher der OpenTelemetry Collector laufen "
-"wird."
+"Wählen Sie die Instanz, auf welcher der OpenTelemetry Collector laufen wird."
 
 msgid ""
 "Provide a title for the configuration and select the site where the "

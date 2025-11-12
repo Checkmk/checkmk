@@ -7133,6 +7133,10 @@ msgstr "クエリを実行しているホストに割り当てます"
 msgid "Assign via regular expressions"
 msgstr "正規表現で割り当てる"
 
+#, fuzzy
+msgid "Assigned to host"
+msgstr "グループに割り当てる"
+
 msgid "Assignee"
 msgstr "受任者"
 
@@ -8559,27 +8563,27 @@ msgid "Azure Redis Cache effectiveness"
 msgstr "Azure データベース接続"
 
 #, fuzzy
-msgid "Azure Redis connections"
+msgid "Azure Redis Connections"
 msgstr "Azure データベース接続"
 
 #, fuzzy
-msgid "Azure Redis latency"
+msgid "Azure Redis Latency"
 msgstr "平均ディスク遅延"
 
 #, fuzzy
-msgid "Azure Redis memory"
+msgid "Azure Redis Memory"
 msgstr "絶対使用メモリ"
 
 #, fuzzy
-msgid "Azure Redis replication"
+msgid "Azure Redis Replication"
 msgstr "Azure データベース接続"
 
 #, fuzzy
-msgid "Azure Redis server load"
+msgid "Azure Redis Server load"
 msgstr "Redisサーバー名"
 
 #, fuzzy
-msgid "Azure Redis throughput"
+msgid "Azure Redis Throughput"
 msgstr "読み取りスループット"
 
 #, fuzzy
@@ -23027,6 +23031,10 @@ msgstr "行あたりのエントリー"
 
 msgid "Entry"
 msgstr "エントリ"
+
+#, fuzzy
+msgid "Env Creation"
+msgstr "作成"
 
 msgid "Environment Sensors"
 msgstr "Environment Sensors"
@@ -39745,6 +39753,10 @@ msgstr "1秒あたりのRPCリクエストの最大数"
 msgid "Maximum number of access points"
 msgstr "最大アクセスポイント数"
 
+#, fuzzy
+msgid "Maximum number of attempts"
+msgstr "配信の最大試行回数"
+
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -45580,6 +45592,10 @@ msgstr ""
 
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "1つのサーバーに複数のMySQLインスタンスがある場合にのみ必要"
+
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "空にすることができるタグは1つだけです。"
@@ -53661,6 +53677,9 @@ msgstr "Rittal CMC-IIIユニット: 現在"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-IIIユニット:温度"
 
+msgid "Robot"
+msgstr ""
+
 msgid "Robot Framework parameters"
 msgstr "ロボットフレームワークのパラメータ"
 
@@ -54905,6 +54924,14 @@ msgstr ""
 
 msgid "Scheduler"
 msgstr "スケジューラ"
+
+#, fuzzy
+msgid "Scheduler Interval"
+msgstr "キャッシュ間隔"
+
+#, fuzzy
+msgid "Scheduler Plan Configs"
+msgstr "ダウンタイムをスケジュールしますか?"
 
 msgid "Scheduler job name"
 msgstr "スケジューラジョブ名"
@@ -63045,23 +63072,23 @@ msgstr ""
 "<tt>DISTRIBUTION</tt> タグと <tt>DISTTAG</tt>タグはRPM specファイル内で空のま"
 "まになります。ここでは、これらのタグを手動で指定できます。"
 
-#, fuzzy
-msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
-"improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
-"performance of your GUI and will decrease resource usage."
-msgstr ""
-"LivestatusプロキシデーモンはCheckmk Enterprise Editionで使用でき、livestatus"
-"を使用したサイト間接続の管理を改善します。Livestatusプロキシデーモンを使用す"
-"ると、GUIの応答性とパフォーマンスが向上し、リソースの使用量が減少します。"
-
 msgid ""
 "The Livestatus Proxy is not only good for remote sites, enable it for your "
 "central site"
 msgstr ""
 "Livestatus プロキシは、リモートサイトに適しているだけでなく、セントラルサイト"
 "にも有効です"
+
+#, fuzzy
+msgid ""
+"The Livestatus proxy daemon is available with all commercial editions and "
+"improves the management of the inter site connections using Livestatus. "
+"Using the Livestatus proxy daemon improves the responsiveness and "
+"performance of your GUI and will decrease resource usage."
+msgstr ""
+"LivestatusプロキシデーモンはCheckmk Enterprise Editionで使用でき、livestatus"
+"を使用したサイト間接続の管理を改善します。Livestatusプロキシデーモンを使用す"
+"ると、GUIの応答性とパフォーマンスが向上し、リソースの使用量が減少します。"
 
 msgid "The Logfile"
 msgstr "ログファイル"
@@ -88109,6 +88136,21 @@ msgstr "既存のビューをコピーする"
 #, fuzzy
 msgid "explicit password"
 msgstr "新しいパスワード"
+
+#, fuzzy
+msgid "~Enter regex (pattern match)"
+msgstr "パターン一致を試す"
+
+msgid "Enter plain text (single match)"
+msgstr ""
+
+#, fuzzy
+msgid "show preview"
+msgstr "もっと表示"
+
+#, fuzzy
+msgid "Preview of matches:"
+msgstr "ルール一致"
 
 msgid "Auto"
 msgstr "自動"

@@ -7546,6 +7546,10 @@ msgstr "Toewijzen aan de vragende host"
 msgid "Assign via regular expressions"
 msgstr "Toewijzen via reguliere expressies"
 
+#, fuzzy
+msgid "Assigned to host"
+msgstr "Toewijzen aan groep"
+
 msgid "Assignee"
 msgstr ""
 
@@ -9166,27 +9170,27 @@ msgid "Azure Redis Cache effectiveness"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
-msgid "Azure Redis connections"
+msgid "Azure Redis Connections"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
-msgid "Azure Redis latency"
+msgid "Azure Redis Latency"
 msgstr "Gemiddelde schijflatentie"
 
 #, fuzzy
-msgid "Azure Redis memory"
+msgid "Azure Redis Memory"
 msgstr "Absoluut vrij geheugen"
 
 #, fuzzy
-msgid "Azure Redis replication"
+msgid "Azure Redis Replication"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
-msgid "Azure Redis server load"
+msgid "Azure Redis Server load"
 msgstr "Redis server naam"
 
 #, fuzzy
-msgid "Azure Redis throughput"
+msgid "Azure Redis Throughput"
 msgstr "Lees doorvoer"
 
 #, fuzzy
@@ -24402,6 +24406,10 @@ msgstr "Inzendingen"
 
 msgid "Entry"
 msgstr "Ingang"
+
+#, fuzzy
+msgid "Env Creation"
+msgstr "Schepping"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -42257,6 +42265,10 @@ msgid "Maximum number of access points"
 msgstr "Maximum aantal toegangspunten"
 
 #, fuzzy
+msgid "Maximum number of attempts"
+msgstr "Maximum aantal leveringspogingen"
+
+#, fuzzy
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -48475,6 +48487,10 @@ msgstr "Vraag alleen naar de volgende SID's (indien gevonden)"
 #, fuzzy
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Alleen nodig als u meerdere MySQL Instances op één server heeft"
+
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "Slechts één tag mag leeg zijn."
@@ -57227,6 +57243,9 @@ msgstr "Rittal CMC-III units: Actueel"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III units: Temperaturen"
 
+msgid "Robot"
+msgstr ""
+
 #, fuzzy
 msgid "Robot Framework parameters"
 msgstr "Robot Framework: %s"
@@ -58565,6 +58584,14 @@ msgstr ""
 
 msgid "Scheduler"
 msgstr "Scheduler"
+
+#, fuzzy
+msgid "Scheduler Interval"
+msgstr "Cache-interval"
+
+#, fuzzy
+msgid "Scheduler Plan Configs"
+msgstr "Uitvaltijden plannen"
 
 #, fuzzy
 msgid "Scheduler job name"
@@ -67194,9 +67221,17 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
-"improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
+"The Livestatus Proxy is not only good for remote sites, enable it for your "
+"central site"
+msgstr ""
+"De Livestatus Proxy is niet alleen goed voor slave sites, schakel het in "
+"voor uw master site"
+
+#, fuzzy
+msgid ""
+"The Livestatus proxy daemon is available with all commercial editions and "
+"improves the management of the inter site connections using Livestatus. "
+"Using the Livestatus proxy daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
 "De Livestatus Proxy Daemon is beschikbaar met de Checkmk Enterprise Editie "
@@ -67204,14 +67239,6 @@ msgstr ""
 "livestatus. Het gebruik van de Livestatus Proxy Daemon verbetert de "
 "responsiviteit en prestaties van uw GUI en zal het gebruik van resources "
 "verminderen."
-
-#, fuzzy
-msgid ""
-"The Livestatus Proxy is not only good for remote sites, enable it for your "
-"central site"
-msgstr ""
-"De Livestatus Proxy is niet alleen goed voor slave sites, schakel het in "
-"voor uw master site"
 
 msgid "The Logfile"
 msgstr "Het logbestand"
@@ -93900,6 +93927,21 @@ msgstr "Bestaand uitzicht kopiëren"
 #, fuzzy
 msgid "explicit password"
 msgstr "Nieuw wachtwoord"
+
+#, fuzzy
+msgid "~Enter regex (pattern match)"
+msgstr "Probeer Patroon Overeenstemming"
+
+msgid "Enter plain text (single match)"
+msgstr ""
+
+#, fuzzy
+msgid "show preview"
+msgstr "meer laten zien"
+
+#, fuzzy
+msgid "Preview of matches:"
+msgstr "Deze regel komt overeen met"
 
 #, fuzzy
 msgid "Auto"

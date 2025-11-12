@@ -7596,6 +7596,10 @@ msgstr "Attribuer à l'hôte demandeur"
 msgid "Assign via regular expressions"
 msgstr "Attribution via des expressions régulières"
 
+#, fuzzy
+msgid "Assigned to host"
+msgstr "Affecter à un groupe"
+
 msgid "Assignee"
 msgstr ""
 
@@ -9218,27 +9222,27 @@ msgid "Azure Redis Cache effectiveness"
 msgstr "Connexions à la base de données"
 
 #, fuzzy
-msgid "Azure Redis connections"
+msgid "Azure Redis Connections"
 msgstr "Connexions à la base de données"
 
 #, fuzzy
-msgid "Azure Redis latency"
+msgid "Azure Redis Latency"
 msgstr "Latence moyenne des disques"
 
 #, fuzzy
-msgid "Azure Redis memory"
+msgid "Azure Redis Memory"
 msgstr "Mémoire utilisée absolue"
 
 #, fuzzy
-msgid "Azure Redis replication"
+msgid "Azure Redis Replication"
 msgstr "Connexions à la base de données"
 
 #, fuzzy
-msgid "Azure Redis server load"
+msgid "Azure Redis Server load"
 msgstr "Nom du serveur Redis"
 
 #, fuzzy
-msgid "Azure Redis throughput"
+msgid "Azure Redis Throughput"
 msgstr "Débit de lecture"
 
 #, fuzzy
@@ -24584,6 +24588,10 @@ msgstr "Entrées"
 
 msgid "Entry"
 msgstr "Entrée"
+
+#, fuzzy
+msgid "Env Creation"
+msgstr "Création"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -42570,6 +42578,10 @@ msgid "Maximum number of access points"
 msgstr "Nombre maximal de points d'accès"
 
 #, fuzzy
+msgid "Maximum number of attempts"
+msgstr "Nombre maximal de tentatives de livraison"
+
+#, fuzzy
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -48836,6 +48848,10 @@ msgstr "N'interrogez que les SID suivants (s'ils sont trouvés)"
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr ""
 "Nécessaire uniquement si vous avez plusieurs instances MySQL sur un serveur"
+
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "Une seule balise peut être vide."
@@ -57689,6 +57705,9 @@ msgstr "Unités CMC-III de Rittal : Courant"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unités CMC-III de Rittal : Températures"
 
+msgid "Robot"
+msgstr ""
+
 #, fuzzy
 msgid "Robot Framework parameters"
 msgstr "Robot Framework : %s"
@@ -59039,6 +59058,14 @@ msgstr ""
 
 msgid "Scheduler"
 msgstr "Planificateur"
+
+#, fuzzy
+msgid "Scheduler Interval"
+msgstr "Intervalle de cache"
+
+#, fuzzy
+msgid "Scheduler Plan Configs"
+msgstr "Planifier un temps d'arrêt ?"
 
 #, fuzzy
 msgid "Scheduler job name"
@@ -67752,9 +67779,17 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
-"improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
+"The Livestatus Proxy is not only good for remote sites, enable it for your "
+"central site"
+msgstr ""
+"Le proxy Livestatus n'est pas seulement bon pour les sites esclaves, activez-"
+"le pour votre site principal"
+
+#, fuzzy
+msgid ""
+"The Livestatus proxy daemon is available with all commercial editions and "
+"improves the management of the inter site connections using Livestatus. "
+"Using the Livestatus proxy daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
 "Le Livestatus Proxy Daemon est disponible avec l'édition Entreprise de "
@@ -67762,14 +67797,6 @@ msgstr ""
 "livestatus. L'utilisation du Livestatus Proxy Daemon améliore la réactivité "
 "et la performance de votre interface graphique et réduit l'utilisation des "
 "ressources."
-
-#, fuzzy
-msgid ""
-"The Livestatus Proxy is not only good for remote sites, enable it for your "
-"central site"
-msgstr ""
-"Le proxy Livestatus n'est pas seulement bon pour les sites esclaves, activez-"
-"le pour votre site principal"
 
 msgid "The Logfile"
 msgstr "Le fichier journal"
@@ -94720,6 +94747,21 @@ msgstr "Copier la vue existante"
 #, fuzzy
 msgid "explicit password"
 msgstr "Nouveau mot de passe"
+
+#, fuzzy
+msgid "~Enter regex (pattern match)"
+msgstr "Essayer de faire correspondre les motifs"
+
+msgid "Enter plain text (single match)"
+msgstr ""
+
+#, fuzzy
+msgid "show preview"
+msgstr "afficher plus"
+
+#, fuzzy
+msgid "Preview of matches:"
+msgstr "Cette règle correspond à"
 
 #, fuzzy
 msgid "Auto"

@@ -6,11 +6,11 @@
 import { Page } from '@demo/_demo/page'
 
 import DemoCmkIcon from './DemoCmkIcon.vue'
-import DemoCmkIconWithEmblem from './DemoCmkIconWithEmblem.vue'
+import DemoCmkIconEmblem from './DemoCmkIconEmblem.vue'
 import DemoCmkMultitoneIcon from './DemoCmkMultitoneIcon.vue'
 
 export const pages = [
   new Page('CmkIcon', DemoCmkIcon),
-  new Page('CmkIconWithEmblem', DemoCmkIconWithEmblem),
+  new Page('CmkIconEmblem', DemoCmkIconEmblem),
   new Page('CmkMultitoneIcon', DemoCmkMultitoneIcon)
 ]

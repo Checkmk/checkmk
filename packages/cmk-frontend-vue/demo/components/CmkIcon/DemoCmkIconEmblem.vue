@@ -7,8 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import { type CmkIconVariants } from '@/components/CmkIcon'
-import CmkIconWithEmblem from '@/components/CmkIcon/CmkIconWithEmblem.vue'
+import CmkIcon, { type CmkIconVariants } from '@/components/CmkIcon'
+import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
 import { emblems, simpleIcons } from '@/components/CmkIcon/icons.constants'
 import type { IconEmblems, SimpleIcons } from '@/components/CmkIcon/types'
 
@@ -30,6 +30,10 @@ defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>
+  <pre>
+&lt;!-- no whitespace between CmkIconEmblem and CmkIcon! --&gt;
+&lt;CmkIconEmblem emblem="warning"&gt;&lt;CmkIcon name="filter" size="medium" /&gt;&lt;/CmkIconEmblem&gt;
+  </pre>
   <select v-model="icon">
     <option v-for="i in simpleIcons" :key="i">{{ i }}</option>
   </select>
@@ -39,7 +43,9 @@ defineProps<{ screenshotMode: boolean }>()
   </select>
   <ul>
     <li v-for="size in sizes" :key="size || 'default'" class="demo-cmk-icon__element-entry">
-      <CmkIconWithEmblem :icon="icon" :icon-emblem="emblem" :size="size" title="sometitle" />
+      <CmkIconEmblem :emblem="emblem"
+        ><CmkIcon :name="icon" :size="size" title="sometitle"
+      /></CmkIconEmblem>
       ({{ size }})
     </li>
   </ul>

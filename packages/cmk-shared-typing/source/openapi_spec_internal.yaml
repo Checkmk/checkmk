@@ -34381,8 +34381,8 @@ paths:
     post:
       tags:
       - Metrics
-      description: 'Available in the following editions: Enterprise, Ultimate, Ultimate
-        with multi-tenancy
+      description: 'Available in the following editions: Pro, Ultimate, Ultimate with
+        multi-tenancy
 
 
         Custom graphs can be created within Checkmk, see [Checkmk
@@ -34576,7 +34576,7 @@ tags:
 - name: Agents
   x-displayName: Agents
   description: 'An agent is a small program that is installed on a host in order for
-    Checkmk to be able query
+    Checkmk to be able to query
 
     data from the host.
 
@@ -34586,10 +34586,9 @@ tags:
     [Checkmk guide](https://docs.checkmk.com/latest/en/wato_monitoringagents.html).
 
 
-    You can find more about the Agent Bakery and automatic agent updates of checkmk
-    enterprise
+    You can find more about the Agent Bakery and automatic agent updates in
 
-    in [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).'
+    [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).'
 - name: Audit logs
   x-displayName: Audit logs
   description: The audit log records the activities taking place in CheckMK. These
@@ -47630,7 +47629,7 @@ components:
           title: Auth Password
           type: string
         privacy_protocol:
-          description: The privacy protocol. The only supported values in the Raw
+          description: The privacy protocol. The only supported values in the Community
             Edition are CBC-DES and AES-128. If selected, privacy_password needs to
             be supplied as well.
           enum:
@@ -51830,7 +51829,7 @@ components:
         edition:
           type: string
           description: The Checkmk edition.
-          example: raw
+          example: community
         demo:
           type: boolean
           description: Whether this is a demo version or not.

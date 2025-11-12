@@ -2416,20 +2416,25 @@ def connection(
     if central_site.version.is_managed_edition():
         basic_settings["customer"] = "provider"
 
-    configuration_connection = {
-        "enable_replication": True,
-        "url_of_remote_site": remote_site.internal_url,
-        "disable_remote_configuration": True,
-        "ignore_tls_errors": True,
-        "direct_login_to_web_gui_allowed": True,
-        "user_sync": {"sync_with_ldap_connections": "all"},
-        "replicate_event_console": True,
-        "replicate_extensions": True,
-    }
-    # stay backwards-compatible for adding older remote sites:
-    # only set message_broker_port for CMK2.4.0+
-    if remote_site.version >= CMKVersion("2.4.0", remote_site.version.edition):
-        configuration_connection["message_broker_port"] = remote_site.message_broker_port
+    if central_site.version.edition == remote_site.version.edition:
+        configuration_connection = {
+            "enable_replication": True,
+            "url_of_remote_site": remote_site.internal_url,
+            "disable_remote_configuration": True,
+            "ignore_tls_errors": True,
+            "direct_login_to_web_gui_allowed": True,
+            "user_sync": {"sync_with_ldap_connections": "all"},
+            "replicate_event_console": True,
+            "replicate_extensions": True,
+        }
+        # stay backwards-compatible for adding older remote sites:
+        # only set message_broker_port for CMK2.4.0+
+        if remote_site.version >= CMKVersion("2.4.0", remote_site.version.edition):
+            configuration_connection["message_broker_port"] = remote_site.message_broker_port
+    else:
+        configuration_connection = {
+            "enable_replication": False,
+        }
     site_config: dict[str, object] = {
         "basic_settings": basic_settings,
         "status_connection": {

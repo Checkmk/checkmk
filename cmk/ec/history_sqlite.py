@@ -19,11 +19,10 @@ from pathlib import Path
 from shutil import disk_usage
 from typing import Final, Literal
 
-from cmk.utils.log import VERBOSE
-
 from .config import Config
 from .event import Event
 from .history import History, HistoryWhat
+from .log_level import VERBOSE
 from .query import Columns, QueryFilter, QueryGET
 from .settings import Options, Paths, Settings
 

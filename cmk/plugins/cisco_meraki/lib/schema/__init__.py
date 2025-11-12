@@ -5,7 +5,7 @@
 
 from ._devices import Device, RawDevice
 from ._devices_statuses import RawDevicesStatus
-from ._licenses import LicensesOverview, RawLicensesOverview
+from ._licenses_overview import LicensesOverview, RawLicensesOverview
 from ._organizations import Organisation, RawOrganisation
 from ._sensor_readings import RawSensorReadings
 

@@ -13,12 +13,12 @@ from cmk.plugins.cisco_meraki.lib.log import LOGGER
 from cmk.plugins.cisco_meraki.lib.schema import LicensesOverview, RawLicensesOverview
 
 
-class LicensesSDK(Protocol):
+class LicensesOverviewSDK(Protocol):
     def getOrganizationLicensesOverview(self, organizationId: str) -> RawLicensesOverview: ...
 
 
-class LicensesClient:
-    def __init__(self, sdk: LicensesSDK) -> None:
+class LicensesOverviewClient:
+    def __init__(self, sdk: LicensesOverviewSDK) -> None:
         self._sdk = sdk
 
     def __call__(self, id_: str, name: str) -> LicensesOverview | None:

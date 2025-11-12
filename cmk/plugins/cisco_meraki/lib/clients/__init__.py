@@ -8,7 +8,7 @@ from typing import Protocol, Self
 
 from ._devices import DevicesClient, DevicesSDK
 from ._devices_statuses import DevicesStatusesClient, DevicesStatusesSDK
-from ._licenses import LicensesClient, LicensesSDK
+from ._licenses_overview import LicensesOverviewClient, LicensesOverviewSDK
 from ._organizations import OrganizationsClient, OrganizationsSDK
 from ._sensor_readings import SensorReadingsClient, SensorReadingsSDK
 
@@ -16,7 +16,7 @@ from ._sensor_readings import SensorReadingsClient, SensorReadingsSDK
 class OrganizationSDK(
     DevicesSDK,
     DevicesStatusesSDK,
-    LicensesSDK,
+    LicensesOverviewSDK,
     OrganizationsSDK,
     Protocol,
 ): ...
@@ -39,7 +39,7 @@ class MerakiSDK(Protocol):
 class MerakiClient:
     get_devices: DevicesClient
     get_devices_statuses: DevicesStatusesClient
-    get_licenses_overview: LicensesClient
+    get_licenses_overview: LicensesOverviewClient
     get_organizations: OrganizationsClient
     get_sensor_readings: SensorReadingsClient
 
@@ -48,7 +48,7 @@ class MerakiClient:
         return cls(
             get_devices=DevicesClient(sdk.organizations),
             get_devices_statuses=DevicesStatusesClient(sdk.organizations),
-            get_licenses_overview=LicensesClient(sdk.organizations),
+            get_licenses_overview=LicensesOverviewClient(sdk.organizations),
             get_organizations=OrganizationsClient(sdk.organizations),
             get_sensor_readings=SensorReadingsClient(sdk.sensor),
         )

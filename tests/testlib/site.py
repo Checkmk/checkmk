@@ -2656,7 +2656,7 @@ def connection(
             "replicate_extensions": True,
             "is_trusted": False,
         }
-        # stay backwards-compatible for performance tests:
+        # stay backwards-compatible for adding older remote sites:
         # only set message_broker_port for CMK2.4.0+
         if remote_site.version >= CMKVersion("2.4.0"):
             configuration_connection["message_broker_port"] = remote_site.message_broker_port

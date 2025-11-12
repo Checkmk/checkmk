@@ -16,6 +16,7 @@ from typing import NamedTuple, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import message
+from cmk.gui.dynamic_icon import render_dynamic_icon
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -436,7 +437,7 @@ oncontextmenu = e => e.preventDefault();"""
                 onclick="cmk.popup_menu.close_popup()",
             )
             if user.get_attribute("icons_per_item"):
-                html.icon(item.icon or "dash")
+                render_dynamic_icon(item.icon or "dash", theme)
             self._show_item_title(item)
             html.close_a()
             html.close_li()

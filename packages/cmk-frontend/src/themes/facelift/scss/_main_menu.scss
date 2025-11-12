@@ -12,6 +12,12 @@
   padding: 0;
   margin: 0;
 
+  cmk-dynamic-icon {
+    vertical-align: middle;
+    margin-left: -28px;
+    margin-right: 7px;
+  }
+
   img {
     &.icon {
       width: 20px;

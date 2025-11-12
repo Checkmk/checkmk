@@ -363,9 +363,9 @@ cachetools==5.5.2 \
     # via
     #   -r requirements_all.txt
     #   google-auth
-certifi==2025.10.5 \
-    --hash=sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de \
-    --hash=sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43
+certifi==2025.11.12 \
+    --hash=sha256:97de8790030bbd5c2d96b7ec782fc2f7820ef8dba6db909ccf95449f2d062d4b \
+    --hash=sha256:d8ab5478f2ecd78af242878415affce761ca6bc54a22a27e026d7c25357c3316
     # via
     #   -r requirements_all.txt
     #   httpcore
@@ -830,9 +830,9 @@ execnet==2.1.1 \
     --hash=sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc \
     --hash=sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3
     # via pytest-xdist
-faker==37.12.0 \
-    --hash=sha256:7505e59a7e02fa9010f06c3e1e92f8250d4cfbb30632296140c2d6dbef09b0fa \
-    --hash=sha256:afe7ccc038da92f2fbae30d8e16d19d91e92e242f8401ce9caf44de892bab4c4
+faker==38.0.0 \
+    --hash=sha256:797aa03fa86982dfb6206918acc10ebf3655bdaa89ddfd3e668d7cc69537331a \
+    --hash=sha256:ad4ea6fbfaac2a75d92943e6a79c81f38ecff92378f6541dea9a677ec789a5b2
     # via polyfactory
 fakeredis[lua]==2.26.1 \
     --hash=sha256:68a5615d7ef2529094d6958677e30a6d30d544e203a5ab852985c19d7ad57e32 \
@@ -3860,9 +3860,9 @@ schemathesis==3.38.10 \
     --hash=sha256:01cdd4f313d0b1a8625604cc3bf99ec09147a5668771c8e9bfc1f97990bba2da \
     --hash=sha256:32e2aaabf57e4e8327f11c6e7b8dd2f6e41b436f3d4eae35c17109c770d358d4
     # via -r requirements_dev.txt
-secretstorage==3.4.0 \
-    --hash=sha256:0e3b6265c2c63509fb7415717607e4b2c9ab767b7f344a57473b779ca13bd02e \
-    --hash=sha256:c46e216d6815aff8a8a18706a2fbfd8d53fcbb0dce99301881687a1b0289ef7c
+secretstorage==3.4.1 \
+    --hash=sha256:a799acf5be9fb93db609ebaa4ab6e8f1f3ed5ae640e0fa732bfea59e9c3b50e8 \
+    --hash=sha256:c55d57b4da3de568d8c3af89dad244ab24c35ca1da8625fc1b550edf005ebc41
     # via keyring
 semver==3.0.2 \
     --hash=sha256:6253adb39c70f6e51afed2fa7152bcd414c411286088fb4b9effb133885ab4cc \

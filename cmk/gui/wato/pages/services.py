@@ -351,7 +351,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if not has_discovery_action_specific_permissions(
             api_request.discovery_options.action, api_request.update_target
         ):
-            discovery_options = api_request.discovery_options._replace(action=DiscoveryAction.NONE)
+            api_request.discovery_options = api_request.discovery_options._replace(
+                action=DiscoveryAction.NONE
+            )
         user_permission_config = UserPermissionSerializableConfig.from_global_config(ctx.config)
 
         discovery_result = self._perform_discovery_action(

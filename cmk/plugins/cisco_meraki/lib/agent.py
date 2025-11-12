@@ -291,17 +291,17 @@ def _get_organisations(config: MerakiConfig, client: MerakiClient) -> Sequence[O
     return orgs
 
 
-def run(args: argparse.Namespace) -> int:
-    api_key = resolve_secret_option(args, APIKEY_OPTION_NAME).reveal()
-    dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
+@dataclass(frozen=True, kw_only=True)
+class MerakiRunContext:
+    config: MerakiConfig
+    client: MerakiClient
 
-    config = MerakiConfig.build(args)
-    client = MerakiClient.build(dashboard)
 
+def run(ctx: MerakiRunContext) -> int:
     sections = _query_meraki_objects(
         organisations=[
-            MerakiOrganisation(config, client, organisation)
-            for organisation in _get_organisations(config, client)
+            MerakiOrganisation(ctx.config, ctx.client, organisation)
+            for organisation in _get_organisations(ctx.config, ctx.client)
         ]
     )
 
@@ -312,4 +312,13 @@ def run(args: argparse.Namespace) -> int:
 @report_agent_crashes(AGENT, __version__)
 def main() -> int:
     args = parse_arguments(sys.argv[1:])
-    return run(args)
+
+    api_key = resolve_secret_option(args, APIKEY_OPTION_NAME).reveal()
+    dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
+
+    ctx = MerakiRunContext(
+        config=MerakiConfig.build(args),
+        client=MerakiClient.build(dashboard),
+    )
+
+    return run(ctx)

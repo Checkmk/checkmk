@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from polyfactory.factories import TypedDictFactory
+
+from cmk.plugins.cisco_meraki.lib import schema
+
+
+class RawOrganizationFactory(TypedDictFactory[schema.RawOrganisation]):
+    __check_model__ = False
+
+
+class RawLicensesOverviewFactory(TypedDictFactory[schema.RawLicensesOverview]):
+    __check_model__ = False
+
+
+class RawDeviceFactory(TypedDictFactory[schema.RawDevice]):
+    __check_model__ = False
+
+
+class RawDevicesStatusFactory(TypedDictFactory[schema.RawDevicesStatus]):
+    __check_model__ = False
+
+
+class RawSensorReadingsFactory(TypedDictFactory[schema.RawSensorReadings]):
+    __check_model__ = False

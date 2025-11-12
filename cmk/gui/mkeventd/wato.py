@@ -2515,8 +2515,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         "disabled", _("This rule is currently disabled and will not be applied")
                     )
                 elif event:
-                    event["host"] = cmk.utils.translations.translate_hostname(
-                        eventd_configuration()["hostname_translation"], event["host"]
+                    event["host"] = HostName(
+                        cmk.utils.translations.translate(
+                            eventd_configuration()["hostname_translation"], event["host"]
+                        )
                     )
                     result = match_event_rule(
                         self._rule_pack, rule, event, site_configs[event["site"]]

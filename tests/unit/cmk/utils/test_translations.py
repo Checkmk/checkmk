@@ -5,17 +5,11 @@
 
 import pytest
 
-from cmk.utils.translations import (
-    translate_hostname,
-    translate_service_description,
-    TranslationOptions,
-)
+from cmk.utils.translations import translate, TranslationOptions
 
 
-# translate_service_description covers all options thus we need to test
-# translate_hostname only with option "drop_domain"
 @pytest.mark.parametrize(
-    "hostname, translation, result",
+    "name, translation, result",
     [
         (
             "host123.foobar.de",
@@ -32,15 +26,6 @@ from cmk.utils.translations import (
             TranslationOptions(drop_domain=True),
             "127.0.0.1",
         ),
-    ],
-)
-def test_translate_hostname(hostname: str, translation: TranslationOptions, result: str) -> None:
-    assert translate_hostname(translation, hostname) == result
-
-
-@pytest.mark.parametrize(
-    "service_description, translation, result",
-    [
         # Fixed names
         (
             " Check_MK ",
@@ -65,86 +50,6 @@ def test_translate_hostname(hostname: str, translation: TranslationOptions, resu
         (
             " Check_MK HW/SW Inventory ",
             TranslationOptions(),
-            "Check_MK HW/SW Inventory",
-        ),
-        (
-            " Check_MK ",
-            TranslationOptions(case="upper"),
-            "Check_MK",
-        ),
-        (
-            " Check_MK Agent ",
-            TranslationOptions(case="upper"),
-            "Check_MK Agent",
-        ),
-        (
-            " Check_MK Discovery ",
-            TranslationOptions(case="upper"),
-            "Check_MK Discovery",
-        ),
-        (
-            " Check_MK inventory ",
-            TranslationOptions(case="upper"),
-            "Check_MK inventory",
-        ),
-        (
-            " Check_MK HW/SW Inventory ",
-            TranslationOptions(case="upper"),
-            "Check_MK HW/SW Inventory",
-        ),
-        (
-            " Check_MK ",
-            # Legacy format, should be transformed
-            TranslationOptions(regex=(" Ch[e]ck_MK .*", " Chäck_MK ")),  # type: ignore[typeddict-item]
-            "Check_MK",
-        ),
-        (
-            " Check_MK Agent ",
-            # Legacy format, should be transformed
-            TranslationOptions(regex=(" Ch[e]ck_MK .*", " Chäck_MK ")),  # type: ignore[typeddict-item]
-            "Check_MK Agent",
-        ),
-        (
-            " Check_MK Discovery ",
-            # Legacy format, should be transformed
-            TranslationOptions(regex=(" Ch[e]ck_MK .*", " Chäck_MK ")),  # type: ignore[typeddict-item]
-            "Check_MK Discovery",
-        ),
-        (
-            " Check_MK inventory ",
-            # Legacy format, should be transformed
-            TranslationOptions(regex=(" Ch[e]ck_MK .*", " Chäck_MK ")),  # type: ignore[typeddict-item]
-            "Check_MK inventory",
-        ),
-        (
-            " Check_MK HW/SW Inventory ",
-            # Legacy format, should be transformed
-            TranslationOptions(regex=(" Ch[e]ck_MK .*", " Chäck_MK ")),  # type: ignore[typeddict-item]
-            "Check_MK HW/SW Inventory",
-        ),
-        (
-            " Check_MK ",
-            TranslationOptions(mapping=[(" Check_MK ", "Foo Bar")]),
-            "Check_MK",
-        ),
-        (
-            " Check_MK Agent ",
-            TranslationOptions(mapping=[(" Check_MK Agent ", "Foo Bar")]),
-            "Check_MK Agent",
-        ),
-        (
-            " Check_MK Discovery ",
-            TranslationOptions(mapping=[(" Check_MK Discovery ", "Foo Bar")]),
-            "Check_MK Discovery",
-        ),
-        (
-            " Check_MK inventory ",
-            TranslationOptions(mapping=[(" Check_MK inventory ", "Foo Bar")]),
-            "Check_MK inventory",
-        ),
-        (
-            " Check_MK HW/SW Inventory ",
-            TranslationOptions(mapping=[(" Check_MK HW/SW Inventory ", "Foo Bar")]),
             "Check_MK HW/SW Inventory",
         ),
         # Case
@@ -247,7 +152,5 @@ def test_translate_hostname(hostname: str, translation: TranslationOptions, resu
         ),
     ],
 )
-def test_translate_service_description(
-    service_description: str, translation: TranslationOptions, result: str
-) -> None:
-    assert translate_service_description(translation, service_description) == result
+def test_translate(name: str, translation: TranslationOptions, result: str) -> None:
+    assert translate(translation, name) == result

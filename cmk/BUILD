@@ -200,6 +200,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:site",
     "//packages/cmk-ccc:store",
     "//packages/cmk-ccc:timeout",
+    "//packages/cmk-ccc:translations",
     "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
     "//packages/cmk-ccc:version",

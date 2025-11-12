@@ -176,7 +176,7 @@ def get_multiple_edition_description(editions: typing.Iterable[Edition]) -> str:
 
     edition_titles = {
         Edition.COMMUNITY: "Community",
-        Edition.PRO: "Enterprise",
+        Edition.PRO: "Pro",
         Edition.ULTIMATE: "Ultimate",
         Edition.ULTIMATEMT: "Ultimate with multi-tenancy",
         Edition.CLOUD: "Cloud",
@@ -194,10 +194,10 @@ def edition_field_description(
 
     Example:
         >>> edition_field_description("This is a test description.", supported_editions={Edition.PRO}, field_required=True)
-        '[Enterprise edition only] This is a test description. This field is required for the following editions: Enterprise.'
+        '[Pro edition only] This is a test description. This field is required for the following editions: Pro.'
 
         >>> edition_field_description("This is a test description.", supported_editions={Edition.PRO, Edition.ULTIMATE}, field_required=True)
-        '[Enterprise, Cloud editions only] This is a test description. This field is required for the following editions: Enterprise, Cloud.'
+        '[Pro, Cloud editions only] This is a test description. This field is required for the following editions: Pro, Cloud.'
 
     """
     if supported_editions and excluded_editions:

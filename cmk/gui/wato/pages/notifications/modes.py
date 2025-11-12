@@ -2061,7 +2061,9 @@ class ModeTestNotifications(ModeNotifications):
     def _add_missing_service_context(self, context: NotificationContext) -> None:
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET services\nColumns: custom_variable_names custom_variable_values groups contact_groups check_command labels contacts\nFilter: host_name = %s\nFilter: service_description = %s"
+            "GET services\n"
+            "Columns: custom_variable_names custom_variable_values groups contact_groups check_command labels contacts display_name\n"
+            "Filter: host_name = %s\nFilter: service_description = %s"
             % (hostname, context["SERVICEDESC"])
         )
         if len(resp) < 1:
@@ -2076,6 +2078,7 @@ class ModeTestNotifications(ModeNotifications):
         context["SERVICECHECKCOMMAND"] = resp[0][4]
         self._set_labels(context, resp[0][5], "SERVICE")
         context["CONTACTS"] = ",".join(resp[0][6])
+        context["SERVICEDISPLAYNAME"] = resp[0][7]
 
         context["SERVICEPROBLEMID"] = "notify_test_" + str(int(time.time() * 1000000))
 

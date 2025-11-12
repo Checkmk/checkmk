@@ -24,6 +24,7 @@ hypothesis==6.122.3 # used by unit tests
 hypothesis-jsonschema==0.23.1 # used by unit tests
 jsonschema==4.25.1
 libcst==1.5.1 # concrete syntax trees for plugin migration helpers
+matplotlib==3.10.0 # used by performance tests
 msrest==0.7.1
 multipart==1.2.1 # redfixh server mocker for integration tests
 mypy==1.13.0 # used by test/static/Makefile's test-mypy target--unpin after CMK-19779
@@ -35,6 +36,7 @@ playwright==1.49.1 # used for in-browser testing
 polyfactory==2.18.1 # used for generating mock data for unit tests
 pre-commit==4.0.1 # used to fix / find issues before committing changes
 prometheus-client==0.22.1 # used for testing otel integration
+psycopg==3.2.9 # used by performance tests
 py-import-cycles==0.3.1 # used in tests/Makefile
 pylint==3.3.2 # used by test/Makefile's test-pylint target
 pylint-pydantic==0.3.4
@@ -42,6 +44,7 @@ pylsp-mypy==0.6.9 # mypy plugin for python-lsp-server
 pymongo<4.9  # used by mk_mongodb agent plugin # 4.9 has no pymongo.database.Database anymore
 pytest==8.3.4
 pytest-asyncio==0.25.3  # faciliate testing of async code
+pytest-benchmark==5.2.3 # used by performance tests
 pytest-html==4.1.1 # used to generate HTML reports for test suites
 pytest-mock==3.14.0 # used by quite a few unit/integration tests via the mocker fixture
 pytest-random-order==1.1.1 # used to test resiliency

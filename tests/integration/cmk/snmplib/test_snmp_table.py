@@ -41,7 +41,6 @@ INFO_TREE = BackendSNMPTree(
         ("TimeTicks", ".1.3.6.1.2.1.1.3.0", "449613886"),
     ],
 )
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_data_types(
     site: Site, backend_type: SNMPBackendEnum, type_name: str, oid: str, expected_response: str
@@ -62,7 +61,6 @@ def test_get_data_types(
     assert isinstance(table[0][0], str)
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
@@ -92,7 +90,6 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
     assert exc_match in e.value.stderr
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
@@ -120,7 +117,6 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
     assert exc_match in e.value.stderr
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.parametrize("bulk", [True, False])
 def test_get_simple_snmp_table_bulkwalk(
     site: Site, backend_type: SNMPBackendEnum, bulk: bool
@@ -138,7 +134,6 @@ def test_get_simple_snmp_table_bulkwalk(
     assert isinstance(table[0][0], str)
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_fills_cache(site: Site, backend_type: SNMPBackendEnum) -> None:
     _, walk_cache = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
@@ -149,7 +144,6 @@ def test_get_simple_snmp_table_fills_cache(site: Site, backend_type: SNMPBackend
     ]
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table(site: Site, backend_type: SNMPBackendEnum) -> None:
     table, _ = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
@@ -164,7 +158,6 @@ def test_get_simple_snmp_table(site: Site, backend_type: SNMPBackendEnum) -> Non
     assert isinstance(table[0][0], str)
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_oid_end(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
@@ -184,7 +177,6 @@ def test_get_simple_snmp_table_oid_end(site: Site, backend_type: SNMPBackendEnum
     ]
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_oid_string(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
@@ -205,7 +197,6 @@ def test_get_simple_snmp_table_oid_string(site: Site, backend_type: SNMPBackendE
     ]
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_oid_bin(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
@@ -226,7 +217,6 @@ def test_get_simple_snmp_table_oid_bin(site: Site, backend_type: SNMPBackendEnum
     ]
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_oid_end_bin(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
@@ -247,7 +237,6 @@ def test_get_simple_snmp_table_oid_end_bin(site: Site, backend_type: SNMPBackend
     ]
 
 
-@pytest.mark.skip("CMK-27452")
 @pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_with_hex_str(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(

@@ -43,6 +43,7 @@ from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
+TIMEOUT_AFTER = 120  # seconds
 logger = logging.getLogger(__name__)
 
 
@@ -77,7 +78,9 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
 
         try:
             for process_def in process_definitions:
-                wait_until(_create_listening_condition(process_def), timeout=20)
+                wait_until(
+                    _create_listening_condition(process_def), timeout=TIMEOUT_AFTER, interval=1
+                )
 
             yield
         finally:
@@ -247,24 +250,34 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
     logger.debug("snmpsimd has opened it's sockets")
 
-    # We got the expected number of listen sockets. One for IPv4 and one for IPv6. Now test
-    # whether or not snmpsimd is already answering.
-    g = getCmdSync(
-        SnmpEngine(),
-        CommunityData("public"),
-        UdpTransportTarget(("127.0.0.1", port)),
-        ContextData(),
-        ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
-    )
-    _error_indication, _error_status, _error_index, var_binds = g
-    logger.info("SNMP get response")
-    logger.info(repr((_error_indication, _error_status, _error_index, var_binds)))
-    assert len(var_binds) == 1
-    logger.debug(var_binds[0][1].prettyPrint())
-    assert (
-        var_binds[0][1].prettyPrint()
-        == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
-    )
+    def _snmp_response_is_available() -> bool:
+        # We got the expected number of listen sockets. One for IPv4 and one for IPv6. Now test
+        # whether or not snmpsimd is already answering.
+        g = getCmdSync(
+            SnmpEngine(),
+            CommunityData("public"),
+            UdpTransportTarget(("127.0.0.1", port)),
+            ContextData(),
+            ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
+        )
+        _error_indication, _error_status, _error_index, var_binds = g
+        try:
+            logger.debug("SNMP get response")
+            logger.debug(repr((_error_indication, _error_status, _error_index, var_binds)))
+            assert len(var_binds) == 1
+            logger.debug(var_binds[0][1].prettyPrint())
+            assert (
+                var_binds[0][1].prettyPrint()
+                == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
+            )
+        except (AssertionError, IndexError):
+            return False
+        return True
+
+    try:
+        wait_until(_snmp_response_is_available, timeout=TIMEOUT_AFTER // 2, interval=1)
+    except TimeoutError:
+        return False
     return True
 
 

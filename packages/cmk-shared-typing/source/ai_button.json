@@ -31,7 +31,7 @@
       "properties": {
         "host_name": { "type": "string" },
         "service_name": { "type": "string" },
-        "status": { "enum": ["Ciritcal", "Warning", "Ok"] }
+        "status": { "enum": ["Critical", "Warning", "OK"] }
       }
     }
   }

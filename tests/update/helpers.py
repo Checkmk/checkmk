@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import itertools
 import json
 import logging
 import os
@@ -262,36 +261,52 @@ class BaseVersions:
         return list(dict.fromkeys(earliest_versions + latest_versions))
 
     min_version = get_min_version()
+    _base_packages: list[CMKPackageInfoOld] | None = None
 
-    if edition_from_env().is_cloud_edition():
-        base_packages = [
-            CMKPackageInfoOld(
-                CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"),
-                CMKEditionOld(CMKEditionOld.CLOUD),
-            )
-        ]
-    else:
-        base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
-        if not base_versions_pb_file.exists():
-            base_versions_pb_file = MODULE_PATH / "base_versions.json"
-        base_versions_pb = _limit_versions(
-            json.loads(base_versions_pb_file.read_text(encoding="utf-8")), min_version
-        )
+    @classmethod
+    def get_base_packages(cls) -> list[CMKPackageInfoOld]:
+        if cls._base_packages is None:
+            if edition_from_env().is_cloud_edition():
+                cls._base_packages = [
+                    CMKPackageInfoOld(
+                        CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"),
+                        CMKEditionOld(CMKEditionOld.CLOUD),
+                    )
+                ]
+            else:
+                base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
+                if not base_versions_pb_file.exists():
+                    base_versions_pb_file = MODULE_PATH / "base_versions.json"
+                base_versions_pb = cls._limit_versions(
+                    json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
+                )
 
-        base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
-        base_versions_cb = (
-            _limit_versions(
-                json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
-                min_version,
-            )
-            if base_versions_cb_file.exists()
-            else []
-        )
+                base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
+                base_versions_cb = (
+                    cls._limit_versions(
+                        json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
+                        cls.min_version,
+                    )
+                    if base_versions_cb_file.exists()
+                    else []
+                )
 
-        base_packages = [
-            CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
-            for base_version_str in base_versions_pb + base_versions_cb
-        ]
+                cls._base_packages = [
+                    CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
+                    for base_version_str in base_versions_pb + base_versions_cb
+                ]
+
+        return cls._base_packages
+
+    @classmethod
+    def get_first_base_package(cls) -> CMKPackageInfoOld:
+        """Get the first base package used for the test."""
+        return cls.get_base_packages()[0]
+
+    @classmethod
+    def get_latest_base_package(cls) -> CMKPackageInfoOld:
+        """Get the latest base package used for the test."""
+        return cls.get_base_packages()[-1]
 
 
 @dataclass
@@ -301,21 +316,3 @@ class InteractiveModeDistros:
         "almalinux-9",
     ]
     assert set(DISTROS).issubset(set(get_supported_distros()))
-
-
-@dataclass
-class TestParams:
-    """Pytest parameters used in the test."""
-
-    INTERACTIVE_MODE = [True, False]
-    TEST_PARAMS = [
-        pytest.param(
-            (base_package, interactive_mode),
-            id=f"base-version={base_package.version.version}|interactive-mode={interactive_mode}",
-        )
-        for base_package, interactive_mode in itertools.product(
-            BaseVersions.base_packages, INTERACTIVE_MODE
-        )
-        # interactive mode enabled for some specific distros
-        if interactive_mode == (os.environ.get("DISTRO") in InteractiveModeDistros.DISTROS)
-    ]

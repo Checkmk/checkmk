@@ -1297,6 +1297,7 @@ class LDAPUserConnector(UserConnector):
         # authentication which should be rebound again after trying this.
         try:
             self._bind(user_dn, ("password", password.raw))
+            self._default_bind(self._ldap_obj)
             userid = self.get_matching_user_profile(UserId(ldap_user_id))
             result: CheckCredentialsResult = False if userid is None else userid
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
@@ -1310,7 +1311,6 @@ class LDAPUserConnector(UserConnector):
             self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False
 
-        self._default_bind(self._ldap_obj)
         return result
 
     def _connection_id_of_user(self, user_id: UserId) -> str | None:
@@ -1448,9 +1448,13 @@ class LDAPUserConnector(UserConnector):
                 f"Could not find an existing user or create a new user for the ldap user: '{uid}' with the user_connection_id: '{self.id}'",
             )
 
-        changes = self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
-            users=users,
-            ldap_users=ldap_users,
+        changes = (
+            self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
+                users=users,
+                ldap_users=ldap_users,
+            )
+            if only_username is None
+            else []
         )
 
         has_changed_passwords = False

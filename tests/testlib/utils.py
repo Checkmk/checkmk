@@ -612,7 +612,7 @@ def parse_files(
     logger.info("Parsing logs for '%s' in %s", content_pattern, path_name)
     match_dict: dict[str, list[str]] = {}
     files_paths = check_output(
-        ["bash", "-c", f"find {path_name} -name {files_name_pattern} -type f"],
+        ["bash", "-c", f"find {path_name} -name '{files_name_pattern}' -type f"],
         sudo=sudo,
         encoding="utf-8",
     ).splitlines()

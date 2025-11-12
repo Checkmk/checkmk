@@ -65,8 +65,12 @@ function navigateUrl(url: string) {
       </CmkButton>
       <div class="mm-default-popup__header-left">
         <CmkHeading v-if="props.header.title" type="h2"></CmkHeading>
-        <span v-if="props.header?.info" class="mm-default-popup__header-left-info">
-          {{ props.header?.info }}
+        <!-- eslint-disable vue/no-v-html -->
+        <span
+          v-if="props.header?.info"
+          class="mm-default-popup__header-left-info"
+          v-html="props.header.info"
+        >
         </span>
       </div>
       <div v-if="props.header.show_more" class="mm-default-popup__header-show-more">
@@ -131,6 +135,7 @@ function navigateUrl(url: string) {
 
       .mm-default-popup__header-left-info {
         color: var(--color-white-50);
+        text-align: right;
       }
     }
 

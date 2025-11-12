@@ -80,14 +80,17 @@ def main() {
         """.stripMargin());
 
     def success = true;
+    def successfully_built_packages = false;
 
-    stage("Build Packages") {
+    successfully_built_packages = smart_stage(
+            name: "Build Packages",
+            raiseOnError: false) {
         build(job: "${base_folder}/build-cmk-packages", parameters: job_parameters);
-    }
+    }[0]
 
     success &= smart_stage(
             name: "Build CMK IMAGE",
-            condition: build_image,
+            condition: build_image && successfully_built_packages,
             raiseOnError: false) {
         build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
     }[0]
@@ -96,7 +99,7 @@ def main() {
         "Integration Test for Docker Container": {
             success &= smart_stage(
                     name: "Integration Test for Docker Container",
-                    condition: run_image_tests,
+                    condition: run_image_tests && successfully_built_packages,
                     raiseOnError: false) {
                 build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
             }[0]
@@ -105,7 +108,7 @@ def main() {
         "Composition Test for Packages": {
             success &= smart_stage(
                     name: "Composition Test for Packages",
-                    condition: run_integration_tests,
+                    condition: run_integration_tests && successfully_built_packages,
                     raiseOnError: false) {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }[0]
@@ -114,14 +117,14 @@ def main() {
 
     success &= smart_stage(
             name: "Integration Test for Packages",
-            condition: run_integration_tests,
+            condition: run_integration_tests && successfully_built_packages,
             raiseOnError: false) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
     }[0]
 
     success &= smart_stage(
             name: "Update Test",
-            condition: run_update_tests,
+            condition: run_update_tests && successfully_built_packages,
             raiseOnError: false) {
         build(job: "${base_folder}/test-update", parameters: job_parameters);
     }[0]

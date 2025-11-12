@@ -5,8 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { NavItem, NavItemTopic } from 'cmk-shared-typing/typescript/main_menu'
-import { computed, onMounted, ref } from 'vue'
+import type {
+  NavItem,
+  NavItemTopic,
+  NavItemTopicEntry
+} from 'cmk-shared-typing/typescript/main_menu'
+import { computed, nextTick, onMounted, ref } from 'vue'
 
 import DefaultPopup from '@/main-menu/components/popup/DefaultPopup.vue'
 import { definedMainMenuItemVueApps } from '@/main-menu/provider/item-vue-apps.ts'
@@ -15,7 +19,11 @@ import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 import ItemTopic from './NavItemTopic.vue'
 
 const mainMenu = getInjectedMainMenu()
-const props = defineProps<{ item: NavItem; active?: boolean | undefined }>()
+const props = defineProps<{
+  item: NavItem
+  active?: boolean | undefined
+  small?: boolean | undefined
+}>()
 
 const vueApp = computed(() => {
   if (props.item.vue_app) {
@@ -28,7 +36,7 @@ const vueApp = computed(() => {
   throw new Error('vue app defined within NavItem')
 })
 
-const showAllTopic = ref<NavItemTopic | null>(null)
+const showAllTopic = ref<NavItemTopic | NavItemTopicEntry | null>(null)
 
 mainMenu.onShowAllEntriesOfTopic((id, topic) => {
   if (id === props.item.id) {
@@ -38,6 +46,22 @@ mainMenu.onShowAllEntriesOfTopic((id, topic) => {
 
 mainMenu.onCloseShowAllEntriesOfTopic((id) => {
   if (id === props.item.id) {
+    showAllTopic.value = null
+  }
+})
+
+mainMenu.onNavigate((item: NavItem) => {
+  if (item.id === props.item.id) {
+    const searchInput = document.getElementById(
+      `unified-search-input-${item.id}`
+    ) as HTMLInputElement
+
+    if (searchInput) {
+      void nextTick(() => {
+        searchInput.focus()
+      })
+    }
+  } else {
     showAllTopic.value = null
   }
 })
@@ -57,7 +81,7 @@ onMounted(() => {
     <DefaultPopup
       v-else
       class="mm-item-popup"
-      :class="{ 'mm-item-popup--active': active }"
+      :class="{ 'mm-item-popup--active': active, 'mm-item-popup--small': small }"
       :nav-item-id="props.item.id"
       :header="props.item.header"
       :small="props.item.popup_small"
@@ -68,7 +92,11 @@ onMounted(() => {
       <div v-else class="mm-item-popup__topics">
         <template v-for="topic in item.topics" :key="topic.title">
           <ItemTopic
-            v-if="!topic.show_more_mode || mainMenu.showMoreIsActive(item.id)"
+            v-if="
+              (!topic.show_more_mode &&
+                topic.entries.filter((e) => !e.show_more_mode).length > 0) ||
+              mainMenu.showMoreIsActive(item.id)
+            "
             :topic="topic"
             :nav-item-id="item.id"
           />

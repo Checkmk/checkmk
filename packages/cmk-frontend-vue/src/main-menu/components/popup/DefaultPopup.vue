@@ -157,6 +157,7 @@ function navigateUrl(url: string) {
 
   &.mm-default-popup--small {
     top: auto;
+    min-height: 400px;
 
     .mm-default-popup__header {
       height: 36px;

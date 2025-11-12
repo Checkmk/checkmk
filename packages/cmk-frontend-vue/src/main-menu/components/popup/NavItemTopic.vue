@@ -5,12 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { NavItemIdEnum, NavItemTopic } from 'cmk-shared-typing/typescript/main_menu'
+import type {
+  NavItemTopicEntry as INavItemTopicEntry,
+  NavItemIdEnum,
+  NavItemTopic
+} from 'cmk-shared-typing/typescript/main_menu'
 
 import usei18n from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
@@ -22,24 +27,27 @@ const { _t } = usei18n()
 const mainMenu = getInjectedMainMenu()
 
 const props = defineProps<{
-  topic: NavItemTopic
+  topic: NavItemTopic | INavItemTopicEntry
   navItemId: NavItemIdEnum
   isShowAll?: boolean | undefined
   flexGrow?: boolean | undefined
 }>()
 
 function getActiveEntries() {
-  return props.topic.entries.filter(
-    (e) => !e.show_more_mode || mainMenu.showMoreIsActive(props.navItemId)
+  return (
+    props.topic.entries?.filter(
+      (e: NavItemTopic | INavItemTopicEntry) =>
+        !e.show_more_mode || mainMenu.showMoreIsActive(props.navItemId)
+    ) ?? []
   )
 }
 
 function getEntries2Render() {
   if (props.isShowAll) {
-    return props.topic.entries.slice(0)
+    return props.topic.entries?.slice(0)
   }
 
-  return getActiveEntries().slice(0, maxEntriesPerTopic)
+  return getActiveEntries()?.slice(0, maxEntriesPerTopic)
 }
 </script>
 
@@ -57,33 +65,36 @@ function getEntries2Render() {
         <span>{{ _t('Back') }}</span>
       </CmkButton>
     </div>
+
     <CmkHeading type="h3" class="mm-nav-item-topic__header">
       <img
         v-if="topic.icon"
-        :src="topic.icon?.src"
+        :src="topic.icon.src"
         class="mm-nav-item-topic__icon"
         width="18"
         height="18"
       />
       <span>{{ topic.title }}</span>
     </CmkHeading>
-    <ul>
-      <template v-for="entry in getEntries2Render()" :key="entry.title">
-        <NavItemTopicEntry
-          v-if="!entry.show_more_mode || mainMenu.showMoreIsActive(props.navItemId) || isShowAll"
-          :entry="entry"
-          :nav-item-id="navItemId"
-        />
-      </template>
-      <li v-if="getActiveEntries().length > maxEntriesPerTopic && !props.isShowAll">
-        <a
-          href="javascript:void(0)"
-          class="mm-nav-item-topic__show-all"
-          @click="mainMenu.showAllEntriesOfTopic(props.navItemId, props.topic)"
-          >{{ _t('Show all') }}</a
-        >
-      </li>
-    </ul>
+    <CmkScrollContainer max-height="calc(100vh - 240px)">
+      <ul>
+        <template v-for="entry in getEntries2Render()" :key="entry.title">
+          <NavItemTopicEntry
+            v-if="!entry.show_more_mode || mainMenu.showMoreIsActive(props.navItemId) || isShowAll"
+            :entry="entry"
+            :nav-item-id="navItemId"
+          />
+        </template>
+        <li v-if="getActiveEntries().length > maxEntriesPerTopic && !props.isShowAll">
+          <a
+            href="javascript:void(0)"
+            class="mm-nav-item-topic__show-all"
+            @click="mainMenu.showAllEntriesOfTopic(props.navItemId, props.topic)"
+            >{{ _t('Show all') }}</a
+          >
+        </li>
+      </ul>
+    </CmkScrollContainer>
   </div>
 </template>
 
@@ -91,7 +102,7 @@ function getEntries2Render() {
 .mm-nav-item-topic {
   padding: var(--dimension-8);
   padding-bottom: 0;
-  width: 250px;
+  min-width: 250px;
   box-sizing: border-box;
   border-right: 1px solid var(--ux-theme-3);
 

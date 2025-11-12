@@ -10,6 +10,7 @@ import type {
   NavItemIdEnum,
   NavItemShortcut,
   NavItemTopic,
+  NavItemTopicEntry,
   NavItems
 } from 'cmk-shared-typing/typescript/main_menu'
 import { type Ref, ref } from 'vue'
@@ -126,7 +127,7 @@ export class MainMenuService extends ServiceBase {
     return this.showMoreActive[id]?.value || false
   }
 
-  public showAllEntriesOfTopic(id: NavItemIdEnum, topic: NavItemTopic) {
+  public showAllEntriesOfTopic(id: NavItemIdEnum, topic: NavItemTopic | NavItemTopicEntry) {
     this.dispatchCallback('show-all-topic', id, topic)
   }
 

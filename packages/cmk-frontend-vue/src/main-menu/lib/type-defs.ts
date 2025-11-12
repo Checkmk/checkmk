@@ -3,7 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { NavItem, NavItemTopic } from 'cmk-shared-typing/typescript/main_menu'
+import type {
+  NavItem,
+  NavItemTopic,
+  NavItemTopicEntry
+} from 'cmk-shared-typing/typescript/main_menu'
 import type { Ref } from 'vue'
 
 import type { Colors } from '@/components/CmkBadge.vue'
@@ -11,7 +15,7 @@ import type { Colors } from '@/components/CmkBadge.vue'
 export type OnNavigateCallback = (item: NavItem) => void
 export type OnCloseCallback = (id: string) => void
 export type OnToggleShowMoreLess = (id: string, show_more_active: boolean) => void
-export type OnShowAllTopic = (id: string, topic: NavItemTopic) => void
+export type OnShowAllTopic = (id: string, topic: NavItemTopic | NavItemTopicEntry) => void
 export type OnUserPopupMessagesCallback = (msgs: UserPopupMessageRef[]) => void
 
 export interface AjaxResponse<T> {

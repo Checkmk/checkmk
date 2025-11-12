@@ -7,16 +7,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { NavItemIdEnum, NavItemTopicEntry } from 'cmk-shared-typing/typescript/main_menu'
 
-import type { TranslatedString } from '@/lib/i18nString'
-
-import CmkChip from '@/components/CmkChip.vue'
-import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 
+import NavItemTopicEntryLink from './NavItemTopicEntryLink.vue'
+
 const mainMenu = getInjectedMainMenu()
 
-defineProps<{
+const props = defineProps<{
   entry: NavItemTopicEntry
   navItemId: NavItemIdEnum
 }>()
@@ -24,42 +23,44 @@ defineProps<{
 function clickLi(entry: NavItemTopicEntry) {
   if (entry.toggle) {
     void mainMenu.toggleEntry(entry.toggle.mode, entry.toggle.reload)
+    return
   }
+
+  if (entry.mode === 'multilevel') {
+    mainMenu.showAllEntriesOfTopic(props.navItemId, entry)
+    return
+  }
+
+  mainMenu.close()
 }
 </script>
 
 <template>
-  <li ref="topic-entries" @click="clickLi(entry)">
-    <a :href="entry.url || 'javascript:void(0)'" :target="entry.target || 'main'">
-      <img v-if="entry.icon" :src="entry.icon?.src" width="18" height="14" />
-      {{ entry.title }}
-
-      <CmkIcon
-        v-if="entry.url && entry.target === '_blank'"
-        class="mm-nav-item-topic-entry__external-link"
-        name="external"
-        size="small"
-      />
-      <div
-        v-if="entry.chip && mainMenu.chipEntry(entry.chip.mode)"
-        class="mm-nav-item-topic-entry__chip"
-      >
-        <CmkChip
-          :content="mainMenu.chipEntry(entry.chip.mode) as TranslatedString"
-          :color="entry.chip.color || 'default'"
-          variant="fill"
-          size="small"
+  <li @click="clickLi(entry)">
+    <div v-if="entry.mode === 'indented'" class="mm-nav-item-topic-entry">
+      <CmkHeading type="h4" class="mm-nav-item-topic-entry__indented-header">
+        <span v-if="entry.icon" class="mm-nav-item-topic-entry__header-icon">
+          <img :src="entry.icon.src" width="18" height="18" />
+          <img
+            v-if="entry.icon.emblem"
+            class="mm-nav-item-topic-entry__icon-emblem"
+            :src="entry.icon.emblem"
+            width="10"
+            height="10"
+          />
+        </span>
+        <span>{{ entry.title }}</span>
+      </CmkHeading>
+      <ul>
+        <NavItemTopicEntry
+          v-for="subEntry in entry.entries"
+          :key="subEntry.title"
+          :entry="subEntry"
+          :nav-item-id="navItemId"
         />
-      </div>
-      <div v-if="entry.toggle" class="mm-nav-item-topic-entry__toggle-button">
-        <CmkChip
-          :content="entry.toggle.value as TranslatedString"
-          :color="entry.toggle.color || 'default'"
-          variant="fill"
-          size="small"
-        />
-      </div>
-    </a>
+      </ul>
+    </div>
+    <NavItemTopicEntryLink v-else :entry="entry" :nav-item-id="navItemId"></NavItemTopicEntryLink>
   </li>
 </template>
 
@@ -70,35 +71,27 @@ li {
   display: flex;
   align-items: center;
 
-  a {
-    text-decoration: none;
-    line-height: 22px;
+  .mm-nav-item-topic-entry {
     display: flex;
-    align-items: center;
-    width: 100%;
+    flex-direction: column;
 
-    &:hover {
-      color: var(--success);
+    ul {
+      padding: 0;
+
+      li {
+        margin: 0;
+      }
     }
 
-    img {
-      position: absolute;
-      margin-left: -23px;
-    }
+    .mm-nav-item-topic-entry__indented-header {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-top: var(--dimension-5);
 
-    .mm-nav-item-topic-entry__external-link {
-      position: relative;
-      opacity: 0.5;
-      margin-left: var(--dimension-4);
-    }
-
-    .mm-nav-item-topic-entry__toggle-chip {
-      text-align: left;
-    }
-
-    .mm-nav-item-topic-entry__toggle-button {
-      flex-grow: 1;
-      text-align: right;
+      .mm-nav-item-topic-entry__header-icon {
+        margin-right: var(--dimension-4);
+      }
     }
   }
 }

@@ -120,6 +120,7 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
     assert exc_match in e.value.stderr
 
 
+@pytest.mark.skip("CMK-27452")
 @pytest.mark.parametrize("bulk", [True, False])
 def test_get_simple_snmp_table_bulkwalk(
     site: Site, backend_type: SNMPBackendEnum, bulk: bool

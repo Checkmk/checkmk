@@ -6,12 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { NavItemIdEnum, NavItemTopic } from 'cmk-shared-typing/typescript/main_menu'
-import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton.vue'
-import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
@@ -30,16 +28,18 @@ const props = defineProps<{
   flexGrow?: boolean | undefined
 }>()
 
-const icon = computed(() => props.topic.icon as SimpleIcons)
+function getActiveEntries() {
+  return props.topic.entries.filter(
+    (e) => !e.show_more_mode || mainMenu.showMoreIsActive(props.navItemId)
+  )
+}
 
 function getEntries2Render() {
   if (props.isShowAll) {
     return props.topic.entries.slice(0)
   }
 
-  return props.topic.entries
-    .filter((e) => !e.show_more_mode || mainMenu.showMoreIsActive(props.navItemId))
-    .slice(0)
+  return getActiveEntries().slice(0, maxEntriesPerTopic)
 }
 </script>
 
@@ -58,7 +58,13 @@ function getEntries2Render() {
       </CmkButton>
     </div>
     <CmkHeading type="h3" class="mm-nav-item-topic__header">
-      <CmkIcon :name="icon" size="large" class="mm-nav-item-topic__icon"></CmkIcon>
+      <img
+        v-if="topic.icon"
+        :src="topic.icon"
+        class="mm-nav-item-topic__icon"
+        width="18"
+        height="18"
+      />
       <span>{{ topic.title }}</span>
     </CmkHeading>
     <ul>
@@ -69,7 +75,7 @@ function getEntries2Render() {
           :nav-item-id="navItemId"
         />
       </template>
-      <li v-if="getEntries2Render().length > maxEntriesPerTopic && !props.isShowAll">
+      <li v-if="getActiveEntries().length > maxEntriesPerTopic && !props.isShowAll">
         <a
           href="javascript:void(0)"
           class="mm-nav-item-topic__show-all"

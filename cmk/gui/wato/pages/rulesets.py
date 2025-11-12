@@ -2298,6 +2298,23 @@ class ABCEditRuleMode(WatoMode):
             }
         )
 
+    def _create_rule_value_catalog(
+        self, title: str | None, value_parameter_form: FormSpec
+    ) -> Catalog:
+        return Catalog(
+            elements={
+                "value": Topic(
+                    title=Title("%s") % title if title else Title("Value"),
+                    elements={
+                        "value": TopicElement(
+                            parameter_form=value_parameter_form,
+                            required=True,
+                        )
+                    },
+                )
+            }
+        )
+
     def _get_rule_options_from_catalog_value(self, raw_value: object) -> RuleOptions:
         if not isinstance(raw_value, dict):
             raise TypeError(raw_value)
@@ -2308,6 +2325,11 @@ class ABCEditRuleMode(WatoMode):
             docu_url=raw_properties["docu_url"],
             disabled=raw_properties["disabled"],
         )
+
+    def _get_rule_value_from_catalog_value(self, raw_value: object) -> object:
+        if not isinstance(raw_value, dict):
+            raise TypeError(raw_value)
+        return raw_value["value"]["value"]
 
     def _get_rule_properties_from_rule(self) -> RawDiskData:
         return RawDiskData(
@@ -2331,7 +2353,7 @@ class ABCEditRuleMode(WatoMode):
         return (
             self._rule.value
             if isinstance(self._rule.value, DefaultValue)
-            else RawDiskData(self._rule.value)
+            else RawDiskData({"value": {"value": self._rule.value}})
         )
 
     def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> HTTPRedirect | None:
@@ -2364,9 +2386,11 @@ class ABCEditRuleMode(WatoMode):
         match render_mode:
             case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
-                value = parse_data_from_field_id(
-                    registered_form_spec,
-                    self._vue_field_id(),
+                value = self._get_rule_value_from_catalog_value(
+                    parse_data_from_field_id(
+                        self._create_rule_value_catalog(None, registered_form_spec),
+                        self._vue_field_id(),
+                    )
                 )
             case RenderMode.BACKEND:
                 value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
@@ -2480,12 +2504,12 @@ class ABCEditRuleMode(WatoMode):
             title = valuespec.title()
             has_show_more = valuespec.has_show_more()
 
-        forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
-        forms.section()
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         try:
             match render_mode:
                 case RenderMode.BACKEND:
+                    forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
+                    forms.section()
                     valuespec = self._ruleset.rulespec.valuespec
                     valuespec.validate_datatype(self._rule.value, "ve")
                     valuespec.render_input("ve", self._rule.value)
@@ -2493,7 +2517,7 @@ class ABCEditRuleMode(WatoMode):
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
                     render_form_spec(
-                        registered_form_spec,
+                        self._create_rule_value_catalog(title, registered_form_spec),
                         self._vue_field_id(),
                         self._get_rule_value_from_request_or_rule(),
                         self._should_validate_on_render(),
@@ -2511,13 +2535,18 @@ class ABCEditRuleMode(WatoMode):
             )
             match render_mode:
                 case RenderMode.BACKEND:
+                    forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
+                    forms.section()
                     valuespec = self._ruleset.rulespec.valuespec
                     valuespec.render_input("ve", valuespec.default_value())
                     valuespec.set_focus("ve")
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
                     render_form_spec(
-                        registered_form_spec, self._vue_field_id(), DEFAULT_VALUE, False
+                        self._create_rule_value_catalog(title, registered_form_spec),
+                        self._vue_field_id(),
+                        DEFAULT_VALUE,
+                        False,
                     )
 
         self._show_conditions(tree.folder_choices)

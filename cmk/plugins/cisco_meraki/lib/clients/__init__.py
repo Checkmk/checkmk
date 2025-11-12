@@ -69,7 +69,7 @@ class MerakiClient:
         cache_devices = cache_ttl(devices_storage, ttl=60)
         cache_devices_statuses = cache_ttl(devices_statuses_storage, ttl=60)
         cache_licenses_overview = cache_ttl(licenses_overview_storage, ttl=600)
-        cache_organizations = cache_ttl(organizations_storage, ttl=86_400)
+        cache_organizations = cache_ttl(organizations_storage, ttl=600)
         cache_sensor_readings = cache_ttl(sensor_readings_storage, ttl=0)
 
         return cls(

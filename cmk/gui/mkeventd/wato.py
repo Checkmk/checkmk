@@ -29,13 +29,14 @@ from livestatus import (
     SiteConfigurations,
 )
 
+import cmk.ccc.translations
+
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.changes as _changes
 import cmk.mkp_tool
 import cmk.utils.paths
 import cmk.utils.render
-import cmk.utils.translations
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -2516,7 +2517,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     )
                 elif event:
                     event["host"] = HostName(
-                        cmk.utils.translations.translate(
+                        cmk.ccc.translations.translate(
                             eventd_configuration()["hostname_translation"], event["host"]
                         )
                     )

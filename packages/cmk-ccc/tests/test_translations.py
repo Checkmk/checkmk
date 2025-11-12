@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.translations import translate, TranslationOptions
+from cmk.ccc.translations import translate, TranslationOptions
 
 
 @pytest.mark.parametrize(

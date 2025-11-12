@@ -10,12 +10,12 @@ from collections.abc import Callable, Container, Mapping, Sequence
 from typing import Final
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.translations import parse_translation_options, translate, TranslationOptions
 from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.utils.caching import cache_manager
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.translations import parse_translation_options, translate, TranslationOptions
 
 from .loaded_config import LoadedConfigFragment
 

@@ -17,6 +17,7 @@ from typing import Literal, NamedTuple, override, TypeGuard
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.translations import translate, TranslationOptions
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import Config
@@ -29,7 +30,6 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.translations import translate, TranslationOptions
 
 from . import bakery, builtin_attributes
 from .automation_commands import AutomationCommand, AutomationCommandRegistry

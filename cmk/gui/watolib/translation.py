@@ -23,7 +23,7 @@ from cmk.gui.valuespec import (
 type _LocalizedStr = str
 
 
-# NOTE: When changing this keep it in sync with cmk.utils.translations.translate()
+# NOTE: When changing this keep it in sync with cmk.ccc.translations.translate()
 def HostnameTranslation(
     *, title: _LocalizedStr, help_txt: _LocalizedStr | None = None
 ) -> Dictionary:

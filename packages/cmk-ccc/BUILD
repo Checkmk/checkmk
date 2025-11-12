@@ -172,6 +172,17 @@ py_library(
 )
 
 py_library(
+    name = "translations",
+    srcs = ["cmk/ccc/translations.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "regex",
+    ],
+)
+
+py_library(
     name = "user",
     srcs = ["cmk/ccc/user.py"],
     imports = ["."],
@@ -322,6 +333,21 @@ py_test(
     deps = [
         "__test__",
         "resulttype",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "translations-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_translations.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "translations",
         requirement("pytest"),
     ],
 )

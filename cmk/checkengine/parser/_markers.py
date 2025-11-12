@@ -9,9 +9,9 @@ from collections.abc import Sequence
 from typing import Final, NamedTuple
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.translations import translate, TranslationOptions
 from cmk.checkengine.plugins import SectionName
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.translations import translate, TranslationOptions
 
 __all__ = ["PiggybackMarker", "SectionMarker"]
 

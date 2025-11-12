@@ -195,6 +195,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:observer",
     "//packages/cmk-ccc:plugin-registry",
     "//packages/cmk-ccc:profile",
+    "//packages/cmk-ccc:regex",
     "//packages/cmk-ccc:resulttype",
     "//packages/cmk-ccc:site",
     "//packages/cmk-ccc:store",

@@ -131,6 +131,18 @@ py_library(
 )
 
 py_library(
+    name = "regex",
+    srcs = ["cmk/ccc/regex.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "exceptions",
+        "i18n",
+    ],
+)
+
+py_library(
     name = "site",
     srcs = ["cmk/ccc/site.py"],
     imports = ["."],
@@ -215,6 +227,7 @@ _ALL = [
     "plugin-registry",
     "profile",
     "resulttype",
+    "regex",
     "site",
     "store",
     "timeout",
@@ -280,6 +293,21 @@ py_test(
     deps = [
         "__test__",
         "site",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "regex-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_regex.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "regex",
         requirement("pytest"),
     ],
 )

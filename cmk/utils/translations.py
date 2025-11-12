@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping
 from typing import cast, Literal, NotRequired, TypedDict
 
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.regex import regex
+from cmk.ccc.regex import regex
 from cmk.utils.servicename import ServiceName
 
 

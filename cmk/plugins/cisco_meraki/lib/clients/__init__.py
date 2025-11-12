@@ -32,22 +32,22 @@ class MerakiSDK(Protocol):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MerakiClients:
-    devices: DevicesClient
-    devices_statuses: DevicesStatusesClient
-    licenses: LicensesClient
-    organizations: OrganizationsClient
-    sensor_readings: SensorReadingsClient
+class MerakiClient:
+    get_devices: DevicesClient
+    get_devices_statuses: DevicesStatusesClient
+    get_licenses_overview: LicensesClient
+    get_organizations: OrganizationsClient
+    get_sensor_readings: SensorReadingsClient
 
     @classmethod
     def build(cls, sdk: MerakiSDK) -> Self:
         return cls(
-            devices=DevicesClient(sdk.organizations),
-            devices_statuses=DevicesStatusesClient(sdk.organizations),
-            licenses=LicensesClient(sdk.organizations),
-            organizations=OrganizationsClient(sdk.organizations),
-            sensor_readings=SensorReadingsClient(sdk.sensor),
+            get_devices=DevicesClient(sdk.organizations),
+            get_devices_statuses=DevicesStatusesClient(sdk.organizations),
+            get_licenses_overview=LicensesClient(sdk.organizations),
+            get_organizations=OrganizationsClient(sdk.organizations),
+            get_sensor_readings=SensorReadingsClient(sdk.sensor),
         )
 
 
-__all__ = ["MerakiClients"]
+__all__ = ["MerakiClient"]

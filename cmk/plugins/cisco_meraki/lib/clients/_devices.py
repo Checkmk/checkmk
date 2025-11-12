@@ -22,7 +22,7 @@ class DevicesClient:
     def __init__(self, sdk: DevicesSDK) -> None:
         self._sdk = sdk
 
-    def get_all(self, org: Organisation) -> dict[str, Device]:
+    def __call__(self, org: Organisation) -> dict[str, Device]:
         return {
             raw_device["serial"]: Device(
                 organisation_id=org["id_"],

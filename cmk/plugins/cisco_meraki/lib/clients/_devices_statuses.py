@@ -25,7 +25,7 @@ class DevicesStatusesClient:
     def __init__(self, sdk: DevicesStatusesSDK) -> None:
         self._sdk = sdk
 
-    def get_all(self, org: Organisation) -> Sequence[RawDevicesStatus]:
+    def __call__(self, org: Organisation) -> Sequence[RawDevicesStatus]:
         try:
             return self._sdk.getOrganizationDevicesStatuses(org["id_"], total_pages="all")
         except APIError as e:

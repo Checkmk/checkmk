@@ -21,7 +21,7 @@ class LicensesClient:
     def __init__(self, sdk: LicensesSDK) -> None:
         self._sdk = sdk
 
-    def get_overview(self, org: Organisation) -> LicensesOverview | None:
+    def __call__(self, org: Organisation) -> LicensesOverview | None:
         if not (raw_overview := self._get_raw_overview(org)):
             return None
 

@@ -25,7 +25,7 @@ class SensorReadingsClient:
     def __init__(self, sdk: SensorReadingsSDK) -> None:
         self._sdk = sdk
 
-    def get_all(self, org: Organisation) -> Sequence[RawSensorReadings]:
+    def __call__(self, org: Organisation) -> Sequence[RawSensorReadings]:
         try:
             return self._sdk.getOrganizationSensorReadingsLatest(org["id_"], total_pages="all")
         except APIError as e:

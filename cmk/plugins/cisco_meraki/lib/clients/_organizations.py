@@ -20,7 +20,7 @@ class OrganizationsClient:
     def __init__(self, sdk: OrganizationsSDK) -> None:
         self._sdk = sdk
 
-    def get_all(self) -> Sequence[Organisation]:
+    def __call__(self) -> Sequence[Organisation]:
         try:
             return [
                 Organisation(id_=organisation["id"], name=organisation["name"])

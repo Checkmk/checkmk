@@ -21,7 +21,7 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 
-from .clients import MerakiClients
+from .clients import MerakiClient
 from .config import get_meraki_dashboard, MerakiConfig
 from .constants import (
     AGENT,
@@ -84,7 +84,7 @@ class SupportsOrganizationsClient(Protocol):
 
 
 class OrganizationsCache(DataCache):
-    def __init__(self, config: MerakiConfig, client: SupportsOrganizationsClient) -> None:
+    def __init__(self, config: MerakiConfig, client: MerakiClient) -> None:
         super().__init__(config.cache_dir / "organisations", "organisations")
         self._client = client
 
@@ -97,7 +97,7 @@ class OrganizationsCache(DataCache):
         return True
 
     def get_live_data(self, *args: object) -> Sequence[Organisation]:
-        return self._client.get_all()
+        return self._client.get_organizations()
 
 
 # .
@@ -114,7 +114,7 @@ class OrganizationsCache(DataCache):
 @dataclass(frozen=True)
 class MerakiOrganisation:
     config: MerakiConfig
-    clients: MerakiClients
+    client: MerakiClient
     organisation: Organisation
 
     @property
@@ -123,14 +123,14 @@ class MerakiOrganisation:
 
     def query(self) -> Iterator[Section]:
         if SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
-            if licenses_overview := self.clients.licenses.get_overview(self.organisation):
+            if licenses_overview := self.client.get_licenses_overview(self.organisation):
                 yield self._make_section(
                     name=SEC_NAME_LICENSES_OVERVIEW,
                     data=licenses_overview,
                 )
 
         if self.config.devices_required:
-            devices_by_serial = self.clients.devices.get_all(self.organisation)
+            devices_by_serial = self.client.get_devices(self.organisation)
         else:
             devices_by_serial = {}
 
@@ -150,7 +150,7 @@ class MerakiOrganisation:
             )
 
         if SEC_NAME_DEVICE_STATUSES in self.config.section_names:
-            for device_status in self.clients.devices_statuses.get_all(self.organisation):
+            for device_status in self.client.get_devices_statuses(self.organisation):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (
@@ -163,7 +163,7 @@ class MerakiOrganisation:
                     )
 
         if SEC_NAME_SENSOR_READINGS in self.config.section_names:
-            for sensor_reading in self.clients.sensor_readings.get_all(self.organisation):
+            for sensor_reading in self.client.get_sensor_readings(self.organisation):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (
@@ -280,12 +280,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def _get_organisations(
-    config: MerakiConfig, clients: MerakiClients, *, org_ids: Sequence[str]
+    config: MerakiConfig, client: MerakiClient, *, org_ids: Sequence[str]
 ) -> Sequence[Organisation]:
     if not config.organizations_required:
         return []
 
-    orgs = OrganizationsCache(config, clients.organizations).get_data()
+    orgs = OrganizationsCache(config, client).get_data()
 
     if org_ids:
         return [org for org in orgs if org["id_"] in org_ids]
@@ -298,12 +298,12 @@ def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
     dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
 
     config = MerakiConfig.build(args.hostname, args.sections)
-    clients = MerakiClients.build(dashboard)
+    client = MerakiClient.build(dashboard)
 
     sections = _query_meraki_objects(
         organisations=[
-            MerakiOrganisation(config, clients, organisation)
-            for organisation in _get_organisations(config, clients, org_ids=args.orgs)
+            MerakiOrganisation(config, client, organisation)
+            for organisation in _get_organisations(config, client, org_ids=args.orgs)
         ]
     )
 

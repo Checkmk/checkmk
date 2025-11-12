@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Agents
 
-An agent is a small program that is installed on a host in order for Checkmk to be able query
+An agent is a small program that is installed on a host in order for Checkmk to be able to query
 data from the host.
 
 An introduction to agents can be found in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_monitoringagents.html).
 
-You can find more about the Agent Bakery and automatic agent updates of checkmk enterprise
-in [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
+You can find more about the Agent Bakery and automatic agent updates in
+[Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
 """
 
 from collections.abc import Mapping

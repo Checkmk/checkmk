@@ -148,7 +148,7 @@ class SNMPv3AuthPrivacyModel:
         description="Authentication pass phrase.",
     )
     privacy_protocol: PrivacyProtocolType = api_field(
-        description="The privacy protocol. The only supported values in the Raw Edition are CBC-DES and AES-128. If selected, privacy_password needs to be supplied as well."
+        description="The privacy protocol. The only supported values in the Community Edition are CBC-DES and AES-128. If selected, privacy_password needs to be supplied as well."
     )
     privacy_password: Annotated[str, MinLen(8)] = api_field(
         description="Privacy pass phrase. If filled, privacy_protocol needs to be selected as well.",

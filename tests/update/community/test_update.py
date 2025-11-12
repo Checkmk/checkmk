@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status
-from tests.testlib.version import TypeCMKEdition
+from tests.testlib.version import TypeCMKEdition, TypeCMKEditionOld
 from tests.update.helpers import (
     bulk_discover_and_schedule,
     check_agent_receiver_error_log,
@@ -21,13 +21,14 @@ from tests.update.helpers import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip_if_not_edition("community")
 @pytest.mark.skipif(
     os.getenv("DISTRO") == "almalinux-8", reason="Fails on almalinux-8 due to dependency issue."
 )
 @pytest.mark.skip_if_not_edition("community")
 def test_update(test_setup: tuple[Site, TypeCMKEdition, bool, str]) -> None:
     base_site, target_edition, interactive_mode, hostname = test_setup
+
+    assert base_site.edition.short == TypeCMKEditionOld.COMMUNITY.short
 
     # get baseline monitoring data for each host
     base_data = base_site.get_host_services(hostname)

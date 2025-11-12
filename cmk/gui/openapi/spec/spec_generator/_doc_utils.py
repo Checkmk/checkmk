@@ -8,19 +8,14 @@
 # mypy: disable-error-code="type-arg"
 
 import enum
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 
 from apispec import APISpec
 from apispec.utils import dedent
 from werkzeug.utils import import_string
 
-from cmk.ccc.version import Edition
 from cmk.gui.openapi import endpoint_family_registry
-from cmk.gui.openapi.restful_objects.type_defs import (
-    EditionLabel,
-    OpenAPITag,
-    TagGroup,
-)
+from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag, TagGroup
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import permission_verification as permissions
 
@@ -44,34 +39,6 @@ class DefaultStatusCodeDescription(enum.Enum):
     Code428 = "The required If-Match header is missing."
     Code200 = "The operation was done successfully."
     Code204 = "Operation done successfully. No further output."
-
-
-def format_endpoint_supported_editions(editions: set[Edition]) -> Sequence[EditionLabel]:
-    colors: Mapping[Edition, str] = {
-        Edition.PRO: "#74ebdd",
-        Edition.COMMUNITY: "#afb9c2",
-        Edition.ULTIMATE: "#586aa2",
-        Edition.CLOUD: "#7e96f3",
-        Edition.ULTIMATEMT: "#70a8db",
-    }
-    ordered_editions = (
-        Edition.COMMUNITY,
-        Edition.PRO,
-        Edition.ULTIMATE,
-        Edition.ULTIMATEMT,
-        Edition.CLOUD,
-    )
-    edition_labels: list[EditionLabel] = []
-    for edition in ordered_editions:
-        if edition in editions:
-            edition_labels.append(
-                {
-                    "name": edition.short.upper(),
-                    "position": "after",
-                    "color": colors[edition],
-                }
-            )
-    return edition_labels
 
 
 def endpoint_title_and_description_from_docstring(

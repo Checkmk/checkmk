@@ -452,12 +452,6 @@ ResponseType = TypedDict(
 )
 
 
-class EditionLabel(TypedDict, total=True):
-    name: str
-    color: str
-    position: Literal["before", "after"]
-
-
 class CodeSample(TypedDict, total=True):
     label: str
     lang: str
@@ -470,7 +464,6 @@ OperationSpecType = TypedDict(
     "OperationSpecType",
     {
         "x-codeSamples": list[CodeSample],
-        "x-badges": NotRequired[Sequence[EditionLabel]],
         "operationId": str,
         "tags": list[str],
         "description": str,

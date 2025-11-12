@@ -94,7 +94,15 @@ class TestMerakiAgentOutput:
     def test_cache_exists(self, ctx: MerakiRunContext, tmp_path: Path) -> None:
         agent.run(ctx)
 
+        assert any((tmp_path / f"{AGENT}_devices" / ctx.config.hostname).iterdir())
+        assert any((tmp_path / f"{AGENT}_devices_statuses" / ctx.config.hostname).iterdir())
+        assert any((tmp_path / f"{AGENT}_licenses_overview" / ctx.config.hostname).iterdir())
         assert any((tmp_path / f"{AGENT}_organizations" / ctx.config.hostname).iterdir())
+
+    def test_cache_not_present(self, ctx: MerakiRunContext, tmp_path: Path) -> None:
+        agent.run(ctx)
+
+        assert not (tmp_path / f"{AGENT}_sensor_readings" / ctx.config.hostname).exists()
 
 
 def _update_org_ids(ctx: MerakiRunContext, org_ids: Sequence[str]) -> MerakiRunContext:

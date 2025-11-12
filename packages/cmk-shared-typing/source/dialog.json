@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "dialog",
+  "properties": {
+    "title": { "type": "string" },
+    "message": { "type": "string" },
+    "buttons": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/dialog_button" }
+    },
+    "dismissal_button": { "$ref": "#/$defs/dismissal_button" }
+  },
+  "required": ["message"],
+  "$defs": {
+    "dialog_button": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "variant": { "$ref": "#/$defs/button_variant" },
+        "action": { "$ref": "#/$defs/dialog_action" }
+      },
+      "required": ["title", "variant", "action"]
+    },
+    "dismissal_button": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "key": { "type": "string", "description": "Unique key for persisting dismissal state" }
+      },
+      "required": ["title", "key"]
+    },
+    "button_variant": {
+      "enum": ["primary", "secondary", "optional", "success", "warning", "danger", "info"]
+    },
+    "dialog_action": {
+      "oneOf": [{ "$ref": "#/$defs/redirect_action" }]
+    },
+    "redirect_action": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "redirect" },
+        "url": { "type": "string" }
+      },
+      "required": ["type", "url"]
+    }
+  }
+}

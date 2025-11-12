@@ -32,6 +32,7 @@ def netsnmp_workspace():
             "//omd/packages/net-snmp/patches:0017-no-fallthrough.dif",
             "//omd/packages/net-snmp/patches:0018-update-user-information-for-python.dif",
             "//omd/packages/net-snmp/patches:0019-Fix-NULL-varbind-in-get-getnext.dif",  # submitted as https://github.com/net-snmp/net-snmp/pull/1027
+            "//omd/packages/net-snmp/patches:0020-fix-bad-mib.dif",
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

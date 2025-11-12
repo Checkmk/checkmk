@@ -291,7 +291,7 @@ def _get_organisations(config: MerakiConfig, client: MerakiClient) -> Sequence[O
     return orgs
 
 
-def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
+def run(args: argparse.Namespace) -> int:
     api_key = resolve_secret_option(args, APIKEY_OPTION_NAME).reveal()
     dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
 
@@ -312,4 +312,4 @@ def agent_cisco_meraki_main(args: argparse.Namespace) -> int:
 @report_agent_crashes(AGENT, __version__)
 def main() -> int:
     args = parse_arguments(sys.argv[1:])
-    return agent_cisco_meraki_main(args)
+    return run(args)

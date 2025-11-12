@@ -219,7 +219,7 @@ def test_agent_cisco_meraki_main(
         lambda *args, **kwargs: FakeOrganizationsCache(),
     )
 
-    agent_cisco_meraki.agent_cisco_meraki_main(
+    agent_cisco_meraki.run(
         agent_cisco_meraki.parse_arguments(
             [
                 "testhost",

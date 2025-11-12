@@ -2854,6 +2854,7 @@ numpy==2.3.4 \
     --hash=sha256:fea80f4f4cf83b54c3a051f2f727870ee51e22f0248d3114b8e755d160b38cfb
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-metric-backend/dev-requirements.in
     #   contourpy
     #   matplotlib
 oauthlib==3.3.1 \

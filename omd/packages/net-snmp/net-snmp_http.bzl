@@ -30,6 +30,7 @@ def netsnmp(version_str, sha256):
             "//omd/packages/net-snmp/patches:0016-Python-Fix-snmpwalk-with-UseNumeric-1.dif",
             "//omd/packages/net-snmp/patches:0017-no-fallthrough.dif",
             "//omd/packages/net-snmp/patches:0018-update-user-information-for-python.dif",
+            "//omd/packages/net-snmp/patches:0020-fix-bad-mib.dif",
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

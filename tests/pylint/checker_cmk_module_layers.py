@@ -697,11 +697,13 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.gui.nonfree.cloud"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
+        *PACKAGE_PLUGIN_APIS,
         *PACKAGE_TRACE,
         "cmk.nonfree.ultimate.metric_backend.gui.register",
         "cmk.fields",
         "cmk.gui",
         "cmk.utils.agent_registration",
+        "cmk.utils.config_warnings",
         "cmk.utils.nonfree.pro",
         "cmk.utils.nonfree.cloud",
         "cmk.utils.licensing",

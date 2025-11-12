@@ -5,7 +5,12 @@
 
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
-from ._utils import get_permitted_user_id, PERMISSIONS_DASHBOARD, save_dashboard_to_file
+from ._utils import (
+    convert_internal_relative_dashboard_to_api_model_dict,
+    get_permitted_user_id,
+    PERMISSIONS_DASHBOARD,
+    save_dashboard_to_file,
+)
 from .model.widget_content.graph import ApiCustomGraphValidation
 
 __all__ = [
@@ -15,4 +20,5 @@ __all__ = [
     "get_permitted_user_id",
     "register_endpoints",
     "save_dashboard_to_file",
+    "convert_internal_relative_dashboard_to_api_model_dict",
 ]

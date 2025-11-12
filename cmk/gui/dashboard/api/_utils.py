@@ -14,6 +14,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
+from cmk.gui.openapi.framework.utils import dump_dict_without_omitted
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.user_async_replication import add_profile_replication_change
@@ -185,3 +186,10 @@ def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId | None) -> N
 
     with ThreadPoolExecutor(max_workers=len(remote_configs)) as executor:
         executor.map(push, remote_configs)
+
+
+def convert_internal_relative_dashboard_to_api_model_dict(
+    dashboard_config: DashboardConfig,
+) -> dict[str, object]:
+    dashboard_relative_grid = RelativeGridDashboardResponse.from_internal(dashboard_config)
+    return dump_dict_without_omitted(RelativeGridDashboardResponse, dashboard_relative_grid)

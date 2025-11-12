@@ -41,7 +41,7 @@ mainMenu.onUserPopupMessages((msgs) => {
 <template>
   <nav>
     <a id="home" :href="props.start.url || '/'" :title="props.start.title">
-      <img :src="props.start.icon || 'themes/facelift/images/icon_checkmk_logo.svg'" />
+      <img :src="props.start.icon?.src || 'themes/facelift/images/icon_checkmk_logo.svg'" />
     </a>
     <ul id="main-menu">
       <NavItem

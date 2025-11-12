@@ -60,7 +60,7 @@ function getEntries2Render() {
     <CmkHeading type="h3" class="mm-nav-item-topic__header">
       <img
         v-if="topic.icon"
-        :src="topic.icon"
+        :src="topic.icon?.src"
         class="mm-nav-item-topic__icon"
         width="18"
         height="18"

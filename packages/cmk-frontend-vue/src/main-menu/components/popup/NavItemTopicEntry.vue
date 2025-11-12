@@ -31,7 +31,7 @@ function clickLi(entry: NavItemTopicEntry) {
 <template>
   <li ref="topic-entries" @click="clickLi(entry)">
     <a :href="entry.url || 'javascript:void(0)'" :target="entry.target || 'main'">
-      <img v-if="entry.icon" :src="entry.icon" width="18" height="14" />
+      <img v-if="entry.icon" :src="entry.icon?.src" width="18" height="14" />
       {{ entry.title }}
 
       <CmkIcon

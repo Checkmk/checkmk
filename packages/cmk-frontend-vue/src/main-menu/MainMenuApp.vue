@@ -79,16 +79,11 @@ mainMenu.onUserPopupMessages((msgs) => {
       />
       <SidebarToggle />
     </ul>
-    <PopupBackdrop v-if="mainMenu.isAnyNavItemActive()">
-      <template v-for="item in props.main.concat(props.user)">
-        <ItemPopup
-          v-if="mainMenu.isNavItemActive(item.id)"
-          :key="`nav-popup-${item.id}`"
-          :item="item"
-          @click.stop
-        />
-      </template>
-    </PopupBackdrop>
+    <template v-for="item in props.main.concat(props.user)" :key="`nav-popup-${item.id}`">
+      <PopupBackdrop v-show="mainMenu.isNavItemActive(item.id)" class="mm-app__popup-backdrop">
+        <ItemPopup :item="item" @click.stop />
+      </PopupBackdrop>
+    </template>
   </nav>
   <CmkPopupDialog
     v-for="msg in usePopupMessages"

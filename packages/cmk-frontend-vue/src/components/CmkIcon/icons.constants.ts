@@ -187,21 +187,22 @@ export const oneColorIcons = [
 ] as const
 export const twoColorIcons = ['aggr'] as const
 
+export const iconSizes = {
+  xxsmall: 8,
+  xsmall: 10,
+  small: 12,
+  medium: 15,
+  large: 18,
+  xlarge: 20,
+  xxlarge: 32,
+  xxxlarge: 77
+}
+
 export const cmkIconVariants = cva('', {
   variants: {
     variant: {
       plain: '',
       inline: 'cmk-icon--inline'
-    },
-    size: {
-      xxsmall: '8px',
-      xsmall: '10px',
-      small: '12px',
-      medium: '15px',
-      large: '18px',
-      xlarge: '20px',
-      xxlarge: '32px',
-      xxxlarge: '77px'
     },
     colored: {
       true: '',
@@ -210,7 +211,6 @@ export const cmkIconVariants = cva('', {
   },
   defaultVariants: {
     variant: 'plain',
-    size: 'medium',
     colored: true
   }
 })
@@ -229,19 +229,6 @@ export const cmkMultitoneIconVariants = cva('', {
       users: 'purple',
       specialAgents: 'cyan',
       font: 'font'
-    },
-    size: {
-      xxsmall: '8px',
-      xsmall: '10px',
-      small: '12px',
-      medium: '15px',
-      large: '18px',
-      xlarge: '20px',
-      xxlarge: '32px',
-      xxxlarge: '77px'
     }
-  },
-  defaultVariants: {
-    size: 'medium'
   }
 })

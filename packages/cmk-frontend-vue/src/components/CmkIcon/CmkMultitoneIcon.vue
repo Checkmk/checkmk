@@ -4,24 +4,25 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup generic="IconName extends CmkMultitoneIconNames" lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
 import { cmkMultitoneIconVariants, oneColorIcons, twoColorIcons } from './icons.constants.ts'
 import type {
-  CmkIconSize,
   CmkMultitoneIconColor,
   CmkMultitoneIconNames,
+  IconSizeNames,
   OneColorIcons,
   TwoColorIcons
 } from './types.ts'
+import { iconSizeNametoNumber } from './utils'
 
 const props = defineProps<{
   name: IconName
   primaryColor: CmkMultitoneIconColor
   secondaryColor?: IconName extends OneColorIcons ? never : CmkMultitoneIconColor
-  size?: CmkIconSize | undefined
+  size?: IconSizeNames | undefined
   title?: string | undefined
   rotate?: number | undefined
 }>()
@@ -29,9 +30,7 @@ function getTransformRotate(): string {
   return `rotate(${props.rotate || 0}deg)`
 }
 
-function getSize(): string {
-  return cmkMultitoneIconVariants({ size: props.size })
-}
+const iconSize = computed(() => iconSizeNametoNumber(props.size))
 
 function getColorClass(color: CmkMultitoneIconColor, prefix: string): string {
   if (!color) {
@@ -88,8 +87,8 @@ immediateWatch(
   margin: 0;
   padding: 0;
   vertical-align: baseline;
-  width: v-bind('getSize()');
-  height: v-bind('getSize()');
+  width: v-bind('`${iconSize}px`');
+  height: v-bind('`${iconSize}px`');
   transform: v-bind('getTransformRotate()');
 
   --icon-primary-color: var(--color-corporate-green-60);

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import CmkIcon, { type CmkIconVariants } from '@/components/CmkIcon'
+import CmkIcon, { type IconSizeNames } from '@/components/CmkIcon'
 import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
 import { emblems, simpleIcons } from '@/components/CmkIcon/icons.constants'
 import type { IconEmblems, SimpleIcons } from '@/components/CmkIcon/types'
@@ -15,7 +15,7 @@ import type { IconEmblems, SimpleIcons } from '@/components/CmkIcon/types'
 const icon = ref<SimpleIcons>('filter')
 const emblem = ref<IconEmblems>('warning')
 
-const sizes: CmkIconVariants['size'][] = [
+const sizes: IconSizeNames[] = [
   'xxsmall',
   'xsmall',
   'small',

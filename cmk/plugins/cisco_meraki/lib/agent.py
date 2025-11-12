@@ -123,14 +123,14 @@ class MerakiOrganisation:
 
     def query(self) -> Iterator[Section]:
         if SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
-            if licenses_overview := self.client.get_licenses_overview(self.organisation):
+            if licenses_overview := self.client.get_licenses_overview(**self.organisation):
                 yield self._make_section(
                     name=SEC_NAME_LICENSES_OVERVIEW,
                     data=licenses_overview,
                 )
 
         if self.config.devices_required:
-            devices_by_serial = self.client.get_devices(self.organisation)
+            devices_by_serial = self.client.get_devices(**self.organisation)
         else:
             devices_by_serial = {}
 
@@ -150,7 +150,7 @@ class MerakiOrganisation:
             )
 
         if SEC_NAME_DEVICE_STATUSES in self.config.section_names:
-            for device_status in self.client.get_devices_statuses(self.organisation):
+            for device_status in self.client.get_devices_statuses(self.organisation_id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (
@@ -163,7 +163,7 @@ class MerakiOrganisation:
                     )
 
         if SEC_NAME_SENSOR_READINGS in self.config.section_names:
-            for sensor_reading in self.client.get_sensor_readings(self.organisation):
+            for sensor_reading in self.client.get_sensor_readings(self.organisation_id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (

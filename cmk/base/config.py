@@ -71,6 +71,7 @@ from cmk.base.sources import ParserConfig
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.regex import regex
 from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import (
@@ -166,7 +167,6 @@ from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.misc import key_config_paths
 from cmk.utils.password_store import make_configured_passwords_lookup
-from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,

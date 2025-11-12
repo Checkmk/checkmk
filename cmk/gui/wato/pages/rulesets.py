@@ -31,6 +31,7 @@ import cmk.gui.watolib.changes as _changes
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.site import SiteId
 from cmk.gui import deprecations, forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -176,7 +177,6 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.gui.watolib.utils import mk_eval, mk_repr
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.labels import LabelGroups
-from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import (
     allow_host_label_conditions,

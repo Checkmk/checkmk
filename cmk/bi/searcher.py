@@ -10,8 +10,8 @@ from typing import override
 
 from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 from cmk.bi.type_defs import HostChoice, HostConditions, HostRegexMatches, HostServiceConditions
+from cmk.ccc.regex import regex
 from cmk.utils.labels import LabelGroups
-from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition, TagCondition
 from cmk.utils.tags import TagGroupID
 

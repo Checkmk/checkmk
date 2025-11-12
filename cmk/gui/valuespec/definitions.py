@@ -70,11 +70,12 @@ from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 
 import cmk.ccc.plugin_registry
+import cmk.ccc.regex
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.regex
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress as HostAddressType
+from cmk.ccc.regex import RegexFutureWarning
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
@@ -122,7 +123,6 @@ from cmk.gui.view_utils import render_labels
 from cmk.utils import dateutils
 from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
-from cmk.utils.regex import RegexFutureWarning
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
 
@@ -1111,7 +1111,7 @@ def ID(
         empty_text=empty_text,
         read_only=read_only,
         forbidden_chars=forbidden_chars,
-        regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_ID, re.ASCII),
+        regex=cmk.ccc.regex.regex(cmk.ccc.regex.REGEX_ID, re.ASCII),
         regex_error=regex_requirement_message,
         minlen=minlen,
         maxlen=maxlen,
@@ -7549,7 +7549,7 @@ class _SingleLabel(AjaxDropdownChoice):
         on_change: str | None = None,
     ):
         super().__init__(
-            regex=cmk.utils.regex.regex(LABEL_REGEX),
+            regex=cmk.ccc.regex.regex(LABEL_REGEX),
             regex_error=_(
                 'Labels need to be in the format "[KEY]:[VALUE]". For example "os:windows".'
             ),

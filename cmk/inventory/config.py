@@ -7,7 +7,7 @@ from collections.abc import Iterator, Sequence
 from typing import Literal, TypedDict
 
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.regex import regex
+from cmk.ccc.regex import regex
 
 
 class InvCleanupParamsCombined(TypedDict):

@@ -11,7 +11,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, TypedDict
 
-import cmk.utils.regex
+import cmk.ccc.regex
 from cmk.gui.log import logger
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -182,7 +182,7 @@ def find_matching_translation(
     if translation := translation_by_metric_names.get(metric_name):
         return translation
     for orig_metric_name, translation in translation_by_metric_names.items():
-        if orig_metric_name.startswith("~") and cmk.utils.regex.regex(orig_metric_name[1:]).match(
+        if orig_metric_name.startswith("~") and cmk.ccc.regex.regex(orig_metric_name[1:]).match(
             metric_name
         ):  # Regex entry
             return translation

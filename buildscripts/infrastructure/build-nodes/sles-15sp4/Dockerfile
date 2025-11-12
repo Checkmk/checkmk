@@ -36,7 +36,6 @@ RUN zypper ref -s \
     gcc \
     gcc-c++ \
     gd-devel \
-    gmp-devel-6.1.2-4.9.1.x86_64 \
     groff \
     gtk-doc \
     intltool \
@@ -64,7 +63,6 @@ RUN zypper ref -s \
     xmlsec1-devel \
     xmlsec1-openssl-devel \
     mariadb-client \
-    mpfr-devel \
     openldap2-devel \
     openssh \
     pango-devel \

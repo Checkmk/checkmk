@@ -19,8 +19,8 @@ from pydantic import BaseModel, Field
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v1 import Metric, Result
-from cmk.agent_based.v2 import check_levels as check_levels_v2
 from cmk.agent_based.v2 import (
+    Attributes,
     CheckResult,
     DiscoveryResult,
     get_average,
@@ -35,6 +35,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
+from cmk.agent_based.v2 import check_levels as check_levels_v2
 from cmk.plugins.lib.labels import ensure_valid_labels
 
 AZURE_AGENT_SEPARATOR = "|"
@@ -548,17 +549,14 @@ def check_storage() -> CheckFunctionWithoutItem:
 # per resource type.
 def create_inventory_function() -> Callable[[Resource], InventoryResult]:
     def inventory_common_azure(section: Resource) -> InventoryResult:
-        path = ["software", "applications", "azure"]
-
-        # Table label -> resource dict key
         mapping = {
-            "Object": "type",
-            "Name": "name",
-            "Tenant ID": "tenant_id",
-            "Subscription ID": "subscription",
-            "Subscription name": "subscription_name",
-            "Resource group": "group",
-            "Region": "location",
+            "object": "type",
+            "name": "name",
+            "tenant_id": "tenant_id",
+            "subscription_id": "subscription",
+            "subscription_name": "subscription_name",
+            "resource_group": "group",
+            "region": "location",
         }
 
         match section.type:
@@ -566,27 +564,20 @@ def create_inventory_function() -> Callable[[Resource], InventoryResult]:
                 entity = "Resource Group"
             case "subscription":
                 entity = "Subscription"
-                mapping["ID"] = "id"
+                mapping["id"] = "id"
             case _:
                 entity = "Resource"
 
-        hardcoded_values = {
-            "Cloud provider": "Azure",
-            "Entity": entity,
+        inventory_attributes = {
+            "cloud_provider": "Azure",
+            "entity": entity,
         }
+        for label, value in mapping.items():
+            if (row_value := getattr(section, value, None)) is not None and row_value != "":
+                inventory_attributes[label] = row_value
 
-        for label, value in mapping.items() | hardcoded_values.items():
-            if label in mapping:
-                row_value = getattr(section, value, None)
-            else:
-                row_value = value
-
-            if row_value is not None and row_value != "":
-                yield TableRow(
-                    path=path + ["metadata"],
-                    key_columns={"information": label},
-                    inventory_columns={"value": row_value},
-                )
+        path = ["software", "applications", "azure"]
+        yield Attributes(path=path + ["metadata"], inventory_attributes=inventory_attributes)
 
         for tag_key, tag_value in (section.tags or {}).items():
             yield TableRow(

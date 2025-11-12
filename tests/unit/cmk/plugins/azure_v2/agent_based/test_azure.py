@@ -16,9 +16,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import (
-    check_levels as check_levels_v2,
-)
-from cmk.agent_based.v2 import (
+    Attributes,
     CheckResult,
     DiscoveryResult,
     Metric,
@@ -28,6 +26,9 @@ from cmk.agent_based.v2 import (
     ServiceLabel,
     State,
     TableRow,
+)
+from cmk.agent_based.v2 import (
+    check_levels as check_levels_v2,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     _get_metrics,
@@ -881,31 +882,30 @@ def test_inventory_common_azure() -> None:
     inventory = list(create_inventory_function()(PARSED_RESOURCE))
 
     expected_metadata: dict[int | float | str, str] = {
-        "Object": "Microsoft.DBforMySQL/servers",
-        "Resource group": "BurningMan",
-        "Entity": "Resource",
-        "Cloud provider": "Azure",
-        "Region": "westeurope",
-        "Name": "checkmk-mysql-server",
+        "object": "Microsoft.DBforMySQL/servers",
+        "resource_group": "BurningMan",
+        "entity": "Resource",
+        "cloud_provider": "Azure",
+        "region": "westeurope",
+        "name": "checkmk-mysql-server",
         # TODO: These require updating the fixture data
-        # "Subscription name": ,
-        # "Subscription ID",
+        # "subscription_name": ,
+        # "subscription_id",
     }
 
     tags = {}
     matched_rows = 0
     for inv in inventory:
-        assert isinstance(inv, TableRow)  # sate mypy
         if "metadata" in inv.path:
-            key = inv.key_columns["information"]
-            value = inv.inventory_columns["value"]
-
-            # We might output more than we look for.
-            # Particularly with outdated fixture data.
-            if key in expected_metadata:
-                matched_rows += 1
-                assert expected_metadata[key] == value
+            assert isinstance(inv, Attributes)
+            for key, value in inv.inventory_attributes.items():
+                # We might output more than we look for.
+                # Particularly with outdated fixture data.
+                if key in expected_metadata:
+                    matched_rows += 1
+                    assert expected_metadata[key] == value
         elif "tags" in inv.path:
+            assert isinstance(inv, TableRow)
             tags[inv.key_columns["name"]] = inv.inventory_columns["value"]
 
     # Since the test is not 1:1 with the expected rows, do an extra check after,

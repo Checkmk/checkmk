@@ -23,4 +23,4 @@ AGENT_LINES = [
 def test_azure_subscription_inventory() -> None:
     parsed = agent_section_azure_subscription.parse_function(AGENT_LINES)
     inventory = inventory_plugin_azure_subscription.inventory_function(parsed)
-    assert get_inventory_value(inventory, "Subscription name") == "mock_subscription_name"
+    assert get_inventory_value(inventory, "subscription_name") == "mock_subscription_name"

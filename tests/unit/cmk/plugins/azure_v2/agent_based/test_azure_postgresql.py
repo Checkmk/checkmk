@@ -268,4 +268,4 @@ def test_azure_postgresql_inventory() -> None:
         },
     )
     inventory = inventory_plugin_azure_postgresql.inventory_function(section)
-    assert get_inventory_value(inventory, "Region") == "westeurope"
+    assert get_inventory_value(inventory, "region") == "westeurope"

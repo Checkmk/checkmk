@@ -699,4 +699,4 @@ def test_check_virtual_network_gateway_peering(section, item, expected_result):
 
 def test_azure_virtual_network_gateways_inventory() -> None:
     inventory = inventory_plugin_azure_virtualnetworkgateways.inventory_function(SECTION)
-    assert get_inventory_value(inventory, "Region") == "maxwellmonteswest"
+    assert get_inventory_value(inventory, "region") == "maxwellmonteswest"

@@ -168,4 +168,4 @@ def test_azure_traffic_manager_inventory() -> None:
         },
     )
     inventory = inventory_plugin_azure_traffic_manager.inventory_function(section)
-    assert get_inventory_value(inventory, "Region") == "westeurope"
+    assert get_inventory_value(inventory, "region") == "westeurope"

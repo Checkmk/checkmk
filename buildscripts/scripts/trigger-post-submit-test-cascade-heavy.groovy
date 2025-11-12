@@ -26,7 +26,7 @@ void main() {
         "test-plugins",
         "test-plugins-piggyback",
         "test-update-single-f12less",
-        "test-update-single-f12less-pro-community",
+        "test-update-single-f12less-community-pro",
         "test-update-single-f12less-pro-ultimate",
         "test-update-single-f12less-pro-ultimatemt",
     ];

@@ -106,12 +106,24 @@ def _restore_working_dir(site_home: Path) -> Path:
     return site_home / ".restore_working_dir"
 
 
+def _clickhouse_dir(site_home: Path) -> Path:
+    return site_home / "var" / "clickhouse-server"
+
+
 def _remove_site_home(site_home: Path) -> None:
+    restore_working_dir = _restore_working_dir(site_home)
+    clickhouse_dir = site_home / "var" / "clickhouse-server"
+    restore_clickhouse_dir = restore_working_dir / "clickhouse-server"
+    if clickhouse_dir.exists():
+        clickhouse_dir.rename(restore_clickhouse_dir)
     with os.scandir(site_home) as scaniter:
         for entry in scaniter:
-            if entry.name == _restore_working_dir(site_home).name:
+            if entry.name == restore_working_dir.name:
                 continue
             elif entry.is_dir(follow_symlinks=False):
                 shutil.rmtree(entry.path)
             else:
                 os.unlink(entry.path)
+    if restore_clickhouse_dir.exists():
+        clickhouse_dir.parent.mkdir(parents=True)
+        restore_clickhouse_dir.rename(clickhouse_dir)

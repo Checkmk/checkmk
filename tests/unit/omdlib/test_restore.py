@@ -7,6 +7,7 @@ import os
 import stat
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from itertools import groupby
 from pathlib import Path
 
 import pytest
@@ -107,8 +108,38 @@ def _from_disk(path: Path) -> RootDir:
     return RootDir(path=path, directories=sub_dirs, files=sub_files)
 
 
+def _merge_file_lists(files1: Sequence[FileType], files2: Sequence[FileType]) -> Sequence[FileType]:
+    merged = set(files1) | set(files2)
+    names = [file.name for file in merged]
+    assert len(names) == len(set(names))
+    return list(merged)
+
+
+def _merge_directories(
+    dirs_one: Sequence[Directory], dirs_two: Sequence[Directory]
+) -> Sequence[Directory]:
+    result = []
+
+    def by_name(dir_: Directory) -> str:
+        return dir_.name
+
+    for name, dirs in groupby(sorted(list(dirs_one) + list(dirs_two), key=by_name), key=by_name):
+        match list(dirs):
+            case [dir_]:
+                result.append(dir_)
+            case [dir_one, dir_two]:
+                merged_files = _merge_file_lists(dir_one.files, dir_two.files)
+                merged_dirs = _merge_directories(dir_one.directories, dir_two.directories)
+                file_names = {file.name for file in merged_files}
+                assert not any(dir_.name in file_names for dir_ in merged_dirs)
+                result.append(Directory(name=name, files=merged_files, directories=merged_dirs))
+            case _:
+                raise ValueError("duplicate directory names")
+    return result
+
+
 @pytest.mark.parametrize(
-    "directories, files",
+    "directories, files, untouched",
     [
         (
             [
@@ -116,33 +147,44 @@ def _from_disk(path: Path) -> RootDir:
                     name="jaeger",
                     files=[File("test", content=b"abc")],
                 ),
-                Directory(name=".restore_working_dir"),
                 Directory(
                     name="var",
                     files=[File("rand.txt", content=b"abc")],
+                ),
+            ],
+            (),
+            [
+                Directory(
+                    name="var",
                     directories=[
                         Directory(name="clickhouse-server", files=[File("data", content=b"abc")])
                     ],
                 ),
+                Directory(name=".restore_working_dir"),
             ],
-            (),
         ),
         (
-            [Directory(name=".restore_working_dir")],
+            [],
             [FIFO(name="a pipe")],
+            [Directory(name=".restore_working_dir")],
         ),
         (
-            [Directory(name=".restore_working_dir")],
+            [],
             [Symlink(name="a link", path=Path("../up"))],
+            [Directory(name=".restore_working_dir")],
         ),
     ],
 )
 def test_remove_site_home(
-    directories: Sequence[Directory], files: Sequence[FileType], tmp_path: Path
+    directories: Sequence[Directory],
+    files: Sequence[FileType],
+    untouched: Sequence[Directory],
+    tmp_path: Path,
 ) -> None:
+    # Assemble
+    directories = _merge_directories(directories, untouched)
     _to_disk(RootDir(path=tmp_path, directories=directories, files=files))
+    # Act
     _remove_site_home(tmp_path)
-    assert _from_disk(tmp_path) == RootDir(
-        path=tmp_path,
-        directories=[Directory(name=".restore_working_dir")],
-    )
+    # Assert
+    assert _from_disk(tmp_path) == RootDir(path=tmp_path, directories=untouched)

@@ -147,6 +147,10 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     excludes.append("var/check_mk/persisted/*")
     excludes.append("var/check_mk/persisted_sections/*")
 
+    # exclude ClickHouse data. This is used in monitoring, and thus old data would only confuse the
+    # monitoring. Once we use a more long-term storage, we will have to come with a backup.
+    excludes.append("var/clickhouse-server/*")
+
     if "no-rrds" in options or "no-past" in options:
         excludes.append("var/pnp4nagios/perfdata/*")
         excludes.append("var/pnp4nagios/spool/*")

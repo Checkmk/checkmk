@@ -6,7 +6,7 @@
 import os
 import stat
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
@@ -38,8 +38,8 @@ type FileType = File | Symlink | FIFO
 @dataclass(frozen=True)
 class Directory:
     name: str
-    directories: Sequence["Directory"] = ()
-    files: Sequence[FileType] = ()
+    directories: Sequence["Directory"] = field(default_factory=list)
+    files: Sequence[FileType] = field(default_factory=list)
 
 
 # Ignore permissions. Additionally, ignore that path segments such as name should be arbitrary
@@ -47,8 +47,8 @@ class Directory:
 @dataclass(frozen=True)
 class RootDir:
     path: Path
-    directories: Sequence[Directory] = ()
-    files: Sequence[FileType] = ()
+    directories: Sequence[Directory] = field(default_factory=list)
+    files: Sequence[FileType] = field(default_factory=list)
 
 
 def _files_to_disk(folder: Path, files: Sequence[FileType]) -> None:
@@ -99,7 +99,7 @@ def _recursive_from_disk(folder: Path) -> tuple[Sequence[Directory], Sequence[Fi
             else:
                 # Sockets, block devices, char devices
                 raise NotImplementedError()
-    return directories or (), files or ()
+    return directories, files
 
 
 def _from_disk(path: Path) -> RootDir:

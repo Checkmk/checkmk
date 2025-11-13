@@ -5,17 +5,14 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
-
 import re
-from typing import Any, get_args
+from typing import Any, cast, get_args
 
 from marshmallow import post_load, pre_load, ValidationError
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 from urllib3.util import parse_url
 
 from cmk import fields
-from cmk.ccc.i18n import _
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import (
     AuxTagIDField,
     ContactGroupField,
@@ -32,13 +29,15 @@ from cmk.gui.fields import (
     TimePeriodIDField,
 )
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.unstable import LegacyValueSpec
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
+from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 from cmk.utils.notify_types import (
     CaseStateStr,
@@ -2264,29 +2263,29 @@ class CustomPlugin(BaseSchema):
         if plugin_name in notification_parameter_registry:
             instance = notification_parameter_registry[data["plugin_name"]]
             if isinstance(instance, NotificationParameters):
-                vs = convert_to_legacy_valuespec(instance.parameter_form(), _)
+                form_spec = instance.parameter_form()
+            elif instance.form_spec is not None:
+                form_spec = instance.form_spec()
             else:
-                vs = instance.spec()
-            try:
-                vs.validate_datatype(dif, "plugin_params")
-            except MKUserError as exc:
-                message = exc.message if ": " not in exc.message else exc.message.split(": ")[-1]
-                if re.search("The entry (.*)", exc.message) is not None:
-                    message = "A required (sub-)field is missing."
+                form_spec = cast(Dictionary, LegacyValueSpec.wrap(instance.spec()))
 
-                raise ValidationError(
-                    message=message,
-                    field_name="_schema" if exc.varname is None else exc.varname.split("_p_")[-1],
+            visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=True))
+            if validation_errors := visitor.validate(RawDiskData(dif)):
+                joined_messages = ", ".join(error.message for error in validation_errors)
+
+                # Parsing of legacy valuespec validate_datatype
+                message = (
+                    joined_messages
+                    if ": " not in joined_messages
+                    else joined_messages.split(": ")[-1]
                 )
+                if re.search("The entry (.*)", joined_messages) is not None:
+                    raise ValidationError(
+                        message="A required (sub-)field is missing.", field_name="plugin_params"
+                    )
 
-            try:
-                vs.validate_value(dif, "plugin_params")
-            except MKUserError as exc:
-                raise ValidationError(
-                    message=exc.message,
-                    field_name="_schema" if exc.varname is None else exc.varname.split("_p_")[-1],
-                )
-
+                # Output generic message
+                raise ValidationError(message=message, field_name="plugin_params")
         else:
             NonRegisteredCustomPlugin().load(dif)
 

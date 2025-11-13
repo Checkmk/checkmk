@@ -2003,7 +2003,7 @@ invalid_dict_configs = [
             "user_key": "some_user_key",
             "api_password": {"some_api_password": "pass", "non_valid_key": "some_invalid_key"},
         },
-        {"api_password": ["The value must be of type str, but it has type dict"]},
+        {"plugin_params": ["The value must be of type str, but it has type dict"]},
     ),
 ]
 

@@ -452,7 +452,7 @@ def _notify_notify(
     )
 
     if not analyse:
-        store_notification_backlog(raw_context, backlog_size=backlog_size)
+        store_notification_backlog(enriched_context, backlog_size=backlog_size)
 
     logger.info("----------------------------------------------------------------------")
     if analyse:
@@ -464,8 +464,8 @@ def _notify_notify(
     else:
         logger.info(
             "Got raw notification (%s) context with %s variables",
-            events.find_host_service_in_context(raw_context),
-            len(raw_context),
+            events.find_host_service_in_context(enriched_context),
+            len(enriched_context),
         )
 
     # Add some further variable for the conveniance of the plugins

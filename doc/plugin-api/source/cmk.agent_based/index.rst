@@ -11,7 +11,7 @@ Version 2
    v2.clusterize
    v2.render
 
-Version 1 (Checkmk 2.2.0 - 2.3.0)
+Version 1 (Checkmk 2.0.0 - 2.3.0)
 =================================
 
 .. toctree::

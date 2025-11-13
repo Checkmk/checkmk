@@ -9,6 +9,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+import pytest
+
 from omdlib.restore import _remove_site_home
 
 
@@ -105,23 +107,38 @@ def _from_disk(path: Path) -> RootDir:
     return RootDir(path=path, directories=sub_dirs, files=sub_files)
 
 
-def test_remove_site_home(tmp_path: Path) -> None:
-    root = RootDir(
-        path=tmp_path,
-        directories=[
-            Directory(
-                name="jaeger",
-                files=[File("test", content=b"abc")],
-            ),
-            Directory(
-                name="var",
-                files=[File("rand.txt", content=b"abc")],
-                directories=[
-                    Directory(name="clickhouse-server", files=[File("data", content=b"abc")])
-                ],
-            ),
-        ],
-    )
-    _to_disk(root)
+@pytest.mark.parametrize(
+    "directories, files",
+    [
+        (
+            [
+                Directory(
+                    name="jaeger",
+                    files=[File("test", content=b"abc")],
+                ),
+                Directory(
+                    name="var",
+                    files=[File("rand.txt", content=b"abc")],
+                    directories=[
+                        Directory(name="clickhouse-server", files=[File("data", content=b"abc")])
+                    ],
+                ),
+            ],
+            (),
+        ),
+        (
+            (),
+            [FIFO(name="a pipe")],
+        ),
+        (
+            (),
+            [Symlink(name="a link", path=Path("../up"))],
+        ),
+    ],
+)
+def test_remove_site_home(
+    directories: Sequence[Directory], files: Sequence[FileType], tmp_path: Path
+) -> None:
+    _to_disk(RootDir(path=tmp_path, directories=directories, files=files))
     _remove_site_home(tmp_path)
     assert _from_disk(tmp_path) == RootDir(path=tmp_path)

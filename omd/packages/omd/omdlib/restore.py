@@ -103,9 +103,9 @@ def _verify_directory_write_access(site_home: str) -> None:
 
 
 def _remove_site_home(site_home: Path) -> None:
-    for f in os.listdir(Path(site_home)):
-        fullpath = Path(site_home, f)
-        if os.path.islink(fullpath) or os.path.isfile(fullpath):
-            os.unlink(fullpath)
-        else:
-            shutil.rmtree(fullpath)
+    with os.scandir(site_home) as scaniter:
+        for entry in scaniter:
+            if entry.is_dir(follow_symlinks=False):
+                shutil.rmtree(entry.path)
+            else:
+                os.unlink(entry.path)

@@ -5,7 +5,14 @@
 
 filegroup(
     name = "plugins",
-    srcs = glob(["**"]),
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "BUILD",
+            "**/OWNERS",
+            ".f12",
+        ],
+    ),
     visibility = ["//visibility:public"],
 )
 

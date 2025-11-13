@@ -89,6 +89,7 @@ pkg_files(
             "skel/etc/init.d/*",
             "skel/etc/rc.d/*",
             "**/.gitignore",
+            "**/OWNERS",
         ],
     ),
     strip_prefix = strip_prefix.from_pkg(""),

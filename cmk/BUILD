@@ -161,6 +161,7 @@ filegroup(
         [
             "**/checkman/*",
         ],
+        exclude = ["**/OWNERS"],
     ),
 )
 

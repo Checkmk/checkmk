@@ -139,7 +139,7 @@ _CLEAN_PLUGIN_FAMILIES = {
     "azure",
     # "azure_v2",  # :DataCache, Edition, HostAddress
     # "bazel",  # :DataCache
-    # "cisco_meraki",  # : DataCache
+    "cisco_meraki",
     "cisco",
     "couchbase",
     # "datadog", This cannot be fixed easily. It bypasses APIs to talk to the EC

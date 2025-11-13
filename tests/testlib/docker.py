@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
-
 """
 Module for managing Checkmk Docker containers in integration tests.
 
@@ -26,7 +23,7 @@ import tarfile
 from collections.abc import Iterator, Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, Self
 
 import docker.client  # type: ignore[import-untyped]
 import docker.errors  # type: ignore[import-untyped]
@@ -81,7 +78,7 @@ def copy_to_container(
 def get_container_ip(c: docker.models.containers.Container) -> str:
     """Return the primary IP address for a given container."""
     network_settings = c.attrs["NetworkSettings"]
-    container_ip = network_settings.get(
+    container_ip: str = network_settings.get(
         "IPAddress",
         next(
             (
@@ -342,7 +339,7 @@ class CheckmkApp:
 
     @property
     def logs(self) -> str:
-        return self.container.logs().decode("utf-8")
+        return self.container.logs().decode("utf-8")  # type: ignore[no-any-return]
 
     def _setup(self) -> docker.models.containers.Container:
         """Provide a readily configured Checkmk docker container."""
@@ -444,10 +441,12 @@ class CheckmkApp:
         cse_config_on_container = Path("/") / cse_config_dir
         return [f"{cse_config_on_local_machine}:{cse_config_on_container}:ro"]
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: Any
+    ) -> None:
         self._teardown()
 
     def _create_automation_user(self) -> None:

@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
 # This file initializes the pytest environment
 
 import logging
@@ -109,7 +105,7 @@ def fail_on_log_exception(
 @pytest.hookimpl(tryfirst=True)
 def pytest_exception_interact(
     node: pytest.Item | pytest.Collector,
-    call: pytest.CallInfo,
+    call: pytest.CallInfo[object],
     report: pytest.CollectReport | pytest.TestReport,
 ) -> None:
     if not (excinfo := call.excinfo):
@@ -212,7 +208,7 @@ def _rendered_command_outputs_for_site(site_name: str) -> Generator[str]:
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_internalerror(excinfo: pytest.ExceptionInfo) -> None:
+def pytest_internalerror(excinfo: pytest.ExceptionInfo[BaseException]) -> None:
     if PYTEST_RAISE:
         raise excinfo.value
 
@@ -226,7 +222,7 @@ collect_ignore: list[str] = []
 logging.getLogger("faker").setLevel(logging.ERROR)
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Register options to pytest"""
     parser.addoption(
         "--ignore-running-procs",

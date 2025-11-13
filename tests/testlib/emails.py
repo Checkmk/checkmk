@@ -8,8 +8,6 @@ It includes functions to configure and remove local Postfix server, wait for inc
 and verify the content of received emails.
 """
 
-# mypy: disable-error-code="no-untyped-def"
-
 import email
 import logging
 import time
@@ -18,7 +16,8 @@ from email.message import Message
 from email.policy import default
 from getpass import getuser
 from pathlib import Path
-from typing import Final, IO
+from types import TracebackType
+from typing import Final, IO, Self
 
 from faker import Faker
 
@@ -44,11 +43,16 @@ class EmailManager:
         self.teardown_postfix_script = scripts_folder / "teardown_postfix.sh"
         self._username = getuser()
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         self.setup_postfix()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self.teardown_postfix()
         self.delete_html_file()
 

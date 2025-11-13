@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 """Test utilities module provides functionality for managing plugin registries and dynamic
 module importing.
 """
@@ -14,16 +12,15 @@ import importlib.machinery
 import importlib.util
 import os
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from types import ModuleType
-from typing import Any
 
 from cmk.ccc.plugin_registry import Registry
 from tests.testlib.common.repo import repo_path
 
 
 @contextlib.contextmanager
-def reset_registries(registries: list[Registry[Any]]) -> Iterator[None]:
+def reset_registries[T](registries: Iterable[Registry[T]]) -> Iterator[None]:
     """Reset the given registries after completing"""
     defaults_per_registry = [(registry, list(registry)) for registry in registries]
     try:

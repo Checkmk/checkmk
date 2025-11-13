@@ -11,8 +11,6 @@ Note: this implementation is purely request-based and does not manage cookies or
 JavaScript scripts.
 """
 
-# mypy: disable-error-code="type-arg"
-
 import logging
 import os
 import re
@@ -37,7 +35,7 @@ class CMKWebSession:
     def __init__(self, site) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         # Resources are only fetched and verified once per session
-        self.verified_resources: set = set()
+        self.verified_resources: set[str] = set()
         self.site = site
         self.session = requests.Session()
 
@@ -160,8 +158,8 @@ class CMKWebSession:
         base_url: str | bytes,
         tag: str,
         attr: str,
-        allowed_mime_types: Container,
-        filters: Collection | None = None,
+        allowed_mime_types: Container[str],
+        filters: Collection[tuple[str, str]] | None = None,
     ) -> None:
         for url in self._find_resource_urls(tag, attr, soup, filters):
             # Only check resources once per session
@@ -177,9 +175,13 @@ class CMKWebSession:
             assert mime_type in allowed_mime_types
 
     def _find_resource_urls(
-        self, tag: str, attribute: str, soup: BeautifulSoup, filters: Collection | None = None
-    ) -> list:
-        urls = []
+        self,
+        tag: str,
+        attribute: str,
+        soup: BeautifulSoup,
+        filters: Collection[tuple[str, str]] | None = None,
+    ) -> list[str]:
+        urls: list[str] = []
 
         # TODO: Typing chaos ahead! Clarify PageElement/Tag/NavigableString
         for element in soup.find_all(tag):
@@ -190,8 +192,8 @@ class CMKWebSession:
                         skip = True
                         break
 
-                if not skip:
-                    urls.append(element[attribute])
+                if not skip and isinstance(url := element[attribute], str):
+                    urls.append(url)
             except KeyError:
                 pass
 

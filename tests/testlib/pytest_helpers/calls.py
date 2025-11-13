@@ -8,12 +8,10 @@ It includes functions to skip tests based on specific conditions and a context m
 pytest with detailed exception tracebacks.
 """
 
-# mypy: disable-error-code="misc"
-
 import traceback
+from collections.abc import Iterator
 from contextlib import contextmanager
 from subprocess import CalledProcessError
-from typing import Any
 
 import pytest
 
@@ -23,7 +21,7 @@ from tests.testlib.utils import verbose_called_process_error
 @contextmanager
 def exit_pytest_on_exceptions(
     exceptions: tuple[type[BaseException]] | None = None, exit_msg: str = ""
-) -> Any:
+) -> Iterator[None]:
     exceptions = (BaseException,) if exceptions is None else exceptions
     msg = f"{exit_msg}\n"
     try:

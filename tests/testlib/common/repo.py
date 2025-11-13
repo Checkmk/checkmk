@@ -9,8 +9,6 @@ The functions in this module are designed with caching where appropriate to opti
 They almost all require a Git repository to be present.
 """
 
-# mypy: disable-error-code="no-untyped-def"
-
 import logging
 import os
 import subprocess
@@ -59,7 +57,7 @@ def add_python_paths() -> None:
     sys.path.insert(0, os.path.join(repo_path(), "omd/packages/omd"))
 
 
-def add_protocols_path():
+def add_protocols_path() -> None:
     sys.path.insert(0, str(repo_path()))
     if is_pro_repo():
         sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmc-protocols"))

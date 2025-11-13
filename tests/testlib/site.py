@@ -3,12 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
-
 """Module for managing Checkmk test sites.
 
 This module provides classes and functions for managing Checkmk test sites. The main classes are
@@ -622,7 +616,7 @@ class Site:
         def _has_ping_been_executed() -> bool:
             """Check if the PING service has been executed."""
             host_services = self.get_host_services(hostname, extra_columns=("has_been_checked",))
-            return host_services[service_name].extra_columns["has_been_checked"] == 1
+            return bool(host_services[service_name].extra_columns["has_been_checked"] == 1)
 
         wait_until(_has_ping_been_executed, timeout=timeout, interval=0.5)
 
@@ -637,7 +631,7 @@ class Site:
         cmd: list[str],
         preserve_env: list[str] | None = None,
         **kwargs: Any,
-    ) -> subprocess.Popen:
+    ) -> subprocess.Popen[str]:
         return execute(cmd, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs)
 
     def run(
@@ -649,7 +643,7 @@ class Site:
         input_: str | None = None,
         preserve_env: list[str] | None = None,
         **kwargs: Any,
-    ) -> subprocess.CompletedProcess:
+    ) -> subprocess.CompletedProcess[str]:
         return run(
             args=args,
             capture_output=capture_output,
@@ -730,7 +724,7 @@ class Site:
         helper_file = caller_file.parent / name
         return PythonHelper(self, helper_file)
 
-    def omd(self, mode: str, *args: str, check: bool = False) -> subprocess.CompletedProcess:
+    def omd(self, mode: str, *args: str, check: bool = False) -> subprocess.CompletedProcess[str]:
         """run the "omd" command with the given mode and arguments.
 
         Args:
@@ -889,7 +883,6 @@ class Site:
 
     def system_temp_dir(self) -> Iterator[str]:
         stdout = self.check_output(["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"])  # nosec
-        assert stdout is not None
         path = stdout.strip()
 
         try:
@@ -976,9 +969,7 @@ class Site:
             output = run(
                 ["ls", "-laR", self._package.version_path()], check=False, sudo=True
             ).stdout
-            remaining_files = (
-                [_ for _ in output.strip().split("\n") if _] if isinstance(output, str) else []
-            )
+            remaining_files = [_ for _ in output.strip().split("\n") if _]
             assert not remaining_files, (
                 f"Package '{self._package}' is still installed, "
                 "even though the uninstallation was completed with RC=0!"
@@ -986,7 +977,7 @@ class Site:
             )
 
     @tracer.instrument("Site.create")
-    def create(self) -> subprocess.CompletedProcess:
+    def create(self) -> None:
         self.install_cmk()
 
         if not self.reuse and self.exists():
@@ -1011,7 +1002,7 @@ class Site:
                 sudo=True,
             )
             assert not completed_process.returncode, completed_process.stderr
-            assert os.path.exists("/omd/sites/%s" % self.id)
+            assert self.exists(), "Site %s was not created!" % self.id
 
             self._ensure_sample_config_is_present()
             # This seems to cause an issue with GUI and XSS crawl (they take too long or seem to
@@ -1038,7 +1029,6 @@ class Site:
         self.set_timezone(os.getenv("TZ", "UTC"))
 
         self._disable_autostart()
-        return completed_process
 
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
@@ -2652,10 +2642,14 @@ class PythonHelper:
             return output
 
     @contextmanager
-    def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]
+    def execute(  # type: ignore[misc]
+        self,
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> Iterator[subprocess.Popen[str]]:
         with self.copy_helper():
             yield self.site.execute(
-                ["python3", str(self.site_path)] + (self.args or []), *args, **kwargs
+                ["python3", str(self.site_path)] + (self.args or []), preserve_env, **kwargs
             )
 
 

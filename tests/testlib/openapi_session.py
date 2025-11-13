@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
-
 """
 Module Summary:
     This module implements a REST API client for interacting with the Checkmk system in tests.
@@ -398,7 +394,12 @@ class ChangesAPI(BaseAPI):
                         )
                 logger.info("Activation status: %s", str(pprint.pformat(activation_status)))
 
-        pending_changes_after = self.get_pending()
+        # Suppression for mypy `unreachable` error is added here because this code could be actually
+        # reached. Mypy does not realize that `wait_for_completion` context manager is swallowing
+        # the `Redirect` exception.
+        #
+        # Mypy issue: https://github.com/python/mypy/issues/8766
+        pending_changes_after = self.get_pending()  # type: ignore[unreachable]
         if strict:
             assert not pending_changes_after, (
                 f"There are pending changes after activation: {pending_changes_after}"
@@ -424,7 +425,9 @@ class ChangesAPI(BaseAPI):
         response = self.session.get(f"/objects/activation_run/{activation_id}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response.json()
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
 
 
 class UsersAPI(BaseAPI):
@@ -837,12 +840,13 @@ class ServiceDiscoveryAPI(BaseAPI):
         status: str = job_status_response["extensions"]["status"]["state"]
         return status
 
-    def get_bulk_discovery_job_status(self, job_id: str) -> dict:
+    def get_bulk_discovery_job_status(self, job_id: str) -> dict[str, Any]:
         response = self.session.get(f"/objects/background_job/{job_id}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        job_status_response: dict = response.json()
-        return job_status_response
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
 
     def get_discovery_status(self, hostname: str) -> str:
         job_status_response = self.get_discovery_job_status(hostname)
@@ -854,12 +858,13 @@ class ServiceDiscoveryAPI(BaseAPI):
         status: str = job_status_response["extensions"]["state"]
         return status
 
-    def get_discovery_job_status(self, hostname: str) -> dict:
+    def get_discovery_job_status(self, hostname: str) -> dict[str, Any]:
         response = self.session.get(f"/objects/service_discovery_run/{hostname}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        job_status_response: dict = response.json()
-        return job_status_response
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
 
     @tracer.instrument("run_discovery_and_wait_for_completion")
     def run_discovery_and_wait_for_completion(
@@ -1113,7 +1118,7 @@ class BrokerConnectionsAPI(BaseAPI):
 
 
 class SitesAPI(BaseAPI):
-    def create(self, site_config: dict) -> None:
+    def create(self, site_config: dict[str, Any]) -> None:
         response = self.session.post(
             "/domain-types/site_connection/collections/all",
             headers={
@@ -1125,7 +1130,7 @@ class SitesAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def update(self, site_id: str, site_config: dict) -> None:
+    def update(self, site_id: str, site_config: dict[str, Any]) -> None:
         site_config.pop("logged_in", None)
         response = self.session.put(
             f"/objects/site_connection/{site_id}",
@@ -1258,9 +1263,9 @@ class DcdAPI(BaseAPI):
         title: str,
         comment: str = "",
         disabled: bool = False,
-        restrict_source_hosts: list | None = None,
+        restrict_source_hosts: list[str] | None = None,
         interval: int = 60,
-        host_attributes: dict | None = None,
+        host_attributes: dict[str, object] | None = None,
         delete_hosts: bool = False,
         discover_on_creation: bool = True,
         no_deletion_time_after_init: int = 600,
@@ -1359,7 +1364,9 @@ class DcdAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
         if response.status_code == 404:
             return None
-        return response.json()
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
 
     def delete(self, dcd_id: str) -> None:
         """Delete a DCD connection via REST API."""
@@ -1689,7 +1696,9 @@ class Saml2API(BaseAPI):
         response = self.session.get("/domain-types/saml_connection/collections/all")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response.json()["value"]
+
+        saml_connections: list[dict[str, Any]] = response.json()["value"]
+        return saml_connections
 
     def get(self, connection_id: str) -> tuple[dict[str, Any], str]:
         """Returns a tuple with the connection details and the Etag header"""
@@ -1722,7 +1731,9 @@ class Saml2API(BaseAPI):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response.json()
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
 
     def delete(self, connection_id: str, etag: str) -> None:
         response = self.session.delete(

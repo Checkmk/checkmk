@@ -8,10 +8,6 @@ It includes clients for different API domains, providing methods to perform crea
 delete operations and other actions.
 """
 
-# mypy: disable-error-code="mutable-override"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-
 from __future__ import annotations
 
 import abc
@@ -175,7 +171,7 @@ class RestApiException(Exception):
         )
 
 
-def get_link(resp: dict, rel: str) -> Mapping:
+def get_link(resp: dict[str, Any], rel: str) -> Mapping[str, Any]:
     """Return the first instance of 'link' corresponding to pattern 'rel'.
 
     Searches recursively within the dictionary.
@@ -186,7 +182,7 @@ def get_link(resp: dict, rel: str) -> Mapping:
         if key == "links" and isinstance(value, list):
             for link in value:
                 if link.get("rel", "").startswith(rel):
-                    return link
+                    return link  # type: ignore[no-any-return]
         elif isinstance(value, dict):
             try:
                 return get_link(value, rel)
@@ -1797,7 +1793,7 @@ class DowntimeClient(RestApiClient):
 
     @staticmethod
     def _update_find_by_type(
-        body: dict,
+        body: dict[str, object],
         find_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
@@ -1879,15 +1875,15 @@ class GroupConfig(RestApiClient):
 
 
 class HostGroupClient(GroupConfig):
-    domain: Literal["host_group_config"] = "host_group_config"
+    domain: DomainType = "host_group_config"
 
 
 class ServiceGroupClient(GroupConfig):
-    domain: Literal["service_group_config"] = "service_group_config"
+    domain: DomainType = "service_group_config"
 
 
 class ContactGroupClient(GroupConfig):
-    domain: Literal["contact_group_config"] = "contact_group_config"
+    domain: DomainType = "contact_group_config"
 
 
 class SiteManagementClient(RestApiClient):
@@ -2946,7 +2942,7 @@ class ServiceDiscoveryClient(RestApiClient):
         follow_redirects: bool = True,
         expect_ok: bool = True,
     ) -> Response:
-        body: dict = {
+        body: dict[str, object] = {
             "hostnames": hostnames,
             "options": {
                 "monitor_undecided_services": monitor_undecided_services,
@@ -3060,7 +3056,7 @@ class ParentScanClient(RestApiClient):
         self,
         host_names: Sequence[str],
         gateway_hosts: Any,
-        performance_settings: dict | None = None,
+        performance_settings: dict[str, object] | None = None,
         force_explicit_parents: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:

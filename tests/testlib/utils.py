@@ -6,10 +6,6 @@
 handling file operations, and interacting with the system environment.
 """
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-
 import dataclasses
 import enum
 import logging
@@ -214,7 +210,7 @@ def run(
     sudo: bool = False,
     substitute_user: str | None = None,
     **kwargs: Any,
-) -> subprocess.CompletedProcess:
+) -> subprocess.CompletedProcess[str]:
     """Run a process and return a `subprocess.CompletedProcess` object."""
     preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
     args_ = _extend_command(args, substitute_user, None, sudo, preserve_env, kwargs)
@@ -235,7 +231,7 @@ def execute(
     substitute_shell: str | None = None,
     sudo: bool = False,
     **kwargs: Any,
-) -> subprocess.Popen:
+) -> subprocess.Popen[str]:
     """Run a process as root or a different user and return a `subprocess.Popen`.
 
     The method wraps `subprocess.Popen` and initializes some `kwargs` by default.
@@ -278,8 +274,8 @@ def get_processes_by_cmdline(cmdline_pattern: str) -> list[psutil.Process]:
 
 
 def _add_trace_context(
-    kwargs: dict, preserve_env: list[str] | None, sudo: bool
-) -> tuple[list[str] | None, dict]:
+    kwargs: dict[str, Any], preserve_env: list[str] | None, sudo: bool
+) -> tuple[list[str] | None, dict[str, Any]]:
     current_distro = os.environ.get("DISTRO")
     if current_distro in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU:
         logger.info(f"Don't add trace context for {current_distro}")
@@ -300,7 +296,7 @@ def _extend_command(
     substitute_shell: str | None,
     sudo: bool,
     preserve_env: list[str] | None,
-    kwargs: dict,  # subprocess.<method> kwargs
+    kwargs: dict[str, Any],  # subprocess.<method> kwargs
 ) -> list[str]:
     """Return extended command by adding `sudo` or `su` usage."""
 
@@ -376,7 +372,7 @@ def daemon(
     name_for_logging: str,
     termination_mode: DaemonTerminationMode,
     sudo: bool,
-) -> Iterator[subprocess.Popen]:
+) -> Iterator[subprocess.Popen[str]]:
     with execute(
         cmd,
         sudo=sudo,
@@ -401,7 +397,7 @@ def daemon(
 
 
 def _terminate_daemon(
-    daemon_proc: subprocess.Popen,
+    daemon_proc: subprocess.Popen[str],
     termination_mode: DaemonTerminationMode,
     sudo: bool,
 ) -> None:
@@ -464,7 +460,7 @@ def check_output(
     kwargs["input"] = input_
 
     with tracer.span("execute", attributes={"cmk.command": repr(cmd_)}):
-        return subprocess.check_output(cmd_, **kwargs)
+        return subprocess.check_output(cmd_, **kwargs)  # type: ignore[no-any-return]
 
 
 @overload
@@ -630,7 +626,8 @@ def get_supported_distros() -> list[str]:
     with open(repo_path() / "editions.yml") as stream:
         yaml_file = yaml.safe_load(stream)
 
-    return yaml_file["common"]
+    supported_distros: list[str] = yaml_file["common"]
+    return supported_distros
 
 
 def check_permissions(file_path: Path, expected_permissions: str) -> None:

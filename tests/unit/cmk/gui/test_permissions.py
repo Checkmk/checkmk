@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Sequence
+from typing import Any
 
 import pytest
 
+from cmk.ccc.plugin_registry import Registry
 from cmk.gui import permissions
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from tests.testlib.unit.utils import reset_registries
@@ -15,7 +17,8 @@ from tests.testlib.unit.utils import reset_registries
 @pytest.fixture(name="reset_permission_registries")
 def fixture_reset_permission_registries() -> Iterator[None]:
     """Fixture to reset registries to its default entries."""
-    with reset_registries([permission_registry, permission_section_registry]):
+    registries: list[Registry[Any]] = [permission_registry, permission_section_registry]
+    with reset_registries(registries):
         yield
 
 

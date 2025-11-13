@@ -6,8 +6,6 @@
 and handle correct termination of all processes if a specified timeout is exceeded.
 """
 
-# mypy: disable-error-code="type-arg"
-
 import multiprocessing
 import os
 import signal
@@ -28,7 +26,7 @@ class MonitorTimeout:
     def __init__(
         self,
         timeout: int,
-        timeout_handler: Callable | None = None,
+        timeout_handler: Callable[[int, FrameType | None], None] | None = None,
     ):
         """Contextmanager to monitor duration of a code snippet.
 

@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-
 """
 This module provides a collection of utility functions and context managers for managing and testing
 the Checkmk agent in various environments.
@@ -152,7 +148,7 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
 
 
 @contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]:
+def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | None]:
     """Manually take over systemds job if we are in a container (where we have no systemd)."""
     if not is_containerized():
         yield None
@@ -238,7 +234,10 @@ def wait_until_host_receives_data(
 
 
 def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
-    return json.loads(run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout)
+    json_data: Mapping[str, Any] = json.loads(
+        run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout
+    )
+    return json_data
 
 
 def controller_connection_json(

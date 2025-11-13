@@ -8,11 +8,6 @@ It handles the preparation of the Docker environment, executing specified test c
 the container, and collecting and storing the test results.
 """
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-
 from __future__ import annotations
 
 import logging
@@ -27,7 +22,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 import docker  # type: ignore[import-untyped]
 import dockerpty  # type: ignore[import-untyped]
@@ -560,7 +555,7 @@ def _container_env(package_info: CMKPackageInfo) -> Mapping[str, str]:
 
 # pep-0692 is not yet finished in mypy...
 @contextmanager
-def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:  # type: ignore[no-untyped-def]
+def _start(client: docker.DockerClient, **kwargs: Any) -> Iterator[docker.Container]:  # type: ignore[misc]
     logger.info("Start new container from [%s] (Args: %s)", kwargs["image"], kwargs)
 
     try:
@@ -607,13 +602,6 @@ def _exec_run(  # type: ignore[no-untyped-def]
 
     if kwargs.get("stream"):
         return result.communicate(line_prefix=b"%s: " % c.short_id.encode("ascii"))
-
-    printed_dot = False
-    while result.poll() is None:
-        printed_dot = True
-        sys.stdout.write(".")
-    if printed_dot:
-        sys.stdout.write("\n")
 
     returncode = result.poll()
     if check and returncode != 0:
@@ -671,8 +659,8 @@ class ContainerExec:
         self.id = container_id
         self.output = output
 
-    def inspect(self) -> Mapping:
-        return self.client.api.exec_inspect(self.id)
+    def inspect(self) -> Mapping[str, Any]:
+        return self.client.api.exec_inspect(self.id)  # type: ignore[no-any-return]
 
     def poll(self) -> int:
         return int(self.inspect()["ExitCode"])
@@ -695,8 +683,6 @@ class ContainerExec:
                     offset += len(slce)
                     sys.stdout.buffer.write(slce)
             sys.stdout.flush()
-        while self.poll() is None:
-            raise RuntimeError()
         return self.poll()
 
 

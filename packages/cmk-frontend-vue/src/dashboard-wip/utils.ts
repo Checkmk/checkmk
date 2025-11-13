@@ -8,18 +8,24 @@ import client, { unwrap } from '@/lib/rest-api-client/client'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import type {
   BadRequestBody,
+  ContentRelativeGrid,
+  ContentResponsiveGrid,
   CreateRelativeDashboardBody,
   CreateResponsiveDashboardBody,
   DashboardConstants,
   DashboardGeneralSettings,
   DashboardMainMenuTopic,
   DashboardMetadata,
+  DashboardModel,
   EditRelativeDashboardBody,
   EditResponsiveDashboardBody,
   RelativeGridDashboardDomainObject,
+  RelativeGridDashboardResponse,
   ResponsiveGridDashboardDomainObject,
+  ResponsiveGridDashboardResponse,
   SidebarElement
 } from '@/dashboard-wip/types/dashboard.ts'
+import { DashboardLayout, DashboardOwnerType } from '@/dashboard-wip/types/dashboard.ts'
 import type { FilterCollection } from '@/dashboard-wip/types/filter.ts'
 import type {
   ComputedTopListResponse,
@@ -211,6 +217,35 @@ export const dashboardAPI = {
       })
     )
   }
+}
+
+export function createDashboardModel(
+  dashboardResp: RelativeGridDashboardResponse | ResponsiveGridDashboardResponse,
+  layoutType: DashboardLayout
+): DashboardModel {
+  let content: ContentRelativeGrid | ContentResponsiveGrid
+
+  if (layoutType === DashboardLayout.RELATIVE_GRID) {
+    content = {
+      layout: dashboardResp.layout,
+      widgets: dashboardResp.widgets
+    } as ContentRelativeGrid
+  } else {
+    content = {
+      layout: dashboardResp.layout,
+      widgets: dashboardResp.widgets
+    } as ContentResponsiveGrid
+  }
+
+  const dashboard: DashboardModel = {
+    owner: dashboardResp.owner,
+    general_settings: dashboardResp.general_settings,
+    filter_context: dashboardResp.filter_context,
+    type: dashboardResp.is_built_in ? DashboardOwnerType.BUILT_IN : DashboardOwnerType.CUSTOM,
+    content
+  }
+
+  return dashboard
 }
 
 export const determineWidgetEffectiveFilterContext = async (

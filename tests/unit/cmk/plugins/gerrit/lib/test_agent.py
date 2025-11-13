@@ -10,7 +10,6 @@ import argparse
 import pytest
 
 from cmk.plugins.gerrit.lib import agent
-from cmk.plugins.gerrit.lib.shared_typing import Sections
 
 
 def test_parse_arguments() -> None:
@@ -33,25 +32,12 @@ def test_parse_arguments() -> None:
     assert value == expected
 
 
-def test_fetch_section_data() -> None:
-    class DummySectionCollector:
-        def collect(self) -> Sections:
-            return {"foobar": {"foo": "bar"}}
-
-    value = DummySectionCollector().collect()
-    expected = {"foobar": {"foo": "bar"}}
-
-    assert value == expected
-
-
-def test_write_sections(capsys: pytest.CaptureFixture) -> None:
-    sections: Sections = {
-        "version": {
-            "current": "1.2.3",
-            "latest": {"major": None, "minor": "1.3.4", "patch": "1.2.5"},
-        }
+def test_write_version_section(capsys: pytest.CaptureFixture) -> None:
+    section = {
+        "current": "1.2.3",
+        "latest": {"major": None, "minor": "1.3.4", "patch": "1.2.5"},
     }
-    agent.write_sections(sections)
+    agent._write_section(section, name="gerrit_version")
 
     value = capsys.readouterr().out
     expected = """\

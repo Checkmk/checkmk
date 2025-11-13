@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
 
 import argparse
 import json
@@ -12,7 +13,6 @@ from collections.abc import Sequence
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.gerrit.lib import collectors, storage
-from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
 __version__ = "2.5.0b1"
@@ -76,21 +76,17 @@ def run_agent(args: argparse.Namespace) -> int:
     api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
     auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
 
-    sections: Sections = {}
-
     version_collector = collectors.GerritVersion(api_url=api_url, auth=auth)
     version_cache = storage.VersionCache(collector=version_collector, interval=args.version_cache)
-    sections.update(version_cache.get_sections())
-
-    write_sections(sections)
+    _write_section(version_cache.get_data(), name="gerrit_version")
 
     return 0
 
 
-def write_sections(sections: Sections) -> None:
-    for name, data in sections.items():
-        section_payload = json.dumps(data, sort_keys=True)
-        sys.stdout.write(f"<<<gerrit_{name}:sep(0)>>>\n{section_payload}\n")
+def _write_section(data: object, *, name: str) -> None:
+    section_payload = json.dumps(data, sort_keys=True)
+    sys.stdout.write(f"<<<{name}:sep(0)>>>\n")
+    sys.stdout.write(f"{section_payload}\n")
 
 
 if __name__ == "__main__":

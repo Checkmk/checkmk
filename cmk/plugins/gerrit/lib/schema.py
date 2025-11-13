@@ -3,11 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Protocol
+from __future__ import annotations
 
-type Sections = dict[str, dict[str, Any]]
-"""The data structure used to write out the agent output."""
+from typing import TypedDict
 
 
-class SectionCollector(Protocol):
-    def collect(self) -> Sections: ...
+class VersionInfo(TypedDict):
+    current: str
+    latest: LatestVersion
+
+
+class LatestVersion(TypedDict):
+    major: str | None
+    minor: str | None
+    patch: str | None

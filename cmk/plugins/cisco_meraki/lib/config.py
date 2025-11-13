@@ -6,7 +6,6 @@
 from argparse import Namespace
 from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Self
 
 from meraki import DashboardAPI  # type: ignore[import-not-found]
@@ -16,16 +15,16 @@ from . import constants
 
 @dataclass(frozen=True)
 class MerakiConfig:
+    hostname: str
     org_ids: Sequence[str]
     section_names: Sequence[str]
-    cache_dir: Path
 
     @classmethod
     def build(cls, args: Namespace) -> Self:
         return cls(
+            hostname=args.hostname,
             org_ids=args.orgs,
             section_names=args.sections,
-            cache_dir=constants.BASE_CACHE_FILE_DIR / args.hostname,
         )
 
     @property

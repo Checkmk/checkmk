@@ -15,11 +15,9 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
-from typing import Protocol
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.misc import DataCache
 
 from .clients import MerakiClient
 from .config import get_meraki_dashboard, MerakiConfig
@@ -66,38 +64,6 @@ class Section:
 
     def get_name(self) -> str:
         return "_".join(["cisco_meraki", self.api_data_source.name, self.name])
-
-
-# .
-#   .--caches--------------------------------------------------------------.
-#   |                                  _                                   |
-#   |                    ___ __ _  ___| |__   ___  ___                     |
-#   |                   / __/ _` |/ __| '_ \ / _ \/ __|                    |
-#   |                  | (_| (_| | (__| | | |  __/\__ \                    |
-#   |                   \___\__,_|\___|_| |_|\___||___/                    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class SupportsOrganizationsClient(Protocol):
-    def get_all(self) -> Sequence[Organisation]: ...
-
-
-class OrganizationsCache(DataCache):
-    def __init__(self, config: MerakiConfig, client: MerakiClient) -> None:
-        super().__init__(config.cache_dir / "organisations", "organisations")
-        self._client = client
-
-    @property
-    def cache_interval(self) -> int:
-        # Once per day
-        return 86400
-
-    def get_validity_from_args(self, *args: object) -> bool:
-        return True
-
-    def get_live_data(self, *args: object) -> Sequence[Organisation]:
-        return self._client.get_organizations()
 
 
 # .
@@ -283,7 +249,7 @@ def _get_organisations(config: MerakiConfig, client: MerakiClient) -> Sequence[O
     if not config.organizations_required:
         return []
 
-    orgs = OrganizationsCache(config, client).get_data()
+    orgs = client.get_organizations()
 
     if config.org_ids:
         return [org for org in orgs if org["id_"] in config.org_ids]
@@ -317,8 +283,8 @@ def main() -> int:
     dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
 
     ctx = MerakiRunContext(
-        config=MerakiConfig.build(args),
-        client=MerakiClient.build(dashboard),
+        config=(config := MerakiConfig.build(args)),
+        client=MerakiClient.build(dashboard, config),
     )
 
     return run(ctx)

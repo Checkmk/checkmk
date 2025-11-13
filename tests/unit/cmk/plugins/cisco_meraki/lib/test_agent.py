@@ -15,17 +15,23 @@ from cmk.plugins.cisco_meraki.lib import agent
 from cmk.plugins.cisco_meraki.lib.agent import MerakiRunContext
 from cmk.plugins.cisco_meraki.lib.clients import MerakiClient
 from cmk.plugins.cisco_meraki.lib.config import MerakiConfig
-from cmk.plugins.cisco_meraki.lib.constants import SECTION_NAME_MAP
+from cmk.plugins.cisco_meraki.lib.constants import AGENT, SECTION_NAME_MAP
 
 from .fakes import FakeMerakiSDK
 
 
+@pytest.fixture(autouse=True)
+def patch_storage_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+
+
+@pytest.mark.usefixtures("patch_storage_env")
 class TestMerakiAgentOutput:
     @pytest.fixture
-    def ctx(self, tmp_path: Path) -> MerakiRunContext:
-        default_sections = list(SECTION_NAME_MAP)
-        config = MerakiConfig(org_ids=[], section_names=default_sections, cache_dir=tmp_path)
-        client = MerakiClient.build(FakeMerakiSDK())
+    def ctx(self) -> MerakiRunContext:
+        args = agent.parse_arguments(["heute", "--apikey", "my-api-key"])
+        config = MerakiConfig.build(args)
+        client = MerakiClient.build(FakeMerakiSDK(), config)
         return MerakiRunContext(config=config, client=client)
 
     def test_no_errors(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
@@ -84,6 +90,11 @@ class TestMerakiAgentOutput:
         agent_output_with_org = capsys.readouterr().out
 
         assert len(agent_output_all_orgs) > len(agent_output_with_org)
+
+    def test_cache_exists(self, ctx: MerakiRunContext, tmp_path: Path) -> None:
+        agent.run(ctx)
+
+        assert any((tmp_path / f"{AGENT}_organizations" / ctx.config.hostname).iterdir())
 
 
 def _update_org_ids(ctx: MerakiRunContext, org_ids: Sequence[str]) -> MerakiRunContext:

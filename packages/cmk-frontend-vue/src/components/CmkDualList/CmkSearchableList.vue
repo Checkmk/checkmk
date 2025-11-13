@@ -9,6 +9,7 @@ import { computed, ref, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 import useId from '@/lib/useId'
 
+import CmkIcon from '../CmkIcon/'
 import CmkInput from '../user-input/CmkInput.vue'
 import type { DualListElement } from './index.ts'
 
@@ -103,7 +104,7 @@ watch(
         :for="`cmk-searchable-list-search-input-${componentId}`"
         class="cmk-searchable-list__icon"
       >
-        <img />
+        <CmkIcon name="search" size="small" />
       </label>
     </div>
 
@@ -161,15 +162,8 @@ watch(
   position: absolute;
   top: 0;
   right: 0;
-}
-
-.cmk-searchable-list__search-input-wrapper .cmk-searchable-list__icon img {
-  content: var(--icon-search);
   cursor: pointer;
-  height: 12px;
-  width: 12px;
   padding: 4px;
-  border-radius: 2px;
 }
 
 .cmk-searchable-list__container select {

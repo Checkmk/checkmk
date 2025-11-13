@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import CmkIcon from '@/components/CmkIcon'
+
 import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMultilineText from './FormMultilineText.vue'
@@ -30,12 +32,14 @@ const prependDateAndUsername = (): void => {
       :backend-validation="backendValidation"
       :spec="{ ...spec, type: 'multiline_text' }"
     />
-    <!-- TODO: replace thise with something like
-      <Button variant='invisible'><CmkIcon /></Button> -->
-    <img
-      :alt="props.spec.i18n.prefix_date_and_comment"
+    <CmkIcon
       :title="props.spec.i18n.prefix_date_and_comment"
-      :style="{ content: 'var(--icon-insertdate)', cursor: 'pointer' }"
+      name="insertdate"
+      size="xlarge"
+      :style="{
+        cursor: 'pointer',
+        'margin-left': 'var(--spacing)'
+      }"
       @click="prependDateAndUsername()"
     />
   </div>
@@ -44,11 +48,5 @@ const prependDateAndUsername = (): void => {
 <style scoped>
 .form-comment-text-area {
   display: flex;
-
-  img {
-    width: 20px;
-    height: 20px;
-    margin-left: var(--spacing);
-  }
 }
 </style>

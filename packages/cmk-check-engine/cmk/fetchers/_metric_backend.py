@@ -30,9 +30,10 @@ class AttributeFilter:
 class MetricBackendFetcherConfig:
     host_name_resource_attribute_key: str
     attribute_filters: Sequence[AttributeFilter]
+    check_interval: float
 
     @classmethod
-    def from_serialized(cls, metrics_association_raw: str) -> Self:
+    def from_serialized(cls, metrics_association_raw: str, check_interval: float) -> Self:
         metrics_association = json.loads(metrics_association_raw)
 
         host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]
@@ -49,4 +50,5 @@ class MetricBackendFetcherConfig:
         return cls(
             host_name_resource_attribute_key=host_name_resource_attribute_key,
             attribute_filters=filter_args,
+            check_interval=check_interval,
         )

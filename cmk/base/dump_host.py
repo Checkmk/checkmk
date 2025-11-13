@@ -286,6 +286,7 @@ def dump_host(
                 metric_backend_fetcher=get_metric_backend_fetcher(
                     hostname,
                     config_cache.explicit_host_attributes,
+                    config_cache.check_mk_check_interval,
                     loaded_config.monitoring_core == "cmc",
                 ),
             )

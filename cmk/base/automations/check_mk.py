@@ -421,6 +421,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
                 hn,
                 config_cache.explicit_host_attributes,
+                config_cache.check_mk_check_interval,
                 loaded_config.monitoring_core == "cmc",
             ),
         )
@@ -662,6 +663,7 @@ class AutomationDiscoveryPreview(Automation):
             metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
                 hn,
                 config_cache.explicit_host_attributes,
+                config_cache.check_mk_check_interval,
                 loaded_config.monitoring_core == "cmc",
             ),
         )
@@ -1159,6 +1161,7 @@ def _execute_autodiscovery(
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
             loaded_config.monitoring_core == "cmc",
         ),
     )
@@ -3539,6 +3542,7 @@ class AutomationDiagHost(Automation):
             metric_backend_fetcher=get_metric_backend_fetcher(
                 host_name,
                 config_cache.explicit_host_attributes,
+                config_cache.check_mk_check_interval,
                 loaded_config.monitoring_core == "cmc",
             ),
         ):
@@ -4112,6 +4116,7 @@ class AutomationGetAgentOutput(Automation):
                     metric_backend_fetcher=get_metric_backend_fetcher(
                         hostname,
                         config_cache.explicit_host_attributes,
+                        config_cache.check_mk_check_interval,
                         loaded_config.monitoring_core == "cmc",
                     ),
                 ):

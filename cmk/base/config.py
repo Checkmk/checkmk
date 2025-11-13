@@ -3876,13 +3876,16 @@ def _parse[T](raw: object, type_: Callable[..., T], /) -> T:
 def get_metric_backend_fetcher(
     host_name: HostAddress,
     explicit_host_attributes: Callable[[HostAddress], ObjectAttributes],
+    check_interval: Callable[[HostAddress], float],
     is_cmc: bool,
 ) -> ProgramFetcher | None:
     if (
         metrics_association := explicit_host_attributes(host_name).get("metrics_association")
     ) is not None:
         return make_metric_backend_fetcher(
-            host_name, make_metric_backend_fetcher_config(metrics_association), is_cmc
+            host_name,
+            make_metric_backend_fetcher_config(metrics_association, check_interval(host_name)),
+            is_cmc,
         )
     return None
 
@@ -3901,7 +3904,7 @@ def make_metric_backend_fetcher(
             f"{filter_.attribute_type}:{filter_.attribute_key}={filter_.attribute_value}",
         ]
     return ProgramFetcher(
-        cmdline=f"python3 -m {agent_otel.__spec__.name} {host_name}",
+        cmdline=f"python3 -m {agent_otel.__spec__.name} {host_name} --check-interval={metric_backend_fetcher_config.check_interval}",
         stdin=f"--host-name-resource-attribute-key={metric_backend_fetcher_config.host_name_resource_attribute_key} {' '.join(filter_args)}",
         is_cmc=is_cmc,
     )

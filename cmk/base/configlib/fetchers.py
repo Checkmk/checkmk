@@ -69,5 +69,9 @@ def make_parsed_snmp_fetch_intervals_config(
     }
 
 
-def make_metric_backend_fetcher_config(metrics_association: str) -> MetricBackendFetcherConfig:
-    return MetricBackendFetcherConfig.from_serialized(metrics_association_raw=metrics_association)
+def make_metric_backend_fetcher_config(
+    metrics_association: str, check_interval: float
+) -> MetricBackendFetcherConfig:
+    return MetricBackendFetcherConfig.from_serialized(
+        metrics_association_raw=metrics_association, check_interval=check_interval
+    )

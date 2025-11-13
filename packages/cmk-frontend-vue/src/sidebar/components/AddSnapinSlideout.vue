@@ -53,6 +53,7 @@ immediateWatch(
       title: _t('Add sidebar element'),
       closeButton: true
     }"
+    :is-index-page="true"
     :open="slideInOpen"
     @close="onClose"
   >

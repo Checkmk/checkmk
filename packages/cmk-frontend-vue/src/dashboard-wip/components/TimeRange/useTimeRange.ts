@@ -5,8 +5,6 @@
  */
 import { type Ref, ref } from 'vue'
 
-import type { TranslatedString } from '@/lib/i18nString'
-
 import type { GraphTimerange } from './GraphTimeRange.vue'
 import type { TimerangeModel } from './types'
 
@@ -15,16 +13,71 @@ interface UseTimeRange {
   widgetProps: () => TimerangeModel
 }
 
-export const useTimeRange = (title: TranslatedString): UseTimeRange => {
-  //Todo: Fill values if they exist in serializedData
+const timerangeModel2GraphTimerange = (model: TimerangeModel): GraphTimerange => {
+  switch (model?.type) {
+    case 'graph':
+      return {
+        type: 'duration',
+        duration: model.duration,
+        title: null,
+        date_range: null,
+        predefined: null,
+        age: null
+      }
+
+    case 'date':
+      return {
+        type: 'date',
+        date_range: {
+          from: model.start,
+          to: model.end
+        },
+        title: null,
+        duration: null,
+        predefined: null,
+        age: null
+      }
+
+    case 'age':
+      return {
+        type: 'age',
+        age: {
+          days: model.days ?? 0,
+          hours: model.hours ?? 0,
+          minutes: model.minutes ?? 0,
+          seconds: model.seconds ?? 0
+        },
+        title: null,
+        duration: null,
+        date_range: null,
+        predefined: null
+      }
+
+    case 'predefined':
+    default:
+      return {
+        type: 'predefined',
+        predefined: model.value,
+        title: null,
+        duration: null,
+        date_range: null,
+        age: null
+      }
+  }
+}
+
+export const useTimeRange = (currentTimerange: TimerangeModel | null): UseTimeRange => {
   const timeRange = ref<GraphTimerange>({
     type: 'predefined',
-    title: title,
+    predefined: 'last_4_hours',
+    title: null,
     duration: null,
     date_range: null,
-    predefined: 'last_4_hours',
     age: null
   })
+  if (currentTimerange) {
+    timeRange.value = timerangeModel2GraphTimerange(currentTimerange)
+  }
 
   const widgetProps = (): TimerangeModel => {
     let window: TimerangeModel

@@ -5,9 +5,8 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
-
 import type { GraphTimerange } from '@/dashboard-wip/components/TimeRange/GraphTimeRange.vue'
+import type { TimerangeModel } from '@/dashboard-wip/components/TimeRange/types'
 import { useTimeRange } from '@/dashboard-wip/components/TimeRange/useTimeRange'
 import {
   type DataRangeType,
@@ -27,8 +26,6 @@ import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
-
-const { _t } = usei18n()
 
 export interface UseMetric extends UseWidgetHandler, UseWidgetVisualizationOptions {
   timeRangeType: Ref<TimeRangeType>
@@ -57,7 +54,9 @@ export const useMetric = async (
   const timeRangeType = ref<TimeRangeType>(
     currentContent?.time_range === 'current' ? 'current' : 'window'
   )
-  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(_t('Time range'))
+  const currentTimerange: TimerangeModel | null =
+    currentContent?.time_range === 'current' ? null : currentContent?.time_range.window
+  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(currentTimerange)
   const displayRangeLimits = ref<boolean>(currentContent?.show_display_range_limits ?? true)
   const showServiceStatus = ref<boolean>(true)
 

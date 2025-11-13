@@ -5,8 +5,6 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
-
 import type { GraphTimerange } from '@/dashboard-wip/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRange } from '@/dashboard-wip/components/TimeRange/useTimeRange'
 import {
@@ -26,8 +24,6 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 import { type UseAdditionalOptions, useAdditionalOptions } from './useAdditionalOptions'
 
-const { _t } = usei18n()
-
 export interface UseScatterplot
   extends UseWidgetHandler,
     UseWidgetVisualizationOptions,
@@ -44,7 +40,9 @@ export const useScatterplot = async (
 ): Promise<UseScatterplot> => {
   const currentContent = currentSpec?.content as ScatterplotContent
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
+  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
+    currentContent.time_range ?? null
+  )
 
   const {
     title,

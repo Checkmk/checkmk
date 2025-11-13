@@ -51,8 +51,6 @@ export const useNotificationTimeline = async (
 ): Promise<UseNotificationTimeline> => {
   const isUpdating = ref(false)
   const timeRangeType = ref<TimeRangeType>('current')
-  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(_t('Time range'))
-
   const {
     title,
     showTitle,
@@ -66,6 +64,9 @@ export const useNotificationTimeline = async (
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
   const currentContent = currentSpec?.content as NotificationTimelineContent
+  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
+    currentContent?.render_mode?.time_range ?? null
+  )
 
   let initialTimeResolution: 'hour' | 'day' = 'hour'
   if (

@@ -272,6 +272,11 @@
     --perfometer-bg-color: var(--color-white-100);
     --inline-help-text-bg: rgb(223 239 251);
     --inline-help-icon-bg: rgb(12 129 238);
+
+    /* breadcrumb colors */
+    --font-color-breadcrumb-inactive: var(--color-conference-grey-70);
+    --font-color-breadcrumb-interactive: var(--color-conference-grey-100);
+    --font-color-breadcrumb-hover: var(--color-corporate-green-70);
   }
 
   body[data-theme='modern-dark'] {
@@ -357,6 +362,11 @@
     --perfometer-bg-color: var(--color-mist-grey-30);
     --inline-help-text-bg: rgb(17 24 29);
     --inline-help-icon-bg: rgb(6 103 193);
+
+    /* breadcrumb colors */
+    --font-color-breadcrumb-inactive: var(--color-white-70);
+    --font-color-breadcrumb-interactive: var(--color-white-100);
+    --font-color-breadcrumb-hover: var(--color-corporate-green-50);
   }
 }
 

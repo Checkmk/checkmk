@@ -772,7 +772,7 @@ class AttributeDisplayHint:
         return _("Inventory attribute: %s") % self.long_title
 
 
-def _parse_attribute_hint(
+def _parse_attr_field_from_legacy(
     *,
     path: SDPath,
     node_name: str,
@@ -1166,7 +1166,7 @@ def _parse_legacy_display_hints(
             long_title=long_title,
             icon=icon,
             attributes={
-                SDKey(key): _parse_attribute_hint(
+                SDKey(key): _parse_attr_field_from_legacy(
                     path=path,
                     node_name=name,
                     node_title=title,

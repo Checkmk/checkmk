@@ -21,7 +21,6 @@ import copy
 import dataclasses
 import enum
 import itertools
-import json
 import numbers
 import os
 import pickle
@@ -3895,16 +3894,14 @@ def make_metric_backend_fetcher(
         agent_otel,
     )
 
-    metrics_association = json.loads(metric_backend_fetcher_config.metrics_association)
-    host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]
     filter_args = []
-    for filter_ in metrics_association["attribute_filters"]:
+    for filter_ in metric_backend_fetcher_config.attribute_filters:
         filter_args += [
             "--filter",
-            f"{filter_['attribute_type']}:{filter_['attribute_key']}={filter_['attribute_value']}",
+            f"{filter_.attribute_type}:{filter_.attribute_key}={filter_.attribute_value}",
         ]
     return ProgramFetcher(
         cmdline=f"python3 -m {agent_otel.__spec__.name} {host_name}",
-        stdin=f"--host-name-resource-attribute-key={host_name_resource_attribute_key} {' '.join(filter_args)}",
+        stdin=f"--host-name-resource-attribute-key={metric_backend_fetcher_config.host_name_resource_attribute_key} {' '.join(filter_args)}",
         is_cmc=is_cmc,
     )

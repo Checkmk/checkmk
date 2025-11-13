@@ -100,7 +100,7 @@ function onClickGoTo() {
 
   &.cmk-wizard-step--complete {
     &::before {
-      background-image: var(--icon-check);
+      background-image: url('~cmk-frontend/themes/facelift/images/icon_check.svg');
       background-repeat: no-repeat;
       background-position: center;
       content: '';

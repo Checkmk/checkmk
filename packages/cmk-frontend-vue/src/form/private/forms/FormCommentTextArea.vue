@@ -35,7 +35,10 @@ const prependDateAndUsername = (): void => {
     <img
       :alt="props.spec.i18n.prefix_date_and_comment"
       :title="props.spec.i18n.prefix_date_and_comment"
-      :style="{ content: 'var(--icon-insertdate)', cursor: 'pointer' }"
+      :style="{
+        content: 'url(~cmk-frontend/themes/facelift/images/icon_insertdate.svg)',
+        cursor: 'pointer'
+      }"
       @click="prependDateAndUsername()"
     />
   </div>

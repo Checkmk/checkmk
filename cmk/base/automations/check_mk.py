@@ -2499,6 +2499,12 @@ class ABCDeleteHosts:
         with suppress(FileNotFoundError):
             shutil.rmtree(f"{logwatch_dir}/{hostname}")
 
+    def _delete_server_side_program_files(self, host_name: HostName) -> None:
+        if (base := os.getenv("SERVER_SIDE_PROGRAM_STORAGE_PATH")) is None:
+            return
+        with suppress(FileNotFoundError):
+            shutil.rmtree(f"{base}/{host_name}")
+
     def _delete_if_exists(self, path: str) -> None:
         """Delete the given file or folder in case it exists"""
         try:
@@ -2565,6 +2571,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         self._delete_datasource_dirs(hostname)
         self._delete_baked_agents(hostname)
         self._delete_logwatch(hostname)
+        self._delete_server_side_program_files(hostname)
         self._delete_robotmk_html_log_dir(hostname)
 
 
@@ -2608,6 +2615,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
 
         self._delete_datasource_dirs(hostname)
         self._delete_logwatch(hostname)
+        self._delete_server_side_program_files(hostname)
         self._delete_robotmk_html_log_dir(hostname)
 
 

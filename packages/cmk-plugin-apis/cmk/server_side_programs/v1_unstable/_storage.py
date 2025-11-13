@@ -33,8 +33,8 @@ class Storage:
     def _full_dir(self) -> Path:
         return Path(
             self._get_base_path(),
-            self._sanitize_key(self._ident),
             self._sanitize_key(self._host),
+            self._sanitize_key(self._ident),
         )
 
     @staticmethod

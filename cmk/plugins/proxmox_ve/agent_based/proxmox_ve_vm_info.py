@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from collections.abc import Mapping, MutableMapping
-from typing import Any, cast, TypedDict
+from collections.abc import MutableMapping
+from typing import Any, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -62,13 +62,11 @@ def discover_single(section: SectionVMInfo) -> DiscoveryResult:
 
 
 def _get_lock_duration(
-    value_store: Mapping[str, Any],
+    value_store: MutableMapping[str, Any],
     key: str,
     time: float,
     value: LockState,
 ) -> float | None:
-    value_store = cast(MutableMapping[str, object], value_store)
-
     last_state = value_store.get(key)
     match last_state:
         case (
@@ -90,7 +88,7 @@ def _get_lock_duration(
 
 
 def _check_lock_state_and_duration(
-    value_store: Mapping[str, Any],
+    value_store: MutableMapping[str, Any],
     lock_value: LockState,
     key: str,
     now: float,
@@ -121,7 +119,7 @@ def _check_lock_state_and_duration(
 
 
 def _check_proxmox_ve_vm_info_testable(
-    params: Params, section: SectionVMInfo, value_store: Mapping[str, Any]
+    params: Params, section: SectionVMInfo, value_store: MutableMapping[str, Any]
 ) -> CheckResult:
     yield Result(state=State.OK, summary=f"VM ID: {section.vmid}")
 

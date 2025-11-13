@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
-from collections.abc import Mapping
+from collections.abc import MutableMapping
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -139,7 +139,7 @@ VM_DATA_WITH_LOCK = SectionVMInfo(
 def test_check_proxmox_ve_vm_info(
     params: pvvi.Params,
     section: SectionVMInfo,
-    value_store: Mapping[str, object],
+    value_store: MutableMapping[str, object],
     expected_results: CheckResult,
 ) -> None:
     with time_machine.travel(datetime.datetime(2025, 2, 4, 16, 16, 50, tzinfo=ZoneInfo("CET"))):

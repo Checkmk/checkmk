@@ -3897,14 +3897,21 @@ def make_metric_backend_fetcher(
         agent_otel,
     )
 
-    filter_args = []
+    stdin = [
+        "--check-interval",
+        str(metric_backend_fetcher_config.check_interval),
+        "--host-name-resource-attribute-key",
+        metric_backend_fetcher_config.host_name_resource_attribute_key,
+        "--host-name",
+        host_name,
+    ]
     for filter_ in metric_backend_fetcher_config.attribute_filters:
-        filter_args += [
+        stdin += [
             "--filter",
-            f"{filter_.attribute_type}:{filter_.attribute_key}={filter_.attribute_value}",
+            f"{filter_.attribute_type.value}:{filter_.attribute_key}={filter_.attribute_value}",
         ]
     return ProgramFetcher(
-        cmdline=f"python3 -m {agent_otel.__spec__.name} {host_name} --check-interval={metric_backend_fetcher_config.check_interval}",
-        stdin=f"--host-name-resource-attribute-key={metric_backend_fetcher_config.host_name_resource_attribute_key} {' '.join(filter_args)}",
+        cmdline=f"python3 -m {agent_otel.__spec__.name}",
+        stdin=" ".join(stdin),
         is_cmc=is_cmc,
     )

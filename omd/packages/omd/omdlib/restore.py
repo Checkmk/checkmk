@@ -35,6 +35,15 @@ def prepare_restore_as_root(
     sitename_must_be_valid(site.name, Path(site_home), reuse)
 
     if reuse:
+        # shutil.rmtree will default to an unsafe way of deleting a user-controlled directory, if
+        # `avoids_symlink_attacks` is false.
+        #
+        # This assertion should always pass on distros we support: The value of
+        # `avoids_symlink_attacks` depends on macro variables set during the python build process.
+        # The interpreter we ship with Checkmk always sets these such that the operation is safe.
+        #
+        # We call the assertion here to avoid unmounting tmpfs.
+        assert shutil.rmtree.avoids_symlink_attacks, "Can't run shutil.rmtree"
         if not site.is_stopped(verbose) and "kill" not in options:
             sys.exit("Cannot restore '%s' while it is running." % (site.name))
         else:

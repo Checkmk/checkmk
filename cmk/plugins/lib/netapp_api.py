@@ -256,7 +256,7 @@ def check_netapp_luns(
         expected = str(params.get("read_only")).lower()
         yield Result(
             state=State.WARN,
-            summary=f"read-only is {str(read_only if read_only is not None else "unknown").lower()} (expected: {expected})",
+            summary=f"read-only is {str(read_only if read_only is not None else 'unknown').lower()} (expected: {expected})",
         )
 
     if params.get("ignore_levels"):
@@ -370,20 +370,12 @@ def merge_if_sections(  # pylint: disable=too-many-branches
     return nics, extra_info
 
 
-def check_netapp_interfaces(  # pylint: disable=too-many-branches
+def _check_netapp_interfaces(
     item: str,
     params: Mapping[str, Any],
-    section: IfSection,
-    value_store: MutableMapping[str, Any],
+    nics: interfaces.Section[interfaces.InterfaceWithCounters],
+    extra_info: ExtraInfo,
 ) -> CheckResult:
-    nics, extra_info = section
-    yield from interfaces.check_multiple_interfaces(
-        item,
-        params,
-        nics,
-        value_store=value_store,
-    )
-
     for iface in interfaces.matching_interfaces_for_item(item, nics):
         vif = extra_info.get(iface.attributes.descr)
         if vif is None:
@@ -440,6 +432,28 @@ def check_netapp_interfaces(  # pylint: disable=too-many-branches
                 state=State(speed_state),
                 summary="Interfaces do not have the same speed",
             )
+
+
+def check_netapp_interfaces(  # pylint: disable=too-many-branches
+    item: str,
+    params: Mapping[str, Any],
+    section: IfSection,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    nics, extra_info = section
+    yield from interfaces.check_multiple_interfaces(
+        item,
+        params,
+        nics,
+        value_store=value_store,
+    )
+
+    yield from _check_netapp_interfaces(
+        item,
+        params,
+        nics,
+        extra_info,
+    )
 
 
 def check_netapp_vs_traffic(

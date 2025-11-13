@@ -673,9 +673,9 @@ charset-normalizer==3.4.4 \
     #   -c requirements.txt
     #   reportlab
     #   requests
-checkmk-dev-tools==1.2.0 \
-    --hash=sha256:00f811f8ef55fde4028ef008a7b1f336170ae998be0fcfd22c8d73e376c7bbaa \
-    --hash=sha256:13bad068542f10c3d65dc670e492fec97746dd7a14c5b7d140bf9ef0e85b7e32
+checkmk-dev-tools==1.2.1 \
+    --hash=sha256:09d8bc14bf4b6012a25e38a10a31d5ed990b533b7c60b2eca754fc1b6cd2e4ab \
+    --hash=sha256:faf80c3b23dafe957b0f896218b14845fc2129813bb687b310b07f79ac78e71c
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in

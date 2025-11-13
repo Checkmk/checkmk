@@ -67,6 +67,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	    $(ADDITIONAL_EXCLUDE) \
 	    check-mk-agent_$(CMK_VERSION)-1_all.deb \
 	    check-mk-agent-$(CMK_VERSION)-1.noarch.rpm \
+	    linux \
 	    windows/check_mk_agent.msi \
 	    windows/unsign-msi.patch \
 	    windows/python-3.cab \

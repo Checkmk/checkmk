@@ -4,21 +4,124 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import stat
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 from omdlib.restore import _remove_site_home
 
 
-def _setup_site_home(tmp_path: Path) -> None:
-    tmp_path.joinpath("etc/").mkdir()
-    tmp_path.joinpath("etc/jaeger/").mkdir()
-    tmp_path.joinpath("etc/jaeger/test").touch()
-    tmp_path.joinpath("var/").mkdir()
-    tmp_path.joinpath("var/clickhouse-server/").mkdir()
-    tmp_path.joinpath("var/clickhouse-server/data").touch()
+@dataclass(frozen=True)
+class File:
+    name: str
+    content: bytes
+
+
+@dataclass(frozen=True)
+class Symlink:
+    name: str
+    path: Path
+
+
+@dataclass(frozen=True)
+class FIFO:
+    name: str
+
+
+# We ignore the other types such as devices and sockets for now.
+type FileType = File | Symlink | FIFO
+
+
+@dataclass(frozen=True)
+class Directory:
+    name: str
+    directories: Sequence["Directory"] = ()
+    files: Sequence[FileType] = ()
+
+
+# Ignore permissions. Additionally, ignore that path segments such as name should be arbitrary
+# bytes, where only `/` and `\0` disallowed.
+@dataclass(frozen=True)
+class RootDir:
+    path: Path
+    directories: Sequence[Directory] = ()
+    files: Sequence[FileType] = ()
+
+
+def _files_to_disk(folder: Path, files: Sequence[FileType]) -> None:
+    for file in files:
+        path = folder.joinpath(file.name)
+        match file:
+            case File(_name, content):
+                path.write_bytes(content)
+            case Symlink(_name, target):
+                path.symlink_to(target)
+            case FIFO():
+                os.mkfifo(path)
+
+
+def _recursive_to_disk(
+    parent_folder: Path, directories: Sequence[Directory], files: Sequence[FileType]
+) -> None:
+    for directory in directories:
+        dir_path = parent_folder.joinpath(directory.name)
+        dir_path.mkdir()
+        _recursive_to_disk(dir_path, directory.directories, directory.files)
+    _files_to_disk(parent_folder, files)
+
+
+def _to_disk(root: RootDir) -> None:
+    _recursive_to_disk(root.path, directories=root.directories, files=root.files)
+
+
+def _recursive_from_disk(folder: Path) -> tuple[Sequence[Directory], Sequence[FileType]]:
+    directories: list[Directory] = []
+    files: list[FileType] = []
+
+    with os.scandir(folder) as scaniter:
+        for entry in scaniter:
+            path = Path(entry.path)
+            if entry.is_symlink():
+                files.append(Symlink(name=entry.name, path=path.readlink()))
+
+            elif entry.is_dir(follow_symlinks=False):
+                sub_dirs, sub_files = _recursive_from_disk(path)
+                directories.append(
+                    Directory(name=entry.name, directories=sub_dirs, files=sub_files)
+                )
+            elif entry.is_file(follow_symlinks=False):
+                files.append(File(name=entry.name, content=path.read_bytes()))
+            elif stat.S_ISFIFO(entry.stat(follow_symlinks=False).st_mode):
+                files.append(FIFO(name=entry.name))
+            else:
+                # Sockets, block devices, char devices
+                raise NotImplementedError()
+    return directories or (), files or ()
+
+
+def _from_disk(path: Path) -> RootDir:
+    sub_dirs, sub_files = _recursive_from_disk(path)
+    return RootDir(path=path, directories=sub_dirs, files=sub_files)
 
 
 def test_remove_site_home(tmp_path: Path) -> None:
-    _setup_site_home(tmp_path)
+    root = RootDir(
+        path=tmp_path,
+        directories=[
+            Directory(
+                name="jaeger",
+                files=[File("test", content=b"abc")],
+            ),
+            Directory(
+                name="var",
+                files=[File("rand.txt", content=b"abc")],
+                directories=[
+                    Directory(name="clickhouse-server", files=[File("data", content=b"abc")])
+                ],
+            ),
+        ],
+    )
+    _to_disk(root)
     _remove_site_home(tmp_path)
-    assert os.listdir(tmp_path) == []
+    assert _from_disk(tmp_path) == RootDir(path=tmp_path)

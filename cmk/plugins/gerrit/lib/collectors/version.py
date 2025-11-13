@@ -41,7 +41,7 @@ class GerritVersion:
         self.auth = auth
 
     def collect(self) -> Sections:
-        current_version = self._get_current_section()
+        current_version = self._get_current_version()
         latest_versions = self._get_latest_versions(current_version)
 
         return {
@@ -51,7 +51,7 @@ class GerritVersion:
             },
         }
 
-    def _get_current_section(self) -> SemanticVersion:
+    def _get_current_version(self) -> SemanticVersion:
         uri = "/config/server/version?verbose"
 
         resp = requests.get(self.api_url + uri, auth=self.auth, timeout=30)

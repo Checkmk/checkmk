@@ -1104,6 +1104,7 @@ class ActivationSitesSummary(TypedDict):
         "missing",
         "unknown",
     ]
+    logged_in: bool
 
 
 class PendingChangesSummary(TypedDict):
@@ -1390,6 +1391,7 @@ class ActivateChanges:
                     onlineStatus="disabled"
                     if site.get("disabled")
                     else sites_states().get(site_id, SiteStatus({})).get("state", "unknown"),
+                    logged_in=self.site_is_logged_in(site_id, site),
                 )
                 for site_id, site in activation_sites(sites).items()
             ],

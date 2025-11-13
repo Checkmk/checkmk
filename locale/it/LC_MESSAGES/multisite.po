@@ -1054,6 +1054,10 @@ msgstr "(Modulo senza titolo)"
 msgid ", "
 msgstr ""
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "... (%d più)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
 ", ma è annullato da una corrispondenza in un pacchetto di regole precedenti."
@@ -1423,6 +1427,12 @@ msgstr ""
 "b><br>Specificare tag espliciti per questi servizi. I tag generali saranno "
 "ignorati per questi servizi. I tag generali saranno ignorati per questi "
 "servizi."
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -66293,14 +66303,6 @@ msgstr ""
 "disponibili ha un effetto negativo, perché aumenta la quantità di "
 "commutazioni di contesto."
 
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"La Checkmk Managed Services Edition può essere collegata ad altri siti solo "
-"tramite l'ECM."
-
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
 "the command <tt>python3</tt>, and a Python 2 installation by looking for the "
@@ -68417,10 +68419,6 @@ msgid ""
 "and the folder location. Adjust to modify labels, tags or similar "
 "customization."
 msgstr ""
-
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "Il login non è consentito su questo sito."
 
 #, python-format
 msgid "The host '%s' does not exist"
@@ -94204,6 +94202,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "La Checkmk Managed Services Edition può essere collegata ad altri siti "
+#~ "solo tramite l'ECM."
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "Il login non è consentito su questo sito."
 
 #, fuzzy
 #~ msgid "Update widget"

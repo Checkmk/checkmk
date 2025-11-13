@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-11-11 19:34+0000\n"
+"PO-Revision-Date: 2025-11-12 21:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -1061,6 +1061,10 @@ msgstr "(unbenannter Regelsatz)"
 msgid ", "
 msgstr ", "
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "... (%d mehr)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
 ", wird aber durch eine Übereinstimmung in einem früheren Regelpaket "
@@ -1426,6 +1430,12 @@ msgstr ""
 "Ignorieren von übergreifenden Merkmalen:</b><br> Nutzen Sie diese Option, um "
 "explizite Namen anzugeben. Die übergreifenden Merkmale werden für diese "
 "Services ignoriert."
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 msgid ""
 "<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
@@ -7277,7 +7287,7 @@ msgid ""
 "even before the desktop user logs on. The scheduling of such desktop tests "
 "can be delayed via this option until the desktop session is established."
 msgstr ""
-"Da der Checkmk-Agent zusammen mit dem Scheduler beim Booten gestartet wird, "
+"Da der Checkmk-Agent zusammen mit dem Planer beim Booten gestartet wird, "
 "noch bevor sich der Desktop-Benutzer anmeldet. Die Planung solcher Desktop-"
 "Tests kann über diese Option verzögert werden, bis die Desktop-Sitzung "
 "aufgebaut ist."
@@ -7354,9 +7364,8 @@ msgstr "Anfragende Hosts zuordnen"
 msgid "Assign via regular expressions"
 msgstr "Zuweisung über reguläre Ausdrücke"
 
-#, fuzzy
 msgid "Assigned to host"
-msgstr "Ordne einer Gruppe zu"
+msgstr "Zugewiesen zu Host"
 
 msgid "Assignee"
 msgstr "Adressat"
@@ -8768,27 +8777,21 @@ msgstr "Azure Redis CPU-Auslastung"
 msgid "Azure Redis Cache effectiveness"
 msgstr "Effektivität des Azure Redis Caches"
 
-#, fuzzy
 msgid "Azure Redis Connections"
 msgstr "Azure Redis Verbindungen"
 
-#, fuzzy
 msgid "Azure Redis Latency"
 msgstr "Azure Redis Latenz"
 
-#, fuzzy
 msgid "Azure Redis Memory"
-msgstr "Azure Redis Speicherplatz"
+msgstr "Azure Redis Speicher"
 
-#, fuzzy
 msgid "Azure Redis Replication"
 msgstr "Azure Redis Replikation"
 
-#, fuzzy
 msgid "Azure Redis Server load"
-msgstr "Azure Redis Serverauslastung"
+msgstr "Azure Redis Server-Last"
 
-#, fuzzy
 msgid "Azure Redis Throughput"
 msgstr "Azure Redis Durchsatz"
 
@@ -19276,7 +19279,7 @@ msgid "Deploy Podman plug-in"
 msgstr "Podman-Plugin verteilen"
 
 msgid "Deploy Robotmk scheduler and agent plug-in"
-msgstr "Robotmk-Scheduler und Agentenplugin verteilen"
+msgstr "Robotmk-Planer und Agentenplugin verteilen"
 
 msgid "Deploy SMART Posix plug-in"
 msgstr "SMART Posix-Plugin verteilen"
@@ -19377,7 +19380,7 @@ msgid "Deploy plug-in for Windows System Info"
 msgstr "Plugins für Windows Systeminfo verteilen"
 
 msgid "Deploy plug-in for Windows Task Scheduler"
-msgstr "Plugin für Windows Task-Scheduler verteilen"
+msgstr "Plugin für Windows Aufgabenplaner verteilen"
 
 msgid "Deploy plug-in for Windows broadcom bonding"
 msgstr "Plugin für Windows Broadcom-Bonding verteilen"
@@ -20919,7 +20922,7 @@ msgid "Do not deploy plug-in for Windows System Info"
 msgstr "Plugins für Windows Systeminfo nicht verteilen"
 
 msgid "Do not deploy plug-in for Windows Task Scheduler"
-msgstr "Plugin für Windows Task-Scheduler nicht verteilen"
+msgstr "Plugin für Windows Aufgabenplaner nicht verteilen"
 
 msgid "Do not deploy plug-in for Windows broadcom bonding"
 msgstr "Plugin für Windows Broadcom-Bonding nicht verteilen"
@@ -23027,7 +23030,6 @@ msgstr ""
 "verwandter Probleme die Anzahl der Benachrichtigungen deutlich reduziert "
 "werden."
 
-#, fuzzy
 msgid ""
 "Enabling this option lets Checkmk create safe host names for piggyback "
 "hosts. This avoids conflicts caused by entities having the same name in "
@@ -23037,11 +23039,14 @@ msgid ""
 "resources, or resource groups with the same name across multiple Azure "
 "tenants or subscriptions."
 msgstr ""
-"Mit dieser Option erstellt Checkmk sichere Host-Namen für Piggyback-Hosts, "
-"um Konflikte mit Entitätsnamen aus Azure zu vermeiden. Diese Option stellt "
-"den Host-Namen 'azr-' voran und fügt den letzten Teil der Abonnement-ID an. "
-"Beispiel: 'azr-my-vm-1a2b3c4d'. Aktivieren Sie diese Option, wenn Sie "
-"Ressourcen oder Ressourcengruppen mit demselben Namen haben."
+"Wenn Sie diese Option aktivieren, kann Checkmk sichere Host-Namen für "
+"Piggyback-Hosts erstellen. Dadurch werden Konflikte vermieden, die durch "
+"gleichnamige Entitäten in Azure verursacht werden und zum Überschreiben oder "
+"Verlust von Monitoring-Daten führen können. Die Option funktioniert, indem "
+"ein eindeutiger Hash an die Checkmk-Piggyback-Host-Namen angehängt wird "
+"(Beispiel: 'my-vm-1a2b3c4d'). Aktivieren Sie dies, wenn Sie über mehrere "
+"Azure-Mandanten oder -Subskriptionen hinweg Subskriptionen, Ressourcen oder "
+"Ressourcengruppen mit demselben Namen haben."
 
 msgid ""
 "Enabling this option results in additional performance data for the Checkmk "
@@ -23496,9 +23501,8 @@ msgstr "Einträge pro Zeile"
 msgid "Entry"
 msgstr "Eintrag"
 
-#, fuzzy
 msgid "Env Creation"
-msgstr "Erstellung"
+msgstr ""
 
 msgid "Environment Sensors"
 msgstr "Umgebungssensoren"
@@ -27266,7 +27270,7 @@ msgid "Grab user from found processess"
 msgstr "Benutzer aus gefundenen Prozessen holen"
 
 msgid "Grace period before scheduler starts"
-msgstr "Karenzzeit vor dem Start des Schedulers"
+msgstr "Karenzzeit vor dem Start des Planers"
 
 msgid "Gracefully finishing"
 msgstr "Anständig beenden"
@@ -28724,9 +28728,9 @@ msgid ""
 "Here you can set explicit scheduler jobs by defining them via SID, job owner "
 "and job name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"
 msgstr ""
-"Hier können Sie explizite Scheduler-Jobs angeben, indem Sie SID, Job-"
-"Benutzer und Job-Name, durch Punkte getrennt, angeben, z.B. "
-"<tt>TUX12C.SYS.PURGE_LOG</tt>"
+"Hier können Sie explizite Planer-Jobs angeben, indem Sie SID, Job-Benutzer "
+"und Job-Name, durch Punkte getrennt, angeben, z.B. <tt>TUX12C.SYS.PURGE_LOG</"
+"tt>"
 
 msgid ""
 "Here you can set explicit tablespaces by defining them via SID and the "
@@ -31669,17 +31673,16 @@ msgstr ""
 "der Steuerungsebene betrachtet. Andernfalls wird er als Arbeitsknoten "
 "betrachtet."
 
-#, fuzzy
 msgid ""
 "If a selection is set to <i>This value differs between the selected hosts.</"
 "i> then currenty not all selected hosts share the same setting for this "
 "attribute. If you keep that selection, all hosts will keep their individual "
 "settings."
 msgstr ""
-"Wenn eine Auswahl auf <i>Dieser Wert ist für die ausgewählten Hosts "
-"unterschiedlich.</i> gesetzt ist, dann haben aktuell nicht alle ausgewählten "
-"Hosts dieselbe Einstellung für dieses Attribut. Wenn Sie die Auswahl "
-"beibehalten, dann behalten alle Hosts ihre individuelle Einstellung."
+"Wenn eine Auswahl auf <i> getroffen ist, dann ist dieser Wert nicht für alle "
+"ausgewählten Hosts gleich.</i> Dann haben aktuell nicht alle Hosts dieselbe "
+"Einstellung für dieses Attribut. Wenn Sie diese Auswahl beibehalten, dann "
+"behalten alle Hosts ihre individuelle Einstellung."
 
 msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
@@ -36002,7 +36005,7 @@ msgid "Job name"
 msgstr "Jobname"
 
 msgid "Job scheduler"
-msgstr "Job Scheduler"
+msgstr "Job-Planer"
 
 msgid "Job score"
 msgstr "Job-Bewertung"
@@ -40526,9 +40529,8 @@ msgstr "Maxmale Anzahl von RPCs pro Sekunde"
 msgid "Maximum number of access points"
 msgstr "Maximale Anzahl von Zugangspunkten"
 
-#, fuzzy
 msgid "Maximum number of attempts"
-msgstr "Maximale Anzahl Zustellungsversuche"
+msgstr "Maximale Anzahl an Versuchen"
 
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
@@ -47506,13 +47508,13 @@ msgid "Oracle release of the remote database"
 msgstr "Oracle-Release der Remote-Datenbank"
 
 msgid "Oracle scheduler job"
-msgstr "Oracle Scheduler-Job"
+msgstr "Oracle Planer-Job"
 
 msgid "Oracle scheduler wait class"
-msgstr "Oracle Scheduler-Warteklasse"
+msgstr "Oracle Planer-Warteklasse"
 
 msgid "Oracle scheduler wait class (FG)"
-msgstr "Oracle Scheduler-Warteklasse (FG)"
+msgstr "Oracle Planer-Warteklasse (FG)"
 
 msgid "Oracle sessions"
 msgstr "Oracle Sitzungen"
@@ -47847,9 +47849,8 @@ msgstr "Ausgangsregel"
 msgid "Outbound rules"
 msgstr "Ausgangsregeln"
 
-#, fuzzy
 msgid "Outbound throughput upper levels (/sec)"
-msgstr "Ausgangslevels (pro Sekunde)"
+msgstr "Obergrenzen für den Ausgangsdurchsatz (/sec)"
 
 msgid "Outcome & Action"
 msgstr "Ergebnis & Aktion"
@@ -48357,9 +48358,8 @@ msgstr "Ping (aktiver Check mit ICMP Echo Request)"
 msgid "PING and host check parameters"
 msgstr "Ping und Host Check-Parameter"
 
-#, fuzzy
 msgid "PLEASE WAIT"
-msgstr "CLOSE_WAIT"
+msgstr ""
 
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
@@ -48911,9 +48911,8 @@ msgstr "Passwort für diesen Benutzer"
 msgid "Password policy for local accounts"
 msgstr "Passwortrichtlinie für lokale Accounts"
 
-#, fuzzy
 msgid "Password properties"
-msgstr "Dashboard-Eigenschaften"
+msgstr "Passwort-Eigenschaften"
 
 msgid "Password:"
 msgstr "Passwort:"
@@ -51430,11 +51429,8 @@ msgstr "Prometheus API-Endpunkt"
 msgid "Prometheus Alertmanager"
 msgstr "Prometheus Alertmanager"
 
-#, fuzzy
 msgid "Prometheus Scrape Targets to fetch information from (deprecated)"
-msgstr ""
-"Promtheus Scrape Targets (inkludiere Prometheus Exporter) um daraus "
-"Informationen zu holen"
+msgstr "Prometheus Scrape Ziele, um daraus Informationen zu holen (veraltet)"
 
 msgid "Prometheus custom service"
 msgstr "kundenspezifischer Prometheus-Service"
@@ -51507,41 +51503,40 @@ msgid "Provider"
 msgstr "Provider"
 
 msgid "Provisioned IOPS SSD (io1) IO operations per second"
-msgstr "Vorgesehene IOPS-SSD (io1). E/A-Operationen pro Sekunde"
+msgstr "Bereitgestellte IOPS-SSD (io1) E/A-Operationen pro Sekunde"
 
 msgid "Provisioned IOPS SSD (io1) space"
 msgstr "Bereitgestellter IOPS-SSD (io1)-Speicherplatz"
 
 msgid "Provisioned IOPS SSD (io2) IO operations per second"
-msgstr "Vorgesehene IOPS-SSD (io2). E/A-Operationen pro Sekunde"
+msgstr "Bereitgestellte IOPS-SSD (io2) E/A-Operationen pro Sekunde"
 
 msgid "Provisioned IOPS SSD (io2) space"
 msgstr "Bereitgestellter IOPS SSD (io2)-Platz"
 
 msgid "Provisioned concurrency executions"
-msgstr "Vorgesehene Gleichzeitigkeit der Ausführungen"
+msgstr "Bereitgestellte gleichzeitige Ausführungen"
 
 msgid "Provisioned concurrency invocations"
-msgstr "Vorgesehene gleichzeitige Aufrufe"
+msgstr "Bereitgestellte gleichzeitige Anrufe"
 
 msgid "Provisioned concurrency spillover invocations"
-msgstr "Vorgesehene Nebenläufigkeitsaufrufe (Spillover)"
+msgstr "Bereitgestellte gleichzeitige Spillover-Anrufe"
 
 msgid "Provisioned concurrency utilization"
-msgstr "Vorgesehene gleichzeitige Auslastung"
+msgstr "Bereitgestellte gleichzeitige Auslastung"
 
 msgid "Provisioned space"
-msgstr "Bereitgestellter Speicherplatz"
+msgstr "Bereitgestellter Platz"
 
-#, fuzzy
 msgid "Provisioned storage usage"
-msgstr "Bereitgestellter Speicherplatz"
+msgstr "Bereitgestellte Speicherauslastung"
 
 msgid "Provisioning Levels"
-msgstr "Schwellen für Provisionierung"
+msgstr "Bereitstellungsstufen"
 
 msgid "Provisioning levels"
-msgstr "Levels für Provisionierung"
+msgstr "Bereitstellungsstufen"
 
 msgid "Proxmox"
 msgstr "Proxmox"
@@ -51941,9 +51936,8 @@ msgstr "RAID: Sammelzustand"
 msgid "RAM"
 msgstr "RAM"
 
-#, fuzzy
 msgid "RAM (Cached, buffers)"
-msgstr "Redo-Puffer"
+msgstr "RAM (gecacht, Puffer)"
 
 msgid "RAM (averaged)"
 msgstr "RAM (gemittelt)"
@@ -51993,9 +51987,8 @@ msgstr "RCC (veraltet)"
 msgid "RCC Remote server address"
 msgstr "Adresse des RCC Remote-Servers"
 
-#, fuzzy
 msgid "RCC configuration"
-msgstr "MAC-Konfiguration"
+msgstr "RCC-Konfiguration"
 
 msgid "RCC profile configuration"
 msgstr "RCC-Profil-Konfiguration"
@@ -52817,9 +52810,8 @@ msgstr "Regulärer Ausdruck für Host-Namen"
 msgid "Regex sets"
 msgstr "Regex-Sets"
 
-#, fuzzy
 msgid "Region"
-msgstr "Name der Region"
+msgstr "Region"
 
 msgid "Region name"
 msgstr "Name der Region"
@@ -52863,9 +52855,8 @@ msgstr "Einen neuen Host registrieren"
 msgid "Register authenticator app"
 msgstr "Authenticator-App registrieren"
 
-#, fuzzy
 msgid "Register for automatic agent updates"
-msgstr "Aktivierung von automatischen Agenten-Updates"
+msgstr "Registrierung für automatische Agenten-Updates"
 
 msgid "Register host & download monitoring agents of your hosts"
 msgstr "Host registrieren & Monitoring-Agenten für Ihre Hosts herunterladen"
@@ -53061,9 +53052,8 @@ msgstr "Relative Levels"
 msgid "Relative levels of active sessions."
 msgstr "Relative Schwellen für aktive Sitzungen."
 
-#, fuzzy
 msgid "Relative limit in %"
-msgstr "Relative Grenze in %"
+msgstr "Relatives Limit in %"
 
 msgid "Relative manifest path"
 msgstr "Relativer Pfad zum Manifest"
@@ -53086,9 +53076,8 @@ msgstr "Relais"
 msgid "Relay ID"
 msgstr "Relais-ID"
 
-#, fuzzy
 msgid "Relay configuration"
-msgstr "Relais-Konfigurationen"
+msgstr "Relais-Konfiguration"
 
 msgid "Relay configurations"
 msgstr "Relais-Konfigurationen"
@@ -54187,7 +54176,6 @@ msgstr "Ressource-Attribute"
 msgid "Resource consumption of Windows processes"
 msgstr "Ressourcenverbrauch von Windows-Prozessen"
 
-#, fuzzy
 msgid "Resource group"
 msgstr "Ressourcengruppe"
 
@@ -54582,9 +54570,8 @@ msgstr "Änderungen rückgängig machen?"
 msgid "Revert foreign changes"
 msgstr "Fremde Änderungen rückgängig machen"
 
-#, fuzzy
 msgid "Reverting pending changes."
-msgstr "Keine ausstehenden Änderungen."
+msgstr "Ausstehenden Änderungen werden rückgängig gemacht."
 
 msgid "Review and run preview service discovery"
 msgstr "Überprüfen und Ausführen einer Vorschau der Service-Erkennung"
@@ -54674,10 +54661,10 @@ msgid "Robotmk plan"
 msgstr "Robotmk-Plan"
 
 msgid "Robotmk scheduler (Linux)"
-msgstr "Robotmk-Scheduler (Linux)"
+msgstr "Robotmk-Planer (Linux)"
 
 msgid "Robotmk scheduler (Windows)"
-msgstr "Robotmk-Scheduler (Windows)"
+msgstr "Robotmk-Planer (Windows)"
 
 msgid "Robotmk test"
 msgstr "Robotmk-Test"
@@ -55140,9 +55127,8 @@ msgstr "Laufzeit"
 msgid "Runtime (peak attempt)"
 msgstr "Laufzeit (Peak-Versuch)"
 
-#, fuzzy
 msgid "Runtime limit (total)"
-msgstr "Laufzeit-Limit-Verhältnis (Peak-Versuch)"
+msgstr "Laufzeit-Limit (gesamt)"
 
 msgid "Runtime run queue"
 msgstr "Laufzeit-Warteschlange"
@@ -55639,9 +55625,8 @@ msgstr "SSL"
 msgid "SSL certificate checking"
 msgstr "Überprüfung von SSL-Zertifikaten"
 
-#, fuzzy
 msgid "SSL certificate revocation checks"
-msgstr "SSL Zertifikatsverifizierung"
+msgstr "Checks für SSL Zertifikatswiderruf"
 
 msgid "SSL certificate validation"
 msgstr "SSL Zertifikats Überprüfung"
@@ -55882,16 +55867,14 @@ msgstr ""
 msgid "Scheduler"
 msgstr "Planer"
 
-#, fuzzy
 msgid "Scheduler Interval"
-msgstr "Check-Intervall"
+msgstr "Planer-Intervall"
 
-#, fuzzy
 msgid "Scheduler Plan Configs"
-msgstr "Eine Wartungszeit planen?"
+msgstr "Konfiguration von Plänen des Planers"
 
 msgid "Scheduler job name"
-msgstr "Name des Scheduler-Jobs"
+msgstr "Name des Planer-Jobs"
 
 #, python-format
 msgid "Scheduling report in background failed: %s"
@@ -59205,13 +59188,11 @@ msgstr "Einfache Anführungszeichen sind hier nicht erlaubt."
 msgid "Single-Host Aggregations of Host"
 msgstr "Einzelhost-Aggregationen von Host"
 
-#, fuzzy
 msgid "Single-request consumption (AWS, DynamoDB read)"
-msgstr "Verbrauch bei Einzelanforderung"
+msgstr "Verbrauch bei Einzelanforderung (AWS, DynamoDB lesend)"
 
-#, fuzzy
 msgid "Single-request consumption (AWS, DynamoDB write)"
-msgstr "Verbrauch bei Einzelanforderung"
+msgstr "Verbrauch bei Einzelanforderung (AWS, DynamoDB schreibend)"
 
 msgid "Siren"
 msgstr "Sirene"
@@ -59374,9 +59355,8 @@ msgstr "Der Filter für die Dateigröße muss das Format [OPERATOR][INT] haben."
 msgid "Size growth per minute"
 msgstr "Größenwachstum pro Minute"
 
-#, fuzzy
 msgid "Size of ClickHouse"
-msgstr "Größe der Lizenzierung"
+msgstr "Größe von ClickHouse"
 
 msgid "Size of OTel Collector"
 msgstr "Größe des OTel Collectors"
@@ -59447,9 +59427,8 @@ msgstr "Größe, Alter und Anzahl von Dateigruppen"
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Größe, Alter und Anzahl von Dateigruppen (mk_filestats)"
 
-#, fuzzy
 msgid "Size, used and reserved space"
-msgstr "Größe und genutzter Speicherplatz"
+msgstr "Größe, genutzter und reservierter Platz"
 
 msgid "Skip SSL certificate verification"
 msgstr "SSL Zertifikatsverifizierung überspringen"
@@ -60383,13 +60362,12 @@ msgstr "Legen Sie die Auswertung des Eingangszustands fest"
 msgid "Specify levels"
 msgstr "Levels einstellen"
 
-#, fuzzy
 msgid ""
 "Specify levels for HTTP {http_err_code.upper()} errors in percent which "
 "refer to the total number of requests."
 msgstr ""
-"Geben Sie die Stufen für HTTP %s-Fehler in Prozent an, die sich auf die "
-"Gesamtzahl der Anfragen beziehen."
+"Geben Sie die Stufen für HTTP {http_err_code.upper()}-Fehler in Prozent an, "
+"die sich auf die Gesamtzahl der Anfragen beziehen."
 
 msgid ""
 "Specify levels for Lambda user errors in percent which refer to the total "
@@ -62367,13 +62345,11 @@ msgstr "Subskription"
 msgid "Subscription ID"
 msgstr "Subskriptions-ID"
 
-#, fuzzy
 msgid "Subscription Status"
-msgstr "Subskription"
+msgstr "Status der Subskription"
 
-#, fuzzy
 msgid "Subscription name"
-msgstr "Subskription"
+msgstr "Name der Subskription"
 
 msgid "Subscriptions matching tag based criteria"
 msgstr "Subskriptionen, die den merkmalsbasierten Kriterien entsprechen"
@@ -63004,9 +62980,8 @@ msgstr "TLS-Zertifikatsüberprüfung"
 msgid "TLS certificate verification"
 msgstr "Verifizierung des TLS-Zertifikats"
 
-#, fuzzy
 msgid "TLS port"
-msgstr "TCP Port"
+msgstr "TLS-Port"
 
 msgid "TLS processed bytes"
 msgstr "Verarbeitete Bytes über TLS"
@@ -63473,9 +63448,8 @@ msgstr "Temporäres Dateisystem eingebunden"
 msgid "Temporary local destination"
 msgstr "Vorläufiges lokales Ziel"
 
-#, fuzzy
 msgid "Tenant ID"
-msgstr "TenantID"
+msgstr "Tenant-ID"
 
 msgid "Tenant ID / Directory ID"
 msgstr "Tenant-ID / Verzeichnis-ID"
@@ -63846,14 +63820,6 @@ msgstr ""
 "erhält. Die Konfiguration von mehr Checkmk-Prozessen als die Anzahl der "
 "verfügbaren CPUs hat einen negativen Effekt, weil dadurch die Anzahl der "
 "Kontextwechsel erhöht wird."
-
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"Die Checkmk Managed Services Edition kann nur mit anderen Instanzen "
-"verbunden werden, die ebenfalls die CME verwenden."
 
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
@@ -64272,18 +64238,17 @@ msgstr ""
 "Der Livestatus Proxy ist nicht nur für Remote-Instanzen gut, aktivieren Sie "
 "ihn für Ihre Zentralinstanz"
 
-#, fuzzy
 msgid ""
 "The Livestatus proxy daemon is available with all commercial editions and "
 "improves the management of the inter site connections using Livestatus. "
 "Using the Livestatus proxy daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
-"Der Livestatus Proxy Daemon ist in der Checkmk Enterprise Edition enthalten "
+"Der Livestatus Proxy Daemon ist in allen kommerziellen Editionen enthalten "
 "und verbessert die Verwaltung der Verbindungen zwischen mehreren Instanzen "
 "durch die Nutzung von Livestatus. Durch die Nutzung des Livestatus Proxy "
-"Daemon verbessern Sie die Antwortzeit und die Performance Ihrer Oberfläche "
-"bei gleichzeitiger Reduktion der Ressourcennutzung."
+"Daemon verbessern Sie die Antwortzeit und die Performance Ihrer GUI bei "
+"gleichzeitiger Reduktion der Ressourcenauslastung."
 
 msgid "The Logfile"
 msgstr "Die Log-Datei"
@@ -64353,15 +64318,15 @@ msgid ""
 "potentially execute arbitrary code via the scheduler. To avoid this issue, "
 "one should specify a non-existing directory or empty directory here."
 msgstr ""
-"Der Robotmk-Scheduler setzt die Variable ROBOCORP_HOME explizit, wenn RCC-"
+"Der Robotmk-Planer setzt die Variable ROBOCORP_HOME explizit, wenn RCC-"
 "Befehle ausgeführt werden. Pro Benutzer gibt es ein ROBOCORP_HOME-"
-"Verzeichnis. Der Scheduler erstellt diese Verzeichnisse im Basisverzeichnis. "
-"Vor der Ausführung von Tests übernimmt der Scheduler den Besitz des "
+"Verzeichnis. Der Planer erstellt diese Verzeichnisse im Basisverzeichnis. "
+"Vor der Ausführung von Tests übernimmt der Planer den Besitz des "
 "Basisverzeichnisses. Er löscht jedoch nicht den Inhalt eines bestehenden "
 "Verzeichnisses. Wenn Sie ein Basisverzeichnis angeben, das zuvor im Besitz "
 "eines Benutzers war, könnte dieser Benutzer möglicherweise beliebigen Code "
-"über den Scheduler ausführen. Um dieses Problem zu vermeiden, sollte man "
-"hier ein nicht existierendes oder leeres Verzeichnis angeben."
+"über den Planer ausführen. Um dieses Problem zu vermeiden, sollte man hier "
+"ein nicht existierendes oder leeres Verzeichnis angeben."
 
 msgid ""
 "The Robotmk scheduler will configure micromamba to create Conda environments "
@@ -64372,14 +64337,14 @@ msgid ""
 "arbitrary code via the scheduler. To avoid this issue, one should specify a "
 "non-existing directory or empty directory here."
 msgstr ""
-"Der Robotmk-Scheduler konfiguriert micromamba so, dass Conda-Umgebungen in "
+"Der Robotmk-Planer konfiguriert micromamba so, dass Conda-Umgebungen in "
 "diesem Verzeichnis erstellt werden. Vor der Ausführung von Tests übernimmt "
-"der Scheduler den Besitz des Basisverzeichnisses. Er löscht jedoch nicht den "
+"der Planer den Besitz des Basisverzeichnisses. Er löscht jedoch nicht den "
 "Inhalt eines bestehenden Verzeichnisses. Wenn Sie ein Basisverzeichnis "
 "angeben, das zuvor im Besitz eines Benutzers war, dann könnte dieser "
-"Benutzer möglicherweise beliebigen Code über den Scheduler ausführen. Um "
-"dieses Problem zu vermeiden, sollte man hier ein nicht existierendes oder "
-"leeres Verzeichnis angeben."
+"Benutzer möglicherweise beliebigen Code über den Planer ausführen. Um dieses "
+"Problem zu vermeiden, sollte man hier ein nicht existierendes oder leeres "
+"Verzeichnis angeben."
 
 msgid ""
 "The SAML login button on the login page will display this name. Choose a "
@@ -66086,10 +66051,6 @@ msgstr ""
 "Merkmale oder ähnliche Anpassungen an."
 
 #, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "Der Host %s wird auf dieser Instanz nicht überwacht."
-
-#, python-format
 msgid "The host '%s' does not exist"
 msgstr "Der Host '%s' existiert nicht"
 
@@ -66380,9 +66341,9 @@ msgid ""
 "The job scheduler manages regularly running tasks and the execution of "
 "background jobs. Log entries of this component are written to <tt>%s</tt>."
 msgstr ""
-"Der Job Scheduler verwaltet regelmäßig laufende Aufgaben und die Ausführung "
-"von Hintergrundjobs. Protokolleinträge dieser Komponente werden nach <tt>%s</"
-"tt> geschrieben."
+"Der Job-Planer verwaltet regelmäßig laufende Aufgaben und die Ausführung von "
+"Hintergrundjobs. Protokolleinträge dieser Komponente werden nach <tt>%s</tt> "
+"geschrieben."
 
 #, python-format
 msgid "The key / certificate already exists (Key: %d, Description: %s)"
@@ -66757,8 +66718,8 @@ msgid ""
 "Framework execution. This time, when multiplied by the number of executions, "
 "sets the total runtime limit for the execution of a plan."
 msgstr ""
-"Die maximale Zeit, die der Robotmk-Scheduler für eine einzelne Robot "
-"Framework-Ausführung zulässt. Diese Zeit, multipliziert mit der Anzahl der "
+"Die maximale Zeit, die der Robotmk-Planer für eine einzelne Robot Framework-"
+"Ausführung zulässt. Diese Zeit, multipliziert mit der Anzahl der "
 "Ausführungen, legt die maximale Gesamtlaufzeit für die Ausführung eines "
 "Plans fest."
 
@@ -68040,9 +68001,9 @@ msgid ""
 "execution attempts. If there are multiple execution attempts, the thresholds "
 "apply to the total runtime."
 msgstr ""
-"Das Laufzeit-Limit-Verhältnis (absolut) ist die Gesamtlaufzeit aller "
-"Versuche im Verhältnis zum Limit pro Versuch. Diese Schwellwerte gelten für "
-"die Gesamtlaufzeit aller Ausführungsversuche. Gibt es mehrere "
+"Das Laufzeit-Limit-Verhältnis (gesamt) ist die Gesamtlaufzeit aller Versuche "
+"im Verhältnis zum Limit pro Versuch. Diese Schwellwerte gelten für die "
+"Gesamtlaufzeit aller Ausführungsversuche. Gibt es mehrere "
 "Ausführungsversuche, gelten die Schwellwerte für die Gesamtlaufzeit."
 
 msgid ""
@@ -71013,7 +70974,7 @@ msgid ""
 "Conda environments are created right after the schedulder gets started by "
 "the Checkmk agent and before it enters the scheduling phase."
 msgstr ""
-"Mit dieser Option wird der Robotmk-Scheduler so konfiguriert, dass er eine "
+"Mit dieser Option wird der Robotmk-Planer so konfiguriert, dass er eine "
 "Conda-Umgebung erstellt und die Testsuite im Kontext dieser Umgebung "
 "ausführt. Die Umgebung wird mit micromamba erstellt. Dadurch entfällt die "
 "Notwendigkeit, Python und alle dazugehörigen Bibliothekspakete auf den "
@@ -83860,7 +83821,7 @@ msgid "Windows Services"
 msgstr "Windows Services"
 
 msgid "Windows Task Scheduler"
-msgstr "Windows Task Scheduler"
+msgstr "Windows Aufgabenplaner"
 
 msgid "Windows Tasks"
 msgstr "Windows Tasks"
@@ -83938,11 +83899,11 @@ msgid ""
 "the scheduling phase."
 msgstr ""
 "Mit Hilfe der Binärdatei <a href=\"https://github.com/robocorp/rcc\" "
-"target=\"_blank\">RCC</a> kann der Robotmk-Scheduler die Python-Umgebungen "
+"target=\"_blank\">RCC</a> kann der Robotmk-Planer die Python-Umgebungen "
 "erstellen, die für die Ausführung von Robot Framework Suiten erforderlich "
 "sind. Dadurch entfällt die Notwendigkeit, Python und alle dazugehörigen "
 "Bibliothekspakete auf den Ziel-Hosts zu installieren und zu konfigurieren. "
-"RCC-Umgebungen werden direkt nach dem Start des Schedulers durch den Checkmk-"
+"RCC-Umgebungen werden direkt nach dem Start des Planers durch den Checkmk-"
 "Agenten und vor Beginn der Planungsphase erstellt."
 
 msgid ""
@@ -90195,9 +90156,8 @@ msgstr ""
 msgid "show preview"
 msgstr "mehr anzeigen"
 
-#, fuzzy
 msgid "Preview of matches:"
-msgstr "Regel trifft zu"
+msgstr "Vorschau der Matches:"
 
 msgid "Auto"
 msgstr "Auto"
@@ -91080,6 +91040,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "Checkmk Ultimate with multi-tenancy kann nur mit anderen Instanzen "
+#~ "verbunden werden, die ebenfalls Checkmk Ultimate with multi-tenancy "
+#~ "verwenden."
+
+#, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "Der Host %s wird auf dieser Instanz nicht überwacht."
 
 #~ msgid "Update widget"
 #~ msgstr "Widget aktualisieren"

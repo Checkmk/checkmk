@@ -1044,6 +1044,10 @@ msgstr "(不明なルールセット)"
 msgid ", "
 msgstr ", "
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "...(%d more)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr "、ただし、以前のルールパックの一致によって無効にされます。"
 
@@ -1394,6 +1398,12 @@ msgstr ""
 "れます<br><br><b>明示的なサービス名を使用し、タグ全体を無視する：</b><br>この"
 "オプションを使用して指定します。これらのサービスでは、タグ全体が無視されま"
 "す。"
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 msgid ""
 "<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
@@ -62679,14 +62689,6 @@ msgstr ""
 "くのチェッカーを構成すると、コンテキストスイッチの数が増えるため、悪影響があ"
 "ります。"
 
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"Checkmk Managed Services Editionは、CMEを使用して他のサイトにのみ接続できま"
-"す。"
-
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
 "the command <tt>python3</tt>, and a Python 2 installation by looking for the "
@@ -64763,10 +64765,6 @@ msgstr ""
 "ホスト\"{host_name}\"には、一般的なプロパティやフォルダーの場所など、すべての"
 "設定が含まれています。ラベル、タグ、または同様のカスタマイズを変更するには、"
 "設定を調整してください。"
-
-#, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "ホスト%sはこのサイトでは監視されていません"
 
 #, python-format
 msgid "The host '%s' does not exist"
@@ -89116,6 +89114,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "Checkmk Managed Services Editionは、CMEを使用して他のサイトにのみ接続でき"
+#~ "ます。"
+
+#, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "ホスト%sはこのサイトでは監視されていません"
 
 #, fuzzy
 #~ msgid "Update widget"

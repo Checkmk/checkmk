@@ -1063,6 +1063,10 @@ msgstr "(Module zonder naam)"
 msgid ", "
 msgstr ""
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "... (%d more)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", maar wordt verworpen door een match in de voorgaande regels."
 
@@ -1434,6 +1438,12 @@ msgstr ""
 "worden voor deze diensten genegeerd.<br><br><b>Expliciete dienstnamen en "
 "algemene tags negeren:</b><br>Gebruik deze optie om expliciete namen op te "
 "geven. De algemene tags worden voor deze diensten genegeerd."
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -66806,14 +66816,6 @@ msgstr ""
 "krijgt. Het instellen van meer checkers dan het aantal beschikbare CPU's "
 "heeft een negatief effect, omdat het aantal context-switches dan toeneemt."
 
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"De Checkmk Managed Services Edition kan alleen met andere sites worden "
-"verbonden via de CME."
-
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
 "the command <tt>python3</tt>, and a Python 2 installation by looking for the "
@@ -68951,10 +68953,6 @@ msgid ""
 "and the folder location. Adjust to modify labels, tags or similar "
 "customization."
 msgstr ""
-
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "Inloggen is niet toegestaan op deze site."
 
 #, python-format
 msgid "The host '%s' does not exist"
@@ -94947,6 +94945,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "De Checkmk Managed Services Edition kan alleen met andere sites worden "
+#~ "verbonden via de CME."
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "Inloggen is niet toegestaan op deze site."
 
 #, fuzzy
 #~ msgid "Update widget"

@@ -1073,6 +1073,10 @@ msgstr "(Modul fără titlu)"
 msgid ", "
 msgstr ""
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "... (%d mai mult)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", dar este anulată de o potrivire dintr-un pachet de reguli anterior."
 
@@ -1444,6 +1448,12 @@ msgstr ""
 "aceste servicii.<br><br><b>Explicit service names and ignore overall tags:</"
 "b><br>Utilizați această opțiune pentru a specifica nume explicite. "
 "Etichetele globale vor fi ignorate pentru aceste servicii."
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -66998,14 +67008,6 @@ msgstr ""
 "verificatori decât numărul de unități centrale de procesare disponibile are "
 "un efect negativ, deoarece crește numărul de comutări de context."
 
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"Checkmk Managed Services Edition poate fi conectat numai cu alte site-uri "
-"care utilizează CME."
-
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
 "the command <tt>python3</tt>, and a Python 2 installation by looking for the "
@@ -69148,10 +69150,6 @@ msgid ""
 "and the folder location. Adjust to modify labels, tags or similar "
 "customization."
 msgstr ""
-
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "Autentificarea nu este permisă pe acest site."
 
 #, python-format
 msgid "The host '%s' does not exist"
@@ -95215,6 +95213,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "Checkmk Managed Services Edition poate fi conectat numai cu alte site-uri "
+#~ "care utilizează CME."
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "Autentificarea nu este permisă pe acest site."
 
 #, fuzzy
 #~ msgid "Update widget"

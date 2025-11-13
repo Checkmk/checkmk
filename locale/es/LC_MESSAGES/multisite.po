@@ -1062,6 +1062,10 @@ msgstr "(Módulo sin título)"
 msgid ", "
 msgstr ""
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "... (%d más)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
 ", pero es anulada por una coincidencia en un paquete de reglas anterior."
@@ -1425,6 +1429,12 @@ msgstr ""
 "explícitos e ignorar etiquetas globales:</b><br>Utilice esta opción para "
 "especificar nombres explícitos. Las etiquetas globales se ignorarán para "
 "estos servicios."
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -67379,14 +67389,6 @@ msgstr ""
 "número de CPUs disponibles tiene un efecto negativo, porque aumenta la "
 "cantidad de cambios de contexto."
 
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"La edición Checkmk Managed Services sólo puede conectarse con otros sitios "
-"mediante el CME."
-
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
 "the command <tt>python3</tt>, and a Python 2 installation by looking for the "
@@ -69528,10 +69530,6 @@ msgid ""
 "and the folder location. Adjust to modify labels, tags or similar "
 "customization."
 msgstr ""
-
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "No se permite el inicio de sesión en este sitio."
 
 #, python-format
 msgid "The host '%s' does not exist"
@@ -95689,6 +95687,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "La edición Checkmk Managed Services sólo puede conectarse con otros "
+#~ "sitios mediante el CME."
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "No se permite el inicio de sesión en este sitio."
 
 #, fuzzy
 #~ msgid "Update widget"

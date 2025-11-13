@@ -1059,6 +1059,10 @@ msgstr "(Module sans titre)"
 msgid ", "
 msgstr ""
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "... (%d plus)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
 "mais elle est annulée par une correspondance dans un paquet de règles "
@@ -1437,6 +1441,12 @@ msgstr ""
 "services.<br><br><b>Noms de services explicites et ignorer les balises "
 "globales:</b><br>Utilisez cette option pour spécifier des noms explicites. "
 "Les balises globales seront ignorées pour ces services."
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -67358,14 +67368,6 @@ msgstr ""
 "vérificateurs que le nombre de CPU disponibles a un effet négatif, car elle "
 "augmente le nombre de changements de contexte."
 
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"Checkmk Managed Services Edition ne peut être connecté à d'autres sites "
-"qu'en utilisant le CME."
-
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
 "the command <tt>python3</tt>, and a Python 2 installation by looking for the "
@@ -69521,10 +69523,6 @@ msgid ""
 "and the folder location. Adjust to modify labels, tags or similar "
 "customization."
 msgstr ""
-
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "La connexion n'est pas autorisée sur ce site."
 
 #, python-format
 msgid "The host '%s' does not exist"
@@ -95770,6 +95768,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "Checkmk Managed Services Edition ne peut être connecté à d'autres sites "
+#~ "qu'en utilisant le CME."
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "La connexion n'est pas autorisée sur ce site."
 
 #, fuzzy
 #~ msgid "Update widget"

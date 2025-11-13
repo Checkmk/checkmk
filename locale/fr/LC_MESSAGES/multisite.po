@@ -67144,10 +67144,6 @@ msgid ""
 "customization."
 msgstr ""
 
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "La connexion n'est pas autorisée sur ce site."
-
 #, python-format
 msgid "The host '%s' does not exist"
 msgstr "L'hôte '%s' n'existe pas"
@@ -90593,6 +90589,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "La connexion n'est pas autorisée sur ce site."
 
 #, fuzzy
 #~ msgid "Set host visibility for contact groups"

@@ -66691,10 +66691,6 @@ msgid ""
 "customization."
 msgstr ""
 
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "Autentificarea nu este permisă pe acest site."
-
 #, python-format
 msgid "The host '%s' does not exist"
 msgstr "Gazda \"%s\" nu există"
@@ -89918,6 +89914,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "Autentificarea nu este permisă pe acest site."
 
 #, fuzzy
 #~ msgid "Set host visibility for contact groups"

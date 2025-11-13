@@ -65992,10 +65992,6 @@ msgid ""
 "customization."
 msgstr ""
 
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "Il login non è consentito su questo sito."
-
 #, python-format
 msgid "The host '%s' does not exist"
 msgstr "L'host '%s' non esiste"
@@ -88963,6 +88959,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "Il login non è consentito su questo sito."
 
 #, fuzzy
 #~ msgid "Set host visibility for contact groups"

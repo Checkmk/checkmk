@@ -102,10 +102,16 @@ def _verify_directory_write_access(site_home: str) -> None:
         )
 
 
+def _restore_working_dir(site_home: Path) -> Path:
+    return site_home / ".restore_working_dir"
+
+
 def _remove_site_home(site_home: Path) -> None:
     with os.scandir(site_home) as scaniter:
         for entry in scaniter:
-            if entry.is_dir(follow_symlinks=False):
+            if entry.name == _restore_working_dir(site_home).name:
+                continue
+            elif entry.is_dir(follow_symlinks=False):
                 shutil.rmtree(entry.path)
             else:
                 os.unlink(entry.path)

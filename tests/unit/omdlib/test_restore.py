@@ -116,6 +116,7 @@ def _from_disk(path: Path) -> RootDir:
                     name="jaeger",
                     files=[File("test", content=b"abc")],
                 ),
+                Directory(name=".restore_working_dir"),
                 Directory(
                     name="var",
                     files=[File("rand.txt", content=b"abc")],
@@ -127,11 +128,11 @@ def _from_disk(path: Path) -> RootDir:
             (),
         ),
         (
-            (),
+            [Directory(name=".restore_working_dir")],
             [FIFO(name="a pipe")],
         ),
         (
-            (),
+            [Directory(name=".restore_working_dir")],
             [Symlink(name="a link", path=Path("../up"))],
         ),
     ],
@@ -141,4 +142,7 @@ def test_remove_site_home(
 ) -> None:
     _to_disk(RootDir(path=tmp_path, directories=directories, files=files))
     _remove_site_home(tmp_path)
-    assert _from_disk(tmp_path) == RootDir(path=tmp_path)
+    assert _from_disk(tmp_path) == RootDir(
+        path=tmp_path,
+        directories=[Directory(name=".restore_working_dir")],
+    )

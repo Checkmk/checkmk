@@ -3,21 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-
 import argparse
 import dataclasses
 import json
 import sys
 from collections.abc import Sequence
-from pathlib import Path
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.plugins.gerrit.lib import storage
+from cmk.plugins.gerrit.lib.cache import cache_ttl
 from cmk.plugins.gerrit.lib.collectors import Collector, GerritVersion
 from cmk.plugins.gerrit.lib.schema import VersionInfo
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
 
 __version__ = "2.5.0b1"
 
@@ -34,6 +30,7 @@ def main() -> int:
     auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
 
     ctx = GerritRunContext(
+        hostname=args.hostname,
         ttl=TTLCache(version=args.version_cache),
         collectors=Collectors(version=GerritVersion(api_url=api_url, auth=auth)),
     )
@@ -98,18 +95,16 @@ class Collectors:
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class GerritRunContext:
+    hostname: str
     ttl: TTLCache
     collectors: Collectors
-    cache_dir: Path | None = None
 
 
 def run(ctx: GerritRunContext) -> int:
-    version_cache = storage.VersionCache(
-        collector=ctx.collectors.version,
-        interval=ctx.ttl.version,
-        directory=ctx.cache_dir,
-    )
-    _write_section(version_cache.get_data(), name="gerrit_version")
+    version_storage = Storage(f"{AGENT}_version", ctx.hostname)
+    version_cache = cache_ttl(version_storage, ttl=ctx.ttl.version)
+    collect_version = version_cache(ctx.collectors.version.collect)
+    _write_section(collect_version(), name="gerrit_version")
 
     return 0
 

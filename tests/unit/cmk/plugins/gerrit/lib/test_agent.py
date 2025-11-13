@@ -12,11 +12,17 @@ from cmk.plugins.gerrit.lib import agent
 from cmk.plugins.gerrit.lib.schema import VersionInfo
 
 
+@pytest.fixture(autouse=True)
+def patch_storage_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+
+
+@pytest.mark.usefixtures("patch_storage_env")
 def test_run_agent(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
     ctx = agent.GerritRunContext(
+        hostname="heute",
         ttl=agent.TTLCache(version=60),
         collectors=agent.Collectors(version=_FakeVersionCollector()),
-        cache_dir=tmp_path,
     )
     agent.run(ctx)
     captured = capsys.readouterr()
@@ -28,7 +34,7 @@ def test_run_agent(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
     assert "<<<gerrit_version:sep(0)>>>" in captured.out
 
     # cache was succesfully written out.
-    assert (tmp_path / "gerrit_version.cache").exists()
+    assert any((tmp_path / "heute/gerrit_version").iterdir())
 
 
 def test_parse_arguments() -> None:

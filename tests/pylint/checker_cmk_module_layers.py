@@ -147,7 +147,7 @@ _CLEAN_PLUGIN_FAMILIES = {
     "elasticsearch",
     "fritzbox",
     # "gcp",  # : Edition
-    # "gerrit",  # :DataCache
+    "gerrit",
     "graylog",
     "hivemanager_ng",
     "hivemanager",

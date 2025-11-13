@@ -25,7 +25,6 @@ import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.translations import TranslationOptions
 from cmk.ccc.user import UserId
 from cmk.fields import String
 from cmk.gui.config import Config
@@ -46,6 +45,7 @@ from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
+from cmk.utils.translations import TranslationOptions
 
 _ContactgroupName = str
 

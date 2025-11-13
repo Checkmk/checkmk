@@ -50,10 +50,10 @@ from cmk.ccc.crash_reporting import CrashReportStore, make_crash_report_base_pat
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
-from cmk.ccc.translations import translate
 from cmk.ccc.version import get_general_version_infos
 from cmk.utils import log
 from cmk.utils.log import VERBOSE
+from cmk.utils.translations import translate
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import (

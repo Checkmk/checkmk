@@ -43,7 +43,6 @@ from typing import (
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
-import cmk.ccc.translations
 import cmk.ccc.version as cmk_version
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
@@ -51,6 +50,7 @@ import cmk.utils.check_utils
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.timeperiod
+import cmk.utils.translations
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.base import default_config

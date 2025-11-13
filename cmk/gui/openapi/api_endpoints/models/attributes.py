@@ -21,7 +21,6 @@ from pydantic import AfterValidator, model_validator, WithJsonSchema
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
-from cmk.ccc.translations import TranslationOptions
 from cmk.ccc.user import UserId
 from cmk.gui.fields.attributes import (
     AuthProtocolConverter,
@@ -48,6 +47,7 @@ from cmk.gui.watolib.host_attributes import (
     NetworkScanResult,
     NetworkScanSpec,
 )
+from cmk.utils.translations import TranslationOptions
 
 
 @api_model

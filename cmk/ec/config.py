@@ -8,7 +8,7 @@ from re import Pattern
 from typing import Any, Literal, NewType, TypeAlias, TypedDict
 
 from cmk.ccc.exceptions import MKException
-from cmk.ccc.translations import TranslationOptions
+from cmk.utils.translations import TranslationOptions
 
 TextPattern = str | Pattern[str]
 TextMatchResult = Literal[False] | Sequence[str]

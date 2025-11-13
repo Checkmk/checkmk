@@ -11,7 +11,6 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.translations import parse_translation_options, TranslationOptions
 from cmk.checkengine.parser import (
     AgentParser,
     AgentRawDataSectionElem,
@@ -21,6 +20,7 @@ from cmk.checkengine.parser import (
     SNMPParser,
 )
 from cmk.helper_interface import FetcherType
+from cmk.utils.translations import parse_translation_options, TranslationOptions
 
 __all__ = ["make_parser", "ParserConfig"]
 

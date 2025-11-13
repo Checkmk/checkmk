@@ -13,9 +13,9 @@ from typing import Final, final, NamedTuple
 
 import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.translations import TranslationOptions
 from cmk.checkengine.plugins import SectionName
 from cmk.helper_interface import AgentRawData
+from cmk.utils.translations import TranslationOptions
 
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import (

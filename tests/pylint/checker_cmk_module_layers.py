@@ -578,6 +578,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.rulesets",
         "cmk.utils.servicename",
         "cmk.utils.timeperiod",
+        "cmk.utils.translations",
     ),
     Component("cmk.fetcher_helper"): _allow(
         *PACKAGE_CCC,
@@ -718,6 +719,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.paths",
         "cmk.utils.render",
         "cmk.utils.rulesets",
+        "cmk.utils.translations",
         exclude=("cmk.gui.plugins", "cmk.gui.nonfree.pro.plugins"),
     ),
     Component("cmk.gui.nonfree.ultimatemt"): _allow(
@@ -830,6 +832,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.statename",
         "cmk.utils.tags",
         "cmk.utils.timeperiod",
+        "cmk.utils.translations",
         "cmk.utils.urls",
         "cmk.utils.http_proxy_config",
         "cmk.utils.visuals",

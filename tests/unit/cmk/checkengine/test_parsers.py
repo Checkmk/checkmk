@@ -19,7 +19,6 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.translations import TranslationOptions
 from cmk.checkengine.parser import (
     AgentParser,
     AgentRawDataSectionElem,
@@ -32,6 +31,7 @@ from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
 from cmk.checkengine.plugins import SectionName
 from cmk.helper_interface import AgentRawData
 from cmk.snmplib import SNMPRawData, SNMPSectionMarker
+from cmk.utils.translations import TranslationOptions
 
 StringTable = list[list[str]]
 

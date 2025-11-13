@@ -207,6 +207,17 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
         )
         assert is_allowed, f"Found unexpected global file: {path} in {package_path}"
 
+    disallowed_pattern = [
+        ".*/.f12$",
+        ".*/OWNERS$",
+        ".*/BUILD$",
+        r".*/BUILD\..*$",
+    ]
+    disallowed_paths = [
+        path for path in paths if any(re.match(p, path) for p in disallowed_pattern)
+    ]
+    assert not disallowed_paths, f"Found unwanted files in {package_path}: {disallowed_paths}"
+
 
 @cache
 def _get_paths_from_package(path_to_package: str) -> list[str]:
@@ -304,7 +315,7 @@ def test_src_does_not_contain_dev_files(
         ["tar", "tvf", package_path], encoding="utf-8"
     ).splitlines():
         path = Path(line.split()[5])
-        assert path.name != ".f12"
+        assert path.name not in {".f12", "BUILD", "OWNERS"}
 
 
 def test_src_not_contains_enterprise_sources(package_path: str) -> None:

@@ -26,6 +26,10 @@
   --default-help-icon-bg-color: rgb(6 103 193);
   --default-help-icon-bg-color-hover: rgb(56 133 205);
   --scrollbar-color: rgb(78 93 105);
+  --popup-dialog-success: var(--color-corporate-green-50);
+  --popup-dialog-warning: var(--color-yellow-50);
+  --popup-dialog-danger: var(--color-light-red-50);
+  --popup-dialog-info: var(--color-light-blue-50);
 
   /* Fonts */
   --font-size-xxlarge: 18px;
@@ -78,6 +82,9 @@
     --color-skeleton-shimmer-2: rgb(30 38 46 / 6%);
     --color-warning: rgb(255 208 0);
     --color-danger: rgb(229 63 63);
+    --popup-dialog-bg-color: var(--color-daylight-grey-10);
+    --popup-dialog-title-color: var(--color-conference-grey-100);
+    --popup-dialog-message-color: var(--color-mid-grey-100);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
@@ -143,6 +150,9 @@
     --color-warning: rgb(255 215 3);
     --color-danger: rgb(180 45 45);
     --ux-nav-bg-color: rgb(17 24 29);
+    --popup-dialog-bg-color: var(--color-midnight-grey-50);
+    --popup-dialog-title-color: var(--color-white-100);
+    --popup-dialog-message-color: var(--color-mid-grey-0);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 

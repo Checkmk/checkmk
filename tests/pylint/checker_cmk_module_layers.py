@@ -134,11 +134,11 @@ _CLEAN_PLUGIN_FAMILIES = {
     "alertmanager",
     "allnet_ip_sensoric",
     "appdynamics",
-    # "aws",  # :cmk.ccc.store
+    "aws",
     "azure_status",
     "azure",
-    # "azure_v2",  # :DataCache, Edition, HostAddress
-    # "bazel",  # :DataCache
+    # "azure_v2",  # :Edition, HostAddress
+    "bazel",
     "cisco_meraki",
     "cisco",
     "couchbase",
@@ -175,7 +175,7 @@ _CLEAN_PLUGIN_FAMILIES = {
     "ruckus_spot",
     "salesforce",
     "siemens_plc",
-    # "smb",  # :cmk.ccc.hostaddress.HostAddress
+    "smb",
     "splunk",
     "storeonce4x",
     "storeonce",
@@ -188,18 +188,10 @@ _CLEAN_PLUGIN_FAMILIES = {
 
 
 _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
-    "aws": (
-        "cmk.agent_based.v1",  # FIXME
-        "cmk.ccc.version",  # edition detection
-        "cmk.ccc.store",
-        "cmk.plugins.lib",  # ?
-        "cmk.utils.paths",  # edition detection
-    ),
     "azure_deprecated": (
         "cmk.agent_based.v1",  # FIXME
         "cmk.ccc.version",  # edition detection
         "cmk.ccc.hostaddress",  # FormSpec validation
-        "cmk.plugins.lib",  # ?
         "cmk.plugins.azure.lib",  # FIXME
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
@@ -212,7 +204,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
-    "bazel": ("cmk.utils.paths",),
     "checkmk": (
         "cmk.agent_based.v1",  # FIXME
         # These plugins are tightly coupled to Checkmk.
@@ -226,18 +217,10 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils",
         "cmk.ccc",
     ),
-    "cisco_meraki": (
-        "cmk.agent_based.v1",  # FIXME
-        "cmk.utils.paths",
-        "cmk.plugins.cisco.lib_meraki",  # FIXME
-        "cmk.plugins.lib.humidity",
-        "cmk.plugins.lib.temperature",
-    ),
     "datadog": (
         "cmk.ccc.store",
         "cmk.ccc.version",  # edition detection
         "cmk.ec.export",
-        "cmk.gui.form_specs.unstable",
         "cmk.gui.mkeventd",
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
@@ -252,20 +235,8 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.agent_based.v1",  # FIXME
         "cmk.ccc.version",  # edition detection
         "cmk.utils.paths",  # edition detection
-        "cmk.plugins.lib",  # diskstat + X
     ),
-    "gerrit": ("cmk.utils.paths",),
     "jolokia": ("cmk.utils.paths",),
-    "kube": (
-        "cmk.ccc.hostaddress",
-        "cmk.ccc.profile",
-        "cmk.ccc.version",  # edition detection
-        "cmk.gui.form_specs.unstable",
-        "cmk.plugins.lib",
-        "cmk.plugins.lib.node_exporter",
-        "cmk.utils.http_proxy_config",
-        "cmk.utils.paths",  # persisting stuff
-    ),
     "logwatch": (
         "cmk.base.config",
         "cmk.base.configlib.servicename",
@@ -275,30 +246,10 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ec.event",
         "cmk.ec.export",
         "cmk.gui.mkeventd",
-        "cmk.plugins.lib",
         "cmk.utils.paths",
     ),
     "metric_backend": (
         "cmk.metric_backend",
-        "cmk.utils.paths",
-    ),
-    "mobileiron": (
-        "cmk.ccc.regex",
-        "cmk.utils.http_proxy_config",
-    ),
-    "mqtt": ("cmk.ccc.hostaddress",),
-    "prometheus": (
-        "cmk.ccc.hostaddress",
-        "cmk.plugins.prometheus.lib_form_elements",  # FIXME
-        "cmk.plugins.prometheus.lib",  # FIXME
-        "cmk.plugins.lib.node_exporter",
-    ),
-    "proxmox_ve": (
-        "cmk.agent_based.v1",  # FIXME
-        "cmk.plugins.lib.memory",
-        "cmk.plugins.lib.cpu_util",
-        "cmk.plugins.lib.uptime",
-        "cmk.plugins.lib.df",
         "cmk.utils.paths",
     ),
     "otel": (
@@ -310,14 +261,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     ),
     "robotmk": ("cmk.nonfree.pro.robotmk",),
     "sftp": ("cmk.utils.paths",),
-    "smb": ("cmk.ccc.hostaddress",),
-    "storeonce4x": ("cmk.utils.paths",),
     "vnx_quotas": ("cmk.utils.paths",),
-    "vsphere": (
-        "cmk.agent_based.v1",  # FIXME
-        "cmk.utils.paths",
-        "cmk.plugins.lib",
-    ),
 }
 
 PACKAGE_PLUGIN_APIS = (
@@ -869,8 +813,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     **{  # some plugin families that refuse to play by the rules:
         Component(f"cmk.plugins.{family}"): _allow(
             *PACKAGE_PLUGIN_APIS,
-            "cmk.special_agents.v0_unstable",
-            "cmk.utils.password_store",
+            "cmk.plugins.lib",
             *violations,
         )
         for family, violations in _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS.items()
@@ -886,9 +829,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     },
     Component("cmk.plugins"): _allow(
         *PACKAGE_PLUGIN_APIS,
-        "cmk.bakery.v2_unstable",
-        "cmk.special_agents.v0_unstable",
-        "cmk.utils.password_store",
     ),
     Component("cmk.server_side_calls_backend"): _allow(
         *PACKAGE_PLUGIN_APIS,

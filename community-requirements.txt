@@ -396,29 +396,29 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.40.71 \
-    --hash=sha256:4ac9ee8d1629e45d6b6adc727795d1fc9852e998cd1a73e4eda50f6120677bab \
-    --hash=sha256:6d38e0250154552658be92a62cd48adf8ca8fd4abc181fb52d13371b53179503
+boto3==1.40.72 \
+    --hash=sha256:1063a295712f2605d3e463e4dc1fe32fce17cf77a0f4d3bb14249d68533ee856 \
+    --hash=sha256:58d30dd5e046789a760db7a49f817650b8ff08d8d169e127976a61f44b7c59ad
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.40.71 \
-    --hash=sha256:0bdd1033b789bc0a145101f4e27f1770d3a65d5f6841db63f774fceef23e48c5 \
-    --hash=sha256:4f9ccbfc51eada139803fadd7b247a806bdb2ae9b26260b8750aa9a776c7b1ac
+boto3-stubs[logs]==1.40.72 \
+    --hash=sha256:4807f334b87914f75db3c6cd85f7eb706b5777e6ddaf117f8d63219cc01fb4b2 \
+    --hash=sha256:cbcf7b6e8a7f54e77fcb2b8d00041993fe4f76554c716b1d290e48650d569cd0
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.40.71 \
-    --hash=sha256:4c05907b2a56b1f6fd70403fbae0f09a4758b95758192db5ff93c0e9940a11bb \
-    --hash=sha256:7ed28c2e092fc0d67fbfba818fbdccc92426b452cc936bf034db6de717e0d068
+botocore==1.40.72 \
+    --hash=sha256:4f859e5aaf871fe59aac431d6bba59cc0c8ed8a38da2a6a5345700bdc5c74b32 \
+    --hash=sha256:f69199ff6570695556e733fa052f2739e01e0c592c9b60f843f84c77ba3bcdf3
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.40.71 \
-    --hash=sha256:0d97505567bd1b427a222fbecc78aedbc0a95872cf11592de8caf86e4d4c7c30 \
-    --hash=sha256:6524ccba435229edd46a463bbd3ea7c795b572444695318395337ada2d405b07
+botocore-stubs==1.40.72 \
+    --hash=sha256:1166a81074714312d3843be3f879d16966cbffdc440ab61ad6f0cd8922fde679 \
+    --hash=sha256:6d268d0dd9366dc15e7af52cbd0d3a3f3cd14e2191de0e280badc69f8d34708c
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -1158,9 +1158,9 @@ exchangelib==5.6.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-execnet==2.1.1 \
-    --hash=sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc \
-    --hash=sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3
+execnet==2.1.2 \
+    --hash=sha256:63d83bfdd9a23e35b9c6a3261412324f964c2ec8dcd8d3c6916ee9373e0befcd \
+    --hash=sha256:67fba928dd5a544b783f6056f449e5e3931a5c378b128bc18501f7ea79e296ec
     # via
     #   -c requirements.txt
     #   pytest-xdist

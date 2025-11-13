@@ -110,7 +110,7 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
 const resourceAttributesAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
-    ident: 'monitored_resource_attributes_backend',
+    ident: 'monitored_resource_attributes_keys_backend',
     params: {
       strict: true,
       context: getAutoCompleterContext()
@@ -121,7 +121,7 @@ const resourceAttributesAutocompleter = computed<Autocompleter>(() => ({
 const scopeAttributesAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
-    ident: 'monitored_scope_attributes_backend',
+    ident: 'monitored_scope_attributes_keys_backend',
     params: {
       strict: true,
       context: getAutoCompleterContext()
@@ -132,7 +132,7 @@ const scopeAttributesAutocompleter = computed<Autocompleter>(() => ({
 const dataPointAttributesAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
-    ident: 'monitored_data_point_attributes_backend',
+    ident: 'monitored_data_point_attributes_keys_backend',
     params: {
       strict: true,
       context: getAutoCompleterContext()

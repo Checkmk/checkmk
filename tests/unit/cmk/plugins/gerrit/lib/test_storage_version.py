@@ -6,7 +6,7 @@
 import dataclasses
 from pathlib import Path
 
-from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
+from cmk.plugins.gerrit.lib.shared_typing import Sections
 from cmk.plugins.gerrit.lib.storage import VersionCache
 
 
@@ -40,4 +40,4 @@ class _VersionCollectorSpy:
 
     def collect(self) -> Sections:
         self.number_of_times_data_was_fetched += 1
-        return {SectionName("version"): {"times": self.number_of_times_data_was_fetched}}
+        return {"version": {"times": self.number_of_times_data_was_fetched}}

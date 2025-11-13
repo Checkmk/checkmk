@@ -11,7 +11,7 @@ from typing import Self
 import requests
 
 from cmk.plugins.gerrit.lib.semantic_version import SemanticVersion
-from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
+from cmk.plugins.gerrit.lib.shared_typing import Sections
 
 
 @dataclasses.dataclass
@@ -45,7 +45,7 @@ class GerritVersion:
         latest_versions = self._get_latest_versions(current_version)
 
         return {
-            SectionName("version"): {
+            "version": {
                 "current": str(current_version),
                 "latest": dataclasses.asdict(latest_versions),
             },

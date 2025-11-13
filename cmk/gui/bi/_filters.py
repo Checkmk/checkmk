@@ -9,7 +9,6 @@ import re
 import warnings
 from collections.abc import Iterable
 
-from cmk.ccc.regex import RegexFutureWarning
 from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
@@ -25,6 +24,7 @@ from cmk.gui.visuals.filter.components import (
     HorizontalGroup,
     TextInput,
 )
+from cmk.utils.regex import RegexFutureWarning
 
 from ._compiler import is_part_of_aggregation
 from ._packs import aggregation_group_choices, get_aggregation_group_trees

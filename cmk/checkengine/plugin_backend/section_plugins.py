@@ -26,7 +26,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.regex import regex
 from cmk.checkengine.plugins import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -40,6 +39,7 @@ from cmk.checkengine.plugins import (
 )
 from cmk.discover_plugins import PluginLocation
 from cmk.snmplib import SNMPDetectBaseType
+from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
 
 from .utils import (

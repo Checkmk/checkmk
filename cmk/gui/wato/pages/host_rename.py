@@ -20,7 +20,6 @@ from livestatus import SiteConfiguration
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.regex import regex
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.gui import forms
@@ -82,6 +81,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.utils import paths
+from cmk.utils.regex import regex
 
 
 def register(mode_registry: ModeRegistry) -> None:

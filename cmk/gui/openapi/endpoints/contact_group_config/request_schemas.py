@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk import fields
-from cmk.ccc.regex import GROUP_NAME_PATTERN
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.contact_group_config.common import InventoryPaths
+from cmk.utils.regex import GROUP_NAME_PATTERN
 
 
 class UpdateContactGroupAttributes(BaseSchema):

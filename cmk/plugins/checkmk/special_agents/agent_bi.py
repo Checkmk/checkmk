@@ -23,12 +23,12 @@ import urllib3
 from pydantic import BaseModel, Field
 
 import cmk.ccc.site
-from cmk.ccc.regex import regex
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.utils.local_secrets import AutomationUserSecret, SiteInternalSecret
 from cmk.utils.password_store import lookup
 from cmk.utils.paths import omd_root
+from cmk.utils.regex import regex
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

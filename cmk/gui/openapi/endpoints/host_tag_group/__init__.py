@@ -19,7 +19,6 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk import fields
-from cmk.ccc.regex import REGEX_ID
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -50,6 +49,7 @@ from cmk.gui.watolib.tags import (
     TagCleanupMode,
     update_tag_config,
 )
+from cmk.utils.regex import REGEX_ID
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
 
 PERMISSIONS = permissions.AllPerm(

@@ -39,7 +39,6 @@ import cmk.utils.translations
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.regex import RegexFutureWarning
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
 from cmk.gui import forms, hooks, log, sites, watolib
@@ -194,6 +193,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     String,
 )
+from cmk.utils.regex import RegexFutureWarning
 from cmk.utils.rulesets.definition import RuleGroup
 
 from ._rulespecs import RulespecLogwatchEC

@@ -28,12 +28,12 @@ import livestatus
 import cmk.ccc.daemon
 import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.regex import regex
 from cmk.ccc.site import omd_site
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
 from cmk.utils.notify_types import EventRule
+from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName

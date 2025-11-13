@@ -7,7 +7,7 @@
 
 import re
 
-import cmk.ccc.regex
+import cmk.utils.regex
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.generators.folder import create_full_path_folder_choice
@@ -36,7 +36,7 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 
-ID_VALIDATION_REGEX = cmk.ccc.regex.regex(cmk.ccc.regex.REGEX_ID, re.ASCII)
+ID_VALIDATION_REGEX = cmk.utils.regex.regex(cmk.utils.regex.REGEX_ID, re.ASCII)
 
 
 def unique_id_formspec_wrapper(

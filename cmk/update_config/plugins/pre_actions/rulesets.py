@@ -14,7 +14,6 @@ from typing import override
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
-from cmk.ccc.regex import regex, RegexFutureWarning
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.groups import GroupSpec
@@ -35,6 +34,7 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
+from cmk.utils.regex import regex, RegexFutureWarning
 
 
 class PreUpdateRulesets(PreUpdateAction):

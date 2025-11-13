@@ -6,7 +6,7 @@
 import urllib.parse
 from collections.abc import Collection
 
-import cmk.ccc.regex
+import cmk.utils.regex
 
 
 def is_allowed_url(
@@ -47,7 +47,7 @@ def is_allowed_url(
     if schemes is not None and parsed.scheme and parsed.scheme not in schemes:
         return False
 
-    urlchar_regex = cmk.ccc.regex.regex(cmk.ccc.regex.URL_CHAR_REGEX)
+    urlchar_regex = cmk.utils.regex.regex(cmk.utils.regex.URL_CHAR_REGEX)
     for part in parsed:
         if not part:
             continue

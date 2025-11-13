@@ -11,7 +11,6 @@ from typing import NamedTuple
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.regex import regex
 from cmk.ccc.resulttype import Result
 from cmk.checkengine.checkerplugin import AggregatedResult, CheckerPlugin, ConfiguredService
 from cmk.checkengine.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
@@ -44,6 +43,7 @@ from cmk.inventory.structured_data import (
 from cmk.snmplib import SNMPRawData
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console
+from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import TimeperiodName
 

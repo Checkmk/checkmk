@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from cmk.ccc.regex import combine_patterns
+from cmk.utils.regex import combine_patterns
 
 
 @pytest.mark.parametrize(

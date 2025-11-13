@@ -12,7 +12,7 @@ from re import Pattern
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.regex import combine_patterns, regex
+from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.tags import TagID
 
 # Conveniance macros for legacy tuple based host and service rules

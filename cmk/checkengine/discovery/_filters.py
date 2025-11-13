@@ -6,7 +6,7 @@
 from collections.abc import Callable, Sequence
 from typing import Literal, NamedTuple, TypedDict
 
-from cmk.ccc.regex import regex
+from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName
 
 from ._utils import DiscoveryValueSpecModel

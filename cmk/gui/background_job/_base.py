@@ -12,7 +12,6 @@ import time
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.regex import regex, REGEX_GENERIC_IDENTIFIER
 from cmk.ccc.user import UserId
 from cmk.gui import log
 from cmk.gui.http import request
@@ -21,6 +20,7 @@ from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.trace import get_tracer, SpanContext, Status, StatusCode
+from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 
 from ._defines import BackgroundJobDefines
 from ._executor import AlreadyRunningError, JobExecutor, ThreadedJobExecutor

@@ -282,8 +282,8 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.paths",
     ),
     "mobileiron": (
-        "cmk.ccc.regex",
         "cmk.utils.http_proxy_config",
+        "cmk.utils.regex",
     ),
     "mqtt": ("cmk.ccc.hostaddress",),
     "prometheus": (
@@ -575,6 +575,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.metrics",
         "cmk.utils.parameters",
         "cmk.utils.paths",
+        "cmk.utils.regex",
         "cmk.utils.rulesets",
         "cmk.utils.servicename",
         "cmk.utils.timeperiod",
@@ -717,6 +718,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.macros",
         "cmk.utils.password_store",
         "cmk.utils.paths",
+        "cmk.utils.regex",
         "cmk.utils.render",
         "cmk.utils.rulesets",
         "cmk.utils.translations",
@@ -824,6 +826,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.plugin_loader",
         "cmk.utils.prediction",
         "cmk.utils.redis",
+        "cmk.utils.regex",
         "cmk.utils.render",
         "cmk.utils.rulesets",
         "cmk.utils.schedule",
@@ -848,6 +851,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),  # should become a package
     Component("cmk.inventory"): _allow(
         *PACKAGE_CCC,
+        "cmk.utils.regex",
     ),
     Component("cmk.notification_plugins"): _allow(
         *PACKAGE_CCC,
@@ -1003,6 +1007,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.labels",
         "cmk.utils.parameters",
         "cmk.utils.paths",
+        "cmk.utils.regex",
         "cmk.utils.servicename",
         "cmk.utils.tags",
     ),

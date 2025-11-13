@@ -37,7 +37,6 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import ProblemException, serve_json
-from cmk.gui.site_config import enabled_sites
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import (
@@ -132,7 +131,6 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     ):
         activation_response = activate_changes_start(
             sites=sites,
-            enabled_sites=list(enabled_sites(active_config.sites).keys()),
             all_site_configs=active_config.sites,
             user_permission_config=UserPermissionSerializableConfig.from_global_config(
                 active_config

@@ -3721,7 +3721,6 @@ def _raise_for_license_block() -> None:
 def activate_changes_start(
     *,
     sites: Sequence[SiteId],
-    enabled_sites: Sequence[SiteId],
     all_site_configs: SiteConfigurations,
     user_permission_config: UserPermissionSerializableConfig,
     source: ActivationSource,
@@ -3768,7 +3767,7 @@ def activate_changes_start(
             )
 
     for site in sites:
-        if site not in enabled_sites:
+        if site not in all_site_configs:
             raise MKUserError(
                 None, _("Unknown site %s") % escaping.escape_attribute(site), status=400
             )

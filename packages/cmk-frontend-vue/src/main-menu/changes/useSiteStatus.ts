@@ -16,7 +16,7 @@ export function useSiteStatus(sites: Ref<Site[]>) {
     return (
       (site.lastActivationStatus &&
         ['error', 'warning'].includes(site.lastActivationStatus.state)) ||
-      site.onlineStatus !== 'online'
+      (site.onlineStatus !== 'online' && site.onlineStatus !== 'disabled')
     )
   }
 

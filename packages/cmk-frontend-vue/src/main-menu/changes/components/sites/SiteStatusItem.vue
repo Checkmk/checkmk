@@ -52,7 +52,7 @@ const emit = defineEmits<{
         <CmkCheckbox
           v-if="!hideCheckbox"
           :model-value="checked"
-          :disabled="site.onlineStatus !== 'online'"
+          :disabled="!['online', 'disabled'].includes(site.onlineStatus)"
           @update:model-value="
             (val) => {
               emit('updateChecked', site.siteId, val)

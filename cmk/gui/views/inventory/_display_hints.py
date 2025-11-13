@@ -817,7 +817,7 @@ class ColumnDisplayHint:
         return _("Inventory column: %s") % self.long_title
 
 
-def _parse_column_hint(
+def _parse_col_field_from_legacy(
     *, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> ColumnDisplayHint:
     _data_type, paint_function = _get_paint_function(legacy_hint)
@@ -947,7 +947,7 @@ class ColumnDisplayHintOfView:
         return _("Inventory column: %s") % self.long_title
 
 
-def _parse_column_hint_of_view(
+def _parse_col_field_from_legacy_of_view(
     *, table_view_name: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> ColumnDisplayHintOfView:
     _data_type, paint_function = _get_paint_function(legacy_hint)
@@ -1127,7 +1127,7 @@ def _parse_legacy_display_hints(
         ):
             table = TableWithView(
                 columns={
-                    SDKey(key): _parse_column_hint_of_view(
+                    SDKey(key): _parse_col_field_from_legacy_of_view(
                         table_view_name=table_view_name,
                         node_title=title,
                         key=key,
@@ -1147,7 +1147,7 @@ def _parse_legacy_display_hints(
         else:
             table = Table(
                 columns={
-                    SDKey(key): _parse_column_hint(
+                    SDKey(key): _parse_col_field_from_legacy(
                         node_title=title,
                         key=key,
                         legacy_hint=related_legacy_hints.by_column.get(key, {}),

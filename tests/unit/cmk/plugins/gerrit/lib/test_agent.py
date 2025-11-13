@@ -3,13 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 import argparse
+from pathlib import Path
 
 import pytest
 
 from cmk.plugins.gerrit.lib import agent
+from cmk.plugins.gerrit.lib.schema import VersionInfo
+
+
+def test_run_agent(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    ctx = agent.GerritRunContext(
+        ttl=agent.TTLCache(version=60),
+        collectors=agent.Collectors(version=_FakeVersionCollector()),
+        cache_dir=tmp_path,
+    )
+    agent.run_agent(ctx)
+    captured = capsys.readouterr()
+
+    # agent ran without error
+    assert captured.err == ""
+
+    # sections headings were successfully written out.
+    assert "<<<gerrit_version:sep(0)>>>" in captured.out
+
+    # cache was succesfully written out.
+    assert (tmp_path / "gerrit_version.cache").exists()
 
 
 def test_parse_arguments() -> None:
@@ -32,17 +51,9 @@ def test_parse_arguments() -> None:
     assert value == expected
 
 
-def test_write_version_section(capsys: pytest.CaptureFixture) -> None:
-    section = {
-        "current": "1.2.3",
-        "latest": {"major": None, "minor": "1.3.4", "patch": "1.2.5"},
-    }
-    agent._write_section(section, name="gerrit_version")
-
-    value = capsys.readouterr().out
-    expected = """\
-<<<gerrit_version:sep(0)>>>
-{"current": "1.2.3", "latest": {"major": null, "minor": "1.3.4", "patch": "1.2.5"}}
-"""
-
-    assert value == expected
+class _FakeVersionCollector:
+    def collect(self) -> VersionInfo:
+        return {
+            "current": "1.2.3",
+            "latest": {"major": "2.0.0", "minor": "1.3.0", "patch": "1.2.4"},
+        }

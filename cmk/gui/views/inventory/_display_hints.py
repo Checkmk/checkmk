@@ -832,7 +832,7 @@ def _parse_col_field_from_legacy(
     )
 
 
-def _parse_column_display_hint_filter_class(
+def _parse_col_filter_from_legacy(
     table_view_name: str,
     name: str,
     long_title: str,
@@ -963,7 +963,7 @@ def _parse_col_field_from_legacy_of_view(
         long_title=long_title,
         paint_function=_wrap_paint_function(paint_function),
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
-        filter=_parse_column_display_hint_filter_class(
+        filter=_parse_col_filter_from_legacy(
             table_view_name, name, long_title, legacy_hint.get("filter")
         ),
     )

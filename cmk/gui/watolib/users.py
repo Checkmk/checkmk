@@ -498,13 +498,11 @@ class UserFeaturesRegistry(Registry[UserFeatures]):
 user_features_registry = UserFeaturesRegistry()
 
 
-def get_enabled_remote_sites_for_logged_in_user(
-    logged_in_user: LoggedInUser, site_configs: SiteConfigurations
+def get_enabled_remote_sites_for_user(
+    user_spec: UserSpec, site_configs: SiteConfigurations
 ) -> SiteConfigurations:
     all_enabled_slave_sites = site_config.distributed_setup_remote_sites(site_configs)
-    if (
-        site_ids_for_user := user_features_registry.features().sites(logged_in_user.attributes)
-    ) is None:
+    if (site_ids_for_user := user_features_registry.features().sites(user_spec)) is None:
         return all_enabled_slave_sites
 
     return SiteConfigurations(
@@ -514,6 +512,12 @@ def get_enabled_remote_sites_for_logged_in_user(
             if site_id in site_ids_for_user
         }
     )
+
+
+def get_enabled_remote_sites_for_logged_in_user(
+    logged_in_user: LoggedInUser, site_configs: SiteConfigurations
+) -> SiteConfigurations:
+    return get_enabled_remote_sites_for_user(logged_in_user.attributes, site_configs)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

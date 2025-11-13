@@ -18,10 +18,11 @@ from cmk.gui.openapi.framework.utils import dump_dict_without_omitted
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.user_async_replication import add_profile_replication_change
+from cmk.gui.userdb import load_user
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
 from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
-from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
+from cmk.gui.watolib.users import get_enabled_remote_sites_for_user
 
 from .. import DashboardConfig
 from ..store import DashboardStore, save_all_dashboards
@@ -148,15 +149,16 @@ def save_dashboard_to_file(
     sync_user_to_remotes(sites, user_id)
 
 
-def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId | None) -> None:
-    """Synchronize the logged-in user profile and their dashboards to all enabled remote sites.
+def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId) -> None:
+    """Synchronize the user profile and their dashboards to all enabled remote sites.
 
-    This does not handle other users or visuals."""
-    user_id = user_id or user.id  # default to the logged-in user
-    if user_id is None:
-        return
+    This does not sync other visuals."""
+    if user_id == user.id:
+        user_spec = user.attributes
+    else:
+        user_spec = load_user(user_id)
 
-    user_remote_sites = get_enabled_remote_sites_for_logged_in_user(user, sites)
+    user_remote_sites = get_enabled_remote_sites_for_user(user_spec, sites)
     if not user_remote_sites:
         return
 
@@ -179,7 +181,7 @@ def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId | None) -> N
     def push(automation_config: RemoteAutomationConfig) -> None:
         push_user_profiles_to_site_transitional_wrapper(
             automation_config=automation_config,
-            user_profiles={user_id: user.attributes},
+            user_profiles={user_id: user_spec},
             visuals=visuals,
             debug=False,
         )

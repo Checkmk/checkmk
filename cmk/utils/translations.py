@@ -7,7 +7,9 @@ import ipaddress
 from collections.abc import Iterable, Mapping
 from typing import cast, Literal, NotRequired, TypedDict
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
+from cmk.utils.servicename import ServiceName
 
 
 # This can probably improved further by making it total and removing the None,
@@ -53,7 +55,29 @@ class TranslationOptionsSpec(TypedDict):
     regex: NotRequired[list[tuple[str, str]]]
 
 
-def translate(translation: TranslationOptions, name: str) -> str:
+def translate_hostname(translation: TranslationOptions, hostname: str) -> HostName:
+    return HostName(_translate(translation, hostname))
+
+
+def translate_raw_host_name(translation: TranslationOptions, host_name: str) -> str:
+    return _translate(translation, host_name)
+
+
+def translate_service_description(
+    translation: TranslationOptions, service_description: str
+) -> ServiceName:
+    if service_description.strip() in {
+        "Check_MK",
+        "Check_MK Agent",
+        "Check_MK Discovery",
+        "Check_MK inventory",
+        "Check_MK HW/SW Inventory",
+    }:
+        return service_description.strip()
+    return ServiceName(_translate(translation, service_description))
+
+
+def _translate(translation: TranslationOptions, name: str) -> str:
     # 1. Case conversion
     caseconf = translation.get("case")
     if caseconf == "upper":

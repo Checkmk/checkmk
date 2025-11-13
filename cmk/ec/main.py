@@ -53,7 +53,7 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.version import get_general_version_infos
 from cmk.utils import log
 from cmk.utils.log import VERBOSE
-from cmk.utils.translations import translate
+from cmk.utils.translations import translate_hostname
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import (
@@ -1517,7 +1517,7 @@ class EventServer(ECServerThread):
 
     def do_translate_hostname(self, event: Event) -> None:
         try:
-            event["host"] = HostName(translate(self._config["hostname_translation"], event["host"]))
+            event["host"] = translate_hostname(self._config["hostname_translation"], event["host"])
         except Exception:
             if self._config["debug_rules"]:
                 self._logger.exception('Unable to parse host "%s"', event.get("host"))

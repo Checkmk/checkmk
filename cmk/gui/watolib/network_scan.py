@@ -29,7 +29,7 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.translations import translate, TranslationOptions
+from cmk.utils.translations import translate_hostname, TranslationOptions
 
 from . import bakery, builtin_attributes
 from .automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -167,7 +167,7 @@ def _add_scanned_hosts_to_folder(
 
     entries = []
     for host_name, ipaddr in found:
-        host_name = HostName(translate(translation, host_name))
+        host_name = translate_hostname(translation, host_name)
 
         attrs = update_metadata(HostAttributes(), created_by=username)
 

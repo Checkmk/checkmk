@@ -18,7 +18,7 @@ def test_run_agent(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
         collectors=agent.Collectors(version=_FakeVersionCollector()),
         cache_dir=tmp_path,
     )
-    agent.run_agent(ctx)
+    agent.run(ctx)
     captured = capsys.readouterr()
 
     # agent ran without error

@@ -38,7 +38,7 @@ def main() -> int:
         collectors=Collectors(version=GerritVersion(api_url=api_url, auth=auth)),
     )
 
-    return run_agent(ctx)
+    return run(ctx)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -103,7 +103,7 @@ class GerritRunContext:
     cache_dir: Path | None = None
 
 
-def run_agent(ctx: GerritRunContext) -> int:
+def run(ctx: GerritRunContext) -> int:
     version_cache = storage.VersionCache(
         collector=ctx.collectors.version,
         interval=ctx.ttl.version,

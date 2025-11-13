@@ -184,6 +184,13 @@ def main() {
                 ) {
                     versioning.print_image_tag();
 
+                    // some distros are not able to do this automatically
+                    // debian-10, ubuntu-20.04, ubuntu-22.04
+                    // but cma-3, cma-4 and ubuntu-24.04 are
+                    sh("""
+                        make .venv
+                    """);
+
                     withCredentials([
                         usernamePassword(
                             credentialsId: 'nexus',

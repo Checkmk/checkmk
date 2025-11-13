@@ -370,6 +370,17 @@ class Certificate:
             critical=False,
         )
 
+        # RFC 5280 4.2.1.1.  Authority Key Identifier
+        #     this extension MUST appear in all conforming CA certificates
+        #     ...
+        #     this extension SHOULD be included in all certificates
+        builder = builder.add_extension(
+            pyca_x509.AuthorityKeyIdentifier.from_issuer_public_key(
+                issuer_signing_key.public_key.key
+            ),
+            critical=False,
+        )
+
         # RFC 5280 4.2.1.9.  Key Usage
         #
         # Note that some combinations of usage bits may have security implications. See

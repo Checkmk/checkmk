@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from cmk.ccc import store
+from cmk.utils.log import VERBOSE
 
 from .config import (
     ConfigFromWATO,
@@ -33,7 +34,6 @@ from .config import (
     ServiceLevel,
 )
 from .defaults import default_config, default_rule_pack
-from .log_level import VERBOSE
 from .settings import create_paths, Paths, Settings
 
 

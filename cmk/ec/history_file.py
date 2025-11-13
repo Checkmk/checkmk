@@ -12,10 +12,11 @@ from logging import Logger
 from pathlib import Path
 from typing import Any
 
+from cmk.utils.log import VERBOSE
+
 from .config import Config
 from .event import Event, scrub_string
 from .history import _log_event, ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
-from .log_level import VERBOSE
 from .query import Columns, OperatorName, QueryFilter, QueryGET
 from .settings import Settings
 

@@ -26,7 +26,6 @@ import errno
 import ipaddress
 import itertools
 import json
-import logging
 import os
 import pprint
 import select
@@ -53,6 +52,8 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
 from cmk.ccc.translations import translate
 from cmk.ccc.version import get_general_version_infos
+from cmk.utils import log
+from cmk.utils.log import VERBOSE
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import (
@@ -74,7 +75,6 @@ from .history_file import FileHistory
 from .history_mongo import MongoDBHistory
 from .history_sqlite import SQLiteHistory, SQLiteSettings
 from .host_config import HostConfig
-from .log_level import VERBOSE, verbosity_to_log_level
 from .perfcounters import Perfcounters
 from .query import (
     Columns,
@@ -100,19 +100,7 @@ def open_log(log_file_path: Path) -> None:
     except Exception as e:
         getLogger("cmk.mkeventd").exception("Cannot open log file '%s': %s", log_file_path, e)
         logfile = sys.stderr
-    setup_logging_handler(logfile)
-
-
-def setup_logging_handler(stream: IO[str]) -> None:
-    """This method enables all log messages to be written to the given
-    stream file object. The messages are formatted in Check_MK standard
-    logging format.
-    """
-    handler = logging.StreamHandler(stream=stream)
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
-    logger = logging.getLogger("cmk")
-    del logger.handlers[:]  # Remove all previously existing handlers
-    logger.addHandler(handler)
+    log.setup_logging_handler(logfile)
 
 
 class PackedEventStatus(TypedDict):
@@ -3461,8 +3449,8 @@ def main(omd_root: Path, argv: Sequence[str]) -> None:
 
     pid_path = None
     try:
-        setup_logging_handler(sys.stderr)
-        logging.getLogger("cmk").setLevel(verbosity_to_log_level(settings.options.verbosity))
+        log.setup_logging_handler(sys.stderr)
+        log.logger.setLevel(log.verbosity_to_log_level(settings.options.verbosity))
 
         settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
         if not settings.options.foreground:

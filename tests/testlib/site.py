@@ -15,8 +15,6 @@ This module provides classes and functions for managing Checkmk test sites. The 
         provides a helper for running Python scripts within a Checkmk test site.
 """
 
-# ruff: noqa: A005
-
 from __future__ import annotations
 
 import ast

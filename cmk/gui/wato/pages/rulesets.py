@@ -2338,7 +2338,7 @@ class ABCEditRuleMode(WatoMode):
         self._rule.rule_options = self._get_rule_options_from_catalog_value(
             parse_data_from_field_id(
                 self._create_rule_properties_catalog(),
-                "_vue_rule_properties",
+                "_vue_edit_rule_properties",
             )
         )
 
@@ -2465,7 +2465,7 @@ class ABCEditRuleMode(WatoMode):
 
         render_form_spec(
             self._create_rule_properties_catalog(),
-            "_vue_rule_properties",
+            "_vue_edit_rule_properties",
             self._get_rule_properties_from_rule(),
             self._should_validate_on_render(),
         )

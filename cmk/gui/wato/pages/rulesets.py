@@ -2298,14 +2298,8 @@ class ABCEditRuleMode(WatoMode):
             }
         )
 
-    def _get_rule_options_from_catalog(self) -> RuleOptions:
-        if not isinstance(
-            raw_value := parse_data_from_field_id(
-                self._create_rule_properties_catalog(),
-                "_vue_rule_properties",
-            ),
-            dict,
-        ):
+    def _get_rule_options_from_catalog_value(self, raw_value: object) -> RuleOptions:
+        if not isinstance(raw_value, dict):
             raise TypeError(raw_value)
         raw_properties = raw_value["properties"]
         return RuleOptions(
@@ -2341,7 +2335,12 @@ class ABCEditRuleMode(WatoMode):
         )
 
     def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> HTTPRedirect | None:
-        self._rule.rule_options = self._get_rule_options_from_catalog()
+        self._rule.rule_options = self._get_rule_options_from_catalog_value(
+            parse_data_from_field_id(
+                self._create_rule_properties_catalog(),
+                "_vue_rule_properties",
+            )
+        )
 
         rule_conditions = self._get_rule_conditions_from_vars(folder_choices)
         if (

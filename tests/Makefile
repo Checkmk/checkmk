@@ -256,6 +256,12 @@ test-format-bazel:
 test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
+test-performance:
+	$(UVENV) "$(realpath performance)/perftest.sh"
+
+test-performance-docker:
+	RESULT_PATH=$(realpath ..) $(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
+
 test-gui-crawl: prepare-playwright
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 

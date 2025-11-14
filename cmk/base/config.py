@@ -2456,7 +2456,7 @@ class ConfigCache:
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress | None,
         secrets: Mapping[str, str],
-        secrets_file_option: Path,
+        secrets_file_option: cmk.utils.password_store.MakeSureToCatchAllCallsitesPath,
         ip_address_of: IPLookup,
         executable_finder: ExecutableFinderProtocol,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:

@@ -221,7 +221,9 @@ def dump_host(
     # (core, relay, automations helper, ...).
     # We assume that the locally available *pending* (a.k.a. WATO) password
     # store is of most help to the caller.
-    used_password_store = cmk.utils.password_store.pending_secrets_path_site()
+    used_password_store = cmk.utils.password_store.MakeSureToCatchAllCallsitesPath(
+        cmk.utils.password_store.pending_secrets_path_site()
+    )
     # Don't show the real passwords here!
     passwords = defaultdict[str, str](lambda: "****")
     agenttypes = (

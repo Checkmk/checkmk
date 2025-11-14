@@ -38,7 +38,10 @@ final_config_file = _omd_path("etc/check_mk/final.mk")
 local_config_file = _omd_path("etc/check_mk/local.mk")
 check_mk_config_dir = _omd_path("etc/check_mk/conf.d")
 modules_dir = _omd_path("share/check_mk/modules")
-var_dir = _omd_path("var/check_mk")
+
+relative_var_dir = Path("var/check_mk")
+var_dir = omd_root / relative_var_dir
+
 log_dir = _omd_path("var/log")
 precompiled_checks_dir = _omd_path("var/check_mk/precompiled_checks")
 autochecks_dir = _omd_path("var/check_mk/autochecks")
@@ -60,7 +63,8 @@ relative_data_source_cache_dir = Path("tmp/check_mk/data_source_cache")
 data_source_cache_dir = omd_root / relative_data_source_cache_dir
 
 include_cache_dir = _omd_path("tmp/check_mk/check_includes")
-tmp_dir = _omd_path("tmp/check_mk")
+relative_tmp_dir = Path("tmp/check_mk")
+tmp_dir = omd_root / relative_tmp_dir
 tmp_run_dir = _omd_path("tmp/run")
 logwatch_dir = _omd_path("var/check_mk/logwatch")
 nagios_objects_file = _omd_path("etc/nagios/conf.d/check_mk_objects.cfg")

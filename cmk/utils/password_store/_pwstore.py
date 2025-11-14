@@ -24,6 +24,10 @@ PasswordId = str | tuple[PasswordLookupType, str]
 _PASSWORD_ID_PREFIX = "uuid"
 
 
+class MakeSureToCatchAllCallsitesPath(Path):
+    pass
+
+
 class Password(TypedDict):
     title: str
     comment: str
@@ -66,9 +70,27 @@ def active_secrets_path_site(config_path: Path | None = None) -> Path:
     return config_path / "stored_passwords"
 
 
+# this might not be the best place for this funtion. But for now it keeps dependencies lean.
+# TODO: we need to split this up, and correctly handle "pending" vs "activated" password stores.
+def active_secrets_path_relay(config_path: Path | None = None) -> Path:
+    """file where the passwords for use by the relays helpers are stored
+
+    This is "frozen" in the state at config generation.
+    """
+    if config_path is None:
+        # TODO: Make non-optional
+        config_path = VersionedConfigPath.make_latest_path(Path())
+    return config_path / "stored_passwords"
+
+
 def pending_secrets_path_site() -> Path:
     """file where user-managed passwords and the ones extracted from the configuration are merged."""
     return cmk.utils.paths.var_dir / "passwords_merged"
+
+
+def pending_secrets_path_relay() -> Path:
+    """file where user-managed passwords and the ones extracted from the configuration are merged."""
+    return cmk.utils.paths.relative_var_dir / "passwords_merged"
 
 
 # COMING SOON:

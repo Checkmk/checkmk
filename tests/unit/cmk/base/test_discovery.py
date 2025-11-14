@@ -88,6 +88,7 @@ from cmk.snmplib import SNMPRawDataElem
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.password_store import MakeSureToCatchAllCallsitesPath
 from cmk.utils.rulesets import RuleSetName
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
@@ -1543,7 +1544,8 @@ def test_commandline_discovery(
         ip_address_of_mgmt=lambda *a: HostAddress(""),
         mode=Mode.DISCOVERY,
         simulation_mode=True,
-        secrets_file_option=Path("/pw/store"),
+        secrets_file_option_relay=MakeSureToCatchAllCallsitesPath("/pw/store"),
+        secrets_file_option_site=MakeSureToCatchAllCallsitesPath("/pw/store"),
         secrets={},
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,

@@ -107,6 +107,7 @@ from cmk.utils.ip_lookup import (
     IPStackConfig,
 )
 from cmk.utils.log import console
+from cmk.utils.password_store import MakeSureToCatchAllCallsitesPath
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
@@ -357,7 +358,8 @@ class CMKFetcher:
         ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
         ip_address_of_mgmt: IPLookupOptional,
         mode: Mode,
-        secrets_file_option: Path,
+        secrets_file_option_relay: MakeSureToCatchAllCallsitesPath,
+        secrets_file_option_site: MakeSureToCatchAllCallsitesPath,
         secrets: Mapping[str, str],  # Mapping[str, Secret] would be better.
         simulation_mode: bool,
         metric_backend_fetcher_factory: Callable[[HostAddress], ProgramFetcher | None],
@@ -376,7 +378,8 @@ class CMKFetcher:
         self.ip_address_of_mandatory: Final = ip_address_of_mandatory
         self.ip_address_of_mgmt: Final = ip_address_of_mgmt
         self.mode: Final = mode
-        self.secrets_file_option: Final = secrets_file_option
+        self.secrets_file_option_relay: Final = secrets_file_option_relay
+        self.secrets_file_option_site: Final = secrets_file_option_site
         self.secrets: Final = secrets
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
@@ -468,7 +471,9 @@ class CMKFetcher:
                         current_ip_family,
                         current_ip_address,
                         self.secrets,
-                        self.secrets_file_option,
+                        self.secrets_file_option_site
+                        if relay_id is None
+                        else self.secrets_file_option_relay,
                         ip_address_of=self.ip_address_of,
                         executable_finder=ExecutableFinder(
                             # NOTE: we can't ignore these, they're an API promise.

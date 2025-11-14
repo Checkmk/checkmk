@@ -151,6 +151,7 @@ from cmk.utils.http_proxy_config import make_http_proxy_getter
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console, section
+from cmk.utils.password_store import MakeSureToCatchAllCallsitesPath
 from cmk.utils.rulesets.ruleset_matcher import (
     BundledHostRulesetMatcher,
     RulesetMatcher,
@@ -699,7 +700,12 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        pending_passwords_file = cmk.utils.password_store.pending_secrets_path_site()
+        pending_passwords_file = MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.pending_secrets_path_relay()
+            if relay_id
+            else cmk.utils.password_store.pending_secrets_path_site()
+        )
+        secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
         for source in sources.make_sources(
             plugins,
             hostname,
@@ -748,7 +754,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 hostname,
                 ip_family,
                 ipaddress,
-                secrets=load_secrets_file(pending_passwords_file),
+                secrets=secrets,
                 secrets_file_option=pending_passwords_file,
                 ip_address_of=ConfiguredIPLookup(
                     ip_address_of_bare,
@@ -2292,7 +2298,12 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
             discovery=discovery_file_cache_max_age,
             inventory=1.5 * check_interval,
         ),
-        secrets_file_option=cmk.utils.password_store.active_secrets_path_site(),
+        secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.active_secrets_path_relay()
+        ),
+        secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.active_secrets_path_site()
+        ),
         secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
@@ -2662,7 +2673,12 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        secrets_file_option=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.pending_secrets_path_relay()
+        ),
+        secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.pending_secrets_path_site()
+        ),
         secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
@@ -2810,7 +2826,12 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
         ),
         options,
         args,
-        secrets_file_option=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.pending_secrets_path_relay()
+        ),
+        secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.pending_secrets_path_site()
+        ),
         secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
     )
 
@@ -2828,7 +2849,8 @@ def run_checking(
     options: _CheckingOptions,
     args: list[str],
     *,
-    secrets_file_option: Path,
+    secrets_file_option_relay: MakeSureToCatchAllCallsitesPath,
+    secrets_file_option_site: MakeSureToCatchAllCallsitesPath,
     secrets: Mapping[str, str],
 ) -> ServiceState:
     edition = cmk_version.edition(cmk.utils.paths.omd_root)
@@ -2917,7 +2939,8 @@ def run_checking(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        secrets_file_option=secrets_file_option,
+        secrets_file_option_relay=secrets_file_option_relay,
+        secrets_file_option_site=secrets_file_option_site,
         secrets=secrets,
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
@@ -3216,7 +3239,12 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        secrets_file_option=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.pending_secrets_path_relay()
+        ),
+        secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.pending_secrets_path_site()
+        ),
         secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
@@ -3521,7 +3549,12 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
-        secrets_file_option=cmk.utils.password_store.active_secrets_path_site(),
+        secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.active_secrets_path_relay()
+        ),
+        secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.active_secrets_path_site()
+        ),
         secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,

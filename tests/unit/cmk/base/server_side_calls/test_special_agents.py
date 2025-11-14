@@ -11,7 +11,7 @@
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Never
 
 import pytest
 
@@ -28,6 +28,7 @@ from cmk.server_side_calls.v1 import (
 from cmk.server_side_calls_backend import config_processing, SpecialAgent
 from cmk.server_side_calls_backend._special_agents import SpecialAgentCommandLine
 from cmk.utils import password_store
+from cmk.utils.password_store import MakeSureToCatchAllCallsitesPath
 
 HOST_ATTRS = {
     "alias": "my_host_alias",
@@ -91,7 +92,7 @@ def _with_file(path: Path) -> Iterator[None]:
             path.unlink(missing_ok=True)
 
 
-def argument_function_with_exception(*args, **kwargs):
+def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
     raise RuntimeError("Can't create argument list")
 
 
@@ -199,7 +200,7 @@ def test_iter_special_agent_commands(
             global_proxies={}, password_lookup=lambda _name: None
         ),
         stored_passwords=stored_passwords,
-        password_store_file=Path("/pw/store"),
+        password_store_file=MakeSureToCatchAllCallsitesPath("/pw/store"),
         finder=lambda *_: "agent_path",
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", parameters))
@@ -243,7 +244,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
             global_proxies={}, password_lookup=lambda _name: None
         ),
         stored_passwords={"1234": "p4ssw0rd!"},
-        password_store_file=Path("/pw/store"),
+        password_store_file=password_store.MakeSureToCatchAllCallsitesPath("/pw/store"),
         finder=lambda *_: "agent_path",
     )
     assert list(
@@ -270,7 +271,7 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
             global_proxies={}, password_lookup=lambda _name: None
         ),
         stored_passwords={"uuid1234": "p4ssw0rd!"},
-        password_store_file=Path("/pw/store"),
+        password_store_file=password_store.MakeSureToCatchAllCallsitesPath("/pw/store"),
         finder=lambda *_: "agent_path",
     )
     assert list(
@@ -305,7 +306,7 @@ def test_iter_special_agent_commands_crash() -> None:
             global_proxies={}, password_lookup=lambda _name: None
         ),
         stored_passwords={},
-        password_store_file=Path("/pw/store"),
+        password_store_file=password_store.MakeSureToCatchAllCallsitesPath("/pw/store"),
         finder=lambda *_: "/path/to/agent",
     )
 

@@ -50,6 +50,7 @@ from cmk.utils.ip_lookup import (
     make_lookup_mgmt_board_ip_address,
 )
 from cmk.utils.log import console
+from cmk.utils.password_store import MakeSureToCatchAllCallsitesPath
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher
 
 
@@ -200,7 +201,12 @@ def inventory_as_check(
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
-        secrets_file_option=cmk.utils.password_store.active_secrets_path_site(),
+        secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.active_secrets_path_relay()
+        ),
+        secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
+            cmk.utils.password_store.active_secrets_path_site()
+        ),
         secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,

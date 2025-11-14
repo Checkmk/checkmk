@@ -1857,7 +1857,13 @@ class SiteFactory:
                 not site.exists()
             ), f"Site {name} already existing. Please remove it before restoring it from a backup."
 
-        site.install_cmk()
+        try:
+            site.install_cmk()
+        except FileNotFoundError:
+            pytest.skip(
+                f"Base-version '{site.version.version}' is not available for distro "
+                f"{os.environ.get('DISTRO')}"
+            )
         logger.info("Creating %s site from backup...", name)
 
         omd_restore_cmd = (

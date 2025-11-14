@@ -124,9 +124,9 @@ def main() {
         },
         "Integration Test for Packages": {
             success &= smart_stage(
-                name: "Integration Test for Packages",
-                condition: run_int_tests,
-                raiseOnError: false,) {
+                    name: "Integration Test for Packages",
+                    condition: run_int_tests,
+                    raiseOnError: false,) {
                 smart_build(
                     job: "${edition_base_folder}/test-integration-packages",
                     parameters: job_parameters

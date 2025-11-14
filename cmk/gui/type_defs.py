@@ -194,8 +194,7 @@ class UserDetails(TypedDict):
 # TODO: UserSpec gets composed from UserContactDetails and UserDetails so ideally the definition
 #  should highlight this fact. For now, we leave it as is and improve the individual fields
 class UserSpec(TypedDict, total=False):
-    """This is not complete, but they don't yet...  Also we have a
-    user_attribute_registry (cmk/gui/plugins/userdb/utils.py)
+    """This is not complete, but they don't yet...  Also we have a user_attribute_registry
 
     I ignored two mypy findings in cmk/gui/userdb.py grep for ignore[misc]
     """

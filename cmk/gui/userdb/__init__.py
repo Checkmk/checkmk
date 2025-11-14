@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui import utils
 from cmk.gui.type_defs import Users, UserSpec
 
 from ._check_credentials import (
@@ -170,8 +169,3 @@ __all__ = [
     "validate_start_url",
     "write_contacts_and_users_file",
 ]
-
-
-def register() -> None:
-    """Plugin initialization hook"""
-    utils.load_web_plugins("userdb", globals())

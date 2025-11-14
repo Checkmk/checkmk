@@ -61,17 +61,6 @@ def test_load_legacy_watolib_plugin() -> None:
         del main_module.__dict__["ding"]
 
 
-def test_load_legacy_userdb_plugin() -> None:
-    write_local_plugin("userdb")
-    main_module = importlib.import_module("cmk.gui.userdb")
-    assert "ding" not in main_module.__dict__
-    try:
-        main_module.register()
-        assert main_module.ding == "dong"
-    finally:
-        del main_module.__dict__["ding"]
-
-
 def test_load_legacy_views_plugin() -> None:
     write_local_plugin("views")
     main_module = importlib.import_module("cmk.gui.views")
@@ -90,7 +79,6 @@ def test_load_legacy_views_plugin() -> None:
         "wato",
         "watolib",
         "sidebar",
-        "userdb",
         "dashboard",
         "visuals",
         "config",

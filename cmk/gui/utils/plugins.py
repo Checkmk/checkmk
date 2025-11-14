@@ -12,7 +12,6 @@ from cmk.gui import (
     dashboard,
     graphing_main,
     hooks,
-    userdb,
     utils,
     views,
     wato,
@@ -32,12 +31,6 @@ def register() -> None:
     utils.load_web_plugins("pages", globals())
 
     hooks.unregister_plugin_hooks()
-
-    userdb.register()
-    with suppress(ModuleNotFoundError):
-        # we don't ship this namespace anymore.
-        # It's not clear to me if we have to support this for the `local` path
-        _load_plugins("userdb")
 
     views.register()
     _load_plugins("views")

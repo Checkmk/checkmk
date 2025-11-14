@@ -23,7 +23,6 @@ SOURCES_COMMON = [
     "mode_host.json",
     "notifications.json",
     "setup.json",
-    "icon.json",
     "sidebar.json",
     "unified_search.json",
     "user_frontend_config.json",

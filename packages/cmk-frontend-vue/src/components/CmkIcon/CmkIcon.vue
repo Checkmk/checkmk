@@ -25,7 +25,7 @@ function getIconVariable(iconName: SimpleIcons): string {
       `Icon name "${iconName}" contains an underscore (_). Use kebab-case (dashes) instead.`
     )
   }
-  if (iconName.startsWith('icon-')) {
+  if (iconName.startsWith('icon')) {
     errors.push(
       `Icon name "${iconName}" contains "icon". Pass only the base name, e.g. "main-help".`
     )

@@ -12,17 +12,10 @@ let appCount = 0
 export default function defineCmkComponent(
   componentName: string,
   component: Component,
-  options?: {
-    appprops?: CmkAppProps
-    pure?: boolean
-  }
+  options?: CmkAppProps
 ) {
   if (componentName.startsWith('cmk-') === false) {
     throw new Error(`Element name "${componentName}" must start with "cmk-"`)
-  }
-
-  if (options === undefined) {
-    options = {}
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -36,11 +29,7 @@ export default function defineCmkComponent(
         return { appData }
       },
       render() {
-        if (options.pure === undefined || options.pure === false) {
-          return h(CmkApp, options.appprops, () => h(component, this.appData))
-        } else {
-          return h(component, this.appData)
-        }
+        return h(CmkApp, options, () => h(component, this.appData))
       }
     },
     {

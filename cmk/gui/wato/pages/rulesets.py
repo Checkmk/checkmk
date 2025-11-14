@@ -2493,11 +2493,10 @@ class ABCEditRuleMode(WatoMode):
                     valuespec.set_focus("ve")
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
-                    value = self._get_rule_value()
                     render_form_spec(
                         registered_form_spec,
                         self._vue_field_id(),
-                        value,
+                        self._get_rule_value(),
                         self._should_validate_on_render(),
                     )
         except Exception as e:

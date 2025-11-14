@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import hashlib
@@ -787,7 +786,13 @@ def collection_item(
     )
 
 
-def action_parameter(action, parameter, friendly_name, optional, pattern):
+def action_parameter(
+    action: str,
+    parameter: str,
+    friendly_name: str,
+    optional: bool,
+    pattern: str,
+) -> tuple[str, dict[str, str | bool]]:
     return (
         action,
         {
@@ -817,7 +822,7 @@ def hash_of_dict(dict_: Mapping[str, Any]) -> ETagHash:
 
     """
 
-    def _update(_hash_obj, _d):
+    def _update(_hash_obj: "hashlib._Hash", _d: Any) -> None:
         if isinstance(_d, list | tuple):
             for value in _d:
                 _update(_hash_obj, value)

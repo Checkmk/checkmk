@@ -1734,7 +1734,7 @@ class MetricBackendAPI(BaseAPI):
         super().__init__(session)
         self._base_url_internal = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
 
-    def disable_metric_backend(self, site_id: str) -> None:
+    def disable(self, site_id: str) -> None:
         response = self.session.put(
             url=self._config_endpoint_url(),
             json={
@@ -1748,13 +1748,13 @@ class MetricBackendAPI(BaseAPI):
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
 
-    def enable_site_local_metric_backend(self, site_id: str) -> None:
+    def enable(self, site_id: str) -> None:
         response = self.session.put(
             url=self._config_endpoint_url(),
             json={
                 "site_id": site_id,
                 "config": {
-                    "type": "site_local",
+                    "type": "enabled",
                 },
             },
         )

@@ -307,15 +307,7 @@ def test_registered_configvars() -> None:
         cmk_version.Edition.ULTIMATEMT,
     }:
         expected_vars += [
-            "metric_backend_instance",
-        ]
-
-    if cmk_version.edition(paths.omd_root) in {
-        cmk_version.Edition.ULTIMATE,
-        cmk_version.Edition.ULTIMATEMT,
-        cmk_version.Edition.CLOUD,
-    }:
-        expected_vars += [
+            "metric_backend",
             "site_opentelemetry_collector",
             "site_opentelemetry_collector_memory_limit",
         ]

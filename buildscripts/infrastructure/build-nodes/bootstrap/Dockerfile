@@ -17,7 +17,7 @@ FROM ${IMAGE_BASE}
 # docker inspect -f "{{ .Size }}" minimal-alpine-bash-git:latest
 # 31.3MB (31306476)
 # bash is required to be used in Jenkins with image.inside(), requires +3MB
-# git is required to performe clone operation, requires +13MB
+# git is required to perform clone operation, requires +13MB
 # openssh is required to perform clone operation, requires +7MB
 # make is required to get the safe branch name, requires +1MB
 # coreutils is required to get date that is able to handle --iso=seconds,

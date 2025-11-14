@@ -9,6 +9,8 @@ Needs to be part of the generic code, not packed into NTOP addon.
 
 from livestatus import SiteId
 
+from cmk.utils.site import omd_site
+
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -28,7 +30,7 @@ def get_ntop_connection_by_site() -> dict[SiteId, dict]:
     return {
         site_id: get_site_globals(site_id, site_config).get("ntop_connection", {})
         for site_id, site_config in active_config.sites.items()
-    }
+    } | {omd_site(): get_ntop_connection()}
 
 
 def get_ntop_connection_mandatory() -> dict:

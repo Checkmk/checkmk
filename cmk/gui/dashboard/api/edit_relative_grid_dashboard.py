@@ -24,7 +24,7 @@ from ..store import get_all_dashboards
 from ._family import DASHBOARD_FAMILY
 from ._utils import (
     get_permitted_user_id,
-    PERMISSIONS_DASHBOARD,
+    PERMISSIONS_DASHBOARD_EDIT,
     save_dashboard_to_file,
     serialize_relative_grid_dashboard,
 )
@@ -81,7 +81,7 @@ ENDPOINT_EDIT_RELATIVE_GRID_DASHBOARD = VersionedEndpoint(
         link_relation="cmk/edit_dashboard_relative_grid",
         method="put",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
+    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD_EDIT),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=edit_relative_grid_dashboard_v1)},
 )

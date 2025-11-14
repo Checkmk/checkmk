@@ -22,7 +22,7 @@ from cmk.gui.type_defs import AnnotatedUserId
 
 from ..store import get_all_dashboards, save_all_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._utils import get_permitted_user_id, PERMISSIONS_DASHBOARD, sync_user_to_remotes
+from ._utils import get_permitted_user_id, PERMISSIONS_DASHBOARD_EDIT, sync_user_to_remotes
 
 
 def delete_dashboard_v1(
@@ -62,7 +62,7 @@ ENDPOINT_DELETE_DASHBOARD = VersionedEndpoint(
         method="delete",
         content_type=None,
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
+    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD_EDIT),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=delete_dashboard_v1)},
 )

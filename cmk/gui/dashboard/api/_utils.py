@@ -113,6 +113,13 @@ PERMISSIONS_DASHBOARD = permissions.AllPerm(
         PERMISSIONS_VIEW_WIDGET,
     ]
 )
+PERMISSIONS_DASHBOARD_EDIT = permissions.AllPerm(
+    [
+        *PERMISSIONS_DASHBOARD.perms,
+        # extra permissions required for editing foreign dashboards
+        permissions.Optional(permissions.Perm("general.edit_foreign_dashboards")),
+    ]
+)
 
 
 def get_permitted_user_id(owner: UserId | ApiOmitted, action: Literal["delete", "edit"]) -> UserId:

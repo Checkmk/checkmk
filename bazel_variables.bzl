@@ -35,6 +35,9 @@ edition_python_deps = {
 edition_deps = {
     "cloud": [
         "//cmk:cmk_tar_cloud",
+        "//cmk:cmk_tar_ultimate",
+        "//cmk:cmk_tar_pro",
+        "//cmk:cmk_tar_community",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -62,6 +65,7 @@ edition_deps = {
     ],
     "pro": [
         "//cmk:cmk_tar_pro",
+        "//cmk:cmk_tar_community",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -80,6 +84,8 @@ edition_deps = {
     ],
     "ultimate": [
         "//cmk:cmk_tar_ultimate",
+        "//cmk:cmk_tar_pro",
+        "//cmk:cmk_tar_community",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -102,6 +108,9 @@ edition_deps = {
     ],
     "ultimatemt": [
         "//cmk:cmk_tar_ultimatemt",
+        "//cmk:cmk_tar_ultimate",
+        "//cmk:cmk_tar_pro",
+        "//cmk:cmk_tar_community",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",

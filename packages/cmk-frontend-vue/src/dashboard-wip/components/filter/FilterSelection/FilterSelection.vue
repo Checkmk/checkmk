@@ -648,7 +648,7 @@ onUnmounted(() => {
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-menu__filter-checkmark--active {
-  background-image: url('~cmk-frontend/themes/facelift/images/icon_checkmark.svg');
+  background-image: var(--icon-checkmark);
   border-radius: 100%;
 }
 

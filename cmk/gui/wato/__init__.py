@@ -186,8 +186,4 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 
 def register() -> None:
-    # Initialize watolib things which are needed before loading the Setup plugins.
-    # This also loads the watolib plugins.
-    watolib.load_watolib_plugins()
-
     utils.load_web_plugins("wato", globals())

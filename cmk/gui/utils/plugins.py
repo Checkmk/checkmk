@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from contextlib import suppress
 from pathlib import Path
 
 from cmk import trace
@@ -36,10 +35,6 @@ def register() -> None:
     _load_plugins("views")
 
     wato.register()
-    with suppress(ModuleNotFoundError):
-        # we don't ship this namespace anymore.
-        # It's not clear to me if we have to support this for the `local` path
-        _load_plugins("watolib")
     _load_plugins("wato")
 
     dashboard.register()

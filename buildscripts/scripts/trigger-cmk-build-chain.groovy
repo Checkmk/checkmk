@@ -83,15 +83,24 @@ def main() {
 
     def success = true;
 
-    stage("Build Packages") {
-        build(job: "${base_folder}/build-cmk-packages", parameters: job_parameters);
-    }
+    success &= smart_stage(
+            name: "Build Packages",
+            condition: true,
+            raiseOnError: false,) {
+        smart_build(
+            job: "${base_folder}/build-cmk-packages",
+            parameters: job_parameters
+        );
+    }[0]
 
     success &= smart_stage(
             name: "Build CMK IMAGE",
             condition: build_image,
             raiseOnError: false,) {
-        build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
+        smart_build(
+            job: "${base_folder}/build-cmk-image",
+            parameters: job_parameters
+        );
     }[0]
 
     parallel([
@@ -100,7 +109,10 @@ def main() {
                     name: "Integration Test for Docker Container",
                     condition: run_image_tests,
                     raiseOnError: false,) {
-                build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
+                smart_build(
+                    job: "${base_folder}/test-integration-docker",
+                    parameters: job_parameters
+                );
             }[0]
         },
         "Composition Test for Packages": {
@@ -108,7 +120,10 @@ def main() {
                     name: "Composition Test for Packages",
                     condition: run_comp_tests,
                     raiseOnError: false,) {
-                build(job: "${base_folder}/test-composition", parameters: job_parameters);
+                smart_build(
+                    job: "${base_folder}/test-composition",
+                    parameters: job_parameters
+                );
             }[0]
         },
         "Integration Test for Packages": {
@@ -116,7 +131,10 @@ def main() {
                     name: "Integration Test for Packages",
                     condition: run_int_tests,
                     raiseOnError: false,) {
-                build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
+                smart_build(
+                    job: "${base_folder}/test-integration-packages",
+                    parameters: job_parameters
+                );
             }[0]
         },
         "Update Test": {
@@ -124,7 +142,10 @@ def main() {
                     name: "Update Test",
                     condition: run_update_tests,
                     raiseOnError: false,) {
-                build(job: "${base_folder}/test-update", parameters: job_parameters);
+                smart_build(
+                    job: "${base_folder}/test-update",
+                    parameters: job_parameters
+                );
             }[0]
         }
     ]);
@@ -133,9 +154,9 @@ def main() {
             name: "Build Packages again",
             condition: true,
             raiseOnError: false,) {
-        build(
+        smart_build(
             job: "${base_folder}/build-cmk-packages",
-            parameters: job_parameters
+            parameters: job_parameters,
         );
     }[0]
 

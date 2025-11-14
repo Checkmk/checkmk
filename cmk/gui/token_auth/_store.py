@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, RootModel
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import AnnotatedUserId
+from cmk.utils import paths
 
 
 class InvalidToken(ValueError):
@@ -133,3 +134,7 @@ class TokenStore:
         with self.read_locked() as data:
             data.add(token)
         return token
+
+
+def get_token_store() -> TokenStore:
+    return TokenStore(paths.var_dir / "token.store")

@@ -10,7 +10,13 @@ from cmk.gui.token_auth._registry import (
     TokenAuthenticatedPage,
     TokenAuthenticatedPageRegistry,
 )
-from cmk.gui.token_auth._store import AuthToken, DashboardToken, TokenId, TokenStore
+from cmk.gui.token_auth._store import (
+    AuthToken,
+    DashboardToken,
+    get_token_store,
+    TokenId,
+    TokenStore,
+)
 
 __all__ = [
     "AuthToken",
@@ -20,6 +26,7 @@ __all__ = [
     "TokenAuthenticatedPageRegistry",
     "TokenId",
     "TokenStore",
+    "get_token_store",
     "handle_token_page",
     "token_authenticated_page_registry",
 ]

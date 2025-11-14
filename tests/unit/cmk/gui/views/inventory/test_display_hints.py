@@ -109,6 +109,7 @@ def test_paths() -> None:
             ("networking", "cdp_cache"),
             ("networking", "cdp_cache", "neighbors"),
             ("networking", "interfaces"),
+            ("networking", "interfaces", "name"),
             ("networking", "kube"),
             ("networking", "lldp_cache"),
             ("networking", "lldp_cache", "neighbours"),
@@ -266,6 +267,9 @@ def test_paths() -> None:
 
 
 _KNOWN_ATTRIBUTES_KEY_ORDERS = {
+    ("networking", "interfaces"): [
+        "is_show_more",
+    ],
     ("hardware", "cpu"): [
         "arch",
         "max_speed",
@@ -972,6 +976,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
     ],
     ("networking", "interfaces"): [
         "index",
+        "name",
         "description",
         "alias",
         "oper_status",

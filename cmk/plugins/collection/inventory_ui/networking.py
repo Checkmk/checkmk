@@ -101,10 +101,12 @@ node_networking_interfaces = Node(
     name="networking_interfaces",
     path=["networking", "interfaces"],
     title=Title("Network interfaces"),
+    attributes={"is_show_more": BoolField(Title("Is show more"))},
     table=Table(
         view=View(name="invinterface", title=Title("Network interfaces")),
         columns={
             "index": NumberField(Title("Index"), render=UNIT_NUMBER),
+            "name": TextField(Title("Name")),
             "description": TextField(Title("Description")),
             "alias": TextField(Title("Alias")),
             "oper_status": ChoiceField(
@@ -583,4 +585,10 @@ node_networking_lldp_cache_neighbours = Node(
             "system_description": TextField(Title("Neighbor description")),
         },
     ),
+)
+
+node_networking_interfaces_name = Node(
+    name=".networking.interfaces:*.name",
+    path=["networking", "interfaces", "name"],
+    title=Title("Name"),
 )

@@ -305,6 +305,7 @@ class ErrorReporter:
         # type # instance # wato
         ("discovery", "logwatch_groups", "logwatch_groups"),
         ("discovery", "logwatch", "logwatch_groups"),
+        ("inventory", "inv_cdp_cache", "inv_cdp_cache"),
         ("inventory", "inv_if", "inv_if"),
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }

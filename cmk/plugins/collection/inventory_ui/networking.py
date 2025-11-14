@@ -521,3 +521,32 @@ node_networking_wlan_controller_accesspoints = Node(
         },
     ),
 )
+
+node_networking_cdp_cache = Node(
+    name="networking_cdp_cache",
+    path=["networking", "cdp_cache"],
+    title=Title("CDP cache"),
+)
+
+node_networking_cdp_cache_neighbours = Node(
+    name="networking_cdp_cache_neighbours",
+    path=["networking", "cdp_cache", "neighbours"],
+    title=Title("CDP neighbours"),
+    table=Table(
+        view=View(name="invcdpcache", title=Title("CDP neighbours")),
+        columns={
+            "neighbour_name": TextField(Title("Neighbour name")),
+            "neighbour_port": TextField(Title("Neighbour port")),
+            "local_port": TextField(Title("Local port")),
+            "neighbour_address": TextField(Title("Neighbour address")),
+            "neighbour_id": TextField(Title("Neighbour ID")),
+            "platform": TextField(Title("Neighbour platform")),
+            "platform_details": TextField(Title("Neighbour platform details")),
+            "capabilities": TextField(Title("Capabilities")),
+            "duplex": TextField(Title("Duplex")),
+            "native_vlan": TextField(Title("Native VLAN")),
+            "vtp_mgmt_domain": TextField(Title("VTP domain")),
+            "power_consumption": TextField(Title("Power level")),
+        },
+    ),
+)

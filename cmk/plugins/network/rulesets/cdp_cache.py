@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+#
+# Original author: thl-cmk[at]outlook[dot]com
+
+from collections.abc import Mapping, Sequence
+
+from cmk.rulesets.v1 import Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    FixedValue,
+    MultipleChoice,
+    MultipleChoiceElement,
+    String,
+)
+from cmk.rulesets.v1.form_specs.validators import LengthInRange
+from cmk.rulesets.v1.rule_specs import InventoryParameters, Topic
+
+
+def _migrate_remove_columns(value: object) -> Sequence[str]:
+    if isinstance(value, list):
+        # Ensure we return a Sequence[str] and remove "last_change".
+        return [v for v in value if isinstance(v, str) and v != "last_change"]
+    return []
+
+
+def _migrate_inv_cdp_cache(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict):
+        if "removecolumns" in value.keys():
+            if not value["removecolumns"]:
+                _not_used = value.pop("removecolumns")
+        return value
+    return {}
+
+
+_remove_columns = [
+    MultipleChoiceElement(name="platform_details", title=Title("Neighbour platform details")),
+    MultipleChoiceElement(name="capabilities", title=Title("Capabilities")),
+    MultipleChoiceElement(name="vtp_mgmt_domain", title=Title("VTP domain")),
+    MultipleChoiceElement(name="native_vlan", title=Title("Native VLAN")),
+    MultipleChoiceElement(name="duplex", title=Title("Duplex")),
+    MultipleChoiceElement(name="power_consumption", title=Title("Power level")),
+    MultipleChoiceElement(name="platform", title=Title("Neighbour platform")),
+]
+
+
+def _parameter_form_inv_cdp_cache() -> Dictionary:
+    return Dictionary(
+        migrate=_migrate_inv_cdp_cache,
+        elements={
+            "remove_domain": DictElement(
+                parameter_form=FixedValue(
+                    value=True,
+                    title=Title("Remove domain name from neighbour device name"),
+                    label=Label("enabled"),
+                )
+            ),
+            "domain_name": DictElement(
+                parameter_form=String(
+                    title=Title("Specific domain name to remove from neighbour device name"),
+                    custom_validate=[
+                        LengthInRange(
+                            min_value=1, error_msg=Message("This field can not be empty.")
+                        )
+                    ],
+                )
+            ),
+            "removecolumns": DictElement(
+                parameter_form=MultipleChoice(
+                    title=Title("Columns to remove"),
+                    elements=_remove_columns,
+                    migrate=_migrate_remove_columns,
+                    custom_validate=[
+                        LengthInRange(min_value=1, error_msg=Message("Select at least one column."))
+                    ],
+                )
+            ),
+            "use_short_if_name": DictElement(
+                parameter_form=FixedValue(
+                    value=True,
+                    title=Title("Use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"),
+                    label=Label("enabled"),
+                )
+            ),
+        },
+    )
+
+
+rule_spec_inv_cdp_cache = InventoryParameters(
+    name="inv_cdp_cache",
+    parameter_form=_parameter_form_inv_cdp_cache,
+    title=Title("CDP cache"),
+    topic=Topic.NETWORKING,
+)

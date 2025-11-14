@@ -262,6 +262,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "host",
         "hostgroup",
         "invbackplane",
+        "invcdpcache",
         "invchassis",
         "invcmksites",
         "invcmkversions",

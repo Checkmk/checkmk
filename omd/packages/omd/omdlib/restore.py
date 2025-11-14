@@ -58,7 +58,7 @@ def prepare_restore_as_root(
         os.mkdir(site_home)
     else:
         sys.stdout.write("Deleting existing site data...\n")
-        _remove_site_home(Path(site_home))
+        _clear_site_home(Path(site_home))
         ok()
 
 
@@ -76,7 +76,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, ver
     unmount_tmpfs(site.name, site_home, site.tmp_dir)
 
     sys.stdout.write("Deleting existing site data...")
-    _remove_site_home(Path(site_home))
+    _clear_site_home(Path(site_home))
     ok()
 
 
@@ -110,7 +110,7 @@ def _clickhouse_dir(site_home: Path) -> Path:
     return site_home / "var" / "clickhouse-server"
 
 
-def _remove_site_home(site_home: Path) -> None:
+def _clear_site_home(site_home: Path) -> None:
     restore_working_dir = _restore_working_dir(site_home)
     clickhouse_dir = site_home / "var" / "clickhouse-server"
     restore_clickhouse_dir = restore_working_dir / "clickhouse-server"

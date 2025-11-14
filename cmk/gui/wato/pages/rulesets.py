@@ -2322,7 +2322,7 @@ class ABCEditRuleMode(WatoMode):
                     "description": self._rule.rule_options.description,
                     "comment": self._rule.rule_options.comment,
                     "docu_url": self._rule.rule_options.docu_url,
-                    "disabled": self._rule.rule_options.disabled,
+                    "disabled": self._rule.rule_options.disabled or False,
                     "id": self._rule.id,
                     "_name": self._rule.ruleset.name,
                 }

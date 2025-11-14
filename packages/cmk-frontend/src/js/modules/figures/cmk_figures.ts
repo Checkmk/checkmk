@@ -266,8 +266,6 @@ export abstract class FigureBase<
       .join('g')
       .classed('title', true)
 
-    const highlight_container = this._dashlet_spec.show_title == true
-
     title_component
       .selectAll<SVGRectElement, unknown>('rect')
       .data((d) => [d])
@@ -276,7 +274,7 @@ export abstract class FigureBase<
       .attr('y', 0.5)
       .attr('width', this.figure_size.width)
       .attr('height', 22)
-      .classed(highlight_container ? 'highlighted' : '', true)
+      .classed('highlighted', this._dashlet_spec.show_title == true)
 
     if (title_url) {
       //@ts-ignore

@@ -88,3 +88,21 @@ def test_issued_at(tmp_path: Path) -> None:
         valid_for=relativedelta(days=1),
     )
     assert token.issued_at == some_time
+
+
+def test_delete_token(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = store.issue(
+        token_details=DashboardToken(
+            owner=UserId("owner"),
+            dashboard_name="unit-dashboard",
+        ),
+        issuer=UserId("issuer"),
+        now=some_time,
+        valid_for=relativedelta(days=1),
+    )
+
+    store.delete(token.token_id)
+
+    with pytest.raises(InvalidToken, match=f"Could not find token '{token.token_id}'"):
+        store.verify(f"0:{token.token_id}", now=some_time)

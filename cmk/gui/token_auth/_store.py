@@ -63,6 +63,9 @@ class _SerializedTokens(RootModel[dict[TokenId, AuthToken]]):
     def get(self, token_id: TokenId) -> AuthToken | None:
         return self.root.get(token_id)
 
+    def delete(self, token_id: TokenId) -> None:
+        del self.root[token_id]
+
 
 class TokenStore:
     def __init__(self, path: Path) -> None:
@@ -110,6 +113,10 @@ class TokenStore:
     def revoke(self, token_id: TokenId) -> None:
         with self.read_locked() as data:
             data.revoke(token_id)
+
+    def delete(self, token_id: TokenId) -> None:
+        with self.read_locked() as data:
+            data.delete(token_id)
 
     def issue(
         self,

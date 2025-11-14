@@ -178,6 +178,15 @@ def import_module_and_get_file_path(site: Site, import_name: str) -> str:
     return p.communicate()[0].rstrip()
 
 
+def test_avoids_symlink_attacks(site: Site) -> None:
+    # _clear_site_home relies on this assertion to be true for `omd restore` to be safe. See the
+    # change with ID: If3c50a40af55a516c2d8539c0fc48515e30e0760
+    # This test is also covered by the `omd restore` integration test, but this one is more focused.
+    site.check_output(
+        ["python3", "-c", "import shutil; assert shutil.rmtree.avoids_symlink_attacks"]
+    )
+
+
 def test_python_preferred_encoding(site: Site) -> None:
     p = site.execute(
         ["python3", "-c", "import locale; print(locale.getpreferredencoding())"],

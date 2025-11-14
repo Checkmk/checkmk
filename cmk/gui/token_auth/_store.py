@@ -44,6 +44,7 @@ TokenId = NewType("TokenId", str)
 
 class AuthToken(BaseModel):
     issuer: AnnotatedUserId
+    issued_at: datetime
     valid_until: datetime
     details: DashboardToken = Field(discriminator="type_")
     token_id: TokenId
@@ -126,6 +127,7 @@ class TokenStore:
 
         token = AuthToken(
             issuer=issuer,
+            issued_at=now,
             valid_until=now + valid_for,
             details=token_details,
             token_id=TokenId(str(uuid.uuid4())),

@@ -2843,14 +2843,15 @@ class ABCEditRuleMode(WatoMode):
     def _should_validate_on_render(self) -> bool:
         return self._do_validate_on_render or not isinstance(self, ModeNewRule)
 
-    def _page_form(self, tree: FolderTree, *, debug: bool) -> None:
-        self._page_form_quick_setup_warning()
-
-        html.form_has_submit_button = True
-        html.prevent_password_auto_completion()
-
-        is_locked = is_locked_by_quick_setup(self._rule.locked_by)
-
+    def _page_form_backend(
+        self,
+        *,
+        is_locked: bool,
+        title: str | None,
+        has_show_more: bool,
+        tree: FolderTree,
+        debug: bool,
+    ) -> None:
         render_form_spec(
             self._create_rule_properties_catalog(is_locked=is_locked),
             "_vue_edit_rule_properties",
@@ -2858,36 +2859,13 @@ class ABCEditRuleMode(WatoMode):
             self._should_validate_on_render(),
         )
 
+        forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
+        forms.section()
         try:
-            title: str | None = localize_or_none(
-                self._ruleset.rulespec.form_spec.title, translate_to_current_language
-            )
-            has_show_more: bool = False
-        except FormSpecNotImplementedError:
             valuespec = self._ruleset.rulespec.valuespec
-            title = valuespec.title()
-            has_show_more = valuespec.has_show_more()
-
-        render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
-        try:
-            match render_mode:
-                case RenderMode.BACKEND:
-                    forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
-                    forms.section()
-                    valuespec = self._ruleset.rulespec.valuespec
-                    valuespec.validate_datatype(self._rule.value, "ve")
-                    valuespec.render_input("ve", self._rule.value)
-                    valuespec.set_focus("ve")
-                case RenderMode.FRONTEND:
-                    assert registered_form_spec is not None
-                    render_form_spec(
-                        self._create_rule_value_catalog(
-                            title=title, value_parameter_form=registered_form_spec
-                        ),
-                        self._vue_field_id(),
-                        self._get_rule_value_from_rule(),
-                        self._should_validate_on_render(),
-                    )
+            valuespec.validate_datatype(self._rule.value, "ve")
+            valuespec.render_input("ve", self._rule.value)
+            valuespec.set_focus("ve")
         except Exception as e:
             if debug:
                 raise
@@ -2899,25 +2877,10 @@ class ABCEditRuleMode(WatoMode):
                 )
                 % e
             )
-            match render_mode:
-                case RenderMode.BACKEND:
-                    forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
-                    forms.section()
-                    valuespec = self._ruleset.rulespec.valuespec
-                    valuespec.render_input("ve", valuespec.default_value())
-                    valuespec.set_focus("ve")
-                case RenderMode.FRONTEND:
-                    assert registered_form_spec is not None
-                    render_form_spec(
-                        self._create_rule_value_catalog(
-                            title=title, value_parameter_form=registered_form_spec
-                        ),
-                        self._vue_field_id(),
-                        DEFAULT_VALUE,
-                        False,
-                    )
+            valuespec = self._ruleset.rulespec.valuespec
+            valuespec.render_input("ve", valuespec.default_value())
+            valuespec.set_focus("ve")
 
-        # Rule conditions
         if is_locked:
             forms.warning_message(
                 _("Conditions of rules managed by Quick setup cannot be changed.")
@@ -2930,6 +2893,102 @@ class ABCEditRuleMode(WatoMode):
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
         )
+
+    def _page_form_frontend(
+        self,
+        *,
+        is_locked: bool,
+        title: str | None,
+        value_parameter_form: FormSpec | None,
+        tree: FolderTree,
+        debug: bool,
+    ) -> None:
+        render_form_spec(
+            self._create_rule_properties_catalog(is_locked=is_locked),
+            "_vue_edit_rule_properties",
+            self._get_rule_properties_from_rule(),
+            self._should_validate_on_render(),
+        )
+
+        assert value_parameter_form is not None
+        try:
+            render_form_spec(
+                self._create_rule_value_catalog(
+                    title=title, value_parameter_form=value_parameter_form
+                ),
+                self._vue_field_id(),
+                self._get_rule_value_from_rule(),
+                self._should_validate_on_render(),
+            )
+        except Exception as e:
+            if debug:
+                raise
+            html.show_warning(
+                _(
+                    "Unable to read current options of this rule. Falling back to "
+                    "default values. When saving this rule now, your previous settings "
+                    "will be overwritten. The problem was: %s."
+                )
+                % e
+            )
+            render_form_spec(
+                self._create_rule_value_catalog(
+                    title=title, value_parameter_form=value_parameter_form
+                ),
+                self._vue_field_id(),
+                DEFAULT_VALUE,
+                False,
+            )
+
+        if is_locked:
+            forms.warning_message(
+                _("Conditions of rules managed by Quick setup cannot be changed.")
+            )
+            return
+
+        render_form_spec(
+            self._create_rule_conditions_catalog(tree),
+            "_vue_edit_rule_conditions",
+            self._get_rule_conditions_from_rule(),
+            self._should_validate_on_render(),
+        )
+
+    def _page_form(self, tree: FolderTree, *, debug: bool) -> None:
+        self._page_form_quick_setup_warning()
+
+        html.form_has_submit_button = True
+        html.prevent_password_auto_completion()
+
+        is_locked = is_locked_by_quick_setup(self._rule.locked_by)
+
+        try:
+            title: str | None = localize_or_none(
+                self._ruleset.rulespec.form_spec.title, translate_to_current_language
+            )
+            has_show_more: bool = False
+        except FormSpecNotImplementedError:
+            valuespec = self._ruleset.rulespec.valuespec
+            title = valuespec.title()
+            has_show_more = valuespec.has_show_more()
+
+        render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
+        match render_mode:
+            case RenderMode.BACKEND:
+                self._page_form_backend(
+                    is_locked=is_locked,
+                    title=title,
+                    has_show_more=has_show_more,
+                    tree=tree,
+                    debug=debug,
+                )
+            case RenderMode.FRONTEND:
+                self._page_form_frontend(
+                    is_locked=is_locked,
+                    title=title,
+                    value_parameter_form=registered_form_spec,
+                    tree=tree,
+                    debug=debug,
+                )
 
         forms.end()
         html.hidden_fields()

@@ -5,19 +5,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import axios from 'axios'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 
-import type { DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
-import { toPathAndSearch } from '@/dashboard-wip/utils.ts'
+import {
+  type DashboardMetadata,
+  DashboardOwnerType,
+  type DashboardTokenModel
+} from '@/dashboard-wip/types/dashboard.ts'
+import { copyToClipboard, getSharedDashboardLink, toPathAndSearch } from '@/dashboard-wip/utils.ts'
 
-import ButtonDropdownMenu from './ButtonDropdownMenu.vue'
 import DashboardSelector from './DashboardSelector.vue'
+import DropdownMenu from './DropdownMenu.vue'
 import MenuButton from './MenuButton.vue'
+import SharingStatus from './SharingStatus.vue'
 import type { SelectedDashboard } from './types'
 
 interface Props {
@@ -25,6 +30,7 @@ interface Props {
   linkUserGuide: string
   linkNavigationEmbeddingPage: string
   isEditMode: boolean
+  publicToken: DashboardTokenModel | null
 }
 
 const { _t } = usei18n()
@@ -35,6 +41,7 @@ const emit = defineEmits<{
   'open-filter': []
   'open-settings': []
   'open-clone-workflow': []
+  'open-share-workflow': []
   'open-widget-workflow': []
   save: []
   'enter-edit': []
@@ -106,6 +113,15 @@ const parsePageNavigation = () => {
   }
 }
 
+const isBuiltInDashboard = computed(
+  () => props.selectedDashboard?.type === DashboardOwnerType.BUILT_IN
+)
+
+const copyInternalDashboardLink = async (): Promise<void> => {
+  const url = window?.parent?.location?.href || window.location.href
+  await copyToClipboard(url)
+}
+
 const pageNavigation = parsePageNavigation()
 </script>
 
@@ -131,72 +147,72 @@ const pageNavigation = parsePageNavigation()
 
     <div class="actions-section">
       <template v-if="!isEditMode">
-        <ButtonDropdownMenu :label="_t('Settings Menu')">
-          <template #button>
-            <CmkIcon name="global-settings" size="large" />
-            <span>{{ _t('Settings') }}</span>
-          </template>
-          <template #menu="{ hideMenu }">
-            <div class="dropdown-menu-items">
-              <div
-                class="menu-item"
-                @click="
-                  () => {
-                    emit('open-settings')
-                    hideMenu()
-                  }
-                "
-              >
-                <div class="menu-label">{{ _t('Dashboard settings') }}</div>
-              </div>
+        <SharingStatus
+          v-if="!isBuiltInDashboard"
+          :enabled="!!publicToken"
+          :shared-until="publicToken?.expires_at ? new Date(publicToken?.expires_at) : null"
+          @open-sharing-settings="emit('open-share-workflow')"
+        />
 
-              <div
-                class="menu-item"
-                @click="
-                  () => {
-                    emit('open-clone-workflow')
-                    hideMenu()
-                  }
-                "
-              >
-                <div class="menu-label">{{ _t('Clone dashboard') }}</div>
-              </div>
+        <DropdownMenu
+          icon="export-link"
+          :label="_t('Share')"
+          :options="[
+            { label: _t('Copy internal link'), action: copyInternalDashboardLink },
+            {
+              label: _t('Copy public link'),
+              hidden: isBuiltInDashboard,
+              disabled: !publicToken,
+              action: () => {
+                copyToClipboard(getSharedDashboardLink(publicToken!.token_id))
+              }
+            },
+            {
+              label: _t('Configure sharing'),
+              action: () => {
+                emit('open-share-workflow')
+              },
+              hidden: isBuiltInDashboard
+            },
+            {
+              label: _t('Clone dashboard to generate public link'),
+              action: () => emit('open-clone-workflow'),
+              hidden: !isBuiltInDashboard
+            }
+          ]"
+        />
 
-              <a
-                :href="linkUserGuide"
-                class="menu-item menu-item--link"
-                target="_blank"
-                @click="hideMenu()"
-              >
-                <div class="menu-label">{{ _t('Dashboard user guide') }}</div>
-                <CmkIcon name="external-link" size="small" />
-              </a>
+        <DropdownMenu
+          icon="global-settings"
+          :label="_t('Settings')"
+          :options="[
+            {
+              label: _t('Dashboard settings'),
+              action: () => emit('open-settings'),
+              hidden: isBuiltInDashboard
+            },
+            { label: _t('Clone dashboard'), action: () => emit('open-settings') },
+            {
+              label: _t('Dashboard user guide'),
+              url: linkUserGuide,
+              target: '_blank',
+              icon: 'external'
+            },
+            { label: _t('Set as start URL'), action: () => setStartUrl() },
+            {
+              label: _t('Show page navigation'),
+              url: pageNavigation.redirectLink,
+              icon: pageNavigation.toggle === 'on' ? 'toggle-on' : 'toggle-off'
+            }
+          ]"
+        />
 
-              <div
-                class="menu-item"
-                @click="
-                  () => {
-                    setStartUrl()
-                    hideMenu()
-                  }
-                "
-              >
-                <div class="menu-label">{{ _t('Set as start URL') }}</div>
-              </div>
+        <MenuButton v-if="isBuiltInDashboard" @click="emit('open-clone-workflow')">
+          <CmkIcon name="clone" size="large" />
+          <span>{{ _t('Clone') }}</span>
+        </MenuButton>
 
-              <a :href="pageNavigation.redirectLink" target="_top" class="no-underline">
-                <div class="menu-item">
-                  <div class="menu-label no-underline">{{ _t('Show page navigation') }}</div>
-                  <div>
-                    <CmkIcon :name="pageNavigation.toggle === 'on' ? 'toggle-on' : 'toggle-off'" />
-                  </div>
-                </div>
-              </a>
-            </div>
-          </template>
-        </ButtonDropdownMenu>
-
-        <MenuButton class="menu-btn" @click="enterEditMode">
+        <MenuButton v-else class="menu-btn" @click="enterEditMode">
           <CmkIcon name="dashboard-grid" size="large" />
           <span>{{ _t('Edit widgets') }}</span>
         </MenuButton>
@@ -262,49 +278,6 @@ const pageNavigation = parsePageNavigation()
 .dashboard-label {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xxlarge);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dropdown-menu-items {
-  width: 100%;
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .menu-item {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: var(--dimension-5) var(--dimension-6);
-    margin-bottom: var(--dimension-3);
-    border: none;
-    background: none;
-    color: var(--font-color);
-    font-size: var(--font-size-normal);
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-    border-radius: var(--dimension-3);
-    transition: background-color 0.2s ease;
-
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-    .menu-label {
-      color: var(--font-color);
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    &:hover {
-      background-color: var(--ux-theme-5);
-    }
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-    &.menu-item--link {
-      padding: 0;
-      justify-content: flex-start;
-    }
-  }
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

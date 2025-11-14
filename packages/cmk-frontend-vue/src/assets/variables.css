@@ -185,6 +185,7 @@
   --icon-widget-clone: url('~cmk-frontend/themes/facelift/images/icon_widget_clone.svg');
   --icon-widget-delete: url('~cmk-frontend/themes/facelift/images/icon_widget_delete.svg');
   --icon-werk-ack: url('~cmk-frontend/themes/facelift/images/icon_werk_ack.png');
+  --icon-clone: url('~cmk-frontend/themes/facelift/images/icon_clone.svg');
 }
 
 @layer theme {
@@ -211,6 +212,7 @@
     --popup-dialog-bg-color: var(--color-daylight-grey-10);
     --popup-dialog-title-color: var(--color-conference-grey-100);
     --popup-dialog-message-color: var(--color-mid-grey-100);
+    --menu-entry-disabled: var(--color-midnight-grey-100);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
@@ -298,6 +300,7 @@
     --popup-dialog-bg-color: var(--color-midnight-grey-50);
     --popup-dialog-title-color: var(--color-white-100);
     --popup-dialog-message-color: var(--color-mid-grey-0);
+    --menu-entry-disabled: var(--color-white-70);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 

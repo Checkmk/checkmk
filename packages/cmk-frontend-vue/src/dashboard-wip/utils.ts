@@ -241,6 +241,7 @@ export function createDashboardModel(
     owner: dashboardResp.owner,
     general_settings: dashboardResp.general_settings,
     filter_context: dashboardResp.filter_context,
+    public_token: dashboardResp.public_token,
     type: dashboardResp.is_built_in ? DashboardOwnerType.BUILT_IN : DashboardOwnerType.CUSTOM,
     content
   }
@@ -320,4 +321,18 @@ export const urlHandler = {
 
 export function toPathAndSearch(url: URL): string {
   return url.pathname + url.search
+}
+
+export async function copyToClipboard(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch (err) {
+    console.error('Failed to copy to clipboard:', err)
+  }
+}
+
+export function getSharedDashboardLink(publicToken: string): string {
+  const checkmkUrl = new URL(window.parent.location.href ?? window.location.href)
+  checkmkUrl.searchParams.set('cmk-token', `0:${publicToken}`)
+  return checkmkUrl.toString()
 }

@@ -51,6 +51,7 @@ import type {
 import { dashboardAPI, urlHandler } from '@/dashboard-wip/utils.ts'
 
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
+import DashboardSharingWizard from './components/Wizard/wizards/dashboard-sharing/DashboardSharingWizard.vue'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { CmkErrorBoundary } = useCmkErrorBoundary()
@@ -63,6 +64,7 @@ const openDashboardSettings = ref(false)
 const openAddWidgetDialog = ref(false)
 const openDashboardCreationDialog = ref(props.mode === 'create')
 const openDashboardCloneDialog = ref(false)
+const openDashboardShareDialog = ref(false)
 const openWizard = ref(false)
 const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
@@ -118,7 +120,8 @@ const selectedDashboard = computed(() => {
 
   return {
     name: dashboardsManager.activeDashboardName.value!,
-    title: dashboardsManager.activeDashboard.value.general_settings.title.text
+    title: dashboardsManager.activeDashboard.value.general_settings.title.text,
+    type: dashboardsManager.activeDashboard.value.type
   }
 })
 
@@ -351,10 +354,12 @@ function deepClone<T>(obj: T): T {
         :selected-dashboard="selectedDashboard"
         :link-user-guide="props.links.user_guide"
         :link-navigation-embedding-page="props.links.navigation_embedding_page"
+        :public-token="dashboardsManager.activeDashboard.value?.public_token ?? null"
         @open-filter="openDashboardFilterSettings = true"
         @open-settings="openDashboardSettings = true"
         @open-clone-workflow="openDashboardCloneDialog = true"
         @open-widget-workflow="openAddWidgetDialog = true"
+        @open-share-workflow="openDashboardShareDialog = true"
         @save="saveDashboard"
         @enter-edit="isDashboardEditingMode = true"
         @cancel-edit="cancelEdit"
@@ -388,6 +393,15 @@ function deepClone<T>(obj: T): T {
         @clone-dashboard="(...args) => cloneDashboard(...args)"
         @cancel-clone="openDashboardCloneDialog = false"
       />
+      <DashboardSharingWizard
+        v-if="openDashboardShareDialog && dashboardsManager.activeDashboardName.value"
+        :dashboard-name="dashboardsManager.activeDashboardName.value"
+        :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
+        :public-token="dashboardsManager.activeDashboard?.value?.public_token ?? null"
+        @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
+        @close="openDashboardShareDialog = false"
+      />
+
       <AddWidgetDialog
         v-model:open="openAddWidgetDialog"
         :workflow-items="dashboardWidgetWorkflows"

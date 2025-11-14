@@ -30,6 +30,7 @@ export type DashboardFilterContextWithSingleInfos =
 export type DashboardGeneralSettings = components['schemas']['DashboardGeneralSettings']
 export type DashboardRelativeGridLayout = components['schemas']['DashboardRelativeGridLayout']
 export type DashboardResponsiveGridLayout = components['schemas']['DashboardResponsiveGridLayout']
+export type DashboardTokenModel = components['schemas']['DashboardTokenModel']
 
 export type ContentRelativeGrid = {
   layout: DashboardRelativeGridLayout
@@ -51,6 +52,7 @@ export type DashboardModel<T = ContentResponsiveGrid | ContentRelativeGrid> = {
   general_settings: DashboardGeneralSettings
   filter_context: DashboardFilterContextWithSingleInfos
   type: DashboardOwnerType
+  public_token: DashboardTokenModel | null
   content: T
 }
 

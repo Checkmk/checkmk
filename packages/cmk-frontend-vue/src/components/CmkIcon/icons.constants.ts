@@ -145,7 +145,8 @@ export const simpleIcons = [
   'debian',
   'redhat',
   'windows',
-  'custom-snapin'
+  'custom-snapin',
+  'clone'
 ] as const
 
 export const emblems = [

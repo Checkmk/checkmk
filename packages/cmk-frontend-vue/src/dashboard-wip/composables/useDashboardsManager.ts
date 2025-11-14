@@ -59,6 +59,16 @@ export function useDashboardsManager() {
     return setActiveDashboard(name, dashboard)
   }
 
+  async function refreshActiveDashboard(): Promise<void> {
+    if (activeDashboardName.value) {
+      const layout =
+        activeDashboard.value?.content.layout.type === 'responsive_grid'
+          ? DashboardLayout.RESPONSIVE_GRID
+          : DashboardLayout.RELATIVE_GRID
+      await loadDashboard(activeDashboardName.value, layout)
+    }
+  }
+
   async function createDashboard(
     dashboardName: string,
     generalSettings: DashboardGeneralSettings,
@@ -117,6 +127,7 @@ export function useDashboardsManager() {
       owner: dashboardResp.owner,
       general_settings: dashboardResp.general_settings,
       filter_context: dashboardResp.filter_context,
+      public_token: dashboardResp.public_token,
       content,
       type: DashboardOwnerType.CUSTOM
     }
@@ -194,6 +205,7 @@ export function useDashboardsManager() {
 
     createDashboard,
     loadDashboard,
+    refreshActiveDashboard,
     persistDashboard
   }
 }

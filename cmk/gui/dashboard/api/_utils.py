@@ -11,6 +11,7 @@ from livestatus import SiteConfigurations
 
 import cmk.gui.utils.permission_verification as permissions
 from cmk.ccc.user import UserId
+from cmk.gui.dashboard.dashlet import dashlet_registry
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
@@ -24,12 +25,22 @@ from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_user
 
-from .. import DashboardConfig
 from ..store import DashboardStore, save_all_dashboards
+from ..type_defs import DashboardConfig
+from .model.constants import (
+    DashboardConstantsResponse,
+    FilterContextConstants,
+    LayoutConstraints,
+    RelativeLayoutConstraints,
+    RESPONSIVE_GRID_BREAKPOINTS,
+    ResponsiveGridBreakpointConfig,
+    WidgetConstraints,
+)
 from .model.dashboard import (
     RelativeGridDashboardResponse,
 )
 from .model.response_model import RelativeGridDashboardDomainObject
+from .model.widget import WidgetRelativeGridPosition, WidgetRelativeGridSize
 
 INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "problem_graph": "problem_graph",
@@ -195,3 +206,42 @@ def convert_internal_relative_dashboard_to_api_model_dict(
 ) -> dict[str, object]:
     dashboard_relative_grid = RelativeGridDashboardResponse.from_internal(dashboard_config)
     return dump_dict_without_omitted(RelativeGridDashboardResponse, dashboard_relative_grid)
+
+
+class DashboardConstants:
+    @staticmethod
+    def generate_api_response() -> DashboardConstantsResponse:
+        widgets_metadata = {}
+        for widget_type, widget in dashlet_registry.items():
+            if api_type_name := INTERNAL_TO_API_TYPE_NAME.get(widget_type):
+                widgets_metadata[api_type_name] = WidgetConstraints(
+                    layout=LayoutConstraints(
+                        relative=RelativeLayoutConstraints(
+                            initial_size=WidgetRelativeGridSize.from_internal(
+                                widget.initial_size()
+                            ),
+                            initial_position=WidgetRelativeGridPosition.from_internal(
+                                widget.initial_position()
+                            ),
+                            is_resizable=widget.is_resizable(),
+                        )
+                    ),
+                    filter_context=FilterContextConstants(
+                        restricted_to_single=list(widget.single_infos()),
+                    ),
+                )
+
+        return DashboardConstantsResponse(
+            widgets=widgets_metadata,
+            responsive_grid_breakpoints={
+                breakpoint_id: ResponsiveGridBreakpointConfig(
+                    min_width=config["min_width"], columns=config["columns"]
+                )
+                for breakpoint_id, config in RESPONSIVE_GRID_BREAKPOINTS.items()
+            },
+        )
+
+    @staticmethod
+    def dict_output() -> dict[str, object]:
+        response = DashboardConstants.generate_api_response()
+        return dump_dict_without_omitted(DashboardConstantsResponse, response)

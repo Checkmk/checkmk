@@ -11,7 +11,6 @@
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 # FIXME: Cleanups
@@ -4401,7 +4400,7 @@ class OptionalDropdownChoice(DropdownChoice[T]):
     def canonical_value(self) -> Any:
         return self._explicit.canonical_value()
 
-    def value_is_explicit(self, value):
+    def value_is_explicit(self, value: Any) -> bool:
         return value not in [c[0] for c in self.choices()]
 
     def render_input(self, varprefix: str, value: Any) -> None:
@@ -5090,7 +5089,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
 
 class TimeHelper:
     @staticmethod
-    def round(timestamp, unit):
+    def round(timestamp: float, unit: str) -> int:
         lt = datetime.datetime.fromtimestamp(timestamp, tzlocal()).replace(minute=0, second=0)
         if unit != "h":
             lt = lt.replace(hour=0)
@@ -5104,10 +5103,10 @@ class TimeHelper:
         elif unit not in {"d", "h"}:
             raise MKGeneralException("invalid time unit %s" % unit)
 
-        return lt.timestamp()
+        return int(lt.timestamp())
 
     @staticmethod
-    def add(timestamp, count, unit):
+    def add(timestamp: float, count: int, unit: str) -> int:
         lt = datetime.datetime.fromtimestamp(timestamp, tzlocal())
         if unit == "h":
             lt += relativedelta(hours=count)
@@ -5122,7 +5121,7 @@ class TimeHelper:
         else:
             raise MKGeneralException("invalid time unit %s" % unit)
 
-        return lt.timestamp()
+        return int(lt.timestamp())
 
 
 type _TimerangeAge = tuple[Literal["age"], int]  # in seconds
@@ -8609,11 +8608,11 @@ class SetupSiteChoice(DropdownChoice):
             deprecated_choices=deprecated_choices,
         )
 
-    def _site_default_value(self):
+    def _site_default_value(self) -> SiteId | None:
         if site_config.is_distributed_setup_remote_site(active_config.sites):
             # Placeholder for "central site". This is only relevant when using Setup on a remote site
             # and a host / folder has no site set.
-            return ""
+            return SiteId("")
 
         default_value = user_sites.site_attribute_default_value()
         if default_value:
@@ -8789,7 +8788,7 @@ def DocumentationURL() -> TextInput:
     )
 
 
-def type_name(v):
+def type_name(v: object) -> str:
     try:
         return type(v).__name__
     except Exception:

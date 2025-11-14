@@ -145,6 +145,7 @@ CmkEndpointName = Literal[
     "cmk/delete_bi_rule",
     "cmk/delete_bi_aggregation",
     "cmk/delete_bi_pack",
+    "cmk/delete_dashboard_token",
     "cmk/put_bi_rule",
     "cmk/post_bi_rule",
     "cmk/bi_aggregation_state_post",

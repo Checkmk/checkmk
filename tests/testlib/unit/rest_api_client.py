@@ -3641,6 +3641,15 @@ class DashboardClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
+    def delete_dashboard_token(self, payload: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain_token}/actions/delete/invoke",
+            body=payload,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
 
 class ConstantClient(RestApiClient):
     domain: DomainType = "constant"

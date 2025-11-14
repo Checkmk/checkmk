@@ -237,3 +237,52 @@ def test_edit_token_nonexistent_dashboard(
     resp = clients.DashboardClient.edit_dashboard_token(edit_payload, expect_ok=False)
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code}"
     assert resp.json["title"] == "Dashboard not found"
+
+
+def test_delete_token_user_dashboard(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard_with_token: str,
+) -> None:
+    delete_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard_with_token,
+    }
+    resp = clients.DashboardClient.delete_dashboard_token(delete_payload)
+    assert resp.status_code == 204, f"Expected 204, got {resp.status_code}"
+
+
+def test_delete_token_builtin_dashboard(clients: ClientRegistry) -> None:
+    delete_payload = {
+        "dashboard_owner": "",
+        "dashboard_id": "main",
+    }
+    resp = clients.DashboardClient.delete_dashboard_token(delete_payload, expect_ok=False)
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code} {resp.json!r}"
+    assert (
+        resp.json["detail"] == "You are not allowed to edit dashboards owned by the built-in user."
+    )
+
+
+def test_delete_token_nonexistent_dashboard(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> None:
+    delete_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": "does_not_exist",
+    }
+    resp = clients.DashboardClient.delete_dashboard_token(delete_payload, expect_ok=False)
+    assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.json!r}"
+    assert resp.json["title"] == "Dashboard not found"
+
+
+def test_delete_token_no_token(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str], user_dashboard: str
+) -> None:
+    delete_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard,
+    }
+    resp = clients.DashboardClient.delete_dashboard_token(delete_payload, expect_ok=False)
+    assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.json!r}"
+    assert resp.json["title"] == "Dashboard token not found"

@@ -80,11 +80,15 @@ class _BaseDashboardTokenRequest:
     dashboard_id: str = api_field(
         description="The ID of the dashboard for which the token is being created."
     )
+
+
+@api_model
+class _BaseDashboardTokenRequestWithComment(_BaseDashboardTokenRequest):
     comment: str = api_field(description="Internal comment for the token. Not displayed to users.")
 
 
 @api_model
-class CreateDashboardToken(_BaseDashboardTokenRequest):
+class CreateDashboardToken(_BaseDashboardTokenRequestWithComment):
     expires_at: Annotated[
         dt.datetime, AwareDatetime, FutureDatetime, AfterValidator(_validate_max_time)
     ] = api_field(
@@ -95,7 +99,7 @@ class CreateDashboardToken(_BaseDashboardTokenRequest):
 
 
 @api_model
-class EditDashboardToken(_BaseDashboardTokenRequest):
+class EditDashboardToken(_BaseDashboardTokenRequestWithComment):
     is_disabled: bool = api_field(description="Indicates whether the token is disabled.")
     # NOTE: We don't use FutureDatetime here since the token may already be expired
     # TODO: do we even want to allow editing the expiration time
@@ -105,3 +109,8 @@ class EditDashboardToken(_BaseDashboardTokenRequest):
             example="2025-12-31T23:59:59Z",
         )
     )
+
+
+@api_model
+class DeleteDashboardToken(_BaseDashboardTokenRequest):
+    pass

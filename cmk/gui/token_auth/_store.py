@@ -34,6 +34,8 @@ class DashboardToken(BaseModel):
     owner: AnnotatedUserId
     dashboard_name: str
     type_: Literal["dashboard"] = "dashboard"
+    comment: str = ""
+    disabled: bool = False
 
 
 TokenId = NewType("TokenId", str)

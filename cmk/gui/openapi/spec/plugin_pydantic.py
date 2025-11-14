@@ -11,9 +11,9 @@
 import contextlib
 import hashlib
 import warnings
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import is_dataclass
-from typing import Any, cast, is_typeddict, Literal
+from typing import Any, is_typeddict, Literal
 
 import apispec
 import pydantic_core
@@ -169,14 +169,8 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
         This is mostly copied from the base class, changes are marked with comments."""
         json_schema = self.generate_inner(schema["schema"])
 
-        # changed: we also check default_factory
         if "default" in schema:
             default = schema["default"]
-        elif "default_factory" in schema:
-            if schema.get("default_factory_takes_data"):
-                default = cast(Callable[[dict[str, Any]], Any], schema["default_factory"])({})
-            else:
-                default = cast(Callable[[], Any], schema["default_factory"])()
         else:
             return json_schema
 
@@ -226,6 +220,9 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
         return json_schema
 
     def encode_default(self, dft: Any) -> Any:
+        # NOTE: this might cause problems with containers like `list[SomeCustomType]` where the
+        #       custom type has a serializer, as `type()` will just return the outer type.
+        #       since we don't support default_factories (anymore), this should be fine for now.
         type_ = type(dft)
         config = self._config
         adapter = get_cached_type_adapter(

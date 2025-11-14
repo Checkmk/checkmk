@@ -109,7 +109,7 @@ const regexSpec: Regex = {
   validators: [],
   label: '',
   input_type: 'regex',
-  no_results_hint: 'No results found',
+  no_results_hint: 'No matches found',
   autocompleter: {
     data: {
       ident: 'config_hostname',

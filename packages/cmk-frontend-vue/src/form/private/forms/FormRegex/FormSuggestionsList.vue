@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { Regex } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { h, ref, useTemplateRef } from 'vue'
+import { computed, h, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -25,13 +25,6 @@ type SuggestionsCallbackFiltered = {
 const emit = defineEmits<{
   'request-close-suggestions': []
 }>()
-defineExpose({
-  focus,
-  selectNextElement,
-  selectPreviousElement,
-  selectSiblingElement,
-  selectHighlightedSuggestion
-})
 
 const { type, suggestionsMode, spec, role, suggestions } = defineProps<{
   type: string
@@ -50,6 +43,8 @@ const suggestionRefs = useTemplateRef('suggestionRefs')
 const firstSelectableIndex = ref(0)
 const filteredSuggestions = ref<Array<Suggestion>>([])
 const error = ref('error')
+const filteredSuggestionsCount = computed(() => filteredSuggestions.value.length)
+
 function isSuggestionHighlighted(suggestion: Suggestion, index: number): boolean {
   if (
     index === firstSelectableIndex.value &&
@@ -121,6 +116,12 @@ immediateWatch(
   () => ({ newSuggestions: suggestions, newFilterString: data.value }),
   async ({ newSuggestions, newFilterString }) => {
     const result = await getSuggestions(newSuggestions, newFilterString)
+    if (newFilterString === '') {
+      error.value = ''
+      filteredSuggestions.value = []
+      highlightedOption.value = null
+      return
+    }
     if (result instanceof ErrorResponse) {
       error.value = result.error
     } else {
@@ -264,10 +265,19 @@ function getHighlightedPartsRegex(title: string, query: string) {
   }
   return h('span', parts)
 }
+
+defineExpose({
+  focus,
+  selectNextElement,
+  selectPreviousElement,
+  selectSiblingElement,
+  selectHighlightedSuggestion,
+  filteredSuggestionsCount
+})
 </script>
 <template>
   <li
-    v-if="type === 'regex' && suggestionsMode === 'preview'"
+    v-if="type === 'regex' && suggestionsMode === 'preview' && filteredSuggestions.length > 0"
     class="form-suggestions-list__preview-text-li form-suggestions-list__li"
   >
     {{ _t('Preview of matches:') }}
@@ -319,7 +329,7 @@ function getHighlightedPartsRegex(title: string, query: string) {
 
 .form-suggestions-list__li {
   padding: 6px;
-  padding-left: 87px;
+  padding-left: 100px;
   cursor: default;
   color: var(--font-color-dimmed);
 

@@ -28,6 +28,7 @@ const { type, spec } = defineProps<{
 const suggestionsMode = ref<'preview' | 'all'>('preview')
 const rootRef = ref<HTMLElement | null>(null)
 const suggestionListRef = ref<InstanceType<typeof FormSuggestionsList> | null>(null)
+const previewSuggestionListRef = ref<InstanceType<typeof FormSuggestionsList> | null>(null)
 
 const data = defineModel<string>('data', { required: true, default: '' })
 
@@ -106,6 +107,7 @@ defineExpose({
 
     <FormSuggestionsList
       v-if="suggestionsMode === 'preview' && type === 'regex'"
+      ref="previewSuggestionListRef"
       v-model:data="data"
       :suggestions-mode="suggestionsMode"
       :type="'regex'"
@@ -115,12 +117,16 @@ defineExpose({
       @request-close-suggestions="emit('request-close-suggestions')"
     />
     <button
-      v-show="suggestionsMode === 'preview' && type === 'regex'"
+      v-show="
+        suggestionsMode === 'preview' &&
+        type === 'regex' &&
+        (previewSuggestionListRef?.filteredSuggestionsCount ?? 0) > 5
+      "
       class="form-suggestions__button"
       type="button"
       @click.stop="suggestionsMode = 'all'"
     >
-      {{ _t('show all') }}
+      {{ _t('show all') }} ({{ previewSuggestionListRef?.filteredSuggestionsCount ?? 0 }})
     </button>
   </ul>
 </template>
@@ -155,8 +161,8 @@ defineExpose({
   padding: 0;
   list-style-type: none;
   transform: translateX(-86.5px);
-  width: 265px;
-  z-index: var(--z-index-dropdown-offset);
+  width: 274px;
+  z-index: var(--z-index-dropdown);
 }
 
 .form-suggestions__text {
@@ -170,7 +176,7 @@ defineExpose({
   padding: 0;
   list-style-type: none;
   transform: translateX(-86.5px);
-  width: 265px;
-  z-index: var(--z-index-dropdown-offset);
+  width: 274px;
+  z-index: var(--z-index-dropdown);
 }
 </style>

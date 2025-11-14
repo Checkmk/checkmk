@@ -30,7 +30,7 @@ const vClickOutside = useClickOutside()
 
 const placeholder = computed(() => {
   if (inputType.value === 'regex') {
-    return _t('~Enter regex (pattern match)')
+    return _t('Enter regex (pattern match)')
   } else if (inputType.value === 'text') {
     return _t('Enter plain text (single match)')
   }
@@ -160,7 +160,7 @@ function onKeyEnter(e: KeyboardEvent) {
 
 .form-regex__input {
   border: 1px solid var(--color-mid-grey-60);
-  padding: 0 2em 0 3px;
+  padding: 0 12px 0 3px;
   height: 20px;
   border-left: 0;
   border-radius: 0 2px 2px 0;
@@ -168,6 +168,7 @@ function onKeyEnter(e: KeyboardEvent) {
   background-color: var(--ux-theme-5);
   position: relative;
   color: var(--font-color);
+  width: 175px;
 }
 
 .form-regex__input:focus {

@@ -58,7 +58,7 @@ test('renders RegexTextInput with correct props', () => {
       data: ''
     }
   })
-  const input = screen.getByPlaceholderText('~Enter regex (pattern match)')
+  const input = screen.getByPlaceholderText('Enter regex (pattern match)')
   expect(input).toBeInTheDocument()
 })
 test('toggle button state is regex when input_type is "regex"', () => {
@@ -94,6 +94,9 @@ test('toggle button state is text when input_type is "text"', async () => {
   await userEvent.click(toggle)
   expect(toggle).toBeInTheDocument()
   expect(toggle).toHaveAttribute('aria-pressed', 'true')
+
+  const input = screen.getByPlaceholderText('Enter plain text (single match)')
+  expect(input).toBeInTheDocument()
 })
 
 test('shows suggestions when input is focused', async () => {
@@ -112,7 +115,7 @@ test('shows suggestions when input is focused', async () => {
   expect(items.length).toBeGreaterThan(0)
 })
 
-test('shows Regex Preview when input is focused and regex toggle is active', async () => {
+test('shows suggestions when input is focused and regex toggle is active', async () => {
   render(FormRegex, {
     props: {
       spec: regexSpec,
@@ -124,10 +127,11 @@ test('shows Regex Preview when input is focused and regex toggle is active', asy
   const input = screen.getByRole('textbox')
   await userEvent.click(input)
 
-  await screen.findByText('Preview of matches:')
+  const regexSuggestions = screen.getByText('No results found')
+  expect(regexSuggestions).toBeInTheDocument()
 })
 
-test('shows Regex Preview when input is focused and regex toggle is active', async () => {
+test('shows suggestions dropdown when input is focused', async () => {
   render(FormRegex, {
     props: {
       spec: regexSpec,
@@ -139,10 +143,10 @@ test('shows Regex Preview when input is focused and regex toggle is active', asy
   const input = screen.getByRole('textbox')
   await userEvent.click(input)
 
-  await screen.findByText('Preview of matches:')
+  expect(input).toHaveAttribute('aria-expanded', 'true')
 })
 
-test('shows "show all" button in preview mode', async () => {
+test('displays no results hint when no suggestions are found', async () => {
   render(FormRegex, {
     props: {
       spec: regexSpec,
@@ -154,25 +158,5 @@ test('shows "show all" button in preview mode', async () => {
   const input = screen.getByRole('textbox')
   await userEvent.click(input)
 
-  const showAllButton = screen.getByRole('button', { name: 'show all' })
-  expect(showAllButton).toBeInTheDocument()
-})
-
-test('shows "show preview" button after clicking "show all"', async () => {
-  render(FormRegex, {
-    props: {
-      spec: regexSpec,
-      backendValidation: [],
-      data: ''
-    }
-  })
-
-  const input = screen.getByRole('textbox')
-  await userEvent.click(input)
-
-  const showAllButton = await screen.findByRole('button', { name: 'show all' })
-  await userEvent.click(showAllButton)
-
-  const showPreviewButton = await screen.findByRole('button', { name: 'show preview' })
-  expect(showPreviewButton).toBeInTheDocument()
+  await screen.findByText('No results found')
 })

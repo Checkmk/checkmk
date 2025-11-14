@@ -9,8 +9,10 @@ case "$DISTRO" in
     ubuntu-20.04)
         echo "Installing for Ubuntu"
 
-        wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
-        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+        wget --inet4-only -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        # Upstream repo resides at https://apt.releases.hashicorp.com
+        # We use an internal mirror for speedup.
+        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.lan.checkmk.net/hashicorp/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
         apt-get update && apt-get install -y packer
         rm -rf /var/lib/apt/lists/*
 

@@ -5342,6 +5342,14 @@ msgstr "Conexiones del controlador de agentes"
 msgid "Agent controller deployment"
 msgstr "Despliegue del controlador de agentes"
 
+msgid ""
+"Agent controller not registered at this site: You tried to register for "
+"agent updates with a user who's authorized to register agents. This is "
+"supported, but requires a prior agent controller registration. To register "
+"for agent updates only, you need an explicit permission for agent updater "
+"registration."
+msgstr ""
+
 #, fuzzy
 msgid "Agent controller user"
 msgstr "Agente controlador"
@@ -33750,6 +33758,11 @@ msgstr ""
 "específicos a través de la regla de eventos."
 
 msgid ""
+"If the VM is locked longer than the defined levels, a warning/critical state "
+"is triggered.If this is set to 'No Levels', the lock duration is not checked."
+msgstr ""
+
+msgid ""
 "If the application of the message matches this regular expression (case "
 "insensitive) and either no text to cancel is specified or that text also "
 "matched, then events created by this rule will automatically be cancelled "
@@ -36061,6 +36074,10 @@ msgstr ""
 
 msgid "Index hitratio"
 msgstr "Índice en proporción de aciertos"
+
+#, fuzzy
+msgid "Index overhead"
+msgstr "Índices de búsqueda"
 
 msgid "Index percentage bloat levels"
 msgstr "Índice de porcentaje de hinchazón"
@@ -40342,6 +40359,10 @@ msgstr "Ubicación"
 
 msgid "Locator"
 msgstr "Localizador"
+
+#, fuzzy
+msgid "Lock Duration levels"
+msgstr "Niveles de duración"
 
 msgid "Lock Requests / sec"
 msgstr "Solicitudes de bloqueo / seg"
@@ -61402,6 +61423,11 @@ msgstr "Cambiar '%s' por '%s'"
 #, fuzzy
 msgid "Set upper levels"
 msgstr "Establecer niveles superiores"
+
+msgid ""
+"Set upper levels for the index overhead percentage. The index overhead is "
+"the ratio of index usage to total storage (index + data)."
+msgstr ""
 
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "

@@ -5031,6 +5031,14 @@ msgstr "エージェントコントローラー接続"
 msgid "Agent controller deployment"
 msgstr "エージェントコントローラーデプロイ"
 
+msgid ""
+"Agent controller not registered at this site: You tried to register for "
+"agent updates with a user who's authorized to register agents. This is "
+"supported, but requires a prior agent controller registration. To register "
+"for agent updates only, you need an explicit permission for agent updater "
+"registration."
+msgstr ""
+
 msgid "Agent controller user"
 msgstr "エージェントコントローラーユーザー"
 
@@ -31433,6 +31441,11 @@ msgstr ""
 "割り当てられていないイベントを表示できるかどうかを制御します。"
 
 msgid ""
+"If the VM is locked longer than the defined levels, a warning/critical state "
+"is triggered.If this is set to 'No Levels', the lock duration is not checked."
+msgstr ""
+
+msgid ""
 "If the application of the message matches this regular expression (case "
 "insensitive) and either no text to cancel is specified or that text also "
 "matched, then events created by this rule will automatically be cancelled "
@@ -33634,6 +33647,10 @@ msgstr "定義された時間範囲のインデックスの失敗上位レベル
 
 msgid "Index hitratio"
 msgstr "インデックスヒット率"
+
+#, fuzzy
+msgid "Index overhead"
+msgstr "検索するインデックス"
 
 msgid "Index percentage bloat levels"
 msgstr "肥大化レベルのパーセンテージのインデックス"
@@ -37646,6 +37663,10 @@ msgstr "ロケーション"
 
 msgid "Locator"
 msgstr "ロケーター"
+
+#, fuzzy
+msgid "Lock Duration levels"
+msgstr "期間レベル"
 
 msgid "Lock Requests / sec"
 msgstr "ロックリクエスト/秒"
@@ -57113,6 +57134,11 @@ msgstr "'%s'に設定する"
 
 msgid "Set upper levels"
 msgstr "上位レベルを設定する"
+
+msgid ""
+"Set upper levels for the index overhead percentage. The index overhead is "
+"the ratio of index usage to total storage (index + data)."
+msgstr ""
 
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "

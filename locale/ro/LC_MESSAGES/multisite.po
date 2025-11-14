@@ -5325,6 +5325,14 @@ msgstr "Conexiuni agent controler"
 msgid "Agent controller deployment"
 msgstr "Implementarea controlerului de agent"
 
+msgid ""
+"Agent controller not registered at this site: You tried to register for "
+"agent updates with a user who's authorized to register agents. This is "
+"supported, but requires a prior agent controller registration. To register "
+"for agent updates only, you need an explicit permission for agent updater "
+"registration."
+msgstr ""
+
 #, fuzzy
 msgid "Agent controller user"
 msgstr "Controlor agent"
@@ -33582,6 +33590,11 @@ msgstr ""
 "grupuri de contact specifice prin intermediul regulii de eveniment."
 
 msgid ""
+"If the VM is locked longer than the defined levels, a warning/critical state "
+"is triggered.If this is set to 'No Levels', the lock duration is not checked."
+msgstr ""
+
+msgid ""
 "If the application of the message matches this regular expression (case "
 "insensitive) and either no text to cancel is specified or that text also "
 "matched, then events created by this rule will automatically be cancelled "
@@ -35913,6 +35926,10 @@ msgstr ""
 
 msgid "Index hitratio"
 msgstr "Indicele hitratio"
+
+#, fuzzy
+msgid "Index overhead"
+msgstr "Indicii de căutare"
 
 msgid "Index percentage bloat levels"
 msgstr "Niveluri procentuale de umflături"
@@ -40150,6 +40167,10 @@ msgstr "Locație"
 
 msgid "Locator"
 msgstr "Localizator"
+
+#, fuzzy
+msgid "Lock Duration levels"
+msgstr "Niveluri de durată"
 
 msgid "Lock Requests / sec"
 msgstr "Solicitări de blocare / sec"
@@ -61060,6 +61081,11 @@ msgstr "Setați la '%s'"
 #, fuzzy
 msgid "Set upper levels"
 msgstr "Setați nivelurile superioare"
+
+msgid ""
+"Set upper levels for the index overhead percentage. The index overhead is "
+"the ratio of index usage to total storage (index + data)."
+msgstr ""
 
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "

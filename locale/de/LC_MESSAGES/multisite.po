@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-11-12 21:35+0000\n"
+"PO-Revision-Date: 2025-11-13 22:34+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -1061,9 +1061,9 @@ msgstr "(unbenannter Regelsatz)"
 msgid ", "
 msgstr ", "
 
-#, fuzzy, python-format
+#, python-format
 msgid ", +%d more"
-msgstr "... (%d mehr)"
+msgstr ", +%d mehr"
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
@@ -5182,6 +5182,14 @@ msgstr "Agent Controller-Verbindungen"
 
 msgid "Agent controller deployment"
 msgstr "Agent Controller-Verteilung"
+
+msgid ""
+"Agent controller not registered at this site: You tried to register for "
+"agent updates with a user who's authorized to register agents. This is "
+"supported, but requires a prior agent controller registration. To register "
+"for agent updates only, you need an explicit permission for agent updater "
+"registration."
+msgstr ""
 
 msgid "Agent controller user"
 msgstr "Benutzer des Agent Controllers"
@@ -22732,7 +22740,7 @@ msgid "Enable TLS"
 msgstr "TLS einschalten"
 
 msgid "Enable TLS certificate revocation checks"
-msgstr "TLS Certificate Revocation Checks aktivieren"
+msgstr "Checks für TLS Zertifikatswiderruf aktivieren"
 
 msgid "Enable TLS certificate validation"
 msgstr "TLS-Zertifikatsüberprüfung aktivieren"
@@ -32026,6 +32034,11 @@ msgstr ""
 "Ereignisregel keine spezifischen Kontaktgruppen zugewiesen wurden."
 
 msgid ""
+"If the VM is locked longer than the defined levels, a warning/critical state "
+"is triggered.If this is set to 'No Levels', the lock duration is not checked."
+msgstr ""
+
+msgid ""
 "If the application of the message matches this regular expression (case "
 "insensitive) and either no text to cancel is specified or that text also "
 "matched, then events created by this rule will automatically be cancelled "
@@ -34329,6 +34342,10 @@ msgstr "Indexfehler in den definierten Obergrenzen für Zeiträume"
 
 msgid "Index hitratio"
 msgstr "Index-Hitrate"
+
+#, fuzzy
+msgid "Index overhead"
+msgstr "Zu durchsuchende Indizes"
 
 msgid "Index percentage bloat levels"
 msgstr "Prozentuale Levels für Index-Bloat"
@@ -38396,6 +38413,10 @@ msgstr "Ort"
 msgid "Locator"
 msgstr "Locator"
 
+#, fuzzy
+msgid "Lock Duration levels"
+msgstr "Levels für die Dauer"
+
 msgid "Lock Requests / sec"
 msgstr "Requests/Sek. sperren"
 
@@ -41613,6 +41634,8 @@ msgstr "Variable user_id fehlt"
 
 msgid "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
 msgstr ""
+"Eine Mischung von Checkmk Ultimate und Checkmk Ultimate with multi-tenancy "
+"ist nicht erlaubt."
 
 msgid "Mixed"
 msgstr "Gemischt"
@@ -58092,6 +58115,11 @@ msgid "Set upper levels"
 msgstr "Obergrenzen festlegen"
 
 msgid ""
+"Set upper levels for the index overhead percentage. The index overhead is "
+"the ratio of index usage to total storage (index + data)."
+msgstr ""
+
+msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
 msgstr ""
@@ -62970,9 +62998,8 @@ msgstr "TLS"
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS-Authentifizierung ohne TLS ist nicht möglich"
 
-#, fuzzy
 msgid "TLS certificate revocation checks"
-msgstr "Verifizierung des TLS-Zertifikats"
+msgstr "Checks für TLS Zertifikatswiderruf"
 
 msgid "TLS certificate validation"
 msgstr "TLS-Zertifikatsüberprüfung"
@@ -65158,25 +65185,26 @@ msgstr ""
 "Controller nur Zertifikaten vertraut, die von der CA der Zentralinstanz "
 "signiert wurden."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The configured target site <i>%s</i> for this folder is invalid. The folder "
 "<i>%s</i> already belongs to the customer <i>%s</i>. This violates the multi-"
 "tenancy folder hierarchy. You may choose the following sites <i>%s</i>."
 msgstr ""
-"Die konfigurierte Instanz <i>%s</i> ist für diesen Ordner ungültig. Der "
-"Ordner <i>%s</i> gehört bereits dem Kunden <i>%s</i>. Dies verletzt die CME "
-"Ordner Hierarchie. Sie können die folgenden Instanzen wählen <i>%s</i>."
+"Die konfigurierte Zielinstanz <i>%s</i> ist für diesen Ordner ungültig. Der "
+"Ordner <i>%s</i> gehört bereits dem Kunden <i>%s</i>. Dies verletzt die "
+"Ordnerhierarchie des Mehr-Mandanten-Systems. Sie können die folgenden "
+"Instanzen wählen <i>%s</i>."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The configured target site refers to the default customer <i>%s</i>. The "
 "parent folder however, already have the specific customer <i>%s</i> set. "
 "This violates the multi-tenancy folder hierarchy."
 msgstr ""
-"Die konfigurierte Zielinstanz gehört dem Default-Kunden <i>%s</i>. Der "
+"Die konfigurierte Zielinstanz gehört dem Standard-Kunden <i>%s</i>. Der "
 "übergeordnete Ordner jedoch, hat bereits den spezifischen Kunden <i>%s</i> "
-"gesetzt. Das verletzt die CME Ordner Hierarchie."
+"gesetzt. Dies verletzt die Ordnerhierarchie des Mehr-Mandanten-Systems."
 
 msgid ""
 "The configured value for a host is accessible in notifications as well via "
@@ -66054,13 +66082,14 @@ msgstr ""
 msgid "The host '%s' does not exist"
 msgstr "Der Host '%s' existiert nicht"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
 "customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Der Host <i>%s</i> hat die Instanz <i>%s</i> explizit konfiguriert, die zu "
-"dem Kunden <i>%s</i> gehört. Dies ist in der CME nicht erlaubt."
+"dem Kunden <i>%s</i> gehört. Dies verletzt die Ordnerhierarchie des Mehr-"
+"Mandanten-Systems."
 
 msgid "The host could not be found on any active site."
 msgstr "Der Host konnte auf keiner aktiven Instanz gefunden werden."
@@ -67288,13 +67317,13 @@ msgstr ""
 "Befehl 'lodctr /s:counters.txt' eine detaillierte Liste der verfügbaren "
 "Zähler in einer Windows-Shell erhalten."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
 "files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
 "new API."
 msgstr ""
-"Die alte Inventar-Plugin-API wurde in Checkmk Version 2.2 entfernt. Plugin-"
+"Die alte Bakery-Plugin-API wird in Checkmk Version 2.6 entfernt. Plugin-"
 "Dateien in <tt>'%s'</tt> werden ignoriert. Bitte stellen Sie die Plugins auf "
 "die neue API um."
 
@@ -68390,13 +68419,14 @@ msgstr ""
 "verwendet werden, um die eingefrorene Struktur der Aggregate zu "
 "aktualisieren."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
 "to customer <i>%s</i>. This violates the multi-tenancy folder hierarchy."
 msgstr ""
 "Der Unterordner <i>%s</i> hat die explizite Instanz <i>%s</i> gesetzt, "
-"welche dem Kunden <i>%s</i> gehört. Das verletzt die CME Ordner Hierarchie."
+"welche dem Kunden <i>%s</i> gehört. Das verletzt die Ordnerhierarchie des "
+"Mehr-Mandanten-Systems."
 
 msgid "The subscription tag"
 msgstr "Das Subskriptionsmerkmal"

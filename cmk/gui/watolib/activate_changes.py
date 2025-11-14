@@ -3752,8 +3752,22 @@ def activate_changes_start(
 
     """
 
+    for site_id in sites:
+        if site_id not in all_site_configs:
+            raise MKUserError(
+                None, _("Unknown site %s") % escaping.escape_attribute(site_id), status=400
+            )
+
+    sites_to_activate = SiteConfigurations(
+        {
+            site_id: site
+            for site_id, site in all_site_configs.items()
+            if not sites or site_id in sites
+        }
+    )
+
     changes = ActivateChanges()
-    changes.load(sites if sites else list(all_site_configs))
+    changes.load(list(sites_to_activate))
 
     _raise_for_license_block()
 
@@ -3768,14 +3782,8 @@ def activate_changes_start(
                 )
             )
 
-    for site in sites:
-        if site not in all_site_configs:
-            raise MKUserError(
-                None, _("Unknown site %s") % escaping.escape_attribute(site), status=400
-            )
-
     manager = ActivateChangesManager()
-    manager.changes.load(sites if sites else list(all_site_configs))
+    manager.changes.load(list(sites_to_activate))
 
     if manager.is_running():
         raise MKUserError(None, _("There is an activation already running."), status=423)
@@ -3783,26 +3791,30 @@ def activate_changes_start(
     if not manager.changes.has_pending_changes():
         raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
-    if not sites:
-        dirty_sites = manager.changes.dirty_sites(activation_sites(all_site_configs))
-        if not dirty_sites:
-            raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
+    if not (dirty_sites := manager.changes.dirty_sites(activation_sites(sites_to_activate))):
+        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
-        sites = manager.changes.filter_not_activatable_sites(dirty_sites)
-        if not sites:
-            raise MKUserError(
-                None,
-                _(
-                    "There are changes to activate, but no site can be "
-                    "activated (The sites %s have changes, but may be "
-                    "offline or not logged in)."
-                )
-                % ", ".join([site_id for site_id, _site in dirty_sites]),
-                status=409,
+    sites_that_can_be_activated = manager.changes.filter_not_activatable_sites(dirty_sites)
+    if not sites_that_can_be_activated:
+        err_msg = (
+            "sites %s have" % ", ".join(site_id for site_id, _site in dirty_sites)
+            if len(dirty_sites) > 1
+            else "site %s has" % dirty_sites[0][0]
+        )
+
+        raise MKUserError(
+            None,
+            _(
+                "There are changes to activate, but no site can be "
+                "activated (The %s changes, but may be "
+                "offline or not logged in)."
             )
+            % err_msg,
+            status=409,
+        )
 
     manager.start(
-        sites=sites,
+        sites=sites_that_can_be_activated,
         comment=comment,
         activate_foreign=force_foreign_changes,
         source=source,

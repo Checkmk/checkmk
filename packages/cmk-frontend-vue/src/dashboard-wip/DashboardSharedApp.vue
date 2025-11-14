@@ -1,0 +1,43 @@
+<!--
+Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import { computed, provide } from 'vue'
+
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
+
+import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
+import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
+import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
+import { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
+import type { SharedDashboardPageProperties } from '@/dashboard-wip/types/page.ts'
+import { createDashboardModel } from '@/dashboard-wip/utils.ts'
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
+
+const props = defineProps<SharedDashboardPageProperties>()
+
+const sharedDashboard = createDashboardModel(props.dashboard.spec, DashboardLayout.RELATIVE_GRID)
+
+// So far, this is only needed and used by the DashboardContentNtop component
+provide('urlParams', props.url_params)
+
+const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filter_context))
+const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.content.widgets))
+</script>
+
+<template>
+  <CmkErrorBoundary>
+    <DashboardComponent
+      v-model:dashboard="sharedDashboard"
+      :dashboard-name="dashboard.name"
+      :base-filters="dashboardFilters.baseFilters"
+      :widget-cores="dashboardWidgets.widgetCores"
+      :constants="dashboard_constants"
+      :is-editing="false"
+    />
+  </CmkErrorBoundary>
+</template>

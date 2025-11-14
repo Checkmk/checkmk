@@ -34041,6 +34041,10 @@ msgstr "Ungültiger Datentyp vom Wert: %s"
 msgid "Invalid date format: %s"
 msgstr "Ungültiges Datenformat: %s"
 
+#, fuzzy
+msgid "Invalid email address."
+msgstr "Ungültige IP-Adresse"
+
 msgid "Invalid end time given"
 msgstr "Ungülitge Endzeit"
 

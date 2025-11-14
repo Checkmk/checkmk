@@ -35593,6 +35593,10 @@ msgstr "Source de données non valide : %s"
 msgid "Invalid date format: %s"
 msgstr "Source de données non valide : %s"
 
+#, fuzzy
+msgid "Invalid email address."
+msgstr "Adresse IPv4 non valide : %s"
+
 msgid "Invalid end time given"
 msgstr "L'heure de fin donnée est invalide"
 

@@ -35360,6 +35360,10 @@ msgstr "Sursă de date invalidă: %s"
 msgid "Invalid date format: %s"
 msgstr "Format de dată invalid: %s"
 
+#, fuzzy
+msgid "Invalid email address."
+msgstr "Adresa IPv4 invalidă: %s"
+
 msgid "Invalid end time given"
 msgstr "Ora de încheiere invalidă dată"
 

@@ -35538,6 +35538,10 @@ msgstr "Fuente de datos no válida: %s"
 msgid "Invalid date format: %s"
 msgstr "Fuente de datos no válida: %s"
 
+#, fuzzy
+msgid "Invalid email address."
+msgstr "Dirección IPv4 no válida: %s"
+
 msgid "Invalid end time given"
 msgstr "Hora de finalización no válida indicada"
 

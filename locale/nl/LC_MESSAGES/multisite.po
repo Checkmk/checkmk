@@ -35274,6 +35274,10 @@ msgstr "Ongeldige gegevensbron: %s"
 msgid "Invalid date format: %s"
 msgstr "Ongeldige gegevensbron: %s"
 
+#, fuzzy
+msgid "Invalid email address."
+msgstr "Ongeldig IPv4 adres: %s"
+
 msgid "Invalid end time given"
 msgstr "Ongeldige eindtijd gegeven"
 

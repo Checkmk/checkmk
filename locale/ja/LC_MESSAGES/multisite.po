@@ -33107,6 +33107,10 @@ msgstr "無効な値のデータタイプ: %s"
 msgid "Invalid date format: %s"
 msgstr "無効な日付形式：%s"
 
+#, fuzzy
+msgid "Invalid email address."
+msgstr "無効なIPアドレス"
+
 msgid "Invalid end time given"
 msgstr "無効な終了時刻が指定されました"
 

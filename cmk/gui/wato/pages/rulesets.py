@@ -2329,6 +2329,17 @@ class ABCEditRuleMode(WatoMode):
             }
         )
 
+    def _get_rule_value(self) -> IncomingData:
+        if request.has_var(self._vue_field_id()):
+            return RawFrontendData(
+                json.loads(request.get_str_input_mandatory(self._vue_field_id()))
+            )
+        return (
+            self._rule.value
+            if isinstance(self._rule.value, DefaultValue)
+            else RawDiskData(self._rule.value)
+        )
+
     def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> HTTPRedirect | None:
         self._rule.rule_options = self._get_rule_options_from_catalog()
 
@@ -2428,17 +2439,6 @@ class ABCEditRuleMode(WatoMode):
 
         with html.form_context("rule_editor", method="POST"):
             self._page_form(folder_tree(), debug=config.debug)
-
-    def _get_rule_value(self) -> IncomingData:
-        if request.has_var(self._vue_field_id()):
-            return RawFrontendData(
-                json.loads(request.get_str_input_mandatory(self._vue_field_id()))
-            )
-        return (
-            self._rule.value
-            if isinstance(self._rule.value, DefaultValue)
-            else RawDiskData(self._rule.value)
-        )
 
     @property
     def folder(self) -> Folder:

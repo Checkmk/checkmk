@@ -1762,34 +1762,6 @@ class MetricBackendAPI(BaseAPI):
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
 
-    def enable_custom_metric_backend(
-        self,
-        *,
-        site_id: str,
-        address: str,
-        tcp_port: int,
-        http_port: int,
-        username: str,
-        password: str,
-    ) -> None:
-        response = self.session.put(
-            url=self._config_endpoint_url(),
-            json={
-                "site_id": site_id,
-                "config": {
-                    "type": "custom",
-                    "address": address,
-                    "tcp_port": tcp_port,
-                    "http_port": http_port,
-                    "username": username,
-                    "password": password,
-                },
-            },
-        )
-
-        if not response.ok:
-            raise UnexpectedResponse.from_response(response)
-
     def _config_endpoint_url(self) -> str:
         return f"{self._base_url_internal}/domain-types/metric_backend/actions/update/invoke"
 

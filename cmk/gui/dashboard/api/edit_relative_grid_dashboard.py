@@ -64,14 +64,17 @@ def edit_relative_grid_dashboard_v1(
             detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{user_id}'.",
         )
 
-    embedded_views = dashboards[key].get("embedded_views", {})
+    old_dashboard = dashboards[key]
+    embedded_views = old_dashboard.get("embedded_views", {})
     body.validate(api_context, embedded_views=embedded_views)
 
-    save_dashboard_to_file(
-        api_context.config.sites, body.to_internal(user_id, dashboard_id, embedded_views), user_id
+    new_dashboard = body.to_internal(
+        user_id, dashboard_id, embedded_views, old_dashboard.get("public_token_id")
     )
+
+    save_dashboard_to_file(api_context.config.sites, new_dashboard, user_id)
     return serialize_relative_grid_dashboard(
-        dashboard_id, RelativeGridDashboardResponse.from_internal(dashboards[key])
+        dashboard_id, RelativeGridDashboardResponse.from_internal(new_dashboard)
     )
 
 

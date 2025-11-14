@@ -288,7 +288,11 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
 
     @abstractmethod
     def to_internal(
-        self, owner: UserId, dashboard_id: str, embedded_views: dict[str, DashboardEmbeddedViewSpec]
+        self,
+        owner: UserId,
+        dashboard_id: str,
+        embedded_views: dict[str, DashboardEmbeddedViewSpec],
+        public_token_id: str | None,
     ) -> DashboardConfig:
         """Convert the API model to the internal representation."""
         pass
@@ -306,6 +310,7 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
         owner: UserId,
         dashboard_id: str,
         raw_embedded_views: dict[str, DashboardEmbeddedViewSpec],
+        public_token_id: str | None,
     ) -> DashboardConfig:
         used_embedded_views = self._get_used_embedded_views()
         updated_embedded_views = {}
@@ -344,6 +349,7 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
             mandatory_context_filters=self.filter_context.mandatory_context_filters,
             dashlets=[widget.to_internal() for widget in self._iter_widgets()],
             embedded_views=updated_embedded_views,
+            public_token_id=public_token_id,
         )
 
 
@@ -403,9 +409,15 @@ class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
 
     @override
     def to_internal(
-        self, owner: UserId, dashboard_id: str, embedded_views: dict[str, DashboardEmbeddedViewSpec]
+        self,
+        owner: UserId,
+        dashboard_id: str,
+        embedded_views: dict[str, DashboardEmbeddedViewSpec],
+        public_token_id: str | None,
     ) -> DashboardConfig:
-        config = self._to_internal_without_layout(owner, dashboard_id, embedded_views)
+        config = self._to_internal_without_layout(
+            owner, dashboard_id, embedded_views, public_token_id
+        )
         config["layout"] = self.layout.to_internal()
         return config
 

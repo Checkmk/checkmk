@@ -41,7 +41,7 @@ def create_relative_grid_dashboard_v1(
     user.need_permission("general.edit_dashboards")
 
     owner = user.ident
-    internal = body.to_internal(owner, body.dashboard_id, embedded_views={})
+    internal = body.to_internal(owner, body.dashboard_id, embedded_views={}, public_token_id=None)
     save_dashboard_to_file(api_context.config.sites, internal, owner)
 
     return ApiResponse(

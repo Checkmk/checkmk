@@ -2,9 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 import logging
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -29,7 +29,8 @@ class MockEndpoint:
 @dataclass(frozen=True)
 class MockResponse:
     status: int
-    body: str | dict[str, object] | list[object]
+    body: bytes
+    request_validator: Callable[[dict[str, str], bytes], bool] | None = None
 
 
 class MockHTTPServer(HTTPServer):
@@ -61,18 +62,25 @@ class MockHandler(BaseHTTPRequestHandler):
             raise TypeError(f"Expected MockHTTPServer, got {type(self.server)}")
         endpoints = self.server.endpoints
         endpoint = MockEndpoint(method=method, path=self.path)
-        if response := endpoints.get(endpoint):
-            self.send_response(response.status)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            if isinstance(response.body, dict | list):
-                body = json.dumps(response.body)
-            else:
-                body = response.body
-            self.wfile.write(body.encode())
-        else:
+        if not (response := endpoints.get(endpoint)):
             self.send_response(404)
             self.end_headers()
+            return
+        if response.request_validator is not None:
+            request_headers = dict(self.headers.items())
+            size = int(self.headers.get("Content-Length", 0))
+            request_body = self.rfile.read(size)
+            try:
+                assert response.request_validator(request_headers, request_body)
+            except AssertionError as excp:
+                self.send_response(400, "Request Validation Failed")
+                self.end_headers()
+                self.wfile.write(str(excp).encode())
+                return
+        self.send_response(response.status)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(response.body)
 
 
 class MockServer:
@@ -96,7 +104,7 @@ class MockServer:
         >>> with MockServer() as mock_server:
         ...     mock_server.add_endpoint(
         ...         MockEndpoint(method="GET", path="/test"),
-        ...         MockResponse(status=200, body={"text": "hello"}),
+        ...         MockResponse(status=200, body=b"{'text': 'hello'}"),
         ...     )
         ...     # Make requests to server.url (e.g. via requests.request())
         ...     pass

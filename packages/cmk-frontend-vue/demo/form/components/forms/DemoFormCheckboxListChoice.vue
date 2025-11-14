@@ -5,7 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { CheckboxListChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import FormCheckboxListChoice, {
   type CheckboxListChoiceElement
@@ -51,9 +53,31 @@ const data = ref<Array<CheckboxListChoiceElement>>([
     title: 'some title 1'
   }
 ])
+const showValidation = ref<boolean>(false)
+const validation = computed(() => {
+  if (showValidation.value) {
+    return [
+      {
+        location: [],
+        message: 'some validation problem',
+        replacement_value: [
+          {
+            name: 'some_name_2',
+            title: 'some title 2'
+          }
+        ]
+      }
+    ]
+  } else {
+    return []
+  }
+})
 </script>
 
 <template>
+  <div>
+    <CmkCheckbox v-model="showValidation" label="show validation" />
+  </div>
   <pre>{{ JSON.stringify(data) }}</pre>
-  <FormCheckboxListChoice v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <FormCheckboxListChoice v-model:data="data" :spec="spec" :backend-validation="validation" />
 </template>

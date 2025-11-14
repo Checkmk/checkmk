@@ -9,10 +9,12 @@ import type {
   DualListChoiceI18N,
   MultipleChoiceElement
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { type DualListElement } from '@/components/CmkDualList/index.ts'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
+import type { ValidationMessages } from '@/form'
 import FormDualListChoice from '@/form/private/forms/FormDualListChoice.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -49,10 +51,31 @@ const spec = ref<DualListChoice>({
 })
 
 const data = ref<DualListElement[]>([])
+
+const showValidation = ref<boolean>(false)
+const validation = computed((): ValidationMessages => {
+  if (showValidation.value) {
+    return [
+      {
+        location: [],
+        message: 'General Inline Error Message',
+        replacement_value: [
+          { name: 'Test_name_2', title: 'Test Name 2' },
+          { name: 'Test_name_4', title: 'Test Name 4' }
+        ]
+      }
+    ]
+  } else {
+    return []
+  }
+})
 </script>
 
 <template>
   <h2>Demo: Form Dual List Choice</h2>
+  <div>
+    <CmkCheckbox v-model="showValidation" label="show validation" />
+  </div>
   <pre>{{ JSON.stringify(data) }}</pre>
-  <FormDualListChoice v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <FormDualListChoice v-model:data="data" :spec="spec" :backend-validation="validation" />
 </template>

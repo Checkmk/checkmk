@@ -9,7 +9,9 @@ import type * as vue_formspec_components from 'cmk-shared-typing/typescript/vue_
 import { computed, ref } from 'vue'
 
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
+import type { ValidationMessages } from '@/form'
 import FormEdit from '@/form/FormEdit.vue'
 import FormReadonly from '@/form/FormReadonly.vue'
 
@@ -109,9 +111,26 @@ const spec = computed(() => {
   } as vue_formspec_components.CascadingSingleChoice
 })
 const data = ref<[string, unknown]>(['stringChoice', 'some string'])
+const showValidation = ref<boolean>(false)
+const validation = computed((): ValidationMessages => {
+  if (showValidation.value) {
+    return [
+      {
+        location: [],
+        message: 'General Inline Error Message',
+        replacement_value: ''
+      }
+    ]
+  } else {
+    return []
+  }
+})
 </script>
 
 <template>
+  <div>
+    <CmkCheckbox v-model="showValidation" label="show validation" />
+  </div>
   <label
     >layout
     <select v-model="layout">
@@ -131,8 +150,8 @@ const data = ref<[string, unknown]>(['stringChoice', 'some string'])
   </label>
   <hr />
   <h2>Edit</h2>
-  <FormEdit v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <FormEdit v-model:data="data" :spec="spec" :backend-validation="validation" />
   <hr />
   <h2>Readonly</h2>
-  <FormReadonly :data="data" :spec="spec" :backend-validation="[]" />
+  <FormReadonly :data="data" :spec="spec" :backend-validation="validation" />
 </template>

@@ -9,8 +9,11 @@ import type {
   String,
   Tuple
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import type { ValidationMessages } from '@/form'
 import FormEdit from '@/form/FormEdit.vue'
 import FormReadonly from '@/form/FormReadonly.vue'
 
@@ -84,9 +87,37 @@ const components: Array<[unknown, string]> = [
   [FormEdit, 'FormEdit'],
   [FormReadonly, 'FormReadonly']
 ]
+const showValidation = ref<boolean>(false)
+const validation = computed((): ValidationMessages => {
+  if (showValidation.value) {
+    return [
+      {
+        location: [],
+        message: 'General Inline Error Message',
+        replacement_value: ''
+      },
+
+      {
+        location: ['0'],
+        message: 'First element error',
+        replacement_value: ''
+      },
+      {
+        location: ['1'],
+        message: 'Second element error',
+        replacement_value: ''
+      }
+    ]
+  } else {
+    return []
+  }
+})
 </script>
 
 <template>
+  <div>
+    <CmkCheckbox v-model="showValidation" label="show validation" />
+  </div>
   <div v-for="[component, title] in components" :key="title">
     <h2>{{ title }}</h2>
     <div v-for="embeddedFormSpec in ['string', 'singleChoice']" :key="embeddedFormSpec">
@@ -106,7 +137,7 @@ const components: Array<[unknown, string]> = [
               <component
                 :is="component"
                 :spec="getTupleSpec(layout, showTitles, embeddedFormSpec)"
-                :backend-validation="[]"
+                :backend-validation="validation"
                 :data="data"
               />
             </td>

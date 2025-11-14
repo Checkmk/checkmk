@@ -13,7 +13,9 @@ import { computed, ref } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
+import type { ValidationMessages } from '@/form'
 import FormEdit from '@/form/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -163,9 +165,37 @@ const requiredDictionarySpec = computed(() => {
 
 const data = ref<Record<string, string>>({})
 const dataRequired = ref<Record<string, unknown>>({})
+
+const showValidation = ref<boolean>(false)
+const validation = computed((): ValidationMessages => {
+  if (showValidation.value) {
+    return [
+      {
+        location: [],
+        message: 'General Form dictionary error',
+        replacement_value: ''
+      },
+      {
+        location: ['service_name', 'name'],
+        message: 'Test validation error ',
+        replacement_value: ''
+      },
+      {
+        location: ['service_name', 'prefix'],
+        message: 'Test validation error ',
+        replacement_value: ''
+      }
+    ]
+  } else {
+    return []
+  }
+})
 </script>
 
 <template>
+  <div>
+    <CmkCheckbox v-model="showValidation" label="show validation" />
+  </div>
   <p>
     <CmkHeading>Dictionary type:</CmkHeading>
     <CmkDropdown
@@ -191,9 +221,13 @@ const dataRequired = ref<Record<string, unknown>>({})
     />
   </p>
   <h2>optional key:</h2>
-  <FormEdit v-model:data="data" :spec="dictionarySpec" :backend-validation="[]" />
+  <FormEdit v-model:data="data" :spec="dictionarySpec" :backend-validation="validation" />
   <pre>{{ JSON.stringify(data) }}</pre>
   <h2>required key:</h2>
-  <FormEdit v-model:data="dataRequired" :spec="requiredDictionarySpec" :backend-validation="[]" />
+  <FormEdit
+    v-model:data="dataRequired"
+    :spec="requiredDictionarySpec"
+    :backend-validation="validation"
+  />
   <pre>{{ JSON.stringify(dataRequired) }}</pre>
 </template>

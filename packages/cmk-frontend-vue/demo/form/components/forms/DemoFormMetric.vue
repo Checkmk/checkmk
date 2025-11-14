@@ -5,8 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Metric } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import type { ValidationMessages } from '@/form'
 import FormMetric from '@/form/private/forms/FormMetric.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -60,8 +63,25 @@ const spec = ref<Metric>({
   }
 })
 const data = ref<string>('')
+const showValidation = ref<boolean>(false)
+const validation = computed((): ValidationMessages => {
+  if (showValidation.value) {
+    return [
+      {
+        location: [],
+        message: 'General Inline Error Message',
+        replacement_value: ''
+      }
+    ]
+  } else {
+    return []
+  }
+})
 </script>
 
 <template>
-  <FormMetric v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <div>
+    <CmkCheckbox v-model="showValidation" label="show validation" />
+  </div>
+  <FormMetric v-model:data="data" :spec="spec" :backend-validation="validation" />
 </template>

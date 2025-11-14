@@ -5,7 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Float } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import FormFloat from '@/form/private/forms/FormFloat.vue'
 
@@ -23,11 +25,26 @@ const spec = ref<Float>({
 
 const data = ref<number>(10.2)
 
-const backendValidation = [
-  { location: [], message: 'some backend validation', replacement_value: true }
-]
+const validation = computed(() => {
+  if (showValidation.value) {
+    return [
+      {
+        location: [],
+        message: 'some validation problem',
+        replacement_value: 5
+      }
+    ]
+  } else {
+    return []
+  }
+})
+
+const showValidation = ref<boolean>(false)
 </script>
 
 <template>
-  <FormFloat v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
+  <div>
+    <CmkCheckbox v-model="showValidation" label="show validation" />
+  </div>
+  <FormFloat v-model:data="data" :spec="spec" :backend-validation="validation" />
 </template>

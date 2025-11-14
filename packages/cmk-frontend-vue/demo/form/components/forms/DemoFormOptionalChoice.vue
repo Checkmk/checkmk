@@ -5,9 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { OptionalChoice, String } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import FormOptionalChoice from '@/form/private/forms/FormOptionalChoice.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import FormEdit from '@/form/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -35,9 +37,27 @@ const spec = ref<OptionalChoice>({
   parameter_form: embeddedSpec
 })
 const data = ref<null | string>(null)
+const validation = computed(() => {
+  if (showValidation.value) {
+    return [
+      {
+        location: [],
+        message: 'some validation problem',
+        replacement_value: 5
+      }
+    ]
+  } else {
+    return []
+  }
+})
+
+const showValidation = ref<boolean>(false)
 </script>
 
 <template>
+  <div>
+    <CmkCheckbox v-model="showValidation" label="show validation" />
+  </div>
   <pre>{{ JSON.stringify(data) }}</pre>
-  <FormOptionalChoice v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <FormEdit v-model:data="data" :spec="spec" :backend-validation="validation" />
 </template>

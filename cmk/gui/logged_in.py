@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Manage the currently logged in user"""
@@ -361,12 +360,12 @@ class LoggedInUser:
         )
 
     @property
-    def bi_assumptions(self):
+    def bi_assumptions(self) -> dict[tuple[str, str] | tuple[str, str, str], int]:
         if not self._bi_assumptions:
             self._bi_assumptions = self.load_file("bi_assumptions", {})
         return self._bi_assumptions
 
-    def save_bi_assumptions(self):
+    def save_bi_assumptions(self) -> None:
         self.save_file("bi_assumptions", self._bi_assumptions)
 
     @property

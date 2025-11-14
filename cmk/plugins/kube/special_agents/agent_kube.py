@@ -1198,7 +1198,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     client_config = query.APISessionConfig.model_validate(
         {
             **arguments.__dict__,
-            "token": resolve_secret_option(arguments, TOKEN_OPTION),
+            "token": resolve_secret_option(arguments, TOKEN_OPTION).reveal(),
         }
     )
 

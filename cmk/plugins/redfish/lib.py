@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import json
 from collections.abc import Mapping
@@ -275,7 +274,7 @@ def process_redfish_perfdata(entry: Mapping[str, Any]) -> None | Perfdata:
     )
 
 
-def find_key_recursive(d, key):
+def find_key_recursive(d: Mapping[str, Any], key: str) -> Any | None:
     """Search multilevel dict for key"""
     if key in d:
         return d[key]

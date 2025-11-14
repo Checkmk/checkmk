@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -238,7 +237,7 @@ class SampleConfigGenerator(abc.ABC):
 
 
 class SampleConfigGeneratorRegistry(cmk.ccc.plugin_registry.Registry[type[SampleConfigGenerator]]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: type[SampleConfigGenerator]) -> str:
         return instance.ident()
 
     def get_generators(self) -> list[SampleConfigGenerator]:

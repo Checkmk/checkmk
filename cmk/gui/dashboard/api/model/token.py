@@ -6,15 +6,34 @@
 # mypy: disable-error-code="mutable-override"
 
 import datetime as dt
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Annotated, Literal, Self
 
 from dateutil.relativedelta import relativedelta
 from pydantic import AfterValidator, AwareDatetime, FutureDatetime
 
+from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
-from cmk.gui.token_auth import AuthToken, DashboardToken
+from cmk.gui.token_auth import AuthToken, DashboardToken, get_token_store, TokenId
 from cmk.gui.type_defs import AnnotatedUserId
+
+
+@contextmanager
+def edit_dashboard_auth_token(dashboard: DashboardConfig) -> Generator[AuthToken | None]:
+    """Context manager to edit the auth token of a dashboard."""
+    if (token_id := dashboard.get("public_token_id")) is None:
+        yield None
+        return
+
+    token_store = get_token_store()
+    with token_store.read_locked() as data:
+        if (token := data.get(TokenId(token_id))) and isinstance(token.details, DashboardToken):
+            yield token
+            return
+
+    yield None
 
 
 @api_model
@@ -56,16 +75,33 @@ def _validate_max_time(value: dt.datetime) -> dt.datetime:
 
 
 @api_model
-class CreateDashboardToken:
+class _BaseDashboardTokenRequest:
     dashboard_owner: AnnotatedUserId = api_field(description="The user ID of the dashboard owner.")
     dashboard_id: str = api_field(
         description="The ID of the dashboard for which the token is being created."
     )
     comment: str = api_field(description="Internal comment for the token. Not displayed to users.")
+
+
+@api_model
+class CreateDashboardToken(_BaseDashboardTokenRequest):
     expires_at: Annotated[
         dt.datetime, AwareDatetime, FutureDatetime, AfterValidator(_validate_max_time)
     ] = api_field(
         description="The date and time when the token will expire. Defaults to one year from now.",
         example="2025-12-31T23:59:59Z",
         default_factory=lambda: dt.datetime.now(dt.UTC) + relativedelta(years=1),
+    )
+
+
+@api_model
+class EditDashboardToken(_BaseDashboardTokenRequest):
+    is_disabled: bool = api_field(description="Indicates whether the token is disabled.")
+    # NOTE: We don't use FutureDatetime here since the token may already be expired
+    # TODO: do we even want to allow editing the expiration time
+    expires_at: Annotated[dt.datetime, AwareDatetime, AfterValidator(_validate_max_time)] = (
+        api_field(
+            description="The date and time when the token will expire.",
+            example="2025-12-31T23:59:59Z",
+        )
     )

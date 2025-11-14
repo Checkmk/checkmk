@@ -126,6 +126,7 @@ CmkEndpointName = Literal[
     "cmk/download_license_request",
     "cmk/edit_dashboard_relative_grid",
     "cmk/edit_dashboard_responsive_grid",
+    "cmk/edit_dashboard_token",
     "cmk/fetch",
     "cmk/fetch_phase_one",
     "cmk/list",

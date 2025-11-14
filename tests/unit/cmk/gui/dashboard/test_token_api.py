@@ -46,6 +46,25 @@ def fixture_user_dashboard(clients: ClientRegistry, with_automation_user: str) -
     clients.DashboardClient.delete(user_dashboard_id)
 
 
+@pytest.fixture(name="user_dashboard_with_token")
+def fixture_user_dashboard_with_token(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard: str,
+) -> Generator[str]:
+    """Creates a user dashboard with a token for testing."""
+    expires_at = (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat()
+    payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard,
+        "comment": "User dashboard token",
+        "expires_at": expires_at,
+    }
+    clients.DashboardClient.create_dashboard_token(payload)
+    yield user_dashboard
+    # Cleanup is handled by the user_dashboard fixture.
+
+
 def test_create_token_builtin_dashboard(clients: ClientRegistry) -> None:
     expires_at = (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat()
     payload = {
@@ -123,4 +142,98 @@ def test_create_token_nonexistent_dashboard(
     }
     resp = clients.DashboardClient.create_dashboard_token(payload, expect_ok=False)
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.json!r}"
+    assert resp.json["title"] == "Dashboard not found"
+
+
+def test_edit_token_user_dashboard(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard_with_token: str,
+) -> None:
+    new_expires = (
+        (dt.datetime.now(dt.UTC) + dt.timedelta(days=60)).isoformat().replace("+00:00", "Z")
+    )
+    edit_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard_with_token,
+        "comment": "Edited",
+        "is_disabled": True,
+        "expires_at": new_expires,
+    }
+    resp = clients.DashboardClient.edit_dashboard_token(edit_payload)
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.json!r}"
+    assert resp.json["extensions"]["comment"] == "Edited"
+    assert resp.json["extensions"]["is_disabled"] is True
+    assert resp.json["extensions"]["expires_at"] == new_expires
+
+
+def test_edit_token_builtin_dashboard(clients: ClientRegistry) -> None:
+    edit_payload = {
+        "dashboard_owner": "",
+        "dashboard_id": "main",
+        "comment": "Should fail",
+        "is_disabled": True,
+        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat(),
+    }
+    resp = clients.DashboardClient.edit_dashboard_token(edit_payload, expect_ok=False)
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code} {resp.json!r}"
+    assert (
+        resp.json["detail"] == "You are not allowed to edit dashboards owned by the built-in user."
+    )
+
+
+def test_edit_token_expiration_in_past(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard: str,
+) -> None:
+    create_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard,
+        "comment": "Initial",
+    }
+    clients.DashboardClient.create_dashboard_token(create_payload)
+    edit_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard,
+        "comment": "Edited",
+        "is_disabled": False,
+        "expires_at": (dt.datetime.now(dt.UTC) - dt.timedelta(days=1)).isoformat(),
+    }
+    resp = clients.DashboardClient.edit_dashboard_token(edit_payload)
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.json!r}"
+
+
+def test_edit_token_invalid_expiration(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard_with_token: str,
+) -> None:
+    edit_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard_with_token,
+        "comment": "Edited",
+        "is_disabled": False,
+        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=800)).isoformat(),
+    }
+    resp = clients.DashboardClient.edit_dashboard_token(edit_payload, expect_ok=False)
+    assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.json!r}"
+    assert (
+        resp.json["fields"]["body.expires_at"]["msg"]
+        == "Value error, Expiration time must be less than two years from now."
+    )
+
+
+def test_edit_token_nonexistent_dashboard(
+    clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+) -> None:
+    edit_payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": "does_not_exist",
+        "comment": "Should fail",
+        "is_disabled": True,
+        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=30)).isoformat(),
+    }
+    resp = clients.DashboardClient.edit_dashboard_token(edit_payload, expect_ok=False)
+    assert resp.status_code == 404, f"Expected 404, got {resp.status_code}"
     assert resp.json["title"] == "Dashboard not found"

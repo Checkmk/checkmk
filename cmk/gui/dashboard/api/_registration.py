@@ -15,6 +15,7 @@ from .list_dashboard_metadata import ENDPOINT_LIST_DASHBOARD_METADATA
 from .show_dashboard_constraints import ENDPOINT_SHOW_DASHBOARD_CONSTANTS
 from .show_relative_grid_dashboard import ENDPOINT_SHOW_RELATIVE_GRID_DASHBOARD
 from .token_create import ENDPOINT_CREATE_DASHBOARD_TOKEN
+from .token_edit import ENDPOINT_EDIT_DASHBOARD_TOKEN
 
 
 def register_endpoints(
@@ -51,4 +52,7 @@ def register_endpoints(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_CREATE_DASHBOARD_TOKEN, ignore_duplicates=ignore_duplicates
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_EDIT_DASHBOARD_TOKEN, ignore_duplicates=ignore_duplicates
     )

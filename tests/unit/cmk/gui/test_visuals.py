@@ -276,6 +276,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invibmmqqueues",
         "invinterface",
         "invkernelconfig",
+        "invlldpcache",
         "invmodule",
         "invoradataguardstats",
         "invorainstance",

@@ -47,6 +47,7 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/docker_object:container",
     "cmk/docker_object:node",
     "cmk/has_cdp_neighbors",
+    "cmk/has_lldp_neighbors",
     "cmk/kubernetes/annotation/{key}:{value}",
     "cmk/kubernetes",
     "cmk/kubernetes/deployment",

@@ -550,3 +550,37 @@ node_networking_cdp_cache_neighbors = Node(
         },
     ),
 )
+
+
+node_networking_lldp_cache = Node(
+    name="networking_lldp_cache",
+    path=["networking", "lldp_cache"],
+    title=Title("LLDP cache"),
+    table=Table(
+        columns={
+            "local_cap_supported": TextField(Title("Capabilities supported")),
+            "local_cap_enabled": TextField(Title("Capabilities enabled")),
+        },
+    ),
+)
+
+
+node_networking_lldp_cache_neighbours = Node(
+    name="networking_lldp_cache_neighbours",
+    path=["networking", "lldp_cache", "neighbours"],
+    title=Title("LLDP neighbours"),
+    table=Table(
+        view=View(name="invlldpcache", title=Title("LLDP neighbours")),
+        columns={
+            "capabilities": TextField(Title("Capabilities supported")),
+            "capabilities_map_supported": TextField(Title("Capabilities supported")),
+            "local_port": TextField(Title("Local port")),
+            "neighbour_address": TextField(Title("Neighbor address")),
+            "neighbour_id": TextField(Title("Neighbor ID")),
+            "neighbour_name": TextField(Title("Neighbor name")),
+            "neighbour_port": TextField(Title("Neighbor port")),
+            "port_description": TextField(Title("Neighbor port description")),
+            "system_description": TextField(Title("Neighbor description")),
+        },
+    ),
+)

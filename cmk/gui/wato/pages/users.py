@@ -66,7 +66,6 @@ from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import (
     get_ntop_connection_by_site,
-    get_ntop_connection_mandatory,
     is_ntop_available,
 )
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -1000,15 +999,19 @@ class ModeEditUser(WatoMode):
 
         # ntopng
         if is_ntop_available():
-            ntop_connection = get_ntop_connection_mandatory()
-            # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding Setup rule
-            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
-            if ntop_username_attribute:
-                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[typeddict-unknown-key]
-                    ntop_username_attribute
+            ntop_connections = get_ntop_connection_by_site()
+            for _site_id, ntop_connection in ntop_connections.items():
+                # ntop_username_attribute will be the name of the custom attribute or false
+                # see corresponding Setup rule
+                ntop_username_attribute = ntop_connection.get(
+                    "use_custom_attribute_as_ntop_username"
                 )
+                if ntop_username_attribute:
+                    # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+                    user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
+                        ntop_username_attribute
+                    )
+                    return
 
     def _increment_auth_serial(self, user_attrs: UserSpec) -> None:
         user_attrs["serial"] = user_attrs.get("serial", 0) + 1

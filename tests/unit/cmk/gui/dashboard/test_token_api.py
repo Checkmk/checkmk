@@ -286,3 +286,13 @@ def test_delete_token_no_token(
     resp = clients.DashboardClient.delete_dashboard_token(delete_payload, expect_ok=False)
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.json!r}"
     assert resp.json["title"] == "Dashboard token not found"
+
+
+def test_get_token_user_dashboard(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard_with_token: str,
+) -> None:
+    resp = clients.DashboardClient.get_relative_grid_dashboard(user_dashboard_with_token)
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.json!r}"
+    assert resp.json["extensions"]["public_token"]["token_id"] is not None

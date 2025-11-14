@@ -34,6 +34,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 
+from .token import DashboardTokenModel, get_dashboard_auth_token
 from .type_defs import AnnotatedInfoName
 from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
 from .widget_content.view import EmbeddedViewContent
@@ -356,9 +357,18 @@ class BaseDashboardResponse(_BaseDashboard):
     is_built_in: bool = api_field(
         description="Whether the dashboard is a built-in (system) dashboard."
     )
+    public_token: DashboardTokenModel | None = api_field(
+        description="The public token for sharing the dashboard, if it exists."
+    )
     filter_context: DashboardFilterContextResponse = api_field(
         description="Filter context for the dashboard."
     )
+
+    @staticmethod
+    def _public_token_from_internal(dashboard: DashboardConfig) -> DashboardTokenModel | None:
+        if token := get_dashboard_auth_token(dashboard):
+            return DashboardTokenModel.from_internal(token)
+        return None
 
 
 @api_model
@@ -413,6 +423,7 @@ class RelativeGridDashboardResponse(BaseDashboardResponse):
             owner=dashboard["owner"],
             last_modified_at=dt.datetime.fromtimestamp(dashboard["mtime"], tz=dt.UTC),
             is_built_in=dashboard["owner"] == UserId.builtin(),
+            public_token=cls._public_token_from_internal(dashboard),
             general_settings=DashboardGeneralSettings.from_internal(dashboard),
             filter_context=DashboardFilterContextResponse.from_internal(dashboard),
             widgets={

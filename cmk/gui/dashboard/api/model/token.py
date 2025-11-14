@@ -36,6 +36,12 @@ def edit_dashboard_auth_token(dashboard: DashboardConfig) -> Generator[AuthToken
     yield None
 
 
+def get_dashboard_auth_token(dashboard: DashboardConfig) -> AuthToken | None:
+    """Read access to the auth token of a dashboard."""
+    with edit_dashboard_auth_token(dashboard) as token:
+        return token
+
+
 @api_model
 class DashboardTokenMetadata:
     is_disabled: bool = api_field(description="Indicates whether the token is disabled.")
@@ -58,6 +64,22 @@ class DashboardTokenMetadata:
             comment=token.details.comment,
             issued_at=token.issued_at,
             expires_at=token.valid_until,
+        )
+
+
+@api_model
+class DashboardTokenModel(DashboardTokenMetadata):
+    token_id: str = api_field(description="The unique identifier of the dashboard token.")
+
+    @classmethod
+    def from_internal(cls, token: AuthToken) -> Self:
+        base = DashboardTokenMetadata.from_internal(token)
+        return cls(
+            token_id=token.token_id,
+            is_disabled=base.is_disabled,
+            comment=base.comment,
+            issued_at=base.issued_at,
+            expires_at=base.expires_at,
         )
 
 

@@ -3511,6 +3511,7 @@ class DashboardClient(RestApiClient):
     domain_relative: DomainType = "dashboard_relative_grid"
     domain_responsive: DomainType = "dashboard_responsive_grid"
     domain_metadata: DomainType = "dashboard_metadata"
+    domain_token: DomainType = "dashboard_token"
     default_version = APIVersion.UNSTABLE
 
     def list_dashboard_metadata(self) -> Response:
@@ -3620,6 +3621,15 @@ class DashboardClient(RestApiClient):
             "post",
             url=f"/domain-types/{self.domain}/actions/compute-top-list/invoke",
             body={"content": top_list_config, "context": context},
+        )
+
+    def create_dashboard_token(self, payload: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain_token}/collections/all",
+            body=payload,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
 

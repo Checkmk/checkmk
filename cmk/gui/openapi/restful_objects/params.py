@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import re
@@ -194,7 +193,7 @@ def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Sche
 
     """
 
-    def _validate_fields(name, dict_):
+    def _validate_fields(name: str, dict_: Mapping[str, fields.Field]) -> None:
         for key, field in dict_.items():
             if "description" not in field.metadata:
                 # FIXME: Add descriptions to all BI fields and schemas
@@ -205,7 +204,7 @@ def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Sche
                         f"\n\n{dict_!r}"
                     )
 
-    def _from_dict(dict_):
+    def _from_dict(dict_: Mapping[str, fields.Field]) -> type[BaseSchema]:
         needs_validating = False
         for value in dict_.values():
             if isinstance(value, fields.Field):
@@ -213,7 +212,7 @@ def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Sche
 
         if needs_validating:
             _validate_fields("dict", dict_)
-        schema_class = BaseSchema.from_dict(dict_)
+        schema_class = BaseSchema.from_dict(dict(dict_))
         assert issubclass(schema_class, BaseSchema)
         return schema_class
 

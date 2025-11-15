@@ -11,7 +11,6 @@ which then has to be dumped into the checkmk.yaml file.
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -710,7 +709,7 @@ class Endpoint:
         return self._expected_status_codes
 
     @property
-    def does_redirects(self):
+    def does_redirects(self) -> bool:
         # created, moved permanently, found, see other
         return any(code in self._expected_status_codes for code in [201, 301, 302, 303])
 

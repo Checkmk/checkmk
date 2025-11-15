@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
+from __future__ import annotations
 
 import calendar
 import json as json_module
 import time
+from collections.abc import Generator, Mapping
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, render
@@ -29,7 +30,11 @@ def handle_iso_utc_to_localtimestamp(iso_8601_time: str) -> int:
     return local_timestamp
 
 
-def handle_graylog_messages(messages, params):
+def handle_graylog_messages(
+    messages: int | float, params: Mapping[str, Any]
+) -> Generator[
+    tuple[int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]]
+]:
     msgs_levels_upper = params.get("msgs_upper", (None, None))
     msgs_levels_lower = params.get("msgs_lower", (None, None))
 

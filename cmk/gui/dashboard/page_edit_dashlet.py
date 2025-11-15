@@ -90,7 +90,8 @@ class EditDashletPage(Page):
                 "single_infos": dashlet_type.single_infos(),
                 "type": type_name,
             }
-            dashlet_spec.update(dashlet_type.default_settings())
+            if (default_settings := dashlet_type.default_settings()) is not None:
+                dashlet_spec.update(default_settings)
 
             if dashlet_type.has_context():
                 dashlet_spec["context"] = {}

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -157,13 +156,12 @@ class Dashlet(abc.ABC, Generic[T]):
         )
 
     @classmethod
-    def default_settings(cls):
+    def default_settings(cls) -> T | None:
         """Overwrite specific default settings for dashlets by returning a dict
             return { key: default_value, ... }
         e.g. to have a dashlet default to not showing its title
             return { "show_title": False }
         """
-        return {}
 
     def __init__(
         self,

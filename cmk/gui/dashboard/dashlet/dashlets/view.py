@@ -309,25 +309,27 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         )
 
     @classmethod
-    def default_settings(cls) -> dict[str, object]:
-        return {
-            "datasource": request.get_str_input_mandatory("datasource"),
-            "group_painters": [],
-            "layout": "table",
-            "painters": [],
-            "sorters": [],
-            "title": "",
-            "browser_reload": 0,
-            "column_headers": "off",
-            "hidden": False,
-            "mustsearch": False,
-            "name": "",
-            "num_columns": 3,
-            "play_sounds": False,
-            "sort_index": 99,
-            "add_context_to_title": True,
-            "is_show_more": False,
-        }
+    def default_settings(cls) -> ViewDashletConfig:
+        return ViewDashletConfig(
+            {
+                "type": cls.type_name(),
+                "datasource": request.get_str_input_mandatory("datasource"),
+                "group_painters": [],
+                "layout": "table",
+                "painters": [],
+                "sorters": [],
+                "title": "",
+                "browser_reload": 0,
+                "column_headers": "off",
+                "mustsearch": False,
+                "name": "",
+                "num_columns": 3,
+                "play_sounds": False,
+                "sort_index": 99,
+                "add_context_to_title": True,
+                "is_show_more": False,
+            }
+        )
 
     def update(self, config: Config, user_permissions: UserPermissions) -> None:
         self._show_view_as_dashlet(

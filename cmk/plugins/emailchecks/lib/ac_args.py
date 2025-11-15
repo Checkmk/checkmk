@@ -7,10 +7,9 @@ import argparse
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from pathlib import Path
 from typing import assert_never, Literal
 
-from cmk.utils.password_store import lookup as password_store_lookup
+from cmk.password_store.v1_unstable import dereference_secret
 
 
 @dataclass
@@ -182,8 +181,7 @@ def _parse_secret(secret: str | None, reference: str | None) -> str:
         return secret
     if reference is None:
         raise ValueError("Either secret or secret reference must be set")
-    secret_id, file = reference.split(":", 1)
-    return password_store_lookup(Path(file), secret_id)
+    return dereference_secret(reference).reveal()
 
 
 def _parse_port(raw: Mapping[str, object]) -> int:

@@ -15,6 +15,11 @@ import pytest
 from cmk.special_agents.v0_unstable.misc import DataCache
 
 
+@pytest.fixture(autouse=True)
+def _patch_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+
+
 class KeksDose(DataCache):
     @property
     def cache_interval(self) -> int:
@@ -27,27 +32,17 @@ class KeksDose(DataCache):
         return "live data"
 
 
-def test_datacache_init(tmp_path: Path) -> None:
-    tcache = KeksDose(tmp_path, "test")
-    assert isinstance(tcache._cache_file_dir, Path)
-    assert isinstance(tcache._cache_file, Path)
-    assert not tcache.debug
-
-    tc_debug = KeksDose(tmp_path, "test", debug=True)
-    assert tc_debug.debug
-
-
-def test_datacache_timestamp(tmp_path: Path) -> None:
-    tcache = KeksDose(tmp_path, "test")
+def test_datacache_timestamp() -> None:
+    tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
 
     assert tcache.cache_timestamp is None  # file doesn't exist yet
 
     tcache._write_to_cache("")
-    assert tcache.cache_timestamp == tcache._cache_file.stat().st_mtime
+    assert isinstance(tcache.cache_timestamp, float)
 
 
 def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    tcache = KeksDose(tmp_path, "test")
+    tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
     tcache._write_to_cache("cached data")
     assert tcache.cache_timestamp is not None
 
@@ -66,7 +61,7 @@ def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 
 
 def test_datacache_validity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    tcache = KeksDose(tmp_path, "test")
+    tcache = KeksDose(host_name="myhost", agent="agent_smith", key="test")
     tcache._write_to_cache("cached data")
     assert tcache.cache_timestamp is not None
 

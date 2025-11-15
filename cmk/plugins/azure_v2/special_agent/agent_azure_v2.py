@@ -34,7 +34,6 @@ from collections.abc import Coroutine, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from multiprocessing import Lock
-from pathlib import Path
 from typing import Any, Final, Literal, Required, TypedDict, TypeVar
 
 import requests
@@ -66,7 +65,6 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.paths import tmp_dir
 
 T = TypeVar("T")
 type ResourceId = str
@@ -76,8 +74,6 @@ __version__ = "2.5.0b1"
 AGENT = "auzure_v2"
 
 LOGGER = logging.getLogger(f"agent_{AGENT}")
-
-AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / f"agent_{AGENT}"
 
 NOW = datetime.datetime.now(tz=datetime.UTC)
 
@@ -1411,7 +1407,7 @@ class AzureAsyncCache(DataCache):
         use_cache = kwargs.pop("use_cache", True)
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
             try:
-                LOGGER.debug("Reading data from cache: %s", self._cache_file)
+                LOGGER.debug("Reading data from cache: %s", self._key)
                 return await self.get_cached_data()
             except (OSError, ValueError) as exc:
                 LOGGER.error("Getting live data (failed to read from cache: %s).", exc)
@@ -1445,10 +1441,10 @@ class UsageDetailsCache(AzureAsyncCache):
     ) -> None:
         self._subscription = subscription
         metric_names = "usage_details"
-        self._cache_path = AZURE_CACHE_FILE_PATH / cache_id / subscription / metric_names
         super().__init__(
-            self._cache_path,
-            metric_names,
+            host_name=cache_id,  # we have no host name.
+            agent=f"agent_{AGENT}",
+            key=f"{subscription}-{metric_names}",
             debug=debug,
         )
 
@@ -1577,7 +1573,7 @@ class MetricCache(AzureAsyncCache):
             metric.name: metric.cmk_metric_alias for metric in metrics_definition.metrics
         }
 
-        self._cache_path = self.get_cache_path(
+        key_prefix = self.get_cache_key_prefix(
             cache_id,
             self.metrics_definitions.resource_type,
             self.metrics_definitions.region,
@@ -1585,12 +1581,11 @@ class MetricCache(AzureAsyncCache):
         )
 
         # 'replace' to not create random directories
-        cache_file_name = ",".join(
-            [alias.replace("/", "_") for alias in self.metric_aliases.values()]
-        )
+        key_suffix = ",".join([alias.replace("/", "_") for alias in self.metric_aliases.values()])
         super().__init__(
-            self._cache_path,
-            cache_file_name,
+            host_name=cache_id,  # we have no host name
+            agent=f"agent_{AGENT}",
+            key=f"{key_prefix}_{key_suffix}",
             debug=debug,
         )
         self.remaining_reads = None
@@ -1610,10 +1605,12 @@ class MetricCache(AzureAsyncCache):
         self.end_time = ref_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod
-    def get_cache_path(cache_id: str, resource_type: str, region: str, subscription: str) -> Path:
+    def get_cache_key_prefix(
+        cache_id: str, resource_type: str, region: str, subscription: str
+    ) -> str:
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         subdir = "".join(c if c in valid_chars else "_" for c in f"{region}_{resource_type}")
-        return AZURE_CACHE_FILE_PATH / cache_id / subscription / subdir
+        return f"{subscription}_{subdir}"
 
     @property
     def cache_interval(self) -> int:

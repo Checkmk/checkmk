@@ -15,13 +15,12 @@ import datetime
 import json
 import logging
 import time
-from pathlib import Path
 from typing import Any
 
-from cmk.ccc import store
+from cmk.server_side_programs.v1_unstable import Storage
 
 
-def datetime_serializer(obj):
+def _datetime_serializer(obj):
     """Custom serializer to pass to json dump functions"""
     if isinstance(obj, datetime.datetime):
         return str(obj)
@@ -36,10 +35,25 @@ class DataCache(abc.ABC):
     Normally you should use the hostname as part of the cache_file_name or cache_file_dir.
     """
 
-    def __init__(self, cache_file_dir: Path, cache_file_name: str, debug: bool = False) -> None:
-        self._cache_file_dir = cache_file_dir
-        self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)
+    def __init__(self, *, host_name: str, agent: str, key: str, debug: bool = False) -> None:
+        self._storage = Storage(host_name, agent)
+        self._key = key
         self.debug = debug
+
+    def _read_storage(self) -> tuple[float, str] | None:
+        if (raw := self._storage.read(self._key, None)) is None:
+            return None
+
+        try:
+            raw_timestamp, raw_content = raw.split("\n", 1)
+            return float(raw_timestamp), raw_content
+        except ValueError:
+            logging.warning("Corrupted stograge content. Removing it.")
+            self._storage.unset(self._key)
+        return None
+
+    def _write_storage(self, raw_content: str) -> None:
+        self._storage.write(self._key, f"{time.time()}\n{raw_content}")
 
     @property
     @abc.abstractmethod
@@ -62,17 +76,7 @@ class DataCache(abc.ABC):
 
     @property
     def cache_timestamp(self) -> float | None:
-        if not self._cache_file.exists():
-            return None
-
-        try:
-            return self._cache_file.stat().st_mtime
-        except FileNotFoundError:
-            logging.info("No such file or directory %s (cache_timestamp)", self._cache_file)
-            return None
-        except OSError as exc:
-            logging.info("Cannot calculate cache file age: %s", exc)
-            raise
+        return None if (read := self._read_storage()) is None else read[0]
 
     def _cache_is_valid(self):
         mtime = self.cache_timestamp
@@ -84,22 +88,16 @@ class DataCache(abc.ABC):
             return True
 
         if age < 0:
-            logging.info("Cache file from future considered invalid: %s", self._cache_file)
-        else:
-            logging.info("Cache file %s is outdated", self._cache_file)
+            logging.info("Cache file from future considered invalid.")
         return False
 
     def get_cached_data(self):
-        try:
-            with self._cache_file.open(encoding="utf-8") as f:
-                raw_content = f.read().strip()
-        except FileNotFoundError:
-            logging.info("No such file or directory %s (read from cache)", self._cache_file)
-            raise
-        except OSError as exc:
-            logging.info("Cannot read from cache file: %s", exc)
-            raise
+        if (read := self._read_storage()) is None:
+            # raising here is silly, but I am refactoring and want to
+            # keep the changes as small as possible.
+            raise FileNotFoundError(self._key)
 
+        _raw_timestamp, raw_content = read
         try:
             content = json.loads(raw_content)
         except ValueError as exc:
@@ -127,7 +125,4 @@ class DataCache(abc.ABC):
         return live_data
 
     def _write_to_cache(self, raw_content):
-        self._cache_file_dir.mkdir(parents=True, exist_ok=True)
-
-        json_dump = json.dumps(raw_content, default=datetime_serializer)
-        store.save_text_to_file(self._cache_file, json_dump)
+        self._write_storage(json.dumps(raw_content, default=_datetime_serializer))

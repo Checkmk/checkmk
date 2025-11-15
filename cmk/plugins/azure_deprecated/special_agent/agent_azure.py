@@ -30,7 +30,6 @@ import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock
-from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypeVar
 
 import msal
@@ -40,7 +39,6 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
-from cmk.utils.paths import tmp_dir
 
 T = TypeVar("T")
 Args = argparse.Namespace
@@ -50,8 +48,6 @@ GroupLabels = Mapping[str, Mapping[str, str]]
 LOGGER = logging.getLogger()  # root logger for now
 
 AGENT = "azure"
-
-AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / f"agent_{AGENT}"
 
 SECRET_OPTION = "secret"
 
@@ -1472,8 +1468,9 @@ class MetricCache(DataCache):
         self.metric_definition = metric_definition
         metric_names = metric_definition[0]
         super().__init__(
-            self.get_cache_path(cache_id, resource_type, region),
-            metric_names,
+            host_name=cache_id,
+            agent=f"agent_{AGENT}",
+            key=f"{self.get_cache_key_prefix(resource_type, region)}_{metric_names}",
             debug=debug,
         )
         self.remaining_reads = None
@@ -1493,10 +1490,9 @@ class MetricCache(DataCache):
         self.end_time = ref_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod
-    def get_cache_path(cache_id: str, resource_type: str, region: str) -> Path:
+    def get_cache_key_prefix(resource_type: str, region: str) -> str:
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
-        subdir = "".join(c if c in valid_chars else "_" for c in f"{region}_{resource_type}")
-        return AZURE_CACHE_FILE_PATH / cache_id / subdir
+        return "".join(c if c in valid_chars else "_" for c in f"{region}_{resource_type}")
 
     @property
     def cache_interval(self) -> int:

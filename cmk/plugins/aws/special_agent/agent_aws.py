@@ -769,8 +769,9 @@ class AWSSection(DataCache):
         config: AWSConfig,
         distributor: ResultDistributor | None = None,
     ) -> None:
-        cache_dir = AWSCacheFilePath / region / config.hostname
-        super().__init__(cache_dir, self.name)
+        super().__init__(
+            host_name=config.hostname, agent=f"agent_{AGENT}", key=f"{region}-{self.name}"
+        )
         self._client = client
         self._region = region
         self._config = config
@@ -887,7 +888,7 @@ class AWSSection(DataCache):
         if my_cache_timestamp is None:
             return False
         if colleague_contents.cache_timestamp > my_cache_timestamp:
-            logging.info("Colleague data is newer than cache file %s", self._cache_file)
+            logging.info("Colleague data is newer than cache file %s", self._key)
             return False
         return True
 

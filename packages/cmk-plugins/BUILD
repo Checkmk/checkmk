@@ -105,12 +105,18 @@ filegroup(
     ],
 )
 
+[filegroup(
+    name = "checkman-%s" % family,
+    srcs = glob(
+        ["cmk/plugins/%s/checkman/**/*" % family],
+        allow_empty = True,
+    ),
+) for family in FAMILIES]
+
 [pkg_files(
     name = "libexec-%s" % family,
     srcs = glob(
-        [
-            "cmk/plugins/%s/libexec/*" % family,
-        ],
+        ["cmk/plugins/%s/libexec/*" % family],
         allow_empty = True,
     ),
     attributes = pkg_attributes(
@@ -128,7 +134,7 @@ py_wheel(
     deps = [
         ":%s" % f
         for f in FAMILIES
-    ],
+    ] + [":checkman-%s" % f for f in FAMILIES],
 )
 
 package_wheel(

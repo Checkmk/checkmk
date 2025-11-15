@@ -2458,8 +2458,11 @@ def connection(
     }
     logger.info("Create site connection from '%s' to '%s'", central_site.id, remote_site.id)
     central_site.openapi.sites.create(site_config)
-    logger.info("Establish site login '%s' to '%s'", central_site.id, remote_site.id)
-    central_site.openapi.sites.login(remote_site.id)
+    if configuration_connection.get("enable_replication"):
+        # CMK-27517: login won't work when replication is disabled
+        # CMK-27518: login won't work for the community edition (even if site URL is set via UI)
+        logger.info("Establish site login '%s' to '%s'", central_site.id, remote_site.id)
+        central_site.openapi.sites.login(remote_site.id)
     logger.info("Activating site setup changes")
     central_site.openapi.changes.activate_and_wait_for_completion(
         # this seems to be necessary to avoid sporadic CI failures

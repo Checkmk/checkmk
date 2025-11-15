@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import re
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 
 from cmk.gui import query_filters
@@ -731,21 +730,27 @@ class FilterInvHasSoftwarePackage(Filter):
                 new_rows.append(row)
         return new_rows
 
-    def find_package(self, packages, name, from_version, to_version):
+    def find_package(
+        self,
+        packages: Sequence[Mapping[str, SDValue]],
+        name: str | re.Pattern[str],
+        from_version: str,
+        to_version: str,
+    ) -> bool:
         for package in packages:
             if isinstance(name, str):
                 if package["name"] != name:
                     continue
-            elif not name.search(package["name"]):
+            elif not name.search(str(package["name"])):
                 continue
             if not from_version and not to_version:
                 return True  # version not relevant
             version = package["version"]
             if from_version == to_version and from_version != version:
                 continue
-            if from_version and self.version_is_lower(version, from_version):
+            if from_version and self.version_is_lower(str(version), from_version):
                 continue
-            if to_version and self.version_is_higher(version, to_version):
+            if to_version and self.version_is_higher(str(version), to_version):
                 continue
             return True
         return False

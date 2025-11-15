@@ -3,18 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import contains
 
 DETECT_CMCTC = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2606.4")
 
 
-def cmctc_translate_status(status):
+def cmctc_translate_status(status: int) -> int:
     return {4: 0, 7: 1, 8: 1, 9: 2}.get(status, 3)  # ok  # warning  # too low  # too high
 
 
-def cmctc_translate_status_text(status):
+def cmctc_translate_status_text(status: int) -> str:
     return {
         1: "notAvail",
         2: "lost",

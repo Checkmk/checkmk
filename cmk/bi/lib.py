@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -268,7 +267,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
     def schema(cls) -> type[BIAggregationComputationOptionsSchema]:
         return BIAggregationComputationOptionsSchema
 
-    def serialize(self):
+    def serialize(self) -> ComputationConfigDict:
         return {
             "disabled": self.disabled,
             "freeze_aggregations": self.freeze_aggregations,
@@ -315,7 +314,7 @@ class BIAggregationGroups(ABCWithSchema):
     def schema(cls) -> type[BIAggregationGroupsSchema]:
         return BIAggregationGroupsSchema
 
-    def serialize(self):
+    def serialize(self) -> GroupConfigDict:
         return {
             "names": self.names,
             "paths": self.paths,
@@ -349,7 +348,7 @@ class BIParams(ABCWithSchema):
     def schema(cls) -> type[BIParamsSchema]:
         return BIParamsSchema
 
-    def serialize(self):
+    def serialize(self) -> dict[str, list[str]]:
         return {
             "arguments": self.arguments,
         }
@@ -512,7 +511,7 @@ class ABCBICompiledNode(ABC):
         self._frozen_marker: FrozenMarker | None = None
 
     @property
-    def frozen_marker(self):
+    def frozen_marker(self) -> FrozenMarker | None:
         return self._frozen_marker
 
     def set_frozen_marker(self, frozen_marker: FrozenMarker) -> None:

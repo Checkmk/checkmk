@@ -70,6 +70,7 @@ class ComputationConfigDict(TypedDict):
     disabled: bool
     use_hard_states: bool
     escalate_downtimes_as_warn: bool
+    freeze_aggregations: NotRequired[bool]
 
 
 class AggrConfigDict(TypedDict):

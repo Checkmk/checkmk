@@ -51,7 +51,7 @@ def generate_sql_command(
         f"--dbms={params.dbms}",
         f"--name={replace_macros(params.name, host_config.macros)}",
         f"--user={replace_macros(params.user, host_config.macros)}",
-        "--password-reference",
+        "--password-id",
         params.password,
     ]
 

@@ -2539,10 +2539,11 @@ class PythonHelper:
     of the Checkmk site under test. This object helps to copy
     and execute the script."""
 
-    def __init__(self, site: Site, helper_path: Path) -> None:
+    def __init__(self, site: Site, helper_path: Path, args: list[str] | None = None) -> None:
         self.site: Final = site
         self.helper_path: Final = helper_path
         self.site_path: Final = site.root / self.helper_path.name
+        self.args: Final = args
 
     @contextmanager
     def copy_helper(self) -> Iterator[None]:
@@ -2562,7 +2563,7 @@ class PythonHelper:
     ) -> str:
         with self.copy_helper():
             output = self.site.check_output(
-                ["python3", str(self.site_path)],
+                ["python3", str(self.site_path)] + (self.args or []),
                 input_=input_,
                 encoding=encoding,
                 stderr=subprocess.PIPE,
@@ -2572,7 +2573,9 @@ class PythonHelper:
     @contextmanager
     def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]
         with self.copy_helper():
-            yield self.site.execute(["python3", str(self.site_path)], *args, **kwargs)
+            yield self.site.execute(
+                ["python3", str(self.site_path)] + (self.args or []), *args, **kwargs
+            )
 
 
 def _assert_tmpfs(site: Site, from_version: CMKVersion) -> None:

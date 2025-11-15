@@ -26,7 +26,7 @@ import sys
 import time
 import uuid
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from contextlib import redirect_stderr, redirect_stdout, suppress
+from contextlib import contextmanager, redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
@@ -3095,7 +3095,6 @@ class AutomationDiagSpecialAgent(Automation):
         # store is available on the remote site.
         password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
         try:
-            cmk.utils.password_store.save(diag_special_agent_input.passwords, password_store_file)
             cmds = get_special_agent_commandline(
                 diag_special_agent_input.host_config,
                 diag_special_agent_input.agent_name,
@@ -3110,33 +3109,44 @@ class AutomationDiagSpecialAgent(Automation):
                     password_lookup=make_staged_passwords_lookup(),
                 ),
             )
-            for cmd in cmds:
-                fetcher = ProgramFetcher(
-                    cmdline=cmd.cmdline,
-                    stdin=cmd.stdin,
-                    is_cmc=diag_special_agent_input.is_cmc,
-                )
-                with fetcher:
-                    fetched = fetcher.fetch(Mode.DISCOVERY)
 
-                if fetched.is_ok():
-                    yield (
-                        0,
-                        ensure_str_with_fallback(
-                            fetched.ok,
-                            encoding="utf-8",
-                            fallback="latin-1",
-                        ),
+            with _temporary_local_password_store(
+                diag_special_agent_input.passwords, password_store_file
+            ):
+                for cmd in cmds:
+                    fetcher = ProgramFetcher(
+                        cmdline=cmd.cmdline,
+                        stdin=cmd.stdin,
+                        is_cmc=diag_special_agent_input.is_cmc,
                     )
-                else:
-                    yield 1, str(fetched.error)
-        except Exception as e:
+                    with fetcher:
+                        fetched = fetcher.fetch(Mode.DISCOVERY)
+
+                    yield (
+                        (
+                            0,
+                            ensure_str_with_fallback(
+                                fetched.ok,
+                                encoding="utf-8",
+                                fallback="latin-1",
+                            ),
+                        )
+                        if fetched.is_ok()
+                        else (1, str(fetched.error))
+                    )
+        except Exception as exc:
             if cmk.ccc.debug.enabled():
                 raise
-            yield 1, str(e)
-        finally:
-            if password_store_file.exists():
-                password_store_file.unlink()
+            yield 1, str(exc)
+
+
+@contextmanager
+def _temporary_local_password_store(passwords: Mapping[str, str], path: Path) -> Iterator[None]:
+    cmk.utils.password_store.save(passwords, path)
+    try:
+        yield
+    finally:
+        path.unlink(missing_ok=True)
 
 
 automations.register(AutomationDiagSpecialAgent())

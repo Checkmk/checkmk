@@ -1155,7 +1155,12 @@ def _make_service_description_cb(
 @dataclasses.dataclass(frozen=True)
 class ServiceDependsOn:
     tag_list: Callable[[HostName], Sequence[TagID]]
-    service_dependencies: Sequence[tuple]  # :-(
+    service_dependencies: Sequence[
+        tuple[str, Sequence[TagID], Sequence[str], Sequence[str]]
+        | tuple[str, Sequence[TagID], Sequence[str], Sequence[str], dict[str, Any]]
+        | tuple[str, Sequence[str], Sequence[str]]
+        | tuple[str, Sequence[str], Sequence[str], dict[str, Any]]
+    ]
 
     def __call__(self, hostname: HostName, servicedesc: ServiceName) -> list[ServiceName]:
         """Return a list of services this service depends on"""
@@ -1166,7 +1171,7 @@ class ServiceDependsOn:
                 continue
             if len(entry) == 3:
                 depname, hostlist, patternlist = entry
-                tags: list[TagID] = []
+                tags: Sequence[TagID] = []
             elif len(entry) == 4:
                 depname, tags, hostlist, patternlist = entry
             else:

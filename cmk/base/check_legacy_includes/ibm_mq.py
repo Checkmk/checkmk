@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import re
 from collections.abc import Mapping
@@ -32,7 +31,9 @@ def is_ibm_mq_service_vanished(item: str, parsed: Mapping[str, Any]) -> bool:
     raise IgnoreResultsError("Stale because queue manager %s" % qmgr_status)
 
 
-def ibm_mq_check_version(actual_version, params, label):
+def ibm_mq_check_version(
+    actual_version: str | None, params: Mapping[str, Any], label: str
+) -> tuple[int, str]:
     """
     >>> ibm_mq_check_version(
     ...    "2.0.0b4",
@@ -43,7 +44,7 @@ def ibm_mq_check_version(actual_version, params, label):
 
     """
 
-    def tokenize(version):
+    def tokenize(version: str) -> list[int]:
         _map_chars = {"p": 2, "b": 1, "i": 0}
         if not set("0123456789.pbi").issuperset(version):
             raise ValueError(version)

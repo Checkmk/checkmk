@@ -7,7 +7,7 @@
 
 import re
 from collections.abc import Callable, Collection, Sequence
-from typing import Any, get_args, override
+from typing import get_args, override
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
@@ -231,7 +231,7 @@ def check_types_autocompleter(config: Config, value: str, params: dict) -> Choic
     ]
 
 
-def validate_autocompleter_data(api_request: dict[str, Any]) -> None:
+def validate_autocompleter_data(api_request: dict[str, object]) -> None:
     params = api_request.get("params")
     if params is None:
         raise MKUserError("params", _('You need to set the "%s" parameter.') % "params")

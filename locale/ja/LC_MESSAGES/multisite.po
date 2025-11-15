@@ -6972,6 +6972,9 @@ msgstr "イベントのアーカイブ"
 msgid "Archive events of hosts"
 msgstr "ホストのイベントをアーカイブする"
 
+msgid "Archive exceeds total size limit"
+msgstr ""
+
 msgid "Archive log"
 msgstr "アーカイブログ"
 
@@ -9004,20 +9007,14 @@ msgstr "バックアップが構成されています"
 msgid "Backup encryption keys"
 msgstr "バックアップ暗号化キー"
 
+msgid "Backup in progress. Refresh to see the final status."
+msgstr ""
+
 msgid "Backup job"
 msgstr "バックアップジョブ"
 
 msgid "Backup modes"
 msgstr "バックアップモード"
-
-msgid ""
-"Backup process has started. You can safely navigate away from this page as "
-"the process will continue in the background. Refresh this page to check the "
-"current status."
-msgstr ""
-"バックアップ処理が開始されました。処理はバックグラウンドで継続されますので、"
-"このページから離れても問題ありません。現在の状況を確認するにはこのページを更"
-"新してください。"
 
 msgid "Backup size"
 msgstr "バックアップサイズ"
@@ -13969,6 +13966,14 @@ msgstr "コミット"
 
 msgid "Committed memory"
 msgstr "コミットされたメモリ"
+
+#, fuzzy
+msgid "Common Name (Issuer)"
+msgstr "コモンネーム (CN)"
+
+#, fuzzy
+msgid "Common Name (Subject)"
+msgstr "コモンネーム (CN)"
 
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr "共通のプロビジョニンググループ：仮想プールの構成"
@@ -20377,6 +20382,10 @@ msgstr "列ヘッダーを追加しないでください"
 
 msgid "Do not add text"
 msgstr "テキストを追加しない"
+
+#, fuzzy
+msgid "Do not apply this rule"
+msgstr "このルールを適用しないでください"
 
 msgid "Do not ask for a comment"
 msgstr "コメントを求めないでください"
@@ -34917,9 +34926,6 @@ msgstr "発行された"
 
 msgid "Issuer"
 msgstr "発行者"
-
-msgid "Issuer Name"
-msgstr "発行名"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -51826,6 +51832,10 @@ msgstr "すべてのサービスとホストラベルを更新します(タブ�
 msgid "Refresh interval"
 msgstr "更新間隔"
 
+#, fuzzy
+msgid "Refresh status"
+msgstr "サービスステータス"
+
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
 msgstr "ホスト '%s' の確認設定を更新しました"
@@ -55313,6 +55323,9 @@ msgstr "セキュリティレベル"
 msgid "Security advice"
 msgstr "セキュリティに関するアドバイス"
 
+msgid "Security checks have failed for the uploaded tar.gz file"
+msgstr ""
+
 #, python-format
 msgid "Security message #%d"
 msgstr "セキュリティメッセージ #%d"
@@ -55649,7 +55662,8 @@ msgstr ""
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
 "immediate encrypted connection. SMTP STARTTLS negotiates encryption after "
-"connecting in plain text."
+"connecting in plain text.Proxy connections allow to connect via a proxy "
+"server, only global and manual proxy configurations are supported."
 msgstr ""
 
 msgid ""
@@ -61224,9 +61238,6 @@ msgstr ""
 
 msgid "Subject"
 msgstr "件名"
-
-msgid "Subject Name"
-msgstr "主題名"
 
 msgid "Subject for bulk notifications"
 msgstr "一括通知の対象"
@@ -67266,12 +67277,6 @@ msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 "アップロードされたZIPファイルの展開後のサイズが制限を超えています: %s > %s"
 
-#, python-format
-msgid ""
-"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-msgstr ""
-"アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s > %s"
-
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "アップロードされたファイルは有効なZIPファイルではありません。"
 
@@ -68106,15 +68111,6 @@ msgstr "このIDは、別のバックアップターゲットによってすで�
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "このIDは、一意の識別子として使用されます。後で変更することはできません。"
-
-msgid ""
-"This ID uniquely identifies this rule in Checkmk. Use this ID when working "
-"with rules in Checkmk REST API calls, e.g., to show, modify or delete the "
-"rule."
-msgstr ""
-"このIDは、Checkmk 内でこのルールを識別します。CheckmkのREST API呼び出しでルー"
-"ルを操作する場合（例：ルールを表示、変更、または削除するとき）には、このIDを"
-"使用してください。"
 
 msgid "This Ruleset sets the threshold limits for battery sensors"
 msgstr "このルールセットは、バッテリーセンサーのしきい値の上限を設定します"
@@ -69233,15 +69229,6 @@ msgid ""
 msgstr ""
 "この名前は、mk_filestatsコンフィギュレーションで定義されたセクションの名前と"
 "一致する必要があります。"
-
-msgid ""
-"This name uniquely identifies the rule set in Checkmk. Use this name when "
-"working with rule sets and rules in Checkmk REST API calls, e.g. to create a "
-"new rule."
-msgstr ""
-"この名前は、Checkmk内のルールセットを識別します。Checkmkの REST API 呼び出し"
-"でルールセットやルールを操作する際には、この名前を使用してください。例えば新"
-"しいルールを作成する際などです。"
 
 msgid "This name will be used in the description of the service"
 msgstr "この名前は、サービスの説明で使用されます"
@@ -83082,6 +83069,9 @@ msgstr ""
 "の行など)を挿入できます。このログファイルのすべてのパターンを以下に示します。"
 "\"試してみる\"ボタンをクリックすると、一致するパターンが強調表示されます。"
 
+msgid "You can leave this page. This backup continues in the background"
+msgstr ""
+
 msgid ""
 "You can limit the number of current events created by a single host here. "
 "This is meant to prevent you from message storms created by one device."
@@ -88606,13 +88596,12 @@ msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 msgid "Select the folder your host(s) will be created in."
 msgstr "ホストが作成される場所を指定してください。"
 
-msgid "Deploy the relay to your environment"
+msgid "Download the relay to your environment"
 msgstr ""
 
-msgid ""
-"Download the Relay container image and run it in your environment to start "
-"the setup."
-msgstr ""
+#, fuzzy
+msgid "Download the Relay container image."
+msgstr "Dockerコンテナプラグインをデプロイする"
 
 #, fuzzy
 msgid "Name the relay"
@@ -88626,25 +88615,27 @@ msgid ""
 "code in the next step."
 msgstr ""
 
-msgid "Register the relay with your Checkmk site"
+#, fuzzy
+msgid "Register the relay with your Checkmk site and run it"
 msgstr "Checkmkサイトにリレーを登録する"
 
 msgid ""
 "Register the Relay to authorize it for communication with your Checkmk site."
 msgstr "リレーを登録し、Checkmkサイトとの通信を許可してください。"
 
-msgid ""
-"This code snippet includes a one-time token. If you plan to use it multiple "
-"times in larger environments, you can check "
+msgid " Go to "
 msgstr ""
 
 #, fuzzy
-msgid "this article"
-msgstr "このルール"
+msgid "this page"
+msgstr "1ページ目"
 
 #, fuzzy
-msgid " for more details."
-msgstr "詳細はこちらをクリックしてください。"
+msgid " and get an automation secret. Use it in place of [automation-secret]"
+msgstr "自動化ユーザーの有効な自動化シークレット"
+
+msgid "After successful registration, start the Relay daemon."
+msgstr ""
 
 #, fuzzy
 msgid "Verify registration"
@@ -89140,6 +89131,54 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "Backup process has started. You can safely navigate away from this page "
+#~ "as the process will continue in the background. Refresh this page to "
+#~ "check the current status."
+#~ msgstr ""
+#~ "バックアップ処理が開始されました。処理はバックグラウンドで継続されますの"
+#~ "で、このページから離れても問題ありません。現在の状況を確認するにはこのペー"
+#~ "ジを更新してください。"
+
+#~ msgid "Issuer Name"
+#~ msgstr "発行名"
+
+#~ msgid "Subject Name"
+#~ msgstr "主題名"
+
+#, python-format
+#~ msgid ""
+#~ "The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+#~ msgstr ""
+#~ "アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s "
+#~ "> %s"
+
+#~ msgid ""
+#~ "This ID uniquely identifies this rule in Checkmk. Use this ID when "
+#~ "working with rules in Checkmk REST API calls, e.g., to show, modify or "
+#~ "delete the rule."
+#~ msgstr ""
+#~ "このIDは、Checkmk 内でこのルールを識別します。CheckmkのREST API呼び出しで"
+#~ "ルールを操作する場合（例：ルールを表示、変更、または削除するとき）には、こ"
+#~ "のIDを使用してください。"
+
+#~ msgid ""
+#~ "This name uniquely identifies the rule set in Checkmk. Use this name when "
+#~ "working with rule sets and rules in Checkmk REST API calls, e.g. to "
+#~ "create a new rule."
+#~ msgstr ""
+#~ "この名前は、Checkmk内のルールセットを識別します。Checkmkの REST API 呼び出"
+#~ "しでルールセットやルールを操作する際には、この名前を使用してください。例え"
+#~ "ば新しいルールを作成する際などです。"
+
+#, fuzzy
+#~ msgid "this article"
+#~ msgstr "このルール"
+
+#, fuzzy
+#~ msgid " for more details."
+#~ msgstr "詳細はこちらをクリックしてください。"
 
 #, fuzzy
 #~ msgid ""

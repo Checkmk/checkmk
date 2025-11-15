@@ -7433,6 +7433,9 @@ msgstr "Événements d'archives"
 msgid "Archive events of hosts"
 msgstr "Archiver les événements des hôtes"
 
+msgid "Archive exceeds total size limit"
+msgstr ""
+
 #, fuzzy
 msgid "Archive log"
 msgstr "Archive"
@@ -9682,17 +9685,14 @@ msgstr "Sauvegarde configurée"
 msgid "Backup encryption keys"
 msgstr "Sauvegarde des clés de cryptage"
 
+msgid "Backup in progress. Refresh to see the final status."
+msgstr ""
+
 msgid "Backup job"
 msgstr "Travail de sauvegarde"
 
 msgid "Backup modes"
 msgstr "Modes de sauvegarde"
-
-msgid ""
-"Backup process has started. You can safely navigate away from this page as "
-"the process will continue in the background. Refresh this page to check the "
-"current status."
-msgstr ""
 
 msgid "Backup size"
 msgstr "Taille de la sauvegarde"
@@ -14905,6 +14905,14 @@ msgstr "Commits"
 
 msgid "Committed memory"
 msgstr "La mémoire engagée"
+
+#, fuzzy
+msgid "Common Name (Issuer)"
+msgstr "Nom commun"
+
+#, fuzzy
+msgid "Common Name (Subject)"
+msgstr "Nom commun"
 
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr ""
@@ -21742,6 +21750,10 @@ msgstr "Ne pas ajouter d'en-têtes de colonne"
 #, fuzzy
 msgid "Do not add text"
 msgstr "Ne pas tamponner"
+
+#, fuzzy
+msgid "Do not apply this rule"
+msgstr "ne pas appliquer cette règle"
 
 msgid "Do not ask for a comment"
 msgstr "Ne demandez pas de commentaire"
@@ -37436,10 +37448,6 @@ msgstr "Délivré à"
 
 msgid "Issuer"
 msgstr "Émetteur"
-
-#, fuzzy
-msgid "Issuer Name"
-msgstr "Nom de l'utilisateur"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -55732,6 +55740,10 @@ msgstr "Rafraîchir tous les services et les étiquettes des hôtes (tabula rasa
 msgid "Refresh interval"
 msgstr "Intervalle de rafraîchissement"
 
+#, fuzzy
+msgid "Refresh status"
+msgstr "État des services"
+
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
 msgstr "Rafraîchissement de la configuration de contrôle de l'hôte '%s'"
@@ -59479,6 +59491,9 @@ msgstr "Niveau de sécurité"
 msgid "Security advice"
 msgstr "Nom de sécurité"
 
+msgid "Security checks have failed for the uploaded tar.gz file"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Security message #%d"
 msgstr "Nom de sécurité"
@@ -59799,7 +59814,8 @@ msgstr ""
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
 "immediate encrypted connection. SMTP STARTTLS negotiates encryption after "
-"connecting in plain text."
+"connecting in plain text.Proxy connections allow to connect via a proxy "
+"server, only global and manual proxy configurations are supported."
 msgstr ""
 
 msgid ""
@@ -65752,10 +65768,6 @@ msgstr ""
 
 msgid "Subject"
 msgstr "Sujet"
-
-#, fuzzy
-msgid "Subject Name"
-msgstr "Nom de la section"
 
 msgid "Subject for bulk notifications"
 msgstr "Objet des notifications groupées"
@@ -72095,11 +72107,6 @@ msgstr "Le type de l'horodatage doit être int ou float, mais est %s"
 msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 
-#, python-format
-msgid ""
-"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-msgstr ""
-
 #, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "Le fichier ne ressemble pas à un fichier clé valide."
@@ -72963,16 +72970,6 @@ msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "Cet ID est utilisé comme identifiant unique. Il ne peut pas être modifié "
 "ultérieurement."
-
-#, fuzzy
-msgid ""
-"This ID uniquely identifies this rule in Checkmk. Use this ID when working "
-"with rules in Checkmk REST API calls, e.g., to show, modify or delete the "
-"rule."
-msgstr ""
-"Le nom du jeu de règles identifie le jeu de règles dans Checkmk. Utilisez ce "
-"nom lorsque vous travaillez avec les règles et les appels de l'API REST du "
-"jeu de règles."
 
 #, fuzzy
 msgid "This Ruleset sets the threshold limits for battery sensors"
@@ -74169,16 +74166,6 @@ msgid ""
 msgstr ""
 "Ce nom doit correspondre au nom de la section définie dans la configuration "
 "de mk_filestats."
-
-#, fuzzy
-msgid ""
-"This name uniquely identifies the rule set in Checkmk. Use this name when "
-"working with rule sets and rules in Checkmk REST API calls, e.g. to create a "
-"new rule."
-msgstr ""
-"Le nom du jeu de règles identifie le jeu de règles dans Checkmk. Utilisez ce "
-"nom lorsque vous travaillez avec les règles et les appels de l'API REST du "
-"jeu de règles."
 
 msgid "This name will be used in the description of the service"
 msgstr "Ce nom sera utilisé dans la description du service"
@@ -89484,6 +89471,9 @@ msgstr ""
 "pour ce fichier journal sont listés ci-dessous. Les modèles correspondants "
 "seront mis en évidence après avoir cliqué sur le bouton \"Essayer\"."
 
+msgid "You can leave this page. This backup continues in the background"
+msgstr ""
+
 msgid ""
 "You can limit the number of current events created by a single host here. "
 "This is meant to prevent you from message storms created by one device."
@@ -95243,13 +95233,12 @@ msgstr ""
 "Spécifiez à quelle période un nouveau fichier pour l'historique des "
 "événements sera créé."
 
-msgid "Deploy the relay to your environment"
+msgid "Download the relay to your environment"
 msgstr ""
 
-msgid ""
-"Download the Relay container image and run it in your environment to start "
-"the setup."
-msgstr ""
+#, fuzzy
+msgid "Download the Relay container image."
+msgstr "Déployer le plugin de conteneur docker"
 
 #, fuzzy
 msgid "Name the relay"
@@ -95265,7 +95254,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Register the relay with your Checkmk site"
+msgid "Register the relay with your Checkmk site and run it"
 msgstr "Affichage de l'état des sites Checkmk\n"
 
 #, fuzzy
@@ -95273,18 +95262,19 @@ msgid ""
 "Register the Relay to authorize it for communication with your Checkmk site."
 msgstr "Affichage de l'état des sites Checkmk\n"
 
-msgid ""
-"This code snippet includes a one-time token. If you plan to use it multiple "
-"times in larger environments, you can check "
+msgid " Go to "
 msgstr ""
 
 #, fuzzy
-msgid "this article"
-msgstr "Cette règle"
+msgid "this page"
+msgstr "Première page"
 
 #, fuzzy
-msgid " for more details."
-msgstr "Cliquez ici pour plus de détails."
+msgid " and get an automation secret. Use it in place of [automation-secret]"
+msgstr "Secret d'automatisation valide pour l'utilisateur d'automatisation"
+
+msgid "After successful registration, start the Relay daemon."
+msgstr ""
 
 #, fuzzy
 msgid "Verify registration"
@@ -95794,6 +95784,42 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Issuer Name"
+#~ msgstr "Nom de l'utilisateur"
+
+#, fuzzy
+#~ msgid "Subject Name"
+#~ msgstr "Nom de la section"
+
+#, fuzzy
+#~ msgid ""
+#~ "This ID uniquely identifies this rule in Checkmk. Use this ID when "
+#~ "working with rules in Checkmk REST API calls, e.g., to show, modify or "
+#~ "delete the rule."
+#~ msgstr ""
+#~ "Le nom du jeu de règles identifie le jeu de règles dans Checkmk. Utilisez "
+#~ "ce nom lorsque vous travaillez avec les règles et les appels de l'API "
+#~ "REST du jeu de règles."
+
+#, fuzzy
+#~ msgid ""
+#~ "This name uniquely identifies the rule set in Checkmk. Use this name when "
+#~ "working with rule sets and rules in Checkmk REST API calls, e.g. to "
+#~ "create a new rule."
+#~ msgstr ""
+#~ "Le nom du jeu de règles identifie le jeu de règles dans Checkmk. Utilisez "
+#~ "ce nom lorsque vous travaillez avec les règles et les appels de l'API "
+#~ "REST du jeu de règles."
+
+#, fuzzy
+#~ msgid "this article"
+#~ msgstr "Cette règle"
+
+#, fuzzy
+#~ msgid " for more details."
+#~ msgstr "Cliquez ici pour plus de détails."
 
 #, fuzzy
 #~ msgid ""

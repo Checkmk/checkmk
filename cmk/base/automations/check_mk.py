@@ -3109,35 +3109,36 @@ class AutomationDiagSpecialAgent(Automation):
                     password_lookup=make_staged_passwords_lookup(),
                 ),
             )
-
-            with _temporary_local_password_store(
-                diag_special_agent_input.passwords, password_store_file
-            ):
-                for cmd in cmds:
-                    fetcher = ProgramFetcher(
-                        cmdline=cmd.cmdline,
-                        stdin=cmd.stdin,
-                        is_cmc=diag_special_agent_input.is_cmc,
-                    )
-                    with fetcher:
-                        fetched = fetcher.fetch(Mode.DISCOVERY)
-
-                    yield (
-                        (
-                            0,
-                            ensure_str_with_fallback(
-                                fetched.ok,
-                                encoding="utf-8",
-                                fallback="latin-1",
-                            ),
-                        )
-                        if fetched.is_ok()
-                        else (1, str(fetched.error))
-                    )
         except Exception as exc:
+            # this handles broken plugins.
             if cmk.ccc.debug.enabled():
                 raise
             yield 1, str(exc)
+
+        with _temporary_local_password_store(
+            diag_special_agent_input.passwords, password_store_file
+        ):
+            for cmd in cmds:
+                fetcher = ProgramFetcher(
+                    cmdline=cmd.cmdline,
+                    stdin=cmd.stdin,
+                    is_cmc=diag_special_agent_input.is_cmc,
+                )
+                with fetcher:
+                    fetched = fetcher.fetch(Mode.DISCOVERY)
+
+                yield (
+                    (
+                        0,
+                        ensure_str_with_fallback(
+                            fetched.ok,
+                            encoding="utf-8",
+                            fallback="latin-1",
+                        ),
+                    )
+                    if fetched.is_ok()
+                    else (1, str(fetched.error))
+                )
 
 
 @contextmanager

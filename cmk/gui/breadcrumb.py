@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 """Breadcrumb processing
 
 Cares about rendering the breadcrumb which is shown at the top of all pages
@@ -13,7 +11,7 @@ Cares about rendering the breadcrumb which is shown at the top of all pages
 from __future__ import annotations
 
 from collections.abc import Iterable, MutableSequence
-from typing import NamedTuple
+from typing import NamedTuple, overload
 
 import cmk.gui.htmllib.html
 from cmk.gui.main_menu_types import MainMenu
@@ -34,16 +32,39 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     def __len__(self) -> int:
         return len(self._items)
 
-    def __getitem__(self, index):
+    @overload
+    def __getitem__(self, index: int) -> BreadcrumbItem: ...
+
+    @overload
+    def __getitem__(self, index: slice[int, int, int]) -> MutableSequence[BreadcrumbItem]: ...
+
+    def __getitem__(self, index: int | slice) -> BreadcrumbItem | MutableSequence[BreadcrumbItem]:
         return self._items[index]
 
-    def __setitem__(self, index, value):
-        self._items[index] = value
+    @overload
+    def __setitem__(self, index: int, value: BreadcrumbItem) -> None: ...
 
-    def __delitem__(self, index):
-        self._items.pop(index)
+    @overload
+    def __setitem__(self, index: slice[int, int, int], value: Iterable[BreadcrumbItem]) -> None: ...
 
-    def insert(self, index, value):
+    def __setitem__(
+        self, index: int | slice, value: BreadcrumbItem | Iterable[BreadcrumbItem]
+    ) -> None:
+        self._items[index] = value  # type: ignore[index,assignment]
+
+    @overload
+    def __delitem__(self, index: int) -> None: ...
+
+    @overload
+    def __delitem__(self, index: slice[int, int, int]) -> None: ...
+
+    def __delitem__(self, index: int | slice) -> None:
+        if isinstance(index, int):
+            self._items.pop(index)
+        else:
+            del self._items[index]
+
+    def insert(self, index: int, value: BreadcrumbItem) -> None:
         self._items.insert(index, value)
 
     def __add__(self, other: Breadcrumb) -> Breadcrumb:

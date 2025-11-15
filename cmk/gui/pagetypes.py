@@ -1611,6 +1611,7 @@ def _page_menu_entries_save(
 
     parent_item = breadcrumb[-2]
 
+    assert parent_item.url is not None
     yield PageMenuEntry(
         title=_("Cancel"),
         icon_name="cancel",

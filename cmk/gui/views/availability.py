@@ -243,6 +243,7 @@ def show_availability_page(
     title += " - " + range_title
 
     breadcrumb = view.breadcrumb()
+    assert breadcrumb[-1].url is not None
     breadcrumb.append(
         BreadcrumbItem(
             title=title,
@@ -819,6 +820,7 @@ def show_bi_availability(
         html.body_start(title)
 
         breadcrumb = view.breadcrumb()
+        assert breadcrumb[-1].url is not None
         breadcrumb.append(
             BreadcrumbItem(
                 title=title,

@@ -484,6 +484,7 @@ def make_help_dropdown() -> PageMenuDropdown:
 
 def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     parent_item = breadcrumb[-2]
+    assert parent_item.url is not None
     return PageMenuDropdown(
         name="dummy",
         title="dummy",
@@ -492,7 +493,7 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
                 title=_("Dummy"),
                 entries=[
                     PageMenuEntry(
-                        title=parent_item.title,
+                        title=str(parent_item.title),
                         icon_name="up",
                         item=make_simple_link(parent_item.url),
                         name="up",
@@ -587,7 +588,6 @@ def _make_form_cancel_link(breadcrumb: Breadcrumb, cancel_url: str | None) -> Pa
         if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
             raise ValueError("Can not create back link for this page")
         cancel_url = breadcrumb[-2].url
-    assert cancel_url is not None
 
     return PageMenuEntry(
         title=_("Cancel"),

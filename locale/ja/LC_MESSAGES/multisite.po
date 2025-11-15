@@ -13311,6 +13311,14 @@ msgstr "コミット"
 msgid "Committed memory"
 msgstr "コミットされたメモリ"
 
+#, fuzzy
+msgid "Common Name (Issuer)"
+msgstr "コモンネーム (CN)"
+
+#, fuzzy
+msgid "Common Name (Subject)"
+msgstr "コモンネーム (CN)"
+
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr "共通のプロビジョニンググループ：仮想プールの構成"
 
@@ -33568,9 +33576,6 @@ msgstr "発行された"
 
 msgid "Issuer"
 msgstr "発行者"
-
-msgid "Issuer Name"
-msgstr "発行名"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -59083,9 +59088,6 @@ msgstr ""
 msgid "Subject"
 msgstr "件名"
 
-msgid "Subject Name"
-msgstr "主題名"
-
 msgid "Subject for bulk notifications"
 msgstr "一括通知の対象"
 
@@ -84129,6 +84131,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Issuer Name"
+#~ msgstr "発行名"
+
+#~ msgid "Subject Name"
+#~ msgstr "主題名"
 
 #, python-format
 #~ msgid "The host %s is not monitored on this site"

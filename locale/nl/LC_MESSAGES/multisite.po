@@ -14151,6 +14151,14 @@ msgstr "Vastleggingen"
 msgid "Committed memory"
 msgstr "Vastgelegd geheugen"
 
+#, fuzzy
+msgid "Common Name (Issuer)"
+msgstr "Gebruikelijke naam"
+
+#, fuzzy
+msgid "Common Name (Subject)"
+msgstr "Gebruikelijke naam"
+
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr ""
 
@@ -35761,10 +35769,6 @@ msgstr "Uitgegeven aan"
 
 msgid "Issuer"
 msgstr "Emittent"
-
-#, fuzzy
-msgid "Issuer Name"
-msgstr "Naam gebruiker"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -62931,10 +62935,6 @@ msgstr ""
 msgid "Subject"
 msgstr "Onderwerp"
 
-#, fuzzy
-msgid "Subject Name"
-msgstr "Naam van de sectie"
-
 msgid "Subject for bulk notifications"
 msgstr "Onderwerp voor bulkmeldingen"
 
@@ -89721,6 +89721,14 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Issuer Name"
+#~ msgstr "Naam gebruiker"
+
+#, fuzzy
+#~ msgid "Subject Name"
+#~ msgstr "Naam van de sectie"
 
 #, fuzzy, python-format
 #~ msgid "The host %s is not monitored on this site"

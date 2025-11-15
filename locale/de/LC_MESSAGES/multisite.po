@@ -13722,6 +13722,14 @@ msgstr "Eingaben"
 msgid "Committed memory"
 msgstr "Zugesicherter Speicher"
 
+#, fuzzy
+msgid "Common Name (Issuer)"
+msgstr "Common Name (CN)"
+
+#, fuzzy
+msgid "Common Name (Subject)"
+msgstr "Common Name (CN)"
+
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr "Gemeinsame Bereitstellungsgruppen: Konfiguration des virtuellen Pools"
 
@@ -34513,9 +34521,6 @@ msgstr "Ausgestellt an"
 
 msgid "Issuer"
 msgstr "Herausgeben"
-
-msgid "Issuer Name"
-msgstr "Name des Herausgebers"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -60563,9 +60568,6 @@ msgstr ""
 
 msgid "Subject"
 msgstr "Subjekt"
-
-msgid "Subject Name"
-msgstr "Subjektname"
 
 msgid "Subject for bulk notifications"
 msgstr "Betreff für Bulk-Benachrichtigungen"
@@ -86703,6 +86705,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Issuer Name"
+#~ msgstr "Name des Herausgebers"
+
+#~ msgid "Subject Name"
+#~ msgstr "Subjektname"
 
 #, python-format
 #~ msgid "The host %s is not monitored on this site"

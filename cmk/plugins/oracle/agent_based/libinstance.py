@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 
 import dataclasses
 from collections.abc import Mapping
@@ -74,7 +73,7 @@ class Instance(BaseModel):
         mode="before",
     )
     @classmethod
-    def empty_string_to_none(cls, v):
+    def empty_string_to_none(cls, v: str | int | None) -> str | int | None:
         if v == "":
             # ... should accept an empty string as None:
             return None

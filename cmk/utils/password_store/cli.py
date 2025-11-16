@@ -7,7 +7,7 @@ import argparse
 import sys
 from collections.abc import Sequence
 
-from cmk.utils.password_store import lookup, pending_password_store_path
+from cmk.utils.password_store import lookup, pending_secrets_path_site
 
 
 def _parse_args(args: Sequence[str]) -> argparse.Namespace:
@@ -30,7 +30,7 @@ def main(args: Sequence[str]) -> int:
     parsed_args = _parse_args(args)
 
     try:
-        password = lookup(pending_password_store_path(), parsed_args.lookup)
+        password = lookup(pending_secrets_path_site(), parsed_args.lookup)
     except ValueError as e:
         sys.stderr.write(f"cmk-passwordstore: {e}\n")
         return 1

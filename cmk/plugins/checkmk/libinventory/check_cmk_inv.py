@@ -201,7 +201,7 @@ def inventory_as_check(
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
-        password_store_file=cmk.utils.password_store.core_password_store_path(),
+        password_store_file=cmk.utils.password_store.active_secrets_path_site(),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,

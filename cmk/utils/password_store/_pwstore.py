@@ -55,7 +55,7 @@ def password_store_path() -> Path:
     return cmk.utils.paths.var_dir / "stored_passwords"
 
 
-def core_password_store_path(config_path: Path | None = None) -> Path:
+def active_secrets_path_site(config_path: Path | None = None) -> Path:
     """file where the passwords for use by the helpers are stored
 
     This is "frozen" in the state at config generation.
@@ -66,9 +66,14 @@ def core_password_store_path(config_path: Path | None = None) -> Path:
     return config_path / "stored_passwords"
 
 
-def pending_password_store_path() -> Path:
+def pending_secrets_path_site() -> Path:
     """file where user-managed passwords and the ones extracted from the configuration are merged."""
     return cmk.utils.paths.var_dir / "passwords_merged"
+
+
+# COMING SOON:
+# active_secrets_path_relay()
+# pending_secrets_path_relay()
 
 
 # should accept Mapping[str, Secret[str]]
@@ -117,7 +122,7 @@ def extract_formspec_password(
             # This is a password that was entered in the GUI, so we can return it directly.
             return password_value
         case ("cmk_postprocessed", "stored_password", (password_id, str())):
-            if (pw := _load(pending_password_store_path()).get(password_id)) is None:
+            if (pw := _load(pending_secrets_path_site()).get(password_id)) is None:
                 raise MKGeneralException(
                     "Password not found in pending password store. Please check the password store."
                 )
@@ -131,7 +136,7 @@ def extract_formspec_password(
 def extract(password_id: PasswordId) -> str:
     """Translate the password store reference to the actual password. This function is likely
     to be used by third party plugins and should not be moved / changed in behaviour."""
-    staging_path = pending_password_store_path()
+    staging_path = pending_secrets_path_site()
     match password_id:
         case str():
             if (pw := _load(staging_path).get(password_id)) is None:
@@ -155,7 +160,7 @@ def extract(password_id: PasswordId) -> str:
 def make_staged_passwords_lookup() -> Callable[[str], str | None]:
     """Returns something similar to `extract`. Intended for internal use only."""
     # maybe we should pass this, but lets be consistent for now.
-    staging_path = pending_password_store_path()
+    staging_path = pending_secrets_path_site()
     return load(staging_path).get
 
 
@@ -184,4 +189,4 @@ def lookup(pw_file: Path, pw_id: str) -> str:
 
 
 def lookup_for_bakery(pw_id: str) -> str:
-    return lookup(core_password_store_path(), pw_id)
+    return lookup(active_secrets_path_site(), pw_id)

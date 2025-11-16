@@ -718,7 +718,7 @@ def create_nagios_servicedefs(
         final_service_name_config,
         ip_address_of,
         stored_passwords,
-        password_store.core_password_store_path(),
+        password_store.active_secrets_path_site(),
     ):
         active_service_labels = _get_service_labels(
             config_cache.label_manager, hostname, service_data.description

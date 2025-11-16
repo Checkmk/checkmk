@@ -22,7 +22,7 @@ from cmk.checkengine.plugin_backend import (
     load_selected_plugins,
 )
 from cmk.discover_plugins import PluginLocation
-from cmk.utils.password_store import core_password_store_path
+from cmk.utils.password_store import active_secrets_path_site
 from cmk.utils.paths import omd_root
 
 # This will be replaced by the config generation, when the template is instantiated.
@@ -114,7 +114,7 @@ def main() -> int:
             ),
             {},
             [CONFIG.hostname],
-            password_store_file=core_password_store_path(),
+            password_store_file=active_secrets_path_site(),
         )
     except KeyboardInterrupt:
         with suppress(IOError):

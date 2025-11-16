@@ -13,8 +13,8 @@ The password store mechanic provides a mechanism for keeping passwords out of th
 process, e.g. an active check plug-in. It has been built to extend existing plugins with as small
 modificiations as possible."""
 
+from ._pwstore import active_secrets_path_site as active_secrets_path_site
 from ._pwstore import ad_hoc_password_id as ad_hoc_password_id
-from ._pwstore import core_password_store_path as core_password_store_path
 from ._pwstore import extract as extract
 from ._pwstore import extract_formspec_password as extract_formspec_password
 from ._pwstore import load as load
@@ -25,6 +25,6 @@ from ._pwstore import make_staged_passwords_lookup as make_staged_passwords_look
 from ._pwstore import Password as Password
 from ._pwstore import password_store_path as password_store_path
 from ._pwstore import PasswordId as PasswordId
-from ._pwstore import pending_password_store_path as pending_password_store_path
+from ._pwstore import pending_secrets_path_site as pending_secrets_path_site
 from ._pwstore import save as save
 from .hack import replace_passwords as replace_passwords

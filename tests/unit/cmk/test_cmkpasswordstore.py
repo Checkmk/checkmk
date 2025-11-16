@@ -7,7 +7,7 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
-from cmk.utils.password_store import pending_password_store_path, save
+from cmk.utils.password_store import pending_secrets_path_site, save
 from cmk.utils.password_store.cli import main
 
 
@@ -15,7 +15,7 @@ def test_cmkpasswordstore_existing_password(tmp_path: Path) -> None:
     password_id = "test_id"
     expected_password = "secret_password"
 
-    save({password_id: expected_password}, pending_password_store_path())
+    save({password_id: expected_password}, pending_secrets_path_site())
 
     with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
         exit_code = main(["--lookup", password_id])

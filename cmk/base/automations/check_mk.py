@@ -420,7 +420,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             simulation_mode=config.simulation_mode,
-            password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            password_store_file=cmk.utils.password_store.pending_secrets_path_site(),
             metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
                 hn,
                 config_cache.explicit_host_attributes,
@@ -661,7 +661,7 @@ class AutomationDiscoveryPreview(Automation):
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             simulation_mode=config.simulation_mode,
-            password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            password_store_file=cmk.utils.password_store.pending_secrets_path_site(),
             # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
             # and tabula rasa)
             max_cachefile_age=MaxAge.zero(),
@@ -798,7 +798,7 @@ def _active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
-    password_store_file = cmk.utils.password_store.pending_password_store_path()
+    password_store_file = cmk.utils.password_store.pending_secrets_path_site()
 
     return [
         CheckPreviewEntry(
@@ -1162,7 +1162,7 @@ def _execute_autodiscovery(
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
-        password_store_file=cmk.utils.password_store.core_password_store_path(),
+        password_store_file=cmk.utils.password_store.active_secrets_path_site(),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -2275,7 +2275,7 @@ class AutomationAnalyseServices(Automation):
         ip_address_of: ip_lookup.IPLookup,
         servicedesc: str,
     ) -> Iterable[_FoundService]:
-        password_store_file = cmk.utils.password_store.pending_password_store_path()
+        password_store_file = cmk.utils.password_store.pending_secrets_path_site()
 
         for active_service in config_cache.active_check_services(
             host_name,
@@ -3471,7 +3471,7 @@ class AutomationDiagHost(Automation):
         )
 
         state, output = 0, ""
-        pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
+        pending_passwords_file = cmk.utils.password_store.pending_secrets_path_site()
         passwords = cmk.utils.password_store.load(pending_passwords_file)
 
         host_labels = label_manager.labels_of_host(host_name)
@@ -3821,7 +3821,7 @@ class AutomationActiveCheck(Automation):
             # The redirect might not be needed anymore.
             host_attrs = config_cache.get_host_attributes(host_name, ip_family, ip_address_of)
 
-        password_store_file = cmk.utils.password_store.pending_password_store_path()
+        password_store_file = cmk.utils.password_store.pending_secrets_path_site()
         for service_data in config_cache.active_check_services(
             host_name,
             ip_lookup_config.ip_stack_config(host_name),
@@ -3943,7 +3943,7 @@ class AutomationUpdatePasswordsMergedFile(Automation):
         loading_result = loading_result or load_config(discovery_rulesets=())
         cmk.utils.password_store.save(
             loading_result.config_cache.collect_passwords(),
-            cmk.utils.password_store.pending_password_store_path(),
+            cmk.utils.password_store.pending_secrets_path_site(),
         )
         return UpdatePasswordsMergedFileResult()
 
@@ -4050,7 +4050,7 @@ class AutomationGetAgentOutput(Automation):
                 if hostname in hosts_config.clusters:
                     return GetAgentOutputResult(success, output, AgentRawData(info))
 
-                core_password_store_file = cmk.utils.password_store.core_password_store_path()
+                core_password_store_file = cmk.utils.password_store.active_secrets_path_site()
                 for source in sources.make_sources(
                     plugins,
                     hostname,

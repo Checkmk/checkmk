@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Redis backed cache decorators
@@ -61,12 +60,12 @@ def ttl_memoize(ttl: int, connection_factory: RedisFactory) -> CacheDecorator:
     """
     encode, decode = marshal.dumps, marshal.loads
 
-    def decorator(func):
+    def decorator(func: Callable[P, R]) -> CacheWrapper[P, R]:
         func_name = _get_dotted_path(func)
         prefix = f"redis_cache:{func_name}"
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             if redis_enabled():
                 try:
                     conn = connection_factory()
@@ -79,9 +78,11 @@ def ttl_memoize(ttl: int, connection_factory: RedisFactory) -> CacheDecorator:
                     assert not isinstance(ck, Awaitable)
                     cached_result = ensure_bytes(ck)
                     if cached_result is not None:
-                        return decode(cached_result)
+                        # marshal.loads returns Any, but we know it matches R from the original function
+                        return decode(cached_result)  # type: ignore[no-any-return]
                     result = func(*args, **kwargs)
-                    conn.set(cache_key, encode(result), ex=ttl)
+                    # marshal.dumps accepts broader types than its type hints suggest
+                    conn.set(cache_key, encode(result), ex=ttl)  # type: ignore[arg-type]
                     return result
                 except (RuntimeError, RedisError):
                     pass

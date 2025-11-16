@@ -10,7 +10,6 @@
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Manage configuration activation of Checkmk"""
@@ -401,7 +400,7 @@ def _save_site_replication_status(site_id: SiteId, repl_status: SiteReplicationS
     )
 
 
-def _update_replication_status(site_id, vars_):
+def _update_replication_status(site_id: SiteId, vars_: SiteReplicationStatus) -> None:
     """Updates one or more dict elements of a site in an atomic way."""
     var_dir.mkdir(mode=0o770, exist_ok=True)
 
@@ -1225,7 +1224,7 @@ class ActivateChanges:
                     return True
         return False
 
-    def grouped_changes(self):
+    def grouped_changes(self) -> list[tuple[str, ChangeSpec]]:
         return self._pending_changes
 
     def changes_of_site(self, site_id: SiteId) -> Sequence[ChangeSpec]:
@@ -1714,7 +1713,7 @@ class ActivateChangesManager:
                 ),
             )
 
-    def activate_until(self):
+    def activate_until(self) -> str | None:
         return self._activate_until
 
     def is_running(self) -> bool:
@@ -1926,7 +1925,7 @@ class ActivateChangesManager:
 
         return snapshot_settings
 
-    def _check_snapshot_creation_permissions(self, site_id):
+    def _check_snapshot_creation_permissions(self, site_id: SiteId) -> None:
         if self.changes.site_has_foreign_changes(site_id) and not self._activate_foreign:
             if not user.may("wato.activateforeign"):
                 raise MKUserError(
@@ -2007,7 +2006,7 @@ class ActivateChangesManager:
     def get_state(self) -> ActivationState:
         return {"sites": {site_id: self.get_site_state(site_id) for site_id in self._sites}}  #
 
-    def get_site_state(self, site_id):
+    def get_site_state(self, site_id: SiteId) -> SiteActivationState:
         if self._activation_id is None:
             raise Exception("activation ID is not set")
         return store.load_object_from_file(
@@ -2030,7 +2029,7 @@ class ActivateChangesManager:
         )
 
     @staticmethod
-    def site_filename(site_id):
+    def site_filename(site_id: SiteId) -> str:
         return "site_%s.mk" % site_id
 
 
@@ -2714,7 +2713,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     housekeeping_max_count = 20
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return _("Activate Changes Scheduler")
 
     def __init__(self, activation_id: str) -> None:
@@ -2815,11 +2814,11 @@ def execute_activate_changes(
 
 
 @tracer.instrument("_activate_local_rabbitmq_changes")
-def _activate_local_rabbitmq_changes():
+def _activate_local_rabbitmq_changes() -> None:
     rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
 
 
-def _add_extensions_for_license_usage():
+def _add_extensions_for_license_usage() -> None:
     save_extensions(
         LicenseUsageExtensions(
             ntop=is_ntop_configured(),

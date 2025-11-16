@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import datetime
@@ -14,14 +13,14 @@ import logging
 import re
 import sys
 import textwrap
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from email.headerregistry import Address
 from email.message import EmailMessage
 from pathlib import Path
 from typing import NamedTuple
 
 from git.exc import BadName, GitCommandError
-from git.objects.blob import Blob
+from git.objects.base import IndexObject
 from git.objects.commit import Commit
 from git.repo import Repo
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined, Template
@@ -132,7 +131,7 @@ class File(NamedTuple):
     content: str
 
     @classmethod
-    def new(cls, path: str | None, blob: Blob | None) -> "File":
+    def new(cls, path: str | None, blob: IndexObject | None) -> "File":
         # TODO: Fix None handling at call sites
         assert path is not None
         assert blob is not None
@@ -210,7 +209,7 @@ def _is_werks_path(path: str | None) -> bool:
 
 
 def get_change(commit: Commit) -> WerkCommit | None:
-    def _collect():
+    def _collect() -> Iterator[WerkChange]:
         for diff in commit.parents[0].diff(commit):
             a_is_werk = _is_werks_path(diff.a_path)
             b_is_werk = _is_werks_path(diff.b_path)
@@ -219,18 +218,18 @@ def get_change(commit: Commit) -> WerkCommit | None:
 
             if diff.renamed_file:
                 if a_is_werk:
-                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))  # type: ignore[arg-type]
+                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))  # type: ignore[arg-type]
+                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
             elif diff.deleted_file:
                 if a_is_werk:
-                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))  # type: ignore[arg-type]
+                    yield WerkRemoved(File.new(diff.a_path, diff.a_blob))
             elif diff.new_file:
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))  # type: ignore[arg-type]
+                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
             elif diff.copied_file:
                 if b_is_werk:
-                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))  # type: ignore[arg-type]
+                    yield WerkAdded(File.new(diff.b_path, diff.b_blob))
             else:
                 assert diff.b_path == diff.a_path
                 # TODO: Fix None handling for real
@@ -242,7 +241,7 @@ def get_change(commit: Commit) -> WerkCommit | None:
                         diff.b_blob.data_stream.read().decode("utf-8").split("\n"),
                     )
                 )
-                yield WerkModified(File.new(diff.b_path, diff.b_blob), werk_diff)  # type: ignore[arg-type]
+                yield WerkModified(File.new(diff.b_path, diff.b_blob), werk_diff)
 
     werk_changes = list(_collect())
     if werk_changes:

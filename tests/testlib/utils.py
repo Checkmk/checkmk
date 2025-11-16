@@ -29,6 +29,7 @@ from typing import Any, assert_never, overload
 import pexpect  # type: ignore[import-untyped]
 import psutil
 import yaml
+from bs4 import BeautifulSoup
 
 from tests.testlib.common.repo import branch_from_env, current_branch_name, repo_path
 
@@ -617,3 +618,23 @@ def check_permissions(file_path: Path, expected_permissions: str) -> None:
     assert (
         actual_permissions == expected_permissions
     ), f"Unexpected permissions for {file_path}: {actual_permissions}"
+
+
+def html_find_text_nodes(
+    html: str, tag_name: str, search_terms: str | tuple[str, ...]
+) -> list[str]:
+    """Find a tag_name enclosing a given search_text and return all text nodes within it."""
+    soup = BeautifulSoup(html, "html.parser")
+    if isinstance(search_terms, str):
+        search_terms = (search_terms,)  # normalize to tuple
+    matches = soup.find_all(string=lambda tag: all(tag and term in tag for term in search_terms))
+    results = []
+    for match in matches:
+        parent = match.parent
+        while parent:
+            if parent.name == tag_name:
+                # Collect all text nodes inside this tag
+                results += list(parent.stripped_strings)
+                break
+            parent = parent.parent
+    return results

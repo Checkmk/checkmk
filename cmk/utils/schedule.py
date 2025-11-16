@@ -5,9 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 # Computes for a scheduling entry the last/next time that this entry
 # should have run or will be run. Such a scheduling entry is specified
 # by a period specification as produced by the SchedulePeriod() valuespec
@@ -39,12 +36,18 @@ class Schedule(abc.ABC):
     def delta(self) -> relativedelta:
         pass
 
-    def next(self, t):
-        return self.rule.replace(dtstart=t).after(t)
+    def next(self, t: datetime.datetime) -> datetime.datetime:
+        result = self.rule.replace(dtstart=t).after(t)
+        # dateutil.rrule.after() returns datetime.datetime but is typed as Any
+        assert isinstance(result, datetime.datetime)
+        return result
 
-    def last(self, t):
+    def last(self, t: datetime.datetime) -> datetime.datetime:
         from_ = t + self.delta
-        return self.rule.replace(dtstart=from_, until=t).before(t)
+        result = self.rule.replace(dtstart=from_, until=t).before(t)
+        # dateutil.rrule.before() returns datetime.datetime but is typed as Any
+        assert isinstance(result, datetime.datetime)
+        return result
 
 
 class DaySchedule(Schedule):

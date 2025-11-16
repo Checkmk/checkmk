@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import contextlib
 import itertools
@@ -72,7 +71,7 @@ class FakeResponse:
 
 
 class Deserializer:
-    def __init__(self):
+    def __init__(self) -> None:
         self._api_client = ApiClient()
 
     def run(self, response_type: str, data: requests.Response) -> typing.Any:
@@ -114,7 +113,7 @@ class ClientCoreAPI(ClientAPI):
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1ResourceQuotaList", response).items
 
-    def query_raw_namespaces(self):
+    def query_raw_namespaces(self) -> Sequence[V1Namespace]:
         request = requests.Request("GET", self._config.url("/api/v1/namespaces"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1NamespaceList", response).items
@@ -124,7 +123,7 @@ class ClientCoreAPI(ClientAPI):
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1PersistentVolumeClaimList", response).items
 
-    def query_persistent_volumes(self):
+    def query_persistent_volumes(self) -> Sequence[V1PersistentVolume]:
         request = requests.Request("GET", self._config.url("/api/v1/persistentvolumes"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1PersistentVolumeList", response).items

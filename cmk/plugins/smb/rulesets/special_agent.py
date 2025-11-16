@@ -7,8 +7,7 @@
 
 from collections.abc import Mapping
 
-from cmk.ccc.hostaddress import HostAddress
-from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     DictElement,
@@ -31,7 +30,15 @@ def _parameter_form() -> Dictionary:
                 required=False,
                 parameter_form=String(
                     title=Title("Host name"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+                    custom_validate=(
+                        # Do not validate against being a _Checkmk_ hostname here. Users can enter
+                        # * an IP address
+                        # * a legal hostname
+                        # * a macro like $HOSTNAME$
+                        # The only thing validation can achieve here is catching typos that introduce invalid characters beyond that;
+                        # but those do no more harm than any other typo (which we can't prevent anyway).
+                        validators.LengthInRange(min_value=1),
+                    ),
                     help_text=Help(
                         "<p>Usually Checkmk will use the host name of the host it is attached to. "
                         "With this option you can override this parameter.</p>"
@@ -43,8 +50,8 @@ def _parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("IP address"),
                     custom_validate=(
+                        # Do not validate against being a _Checkmk_ hostname here. See above!
                         validators.LengthInRange(min_value=1),
-                        _validate_hostname,
                     ),
                     help_text=Help(
                         "<p>Usually Checkmk will use the primary IP address of the host it is "
@@ -111,18 +118,6 @@ def _parameter_form() -> Dictionary:
             ),
         },
     )
-
-
-def _validate_hostname(value: str) -> None:
-    try:
-        HostAddress(value)
-    except ValueError as exception:
-        raise validators.ValidationError(
-            message=Message(
-                "Please enter a valid host name or IPv4 address. "
-                "Only letters, digits, dash, underscore and dot are allowed."
-            )
-        ) from exception
 
 
 def _migrate_tuple_to_dict(param: object) -> Mapping[str, object]:

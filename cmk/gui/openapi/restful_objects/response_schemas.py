@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="mutable-override"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import logging
@@ -320,13 +319,14 @@ class ObjectAction(Linkable):
     parameters = fields.Nested(Parameter)
 
 
-class TypeSchemas(dict):
+class TypeSchemas(dict[str, type[Schema]]):
     """This automatically creates entries with the default value."""
 
-    def get(self, key, default=None):
+    # not cleanly overriding. Accept it for the legacy framework
+    def get(self, key: str, default: type[Schema] | None = None) -> type[Schema]:  # type: ignore[override]
         return self[key]
 
-    def __missing__(self, key):
+    def __missing__(self, key: object) -> type[DomainObject]:
         return DomainObject
 
 

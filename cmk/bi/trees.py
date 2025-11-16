@@ -8,7 +8,6 @@
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -174,7 +173,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return f"BICompiledLeaf[Site {self.site_id}, Host: {self.host_name}, Service {self.service_description}]"
 
     @override
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self} / frozen: {self.frozen_marker}"
 
     @override
@@ -295,7 +294,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return BICompiledLeafSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "type": self.kind(),
             "required_hosts": list(
@@ -370,7 +369,7 @@ class BICompiledRule(ABCBICompiledNode):
         )
 
     @override
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"repr(self) / frozen: {self.frozen_marker}"
 
     @override
@@ -507,7 +506,7 @@ class BICompiledRule(ABCBICompiledNode):
         return BICompiledRuleSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "pack_id": self.pack_id,
@@ -659,7 +658,7 @@ class BICompiledAggregation:
         return aggregation_results
 
     def convert_result_to_legacy_format(self, node_result_bundle: NodeResultBundle) -> dict:
-        def generate_state(item):
+        def generate_state(item: NodeComputeResult | None) -> dict[str, Any] | None:
             if not item:
                 return None
             return {
@@ -670,8 +669,10 @@ class BICompiledAggregation:
                 "output": item.output,
             }
 
-        def create_tree_state(bundle: NodeResultBundle, is_toplevel: bool = False) -> tuple:
-            response = []
+        def create_tree_state(
+            bundle: NodeResultBundle, is_toplevel: bool = False
+        ) -> tuple[Any, ...]:
+            response: list[Any] = []
             response.append(generate_state(bundle.actual_result))
             response.append(generate_state(bundle.assumed_result))
             if is_toplevel:
@@ -772,7 +773,7 @@ class BICompiledAggregation:
     def schema(cls) -> type[BICompiledAggregationSchema]:
         return BICompiledAggregationSchema
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "branches": [branch.serialize() for branch in self.branches],
@@ -782,11 +783,11 @@ class BICompiledAggregation:
         }
 
     @override
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Aggregation: {self.id}, NumBranches: {len(self.branches)}"
 
     @override
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Aggregation: {self.id}, NumBranches: {len(self.branches)}"
 
 

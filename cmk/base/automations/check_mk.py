@@ -3114,7 +3114,7 @@ class AutomationDiagSpecialAgent(Automation):
                         name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                         for name, raw in diag_special_agent_input.http_proxies.items()
                     },
-                    password_lookup=make_staged_passwords_lookup(),  # FIXME
+                    password_lookup=diag_special_agent_input.passwords.get,
                 ),
             )
         except Exception as exc:

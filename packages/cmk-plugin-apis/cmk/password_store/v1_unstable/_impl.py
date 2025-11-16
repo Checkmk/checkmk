@@ -101,7 +101,7 @@ class PasswordStore:
 
                 passwords[ident] = password
         finally:
-            pass  # raw = line = sline = "<redacted>"  # wipe sensitive data
+            raw = line = sline = "<redacted>"  # wipe sensitive data
 
         return passwords
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
@@ -12,13 +11,13 @@ from ._base import VisualInfo
 
 
 class VisualInfoRegistry(Registry[type[VisualInfo]]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: type[VisualInfo]) -> str:
         return instance().ident
 
     # At least painter <> info matching extracts the info name from the name of the painter by
     # splitting at first "_" and use the text before it as info name. See
     # cmk.gui.views.infos_needed_by_painter().
-    def registration_hook(self, instance):
+    def registration_hook(self, instance: type[VisualInfo]) -> None:
         ident = instance().ident
         if ident == "aggr_group":
             return  # TODO: Allow this broken thing for the moment

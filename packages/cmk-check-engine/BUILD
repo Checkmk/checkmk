@@ -55,6 +55,7 @@ py_library(
     srcs = [
         "cmk/fetchers/__init__.py",
         "cmk/fetchers/_abstract.py",
+        "cmk/fetchers/_ad_hoc_secrets.py",
         "cmk/fetchers/_agentprtcl.py",
         "cmk/fetchers/_ipmi.py",
         "cmk/fetchers/_metric_backend.py",
@@ -89,6 +90,7 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-crypto",
+        "//packages/cmk-plugin-apis:password_store",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+nonfree_repo": [

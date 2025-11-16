@@ -15,7 +15,10 @@ from cmk.helper_interface import FetcherError
 from ._abstract import Fetcher, Mode
 from .filecache import FileCache
 
-__all__ = ["PlainFetcherTrigger", "FetcherTrigger"]
+__all__ = [
+    "PlainFetcherTrigger",
+    "FetcherTrigger",
+]
 
 _TRawData = TypeVar("_TRawData", bound=Sized)
 

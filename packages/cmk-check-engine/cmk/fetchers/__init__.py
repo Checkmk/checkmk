@@ -11,6 +11,8 @@ See Also:
 
 from ._abstract import Fetcher as Fetcher
 from ._abstract import Mode as Mode
+from ._ad_hoc_secrets import ad_hoc_secrets_file as ad_hoc_secrets_file
+from ._ad_hoc_secrets import AdHocSecrets as AdHocSecrets
 from ._agentprtcl import decrypt_by_agent_protocol as decrypt_by_agent_protocol
 from ._agentprtcl import TCPEncryptionHandling as TCPEncryptionHandling
 from ._agentprtcl import TransportProtocol as TransportProtocol

@@ -26,7 +26,7 @@ import sys
 import time
 import uuid
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager, redirect_stderr, redirect_stdout, suppress
+from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
@@ -172,6 +172,8 @@ from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import (
+    ad_hoc_secrets_file,
+    AdHocSecrets,
     Mode,
     NoSelectedSNMPSections,
     PlainFetcherTrigger,
@@ -189,6 +191,7 @@ from cmk.fetchers.snmp import make_backend as make_snmp_backend
 from cmk.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (
     config_processing,
@@ -518,30 +521,34 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             final_service_name_config
         )
         file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
-        password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
-        try:
-            cmk.utils.password_store.save(run_settings.passwords, password_store_file)
-            cmds = get_special_agent_commandline(
-                run_settings.host_config,
-                run_settings.agent_name,
-                run_settings.params,
-                password_store_file,
-                run_settings.passwords,
-                config_processing.GlobalProxiesWithLookup(
-                    global_proxies={
-                        name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
-                        for name, raw in run_settings.http_proxies.items()
-                    },
-                    password_lookup=make_staged_passwords_lookup(),
-                ),
-            )
 
-            fetcher = SpecialAgentFetcher(
-                PlainFetcherTrigger(),  # no relay support yet
-                agent_name=run_settings.agent_name,
-                cmds=cmds,
-                is_cmc=loaded_config.monitoring_core == "cmc",
-            )
+        ad_hoc_secrets = AdHocSecrets(
+            path=Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}"),
+            secrets={k: Secret(s) for k, s in run_settings.passwords.items()},
+        )
+
+        cmds = get_special_agent_commandline(
+            run_settings.host_config,
+            run_settings.agent_name,
+            run_settings.params,
+            ad_hoc_secrets.path,
+            run_settings.passwords,
+            config_processing.GlobalProxiesWithLookup(
+                global_proxies={
+                    name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
+                    for name, raw in run_settings.http_proxies.items()
+                },
+                password_lookup=make_staged_passwords_lookup(),
+            ),
+        )
+
+        fetcher = SpecialAgentFetcher(
+            PlainFetcherTrigger(),  # no relay support yet
+            agent_name=run_settings.agent_name,
+            cmds=cmds,
+            is_cmc=loaded_config.monitoring_core == "cmc",
+        )
+        with ad_hoc_secrets_file(ad_hoc_secrets):
             preview = _get_discovery_preview(
                 run_settings.host_config.host_name,
                 {
@@ -561,9 +568,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 _disabled_ip_lookup,
                 run_settings.host_config.ip_address,
             )
-        finally:
-            if password_store_file.exists():
-                password_store_file.unlink()
+
         return preview
 
 
@@ -3093,20 +3098,23 @@ class AutomationDiagSpecialAgent(Automation):
     ) -> Iterator[tuple[int, str]]:
         # All passwords are provided by the automation call since we cannot rely that the password
         # store is available on the remote site.
-        password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
+        ad_hoc_secrets = AdHocSecrets(
+            Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}"),
+            {k: Secret(s) for k, s in diag_special_agent_input.passwords.items()},
+        )
         try:
             cmds = get_special_agent_commandline(
                 diag_special_agent_input.host_config,
                 diag_special_agent_input.agent_name,
                 diag_special_agent_input.params,
-                password_store_file,
+                ad_hoc_secrets.path,
                 diag_special_agent_input.passwords,
                 config_processing.GlobalProxiesWithLookup(
                     global_proxies={
                         name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                         for name, raw in diag_special_agent_input.http_proxies.items()
                     },
-                    password_lookup=make_staged_passwords_lookup(),
+                    password_lookup=make_staged_passwords_lookup(),  # FIXME
                 ),
             )
         except Exception as exc:
@@ -3115,9 +3123,7 @@ class AutomationDiagSpecialAgent(Automation):
                 raise
             yield 1, str(exc)
 
-        with _temporary_local_password_store(
-            diag_special_agent_input.passwords, password_store_file
-        ):
+        with ad_hoc_secrets_file(ad_hoc_secrets):
             for cmd in cmds:
                 fetcher = ProgramFetcher(
                     cmdline=cmd.cmdline,
@@ -3139,15 +3145,6 @@ class AutomationDiagSpecialAgent(Automation):
                     if fetched.is_ok()
                     else (1, str(fetched.error))
                 )
-
-
-@contextmanager
-def _temporary_local_password_store(passwords: Mapping[str, str], path: Path) -> Iterator[None]:
-    cmk.utils.password_store.save(passwords, path)
-    try:
-        yield
-    finally:
-        path.unlink(missing_ok=True)
 
 
 automations.register(AutomationDiagSpecialAgent())

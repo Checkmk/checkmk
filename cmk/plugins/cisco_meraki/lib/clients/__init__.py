@@ -64,27 +64,26 @@ class MerakiClient:
                 get_sensor_readings=SensorReadings(sdk.sensor),
             )
 
-        # TODO: ttl values should eventually be passed down through the configuration.
         return cls(
             get_devices=cache_ttl(
                 Storage("cisco_meraki_devices", host=config.hostname),
-                ttl=60,
+                ttl=config.cache_ttl.devices,
             )(Devices(sdk.organizations)),
             get_devices_statuses=cache_ttl(
                 Storage("cisco_meraki_devices_statuses", host=config.hostname),
-                ttl=60,
+                ttl=config.cache_ttl.device_statuses,
             )(DevicesStatuses(sdk.organizations)),
             get_licenses_overview=cache_ttl(
                 Storage("cisco_meraki_licenses_overview", host=config.hostname),
-                ttl=600,
+                ttl=config.cache_ttl.licenses_overview,
             )(LicensesOverview(sdk.organizations)),
             get_organizations=cache_ttl(
                 Storage("cisco_meraki_organizations", host=config.hostname),
-                ttl=600,
+                ttl=config.cache_ttl.organizations,
             )(Organizations(sdk.organizations)),
             get_sensor_readings=cache_ttl(
                 Storage("cisco_meraki_sensor_readings", host=config.hostname),
-                ttl=0,
+                ttl=config.cache_ttl.sensor_readings,
             )(SensorReadings(sdk.sensor)),
         )
 

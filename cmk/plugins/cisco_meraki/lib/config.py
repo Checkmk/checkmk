@@ -14,11 +14,21 @@ from . import constants
 
 
 @dataclass(frozen=True)
+class CacheTTL:
+    devices: int
+    device_statuses: int
+    licenses_overview: int
+    organizations: int
+    sensor_readings: int
+
+
+@dataclass(frozen=True)
 class MerakiConfig:
     hostname: str
     org_ids: Sequence[str]
     section_names: Sequence[str]
     no_cache: bool
+    cache_ttl: CacheTTL
 
     @classmethod
     def build(cls, args: Namespace) -> Self:
@@ -27,6 +37,13 @@ class MerakiConfig:
             org_ids=args.orgs,
             section_names=args.sections,
             no_cache=args.no_cache,
+            cache_ttl=CacheTTL(
+                devices=args.cache_devices,
+                device_statuses=args.cache_device_statuses,
+                licenses_overview=args.cache_licenses_overview,
+                organizations=args.cache_organizations,
+                sensor_readings=args.cache_sensor_readings,
+            ),
         )
 
     @property

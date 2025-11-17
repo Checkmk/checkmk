@@ -22,12 +22,21 @@ from cmk.server_side_calls.v1 import (
 )
 
 
+class CachePerSection(BaseModel):
+    devices: int | None = None
+    device_statuses: int | None = None
+    licenses_overview: int | None = None
+    organizations: int | None = None
+    sensor_readings: int | None = None
+
+
 class Params(BaseModel):
     api_key: Secret
     proxy: URLProxy | NoProxy | EnvProxy | None = None
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None
     no_cache: bool | None = None
+    cache_per_section: CachePerSection | None = None
 
 
 def agent_cisco_meraki_arguments(
@@ -58,6 +67,18 @@ def agent_cisco_meraki_arguments(
 
     if params.no_cache:
         args.append("--no-cache")
+
+    if not params.no_cache and (cache_per_section := params.cache_per_section):
+        if cache_per_section.devices:
+            args += ["--cache-devices", str(cache_per_section.devices)]
+        if cache_per_section.device_statuses:
+            args += ["--cache-device-statuses", str(cache_per_section.device_statuses)]
+        if cache_per_section.licenses_overview:
+            args += ["--cache-licenses-overview", str(cache_per_section.licenses_overview)]
+        if cache_per_section.organizations:
+            args += ["--cache-organizations", str(cache_per_section.organizations)]
+        if cache_per_section.sensor_readings:
+            args += ["--cache-sensor-readings", str(cache_per_section.sensor_readings)]
 
     yield SpecialAgentCommand(command_arguments=args)
 

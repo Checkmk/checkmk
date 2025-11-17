@@ -235,6 +235,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Always fetch data from Meraki API.",
     )
 
+    parser.add_argument("--cache-devices", type=int, default=60)
+    parser.add_argument("--cache-device-statuses", type=int, default=60)
+    parser.add_argument("--cache-licenses-overview", type=int, default=600)
+    parser.add_argument("--cache-organizations", type=int, default=600)
+    parser.add_argument("--cache-sensor-readings", type=int, default=0)
+
     parser.add_argument(
         "--sections",
         nargs="+",

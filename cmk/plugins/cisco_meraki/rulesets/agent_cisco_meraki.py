@@ -7,9 +7,11 @@ from collections.abc import Iterable, Sequence
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
     DictElement,
     Dictionary,
     FixedValue,
+    Integer,
     List,
     migrate_to_password,
     migrate_to_proxy,
@@ -19,6 +21,7 @@ from cmk.rulesets.v1.form_specs import (
     Proxy,
     String,
 )
+from cmk.rulesets.v1.form_specs.validators import NumberInRange
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
@@ -73,6 +76,53 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     label=Label("API cache is disabled."),
                     value=True,
                 )
+            ),
+            "cache_per_section": DictElement(
+                parameter_form=Dictionary(
+                    title=Title("Cache per section"),
+                    elements={
+                        "devices": DictElement(
+                            parameter_form=Integer(
+                                title=Title("Devices"),
+                                prefill=DefaultValue(60),
+                                unit_symbol="minutes",
+                                custom_validate=(NumberInRange(min_value=0),),
+                            )
+                        ),
+                        "device_statuses": DictElement(
+                            parameter_form=Integer(
+                                title=Title("Device statuses"),
+                                prefill=DefaultValue(60),
+                                unit_symbol="minutes",
+                                custom_validate=(NumberInRange(min_value=0),),
+                            )
+                        ),
+                        "licenses_overview": DictElement(
+                            parameter_form=Integer(
+                                title=Title("Licenses overview"),
+                                prefill=DefaultValue(600),
+                                unit_symbol="minutes",
+                                custom_validate=(NumberInRange(min_value=0),),
+                            )
+                        ),
+                        "organizations": DictElement(
+                            parameter_form=Integer(
+                                title=Title("Organizations"),
+                                prefill=DefaultValue(600),
+                                unit_symbol="minutes",
+                                custom_validate=(NumberInRange(min_value=0),),
+                            )
+                        ),
+                        "sensor_readings": DictElement(
+                            parameter_form=Integer(
+                                title=Title("Sensor readings"),
+                                prefill=DefaultValue(0),
+                                unit_symbol="minutes",
+                                custom_validate=(NumberInRange(min_value=0),),
+                            )
+                        ),
+                    },
+                ),
             ),
         },
     )

@@ -2238,7 +2238,7 @@ class ABCEditRuleMode(WatoMode):
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _create_rule_properties_catalog(self) -> Catalog:
+    def _create_rule_properties_catalog(self, *, is_locked: bool) -> Catalog:
         elements = {
             "description": TopicElement(
                 parameter_form=StringAPI(
@@ -2282,7 +2282,8 @@ class ABCEditRuleMode(WatoMode):
                 required=True,
             ),
         }
-        if is_locked_by_quick_setup(self._rule.locked_by, check_reference_exists=False):
+        if is_locked:
+            assert self._rule.locked_by is not None
             elements.update(
                 {
                     "source": TopicElement(
@@ -2366,7 +2367,7 @@ class ABCEditRuleMode(WatoMode):
     ) -> bool:
         self._rule.rule_options = self._get_rule_options_from_catalog_value(
             parse_data_from_field_id(
-                self._create_rule_properties_catalog(),
+                self._create_rule_properties_catalog(is_locked=is_locked),
                 "_vue_edit_rule_properties",
             )
         )
@@ -2496,7 +2497,11 @@ class ABCEditRuleMode(WatoMode):
         html.prevent_password_auto_completion()
 
         render_form_spec(
-            self._create_rule_properties_catalog(),
+            self._create_rule_properties_catalog(
+                is_locked=is_locked_by_quick_setup(
+                    self._rule.locked_by, check_reference_exists=False
+                )
+            ),
             "_vue_edit_rule_properties",
             self._get_rule_properties_from_rule(),
             self._should_validate_on_render(),

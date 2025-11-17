@@ -719,17 +719,31 @@ RESOURCE_HEALTH_ENTRY = {
     },
 }
 
+RESOURCE_GROUPS = {
+    "resource_group_1": AzureResourceGroup(
+        info={
+            "tags": {},
+            "type": "Microsoft.Resources/resourceGroups",
+            "name": "resource_group_1",
+        },
+        tag_key_pattern=TagsImportPatternOption.import_all,
+        subscription=fake_azure_subscription(use_safe_names=False),
+        use_safe_names=False,
+    )
+}
+
 
 @pytest.mark.parametrize(
-    "monitored_resources, resource_health, expected_sections",
+    "monitored_resources, resource_health, resource_groups, expected_sections",
     [
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.ignore_all),
             [RESOURCE_HEALTH_ENTRY, RESOURCE_HEALTH_ENTRY],
+            RESOURCE_GROUPS,
             [
                 MockAzureSection(
                     name="resource_health",
-                    piggytargets=["VM-test-1"],
+                    piggytargets=["resource_group_1"],
                     content=[
                         '{"id": "/subscriptions/subscription_id/resourcegroups/resource_group_1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", \
 "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", \
@@ -746,10 +760,11 @@ RESOURCE_HEALTH_ENTRY = {
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.import_all),
             [RESOURCE_HEALTH_ENTRY],
+            RESOURCE_GROUPS,
             [
                 MockAzureSection(
                     name="resource_health",
-                    piggytargets=["VM-test-1"],
+                    piggytargets=["resource_group_1"],
                     content=[
                         '{"id": "/subscriptions/subscription_id/resourcegroups/resource_group_1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", \
 "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", \
@@ -763,6 +778,7 @@ RESOURCE_HEALTH_ENTRY = {
         pytest.param(
             _monitored_vm_resource(TagsImportPatternOption.import_all),
             [],
+            RESOURCE_GROUPS,
             [],
             id="Empty resource health entries",
         ),
@@ -773,10 +789,10 @@ async def test_get_resource_health_sections(
     monitored_resources: Mapping[str, AzureResource],
     resource_health: Sequence[ResourceHealth],
     expected_sections: Sequence[MockAzureSection],
-    mock_azure_subscription: AzureSubscription,
+    resource_groups: Mapping[str, AzureResourceGroup],
 ) -> None:
     sections = list(
-        _get_resource_health_sections(resource_health, monitored_resources, mock_azure_subscription)
+        _get_resource_health_sections(resource_health, monitored_resources, resource_groups)
     )
 
     assert sections == expected_sections, "Sections not as expected"

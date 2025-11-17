@@ -12,7 +12,7 @@ import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/compon
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 // Local components
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
@@ -46,9 +46,9 @@ const { _t } = usei18n()
 interface MetricsWizardProps {
   dashboardName: string
   contextFilters: ContextFilters
-  // TODO: widgetFilters?: ConfiguredFilters (during edit mode)
   dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
+  availableFeatures: DashboardFeatures
 }
 
 const props = defineProps<MetricsWizardProps>()
@@ -71,6 +71,7 @@ const widgetFilterManager = useWidgetFilterManager(
 const addFilters = useAddFilter()
 
 const { hostSelection, serviceSelection, metricSelection } = getDefaultsFromGraph(
+  props.availableFeatures,
   props.editWidgetSpec?.content?.type
 )
 
@@ -199,6 +200,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :context-filters="contextFilters"
         :is-in-filter-selection-menu-focus="widgetFilterManager.objectTypeIsInFocus"
+        :available-features="availableFeatures"
         @go-next="recapAndNext"
         @set-focus="widgetFilterManager.openSelectionMenu"
         @update-filter-values="

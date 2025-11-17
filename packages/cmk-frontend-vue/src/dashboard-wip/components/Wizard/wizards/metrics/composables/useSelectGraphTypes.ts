@@ -6,6 +6,7 @@
 import { type Ref, ref, watch } from 'vue'
 
 import { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
+import { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 
 export enum MetricSelection {
   SINGLE_METRIC = 'SINGLE',
@@ -104,7 +105,18 @@ interface GetDefaultsFromGraph {
   metricSelection: MetricSelection
 }
 
-export const getDefaultsFromGraph = (graph?: Graph | string): GetDefaultsFromGraph => {
+export const getDefaultsFromGraph = (
+  availableFeatures: DashboardFeatures,
+  graph?: Graph | string
+): GetDefaultsFromGraph => {
+  if (availableFeatures === DashboardFeatures.RESTRICTED) {
+    return {
+      hostSelection: ElementSelection.SPECIFIC,
+      serviceSelection: ElementSelection.SPECIFIC,
+      metricSelection: MetricSelection.COMBINED_GRAPH
+    }
+  }
+
   let hostSelection: ElementSelection = ElementSelection.SPECIFIC
   let serviceSelection: ElementSelection = ElementSelection.SPECIFIC
   let metricSelection: MetricSelection = MetricSelection.SINGLE_METRIC

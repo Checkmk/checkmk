@@ -25,10 +25,12 @@ interface Props {
   contextFilters: ContextFilters
   inSelectionMenuFocus: boolean
   singleOnly?: boolean
+  availableFilterTypes?: ElementSelection[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  singleOnly: false
+  singleOnly: false,
+  availableFilterTypes: () => [ElementSelection.SPECIFIC, ElementSelection.MULTIPLE]
 })
 
 interface Emits {
@@ -46,13 +48,19 @@ const modeSelection = defineModel<ElementSelection>('modeSelection', {
 
 <template>
   <template v-if="!props.singleOnly">
+    {{ availableFilterTypes }}
     <CmkToggleButtonGroup
-      v-model="modeSelection"
+      :model-value="modeSelection"
       :options="[
-        { label: _t('Single %{n}', { n: props.objectType }), value: ElementSelection.SPECIFIC },
+        {
+          label: _t('Single %{n}', { n: props.objectType }),
+          value: ElementSelection.SPECIFIC,
+          disabled: !props.availableFilterTypes?.includes(ElementSelection.SPECIFIC)
+        },
         {
           label: _t('Multiple %{n}', { n: props.objectType }),
-          value: ElementSelection.MULTIPLE
+          value: ElementSelection.MULTIPLE,
+          disabled: !props.availableFilterTypes?.includes(ElementSelection.MULTIPLE)
         }
       ]"
       @update:model-value="

@@ -16,19 +16,16 @@ import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionBut
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import SingleMultiWidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/SingleMultiWidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
-import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
+import { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
+import { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
 import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
-import {
-  Graph,
-  type MetricSelection,
-  useSelectGraphTypes
-} from '../composables/useSelectGraphTypes'
+import { Graph, MetricSelection, useSelectGraphTypes } from '../composables/useSelectGraphTypes'
 import MetricSelector from './MetricSelector/MetricSelector.vue'
 import type { UseMetric } from './MetricSelector/useMetric'
 
@@ -39,6 +36,7 @@ interface Stage1Props {
   widgetActiveFilters: string[]
   contextFilters: ContextFilters
   isInFilterSelectionMenuFocus: (objectType: ObjectType) => boolean
+  availableFeatures: DashboardFeatures
 }
 
 interface Emits {
@@ -93,6 +91,30 @@ const configuredFiltersByObjectType = computed(() =>
     new Set(['host', 'service'])
   )
 )
+
+const availableFilterTypes = computed(() =>
+  props.availableFeatures === DashboardFeatures.RESTRICTED
+    ? [ElementSelection.SPECIFIC]
+    : [ElementSelection.SPECIFIC, ElementSelection.MULTIPLE]
+)
+
+const availableMetricTypes = computed(() =>
+  props.availableFeatures === DashboardFeatures.RESTRICTED
+    ? [MetricSelection.COMBINED_GRAPH]
+    : [MetricSelection.SINGLE_METRIC, MetricSelection.COMBINED_GRAPH]
+)
+
+if (!availableFilterTypes.value.includes(hostFilterType.value)) {
+  hostFilterType.value = availableFilterTypes.value[0]!
+}
+
+if (!availableFilterTypes.value.includes(serviceFilterType.value)) {
+  serviceFilterType.value = availableFilterTypes.value[0]!
+}
+
+if (!availableMetricTypes.value.includes(metricType.value)) {
+  metricType.value = availableMetricTypes.value[0]!
+}
 </script>
 
 <template>
@@ -129,6 +151,7 @@ const configuredFiltersByObjectType = computed(() =>
     :configured-filters-of-object-type="configuredFiltersByObjectType[hostObjectType] || {}"
     :context-filters="contextFilters"
     :in-selection-menu-focus="isInFilterSelectionMenuFocus(hostObjectType)"
+    :available-filter-types="availableFilterTypes"
     @set-focus="emit('set-focus', $event)"
     @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
     @reset-object-type-filters="emit('reset-object-type-filters', $event)"
@@ -145,6 +168,7 @@ const configuredFiltersByObjectType = computed(() =>
     :configured-filters-of-object-type="configuredFiltersByObjectType[serviceObjectType] || {}"
     :context-filters="contextFilters"
     :in-selection-menu-focus="isInFilterSelectionMenuFocus(serviceObjectType)"
+    :available-filter-types="availableFilterTypes"
     @set-focus="emit('set-focus', $event)"
     @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
     @reset-object-type-filters="emit('reset-object-type-filters', $event)"
@@ -159,6 +183,7 @@ const configuredFiltersByObjectType = computed(() =>
   <MetricSelector
     v-model:metric-type="metricType"
     v-model:metric-handler="metricHandler"
+    :available-metric-types="availableMetricTypes"
     :host-selection-mode="hostFilterType"
     :service-selection-mode="serviceFilterType"
   />

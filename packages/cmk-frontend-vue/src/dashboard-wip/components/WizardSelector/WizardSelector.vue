@@ -8,7 +8,7 @@ import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
 import OtherWizard from '@/dashboard-wip/components/Wizard/wizards/other/OtherWizard.vue'
 
-import type { DashboardConstants } from '../../types/dashboard.ts'
+import type { DashboardConstants, DashboardFeatures } from '../../types/dashboard.ts'
 import type { ContextFilters } from '../../types/filter.ts'
 import type {
   WidgetContent,
@@ -34,6 +34,7 @@ interface AllWizardsProps {
   contextFilters: ContextFilters
   editWidgetSpec: WidgetSpec | null
   editWidgetId: string | null
+  availableFeatures: DashboardFeatures
 }
 
 const emit = defineEmits<{
@@ -115,6 +116,7 @@ const handleAddEditWidget = (
         :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
+        :available-features="availableFeatures"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
       />

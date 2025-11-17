@@ -170,6 +170,14 @@ def page_dashboard_app(ctx: PageContext) -> None:
     html.body_start()
     html.begin_page_content(enable_scrollbar=True)
 
+    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
+        available_layouts = ["relative_grid"]
+        available_features = "restricted"
+
+    else:
+        available_layouts = ["relative_grid", "responsive_grid"]
+        available_features = "unrestricted"
+
     page_properties = {
         "initial_breadcrumb": [
             asdict(EvaluatedBreadcrumbItem.from_breadcrumb_item(item)) for item in breadcrumb
@@ -185,10 +193,10 @@ def page_dashboard_app(ctx: PageContext) -> None:
             "user_guide": "https://docs.checkmk.com/master/en/dashboards.html",
             "navigation_embedding_page": makeuri_contextless(ctx.request, [], filename="index.py"),
         },
-        "available_layouts": ["relative_grid"]
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY
-        else ["relative_grid", "responsive_grid"],
+        "available_layouts": available_layouts,
+        "available_features": available_features,
     }
+
     html.vue_component("cmk-dashboard", data=page_properties)
 
 

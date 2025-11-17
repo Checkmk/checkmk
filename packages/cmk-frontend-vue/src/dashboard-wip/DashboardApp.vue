@@ -400,6 +400,7 @@ function deepClone<T>(obj: T): T {
         :dashboard-constants="dashboardsManager.constants.value!"
         :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
         :edit-widget-id="widgetToEdit"
+        :available-features="available_features"
         @back-button="handleWizardSelectorGoBack"
         @add-widget="addWidget"
         @edit-widget="executeEditWidget"

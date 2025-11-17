@@ -5,6 +5,7 @@
  */
 import type {
   DashboardConstants,
+  DashboardFeatures,
   DashboardLayout,
   DashboardMetadata,
   RelativeGridDashboardResponse,
@@ -43,6 +44,7 @@ export interface DashboardPageProperties {
     navigation_embedding_page: string
   }
   available_layouts: DashboardLayout[]
+  available_features: DashboardFeatures
 }
 
 export interface SharedDashboardPageProperties {

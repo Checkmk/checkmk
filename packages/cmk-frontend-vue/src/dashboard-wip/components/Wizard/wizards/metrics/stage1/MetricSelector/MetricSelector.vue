@@ -26,12 +26,15 @@ const { _t } = usei18n()
 interface MetricSelectorProps {
   hostSelectionMode: ElementSelection
   serviceSelectionMode: ElementSelection
+  availableMetricTypes?: MetricSelection[]
 }
 
-defineProps<MetricSelectorProps>()
+const props = withDefaults(defineProps<MetricSelectorProps>(), {
+  availableMetricTypes: () => [MetricSelection.SINGLE_METRIC, MetricSelection.COMBINED_GRAPH]
+})
 
 const metricType = defineModel<MetricSelection>('metricType', {
-  default: MetricSelection.SINGLE_METRIC
+  default: undefined
 })
 const handler = defineModel<UseMetric>('metricHandler', { required: true })
 
@@ -45,8 +48,16 @@ const _updateMetricType = (value: string) => {
   <CmkToggleButtonGroup
     :model-value="metricType"
     :options="[
-      { label: _t('Metric (single)'), value: MetricSelection.SINGLE_METRIC },
-      { label: _t('Graph (combined)'), value: MetricSelection.COMBINED_GRAPH }
+      {
+        label: _t('Metric (single)'),
+        value: MetricSelection.SINGLE_METRIC,
+        disabled: !props.availableMetricTypes.includes(MetricSelection.SINGLE_METRIC)
+      },
+      {
+        label: _t('Graph (combined)'),
+        value: MetricSelection.COMBINED_GRAPH,
+        disabled: !props.availableMetricTypes.includes(MetricSelection.COMBINED_GRAPH)
+      }
     ]"
     @update:model-value="_updateMetricType"
   />

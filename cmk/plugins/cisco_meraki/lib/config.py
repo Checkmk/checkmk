@@ -18,6 +18,7 @@ class MerakiConfig:
     hostname: str
     org_ids: Sequence[str]
     section_names: Sequence[str]
+    no_cache: bool
 
     @classmethod
     def build(cls, args: Namespace) -> Self:
@@ -25,6 +26,7 @@ class MerakiConfig:
             hostname=args.hostname,
             org_ids=args.orgs,
             section_names=args.sections,
+            no_cache=args.no_cache,
         )
 
     @property

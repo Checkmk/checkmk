@@ -5,10 +5,11 @@
 
 from collections.abc import Iterable, Sequence
 
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
+    FixedValue,
     List,
     migrate_to_password,
     migrate_to_proxy,
@@ -63,6 +64,14 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
             "orgs": DictElement(
                 parameter_form=List(
                     element_template=String(macro_support=True), title=Title("Organizations")
+                )
+            ),
+            "no_cache": DictElement(
+                parameter_form=FixedValue(
+                    title=Title("Disable cache"),
+                    help_text=Help("Always fetch data from Meraki API."),
+                    label=Label("API cache is disabled."),
+                    value=True,
                 )
             ),
         },

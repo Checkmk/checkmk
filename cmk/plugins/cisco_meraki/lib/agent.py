@@ -228,6 +228,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--proxy", type=str)
 
     parser.add_argument(
+        "--no-cache",
+        default=False,
+        action="store_const",
+        const=True,
+        help="Always fetch data from Meraki API.",
+    )
+
+    parser.add_argument(
         "--sections",
         nargs="+",
         choices=list(SECTION_NAME_MAP),

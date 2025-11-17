@@ -27,6 +27,7 @@ class Params(BaseModel):
     proxy: URLProxy | NoProxy | EnvProxy | None = None
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None
+    no_cache: bool | None = None
 
 
 def agent_cisco_meraki_arguments(
@@ -54,6 +55,9 @@ def agent_cisco_meraki_arguments(
     if params.orgs is not None:
         args.append("--orgs")
         args += [replace_macros(org, host_config.macros) for org in params.orgs]
+
+    if params.no_cache:
+        args.append("--no-cache")
 
     yield SpecialAgentCommand(command_arguments=args)
 

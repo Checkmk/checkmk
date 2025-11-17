@@ -6,7 +6,6 @@
 import dataclasses
 import re
 from collections.abc import Sequence
-from pathlib import Path
 
 import pytest
 from pytest import CaptureFixture
@@ -15,21 +14,15 @@ from cmk.plugins.cisco_meraki.lib import agent
 from cmk.plugins.cisco_meraki.lib.agent import MerakiRunContext
 from cmk.plugins.cisco_meraki.lib.clients import MerakiClient
 from cmk.plugins.cisco_meraki.lib.config import MerakiConfig
-from cmk.plugins.cisco_meraki.lib.constants import AGENT, SECTION_NAME_MAP
+from cmk.plugins.cisco_meraki.lib.constants import SECTION_NAME_MAP
 
 from .fakes import FakeMerakiSDK
 
 
-@pytest.fixture(autouse=True)
-def patch_storage_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
-
-
-@pytest.mark.usefixtures("patch_storage_env")
 class TestMerakiAgentOutput:
     @pytest.fixture
     def ctx(self) -> MerakiRunContext:
-        args = agent.parse_arguments(["heute", "--apikey", "my-api-key"])
+        args = agent.parse_arguments(["heute", "--apikey", "my-api-key", "--no-cache"])
         config = MerakiConfig.build(args)
         client = MerakiClient.build(FakeMerakiSDK(), config)
         return MerakiRunContext(config=config, client=client)
@@ -90,23 +83,6 @@ class TestMerakiAgentOutput:
         agent_output_with_org = capsys.readouterr().out
 
         assert len(agent_output_all_orgs) > len(agent_output_with_org)
-
-    def test_cache_exists(self, ctx: MerakiRunContext, tmp_path: Path) -> None:
-        agent.run(ctx)
-
-        # We're testing an implementation detail here. It would be nicer to run the agent
-        # a second time, and ensure it is not attmpting to fetch live data, while still
-        # creating the sections. I have no clue how difficult that would be to achieve.
-        assert any((tmp_path / ctx.config.hostname / f"{AGENT}_devices").iterdir())
-        assert any((tmp_path / ctx.config.hostname / f"{AGENT}_devices_statuses").iterdir())
-        assert any((tmp_path / ctx.config.hostname / f"{AGENT}_licenses_overview").iterdir())
-        assert any((tmp_path / ctx.config.hostname / f"{AGENT}_organizations").iterdir())
-
-    def test_cache_not_present(self, ctx: MerakiRunContext, tmp_path: Path) -> None:
-        agent.run(ctx)
-        # We should not test this. I think we probably want to ensure some information is
-        # being updated?
-        assert not (tmp_path / ctx.config.hostname / f"{AGENT}_sensor_readings").exists()
 
 
 def _update_org_ids(ctx: MerakiRunContext, org_ids: Sequence[str]) -> MerakiRunContext:

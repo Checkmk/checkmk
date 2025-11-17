@@ -57,6 +57,15 @@ class MerakiClient:
 
     @classmethod
     def build(cls, sdk: MerakiSDK, config: MerakiConfig) -> Self:
+        if config.no_cache:
+            return cls(
+                get_devices=Devices(sdk.organizations),
+                get_devices_statuses=DevicesStatuses(sdk.organizations),
+                get_licenses_overview=LicensesOverview(sdk.organizations),
+                get_organizations=Organizations(sdk.organizations),
+                get_sensor_readings=SensorReadings(sdk.sensor),
+            )
+
         HostStorage = partial(Storage, host=config.hostname)
 
         devices_storage = HostStorage(f"{AGENT}_devices")

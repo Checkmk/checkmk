@@ -78,7 +78,7 @@ def _query_store(store: TimedTaskStore, status: TaskStatus) -> Iterator[RelayTas
 @dataclasses.dataclass(slots=True, frozen=True)
 class TasksRepository:
     ttl_seconds: float
-    max_tasks_per_relay: int
+    max_pending_tasks_per_relay: int
 
     def __post_init__(self) -> None:
         if self.ttl_seconds <= 0:
@@ -107,8 +107,11 @@ class TasksRepository:
 
     def store_task(self, relay_id: RelayID, task: RelayTask) -> RelayTask:
         store = self._get_or_create_storage(relay_id)
-        if len(list(_query_store(store, status=TaskStatus.PENDING))) >= self.max_tasks_per_relay:
-            raise TooManyTasksError(self.max_tasks_per_relay)
+        if (
+            len(list(_query_store(store, status=TaskStatus.PENDING)))
+            >= self.max_pending_tasks_per_relay
+        ):
+            raise TooManyTasksError(self.max_pending_tasks_per_relay)
         store[task.id] = task
         return task
 

@@ -41,7 +41,7 @@ export const useScatterplot = async (
   const currentContent = currentSpec?.content as ScatterplotContent
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent.time_range ?? null
+    currentContent?.time_range ?? null
   )
 
   const {

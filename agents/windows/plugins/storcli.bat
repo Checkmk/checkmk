@@ -1,5 +1,5 @@
 @ECHO off & setlocal EnableDelayedExpansion
-set CMK_VERSION="2.4.0p16"
+set CMK_VERSION="2.4.0p17"
 REM ***
 REM * plugin to to monitor RAID status via StorCLI utility
 REM * customize StorCli path to your needs

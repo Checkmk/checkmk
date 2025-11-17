@@ -3,6 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+Kuhn & Rueß GmbH
+Consulting and Development
+https://kuhn-ruess.de
+"""
+
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -20,8 +27,8 @@ def _parameter_valuespec_graylog_alerts():
                 Tuple(
                     title=_("Total alerts count upper levels"),
                     elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
+                        Integer(title=_("Warning at"), unit="alerts"),
+                        Integer(title=_("Critical at"), unit="alerts"),
                     ],
                 ),
             ),
@@ -30,28 +37,28 @@ def _parameter_valuespec_graylog_alerts():
                 Tuple(
                     title=_("Total alerts count lower levels"),
                     elements=[
-                        Integer(title=_("Warning below")),
-                        Integer(title=_("Critical below")),
-                    ],
-                ),
-            ),
-            (
-                "alerts_in_range_upper",
-                Tuple(
-                    title=_("Number of alerts in defined timespan upper level"),
-                    elements=[
                         Integer(title=_("Warning below"), unit="alerts"),
                         Integer(title=_("Critical below"), unit="alerts"),
                     ],
                 ),
             ),
             (
-                "alerts_in_range_lower",
+                "events_upper",
                 Tuple(
-                    title=_("Number of alerts in defined timespan lower level"),
+                    title=_("Total events count upper levesl"),
                     elements=[
-                        Integer(title=_("Warning at"), unit="alerts"),
-                        Integer(title=_("Critical at"), unit="alerts"),
+                        Integer(title=_("Warning at"), unit="events"),
+                        Integer(title=_("Critical at"), unit="events"),
+                    ],
+                ),
+            ),
+            (
+                "events_lower",
+                Tuple(
+                    title=_("Total event count lower levels"),
+                    elements=[
+                        Integer(title=_("Warning below"), unit="events"),
+                        Integer(title=_("Critical below"), unit="events"),
                     ],
                 ),
             ),

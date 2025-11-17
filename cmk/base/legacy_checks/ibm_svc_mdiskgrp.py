@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-
 # mypy: disable-error-code="var-annotated"
+
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
@@ -24,7 +24,7 @@ check_info = {}
 # 9:stp6_450G_03:online:18:6:29.43TB:256:21.68TB:8.78TB:7.73TB:7.75TB:29:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
 # 10:stp6_450G_02:online:15:14:24.53TB:256:277.00GB:24.26TB:24.26TB:24.26TB:98:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
 # 15:stp6_300G_01:online:15:23:16.34TB:256:472.50GB:15.88TB:15.88TB:15.88TB:97:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
-# 16:stp5_300G_01:online:15:23:16.34TB:256:472.50GB:15.88TB:15.88TB:15.88TB:97:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 16:stp5_300G_01:online:15:23:16:34TB:256:472.50GB:15.88TB:15.88TB:15.88TB:97:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
 # 17:Quorum_1:online:1:0:512.00MB:256:512.00MB:0.00MB:0.00MB:0.00MB:0:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
 # 18:Quorum_0:online:1:0:512.00MB:256:512.00MB:0.00MB:0.00MB:0.00MB:0:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
 # 21:stp5_450G_01:online:12:31:19.62TB:256:320.00GB:19.31TB:19.31TB:19.31TB:98:0:auto:inactive:no:0.00MB:0.00MB:0.00MB
@@ -33,23 +33,25 @@ check_info = {}
 # 24:stp6_600G_01:online:3:2:6.54TB:256:512.00MB:6.54TB:6.54TB:6.54TB:99:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
 
 
-def ibm_svc_mdiskgrp_to_mb(size):
+def ibm_svc_mdiskgrp_to_mb(size: str) -> float:
     if size.endswith("MB"):
-        size = float(size.replace("MB", ""))
+        size_mb = float(size.replace("MB", ""))
     elif size.endswith("GB"):
-        size = float(size.replace("GB", "")) * 1024
+        size_mb = float(size.replace("GB", "")) * 1024
     elif size.endswith("TB"):
-        size = float(size.replace("TB", "")) * 1024 * 1024
+        size_mb = float(size.replace("TB", "")) * 1024 * 1024
     elif size.endswith("PB"):
-        size = float(size.replace("PB", "")) * 1024 * 1024 * 1024
+        size_mb = float(size.replace("PB", "")) * 1024 * 1024 * 1024
     elif size.endswith("EB"):
-        size = float(size.replace("EB", "")) * 1024 * 1024 * 1024 * 1024
+        size_mb = float(size.replace("EB", "")) * 1024 * 1024 * 1024 * 1024
     else:
-        size = float(size)
-    return size
+        size_mb = float(size)
+    return size_mb
 
 
-def parse_ibm_svc_mdiskgrp(string_table):
+def parse_ibm_svc_mdiskgrp(
+    string_table: Sequence[Sequence[str]],
+) -> Mapping[str, Mapping[str, str]]:
     dflt_header = [
         "id",
         "name",
@@ -90,12 +92,16 @@ def parse_ibm_svc_mdiskgrp(string_table):
     return parsed
 
 
-def inventory_ibm_svc_mdiskgrp(parsed):
+def inventory_ibm_svc_mdiskgrp(
+    parsed: Mapping[str, Mapping[str, str]],
+) -> Iterable[tuple[str, dict[str, object]]]:
     for mdisk_name in parsed:
         yield mdisk_name, {}
 
 
-def check_ibm_svc_mdiskgrp(item, params, parsed):
+def check_ibm_svc_mdiskgrp(
+    item: str, params: Mapping[str, Any], parsed: Mapping[str, Mapping[str, str]]
+) -> Iterable[tuple[int, str] | tuple[int, str, list[Any]]]:
     if not (data := parsed.get(item)):
         return
     mgrp_status = data["status"]

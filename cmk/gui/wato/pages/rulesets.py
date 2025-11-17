@@ -2179,8 +2179,10 @@ class ABCEditRuleMode(WatoMode):
             return redirect(self._back_url())
 
         tree = folder_tree()
-        if redirect_ := self._update_rule_from_vars(tree.folder_choices):
-            return redirect_
+        if do_validate_on_render := self._update_rule_from_vars(tree.folder_choices):
+            return redirect(self._back_url())
+
+        self._do_validate_on_render = do_validate_on_render
 
         # Check permissions on folders
         new_rule_folder = tree.folder(
@@ -2356,7 +2358,7 @@ class ABCEditRuleMode(WatoMode):
             else RawDiskData({"value": {"value": self._rule.value}})
         )
 
-    def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> HTTPRedirect | None:
+    def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> bool:
         self._rule.rule_options = self._get_rule_options_from_catalog_value(
             parse_data_from_field_id(
                 self._create_rule_properties_catalog(),
@@ -2373,7 +2375,7 @@ class ABCEditRuleMode(WatoMode):
                 _("Cannot change rule conditions for rules managed by Quick setup."),
                 msg_type="error",
             )
-            return redirect(self._back_url())
+            return False
 
         if self._get_condition_type_from_vars() == "predefined":
             condition_id = self._get_condition_id_from_vars()
@@ -2382,7 +2384,6 @@ class ABCEditRuleMode(WatoMode):
         self._rule.update_conditions(rule_conditions)
 
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
-        self._do_validate_on_render = True
         match render_mode:
             case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
@@ -2397,7 +2398,7 @@ class ABCEditRuleMode(WatoMode):
                 self._ruleset.rulespec.valuespec.validate_value(value, "ve")
 
         self._rule.value = value
-        return None
+        return True
 
     def _get_condition_type_from_vars(self) -> str | None:
         condition_type = self._vs_condition_type().from_html_vars("condition_type")

@@ -6,7 +6,6 @@
 checks and tells the user what could be improved."""
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 
 # See https://github.com/pylint-dev/pylint/issues/3488
 from __future__ import annotations
@@ -137,7 +136,7 @@ class ACTestCategories:
     deprecations = "deprecations"
 
     @classmethod
-    def title(cls, ident):
+    def title(cls, ident: str) -> str:
         return {
             "connectivity": _("Connectivity"),
             "usability": _("Usability"),

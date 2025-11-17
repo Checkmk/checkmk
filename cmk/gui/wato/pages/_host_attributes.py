@@ -9,7 +9,6 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
-import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms
 from cmk.gui.config import Config
@@ -36,7 +35,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     SearchFolder,
 )
-from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagID
 
@@ -94,7 +92,6 @@ def configure_attributes(
     show_more_mode: bool = False
 
     show_more_mode = user.show_mode != "default_show_less"
-    is_cse = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CLOUD
 
     for topic_id, topic_title in sorted_host_attribute_topics(host_attributes, for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
@@ -141,11 +138,6 @@ def configure_attributes(
             attrname = attr.name()
             if attrname in without_attributes:
                 continue  # e.g. needed to skip ipaddress in CSV-Import
-
-            # Hide snmp tag option in CSE. Registration is still needed because
-            # connection test page should still be functional
-            if is_cse and attrname == "tag_snmp_ds":
-                hide_attributes.append(attr.name())
 
             # Determine visibility information if this attribute is not always hidden
             if attr.is_visible(for_what, new):

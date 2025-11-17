@@ -1,7 +1,9 @@
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
 load("//bazel/rules:make_deployable.bzl", "make_deployable_dir", "make_deployable_file")
+load("//omd/packages/net-snmp:snmp-rules.bzl", "snmp_compile_mibs")
 
 bin_paths = [
     "encode_keychange",
@@ -96,8 +98,27 @@ pkg_filegroup(
 
 pkg_tar(
     name = "net-snmp_tar",
-    srcs = [":net-snmp_files_pkg"],
+    srcs = [
+        ":generate_python_mibs",
+        ":net-snmp_files_pkg",
+    ],
     package_file_name = "net-snmp.tar",
     tags = ["manual"],
     visibility = ["//omd:__subpackages__"],
+)
+
+snmp_compile_mibs(
+    name = "generate_python_mibs",
+    compiler = ":compile_mibs",
+    mibs = ["@net-snmp//:mibs"],
+    tags = ["manual"],
+)
+
+py_binary(
+    name = "compile_mibs",
+    srcs = ["compile_mibs.py"],
+    tags = ["manual"],
+    deps = [
+        requirement("pysmi"),
+    ],
 )

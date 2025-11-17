@@ -23,7 +23,6 @@ from cmk.checkengine.plugin_backend import (
 )
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls_backend import load_secrets_file
-from cmk.utils.password_store import MakeSureToCatchAllCallsitesPath
 from cmk.utils.paths import omd_root
 
 # This will be replaced by the config generation, when the template is instantiated.
@@ -115,12 +114,8 @@ def main() -> int:
             ),
             {},
             [CONFIG.hostname],
-            secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
-                cmk.utils.password_store.active_secrets_path_relay()
-            ),
-            secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
-                cmk.utils.password_store.active_secrets_path_site()
-            ),
+            secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
+            secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
             secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         )
     except KeyboardInterrupt:

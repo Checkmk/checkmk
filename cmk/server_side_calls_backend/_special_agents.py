@@ -7,6 +7,7 @@
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import PluginLocation
@@ -36,7 +37,7 @@ class SpecialAgent:
         host_attrs: Mapping[str, str],
         global_proxies_with_lookup: GlobalProxiesWithLookup,
         stored_passwords: Mapping[str, str],
-        password_store_file: password_store.MakeSureToCatchAllCallsitesPath,
+        password_store_file: Path,
         finder: ExecutableFinderProtocol,
     ):
         self._plugins = {p.name: p for p in plugins.values()}

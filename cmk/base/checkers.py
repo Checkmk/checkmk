@@ -107,7 +107,6 @@ from cmk.utils.ip_lookup import (
     IPStackConfig,
 )
 from cmk.utils.log import console
-from cmk.utils.password_store import MakeSureToCatchAllCallsitesPath
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
@@ -358,8 +357,8 @@ class CMKFetcher:
         ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
         ip_address_of_mgmt: IPLookupOptional,
         mode: Mode,
-        secrets_file_option_relay: MakeSureToCatchAllCallsitesPath,
-        secrets_file_option_site: MakeSureToCatchAllCallsitesPath,
+        secrets_file_option_relay: Path,
+        secrets_file_option_site: Path,
         secrets: Mapping[str, str],  # Mapping[str, Secret] would be better.
         simulation_mode: bool,
         metric_backend_fetcher_factory: Callable[[HostAddress], ProgramFetcher | None],

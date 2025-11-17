@@ -223,7 +223,7 @@ from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager, Labels
 from cmk.utils.log import console, setup_console_logging
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.password_store import make_staged_passwords_lookup, MakeSureToCatchAllCallsitesPath
+from cmk.utils.password_store import make_staged_passwords_lookup
 from cmk.utils.paths import (
     autochecks_dir,
     autodiscovery_dir,
@@ -423,12 +423,8 @@ class AutomationDiscovery(DiscoveryAutomation):
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             simulation_mode=config.simulation_mode,
-            secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
-                cmk.utils.password_store.pending_secrets_path_site()
-            ),
-            secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
-                cmk.utils.password_store.pending_secrets_path_relay()
-            ),
+            secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
+            secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
             secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
             metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
                 hn,
@@ -531,7 +527,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
         )
         file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
         ad_hoc_secrets = AdHocSecrets(
-            path=MakeSureToCatchAllCallsitesPath(
+            path=(
                 Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
                 if run_settings.host_config.relay_id is None
                 else Path(cmk.utils.paths.relative_tmp_dir, f"passwords_temp_relay_{uuid.uuid4()}")
@@ -543,7 +539,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             run_settings.host_config,
             run_settings.agent_name,
             run_settings.params,
-            cmk.utils.password_store.MakeSureToCatchAllCallsitesPath(ad_hoc_secrets.path),
+            ad_hoc_secrets.path,
             run_settings.passwords,
             config_processing.GlobalProxiesWithLookup(
                 global_proxies={
@@ -673,12 +669,8 @@ class AutomationDiscoveryPreview(Automation):
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             simulation_mode=config.simulation_mode,
-            secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
-                cmk.utils.password_store.pending_secrets_path_relay()
-            ),
-            secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
-                cmk.utils.password_store.pending_secrets_path_site()
-            ),
+            secrets_file_option_relay=cmk.utils.password_store.pending_secrets_path_relay(),
+            secrets_file_option_site=cmk.utils.password_store.pending_secrets_path_site(),
             secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
             # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
             # and tabula rasa)
@@ -1180,12 +1172,8 @@ def _execute_autodiscovery(
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
-        secrets_file_option_relay=MakeSureToCatchAllCallsitesPath(
-            cmk.utils.password_store.active_secrets_path_relay()
-        ),
-        secrets_file_option_site=MakeSureToCatchAllCallsitesPath(
-            cmk.utils.password_store.active_secrets_path_site()
-        ),
+        secrets_file_option_relay=cmk.utils.password_store.active_secrets_path_relay(),
+        secrets_file_option_site=cmk.utils.password_store.active_secrets_path_site(),
         secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
@@ -3063,7 +3051,7 @@ def get_special_agent_commandline(
     host_config: DiagSpecialAgentHostConfig,
     agent_name: str,
     params: Mapping[str, object],
-    password_store_file: cmk.utils.password_store.MakeSureToCatchAllCallsitesPath,
+    password_store_file: Path,
     passwords: Mapping[str, str],
     global_proxies_with_lookup: config_processing.GlobalProxiesWithLookup,
 ) -> Iterator[SpecialAgentCommandLine]:
@@ -3136,7 +3124,7 @@ class AutomationDiagSpecialAgent(Automation):
                 diag_special_agent_input.host_config,
                 diag_special_agent_input.agent_name,
                 diag_special_agent_input.params,
-                cmk.utils.password_store.MakeSureToCatchAllCallsitesPath(ad_hoc_secrets.path),
+                ad_hoc_secrets.path,
                 diag_special_agent_input.passwords,
                 config_processing.GlobalProxiesWithLookup(
                     global_proxies={
@@ -3502,7 +3490,7 @@ class AutomationDiagHost(Automation):
         state, output = 0, ""
         host_labels = label_manager.labels_of_host(host_name)
         host_relay_id = config.get_relay_id(host_labels)
-        pending_passwords_file = MakeSureToCatchAllCallsitesPath(
+        pending_passwords_file = (
             cmk.utils.password_store.pending_secrets_path_site()
             if host_relay_id is None
             else cmk.utils.password_store.pending_secrets_path_relay()
@@ -4141,7 +4129,7 @@ class AutomationGetAgentOutput(Automation):
                         hostname,
                         ip_family,
                         ipaddress,
-                        secrets_file_option=MakeSureToCatchAllCallsitesPath(
+                        secrets_file_option=(
                             cmk.utils.password_store.active_secrets_path_site()
                             if relay_id is None
                             else cmk.utils.password_store.active_secrets_path_relay()

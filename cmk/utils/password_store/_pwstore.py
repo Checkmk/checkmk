@@ -24,10 +24,6 @@ PasswordId = str | tuple[PasswordLookupType, str]
 _PASSWORD_ID_PREFIX = "uuid"
 
 
-class MakeSureToCatchAllCallsitesPath(Path):
-    pass
-
-
 class Password(TypedDict):
     title: str
     comment: str

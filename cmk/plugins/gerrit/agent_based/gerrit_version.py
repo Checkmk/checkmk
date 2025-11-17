@@ -17,19 +17,17 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.gerrit.lib.schema import LatestVersion
 
 
-class LatestVersions(TypedDict):
-    major: str | None
-    minor: str | None
-    patch: str | None
-
-
+# TODO: is there a better way to load in the data with strong typing? It seems like overkill to have
+# this as a pydantic model that validates the data that _we_ specified in the agent. We essentially
+# share the `schema.VersionInfo` type and load the data into it during the parse phase.
 class VersionInfo(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(frozen=True)
 
     current: str
-    latest: LatestVersions
+    latest: LatestVersion
 
 
 def parse_gerrit_version(string_table: StringTable) -> VersionInfo | None:
@@ -65,7 +63,7 @@ def get_changelog_url(release: str, release_type: ReleaseType) -> str:
 
 
 def get_latest_version_notice(
-    params: CheckParams, latest_versions: LatestVersions, release_type: ReleaseType
+    params: CheckParams, latest_versions: LatestVersion, release_type: ReleaseType
 ) -> Result:
     if (latest := latest_versions[release_type]) is None:
         return Result(state=State.OK, notice=f"No new {release_type} release available.")

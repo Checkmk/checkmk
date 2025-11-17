@@ -130,7 +130,7 @@ setup_venv() {
 }
 
 run_unit_tests() {
-    bazel test :unit
+    bazel test :unit :doctest
 }
 
 run_component_tests() {

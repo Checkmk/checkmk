@@ -2304,7 +2304,7 @@ class ABCEditRuleMode(WatoMode):
         )
 
     def _create_rule_value_catalog(
-        self, title: str | None, value_parameter_form: FormSpec
+        self, *, title: str | None, value_parameter_form: FormSpec
     ) -> Catalog:
         return Catalog(
             elements={
@@ -2391,7 +2391,9 @@ class ABCEditRuleMode(WatoMode):
                 assert registered_form_spec is not None
                 value = self._get_rule_value_from_catalog_value(
                     parse_data_from_field_id(
-                        self._create_rule_value_catalog(None, registered_form_spec),
+                        self._create_rule_value_catalog(
+                            title=None, value_parameter_form=registered_form_spec
+                        ),
                         self._vue_field_id(),
                     )
                 )
@@ -2523,7 +2525,9 @@ class ABCEditRuleMode(WatoMode):
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
                     render_form_spec(
-                        self._create_rule_value_catalog(title, registered_form_spec),
+                        self._create_rule_value_catalog(
+                            title=title, value_parameter_form=registered_form_spec
+                        ),
                         self._vue_field_id(),
                         self._get_rule_value_from_request_or_rule(),
                         self._should_validate_on_render(),
@@ -2549,7 +2553,9 @@ class ABCEditRuleMode(WatoMode):
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
                     render_form_spec(
-                        self._create_rule_value_catalog(title, registered_form_spec),
+                        self._create_rule_value_catalog(
+                            title=title, value_parameter_form=registered_form_spec
+                        ),
                         self._vue_field_id(),
                         DEFAULT_VALUE,
                         False,

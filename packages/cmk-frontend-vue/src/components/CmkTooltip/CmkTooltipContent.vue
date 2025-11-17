@@ -48,7 +48,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>
-  <TooltipPortal>
+  <TooltipPortal disabled>
     <TooltipContent
       v-bind="{ ...forwarded, avoidCollisions: avoidCollisions!! }"
       :class="props.class"

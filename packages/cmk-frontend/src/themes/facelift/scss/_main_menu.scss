@@ -176,11 +176,11 @@
       width: calc(100vw - 64px);
       height: 100vh;
       position: absolute;
-      z-index: 1000;
+      z-index: $z-index-navigation;
     }
 
     div.fullscreen-popup {
-      z-index: 1001;
+      z-index: $z-index-modal;
       width: auto;
       height: 100%;
     }
@@ -194,7 +194,7 @@
       padding-bottom: $mainmenu-spacing-bottom;
       background-color: $popup-trigger-active-bg-color;
       border-right: $popup-border;
-      z-index: 2000;
+      z-index: $z-index-navigation + $z-index-popup-offset;
 
       &.min {
         left: 48px;
@@ -517,7 +517,7 @@
     right: 0;
     bottom: 0;
     left: 65px;
-    z-index: 100;
+    z-index: $z-index-navigation + $z-index-popup-offset - 1;
     display: none;
     cursor: default;
     background-color: $popup-shadow-color;

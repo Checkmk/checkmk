@@ -93,7 +93,7 @@ defineExpose({
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .cmk-dropdown-menu--container {
     position: absolute;
-    z-index: var(--z-index-dropdown);
+    z-index: var(--z-index-dropdown-offset);
     color: var(--font-color);
     background-color: var(--ux-theme-3);
     border: 1px solid var(--ux-theme-6);

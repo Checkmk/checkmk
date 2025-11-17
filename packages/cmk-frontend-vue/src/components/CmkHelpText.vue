@@ -111,15 +111,17 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
   min-width: 200px;
   max-width: 600px;
   color: var(--default-tooltip-text-color);
+  font-weight: var(--font-weight-default);
+  text-align: left;
+  white-space: normal;
   box-shadow:
     0 4px 6px rgb(0 0 0 / 10%),
     0 2px 4px rgb(0 0 0 / 6%);
   padding: 16px;
+}
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .text {
-    line-height: 1.2;
-  }
+.cmk-help-text__popup {
+  z-index: var(--z-index-tooltip-offset);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

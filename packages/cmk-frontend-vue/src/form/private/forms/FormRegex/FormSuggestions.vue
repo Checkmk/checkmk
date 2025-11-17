@@ -156,7 +156,7 @@ defineExpose({
   list-style-type: none;
   transform: translateX(-86.5px);
   width: 265px;
-  z-index: var(--z-index-dropdown);
+  z-index: var(--z-index-dropdown-offset);
 }
 
 .form-suggestions__text {
@@ -171,6 +171,6 @@ defineExpose({
   list-style-type: none;
   transform: translateX(-86.5px);
   width: 265px;
-  z-index: var(--z-index-dropdown);
+  z-index: var(--z-index-dropdown-offset);
 }
 </style>

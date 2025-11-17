@@ -282,7 +282,7 @@ defineExpose({
 <style scoped>
 .cmk-suggestions {
   position: absolute;
-  z-index: var(--z-index-dropdown);
+  z-index: var(--z-index-dropdown-offset);
   color: var(--font-color);
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--ux-theme-6);

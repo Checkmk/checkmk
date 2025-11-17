@@ -189,7 +189,7 @@ const toggleExpansion = () => {
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     .fade_overlay {
       position: absolute;
-      z-index: var(--z-index-base);
+      z-index: var(--z-index-dropdown-offset);
       bottom: var(--scroll-bar-thickness);
       left: 0;
       right: 0;
@@ -273,7 +273,7 @@ const toggleExpansion = () => {
   color: var(--font-color);
   white-space: nowrap;
   position: relative;
-  z-index: var(--z-index-tooltip);
+  z-index: var(--z-index-tooltip-offset);
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.error {

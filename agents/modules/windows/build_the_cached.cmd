@@ -55,7 +55,8 @@ set fname=python-%version%.%subversion%-%platform%_%git_hash%_%BUILD_NUM%.cab
 set artifact_name=%arti_dir%\python-3.cab
 echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
-curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
+powershell Write-Host "To be executed: curl -sSf --user %creds% -o %fname%  %url%/%fname% --fail-with-body" -foreground white
+curl -sSf --user %creds% -o %fname%  %url%/%fname% --fail-with-body
 IF /I "!ERRORLEVEL!" NEQ "0"  (
     powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
     goto build

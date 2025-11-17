@@ -8,7 +8,7 @@
 # mypy: disable-error-code="type-arg"
 
 import enum
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Container, Mapping
 
 from apispec import APISpec
 from apispec.utils import dedent
@@ -65,7 +65,7 @@ def endpoint_title_and_description_from_docstring(
 def build_spec_description(
     endpoint_description: str | None,
     werk_id: int | None,
-    editions: Iterable[Edition] | None,
+    editions: Container[Edition] | None,
     permissions_required: permissions.BasePerm | None,
     permissions_description: Mapping[str, str] | None,
 ) -> str:
@@ -128,7 +128,7 @@ def _assign_to_tag_group(spec: APISpec, tag_group: TagGroup, name: str) -> None:
 def _build_description(
     description_text: str | None,
     werk_id: int | None = None,
-    editions: Iterable[Edition] | None = None,
+    editions: Container[Edition] | None = None,
 ) -> str:
     r"""Build a OperationSpecType description.
 

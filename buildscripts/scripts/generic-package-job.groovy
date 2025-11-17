@@ -17,17 +17,34 @@ def main() {
         "PACKAGE_PATH",
         "SECRET_VARS",
         "COMMAND_LINE",
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
+        "DISTRO"
     ]);
 
     validate_parameters();
 
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     currentBuild.description = "Running ${PACKAGE_PATH}<br>${currentBuild.description}";
 
+    def distro = DISTRO;
+
+    def safe_branch_name = versioning.safe_branch_name();
+    def docker_tag = versioning.select_docker_tag(
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
+    );
 
     def output_file = PACKAGE_PATH.split("/")[-1] + ".log"
+
     dir(checkout_dir) {
-        inside_container(init: true, privileged: true, set_docker_group_id: true) {
+        inside_container(
+            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+            init: true,
+            privileged: true,
+            pull: true,
+            set_docker_group_id: true
+        ) {
             withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
                 helper.execute_test([
                     name       : PACKAGE_PATH,
@@ -38,7 +55,7 @@ def main() {
             sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
         }
         archiveArtifacts(
-            artifacts: "${output_file}",
+            artifacts: "${output_file}, ${FILE_ARCHIVING_PATTERN}",
             fingerprint: true,
         );
     }

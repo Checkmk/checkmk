@@ -27,4 +27,12 @@ $(NET_SNMP_INSTALL): $(NET_SNMP_INTERMEDIATE_INSTALL)
 	    -s "$(NET_SNMP_PYTHONPATH)/" \
 	    -o 0 -o 1 -o 2 -j0 \
 	    "$(NET_SNMP_PYTHONPATH)/netsnmp/"
+	PYTHONPATH=$(DESTDIR)$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages \
+		PYTHONDONTWRITEBYTECODE=1 \
+		$(PACKAGE_PYTHON_EXECUTABLE) -c "from pysmi.scripts.mibdump import start; start()" \
+		--mib-searcher=$(NET_SNMP_INSTALL_DIR)/share/snmp/mibs \
+		--destination-directory=$(NET_SNMP_INSTALL_DIR)/share/snmp/compiled_mibs \
+		--no-python-compile \
+		--rebuild \
+		"$(shell pwd)/RFC-1212.txt" $(wildcard $(NET_SNMP_INSTALL_DIR)/share/snmp/mibs/*.txt)
 	$(RSYNC) $(NET_SNMP_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/

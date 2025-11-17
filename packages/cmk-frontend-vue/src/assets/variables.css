@@ -84,6 +84,7 @@
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later) */
   --icon-info: url('~cmk-frontend/themes/facelift/images/icon_info.svg');
   --icon-external: url('~cmk-frontend/themes/facelift/images/icon_external.svg');
+  --icon-menu: url('~cmk-frontend/themes/facelift/images/icon_menu.svg');
   --icon-plus: url('~cmk-frontend/themes/facelift/images/icon_plus.svg');
   --icon-edit: url('~cmk-frontend/themes/facelift/images/icon_edit.svg');
   --icon-delete: url('~cmk-frontend/themes/facelift/images/icon_delete.svg');

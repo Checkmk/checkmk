@@ -41,10 +41,8 @@ from cmk.gui.form_specs import (
     DefaultValue,
     DisplayMode,
     get_visitor,
-    IncomingData,
     parse_data_from_field_id,
     RawDiskData,
-    RawFrontendData,
     render_form_spec,
     VisitorOptions,
 )
@@ -2350,11 +2348,7 @@ class ABCEditRuleMode(WatoMode):
             }
         )
 
-    def _get_rule_value_from_request_or_rule(self) -> IncomingData:
-        if request.has_var(self._vue_field_id()):
-            return RawFrontendData(
-                json.loads(request.get_str_input_mandatory(self._vue_field_id()))
-            )
+    def _get_rule_value_from_rule(self) -> DefaultValue | RawDiskData:
         return (
             self._rule.value
             if isinstance(self._rule.value, DefaultValue)
@@ -2533,7 +2527,7 @@ class ABCEditRuleMode(WatoMode):
                             title=title, value_parameter_form=registered_form_spec
                         ),
                         self._vue_field_id(),
-                        self._get_rule_value_from_request_or_rule(),
+                        self._get_rule_value_from_rule(),
                         self._should_validate_on_render(),
                     )
         except Exception as e:

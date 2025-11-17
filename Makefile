@@ -6,8 +6,11 @@
 include defines.make
 include artifacts.make
 
-TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
-                      --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
+TAROPTS            := --owner=root --group=root \
+                      --wildcards \
+                      --exclude .git --exclude .gitignore --exclude .gitmodules --exclude .gitattributes \
+                      --exclude=.svn \
+                      --exclude=~* --exclude=*~ --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
 UVENV              := scripts/run-uvenv
 
@@ -68,13 +71,9 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	    rm -rf check-mk-$(EDITION)-$(VERSION) ; \
 	fi ; \
 	mkdir check-mk-$(EDITION)-$(VERSION) ; \
-	tar -c --wildcards \
+	tar -c \
 	    $(TAROPTS) \
 	    --exclude check-mk-$(EDITION)-$(VERSION) \
-	    --exclude .git \
-	    --exclude .gitignore \
-	    --exclude .gitmodules \
-	    --exclude .gitattributes \
 	    --exclude non-free \
 	    --exclude tests/qa-test-data \
 	    $$EXCLUDES \
@@ -83,7 +82,7 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	    rm COMMIT ; \
 	fi
 	bazel build //omd:license_info && tar xf "$$(bazel cquery --output=files //omd:license_info)" --strip 2 --touch -C check-mk-$(EDITION)-$(VERSION)/omd/
-	tar -cz --wildcards -f check-mk-$(EDITION)-$(VERSION).tar.gz \
+	tar -cz -f check-mk-$(EDITION)-$(VERSION).tar.gz \
 	    $(TAROPTS) \
 	    check-mk-$(EDITION)-$(VERSION)
 	rm -rf check-mk-$(EDITION)-$(VERSION)

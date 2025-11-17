@@ -2553,6 +2553,7 @@ class DcdMetricBackendClient(RestApiClient):
         connector_type: str | None = None,
         discover_on_creation: bool | None = None,
         validity_period: int | None = None,
+        maximum_number_of_hosts: int | None = None,
         creation_rules: list[dict[str, Any]] | None = None,
         expect_ok: bool = True,
     ) -> Response:
@@ -2570,6 +2571,7 @@ class DcdMetricBackendClient(RestApiClient):
                         "interval": interval,
                         "discover_on_creation": discover_on_creation,
                         "validity_period": validity_period,
+                        "maximum_number_of_hosts": maximum_number_of_hosts,
                         "creation_rules": creation_rules,
                     }
                 ),

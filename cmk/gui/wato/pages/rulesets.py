@@ -2191,8 +2191,7 @@ class ABCEditRuleMode(WatoMode):
         new_rule_folder = tree.folder(
             self._get_rule_conditions_from_vars(tree.folder_choices).host_folder
         )
-        if not isinstance(self, ModeNewRule | ModeCloneRule):
-            self._folder.permissions.need_permission("write")
+        self._check_folder_permissions()
         new_rule_folder.permissions.need_permission("write")
 
         if new_rule_folder == self._folder:
@@ -2424,6 +2423,9 @@ class ABCEditRuleMode(WatoMode):
 
     @abc.abstractmethod
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None: ...
+
+    @abc.abstractmethod
+    def _check_folder_permissions(self) -> None: ...
 
     def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         self._ruleset.delete_rule(self._orig_rule, create_change=False, use_git=use_git)
@@ -3292,6 +3294,9 @@ class ModeEditRule(ABCEditRuleMode):
         self._ruleset.edit_rule(self._orig_rule, self._rule, use_git=use_git)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
+    def _check_folder_permissions(self) -> None:
+        self._folder.permissions.need_permission("write")
+
 
 class ModeCloneRule(ABCEditRuleMode):
     @classmethod
@@ -3308,6 +3313,9 @@ class ModeCloneRule(ABCEditRuleMode):
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         self._ruleset.clone_rule(self._orig_rule, self._rule, use_git=use_git)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
+
+    def _check_folder_permissions(self) -> None:
+        pass
 
     def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
@@ -3400,6 +3408,9 @@ class ModeNewRule(ABCEditRuleMode):
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
         self._ruleset.add_new_rule_change(index, self._folder, self._rule, use_git=use_git)
 
+    def _check_folder_permissions(self) -> None:
+        pass
+
     def _success_message(self) -> str:
         return _('Created new rule in ruleset "%s" in folder "%s"') % (
             self._ruleset.title(),
@@ -3417,6 +3428,9 @@ class ModeExportRule(ABCEditRuleMode):
 
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         pass
+
+    def _check_folder_permissions(self) -> None:
+        self._folder.permissions.need_permission("write")
 
     def page(self, config: Config) -> None:
         try:

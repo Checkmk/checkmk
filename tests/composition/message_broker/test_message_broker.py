@@ -115,7 +115,7 @@ class TestMessageBroker:
     def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
         """Ensure that sites can still communicate after the message broker port is changed"""
         with rabbitmq_info_on_failure([central_site, remote_site, remote_site]):
-            site_connection = central_site.openapi.sites.show(remote_site.id)["extensions"]
+            site_connection = central_site.openapi.sites.show(remote_site.id)
             site_connection_port = int(
                 site_connection["configuration_connection"]["message_broker_port"]
             )

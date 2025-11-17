@@ -11,7 +11,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -1603,7 +1602,7 @@ class ModeEditRuleset(WatoMode):
         # Value
         table.cell(_("Value"), css=["value"])
 
-        def _show_rule_backend():
+        def _show_rule_backend() -> None:
             valuespec = self._rulespec.valuespec
             try:
                 value_html = valuespec.value_to_html(value)
@@ -2023,7 +2022,7 @@ class ABCEditRuleMode(WatoMode):
     VAR_RULE_SPEC_NAME: Final = "varname"
     VAR_RULE_ID: Final = "rule_id"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._do_validate_on_render = False
         super().__init__()
 

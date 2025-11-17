@@ -6,6 +6,7 @@
 from collections.abc import Iterable, Sequence
 from typing import TypeVar
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.kube import common, prometheus_api, query
 from cmk.plugins.kube.schemata import section
 from cmk.plugins.lib.node_exporter import NodeExporter, PromQLMetric, SectionStr
@@ -93,11 +94,9 @@ def debug_section(base_url: str, *responses: query.HTTPResponse) -> common.Write
     )
 
 
-def machine_sections(
-    config: query.PrometheusSessionConfig,
-) -> dict[str, str]:
+def machine_sections(token: Secret[str], config: query.PrometheusSessionConfig) -> dict[str, str]:
     def promql_getter(promql_expression: str) -> list[PromQLMetric]:
-        return query.node_exporter_getter(config, common.LOGGER, promql_expression)
+        return query.node_exporter_getter(token, config, common.LOGGER, promql_expression)
 
     node_exporter = NodeExporter(promql_getter)
     result_list: dict[str, list[SectionStr]] = {}

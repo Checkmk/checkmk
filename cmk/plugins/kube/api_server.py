@@ -33,6 +33,7 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     V1ResourceQuota,
 )
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.kube import query
 from cmk.plugins.kube.controllers import ControllerGraph
 from cmk.plugins.kube.schemata import api
@@ -571,6 +572,7 @@ def create_api_data_v2(
 
 
 def from_kubernetes(
+    token: Secret[str],
     client_config: query.APISessionConfig,
     logger: logging.Logger,
     query_kubelet_endpoints: bool,
@@ -580,7 +582,7 @@ def from_kubernetes(
     This should be the only data source for all special agent code!
     """
     deserizalizer = Deserializer()
-    api_client_requests = query.make_api_client_requests(client_config, logger)
+    api_client_requests = query.make_api_client_requests(token, client_config, logger)
     client_batch_api = ClientBatchAPI(client_config, api_client_requests, deserizalizer)
     client_core_api = ClientCoreAPI(client_config, api_client_requests, deserizalizer)
     client_apps_api = ClientAppsAPI(client_config, api_client_requests, deserizalizer)

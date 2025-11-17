@@ -55,7 +55,7 @@ def dcd_connector(
         "tag_piggyback": "piggyback",
         "tag_address_family": "no-ip",
     }
-    site.openapi.dcd.create(
+    site.openapi.dcd.create_piggyback_connection(
         dcd_id=dcd_id,
         title="DCD Connector for piggyback hosts",
         host_attributes=host_attributes,

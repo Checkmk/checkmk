@@ -38,7 +38,8 @@ import time
 import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from typing import Any, NamedTuple
+from dataclasses import dataclass
+from typing import Any, Literal, NamedTuple
 
 import requests
 
@@ -1233,8 +1234,19 @@ class BIAggregationAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MetricBackendDCDConnectionAttributeFilter:
+    attribute_type: Literal["data_point", "resource", "scope"]
+    attribute_key: str
+    attribute_value: str
+
+
 class DcdAPI(BaseAPI):
-    def create(
+    def __init__(self, session: CMKOpenApiSession):
+        super().__init__(session)
+        self._base_url_internal = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
+
+    def create_piggyback_connection(
         self,
         dcd_id: str,
         title: str,
@@ -1278,6 +1290,57 @@ class DcdAPI(BaseAPI):
         )
         if resp.status_code != 200:
             raise UnexpectedResponse.from_response(resp)
+
+    def create_metric_backend_connection(
+        self,
+        *,
+        dcd_id: str,
+        title: str,
+        interval: int = 60,
+        host_name_resource_attribute_key: str,
+        attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter],
+        delete_hosts: bool = False,
+        discover_on_creation: bool = True,
+        validity_period: int = 60,
+        maximum_number_of_hosts: int = 500,
+    ) -> None:
+        """Create a DCD connection via REST API."""
+        response = self.session.post(
+            f"{self._base_url_internal}/domain-types/dcd_metric_backend/collections/all",
+            json={
+                "dcd_id": dcd_id,
+                "title": title,
+                "site": self.session.site,
+                "connector": {
+                    "connector_type": "metric_backend",
+                    "interval": interval,
+                    "attribute_filters": [
+                        {
+                            "attribute_type": attribute_filter.attribute_type,
+                            "attribute_key": attribute_filter.attribute_key,
+                            "attribute_value": attribute_filter.attribute_value,
+                        }
+                        for attribute_filter in attribute_filters
+                    ],
+                    "host_name_resource_attribute_key": host_name_resource_attribute_key,
+                    "creation_rules": [
+                        {
+                            "folder_path": "/",
+                            "host_attributes": {
+                                "tag_address_family": "no-ip",
+                                "tag_agent": "special-agents",
+                            },
+                            "delete_hosts": delete_hosts,
+                        }
+                    ],
+                    "discover_on_creation": discover_on_creation,
+                    "validity_period": validity_period,
+                    "maximum_number_of_hosts": maximum_number_of_hosts,
+                },
+            },
+        )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
 
     def get(self, dcd_id: str) -> dict[str, Any] | None:
         """

@@ -30,6 +30,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 from cmk.gui.watolib.passwords import load_passwords
+from cmk.password_store.v1_unstable import Secret
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
 from cmk.utils.ip_lookup import IPStackConfig
 
@@ -48,7 +49,7 @@ def collect_params_with_defaults_from_form_data(
 
 def collect_passwords_from_form_data(
     all_stages_form_data: ParsedFormData, parameter_form: Dictionary
-) -> Mapping[str, str]:
+) -> Mapping[str, Secret[str]]:
     possible_expected_password_keys = [
         key
         for key in parameter_form.elements.keys()
@@ -56,7 +57,7 @@ def collect_passwords_from_form_data(
     ]
 
     return {
-        form_spec_value[2][0]: (
+        form_spec_value[2][0]: Secret(
             form_spec_value[2][1]
             if form_spec_value[1] == "explicit_password"
             else load_passwords()[form_spec_value[2][0]]["password"]
@@ -73,7 +74,7 @@ def create_diag_special_agent_input(
     rulespec_name: str,
     host_name: str | None,
     relay_id: str | None,
-    passwords: Mapping[str, str],
+    passwords: Mapping[str, Secret[str]],
     params: Mapping[str, object],
 ) -> DiagSpecialAgentInput:
     return DiagSpecialAgentInput(

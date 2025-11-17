@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
+from cmk.password_store.v1_unstable import Secret as StoreSecret
 from cmk.server_side_calls import internal, v1
 from cmk.utils import config_warnings
 
@@ -70,7 +71,7 @@ class GlobalProxiesWithLookup:
 def extract_all_adhoc_secrets(
     rules_by_name: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     global_proxies_with_lookup: GlobalProxiesWithLookup,
-) -> Mapping[str, str]:
+) -> Mapping[str, StoreSecret[str]]:
     """
     >>> extract_all_adhoc_secrets(
     ...     rules_by_name=[
@@ -119,7 +120,7 @@ _RuleSetType_co = TypeVar("_RuleSetType_co", covariant=True)
 @dataclass(frozen=True)
 class ReplacementResult(Generic[_RuleSetType_co]):
     value: _RuleSetType_co  # type: ignore[misc]
-    found_secrets: Mapping[str, str]
+    found_secrets: Mapping[str, StoreSecret[str]]
     surrogates: Mapping[int, str]
 
 
@@ -161,12 +162,12 @@ def _processed_config_value(
             (
                 "cmk_postprocessed",
                 "stored_password" | "explicit_password" as secret_type,
-                (secret_id, secret_value),
+                (str() as secret_id, str() as secret_value),
             )
         ):
             return _replace_password(
                 secret_id,
-                secret_value if secret_type == "explicit_password" else None,
+                StoreSecret(secret_value) if secret_type == "explicit_password" else None,
                 is_internal=is_internal,
             )
 
@@ -217,7 +218,7 @@ def _processed_config_value(
 
 def _replace_password(
     name: str,
-    value: str | None,
+    value: StoreSecret[str] | None,
     is_internal: bool,
 ) -> ReplacementResult[internal.Secret | v1.Secret]:
     # We need some injective function.
@@ -275,7 +276,7 @@ def _replace_internal_stored_proxy(
             name=global_proxy.auth.password[2][0],
             value=None
             if global_proxy.auth.password[1] == "stored_password"
-            else global_proxy.auth.password[2][1],
+            else StoreSecret(global_proxy.auth.password[2][1]),
             is_internal=True,
         )
 
@@ -345,7 +346,7 @@ def _replace_internal_explicit_proxy(
         }:
             _replaced_password = _replace_password(
                 name=part1,
-                value=None if password_type == "stored_password" else part2,
+                value=None if password_type == "stored_password" else StoreSecret(part2),
                 is_internal=True,
             )
 

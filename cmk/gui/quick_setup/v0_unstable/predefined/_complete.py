@@ -68,6 +68,7 @@ from cmk.gui.watolib.services import (
     perform_fix_all,
 )
 from cmk.gui.watolib.sites import ReplicationStatusFetcher
+from cmk.password_store.v1_unstable import Secret
 from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import Password as StorePassword
@@ -124,7 +125,7 @@ def create_special_agent_host_from_form_data(
 
 
 def create_passwords(
-    passwords: Mapping[str, str],
+    passwords: Mapping[str, Secret[str]],
     bundle_id: BundleId,
 ) -> Sequence[CreatePassword]:
     """Create the password entities.
@@ -139,7 +140,7 @@ def create_passwords(
                 title=f"{bundle_id}_password",
                 comment="",
                 docu_url="",
-                password=password,
+                password=password.reveal(),
                 owned_by=None,
                 shared_with=[],
             ),

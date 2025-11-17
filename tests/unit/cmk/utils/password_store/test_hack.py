@@ -6,6 +6,7 @@
 from collections.abc import Iterable
 from pathlib import Path
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.utils.password_store.hack import apply_password_hack, resolve_password_hack
 
 APPLIED = [
@@ -17,8 +18,8 @@ APPLIED = [
     "--end",
 ]
 PASSWORDS = {
-    "one": "12345",
-    "two": "ääääääää",
+    "one": Secret("12345"),
+    "two": Secret("ääääääää"),
 }
 
 
@@ -48,7 +49,7 @@ def test_password_hack_resolve() -> None:
         [
             *[a.strip("'") for a in APPLIED],  # remove quoting is normally done by bash
         ],
-        lambda _path_ignored, x: PASSWORDS[x],
+        lambda _path_ignored, x: PASSWORDS[x].reveal(),
     ) == [
         "--normal",
         "--also-normal",

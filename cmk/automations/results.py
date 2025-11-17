@@ -23,6 +23,7 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.plugins import AutocheckEntry
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.helper_interface import AgentRawData
+from cmk.password_store.v1_unstable import Secret
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.http_proxy_config import HTTPProxySpec
@@ -632,7 +633,7 @@ class DiagSpecialAgentInput:
     host_config: DiagSpecialAgentHostConfig
     agent_name: str
     params: Mapping[str, object]
-    passwords: Mapping[str, str]
+    passwords: Mapping[str, Secret[str]]
     http_proxies: Mapping[str, HTTPProxySpec] = field(default_factory=dict)
     is_cmc: bool = True
 
@@ -646,7 +647,7 @@ class DiagSpecialAgentInput:
             #  this could change when being able to use the formspec vue visitor for
             #  (de)serialization in the future.
             "params": literal_eval(raw["params"]),
-            "passwords": raw["passwords"],
+            "passwords": {k: Secret(v) for k, v in raw["passwords"].items()},
         }
         if "http_proxies" in raw:
             deserialized["http_proxies"] = raw["http_proxies"]
@@ -660,7 +661,7 @@ class DiagSpecialAgentInput:
                 "host_config": self.host_config.serialize(_for_cmk_version),
                 "agent_name": self.agent_name,
                 "params": repr(self.params),
-                "passwords": self.passwords,
+                "passwords": {k: v.reveal() for k, v in self.passwords.items()},
                 "http_proxies": self.http_proxies,
                 "is_cmc": self.is_cmc,
             }

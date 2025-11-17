@@ -27,6 +27,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 from cmk.checkengine.plugins import SectionName
+from cmk.password_store.v1_unstable import Secret
 from cmk.utils import paths
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import HostLabel
@@ -222,7 +223,7 @@ class TestDiagSpecialAgentInput:
             "piggyback_naming_convention": "ip_region_instance",
         },
         passwords={
-            "uuid8d60b66c-c3e1-45cb-a771-b8b291a07cea": "wow_this_access_key_is_secret",
+            "uuid8d60b66c-c3e1-45cb-a771-b8b291a07cea": Secret("wow_this_access_key_is_secret"),
         },
     )
 

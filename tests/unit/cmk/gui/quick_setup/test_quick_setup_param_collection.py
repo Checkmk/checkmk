@@ -23,6 +23,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.session import UserContext
 from cmk.gui.utils.roles import UserPermissions
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import load_special_agents
 from cmk.utils import paths
 
@@ -124,7 +125,7 @@ EXPECTED_PARAMS_WITH_DEFAULTS = {
     },
 }
 
-EXPECTED_PASSWORDS = {"ca2f6299-622f-4339-80bb-14a4ae03bdda": "my_secret_access_key"}
+EXPECTED_PASSWORDS = {"ca2f6299-622f-4339-80bb-14a4ae03bdda": Secret("my_secret_access_key")}
 
 
 def test_quick_setup_collect_params_from_form_data() -> None:

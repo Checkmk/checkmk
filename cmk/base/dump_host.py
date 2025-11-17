@@ -41,6 +41,7 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.helper_interface import SourceType
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ExecutableFinder
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
@@ -223,7 +224,7 @@ def dump_host(
     # store is of most help to the caller.
     used_password_store = cmk.utils.password_store.pending_secrets_path_site()
     # Don't show the real passwords here!
-    passwords = defaultdict[str, str](lambda: "****")
+    passwords = defaultdict[str, Secret[str]](lambda: Secret("****"))
     agenttypes = (
         []
         if hostname in hosts_config.clusters

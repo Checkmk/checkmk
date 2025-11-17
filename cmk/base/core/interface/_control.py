@@ -295,7 +295,10 @@ def _create_core_config(
 
     # recompute and save passwords, to ensure consistency:
     passwords = config_cache.collect_passwords()
-    cmk.utils.password_store.save(passwords, cmk.utils.password_store.pending_secrets_path_site())
+    cmk.utils.password_store.save(
+        {k: s.reveal() for k, s in passwords.items()},
+        cmk.utils.password_store.pending_secrets_path_site(),
+    )
 
     config_path = VersionedConfigPath.next(cmk.utils.paths.omd_root)
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
@@ -318,7 +321,8 @@ def _create_core_config(
         )
 
     cmk.utils.password_store.save(
-        passwords, cmk.utils.password_store.active_secrets_path_site(Path(config_path))
+        {k: s.reveal() for k, s in passwords.items()},
+        cmk.utils.password_store.active_secrets_path_site(Path(config_path)),
     )
 
 

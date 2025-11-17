@@ -124,6 +124,7 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 from cmk.helper_interface import SourceType
 from cmk.inventory.structured_data import RawIntervalFromConfig
+from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
@@ -2319,7 +2320,7 @@ class ConfigCache:
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
         ip_address_of: IPLookupOptional,
-        passwords: Mapping[str, str],
+        passwords: Mapping[str, Secret[str]],
         password_store_file: Path,
         single_plugin: str | None = None,
     ) -> Iterator[ActiveServiceData]:
@@ -2455,7 +2456,7 @@ class ConfigCache:
         host_name: HostName,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress | None,
-        secrets: Mapping[str, str],
+        secrets: Mapping[str, Secret[str]],
         secrets_file_option: Path,
         ip_address_of: IPLookup,
         executable_finder: ExecutableFinderProtocol,
@@ -2505,7 +2506,7 @@ class ConfigCache:
                         f"Config creation for special agent {agentname} failed on {host_name}: {exc}"
                     )
 
-    def collect_passwords(self) -> Mapping[str, str]:
+    def collect_passwords(self) -> Mapping[str, Secret[str]]:
         # consider making the hosts an argument. Sometimes we only need one.
 
         def _compose_filtered_ssc_rules(
@@ -2522,7 +2523,10 @@ class ConfigCache:
             password_lookup=make_configured_passwords_lookup(),
         )
         return {
-            **password_store.load(password_store.password_store_path()),
+            **{
+                k: Secret(s)
+                for k, s in password_store.load(password_store.password_store_path()).items()
+            },
             **extract_all_adhoc_secrets(
                 rules_by_name=_compose_filtered_ssc_rules(active_checks.items()),
                 global_proxies_with_lookup=global_proxies_with_lookup,

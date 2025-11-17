@@ -122,6 +122,7 @@ from cmk.inventory.structured_data import (
     RawIntervalFromConfig,
     SDPath,
 )
+from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls_backend import ExecutableFinder, load_active_checks, load_secrets_file
 from cmk.snmplib import (
@@ -2838,7 +2839,7 @@ def run_checking(
     *,
     secrets_file_option_relay: Path,
     secrets_file_option_site: Path,
-    secrets: Mapping[str, str],
+    secrets: Mapping[str, Secret],
 ) -> ServiceState:
     edition = cmk_version.edition(cmk.utils.paths.omd_root)
     file_cache_options = _handle_fetcher_options(options)

@@ -532,7 +532,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 if run_settings.host_config.relay_id is None
                 else Path(cmk.utils.paths.relative_tmp_dir, f"passwords_temp_relay_{uuid.uuid4()}")
             ),
-            secrets={k: Secret(s) for k, s in run_settings.passwords.items()},
+            secrets=run_settings.passwords,
         )
 
         cmds = get_special_agent_commandline(
@@ -3052,7 +3052,7 @@ def get_special_agent_commandline(
     agent_name: str,
     params: Mapping[str, object],
     password_store_file: Path,
-    passwords: Mapping[str, str],
+    passwords: Mapping[str, Secret[str]],
     global_proxies_with_lookup: config_processing.GlobalProxiesWithLookup,
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
@@ -3117,7 +3117,7 @@ class AutomationDiagSpecialAgent(Automation):
                 else cmk.utils.paths.relative_tmp_dir,
                 f"passwords_temp_{uuid.uuid4()}",
             ),
-            {k: Secret(s) for k, s in diag_special_agent_input.passwords.items()},
+            diag_special_agent_input.passwords,
         )
         try:
             cmds = get_special_agent_commandline(
@@ -3131,7 +3131,9 @@ class AutomationDiagSpecialAgent(Automation):
                         name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
                         for name, raw in diag_special_agent_input.http_proxies.items()
                     },
-                    password_lookup=diag_special_agent_input.passwords.get,
+                    password_lookup=lambda s_id: None
+                    if (s := diag_special_agent_input.passwords.get(s_id)) is None
+                    else s.reveal(),
                 ),
             )
         except Exception as exc:
@@ -3963,7 +3965,7 @@ class AutomationUpdatePasswordsMergedFile(Automation):
     ) -> UpdatePasswordsMergedFileResult:
         loading_result = loading_result or load_config(discovery_rulesets=())
         cmk.utils.password_store.save(
-            loading_result.config_cache.collect_passwords(),
+            {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
             cmk.utils.password_store.pending_secrets_path_site(),
         )
         return UpdatePasswordsMergedFileResult()

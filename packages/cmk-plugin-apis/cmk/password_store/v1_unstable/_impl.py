@@ -49,6 +49,11 @@ class Secret[T]:
     def reveal(self) -> T:
         return self._value
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Secret):
+            return NotImplemented
+        return bool(self.reveal() == other.reveal())
+
 
 def _get_store_secret_path() -> Path:
     if not (raw_key_file := os.environ.get("PASSWORD_STORE_SECRET_FILE")):

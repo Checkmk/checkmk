@@ -11,6 +11,7 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import PluginLocation
+from cmk.password_store.v1_unstable import Secret as StoreSecret
 from cmk.server_side_calls import internal, v1
 from cmk.utils import password_store
 
@@ -36,7 +37,7 @@ class SpecialAgent:
         host_config: v1.HostConfig,
         host_attrs: Mapping[str, str],
         global_proxies_with_lookup: GlobalProxiesWithLookup,
-        stored_passwords: Mapping[str, str],
+        stored_passwords: Mapping[str, StoreSecret[str]],
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
     ):

@@ -10,12 +10,14 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Never
 
 import pytest
 
-import cmk.utils.paths
+import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
 from cmk.discover_plugins import PluginLocation
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
@@ -105,7 +107,7 @@ def test_get_active_service_data_respects_finalizer(
     assert service.description == "MY SERVICE"
 
 
-def argument_function_with_exception(*args, **kwargs):
+def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
     raise Exception("Can't create argument list")
 
 
@@ -237,7 +239,7 @@ def argument_function_with_exception(*args, **kwargs):
             },
             HostName("myhost"),
             HOST_CONFIG,
-            {"stored_password": "mypassword"},
+            {"stored_password": Secret("mypassword")},
             [
                 ActiveServiceData(
                     plugin_name="my_active_check",
@@ -268,7 +270,7 @@ def test_get_active_service_data(
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_config: HostConfig,
-    stored_passwords: Mapping[str, str],
+    stored_passwords: Mapping[str, Secret[str]],
     expected_result: Sequence[ActiveServiceData],
 ) -> None:
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", True)
@@ -326,7 +328,7 @@ def test_get_active_service_data_password_with_hack(
             global_proxies={}, password_lookup=lambda _name: None
         ),
         service_name_finalizer=lambda x: x,
-        stored_passwords={"uuid1234": "p4ssw0rd!"},
+        stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,
@@ -374,7 +376,7 @@ def test_get_active_service_data_password_without_hack() -> None:
             global_proxies={}, password_lookup=lambda _name: None
         ),
         service_name_finalizer=lambda x: x,
-        stored_passwords={"uuid1234": "p4ssw0rd!"},
+        stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
         finder=lambda executable, module: f"/path/to/{executable}",
         ip_lookup_failed=False,

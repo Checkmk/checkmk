@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls import internal, v1
 from cmk.server_side_calls_backend.config_processing import (
     BackendProxy,
@@ -42,7 +43,7 @@ def test_process_configuration_to_parameter_password_explicit() -> None:
         is_internal=False,
     ) == ReplacementResult(
         value={"password": v1.Secret(id(":uuid:1234"))},
-        found_secrets={":uuid:1234": "actual_secret"},
+        found_secrets={":uuid:1234": Secret("actual_secret")},
         surrogates={id(":uuid:1234"): ":uuid:1234"},
     )
 

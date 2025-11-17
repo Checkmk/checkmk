@@ -11,6 +11,7 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 from cmk.discover_plugins import PluginLocation
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls import internal, v1
 from cmk.utils import config_warnings, password_store
 from cmk.utils.servicename import ServiceName
@@ -39,7 +40,7 @@ class ActiveCheck:
         host_config: v1.HostConfig,
         global_proxies_with_lookup: GlobalProxiesWithLookup,
         service_name_finalizer: Callable[[ServiceName], ServiceName],
-        stored_passwords: Mapping[str, str],
+        stored_passwords: Mapping[str, Secret[str]],
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
         *,

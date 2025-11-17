@@ -68,6 +68,7 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.fetchers import Mode, TCPEncryptionHandling
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls.v1 import ActiveCheckConfig
 from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.ip_lookup import IPStackConfig
@@ -3052,7 +3053,7 @@ def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPat
     )
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.collect_passwords() == {"uuid1234": "p4ssw0rd!"}
+    assert config_cache.collect_passwords() == {"uuid1234": Secret("p4ssw0rd!")}
 
 
 def test_get_active_service_data_crash(

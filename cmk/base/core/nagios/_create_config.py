@@ -56,6 +56,7 @@ from cmk.checkengine.plugins import (
     CheckPluginName,
     ServiceID,
 )
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ActiveServiceData
 from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.ip_lookup import IPStackConfig
@@ -132,7 +133,7 @@ class NagiosCore(MonitoringCore):
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-        passwords: Mapping[str, str],
+        passwords: Mapping[str, Secret[str]],
         *,
         hosts_to_update: set[HostName] | None = None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
@@ -180,7 +181,7 @@ class NagiosCore(MonitoringCore):
         ],
         plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
-        passwords: Mapping[str, str],
+        passwords: Mapping[str, Secret[str]],
         get_ip_stack_config: Callable[[HostName], IPStackConfig],
         default_address_family: Callable[
             [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -317,7 +318,7 @@ def create_config(
     plugins: Mapping[CheckPluginName, CheckPlugin],
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
-    passwords: Mapping[str, str],
+    passwords: Mapping[str, Secret[str]],
     get_ip_stack_config: Callable[[HostName], IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -391,7 +392,7 @@ def _create_nagios_config_host(
     hostname: HostName,
     ip_stack_config: IPStackConfig,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-    stored_passwords: Mapping[str, str],
+    stored_passwords: Mapping[str, Secret[str]],
     license_counter: Counter,
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
@@ -671,7 +672,7 @@ def create_nagios_servicedefs(
     ip_stack_config: IPStackConfig,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     host_attrs: ObjectAttributes,
-    stored_passwords: Mapping[str, str],
+    stored_passwords: Mapping[str, Secret[str]],
     license_counter: Counter,
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],

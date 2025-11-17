@@ -98,6 +98,7 @@ from cmk.fetchers import (
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ExecutableFinder, SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -359,7 +360,7 @@ class CMKFetcher:
         mode: Mode,
         secrets_file_option_relay: Path,
         secrets_file_option_site: Path,
-        secrets: Mapping[str, str],  # Mapping[str, Secret] would be better.
+        secrets: Mapping[str, Secret[str]],
         simulation_mode: bool,
         metric_backend_fetcher_factory: Callable[[HostAddress], ProgramFetcher | None],
         max_cachefile_age: MaxAge | None = None,

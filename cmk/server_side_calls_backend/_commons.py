@@ -9,6 +9,7 @@ from pathlib import Path
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir
 from cmk.password_store.v1_unstable import get_store_secret, PasswordStore
+from cmk.password_store.v1_unstable import Secret as StoreSecret
 from cmk.server_side_calls.v1 import Secret
 from cmk.utils import config_warnings, password_store
 
@@ -19,25 +20,21 @@ ConfigSet = Mapping[str, object]
 SSCRules = tuple[str, Sequence[ConfigSet]]
 
 
-# TODO: we're mostly passing this around -- switching to Mapping[str, Secret] should be possible.
-def load_secrets_file(path: Path) -> Mapping[str, str]:
+def load_secrets_file(path: Path) -> Mapping[str, StoreSecret[str]]:
     try:
         store_path_bytes = path.read_bytes()
     except FileNotFoundError:
         return {}
 
-    if not store_path_bytes:
-        return {}
-    return {
-        k: s.reveal()
-        for k, s in PasswordStore(get_store_secret()).load_bytes(store_path_bytes).items()
-    }
+    return (
+        PasswordStore(get_store_secret()).load_bytes(store_path_bytes) if store_path_bytes else {}
+    )
 
 
 def replace_passwords(
     host_name: str,
     arguments: Sequence[str | Secret],
-    passwords: Mapping[str, str],
+    passwords: Mapping[str, StoreSecret[str]],
     password_store_file: Path,
     surrogated_secrets: Mapping[int, str],
     *,
@@ -71,7 +68,7 @@ def replace_passwords(
 
         # TODO: I think we can check this much earlier now.
         try:
-            secret_value = passwords[secret_name]
+            secret_value = passwords[secret_name].reveal()
         except KeyError:
             config_warnings.warn(
                 f'The stored password "{secret_name}" used by host "{host_name}" does not exist.'

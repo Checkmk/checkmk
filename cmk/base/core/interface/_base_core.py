@@ -22,6 +22,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
+from cmk.password_store.v1_unstable import Secret
 from cmk.utils import ip_lookup
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
@@ -79,7 +80,7 @@ class MonitoringCore(abc.ABC):
         ],
         ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-        passwords: Mapping[str, str],
+        passwords: Mapping[str, Secret[str]],
         hosts_to_update: set[HostName] | None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
@@ -126,7 +127,7 @@ class MonitoringCore(abc.ABC):
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
         discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
-        passwords: Mapping[str, str],
+        passwords: Mapping[str, Secret[str]],
         *,
         hosts_to_update: set[HostName] | None = None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],

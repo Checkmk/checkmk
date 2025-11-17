@@ -16,6 +16,8 @@ from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import NoReturn
 
+from cmk.password_store.v1_unstable import Secret
+
 from ._pwstore import lookup
 
 HACK_AGENTS = {
@@ -177,7 +179,7 @@ def resolve_password_hack(
 
 def apply_password_hack(
     command_spec: Iterable[str | tuple[str, str, str]],
-    passwords: Mapping[str, str],
+    passwords: Mapping[str, Secret[str]],
     pw_file: Path,
     logger: Callable[[str], None],
     log_label: str,
@@ -196,7 +198,7 @@ def apply_password_hack(
             raise ValueError(f"Invalid argument for command line: {arg!r}")
 
         try:
-            password = passwords[pw_ident]
+            password = passwords[pw_ident].reveal()
         except KeyError:
             logger(f'The stored password "{pw_ident}"{log_label} does not exist (anymore).')
             password = "%%%"

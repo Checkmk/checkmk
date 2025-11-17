@@ -17,6 +17,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import PluginLocation
+from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
@@ -25,8 +26,7 @@ from cmk.server_side_calls.v1 import (
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
-from cmk.server_side_calls_backend import config_processing, SpecialAgent
-from cmk.server_side_calls_backend._special_agents import SpecialAgentCommandLine
+from cmk.server_side_calls_backend import config_processing, SpecialAgent, SpecialAgentCommandLine
 from cmk.utils import password_store
 
 HOST_ATTRS = {
@@ -172,7 +172,7 @@ def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
             {},
             HOST_ATTRS,
             HOST_CONFIG,
-            {"mypassword": "123456"},
+            {"mypassword": Secret("123456")},
             [SpecialAgentCommandLine("agent_path -h '<HOST>' -a '$HOSTADDRESS$'", None)],
             id="command with macros",
         ),
@@ -183,7 +183,7 @@ def test_iter_special_agent_commands(
     parameters: Mapping[str, object],
     host_attrs: Mapping[str, str],
     host_config: HostConfig,
-    stored_passwords: Mapping[str, str],
+    stored_passwords: Mapping[str, Secret[str]],
     expected_result: Sequence[SpecialAgentCommandLine],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -242,7 +242,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
-        stored_passwords={"1234": "p4ssw0rd!"},
+        stored_passwords={"1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
     )
@@ -269,7 +269,7 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
         global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
             global_proxies={}, password_lookup=lambda _name: None
         ),
-        stored_passwords={"uuid1234": "p4ssw0rd!"},
+        stored_passwords={"uuid1234": Secret("p4ssw0rd!")},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
     )

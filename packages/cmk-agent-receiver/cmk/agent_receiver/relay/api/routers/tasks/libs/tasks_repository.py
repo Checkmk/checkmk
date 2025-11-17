@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import dataclasses
 import uuid
+from collections.abc import Iterator
 from datetime import datetime, UTC
 from enum import StrEnum
 from typing import final
@@ -70,6 +71,10 @@ class RelayTask:
 GLOBAL_TASKS: dict[RelayID, TimedTaskStore] = {}
 
 
+def _query_store(store: TimedTaskStore, status: TaskStatus) -> Iterator[RelayTask]:
+    return (t for t in store if t.status == status)
+
+
 @dataclasses.dataclass(slots=True, frozen=True)
 class TasksRepository:
     ttl_seconds: float
@@ -101,10 +106,10 @@ class TasksRepository:
             raise TaskNotFoundError(task_id)
 
     def store_task(self, relay_id: RelayID, task: RelayTask) -> RelayTask:
-        tasks = self._get_or_create_storage(relay_id)
-        if len(tasks) >= self.max_tasks_per_relay:
+        store = self._get_or_create_storage(relay_id)
+        if len(list(_query_store(store, status=TaskStatus.PENDING))) >= self.max_tasks_per_relay:
             raise TooManyTasksError(self.max_tasks_per_relay)
-        tasks[task.id] = task
+        store[task.id] = task
         return task
 
     def update_task(
@@ -155,6 +160,9 @@ class TimedTaskStore:
 
         for task_id in expired_task_ids:
             del self._tasks[task_id]
+
+    def __iter__(self) -> Iterator[RelayTask]:
+        return iter(self._tasks.values())
 
     def __getitem__(self, key: TaskID) -> RelayTask:
         self._cleanup_expired()

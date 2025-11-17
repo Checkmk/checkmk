@@ -15,7 +15,7 @@ from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks
 
 
-def test_cannot_push_more_tasks_than_allowed(
+def test_cannot_push_more_pending_tasks_than_allowed(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
     site_context: Config,
@@ -50,6 +50,42 @@ def test_cannot_push_more_tasks_than_allowed(
 
     current_tasks = {str(t.id) for t in get_all_tasks(agent_receiver, relay_id)}
     assert current_tasks == set(task_ids)
+
+
+def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
+    agent_receiver: AgentReceiverClient,
+    site: SiteMock,
+    site_context: Config,
+) -> None:
+    """
+    After we reach the max pending task limit we can push new tasks again to the relay.
+    """
+    task_count = 3
+    create_relay_config(max_number_of_tasks=task_count)
+
+    relay_id = add_relays(site, 1)[0]
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
+
+    # add maximum number of tasks allowed
+    task_id, *_ = add_tasks(task_count, agent_receiver, relay_id)
+
+    agent_receiver.update_task(
+        relay_id=relay_id,
+        task_id=task_id,
+        result_type="OK",
+        result_payload="done",
+    )
+
+    response = agent_receiver.push_task(
+        relay_id=relay_id,
+        spec=FetchAdHocTask(payload=".."),
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.text
+
+    current_tasks = {str(t.id) for t in get_all_tasks(agent_receiver, relay_id)}
+    assert len(current_tasks) == task_count + 1
 
 
 def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site: SiteMock) -> None:

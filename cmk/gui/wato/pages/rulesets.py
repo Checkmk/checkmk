@@ -2179,7 +2179,10 @@ class ABCEditRuleMode(WatoMode):
             return redirect(self._back_url())
 
         tree = folder_tree()
-        if do_validate_on_render := self._update_rule_from_vars(tree.folder_choices):
+        is_locked = is_locked_by_quick_setup(self._rule.locked_by)
+        if do_validate_on_render := self._update_rule_from_vars(
+            folder_choices=tree.folder_choices, is_locked=is_locked
+        ):
             return redirect(self._back_url())
 
         self._do_validate_on_render = do_validate_on_render
@@ -2200,7 +2203,7 @@ class ABCEditRuleMode(WatoMode):
                 use_git=config.wato_use_git,
             )
 
-        elif is_locked_by_quick_setup(self._rule.locked_by):
+        elif is_locked:
             flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
             return redirect(self._back_url())
 
@@ -2358,7 +2361,7 @@ class ABCEditRuleMode(WatoMode):
             else RawDiskData({"value": {"value": self._rule.value}})
         )
 
-    def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> bool:
+    def _update_rule_from_vars(self, *, folder_choices: DropdownChoices, is_locked: bool) -> bool:
         self._rule.rule_options = self._get_rule_options_from_catalog_value(
             parse_data_from_field_id(
                 self._create_rule_properties_catalog(),
@@ -2367,10 +2370,7 @@ class ABCEditRuleMode(WatoMode):
         )
 
         rule_conditions = self._get_rule_conditions_from_vars(folder_choices)
-        if (
-            is_locked_by_quick_setup(self._rule.locked_by)
-            and self._rule.conditions != rule_conditions
-        ):
+        if is_locked and self._rule.conditions != rule_conditions:
             flash(
                 _("Cannot change rule conditions for rules managed by Quick setup."),
                 msg_type="error",

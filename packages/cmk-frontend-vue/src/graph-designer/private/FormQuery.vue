@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import {
+  type GraphLineQueryAttribute,
+  type GraphLineQueryAttributes,
   type QueryAggregationHistogramPercentile,
   type QueryAggregationSumRate
 } from 'cmk-shared-typing/typescript/graph_designer'
@@ -29,21 +31,21 @@ const { _t } = usei18n()
 
 export interface Query {
   metricName: string | null
-  resourceAttributes: string[]
-  scopeAttributes: string[]
-  dataPointAttributes: string[]
+  resourceAttributes: GraphLineQueryAttributes
+  scopeAttributes: GraphLineQueryAttributes
+  dataPointAttributes: GraphLineQueryAttributes
   aggregationSum: QueryAggregationSumRate | null
   aggregationHistogram: QueryAggregationHistogramPercentile | null
 }
 
 const metricName = defineModel<string | null>('metricName', { default: null })
-const resourceAttributes = defineModel<string[]>('resourceAttributes', {
+const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
   default: []
 })
-const scopeAttributes = defineModel<string[]>('scopeAttributes', {
+const scopeAttributes = defineModel<GraphLineQueryAttributes>('scopeAttributes', {
   default: []
 })
-const dataPointAttributes = defineModel<string[]>('dataPointAttributes', {
+const dataPointAttributes = defineModel<GraphLineQueryAttributes>('dataPointAttributes', {
   default: []
 })
 const aggregationSum = defineModel<QueryAggregationSumRate | null>('aggregationSum', {
@@ -84,16 +86,23 @@ watch(
 
 // Some internal vars
 
-const resourceAttribute = ref<string | null>(null)
-const scopeAttribute = ref<string | null>(null)
-const dataPointAttribute = ref<string | null>(null)
+const resourceAttribute = ref<{ key: string | null; value: string | null }>({
+  key: null,
+  value: null
+})
+const scopeAttribute = ref<{ key: string | null; value: string | null }>({ key: null, value: null })
+const dataPointAttribute = ref<{ key: string | null; value: string | null }>({
+  key: null,
+  value: null
+})
 
 // autocompleters
 export interface AutoCompleteContext {
   metric_name?: string
-  resource_attributes?: string[]
-  scope_attributes?: string[]
-  data_point_attributes?: string[]
+  attribute_key?: string
+  resource_attributes?: GraphLineQueryAttributes
+  scope_attributes?: GraphLineQueryAttributes
+  data_point_attributes?: GraphLineQueryAttributes
 }
 
 const metricNameAutocompleter = computed<Autocompleter>(() => ({
@@ -107,42 +116,48 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
   }
 }))
 
-const resourceAttributesAutocompleter = computed<Autocompleter>(() => ({
+const resourceAttributesAutocompleter = (key: boolean = true): Autocompleter => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
-    ident: 'monitored_resource_attributes_keys_backend',
+    ident: key
+      ? 'monitored_resource_attributes_keys_backend'
+      : 'monitored_resource_attributes_values_backend',
     params: {
       strict: true,
-      context: getAutoCompleterContext()
+      context: getAutoCompleterContext(resourceAttribute.value.key)
     }
   }
-}))
+})
 
-const scopeAttributesAutocompleter = computed<Autocompleter>(() => ({
+const scopeAttributesAutocompleter = (key: boolean = true): Autocompleter => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
-    ident: 'monitored_scope_attributes_keys_backend',
+    ident: key
+      ? 'monitored_scope_attributes_keys_backend'
+      : 'monitored_scope_attributes_values_backend',
     params: {
       strict: true,
-      context: getAutoCompleterContext()
+      context: getAutoCompleterContext(scopeAttribute.value.key)
     }
   }
-}))
+})
 
-const dataPointAttributesAutocompleter = computed<Autocompleter>(() => ({
+const dataPointAttributesAutocompleter = (key: boolean = true): Autocompleter => ({
   fetch_method: 'ajax_vs_autocomplete',
   data: {
-    ident: 'monitored_data_point_attributes_keys_backend',
+    ident: key
+      ? 'monitored_data_point_attributes_keys_backend'
+      : 'monitored_data_point_attributes_values_backend',
     params: {
       strict: true,
-      context: getAutoCompleterContext()
+      context: getAutoCompleterContext(dataPointAttribute.value.key)
     }
   }
-}))
+})
 
 // actions
 
-function getAutoCompleterContext() {
+function getAutoCompleterContext(key: string | null = null) {
   const context: AutoCompleteContext = {}
   if (metricName.value) {
     context.metric_name = metricName.value
@@ -156,42 +171,63 @@ function getAutoCompleterContext() {
   if (dataPointAttributes.value.length > 0) {
     context.data_point_attributes = dataPointAttributes.value
   }
+  if (key !== '' && key !== null) {
+    context.attribute_key = key
+  }
   return context
 }
 
 function addResourceAttribute() {
-  if (resourceAttribute.value !== '' && resourceAttribute.value !== null) {
-    resourceAttributes.value.push(resourceAttribute.value)
-    resourceAttribute.value = null
+  if (
+    resourceAttribute.value.key !== '' &&
+    resourceAttribute.value.key !== null &&
+    resourceAttribute.value.value !== '' &&
+    resourceAttribute.value.value !== null
+  ) {
+    resourceAttributes.value.push(resourceAttribute.value as GraphLineQueryAttribute)
+    resourceAttribute.value = { key: null, value: null }
   }
 }
 
 function deleteResourceAttribute(index: number) {
   resourceAttributes.value.splice(index, 1)
+  resourceAttribute.value = { key: null, value: null }
   return true
 }
 
 function addScopeAttribute() {
-  if (scopeAttribute.value !== '' && scopeAttribute.value !== null) {
-    scopeAttributes.value.push(scopeAttribute.value)
-    scopeAttribute.value = null
+  if (
+    scopeAttribute.value.key !== '' &&
+    scopeAttribute.value.key !== null &&
+    scopeAttribute.value.value !== '' &&
+    scopeAttribute.value.value !== null
+  ) {
+    scopeAttributes.value.push(scopeAttribute.value as GraphLineQueryAttribute)
+    scopeAttribute.value = { key: null, value: null }
   }
 }
 
 function deleteScopeAttribute(index: number) {
   scopeAttributes.value.splice(index, 1)
+  scopeAttribute.value = { key: null, value: null }
   return true
 }
 
 function addDataPointAttribute() {
-  if (dataPointAttribute.value !== '' && dataPointAttribute.value !== null) {
-    dataPointAttributes.value.push(dataPointAttribute.value)
-    dataPointAttribute.value = null
+  if (
+    dataPointAttribute.value.key !== '' &&
+    dataPointAttribute.value.key !== null &&
+    dataPointAttribute.value.value !== '' &&
+    dataPointAttribute.value.value !== null
+  ) {
+    dataPointAttributes.value.push(dataPointAttribute.value as GraphLineQueryAttribute)
+    dataPointAttribute.value = { key: null, value: null }
   }
 }
 
 function deleteDataPointAttribute(index: number) {
   dataPointAttributes.value.splice(index, 1)
+  dataPointAttribute.value = { key: null, value: null }
   return true
 }
 
@@ -226,15 +262,28 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             orientation="horizontal"
             :try-delete="deleteResourceAttribute"
           >
-            <template #item-props="{ itemData }">{{ itemData }}</template>
+            <template #item-props="{ itemData }">
+              {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
+            </template>
           </CmkList>
-          <FormAutocompleter
-            v-model="resourceAttribute"
-            :autocompleter="resourceAttributesAutocompleter"
-            :size="inputSizes['MEDIUM'].width"
-            :placeholder="_t('Attributes')"
-            @update:model-value="addResourceAttribute"
-          />
+          <div>
+            <FormAutocompleter
+              v-model="resourceAttribute.key"
+              :autocompleter="resourceAttributesAutocompleter()"
+              :size="inputSizes['MEDIUM'].width"
+              :placeholder="_t('Attribute key')"
+              @update:model-value="addResourceAttribute"
+            />
+          </div>
+          <div>
+            <FormAutocompleter
+              v-model="resourceAttribute.value"
+              :autocompleter="resourceAttributesAutocompleter(false)"
+              :size="inputSizes['MEDIUM'].width"
+              :placeholder="_t('Attribute value')"
+              @update:model-value="addResourceAttribute"
+            />
+          </div>
         </td>
       </tr>
       <tr>
@@ -245,15 +294,28 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             orientation="horizontal"
             :try-delete="deleteScopeAttribute"
           >
-            <template #item-props="{ itemData }">{{ itemData }}</template>
+            <template #item-props="{ itemData }">
+              {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
+            </template>
           </CmkList>
-          <FormAutocompleter
-            v-model="scopeAttribute"
-            :autocompleter="scopeAttributesAutocompleter"
-            :size="inputSizes['MEDIUM'].width"
-            :placeholder="_t('Attributes')"
-            @update:model-value="addScopeAttribute"
-          />
+          <div>
+            <FormAutocompleter
+              v-model="scopeAttribute.key"
+              :autocompleter="scopeAttributesAutocompleter()"
+              :size="inputSizes['MEDIUM'].width"
+              :placeholder="_t('Attribute key')"
+              @update:model-value="addScopeAttribute"
+            />
+          </div>
+          <div>
+            <FormAutocompleter
+              v-model="scopeAttribute.value"
+              :autocompleter="scopeAttributesAutocompleter(false)"
+              :size="inputSizes['MEDIUM'].width"
+              :placeholder="_t('Attribute value')"
+              @update:model-value="addScopeAttribute"
+            />
+          </div>
         </td>
       </tr>
       <tr>
@@ -264,15 +326,28 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             orientation="horizontal"
             :try-delete="deleteDataPointAttribute"
           >
-            <template #item-props="{ itemData }">{{ itemData }}</template>
+            <template #item-props="{ itemData }">
+              {{ itemData.key }}{{ itemData.value ? `:${itemData.value}` : '' }}
+            </template>
           </CmkList>
-          <FormAutocompleter
-            v-model="dataPointAttribute"
-            :autocompleter="dataPointAttributesAutocompleter"
-            :size="inputSizes['MEDIUM'].width"
-            :placeholder="_t('Attributes')"
-            @update:model-value="addDataPointAttribute"
-          />
+          <div>
+            <FormAutocompleter
+              v-model="dataPointAttribute.key"
+              :autocompleter="dataPointAttributesAutocompleter()"
+              :size="inputSizes['MEDIUM'].width"
+              :placeholder="_t('Attribute key')"
+              @update:model-value="addDataPointAttribute"
+            />
+          </div>
+          <div>
+            <FormAutocompleter
+              v-model="dataPointAttribute.value"
+              :autocompleter="dataPointAttributesAutocompleter(false)"
+              :size="inputSizes['MEDIUM'].width"
+              :placeholder="_t('Attribute value')"
+              @update:model-value="addDataPointAttribute"
+            />
+          </div>
         </td>
       </tr>
       <tr v-if="aggregationSum !== null && aggregationSum.type === 'rate'">
@@ -307,5 +382,10 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
 table {
   border-collapse: separate;
   border-spacing: 5px;
+}
+
+div {
+  display: inline-block;
+  margin-right: 1px;
 }
 </style>

@@ -58,10 +58,22 @@
     "graph_line_metric_name": {
       "type": "string"
     },
+    "graph_line_query_attribute": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": ["key", "value"]
+    },
     "graph_line_query_attributes": {
       "type": "array",
       "items": {
-        "type": "string"
+        "$ref": "#/$defs/graph_line_query_attribute"
       }
     },
     "query_aggregation_sum_rate": {

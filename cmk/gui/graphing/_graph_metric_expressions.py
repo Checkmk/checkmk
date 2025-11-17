@@ -107,11 +107,17 @@ class QueryAggregationHistogramPercentile:
 
 
 @dataclass(frozen=True)
+class GraphLineQueryAttribute:
+    key: str
+    value: str
+
+
+@dataclass(frozen=True)
 class QueryDataKey:
     metric_name: MetricName
-    resource_attributes: tuple[str, ...]
-    scope_attributes: tuple[str, ...]
-    data_point_attributes: tuple[str, ...]
+    resource_attributes: tuple[GraphLineQueryAttribute, ...]
+    scope_attributes: tuple[GraphLineQueryAttribute, ...]
+    data_point_attributes: tuple[GraphLineQueryAttribute, ...]
     aggregation_sum: QueryAggregationSumRate | None
     aggregation_histogram: QueryAggregationHistogramPercentile | None
 

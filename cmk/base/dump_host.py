@@ -275,8 +275,8 @@ def dump_host(
                     hostname,
                     primary_family,
                     ipaddress,
-                    password_store_file=used_password_store,
-                    passwords=passwords,
+                    secrets_file_option=used_password_store,
+                    secrets=passwords,
                     ip_address_of=ip_address_of,
                     executable_finder=ExecutableFinder(
                         # NOTE: we can't ignore these, they're an API promise.

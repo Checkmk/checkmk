@@ -9,9 +9,9 @@
 import sys
 from contextlib import suppress
 
-import cmk.base.utils
 import cmk.ccc.debug
 import cmk.utils.log
+import cmk.utils.password_store
 from cmk.base import config
 from cmk.base.core.nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
@@ -22,7 +22,7 @@ from cmk.checkengine.plugin_backend import (
     load_selected_plugins,
 )
 from cmk.discover_plugins import PluginLocation
-from cmk.utils.password_store import active_secrets_path_site
+from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils.paths import omd_root
 
 # This will be replaced by the config generation, when the template is instantiated.
@@ -114,7 +114,8 @@ def main() -> int:
             ),
             {},
             [CONFIG.hostname],
-            password_store_file=active_secrets_path_site(),
+            secrets_file_option=cmk.utils.password_store.active_secrets_path_site(),
+            secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         )
     except KeyboardInterrupt:
         with suppress(IOError):

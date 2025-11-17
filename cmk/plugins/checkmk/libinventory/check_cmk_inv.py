@@ -10,8 +10,6 @@ from collections.abc import Sequence
 from contextlib import suppress
 from pathlib import Path
 
-import cmk.ccc.cleanup
-import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -45,6 +43,7 @@ from cmk.checkengine.submitters import ServiceState
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig
 from cmk.fetchers.filecache import FileCacheOptions
+from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils.ip_lookup import (
     ConfiguredIPLookup,
     make_lookup_ip_address,
@@ -201,7 +200,8 @@ def inventory_as_check(
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
-        password_store_file=cmk.utils.password_store.active_secrets_path_site(),
+        secrets_file_option=cmk.utils.password_store.active_secrets_path_site(),
+        secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,

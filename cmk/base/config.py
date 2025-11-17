@@ -2451,8 +2451,8 @@ class ConfigCache:
         host_name: HostName,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         ip_address: HostAddress | None,
-        passwords: Mapping[str, str],
-        password_store_file: Path,
+        secrets: Mapping[str, str],
+        secrets_file_option: Path,
         ip_address_of: IPLookup,
         executable_finder: ExecutableFinderProtocol,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
@@ -2485,8 +2485,8 @@ class ConfigCache:
                 },
                 password_lookup=make_configured_passwords_lookup(),
             ),
-            passwords,
-            password_store_file,
+            secrets,
+            secrets_file_option,
             executable_finder,
         )
         for agentname, params_seq in host_special_agents:

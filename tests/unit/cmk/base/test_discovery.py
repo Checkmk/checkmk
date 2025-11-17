@@ -1543,7 +1543,8 @@ def test_commandline_discovery(
         ip_address_of_mgmt=lambda *a: HostAddress(""),
         mode=Mode.DISCOVERY,
         simulation_mode=True,
-        password_store_file=Path("/pw/store"),
+        secrets_file_option=Path("/pw/store"),
+        secrets={},
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,

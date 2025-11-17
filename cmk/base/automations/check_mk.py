@@ -196,6 +196,7 @@ from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_hos
 from cmk.server_side_calls_backend import (
     config_processing,
     ExecutableFinder,
+    load_secrets_file,
     load_special_agents,
     SpecialAgent,
     SpecialAgentCommandLine,
@@ -420,7 +421,8 @@ class AutomationDiscovery(DiscoveryAutomation):
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             simulation_mode=config.simulation_mode,
-            password_store_file=cmk.utils.password_store.pending_secrets_path_site(),
+            secrets_file_option=cmk.utils.password_store.pending_secrets_path_site(),
+            secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
             metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
                 hn,
                 config_cache.explicit_host_attributes,
@@ -661,7 +663,8 @@ class AutomationDiscoveryPreview(Automation):
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=Mode.DISCOVERY,
             simulation_mode=config.simulation_mode,
-            password_store_file=cmk.utils.password_store.pending_secrets_path_site(),
+            secrets_file_option=cmk.utils.password_store.pending_secrets_path_site(),
+            secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
             # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
             # and tabula rasa)
             max_cachefile_age=MaxAge.zero(),
@@ -825,7 +828,7 @@ def _active_check_preview_rows(
             config_cache.get_host_attributes(host_name, host_ip_family, ip_address_of),
             final_service_name_config,
             ip_address_of,
-            cmk.utils.password_store.load(password_store_file),
+            load_secrets_file(password_store_file),
             password_store_file,
         )
     ]
@@ -1162,7 +1165,8 @@ def _execute_autodiscovery(
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
-        password_store_file=cmk.utils.password_store.active_secrets_path_site(),
+        secrets_file_option=cmk.utils.password_store.active_secrets_path_site(),
+        secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -2284,7 +2288,7 @@ class AutomationAnalyseServices(Automation):
             config_cache.get_host_attributes(host_name, host_ip_family, ip_address_of),
             final_service_name_config,
             ip_address_of,
-            cmk.utils.password_store.load(password_store_file),
+            load_secrets_file(password_store_file),
             password_store_file,
         ):
             if active_service.description == servicedesc:
@@ -3472,7 +3476,7 @@ class AutomationDiagHost(Automation):
 
         state, output = 0, ""
         pending_passwords_file = cmk.utils.password_store.pending_secrets_path_site()
-        passwords = cmk.utils.password_store.load(pending_passwords_file)
+        passwords = load_secrets_file(pending_passwords_file)
 
         host_labels = label_manager.labels_of_host(host_name)
         host_relay_id = config.get_relay_id(host_labels)
@@ -3535,8 +3539,8 @@ class AutomationDiagHost(Automation):
                 host_name,
                 ip_family,
                 ipaddress,
-                password_store_file=pending_passwords_file,
-                passwords=passwords,
+                secrets_file_option=pending_passwords_file,
+                secrets=passwords,
                 ip_address_of=ip_address_of,
                 executable_finder=ExecutableFinder(
                     # NOTE: we can't ignore these, they're an API promise.
@@ -3835,7 +3839,7 @@ class AutomationActiveCheck(Automation):
                 translations=loading_result.loaded_config.service_description_translation,
             ),
             ip_address_of,
-            cmk.utils.password_store.load(password_store_file),
+            load_secrets_file(password_store_file),
             password_store_file,
             single_plugin=plugin,
         ):
@@ -4109,8 +4113,8 @@ class AutomationGetAgentOutput(Automation):
                         hostname,
                         ip_family,
                         ipaddress,
-                        password_store_file=core_password_store_file,
-                        passwords=cmk.utils.password_store.load(core_password_store_file),
+                        secrets_file_option=core_password_store_file,
+                        secrets=load_secrets_file(core_password_store_file),
                         ip_address_of=ip_address_of_with_fallback,
                         executable_finder=ExecutableFinder(
                             # NOTE: we can't ignore these, they're an API promise.

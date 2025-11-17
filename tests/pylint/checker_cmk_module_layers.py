@@ -222,6 +222,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.fetchers",
         "cmk.gui",  # bi
         "cmk.checkengine",
+        "cmk.server_side_calls_backend",
         "cmk.utils",
         "cmk.ccc",
     ),

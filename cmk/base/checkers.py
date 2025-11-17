@@ -100,7 +100,6 @@ from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.server_side_calls_backend import ExecutableFinder, SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
-from cmk.utils import password_store
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.ip_lookup import (
     IPLookup,
@@ -358,7 +357,8 @@ class CMKFetcher:
         ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
         ip_address_of_mgmt: IPLookupOptional,
         mode: Mode,
-        password_store_file: Path,
+        secrets_file_option: Path,
+        secrets: Mapping[str, str],  # Mapping[str, Secret] would be better.
         simulation_mode: bool,
         metric_backend_fetcher_factory: Callable[[HostAddress], ProgramFetcher | None],
         max_cachefile_age: MaxAge | None = None,
@@ -376,7 +376,8 @@ class CMKFetcher:
         self.ip_address_of_mandatory: Final = ip_address_of_mandatory
         self.ip_address_of_mgmt: Final = ip_address_of_mgmt
         self.mode: Final = mode
-        self.password_store_file: Final = password_store_file
+        self.secrets_file_option: Final = secrets_file_option
+        self.secrets: Final = secrets
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
         self.metric_backend_fetcher_factory: Final = metric_backend_fetcher_factory
@@ -431,7 +432,6 @@ class CMKFetcher:
             ca_store=Path(cmk.utils.paths.agent_cert_store),
             site_crt=Path(cmk.utils.paths.site_cert_file),
         )
-        passwords = password_store.load(self.password_store_file)
         relay_id = self.get_relay_id(host_name)
         return _fetch_all(
             self.make_trigger(relay_id),
@@ -467,8 +467,8 @@ class CMKFetcher:
                         current_host_name,
                         current_ip_family,
                         current_ip_address,
-                        passwords,
-                        self.password_store_file,
+                        self.secrets,
+                        self.secrets_file_option,
                         ip_address_of=self.ip_address_of,
                         executable_finder=ExecutableFinder(
                             # NOTE: we can't ignore these, they're an API promise.

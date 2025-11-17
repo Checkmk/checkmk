@@ -8,6 +8,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir
+from cmk.password_store.v1_unstable import get_store_secret, PasswordStore
 from cmk.server_side_calls.v1 import Secret
 from cmk.utils import config_warnings, password_store
 
@@ -16,6 +17,21 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 ConfigSet = Mapping[str, object]
 SSCRules = tuple[str, Sequence[ConfigSet]]
+
+
+# TODO: we're mostly passing this around -- switching to Mapping[str, Secret] should be possible.
+def load_secrets_file(path: Path) -> Mapping[str, str]:
+    try:
+        store_path_bytes = path.read_bytes()
+    except FileNotFoundError:
+        return {}
+
+    if not store_path_bytes:
+        return {}
+    return {
+        k: s.reveal()
+        for k, s in PasswordStore(get_store_secret()).load_bytes(store_path_bytes).items()
+    }
 
 
 def replace_passwords(

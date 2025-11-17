@@ -121,7 +121,7 @@ from cmk.inventory.structured_data import (
     SDPath,
 )
 from cmk.piggyback import backend as piggyback_backend
-from cmk.server_side_calls_backend import ExecutableFinder, load_active_checks
+from cmk.server_side_calls_backend import ExecutableFinder, load_active_checks, load_secrets_file
 from cmk.snmplib import (
     get_single_oid,
     OID,
@@ -746,8 +746,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 hostname,
                 ip_family,
                 ipaddress,
-                passwords=cmk.utils.password_store.load(pending_passwords_file),
-                password_store_file=pending_passwords_file,
+                secrets=load_secrets_file(pending_passwords_file),
+                secrets_file_option=pending_passwords_file,
                 ip_address_of=ConfiguredIPLookup(
                     ip_address_of_bare,
                     allow_empty=hosts_config.clusters,
@@ -1546,9 +1546,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         plugins.check_plugins,
         hostnames=hostnames,
         licensing_handler=get_licensing_handler_type().make(),
-        passwords=cmk.utils.password_store.load(
-            cmk.utils.password_store.pending_secrets_path_site()
-        ),
+        passwords=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
@@ -2253,7 +2251,8 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
             discovery=discovery_file_cache_max_age,
             inventory=1.5 * check_interval,
         ),
-        password_store_file=cmk.utils.password_store.active_secrets_path_site(),
+        secrets_file_option=cmk.utils.password_store.active_secrets_path_site(),
+        secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -2622,7 +2621,8 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        password_store_file=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets_file_option=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -2769,7 +2769,8 @@ def mode_check(options: _CheckingOptions, args: list[str]) -> ServiceState:
         ),
         options,
         args,
-        password_store_file=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets_file_option=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
     )
 
 
@@ -2786,7 +2787,8 @@ def run_checking(
     options: _CheckingOptions,
     args: list[str],
     *,
-    password_store_file: Path,
+    secrets_file_option: Path,
+    secrets: Mapping[str, str],
 ) -> ServiceState:
     edition = cmk_version.edition(cmk.utils.paths.omd_root)
     file_cache_options = _handle_fetcher_options(options)
@@ -2874,7 +2876,8 @@ def run_checking(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        password_store_file=password_store_file,
+        secrets_file_option=secrets_file_option,
+        secrets=secrets,
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -3172,7 +3175,8 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
         simulation_mode=config.simulation_mode,
-        password_store_file=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets_file_option=cmk.utils.password_store.pending_secrets_path_site(),
+        secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
@@ -3476,7 +3480,8 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
-        password_store_file=cmk.utils.password_store.active_secrets_path_site(),
+        secrets_file_option=cmk.utils.password_store.active_secrets_path_site(),
+        secrets=load_secrets_file(cmk.utils.password_store.active_secrets_path_site()),
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,

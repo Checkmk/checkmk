@@ -10,7 +10,8 @@ TAROPTS            := --owner=root --group=root \
                       --wildcards \
                       --exclude .git --exclude .gitignore --exclude .gitmodules --exclude .gitattributes \
                       --exclude=.svn \
-                      --exclude=~* --exclude=*~ --exclude=*.swp --exclude=.f12 \
+                      --exclude=~* --exclude=*~ --exclude=*.swp \
+                      --exclude=.f12 --exclude=OWNERS \
                       --exclude=__pycache__ --exclude=*.pyc
 UVENV              := scripts/run-uvenv
 

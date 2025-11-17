@@ -120,7 +120,7 @@ def finalize_site_as_user(
     initialize_site_ca(site)
     initialize_agent_ca(site)
     save_site_conf(site_home, config)
-    update_cmk_core_config(config)
+    update_cmk_core_config(site_home, config)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         create_instance_id(site_home=Path(site_home), instance_id=uuid4())

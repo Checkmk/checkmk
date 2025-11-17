@@ -4,6 +4,6 @@
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-mathias.laurin@checkmk.com  # component lead
+matthew.rindel@checkmk.com  # component lead
 
 sergey.kipnis@checkmk.com

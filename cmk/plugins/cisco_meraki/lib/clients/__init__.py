@@ -6,7 +6,7 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Protocol, Self, Unpack
+from typing import Protocol, Self
 
 from cmk.plugins.cisco_meraki.lib import schema
 from cmk.plugins.cisco_meraki.lib.cache import cache_ttl
@@ -44,7 +44,7 @@ class MerakiSDK(Protocol):
 
 
 class OrganisationCallable[T](Protocol):
-    def __call__(self, **kwargs: Unpack[schema.Organisation]) -> T: ...
+    def __call__(self, id_: str, name: str) -> T: ...
 
 
 @dataclass(frozen=True, kw_only=True)

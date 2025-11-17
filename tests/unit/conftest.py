@@ -133,9 +133,6 @@ def _fake_version_and_paths() -> None:
     monkeypatch.setattr(
         cmk_version, "omd_version", lambda *args, **kw: f"{cmk_version.__version__}.{edition}"
     )
-    monkeypatch.setenv(
-        "PASSWORD_STORE_SECRET_FILE", str(cmk.utils.paths.password_store_secret_file)
-    )
 
 
 # Cleanup temporary directory created above

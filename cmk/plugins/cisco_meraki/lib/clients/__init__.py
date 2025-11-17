@@ -5,13 +5,11 @@
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from functools import partial
 from typing import Protocol, Self
 
 from cmk.plugins.cisco_meraki.lib import schema
 from cmk.plugins.cisco_meraki.lib.cache import cache_ttl
 from cmk.plugins.cisco_meraki.lib.config import MerakiConfig
-from cmk.plugins.cisco_meraki.lib.constants import AGENT
 from cmk.server_side_programs.v1_unstable import Storage
 
 from ._devices import Devices, DevicesSDK
@@ -66,27 +64,28 @@ class MerakiClient:
                 get_sensor_readings=SensorReadings(sdk.sensor),
             )
 
-        HostStorage = partial(Storage, host=config.hostname)
-
-        devices_storage = HostStorage(f"{AGENT}_devices")
-        devices_statuses_storage = HostStorage(f"{AGENT}_devices_statuses")
-        licenses_overview_storage = HostStorage(f"{AGENT}_licenses_overview")
-        organizations_storage = HostStorage(f"{AGENT}_organizations")
-        sensor_readings_storage = HostStorage(f"{AGENT}_sensor_readings")
-
         # TODO: ttl values should eventually be passed down through the configuration.
-        cache_devices = cache_ttl(devices_storage, ttl=60)
-        cache_devices_statuses = cache_ttl(devices_statuses_storage, ttl=60)
-        cache_licenses_overview = cache_ttl(licenses_overview_storage, ttl=600)
-        cache_organizations = cache_ttl(organizations_storage, ttl=600)
-        cache_sensor_readings = cache_ttl(sensor_readings_storage, ttl=0)
-
         return cls(
-            get_devices=cache_devices(Devices(sdk.organizations)),
-            get_devices_statuses=cache_devices_statuses(DevicesStatuses(sdk.organizations)),
-            get_licenses_overview=cache_licenses_overview(LicensesOverview(sdk.organizations)),
-            get_organizations=cache_organizations(Organizations(sdk.organizations)),
-            get_sensor_readings=cache_sensor_readings(SensorReadings(sdk.sensor)),
+            get_devices=cache_ttl(
+                Storage("cisco_meraki_devices", host=config.hostname),
+                ttl=60,
+            )(Devices(sdk.organizations)),
+            get_devices_statuses=cache_ttl(
+                Storage("cisco_meraki_devices_statuses", host=config.hostname),
+                ttl=60,
+            )(DevicesStatuses(sdk.organizations)),
+            get_licenses_overview=cache_ttl(
+                Storage("cisco_meraki_licenses_overview", host=config.hostname),
+                ttl=600,
+            )(LicensesOverview(sdk.organizations)),
+            get_organizations=cache_ttl(
+                Storage("cisco_meraki_organizations", host=config.hostname),
+                ttl=600,
+            )(Organizations(sdk.organizations)),
+            get_sensor_readings=cache_ttl(
+                Storage("cisco_meraki_sensor_readings", host=config.hostname),
+                ttl=0,
+            )(SensorReadings(sdk.sensor)),
         )
 
 

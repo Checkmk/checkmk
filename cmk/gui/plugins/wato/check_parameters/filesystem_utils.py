@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for filesystem check parameter module internals"""
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
@@ -51,7 +50,9 @@ class FilesystemElements(Enum):
 # -- available absolute,   negative int   (-2, -4)
 # -- available percentage, negative float (-2.0, -4.0)
 # (4 alternatives)
-def match_dual_level_type(value):
+def match_dual_level_type(
+    value: list[tuple[object, tuple[float, float]]] | tuple[float, float],
+) -> int:
     if isinstance(value, list):
         for entry in value:
             if entry[1][0] < 0 or entry[1][1] < 0:
@@ -114,7 +115,7 @@ def _get_free_used_dynamic_valuespec(
             )
         )
 
-    def validate_dynamic_levels(value, varprefix):
+    def validate_dynamic_levels(value: Sequence[Any], varprefix: str) -> None:
         if [v for v in value if v[0] < 0]:
             raise MKUserError(varprefix, _("You need to specify levels of at least 0 bytes."))
 
@@ -144,7 +145,9 @@ def _tuple_convert(val: tuple[float, ...]) -> tuple[float, ...]:
     return tuple(-x for x in val)
 
 
-def _transform_filesystem_free(value):
+def _transform_filesystem_free(
+    value: tuple[Any, ...] | list[Any],
+) -> tuple[float, ...] | list[tuple[Any, tuple[Any, ...]]]:
     if isinstance(value, tuple):
         return _tuple_convert(value)
 

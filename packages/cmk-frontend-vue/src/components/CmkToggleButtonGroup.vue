@@ -9,6 +9,7 @@ import CmkButton from './CmkButton.vue'
 export type ToggleButtonOption = {
   label: string
   value: string
+  disabled?: boolean | string | undefined
 }
 
 export interface ToggleButtonGroupProps {
@@ -33,6 +34,7 @@ function setSelectedOption(value: string) {
       class="toggle_option"
       :class="{ selected: isSelected(option.value) }"
       :aria-label="`Toggle ${option.label}`"
+      :disabled="option.disabled"
       @click="setSelectedOption(option.value)"
       >{{ option.label }}</CmkButton
     >

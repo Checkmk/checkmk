@@ -20,7 +20,8 @@ const model = ref<string>('1')
     :options="[
       { label: 'label1', value: '1' },
       { label: 'label2', value: '2' },
-      { label: 'label3', value: '3' }
+      { label: 'label3 (disabled)', value: '3', disabled: true },
+      { label: 'label4', value: '4' }
     ]"
   />
 

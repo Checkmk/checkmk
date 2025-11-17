@@ -30,7 +30,7 @@ py_pytest_main(
 py_doc_test(
     name = "doctest",
     size = "small",
-    srcs = [":%s" % f for f in FAMILIES],
+    srcs = [":%s" % family for family in FAMILIES],
     tags = ["no-mypy"],
 )
 
@@ -100,8 +100,8 @@ py_test(
 filegroup(
     name = "py_typed",
     srcs = [
-        "cmk/plugins/%s/py.typed" % f
-        for f in FAMILIES
+        "cmk/plugins/%s/py.typed" % family
+        for family in FAMILIES
     ],
 )
 
@@ -113,17 +113,22 @@ filegroup(
     ),
 ) for family in FAMILIES]
 
-[pkg_files(
+[sh_library(
     name = "libexec-%s" % family,
     srcs = glob(
         ["cmk/plugins/%s/libexec/*" % family],
         allow_empty = True,
     ),
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "lib/python%s/site-packages/cmk/plugins/%s/libexec" % (PYTHON_MAJOR_DOT_MINOR, family),
 ) for family in FAMILIES]
+
+# inline this once it's not needed anymore
+COMMON_DEPS = [
+    ":%s" % family
+    for family in FAMILIES
+] + [
+    ":checkman-%s" % family
+    for family in FAMILIES
+]  # TODO: add agent files.
 
 py_wheel(
     name = "wheel",
@@ -131,24 +136,64 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-plugins"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
+    deps = COMMON_DEPS + [
+        ":libexec-%s" % family
+        for family in FAMILIES
+    ],
+)
+
+# One wheel per family:
+# Same as above, but with the loop outside.
+[py_wheel(
+    name = "wheel-%s" % family,
+    distribution = "cmk-plugins-%s" % family,
+    strip_path_prefixes = ["packages/cmk-plugins"],
+    version = "1.0.0",
     deps = [
-        ":%s" % f
-        for f in FAMILIES
-    ] + [":checkman-%s" % f for f in FAMILIES],
+        ":%s" % family,
+        ":checkman-%s" % family,
+        ":libexec-%s" % family,
+    ],
+) for family in FAMILIES]
+
+# Here comes the HACK to work around CMK-27714.
+# `package_wheel` will not preserve the +x flag
+# on the libexec files.
+# To fix this we
+# * create a dedicated wheel *without* the libexec files
+# * add an additional target to contain *just* the libexec files
+# * build the pkg_tar from those.
+# Once `package_wheel` is fixed, this can be simplified.
+
+[pkg_files(
+    name = "libexec-for-pkg_tar-%s" % family,
+    srcs = glob(
+        ["cmk/plugins/%s/libexec/*" % family],
+        allow_empty = True,
+    ),
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "lib/python%s/site-packages/cmk/plugins/%s/libexec" % (PYTHON_MAJOR_DOT_MINOR, family),
+) for family in FAMILIES]
+
+py_wheel(
+    name = "wheel-for-pkg_tar",
+    distribution = "cmk-plugins-tar",
+    strip_path_prefixes = ["packages/cmk-plugins"],
+    # TODO: Duplicated from pyproject.toml
+    version = "1.0.0",
+    deps = COMMON_DEPS,
 )
 
 package_wheel(
     name = "pkg_tar",
-    additional_files = [":libexec-%s" % f for f in FAMILIES],
+    additional_files = [":libexec-for-pkg_tar-%s" % family for family in FAMILIES],
     visibility = ["//visibility:public"],
-    whl = "wheel",
+    whl = "wheel-for-pkg_tar",
 )
 
-# One wheel per family:
-# Very similar to the above, but with the loop outside.
 [py_wheel(
-    name = "wheel-%s" % family,
-    distribution = "cmk-plugins-%s" % family,
+    name = "wheel-for-pkg_tar-%s" % family,
+    distribution = "cmk-plugins-%s-tar" % family,
     strip_path_prefixes = ["packages/cmk-plugins"],
     version = "1.0.0",
     deps = [
@@ -159,7 +204,7 @@ package_wheel(
 
 [package_wheel(
     name = "pkg_tar-%s" % family,
-    additional_files = [":libexec-%s" % family],
+    additional_files = [":libexec-for-pkg_tar-%s" % family],
     visibility = ["//visibility:public"],
-    whl = "wheel-%s" % family,
+    whl = "wheel-for-pkg_tar-%s" % family,
 ) for family in FAMILIES]

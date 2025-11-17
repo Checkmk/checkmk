@@ -9,6 +9,12 @@ filegroup(
     ),
 )
 
+filegroup(
+    name = "mibs",
+    srcs = glob(["mibs/*.txt"]),
+    visibility = ["//visibility:public"],
+)
+
 configure_make(
     name = "net-snmp",
     args = ["-j4"],

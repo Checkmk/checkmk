@@ -83,6 +83,15 @@ if NOT exist %artifact_name% (
 )
 powershell Write-Host "Build successful" -Foreground green
 
+:: Checking existance on the Nexus Cache. No need to upload, if it already exists.
+echo Checking if %artifact_name% exists on cache
+powershell Write-Host "To be executed: curl -sSf --head --fail --user %creds% %url%" -foreground white
+curl -sSf --head --fail --user %creds% %url%
+IF /I "!ERRORLEVEL!" EQU "0" (
+  powershell Write-Host "[+] File already on remote host - not uploading" -Foreground green
+  exit /B 0
+)
+
 :: UPLOADING to the Nexus Cache:
 echo Uploading to cache %artifact_name% ... %fname% ...
 copy %artifact_name% %fname%

@@ -1001,6 +1001,8 @@ class ModeEditUser(WatoMode):
         if is_ntop_available():
             ntop_connections = get_ntop_connection_by_site()
             for _site_id, ntop_connection in ntop_connections.items():
+                if not ntop_connection:
+                    continue
                 # ntop_username_attribute will be the name of the custom attribute or false
                 # see corresponding Setup rule
                 ntop_username_attribute = ntop_connection.get(
@@ -1325,6 +1327,8 @@ class ModeEditUser(WatoMode):
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding Setup rule
             for site_id, ntop_connection in ntop_connections.items():
+                if not ntop_connection:
+                    continue
                 ntop_username_attribute = ntop_connection.get(
                     "use_custom_attribute_as_ntop_username"
                 )

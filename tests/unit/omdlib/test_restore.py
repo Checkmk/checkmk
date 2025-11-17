@@ -5,9 +5,9 @@
 
 import os
 import stat
-from collections.abc import Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from itertools import groupby
+from itertools import chain, groupby
 from pathlib import Path
 
 import pytest
@@ -34,13 +34,15 @@ class FIFO:
 
 # We ignore the other types such as devices and sockets for now.
 type FileType = File | Symlink | FIFO
+type Files = frozenset[FileType]
+type Dirs = frozenset[Directory]
 
 
 @dataclass(frozen=True)
 class Directory:
     name: str
-    directories: Sequence["Directory"] = field(default_factory=list)
-    files: Sequence[FileType] = field(default_factory=list)
+    directories: Dirs = field(default_factory=frozenset)
+    files: Files = field(default_factory=frozenset)
 
 
 # Ignore permissions. Additionally, ignore that path segments such as name should be arbitrary
@@ -48,11 +50,11 @@ class Directory:
 @dataclass(frozen=True)
 class RootDir:
     path: Path
-    directories: Sequence[Directory] = field(default_factory=list)
-    files: Sequence[FileType] = field(default_factory=list)
+    directories: Dirs = field(default_factory=frozenset)
+    files: Files = field(default_factory=frozenset)
 
 
-def _files_to_disk(folder: Path, files: Sequence[FileType]) -> None:
+def _files_to_disk(folder: Path, files: Iterable[FileType]) -> None:
     for file in files:
         path = folder.joinpath(file.name)
         match file:
@@ -65,7 +67,7 @@ def _files_to_disk(folder: Path, files: Sequence[FileType]) -> None:
 
 
 def _recursive_to_disk(
-    parent_folder: Path, directories: Sequence[Directory], files: Sequence[FileType]
+    parent_folder: Path, directories: Iterable[Directory], files: Iterable[FileType]
 ) -> None:
     for directory in directories:
         dir_path = parent_folder.joinpath(directory.name)
@@ -78,29 +80,27 @@ def _to_disk(root: RootDir) -> None:
     _recursive_to_disk(root.path, directories=root.directories, files=root.files)
 
 
-def _recursive_from_disk(folder: Path) -> tuple[Sequence[Directory], Sequence[FileType]]:
-    directories: list[Directory] = []
-    files: list[FileType] = []
+def _recursive_from_disk(folder: Path) -> tuple[Dirs, Files]:
+    directories: set[Directory] = set()
+    files: set[FileType] = set()
 
     with os.scandir(folder) as scaniter:
         for entry in scaniter:
             path = Path(entry.path)
             if entry.is_symlink():
-                files.append(Symlink(name=entry.name, path=path.readlink()))
+                files.add(Symlink(name=entry.name, path=path.readlink()))
 
             elif entry.is_dir(follow_symlinks=False):
                 sub_dirs, sub_files = _recursive_from_disk(path)
-                directories.append(
-                    Directory(name=entry.name, directories=sub_dirs, files=sub_files)
-                )
+                directories.add(Directory(name=entry.name, directories=sub_dirs, files=sub_files))
             elif entry.is_file(follow_symlinks=False):
-                files.append(File(name=entry.name, content=path.read_bytes()))
+                files.add(File(name=entry.name, content=path.read_bytes()))
             elif stat.S_ISFIFO(entry.stat(follow_symlinks=False).st_mode):
-                files.append(FIFO(name=entry.name))
+                files.add(FIFO(name=entry.name))
             else:
                 # Sockets, block devices, char devices
                 raise NotImplementedError()
-    return directories, files
+    return frozenset(directories), frozenset(files)
 
 
 def _from_disk(path: Path) -> RootDir:
@@ -108,82 +108,85 @@ def _from_disk(path: Path) -> RootDir:
     return RootDir(path=path, directories=sub_dirs, files=sub_files)
 
 
-def _merge_file_lists(files1: Sequence[FileType], files2: Sequence[FileType]) -> Sequence[FileType]:
-    merged = set(files1) | set(files2)
+def _merge_file_lists(files1: Files, files2: Files) -> Files:
+    merged = files1 | files2
     names = [file.name for file in merged]
     assert len(names) == len(set(names))
-    return list(merged)
+    return merged
 
 
-def _merge_directories(
-    dirs_one: Sequence[Directory], dirs_two: Sequence[Directory]
-) -> Sequence[Directory]:
-    result = []
+def _merge_directories(dirs_one: Iterable[Directory], dirs_two: Iterable[Directory]) -> Dirs:
+    result = set()
 
     def by_name(dir_: Directory) -> str:
         return dir_.name
 
-    for name, dirs in groupby(sorted(list(dirs_one) + list(dirs_two), key=by_name), key=by_name):
+    for name, dirs in groupby(sorted(chain(dirs_one, dirs_two), key=by_name), key=by_name):
         match list(dirs):
             case [dir_]:
-                result.append(dir_)
+                result.add(dir_)
             case [dir_one, dir_two]:
                 merged_files = _merge_file_lists(dir_one.files, dir_two.files)
                 merged_dirs = _merge_directories(dir_one.directories, dir_two.directories)
                 file_names = {file.name for file in merged_files}
                 assert not any(dir_.name in file_names for dir_ in merged_dirs)
-                result.append(Directory(name=name, files=merged_files, directories=merged_dirs))
+                result.add(Directory(name=name, files=merged_files, directories=merged_dirs))
             case _:
                 raise ValueError("duplicate directory names")
-    return result
+    return frozenset(result)
 
 
 @pytest.mark.parametrize(
     "directories, files, untouched",
     [
         (
-            [
-                Directory(
-                    name="jaeger",
-                    files=[File("test", content=b"abc")],
-                ),
-                Directory(
-                    name="var",
-                    files=[File("rand.txt", content=b"abc")],
-                ),
-            ],
-            (),
-            [
-                Directory(
-                    name="var",
-                    directories=[
-                        Directory(name="clickhouse-server", files=[File("data", content=b"abc")])
-                    ],
-                ),
-                Directory(name=".restore_working_dir"),
-            ],
+            frozenset(
+                {
+                    Directory(
+                        name="jaeger",
+                        files=frozenset({File("test", content=b"abc")}),
+                    ),
+                    Directory(
+                        name="var",
+                        files=frozenset({File("rand.txt", content=b"abc")}),
+                    ),
+                }
+            ),
+            frozenset(),
+            frozenset(
+                {
+                    Directory(
+                        name="var",
+                        directories=frozenset(
+                            {
+                                Directory(
+                                    name="clickhouse-server",
+                                    files=frozenset({File("data", content=b"abc")}),
+                                )
+                            }
+                        ),
+                    ),
+                    Directory(name=".restore_working_dir"),
+                }
+            ),
         ),
         (
-            [],
-            [FIFO(name="a pipe")],
-            [Directory(name=".restore_working_dir")],
+            frozenset(),
+            frozenset({FIFO(name="a pipe")}),
+            frozenset({Directory(name=".restore_working_dir")}),
         ),
         (
-            [],
-            [Symlink(name="a link", path=Path("../up"))],
-            [Directory(name=".restore_working_dir")],
+            frozenset(),
+            frozenset({Symlink(name="a link", path=Path("../up"))}),
+            frozenset({Directory(name=".restore_working_dir")}),
         ),
     ],
 )
-def test_clear_site_home(
-    directories: Sequence[Directory],
-    files: Sequence[FileType],
-    untouched: Sequence[Directory],
-    tmp_path: Path,
-) -> None:
+def test_clear_site_home(directories: Dirs, files: Files, untouched: Dirs, tmp_path: Path) -> None:
     # Assemble
-    directories = _merge_directories(directories, untouched)
-    _to_disk(RootDir(path=tmp_path, directories=directories, files=files))
+    _to_disk(
+        RootDir(path=tmp_path, directories=_merge_directories(directories, untouched), files=files)
+    )
     # Act
     _clear_site_home(tmp_path)
     # Assert

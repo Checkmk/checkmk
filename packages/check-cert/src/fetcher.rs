@@ -55,11 +55,17 @@ fn to_addr(server: &str, port: u16) -> Result<SocketAddr> {
     addr_iter.next().ok_or(anyhow!("no address"))
 }
 
+fn strip_url_protocol(url: &str) -> &str {
+    url.find("://").map(|pos| &url[pos + 3..]).unwrap_or(url)
+}
+
 pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<Vec<u8>>> {
     let addr = config
         .proxy
         .clone()
-        .map_or(to_addr(server, port), |p| p.to_addr())?;
+        .map_or(to_addr(server, port), |proxy| {
+            to_addr(strip_url_protocol(&proxy.url), proxy.port)
+        })?;
     let mut stream = match config.timeout {
         None => TcpStream::connect(addr)?,
         Some(dur) => TcpStream::connect_timeout(&addr, dur)?,
@@ -122,4 +128,38 @@ fn build_proxy_stream<T: Read + Write>(
         return Err(anyhow!("Proxy CONNECT failed: {response}"));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod test_strip_url_protocol {
+    use crate::fetcher::strip_url_protocol;
+
+    #[test]
+    fn test_strip_http() {
+        assert_eq!(
+            strip_url_protocol("http://example.com/url"),
+            "example.com/url"
+        );
+    }
+
+    #[test]
+    fn test_strip_https() {
+        assert_eq!(
+            strip_url_protocol("https://example.com/url"),
+            "example.com/url"
+        );
+    }
+
+    #[test]
+    fn test_strip_ftp() {
+        assert_eq!(
+            strip_url_protocol("ftp://example.com/url"),
+            "example.com/url"
+        );
+    }
+
+    #[test]
+    fn test_no_strip() {
+        assert_eq!(strip_url_protocol("example.com/url"), "example.com/url");
+    }
 }

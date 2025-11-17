@@ -9,6 +9,7 @@ import { computed, provide } from 'vue'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
+import SharedDashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/SharedDashboardMenuHeader.vue'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
@@ -31,6 +32,9 @@ const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.cont
 
 <template>
   <CmkErrorBoundary>
+    <div>
+      <SharedDashboardMenuHeader :dashboard-title="dashboard.title" />
+    </div>
     <DashboardComponent
       v-model:dashboard="sharedDashboard"
       :dashboard-name="dashboard.name"

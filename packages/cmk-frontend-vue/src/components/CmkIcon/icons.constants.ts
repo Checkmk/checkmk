@@ -46,6 +46,7 @@ export const simpleIcons = [
   'main-setup-active',
   'main-monitoring-active',
   'main-customize-active',
+  'menu',
   'info',
   'external',
   'plus',

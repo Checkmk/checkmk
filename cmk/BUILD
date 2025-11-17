@@ -211,7 +211,6 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:translations",
     "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
-    "//packages/cmk-ccc:archive",
     "//packages/cmk-ccc:version",
     "//packages/cmk-check-engine:fetchers",
     "//packages/cmk-check-engine:helper-interface",

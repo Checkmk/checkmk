@@ -25,6 +25,7 @@ import os
 import re
 import shutil
 import subprocess
+import tarfile
 import time
 import traceback
 from collections import Counter
@@ -61,7 +62,6 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
 from cmk import mkp_tool, trace
 from cmk.ccc import store, version
-from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
@@ -2985,10 +2985,8 @@ def _has_local_file_changes(sync_archive: bytes, to_delete: list[str]) -> bool:
     if any(p.startswith(f"{paths.LOCAL_SEGMENT}/") for p in to_delete):
         return True  # no need to check the archive.
 
-    with CheckmkTarArchive.from_bytes(
-        sync_archive, compression="*", allow_symlinks=True
-    ) as safe_tar:
-        return any(m.name.startswith(f"{paths.LOCAL_SEGMENT}/") for m in safe_tar)
+    with tarfile.open(fileobj=io.BytesIO(sync_archive), mode="r|") as archive:
+        return any(m.name.startswith(f"{paths.LOCAL_SEGMENT}/") for m in archive.getmembers())
 
 
 def _execute_post_config_sync_actions(

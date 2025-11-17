@@ -2201,38 +2201,39 @@ class ABCEditRuleMode(WatoMode):
                 debug=config.debug,
                 use_git=config.wato_use_git,
             )
+            flash(self._success_message())
+            return redirect(self._back_url())
 
-        elif is_locked:
+        if is_locked:
             flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
             return redirect(self._back_url())
 
-        else:
-            # Move rule to new folder during editing
-            self._remove_from_orig_folder(
-                pprint_value=config.wato_pprint_config,
-                debug=config.debug,
-                use_git=config.wato_use_git,
-            )
+        # Move rule to new folder during editing
+        self._remove_from_orig_folder(
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
+            use_git=config.wato_use_git,
+        )
 
-            # Set new folder
-            self._rule.folder = new_rule_folder
+        # Set new folder
+        self._rule.folder = new_rule_folder
 
-            self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
-            self._ruleset = self._rulesets.get(self._name)
-            self._ruleset.append_rule(new_rule_folder, self._rule)
-            self._rulesets.save_folder(pprint_value=config.wato_pprint_config, debug=config.debug)
+        self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
+        self._ruleset = self._rulesets.get(self._name)
+        self._ruleset.append_rule(new_rule_folder, self._rule)
+        self._rulesets.save_folder(pprint_value=config.wato_pprint_config, debug=config.debug)
 
-            affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
-            _changes.add_change(
-                action_name="edit-rule",
-                text=_('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
-                % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
-                user_id=user.id,
-                sites=affected_sites,
-                diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
-                object_ref=self._rule.object_ref(),
-                use_git=config.wato_use_git,
-            )
+        affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
+        _changes.add_change(
+            action_name="edit-rule",
+            text=_('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
+            % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
+            user_id=user.id,
+            sites=affected_sites,
+            diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
+            object_ref=self._rule.object_ref(),
+            use_git=config.wato_use_git,
+        )
 
         flash(self._success_message())
         return redirect(self._back_url())

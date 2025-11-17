@@ -25,7 +25,7 @@ if
     [ $? -eq 4 ]
 then
     # Provide better commandline with enhanced 'getopt' from util-linux
-    GETOPT_OPTIONS=(--options 'buFl:afDj:h' --long 'build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" --)
+    GETOPT_OPTIONS=(--options 'buFl:afDj:h' --long 'build,unit-tests,check-format,lint:,all,remote-host,format,documentation,jobs:,help' --name "$(basename "$0")" --)
 else
     # Compatibility with basic 'getopt' as found on non-Linux systems.
     GETOPT_OPTIONS=('buFl:afDj:h')
@@ -46,6 +46,7 @@ usage() {
     echo "  -F, --check-format          check for correct formatting"
     echo "  -l L,..., --lint=L,...      run linters, 'all' means '${ALL_LINTERS}'"
     echo "  -a, --all                   shortcut for -b -u -F -l all"
+    echo "  -R, --remote-host           run tests on a remote host"
     echo "  -f, --format                format sources"
     echo "  -D, --documentation         generate documentation"
     echo "  -j N, --jobs=N              allow N jobs at once, default is ${JOBS}"
@@ -61,6 +62,7 @@ parse_options() {
     RUN_CLIPPY=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
+    RUN_COMPONENT_TESTS_REMOTE_HOST=no
 
     if ! OPTIONS=$(getopt "${GETOPT_OPTIONS[@]}" "$@"); then
         usage >&2
@@ -102,6 +104,10 @@ parse_options() {
                 RUN_COMPONENT_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_CLIPPY=yes
+                shift
+                ;;
+            '-R' | '--remote-host')
+                RUN_COMPONENT_TESTS_REMOTE_HOST=yes
                 shift
                 ;;
             '-f' | '--format')
@@ -218,6 +224,21 @@ run_test_component() {
     esac
 }
 
+run_test_component_remote_host() {
+    TEST_NAME="test_ora_sql_test"
+
+    # copy Oracle DB plug-in test-binary to the remote-host and run the tests
+    scp "${TEST_BINARY_LOCAL_PATH}" "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}"
+    # shellcheck disable=SC2087
+    ssh "${HOST_ADDRESS}" <<EOF
+        set -e
+        cd "${TEST_BINARY_REMOTE_PATH}"
+        export ORACLE_HOME="${ORACLE_HOME}"
+        export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}"
+        ./"${TEST_NAME}"
+EOF
+}
+
 run_test_unit() {
     setup_tests
 
@@ -265,6 +286,7 @@ main() {
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_UNIT_TESTS} = yes && run_test_unit
     test ${RUN_COMPONENT_TESTS} = yes && run_test_component
+    test ${RUN_COMPONENT_TESTS_REMOTE_HOST} = yes && run_test_component_remote_host
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && run_clippy
     test ${RUN_FORMAT} = yes && run_format

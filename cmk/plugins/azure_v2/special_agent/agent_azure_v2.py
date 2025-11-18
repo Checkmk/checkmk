@@ -2524,7 +2524,6 @@ async def main_subscription(
             write_resource_groups_sections(resource_groups)
             write_subscription_info(subscription)
             write_subscription_section(subscription)
-            write_tenant_info()
 
             tasks = {
                 process_usage_details(mgmt_client, subscription, resource_groups, args)
@@ -2625,6 +2624,7 @@ async def collect_info(
     args: argparse.Namespace, selector: Selector, subscriptions: set[AzureSubscription]
 ) -> None:
     monitored_services = set(args.services)
+    write_tenant_info()
     await asyncio.gather(
         main_graph_client(args, monitored_services),
         *{

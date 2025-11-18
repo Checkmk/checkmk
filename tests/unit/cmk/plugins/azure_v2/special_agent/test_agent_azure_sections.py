@@ -13,6 +13,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     _Section,
     AzureLabelsSection,
     AzureTenantLabelsSection,
+    write_tenant_info,
 )
 
 
@@ -174,3 +175,17 @@ def test_azure_tenant_labels_section(
     output = capsys.readouterr().out
     lines = output.strip().split("\n")
     assert lines == section_result
+
+
+def test_write_tenant_info(capsys: pytest.CaptureFixture[str]) -> None:
+    write_tenant_info()
+
+    output = capsys.readouterr().out
+    lines = output.strip().split("\n")
+    assert lines == [
+        "<<<<>>>>",
+        "<<<azure_v2_labels:sep(0)>>>",
+        '{"cloud": "azure", "entity": "tenant"}',
+        "{}",
+        "<<<<>>>>",
+    ]

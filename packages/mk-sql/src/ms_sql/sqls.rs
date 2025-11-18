@@ -299,9 +299,13 @@ FROM master.dbo.sysdatabases";
     pub const CLUSTER_ACTIVE_NODES: &str =
         "SELECT CAST(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') AS NVARCHAR(MAX)) AS active_node";
 
-    pub const CONNECTIONS: &str = r"SELECT name AS DbName,
-      CAST((SELECT COUNT(dbid) AS Num_Of_Connections FROM sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ) AS bigint) AS NumberOfConnections 
-FROM sys.databases";
+    pub const CONNECTIONS: &str = r"SELECT d.name AS DbName,
+            CAST(COUNT(p.spid) AS bigint) AS NumberOfConnections
+FROM sys.databases AS d
+LEFT JOIN sys.sysprocesses AS p
+       ON p.dbid = d.database_id
+GROUP BY d.name
+ORDER BY d.name";
 
     // TODO: check use msdb.dbo instead of dbo
     pub const JOBS: &str = r"

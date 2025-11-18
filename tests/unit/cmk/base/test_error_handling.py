@@ -45,6 +45,7 @@ def test_no_error_keeps_status_from_callee() -> None:
     assert handler.result is None
 
 
+@pytest.mark.usefixtures("disable_debug")
 def test_MKTimeout_exception_returns_2() -> None:
     with _handler() as handler:
         raise MKTimeout("oops!")
@@ -54,6 +55,7 @@ def test_MKTimeout_exception_returns_2() -> None:
     assert handler.result.as_text() == "Timed out"
 
 
+@pytest.mark.usefixtures("disable_debug")
 def test_MKAgentError_exception_returns_2() -> None:
     with _handler() as handler:
         raise FetcherError("oops!")
@@ -63,6 +65,7 @@ def test_MKAgentError_exception_returns_2() -> None:
     assert handler.result.as_text() == "oops!"
 
 
+@pytest.mark.usefixtures("disable_debug")
 def test_MKGeneralException_returns_3() -> None:
     with _handler() as handler:
         raise MKGeneralException("kaputt!")

@@ -82,6 +82,9 @@ def _handle_failure(
     snmp_backend: SNMPBackendEnum,
     keepalive: bool,
 ) -> tuple[ServiceState, str]:
+    if cmk.ccc.debug.enabled():
+        raise exc
+
     if isinstance(exc, MKTimeout):
         if keepalive:
             raise exc
@@ -93,8 +96,6 @@ def _handle_failure(
     if isinstance(exc, MKGeneralException):
         return exit_spec.get("exception", 3), str(exc)
 
-    if cmk.ccc.debug.enabled():
-        raise exc
     return (
         exit_spec.get("exception", 3),
         create_check_crash_dump(

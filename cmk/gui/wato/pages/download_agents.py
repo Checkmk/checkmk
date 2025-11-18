@@ -5,7 +5,6 @@
 """Simple download page for the built-in agents and plugins"""
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -109,10 +108,10 @@ class ABCModeDownloadAgents(WatoMode):
     @abc.abstractmethod
     def _walk_base_dirs(self) -> list[str]: ...
 
-    def _exclude_file_glob_patterns(self):
+    def _exclude_file_glob_patterns(self) -> list[str]:
         return []
 
-    def _exclude_paths(self):
+    def _exclude_paths(self) -> set[str]:
         return {
             "/bakery",
             "/special",
@@ -159,7 +158,7 @@ class ABCModeDownloadAgents(WatoMode):
 
             yield (title, file_paths)
 
-    def _exclude_by_pattern(self, rel_file_path):
+    def _exclude_by_pattern(self, rel_file_path: str) -> bool:
         for exclude_pattern in self._exclude_file_glob_patterns():
             if fnmatch.fnmatch(rel_file_path, exclude_pattern):
                 return True
@@ -215,7 +214,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             ),
         ]
 
-    def _exclude_file_glob_patterns(self):
+    def _exclude_file_glob_patterns(self) -> list[str]:
         return [
             "*.rpm",
             "*.deb",
@@ -225,7 +224,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
             "*robotmk*",
         ]
 
-    def _exclude_paths(self):
+    def _exclude_paths(self) -> set[str]:
         exclude = super()._exclude_paths()
         exclude.add("/cfg_examples/systemd")
         exclude.add("/sap")
@@ -272,7 +271,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
     def _walk_base_dirs(self) -> list[str]:
         return [str(cmk.utils.paths.agents_dir)]
 
-    def _exclude_file_glob_patterns(self):
+    def _exclude_file_glob_patterns(self) -> list[str]:
         return [
             "*.hpux",
             "*.macosx",
@@ -285,7 +284,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
             "*robotmk/windows*",
         ]
 
-    def _exclude_paths(self):
+    def _exclude_paths(self) -> set[str]:
         exclude = super()._exclude_paths()
         exclude.add("/z_os")
         exclude.add("/sap")

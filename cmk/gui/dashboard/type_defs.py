@@ -57,7 +57,7 @@ class DashletConfig(_DashletConfigMandatory, total=False):
     responsive_grid_layouts: dict[
         ResponsiveGridLayoutID, dict[ResponsiveGridBreakpoint, DashletSizeAndPosition]
     ]
-    background: bool
+    background: NotRequired[bool]
     show_title: bool | Literal["transparent"]
 
 

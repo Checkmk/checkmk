@@ -27,9 +27,6 @@ from .constants import (
     APIKEY_OPTION_NAME,
     OPTIONAL_SECTIONS_CHOICES,
     OPTIONAL_SECTIONS_DEFAULT,
-    SEC_NAME_DEVICE_STATUSES,
-    SEC_NAME_LICENSES_OVERVIEW,
-    SEC_NAME_SENSOR_READINGS,
 )
 from .log import LOGGER
 from .schema import RawOrganisation
@@ -96,7 +93,7 @@ class MerakiOrganisation:
         if self.api_disabled:
             return
 
-        if SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
+        if self.config.licenses_overview_required:
             if licenses_overview := self.client.get_licenses_overview(self.id, self.name):
                 yield Section(
                     name="cisco_meraki_org_licenses_overview",
@@ -121,7 +118,7 @@ class MerakiOrganisation:
                 piggyback=device_piggyback,
             )
 
-        if SEC_NAME_DEVICE_STATUSES in self.config.section_names:
+        if self.config.device_statuses_required:
             for device_status in self.client.get_devices_statuses(self.id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
@@ -134,7 +131,7 @@ class MerakiOrganisation:
                         piggyback=piggyback or None,
                     )
 
-        if SEC_NAME_SENSOR_READINGS in self.config.section_names:
+        if self.config.sensor_readings_required:
             for sensor_reading in self.client.get_sensor_readings(self.id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.

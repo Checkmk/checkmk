@@ -14,7 +14,6 @@ from cmk.plugins.cisco_meraki.lib import agent
 from cmk.plugins.cisco_meraki.lib.agent import MerakiRunContext
 from cmk.plugins.cisco_meraki.lib.clients import MerakiClient
 from cmk.plugins.cisco_meraki.lib.config import MerakiConfig
-from cmk.plugins.cisco_meraki.lib.constants import SECTION_NAME_MAP
 
 from .fakes import FakeMerakiSDK
 
@@ -36,7 +35,13 @@ class TestMerakiAgentOutput:
 
         # NOTE: testing on a set here because there could be duplicate matches with multiple orgs.
         value = set(re.findall(r"<<<cisco_meraki_org_(\w+):sep\(0\)>>>", capsys.readouterr().out))
-        expected = set(SECTION_NAME_MAP.values())
+        expected = {
+            "device_info",
+            "device_status",
+            "licenses_overview",
+            "organisations",
+            "sensor_readings",
+        }
 
         assert value == expected
 

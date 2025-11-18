@@ -11,19 +11,9 @@ APIKEY_OPTION_NAME: Final = "apikey"
 API_NAME_DEVICE_SERIAL: Final = "serial"
 API_NAME_DEVICE_NAME: Final = "name"
 
-SEC_NAME_ORGANISATIONS: Final = "_organisations"  # internal use runs always
 SEC_NAME_LICENSES_OVERVIEW: Final = "licenses-overview"
-SEC_NAME_DEVICE_INFO: Final = "_device_info"  # Not configurable, needed for piggyback
 SEC_NAME_DEVICE_STATUSES: Final = "device-statuses"
 SEC_NAME_SENSOR_READINGS: Final = "sensor-readings"
-
-SECTION_NAME_MAP = {
-    SEC_NAME_LICENSES_OVERVIEW: "licenses_overview",
-    SEC_NAME_DEVICE_INFO: "device_info",
-    SEC_NAME_DEVICE_STATUSES: "device_status",
-    SEC_NAME_ORGANISATIONS: "organisations",
-    SEC_NAME_SENSOR_READINGS: "sensor_readings",
-}
 
 OPTIONAL_SECTIONS_CHOICES: Final = (
     SEC_NAME_DEVICE_STATUSES,

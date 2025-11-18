@@ -47,14 +47,20 @@ class MerakiConfig:
         )
 
     @property
+    def device_statuses_required(self) -> bool:
+        return constants.SEC_NAME_DEVICE_STATUSES in self.section_names
+
+    @property
+    def licenses_overview_required(self) -> bool:
+        return constants.SEC_NAME_LICENSES_OVERVIEW in self.section_names
+
+    @property
+    def sensor_readings_required(self) -> bool:
+        return constants.SEC_NAME_SENSOR_READINGS in self.section_names
+
+    @property
     def devices_required(self) -> bool:
-        return any(
-            s in self.section_names
-            for s in [
-                constants.SEC_NAME_DEVICE_STATUSES,
-                constants.SEC_NAME_SENSOR_READINGS,
-            ]
-        )
+        return self.device_statuses_required or self.sensor_readings_required
 
 
 def get_meraki_dashboard(api_key: str, region: str, debug: bool, proxy: str | None) -> DashboardAPI:

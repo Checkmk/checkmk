@@ -88,6 +88,7 @@ from cmk.gui.type_defs import (
     Icon,
     PermissionName,
     Visual,
+    VisualPublic,
 )
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
@@ -140,14 +141,14 @@ class BaseConfig:
 
 class OverridableModel(BaseModel):
     owner: AnnotatedUserId
-    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]] | None
+    public: VisualPublic | None
     hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 
 @dataclass(kw_only=True)
 class OverridableConfig(BaseConfig):
     owner: UserId
-    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]] | None
+    public: VisualPublic | None
     hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 

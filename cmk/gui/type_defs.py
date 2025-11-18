@@ -272,6 +272,7 @@ FilterHTTPVariables = Mapping[str, str]
 VisualName = str
 VisualTypeName = Literal["dashboards", "views", "reports"]
 VisualContext = Mapping[FilterName, FilterHTTPVariables]
+VisualPublic = bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]
 InfoName = str
 SingleInfos = Sequence[InfoName]
 
@@ -297,7 +298,7 @@ class Visual(TypedDict):
     icon: Icon | None
     hidden: bool
     hidebutton: bool
-    public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]
+    public: VisualPublic
     packaged: bool
     link_from: LinkFromSpec
     main_menu_search_terms: Sequence[str]

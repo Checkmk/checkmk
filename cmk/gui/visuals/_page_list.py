@@ -25,7 +25,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pagetypes import customize_page_menu
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import HTTPVariables, Icon, VisualName, VisualTypeName
+from cmk.gui.type_defs import HTTPVariables, Icon, VisualName, VisualPublic, VisualTypeName
 from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.roles import UserPermissions
@@ -271,13 +271,31 @@ def page_list(
                 else:
                     ownertxt = owner
                 table.cell(_("Owner"), ownertxt)
-                table.cell(_("Public"), published_to_user(visual) and _("yes") or _("no"))
-                table.cell(_("Hidden"), visual["hidden"] and _("yes") or _("no"))
+
+                if what == "dashboards":
+                    table.cell(_("Menu placement"), _("Hidden") if visual["hidden"] else _("Shown"))
+                    table.cell(_("Internal access"), _internal_access_state_text(visual["public"]))
+                else:
+                    table.cell(_("Public"), published_to_user(visual) and _("yes") or _("no"))
+                    table.cell(_("Hidden"), visual["hidden"] and _("yes") or _("no"))
 
                 if render_custom_columns:
                     render_custom_columns(table, visual_name, visual)
 
     html.footer()
+
+
+def _internal_access_state_text(visual_public: VisualPublic) -> str:
+    result: str = _("Only me")
+    if isinstance(visual_public, tuple):
+        if visual_public[0] == "contact_groups":
+            result = _("Contact groups")
+        elif visual_public[0] == "sites":
+            result = _("Site users")
+    elif visual_public is True:
+        result = _("All users")
+
+    return result
 
 
 def _render_extension_package_icons(

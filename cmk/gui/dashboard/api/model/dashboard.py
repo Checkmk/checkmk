@@ -7,7 +7,7 @@
 
 import datetime as dt
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator, Discriminator
@@ -32,6 +32,7 @@ from cmk.gui.type_defs import (
     Icon,
     SingleInfos,
     VisualContext,
+    VisualPublic,
 )
 
 from .token import DashboardTokenModel, get_dashboard_auth_token
@@ -149,9 +150,7 @@ class DashboardVisibility:
     share: DashboardShare = api_field(description="Make this dashboard available to other users.")
 
     @staticmethod
-    def share_from_internal(
-        public: bool | tuple[Literal["contact_groups", "sites"], Sequence[str]],
-    ) -> DashboardShare:
+    def share_from_internal(public: VisualPublic) -> DashboardShare:
         if isinstance(public, tuple):
             share_type, values = public
             if share_type == "contact_groups":
@@ -168,7 +167,7 @@ class DashboardVisibility:
 
         return DashboardShareWithAllUsers(share_type="with_all_users") if public else "no"
 
-    def share_to_internal(self) -> bool | tuple[Literal["contact_groups", "sites"], Sequence[str]]:
+    def share_to_internal(self) -> VisualPublic:
         if isinstance(self.share, DashboardShareWithAllUsers):
             return True
         if isinstance(self.share, DashboardShareWithContactGroups):

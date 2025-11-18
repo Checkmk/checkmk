@@ -28,6 +28,8 @@ from cmk.plugins.fileinfo.lib.fileinfo_lib import (
     FileinfoItem,
     MetricInfo,
     parse_fileinfo,
+    PatternConfig,
+    Patterns,
 )
 
 
@@ -139,19 +141,34 @@ def test_parse_fileinfo(info: StringTable, expected_result: Fileinfo) -> None:
     "group_patterns, filename, reftime, expected_result",
     [
         (
-            [("name", "~filename*")],
+            [
+                PatternConfig(
+                    group_name="name",
+                    pattern_configs=Patterns(include_pattern="~filename*", exclude_pattern=""),
+                )
+            ],
             "filename_aa",
             123456,
-            {"name": ["~filename*"]},
+            {"name": [("~filename*", "")]},
         ),
         (
-            [("name", ("", "filename*"))],
+            [
+                PatternConfig(
+                    group_name="name",
+                    pattern_configs=Patterns(include_pattern="", exclude_pattern="filename*"),
+                )
+            ],
             "filename_aa",
             123456,
             {},
         ),
         (
-            [("name", ("~(file)", ""))],
+            [
+                PatternConfig(
+                    group_name="name",
+                    pattern_configs=Patterns(include_pattern="~(file)", exclude_pattern=""),
+                )
+            ],
             "file1file2file3",
             123456,
             {"name": [("~~file", "")]},
@@ -159,7 +176,7 @@ def test_parse_fileinfo(info: StringTable, expected_result: Fileinfo) -> None:
     ],
 )
 def test_fileinfo_groups_get_group_name(
-    group_patterns: list[tuple[str, str | tuple[str, str]]],
+    group_patterns: list[PatternConfig],
     filename: str,
     reftime: int,
     expected_result: Mapping[str, Sequence[str | tuple[str, str]]],
@@ -172,7 +189,12 @@ def test_fileinfo_groups_get_group_name(
     "group_patterns, filename, reftime, expected_result",
     [
         (
-            [("name %s", "~filename*")],
+            [
+                PatternConfig(
+                    group_name="name %s",
+                    pattern_configs=Patterns(include_pattern="~filename*", exclude_pattern=""),
+                )
+            ],
             "filename_aa",
             123456,
             {"name": ["~filename*"]},
@@ -180,7 +202,7 @@ def test_fileinfo_groups_get_group_name(
     ],
 )
 def test_fileinfo_groups_get_group_name_error(
-    group_patterns: list[tuple[str, str | tuple[str, str]]],
+    group_patterns: list[PatternConfig],
     filename: str,
     reftime: int,
     expected_result: Mapping[str, Sequence[str]],
@@ -188,7 +210,7 @@ def test_fileinfo_groups_get_group_name_error(
     with pytest.raises(RuntimeError) as e:
         fileinfo_groups_get_group_name(group_patterns, filename, reftime)
 
-    message = f"Invalid entry in inventory_fileinfo_groups: group name '{group_patterns[0][0]}' contains 1 times '%s', but regular expression '{group_patterns[0][1]}' contains only 0 subexpression(s)."
+    message = f"Invalid entry in inventory_fileinfo_groups: group name '{group_patterns[0]['group_name']}' contains 1 times '%s', but regular expression '{group_patterns[0]['pattern_configs']['include_pattern']}' contains only 0 subexpression(s)."
 
     assert e.value.args[0] == message
 

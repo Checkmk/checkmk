@@ -193,7 +193,7 @@ rule_spec_fileinfo_groups = DiscoveryParameters(
     name="fileinfo_groups",
     topic=Topic.STORAGE,
     parameter_form=_valuespec_fileinfo_groups,
-    title=Title("Size, age and count of file groups"),
+    title=Title("File grouping patterns"),
 )
 
 

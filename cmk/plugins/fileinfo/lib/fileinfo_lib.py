@@ -13,10 +13,10 @@
 import fnmatch
 import re
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import Enum
 from re import Match
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -32,7 +32,18 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import eval_regex
 from cmk.plugins.lib.interfaces import saveint
 
-DiscoveryParams = Iterable[Mapping[str, list[tuple[str, str | tuple[str, str]]]]]
+
+class Patterns(TypedDict):
+    include_pattern: str
+    exclude_pattern: str
+
+
+class PatternConfig(TypedDict):
+    group_name: str
+    pattern_configs: Patterns
+
+
+DiscoveryParams = Sequence[Mapping[Literal["group_patterns"], Sequence[PatternConfig]]]
 
 
 class FileinfoItem(NamedTuple):
@@ -199,17 +210,16 @@ def fileinfo_process_date(pattern: str, reftime: int) -> str:
 
 
 def fileinfo_groups_get_group_name(
-    group_patterns: list[tuple[str, str | tuple[str, str]]],
+    group_patterns: Sequence[PatternConfig],
     filename: str,
     reftime: int,
-) -> dict[str, list[str | tuple[str, str]]]:
+) -> dict[str, list[tuple[str, str]]]:
     found_these_groups: dict[str, set] = {}
 
-    for group_name, pattern in group_patterns:
-        if isinstance(pattern, str):  # support old format
-            inclusion, exclusion = pattern, ""
-        else:
-            inclusion, exclusion = pattern
+    for group_pattern in group_patterns:
+        group_name = group_pattern["group_name"]
+        inclusion = group_pattern["pattern_configs"]["include_pattern"]
+        exclusion = group_pattern["pattern_configs"]["exclude_pattern"]
 
         if _match(filename, exclusion):
             continue
@@ -238,18 +248,17 @@ def fileinfo_groups_get_group_name(
                     % (group_name, num_perc_s, inclusion, len(matches))
                 )
 
-        this_pattern: str | tuple[str, str] = ""
         if matches:
             for nr, group in enumerate(matches):
                 inclusion = eval_regex.instantiate_regex_pattern_once(inclusion, group)
                 group_name = group_name.replace("%%%d" % (nr + 1), group)
 
             this_group_name = group_name % tuple(matches[:num_perc_s])
-            this_pattern = ("~%s" % inclusion, exclusion)
+            this_pattern = (f"~{inclusion}", exclusion)
 
         else:
             this_group_name = group_name
-            this_pattern = pattern
+            this_pattern = (inclusion, exclusion)
 
         found_these_groups.setdefault(this_group_name, set()).add(this_pattern)
 
@@ -268,7 +277,7 @@ def discovery_fileinfo_common(
         return
 
     for item in section.files.values():
-        found_groups = {}
+        found_groups: dict[str, list[tuple[str, str]]] = {}
         for param in params:
             group_patterns = param.get("group_patterns", [])
             found_groups.update(fileinfo_groups_get_group_name(group_patterns, item.name, reftime))
@@ -278,7 +287,18 @@ def discovery_fileinfo_common(
 
         elif found_groups and check_type == CheckType.GROUP:
             for group_name, patterns in found_groups.items():
-                yield Service(item=group_name, parameters={"group_patterns": patterns})
+                yield Service(
+                    item=group_name,
+                    parameters={
+                        "group_patterns": [
+                            {
+                                "group_pattern_include": pattern[0],
+                                "group_pattern_exclude": pattern[1],
+                            }
+                            for pattern in patterns
+                        ]
+                    },
+                )
 
 
 def discovery_fileinfo(
@@ -533,8 +553,7 @@ def check_fileinfo_groups_data(
         return
 
     group_patterns = {
-        (p, "") if isinstance(p, str) else (p["group_pattern_include"], p["group_pattern_exclude"])
-        for p in raw_group_patterns
+        (p["group_pattern_include"], p["group_pattern_exclude"]) for p in raw_group_patterns
     }
 
     include_patterns = [i for i, _e in group_patterns]

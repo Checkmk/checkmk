@@ -304,38 +304,6 @@ def test_check_fileinfo_group_no_matching_files(
                 ["/var/log/syslog", "384", "1465079135"],
                 ["/var/log/syslog1", "384", "1465079135"],
             ],
-            {
-                # legacy format
-                "group_patterns": ["/var/log/sys*"]
-            },
-            [
-                Result(state=State.OK, notice="Include patterns: /var/log/sys*"),
-                Result(
-                    state=State.OK, notice="[/var/log/syslog] Age: 3 years 41 days, Size: 384 B"
-                ),
-                Result(
-                    state=State.OK, notice="[/var/log/syslog1] Age: 3 years 41 days, Size: 384 B"
-                ),
-                Result(state=State.OK, summary="Count: 2"),
-                Metric("count", 2),
-                Result(state=State.OK, summary="Size: 768 B"),
-                Metric("size", 768),
-                Result(state=State.OK, summary="Largest size: 384 B"),
-                Metric("size_largest", 384),
-                Result(state=State.OK, summary="Smallest size: 384 B"),
-                Metric("size_smallest", 384),
-                Result(state=State.OK, summary="Oldest age: 3 years 41 days"),
-                Metric("age_oldest", 98209582),
-                Result(state=State.OK, summary="Newest age: 3 years 41 days"),
-                Metric("age_newest", 98209582),
-            ],
-        ),
-        (
-            [
-                ["1563288717"],
-                ["/var/log/syslog", "384", "1465079135"],
-                ["/var/log/syslog1", "384", "1465079135"],
-            ],
             {},
             [
                 Result(state=State.UNKNOWN, summary="No group pattern found."),
@@ -479,8 +447,20 @@ def test_check_fileinfo_group_patterns_get_host_values(
             [
                 {
                     "group_patterns": [
-                        ("log", ("*syslog*", "")),
-                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),  # nosec
+                        {
+                            "group_name": "log",
+                            "pattern_configs": {
+                                "include_pattern": "*syslog*",
+                                "exclude_pattern": "",
+                            },
+                        },
+                        {
+                            "group_name": "today",
+                            "pattern_configs": {
+                                "include_pattern": "/tmp/$DATE:%Y%m%d$.txt",  # nosec
+                                "exclude_pattern": "",
+                            },
+                        },
                     ]
                 }
             ],
@@ -832,17 +812,50 @@ def test_fileinfo_check(
             [
                 {
                     "group_patterns": [
-                        ("log", ("*syslog*", "")),
-                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),  # nosec
+                        {
+                            "group_name": "log",
+                            "pattern_configs": {
+                                "include_pattern": "*syslog*",
+                                "exclude_pattern": "",
+                            },
+                        },
+                        {
+                            "group_name": "today",
+                            "pattern_configs": {
+                                "include_pattern": "/tmp/$DATE:%Y%m%d$.txt",  # nosec
+                                "exclude_pattern": "",
+                            },
+                        },
                     ]
                 }
             ],
             [
-                Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
-                Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
+                Service(
+                    item="log",
+                    parameters={
+                        "group_patterns": [
+                            {"group_pattern_include": "*syslog*", "group_pattern_exclude": ""}
+                        ]
+                    },
+                ),
+                Service(
+                    item="log",
+                    parameters={
+                        "group_patterns": [
+                            {"group_pattern_include": "*syslog*", "group_pattern_exclude": ""}
+                        ]
+                    },
+                ),
                 Service(
                     item="today",
-                    parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},  # nosec
+                    parameters={
+                        "group_patterns": [
+                            {
+                                "group_pattern_include": "/tmp/20190716.txt",  # nosec
+                                "group_pattern_exclude": "",
+                            }
+                        ]
+                    },
                 ),
             ],
         ),
@@ -851,21 +864,54 @@ def test_fileinfo_check(
             [
                 {
                     "group_patterns": [
-                        ("log", ("*syslog*", "")),
+                        {
+                            "group_name": "log",
+                            "pattern_configs": {
+                                "include_pattern": "*syslog*",
+                                "exclude_pattern": "",
+                            },
+                        },
                     ]
                 },
                 {
                     "group_patterns": [
-                        ("today", ("/tmp/$DATE:%Y%m%d$.txt", "")),  # nosec
+                        {
+                            "group_name": "today",
+                            "pattern_configs": {
+                                "include_pattern": "/tmp/$DATE:%Y%m%d$.txt",  # nosec
+                                "exclude_pattern": "",
+                            },
+                        },
                     ]
                 },
             ],
             [
-                Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
-                Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
+                Service(
+                    item="log",
+                    parameters={
+                        "group_patterns": [
+                            {"group_pattern_include": "*syslog*", "group_pattern_exclude": ""}
+                        ]
+                    },
+                ),
+                Service(
+                    item="log",
+                    parameters={
+                        "group_patterns": [
+                            {"group_pattern_include": "*syslog*", "group_pattern_exclude": ""}
+                        ]
+                    },
+                ),
                 Service(
                     item="today",
-                    parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},  # nosec
+                    parameters={
+                        "group_patterns": [
+                            {
+                                "group_pattern_include": "/tmp/20190716.txt",  # nosec
+                                "group_pattern_exclude": "",
+                            }
+                        ]
+                    },
                 ),
             ],
         ),

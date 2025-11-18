@@ -15,7 +15,7 @@ import cmk.ccc.resulttype as result
 from cmk.base import config
 from cmk.base.modes import check_mk
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.fetchers import Fetcher, Mode, PiggybackFetcher, PlainFetcherTrigger
+from cmk.fetchers import AdHocSecrets, Fetcher, Mode, PiggybackFetcher, PlainFetcherTrigger
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
@@ -26,7 +26,7 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
         super().__init__()
         self._payload = payload
 
-    def _trigger(self, fetcher: Fetcher, mode: Mode) -> result.Result:
+    def _trigger(self, fetcher: Fetcher, mode: Mode, secret: AdHocSecrets | None) -> result.Result:
         if isinstance(fetcher, PiggybackFetcher):
             return result.OK(b"")
         return result.OK(self._payload)

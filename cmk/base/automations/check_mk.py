@@ -508,6 +508,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ServiceDiscoveryPreviewResult:
+        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
 
         if plugins is None:
@@ -540,7 +541,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             run_settings.agent_name,
             run_settings.params,
             ad_hoc_secrets.path,
-            run_settings.passwords,
+            ad_hoc_secrets.secrets,
             config_processing.GlobalProxiesWithLookup(
                 global_proxies={
                     name: config_processing.BackendProxy.model_validate(raw["proxy_config"])
@@ -551,31 +552,31 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
         )
 
         fetcher = SpecialAgentFetcher(
-            PlainFetcherTrigger(),  # no relay support yet
+            config.make_fetcher_trigger(edition, run_settings.host_config.relay_id),
+            ad_hoc_secrets,
             agent_name=run_settings.agent_name,
             cmds=cmds,
             is_cmc=loaded_config.monitoring_core == "cmc",
         )
-        with ad_hoc_secrets_file(ad_hoc_secrets):
-            preview = _get_discovery_preview(
-                run_settings.host_config.host_name,
-                {
-                    run_settings.host_config.host_name: run_settings.host_config.host_primary_family
-                }.__getitem__,
-                {
-                    run_settings.host_config.host_name: run_settings.host_config.ip_stack_config
-                }.__getitem__,
-                OnError.RAISE,
-                fetcher,
-                file_cache_options,
-                loaded_config,
-                final_service_name_config,
-                service_name_config,
-                config_cache,
-                plugins,
-                _disabled_ip_lookup,
-                run_settings.host_config.ip_address,
-            )
+        preview = _get_discovery_preview(
+            run_settings.host_config.host_name,
+            {
+                run_settings.host_config.host_name: run_settings.host_config.host_primary_family
+            }.__getitem__,
+            {
+                run_settings.host_config.host_name: run_settings.host_config.ip_stack_config
+            }.__getitem__,
+            OnError.RAISE,
+            fetcher,
+            file_cache_options,
+            loaded_config,
+            final_service_name_config,
+            service_name_config,
+            config_cache,
+            plugins,
+            _disabled_ip_lookup,
+            run_settings.host_config.ip_address,
+        )
 
         return preview
 
@@ -3275,6 +3276,7 @@ class AutomationDiagCmkAgent(Automation):
                 tls_config=tls_config,
             ),
             mode=Mode.CHECKING,
+            secrets=None,
         )
 
         if raw_data.is_ok():
@@ -3613,6 +3615,7 @@ class AutomationDiagHost(Automation):
                 ),
                 fetcher,
                 Mode.CHECKING,
+                AdHocSecrets(pending_passwords_file, passwords) if passwords else None,
             )
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
@@ -4073,6 +4076,13 @@ class AutomationGetAgentOutput(Automation):
                 if hostname in hosts_config.clusters:
                     return GetAgentOutputResult(success, output, AgentRawData(info))
 
+                secrets_file_option = (
+                    cmk.utils.password_store.active_secrets_path_site()
+                    if relay_id is None
+                    else cmk.utils.password_store.active_secrets_path_relay()
+                )
+                secrets = load_secrets_file(cmk.utils.password_store.active_secrets_path_site())
+
                 for source in sources.make_sources(
                     plugins,
                     hostname,
@@ -4131,14 +4141,8 @@ class AutomationGetAgentOutput(Automation):
                         hostname,
                         ip_family,
                         ipaddress,
-                        secrets_file_option=(
-                            cmk.utils.password_store.active_secrets_path_site()
-                            if relay_id is None
-                            else cmk.utils.password_store.active_secrets_path_relay()
-                        ),
-                        secrets=load_secrets_file(
-                            cmk.utils.password_store.active_secrets_path_site()
-                        ),
+                        secrets_file_option=secrets_file_option,
+                        secrets=secrets,
                         ip_address_of=ip_address_of_with_fallback,
                         executable_finder=ExecutableFinder(
                             # NOTE: we can't ignore these, they're an API promise.
@@ -4166,6 +4170,9 @@ class AutomationGetAgentOutput(Automation):
                         ),
                         source.fetcher(),
                         Mode.CHECKING,
+                        secrets=None
+                        if relay_id is None
+                        else AdHocSecrets(secrets_file_option, secrets),
                     )
                     host_sections = parse_raw_data(
                         make_parser(

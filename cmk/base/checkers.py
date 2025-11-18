@@ -89,6 +89,7 @@ from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
 from cmk.fetchers import (
+    AdHocSecrets,
     Fetcher,
     FetcherTrigger,
     Mode,
@@ -148,6 +149,7 @@ def _fetch_all(
     simulation: bool,
     file_cache_options: FileCacheOptions,
     mode: Mode,
+    secrets: AdHocSecrets | None = None,
 ) -> Sequence[
     tuple[
         SourceInfo,
@@ -162,7 +164,8 @@ def _fetch_all(
             source.source_info(),
             source.file_cache(simulation=simulation, file_cache_options=file_cache_options),
             source.fetcher(),
-            mode=mode,
+            mode,
+            secrets,
         )
         for source in sources
     ]
@@ -173,8 +176,8 @@ def _do_fetch(
     source_info: SourceInfo,
     file_cache: FileCache,
     fetcher: Fetcher,
-    *,
     mode: Mode,
+    secrets: AdHocSecrets | None,
 ) -> tuple[
     SourceInfo,
     result.Result[AgentRawData | SNMPRawData, Exception],
@@ -182,7 +185,7 @@ def _do_fetch(
 ]:
     console.debug(f"  Source: {source_info}")
     with CPUTracker(console.debug) as tracker:
-        raw_data = trigger.get_raw_data(file_cache, fetcher, mode)
+        raw_data = trigger.get_raw_data(file_cache, fetcher, mode, secrets)
     return source_info, raw_data, tracker.duration
 
 
@@ -299,8 +302,8 @@ class SpecialAgentFetcher:
     def __init__(
         self,
         trigger: FetcherTrigger,
+        secrets: AdHocSecrets | None,
         *,
-        # alphabetically sorted
         agent_name: str,
         cmds: Iterator[SpecialAgentCommandLine],
         is_cmc: bool,
@@ -308,6 +311,7 @@ class SpecialAgentFetcher:
         self.trigger: Final = trigger
         self.agent_name: Final = agent_name
         self.cmds: Final = cmds
+        self.secrets: Final = secrets
         self.is_cmc: Final = is_cmc
 
     def __call__(
@@ -332,7 +336,8 @@ class SpecialAgentFetcher:
                 source_info,
                 NoCache(),
                 ProgramFetcher(cmdline=cmd.cmdline, stdin=cmd.stdin, is_cmc=self.is_cmc),
-                mode=Mode.DISCOVERY,
+                Mode.DISCOVERY,
+                self.secrets,
             )
             for cmd in self.cmds
         ]

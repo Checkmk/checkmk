@@ -5,6 +5,7 @@
 
 import abc
 from collections.abc import Mapping, Sized
+from contextlib import nullcontext
 from functools import partial
 from typing import final, Self, TypeVar
 
@@ -13,6 +14,7 @@ from cmk.ccc.exceptions import MKTimeout
 from cmk.helper_interface import FetcherError
 
 from ._abstract import Fetcher, Mode
+from ._ad_hoc_secrets import ad_hoc_secrets_file, AdHocSecrets
 from .filecache import FileCache
 
 __all__ = [
@@ -26,7 +28,11 @@ _TRawData = TypeVar("_TRawData", bound=Sized)
 class FetcherTrigger(abc.ABC):
     @final
     def get_raw_data(
-        self, file_cache: FileCache[_TRawData], fetcher: Fetcher[_TRawData], mode: Mode
+        self,
+        file_cache: FileCache[_TRawData],
+        fetcher: Fetcher[_TRawData],
+        mode: Mode,
+        secrets: AdHocSecrets | None,
     ) -> result.Result[_TRawData, Exception]:
         try:
             cached = file_cache.read(mode)
@@ -39,7 +45,7 @@ class FetcherTrigger(abc.ABC):
             fetched: result.Result[_TRawData, Exception] = result.Error(
                 FetcherError("unknown error")
             )
-            fetched = self._trigger(fetcher, mode)
+            fetched = self._trigger(fetcher, mode, secrets)
             fetched.map(partial(file_cache.write, mode=mode))
             return fetched
 
@@ -51,7 +57,7 @@ class FetcherTrigger(abc.ABC):
 
     @abc.abstractmethod
     def _trigger(
-        self, fetcher: Fetcher[_TRawData], mode: Mode
+        self, fetcher: Fetcher[_TRawData], mode: Mode, secrets: AdHocSecrets | None
     ) -> result.Result[_TRawData, Exception]:
         raise NotImplementedError()
 
@@ -74,9 +80,10 @@ class PlainFetcherTrigger(FetcherTrigger):
     """A simple trigger that fetches data without any additional logic."""
 
     def _trigger(
-        self, fetcher: Fetcher[_TRawData], mode: Mode
+        self, fetcher: Fetcher[_TRawData], mode: Mode, secrets: AdHocSecrets | None
     ) -> result.Result[_TRawData, Exception]:
-        with fetcher:
+        secrets_context = nullcontext() if not secrets else ad_hoc_secrets_file(secrets)
+        with secrets_context, fetcher:
             return fetcher.fetch(mode)
 
     def serialized_params(self) -> Mapping[str, str]:

@@ -106,8 +106,8 @@ from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.fetchers import AdHocSecrets, NoSelectedSNMPSections, SNMPFetcherConfig, TLSConfig
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, TLSConfig
 from cmk.fetchers.config import (
     make_persisted_section_dir,
 )
@@ -706,6 +706,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             else cmk.utils.password_store.pending_secrets_path_site()
         )
         secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
+        ad_hoc_secrets = (
+            AdHocSecrets(pending_passwords_file, secrets) if relay_id and secrets else None
+        )
         for source in sources.make_sources(
             plugins,
             hostname,
@@ -788,6 +791,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 ),
                 source.fetcher(),
                 FetchMode.CHECKING,
+                ad_hoc_secrets,
             )
             host_sections = parse_raw_data(
                 make_parser(

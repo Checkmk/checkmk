@@ -45,7 +45,7 @@ def register(page_registry: PageRegistry, autocompleter_registry_: Autocompleter
     autocompleter_registry_.register_autocompleter("check_types", check_types_autocompleter)
 
 
-def __live_query_to_choices(
+def live_query_to_choices(
     query_callback: Callable[[MultiSiteConnection], Collection[LivestatusColumn]],
     limit: int,
     value: str,
@@ -74,7 +74,7 @@ def _sorted_unique_lq(query: str, limit: int, value: str, params: dict) -> Choic
     def _query_callback(sites_live: MultiSiteConnection) -> Collection[LivestatusColumn]:
         return sites_live.query_column_unique(query)
 
-    return __live_query_to_choices(_query_callback, limit, value, params)
+    return live_query_to_choices(_query_callback, limit, value, params)
 
 
 def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
@@ -181,7 +181,7 @@ def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) ->
                     label_values.add(label_value)
         return label_values
 
-    return __live_query_to_choices(_query_callback, 200, value, params)
+    return live_query_to_choices(_query_callback, 200, value, params)
 
 
 def tag_group_autocompleter(config: Config, value: str, params: dict) -> Choices:

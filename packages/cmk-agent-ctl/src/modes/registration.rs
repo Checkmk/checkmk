@@ -589,8 +589,9 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
 
 fn _prepare_register_updater_cmd(
     updater_registration_config: &UpdaterRegistrationInput,
+    cmk_update_agent_path: &str,
 ) -> AnyhowResult<Command> {
-    let mut cmd = Command::new(CMK_UPDATE_AGENT_CMD);
+    let mut cmd = Command::new(cmk_update_agent_path);
     #[cfg(windows)]
     {
         cmd.arg("updater");
@@ -613,35 +614,71 @@ fn _prepare_register_updater_cmd(
     Ok(cmd)
 }
 
+fn _get_cmk_update_agent_path(cmk_update_agent_cmd: &str) -> AnyhowResult<String> {
+    let current_exe = std::env::current_exe().context("Failed to get current executable path")?;
+
+    let agent_bin_dir = current_exe
+        .parent()
+        .context("Failed to get parent directory of current executable")?;
+
+    let local_path = agent_bin_dir.join(cmk_update_agent_cmd);
+    if local_path.exists() {
+        info!(
+            "Found {} in same directory as cmk-agent-ctl",
+            cmk_update_agent_cmd
+        );
+        return Ok(local_path.to_string_lossy().to_string());
+    }
+
+    if cfg!(windows) {
+        // On Windows, cmk-update-agent must be in the same directory
+        bail!(
+            "{} not found in the same directory as cmk-agent-ctl",
+            cmk_update_agent_cmd
+        );
+    };
+
+    // On Linux, fallback to checking PATH
+    info!("Checking PATH for {}", cmk_update_agent_cmd);
+    if !Command::new("which")
+        .arg(cmk_update_agent_cmd)
+        .output()
+        .context("Failed to execute 'which' command")?
+        .status
+        .success()
+    {
+        bail!(
+            "{} not found in same directory or PATH",
+            cmk_update_agent_cmd
+        );
+    }
+
+    info!("Found {} in PATH", cmk_update_agent_cmd);
+    Ok(cmk_update_agent_cmd.to_string())
+}
+
 pub fn register_updater_subprocess(
     updater_registration_config: &UpdaterRegistrationInput,
 ) -> AnyhowResult<()> {
-    let check_cmd = if cfg!(windows) {
-        Command::new("where").arg(CMK_UPDATE_AGENT_CMD).output()
-    } else {
-        Command::new("which").arg(CMK_UPDATE_AGENT_CMD).output()
-    };
-
-    match check_cmd {
-        Ok(output) if output.status.success() => {
-            info!("Found {} command", CMK_UPDATE_AGENT_CMD);
-        }
-        _ => {
-            error!("Command '{}' not found in PATH", CMK_UPDATE_AGENT_CMD);
-            return Ok(()); // Skip updater registration gracefully
-        }
-    };
-
-    let mut cmd = match _prepare_register_updater_cmd(updater_registration_config) {
-        Ok(cmd) => cmd,
+    let cmk_update_agent_path = match _get_cmk_update_agent_path(CMK_UPDATE_AGENT_CMD) {
+        Ok(path) => path,
         Err(e) => {
-            error!(
-                "Warning: can't build {} command, error: {}",
-                CMK_UPDATE_AGENT_CMD, e
-            );
+            error!("Command '{}' not found: {}", CMK_UPDATE_AGENT_CMD, e);
             return Ok(()); // Skip updater registration gracefully
         }
     };
+
+    let mut cmd =
+        match _prepare_register_updater_cmd(updater_registration_config, &cmk_update_agent_path) {
+            Ok(cmd) => cmd,
+            Err(e) => {
+                error!(
+                    "Warning: can't build {} command, error: {}",
+                    CMK_UPDATE_AGENT_CMD, e
+                );
+                return Ok(()); // Skip updater registration gracefully
+            }
+        };
 
     info!(
         "Registering updater for site {}",
@@ -1306,13 +1343,16 @@ mod tests {
             };
             let protocol = site_spec::Protocol::Http;
 
-            let cmd = _prepare_register_updater_cmd(&UpdaterRegistrationInput {
-                site_id: site_id.clone(),
-                username: "test-user".to_string(),
-                password: "test-password".to_string(),
-                hostname: "test-host".to_string(),
-                protocol,
-            })
+            let cmd = _prepare_register_updater_cmd(
+                &UpdaterRegistrationInput {
+                    site_id: site_id.clone(),
+                    username: "test-user".to_string(),
+                    password: "test-password".to_string(),
+                    hostname: "test-host".to_string(),
+                    protocol,
+                },
+                CMK_UPDATE_AGENT_CMD,
+            )
             .unwrap();
 
             let args: Vec<&OsStr> = cmd.get_args().collect();

@@ -8,4 +8,6 @@ import CmkIcon from './CmkIcon.vue'
 export default CmkIcon
 export type { CmkIconProps } from './types'
 export type { SimpleIcons } from './types'
+export type { IconEmblems } from './types'
+export type { IconSizeNames } from './types'
 export type { CmkIconVariants } from './types'

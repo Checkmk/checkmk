@@ -57,7 +57,13 @@ PermissionGeneralUse = Permission(
     name="use",
     title=_l("Use the GUI at all"),
     description=_l("Users without this permission are not let in at all"),
-    defaults=config.default_authorized_builtin_role_ids,
+    defaults=[
+        *config.default_authorized_builtin_role_ids,
+        # For now, the agent_registration role needs access to the GUI do be able to register
+        # for agent updates.
+        # When providing REST-API endpoints for agent deployment, this can be removed again.
+        "agent_registration",
+    ],
 )
 
 PermissionServerSideRequests = Permission(

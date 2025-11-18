@@ -5,7 +5,7 @@
 
 import pathlib
 
-from cmk.agent_receiver.config import Config, get_config
+from cmk.agent_receiver.lib.config import Config, get_config
 
 
 def create_relay_config(
@@ -16,7 +16,7 @@ def create_relay_config(
     """Helper function to create relay configuration files."""
     config = Config.load()
     config.task_ttl = task_ttl
-    config.max_tasks_per_relay = max_number_of_tasks
+    config.max_pending_tasks_per_relay = max_number_of_tasks
     config_file = config.config_file
     config_file.write_text(config.model_dump_json())
     get_config.cache_clear()

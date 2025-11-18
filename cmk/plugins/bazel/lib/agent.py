@@ -4,28 +4,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special agent: agent_bazel_cache.
 
-# mypy: disable-error-code="no-untyped-call"
-
 This agent collects the metrics from https://bazel-cache-server/metrics.
 Since this endpoint is public, no authentication is required.
 """
+
+# mypy: disable-error-code="no-untyped-call"
 
 import argparse
 import json
 import re
 import sys
+import time
 from collections.abc import Sequence
-from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import requests
 import urllib3
+from pydantic import BaseModel
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.misc import DataCache
-from cmk.utils.paths import tmp_dir
-from cmk.utils.semantic_version import SemanticVersion
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
+
+from .semantic_version import SemanticVersion
 
 __version__ = "2.5.0b1"
 
@@ -42,24 +42,42 @@ class Endpoint(NamedTuple):
     data_format: str = "text"
 
 
-class VersionCache(DataCache):
-    def __init__(self, *, tags_url: str, interval: int, directory: Path | None = None) -> None:
-        super().__init__(
-            cache_file_dir=directory or (tmp_dir / "agents"),
-            cache_file_name="bazel_cache_version",
-        )
-        self._url = tags_url
-        self._interval = interval
+class BazelVersion(BaseModel):
+    major: str | None
+    minor: str | None
+    patch: str | None
 
-    @property
-    def cache_interval(self) -> int:
-        return self._interval
 
-    def get_validity_from_args(self, *args: Any) -> bool:
-        return True
+class BazelVersionInfo(BaseModel):
+    timestamp: float
+    current: str
+    latest: BazelVersion
 
-    def get_live_data(self, commit_hash: str) -> Any:
-        resp = requests.get(self._url, timeout=30)
+
+class VersionCache:
+    VERSION_CACHE_KEY = "bazel_version_cache"
+
+    def __init__(self, storage: Storage, ttl: float) -> None:
+        self.storage = storage
+        self.ttl = ttl
+
+    def get_or_update(self, url: str, commit: str) -> BazelVersionInfo | None:
+        return self._get_cached_version_info() or self._renew_cached_version_info(url, commit)
+
+    def _get_cached_version_info(self) -> BazelVersionInfo | None:
+        if not (raw := self.storage.read(self.VERSION_CACHE_KEY, None)):
+            return None
+        info = BazelVersionInfo.model_validate_json(raw)
+        return info if (time.time() - info.timestamp) < self.ttl else None
+
+    def _renew_cached_version_info(
+        self, tags_url: str, commit_hash: str
+    ) -> BazelVersionInfo | None:
+        try:
+            resp = requests.get(tags_url, timeout=30)
+        except requests.exceptions.RequestException:
+            return None
+        timestamp = time.time()
         resp.raise_for_status()
         items = resp.json()
         versions = {
@@ -67,22 +85,25 @@ class VersionCache(DataCache):
         }
         current_version = versions.get(commit_hash)
 
-        if current_version is not None:
-            newer_versions = {v for k, v in versions.items() if v > current_version}
-            majors = {v for v in newer_versions if v.major > current_version.major}
-            minors = {v for v in newer_versions if v.minor > current_version.minor} - majors
-            patches = (
-                {v for v in newer_versions if v.patch > current_version.patch} - majors - minors
-            )
-            return {
-                "current": str(current_version),
-                "latest": {
-                    "major": str(max(majors, default="")) or None,
-                    "minor": str(max(minors, default="")) or None,
-                    "patch": str(max(patches, default="")) or None,
-                },
-            }
-        return None
+        if current_version is None:
+            return None
+
+        newer_versions = {v for v in versions.values() if v > current_version}
+        majors = {v for v in newer_versions if v.major > current_version.major}
+        minors = {v for v in newer_versions if v.minor > current_version.minor} - majors
+        patches = {v for v in newer_versions if v.patch > current_version.patch} - majors - minors
+        info = BazelVersionInfo(
+            timestamp=timestamp,
+            current=str(current_version),
+            latest=BazelVersion(
+                major=str(max(majors, default="")) or None,
+                minor=str(max(minors, default="")) or None,
+                patch=str(max(patches, default="")) or None,
+            ),
+        )
+        # should the combination of url and commit actually be the key?
+        self.storage.write(self.VERSION_CACHE_KEY, info.model_dump_json())
+        return info
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -152,13 +173,7 @@ def agent_bazel_cache_main(args: argparse.Namespace) -> int:
         ),
     ]
 
-    try:
-        return handle_requests(args, endpoints)
-    except Exception as e:
-        if args.debug:
-            raise e
-
-    return 0
+    return handle_requests(args, endpoints)
 
 
 def handle_requests(args: argparse.Namespace, endpoints: list[Endpoint]) -> int:
@@ -210,27 +225,25 @@ def _camel_to_snake(name: str) -> str:
 
 
 def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Namespace) -> None:
-    if endpoint.data_format == "json":
-        data = {_camel_to_snake(key): value for key, value in res.json().items()}
-        if endpoint.name == "status" and "git_commit" in data:
-            try:
-                version_cache = VersionCache(
-                    tags_url=args.bazel_cache_tags_url, interval=args.version_cache
-                )
-                version_data = version_cache.get_data(data["git_commit"])
-
-                if version_data is not None:
-                    sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
-                    sys.stdout.write(f"{json.dumps(version_data)}\n")
-
-            except requests.exceptions.RequestException:
-                pass
-
-        sys.stdout.write(f"<<<bazel_cache_{endpoint.name}:sep(0)>>>\n")
-        sys.stdout.write(f"{json.dumps(data)}\n")
-
-    else:
+    if endpoint.data_format != "json":
         _process_txt_data(res=res, section_name=endpoint.name)
+        return
+
+    data = {_camel_to_snake(key): value for key, value in res.json().items()}
+    sys.stdout.write(f"<<<bazel_cache_{endpoint.name}:sep(0)>>>\n")
+    sys.stdout.write(f"{json.dumps(data)}\n")
+
+    if endpoint.name != "status" or "git_commit" not in data:
+        return
+
+    version_cache = VersionCache(Storage(AGENT, args.host), args.version_cache)
+    if not (
+        version_info := version_cache.get_or_update(args.bazel_cache_tags_url, data["git_commit"])
+    ):
+        return
+
+    sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
+    sys.stdout.write(f"{version_info.model_dump_json()}\n")
 
 
 def _process_txt_data(res: requests.Response, section_name: str) -> None:

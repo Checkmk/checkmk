@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Main menu processing
 
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="unreachable"
-
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the main menu
 """
+
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="unreachable"
 
 from contextlib import nullcontext
 from dataclasses import asdict
@@ -425,7 +425,7 @@ oncontextmenu = e => e.preventDefault();"""
 
     def _show_item(self, item: MainMenuItem) -> None:
         with (
-            loading_transition(template=item.loading_transition)
+            loading_transition(template=item.loading_transition, title=item.title)
             if item.loading_transition
             else nullcontext()
         ):

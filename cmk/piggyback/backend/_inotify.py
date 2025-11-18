@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Small wrapper for the kernels `inotify` feature
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 Existing libraries seem to be rather unmaintained or lack
 features that we want (type annotations).
 
@@ -15,6 +12,8 @@ rather than being a comprehensive interface to what the kernel offers.
 
 As this is currently only needed for the piggyback hub, we put it here.
 """
+
+# mypy: disable-error-code="no-untyped-call"
 
 import enum
 import os
@@ -125,7 +124,7 @@ class _LibCINotify:
 
     __libc: CDLL | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         if self.__libc is None:
             libc_so = find_library("c") or "libc.so.6"
             self.__libc = CDLL(libc_so, use_errno=True)
@@ -147,7 +146,7 @@ class _LibCINotify:
 
 
 class INotify:
-    def __init__(self):
+    def __init__(self) -> None:
         self._libc = _LibCINotify()
         self._parser = _EventParser()
         self.__fileio: FileIO | None = None

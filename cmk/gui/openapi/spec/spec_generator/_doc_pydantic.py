@@ -14,6 +14,7 @@ from typing import cast, Literal
 from apispec import APISpec
 from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
 
+from cmk.ccc.version import Edition
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import api_field
@@ -48,7 +49,6 @@ from cmk.gui.openapi.spec.spec_generator._doc_utils import (
     build_tag_obj_from_family,
     DefaultStatusCodeDescription,
     endpoint_title_and_description_from_docstring,
-    format_endpoint_supported_editions,
 )
 from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint, SpecEndpoint
 
@@ -121,7 +121,7 @@ def pydantic_endpoint_to_doc_endpoint(
         permissions_description=endpoint.permissions_description,
         status_descriptions=endpoint.status_descriptions or {},
         does_redirects=bool(expected_status_codes & {201, 301, 302, 303}),
-        supported_editions=endpoint.doc_supported_editions,
+        supported_editions=endpoint.doc_supported_editions or set(Edition.__members__.values()),
     )
     try:
         return DocEndpoint(
@@ -182,16 +182,12 @@ def _to_operation_dict(
         "description": build_spec_description(
             endpoint_description=spec_endpoint.description,
             werk_id=werk_id,
+            editions=spec_endpoint.supported_editions,
             permissions_required=spec_endpoint.permissions_required,
             permissions_description=spec_endpoint.permissions_description,
         ),
         "summary": spec_endpoint.title,
     }
-
-    if spec_endpoint.supported_editions:
-        operation_spec["x-badges"] = format_endpoint_supported_editions(
-            spec_endpoint.supported_editions
-        )
 
     if werk_id:
         operation_spec["deprecated"] = True

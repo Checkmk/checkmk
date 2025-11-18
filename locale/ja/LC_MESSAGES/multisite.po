@@ -1044,6 +1044,10 @@ msgstr "(不明なルールセット)"
 msgid ", "
 msgstr ", "
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "...(%d more)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr "、ただし、以前のルールパックの一致によって無効にされます。"
 
@@ -1394,6 +1398,12 @@ msgstr ""
 "れます<br><br><b>明示的なサービス名を使用し、タグ全体を無視する：</b><br>この"
 "オプションを使用して指定します。これらのサービスでは、タグ全体が無視されま"
 "す。"
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 msgid ""
 "<b>Monitor all instances:</b> <br>If overall tags are specified below, then "
@@ -2905,6 +2915,12 @@ msgstr "エラーで中止"
 
 msgid "Abort your modifications."
 msgstr "変更を中止します。"
+
+#, python-format
+msgid ""
+"Aborting because the number of hosts (%d) exceeds the configured maximum "
+"number of hosts (%d). You can adjust this limit in the connector settings."
+msgstr ""
 
 msgid "Aborting change."
 msgstr "変更を中止します。"
@@ -5015,6 +5031,14 @@ msgstr "エージェントコントローラー接続"
 msgid "Agent controller deployment"
 msgstr "エージェントコントローラーデプロイ"
 
+msgid ""
+"Agent controller not registered at this site: You tried to register for "
+"agent updates with a user who's authorized to register agents. This is "
+"supported, but requires a prior agent controller registration. To register "
+"for agent updates only, you need an explicit permission for agent updater "
+"registration."
+msgstr ""
+
 msgid "Agent controller user"
 msgstr "エージェントコントローラーユーザー"
 
@@ -6948,6 +6972,9 @@ msgstr "イベントのアーカイブ"
 msgid "Archive events of hosts"
 msgstr "ホストのイベントをアーカイブする"
 
+msgid "Archive exceeds total size limit"
+msgstr ""
+
 msgid "Archive log"
 msgstr "アーカイブログ"
 
@@ -7126,6 +7153,10 @@ msgstr "クエリを実行しているホストに割り当てます"
 
 msgid "Assign via regular expressions"
 msgstr "正規表現で割り当てる"
+
+#, fuzzy
+msgid "Assigned to host"
+msgstr "グループに割り当てる"
 
 msgid "Assignee"
 msgstr "受任者"
@@ -8553,27 +8584,27 @@ msgid "Azure Redis Cache effectiveness"
 msgstr "Azure データベース接続"
 
 #, fuzzy
-msgid "Azure Redis connections"
+msgid "Azure Redis Connections"
 msgstr "Azure データベース接続"
 
 #, fuzzy
-msgid "Azure Redis latency"
+msgid "Azure Redis Latency"
 msgstr "平均ディスク遅延"
 
 #, fuzzy
-msgid "Azure Redis memory"
+msgid "Azure Redis Memory"
 msgstr "絶対使用メモリ"
 
 #, fuzzy
-msgid "Azure Redis replication"
+msgid "Azure Redis Replication"
 msgstr "Azure データベース接続"
 
 #, fuzzy
-msgid "Azure Redis server load"
+msgid "Azure Redis Server load"
 msgstr "Redisサーバー名"
 
 #, fuzzy
-msgid "Azure Redis throughput"
+msgid "Azure Redis Throughput"
 msgstr "読み取りスループット"
 
 #, fuzzy
@@ -8976,20 +9007,14 @@ msgstr "バックアップが構成されています"
 msgid "Backup encryption keys"
 msgstr "バックアップ暗号化キー"
 
+msgid "Backup in progress. Refresh to see the final status."
+msgstr ""
+
 msgid "Backup job"
 msgstr "バックアップジョブ"
 
 msgid "Backup modes"
 msgstr "バックアップモード"
-
-msgid ""
-"Backup process has started. You can safely navigate away from this page as "
-"the process will continue in the background. Refresh this page to check the "
-"current status."
-msgstr ""
-"バックアップ処理が開始されました。処理はバックグラウンドで継続されますので、"
-"このページから離れても問題ありません。現在の状況を確認するにはこのページを更"
-"新してください。"
 
 msgid "Backup size"
 msgstr "バックアップサイズ"
@@ -9040,6 +9065,10 @@ msgstr "ベーキングエージェント"
 
 msgid "Baked host specific agent"
 msgstr "ベイクされたホストの特定エージェント"
+
+#, fuzzy
+msgid "Bakery plug-in"
+msgstr "プラグイン名"
 
 msgid "Bakery rules"
 msgstr "ベーカリールール"
@@ -13938,6 +13967,14 @@ msgstr "コミット"
 msgid "Committed memory"
 msgstr "コミットされたメモリ"
 
+#, fuzzy
+msgid "Common Name (Issuer)"
+msgstr "コモンネーム (CN)"
+
+#, fuzzy
+msgid "Common Name (Subject)"
+msgstr "コモンネーム (CN)"
+
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr "共通のプロビジョニンググループ：仮想プールの構成"
 
@@ -14799,7 +14836,8 @@ msgid ""
 msgstr ""
 "CheckmkをLDAPまたはActiveDirectoryに接続して、Checkmkでユーザーを作成します。"
 
-msgid "Connect directly (not available in CRE)"
+#, fuzzy
+msgid "Connect directly (not available in Checkmk Community)"
 msgstr "直接接続します(CREでは使用できません)"
 
 msgid "Connect directly to the destination instead of using a proxy."
@@ -19139,6 +19177,10 @@ msgstr "非推奨のHW/SW Inventoryプラグイン"
 msgid "Deprecated PNP templates"
 msgstr "非推奨のPNPテンプレート"
 
+#, fuzzy
+msgid "Deprecated bakery plug-ins"
+msgstr "非推奨のプラグイン: %s"
+
 msgid "Deprecated check man pages"
 msgstr "非推奨のチェックmanページ"
 
@@ -20340,6 +20382,10 @@ msgstr "列ヘッダーを追加しないでください"
 
 msgid "Do not add text"
 msgstr "テキストを追加しない"
+
+#, fuzzy
+msgid "Do not apply this rule"
+msgstr "このルールを適用しないでください"
 
 msgid "Do not ask for a comment"
 msgstr "コメントを求めないでください"
@@ -22287,6 +22333,10 @@ msgstr "マネジメントボードのSNMPv2cを有効化する"
 msgid "Enable TLS"
 msgstr "TLSを有効にする"
 
+#, fuzzy
+msgid "Enable TLS certificate revocation checks"
+msgstr "TLS 証明書の検証"
+
 msgid "Enable TLS certificate validation"
 msgstr "TLS証明書の検証を有効にする"
 
@@ -22574,6 +22624,16 @@ msgstr ""
 "一括通知を有効にすると、同じ連絡先に対するその後の複数の通知を1つの通知に集"
 "め、例えば1通のメールに実際の問題点をすべて列挙します。これにより、短時間に多"
 "くの（関連する）問題が発生した場合、通知の数を減らすことができます。"
+
+msgid ""
+"Enabling this option lets Checkmk create safe host names for piggyback "
+"hosts. This avoids conflicts caused by entities having the same name in "
+"Azure, which could lead to monitoring data being overwritten or lost. The "
+"option works by appending a unique hash to the Checkmk piggyback host names "
+"(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, "
+"resources, or resource groups with the same name across multiple Azure "
+"tenants or subscriptions."
+msgstr ""
 
 msgid ""
 "Enabling this option results in additional performance data for the Checkmk "
@@ -22998,6 +23058,10 @@ msgstr "行あたりのエントリー"
 
 msgid "Entry"
 msgstr "エントリ"
+
+#, fuzzy
+msgid "Env Creation"
+msgstr "作成"
 
 msgid "Environment Sensors"
 msgstr "Environment Sensors"
@@ -24539,6 +24603,10 @@ msgstr ""
 "ルール #%d の処理に失敗 ルールセット内 \"%s\" フォルダ内 \"%s\"。ルールの値"
 "は、現在のルール仕様と互換性がありません。ルールを開いて編集し、変更せずに"
 "ルールを再度保存することで、これを修正してみることができます。"
+
+#, fuzzy
+msgid "Failed to query hosts from metric backend"
+msgstr "OpenTelemetryメトリック名"
 
 msgid "Failed to read the Apache process ID"
 msgstr "ApacheプロセスIDの読み取りに失敗しました"
@@ -27211,6 +27279,13 @@ msgstr "HTTP固定応答"
 msgid "HTTP method"
 msgstr "HTTPメソッド"
 
+#, fuzzy
+msgid "HTTP port"
+msgstr "TCPポート"
+
+msgid "HTTP port (useful for accessing web UI)"
+msgstr ""
+
 msgid "HTTP proxies"
 msgstr "HTTPプロキシ"
 
@@ -27241,10 +27316,6 @@ msgstr "監視するHTTPウェブサービスのエンドポイント"
 msgid "HTTP(S) load balancer"
 msgstr "HTTP(S)ロードバランサー"
 
-#, fuzzy
-msgid "HTTP(S) port"
-msgstr "TCPポート"
-
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, Eメール, ..."
 
@@ -27266,6 +27337,10 @@ msgstr ""
 "ここでは、HTTPSの設定を推奨します。ただし、監視サーバ上の Apache ウェブサーバ"
 "に有効な SSL 設定が必要です。HTTP を使用する場合、ベイクドエージェントに含ま"
 "れる機密データ（プラグインのパスワードなど）が盗み見される可能性があります。"
+
+#, fuzzy
+msgid "HTTPS port"
+msgstr "TCPポート"
 
 msgid "HW Information"
 msgstr "HW情報"
@@ -31375,6 +31450,11 @@ msgstr ""
 "割り当てられていないイベントを表示できるかどうかを制御します。"
 
 msgid ""
+"If the VM is locked longer than the defined levels, a warning/critical state "
+"is triggered.If this is set to 'No Levels', the lock duration is not checked."
+msgstr ""
+
+msgid ""
 "If the application of the message matches this regular expression (case "
 "insensitive) and either no text to cancel is specified or that text also "
 "matched, then events created by this rule will automatically be cancelled "
@@ -33577,6 +33657,10 @@ msgstr "定義された時間範囲のインデックスの失敗上位レベル
 msgid "Index hitratio"
 msgstr "インデックスヒット率"
 
+#, fuzzy
+msgid "Index overhead"
+msgstr "検索するインデックス"
+
 msgid "Index percentage bloat levels"
 msgstr "肥大化レベルのパーセンテージのインデックス"
 
@@ -34842,9 +34926,6 @@ msgstr "発行された"
 
 msgid "Issuer"
 msgstr "発行者"
-
-msgid "Issuer Name"
-msgstr "発行名"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -36963,6 +37044,11 @@ msgid ""
 "Limit the execution time of the query, in order to avoid a hanging system."
 msgstr "システムのハングを回避するために、クエリの実行時間を制限します。"
 
+#, fuzzy
+msgid ""
+"Limit the maximum number of hosts that can be created by this connection."
+msgstr "１接続あたりに実行可能な最大クエリ数。"
+
 msgid "Limit the number of rows"
 msgstr "行数を制限する"
 
@@ -37583,6 +37669,10 @@ msgstr "ロケーション"
 
 msgid "Locator"
 msgstr "ロケーター"
+
+#, fuzzy
+msgid "Lock Duration levels"
+msgstr "期間レベル"
 
 msgid "Lock Requests / sec"
 msgstr "ロックリクエスト/秒"
@@ -39700,6 +39790,10 @@ msgstr "1秒あたりのRPCリクエストの最大数"
 msgid "Maximum number of access points"
 msgstr "最大アクセスポイント数"
 
+#, fuzzy
+msgid "Maximum number of attempts"
+msgstr "配信の最大試行回数"
+
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -39747,6 +39841,10 @@ msgstr "最大実行回数"
 
 msgid "Maximum number of firewall connections"
 msgstr "ファイアウォール接続の最大数"
+
+#, fuzzy
+msgid "Maximum number of hosts"
+msgstr "最大クライアント数"
 
 msgid "Maximum number of messages"
 msgstr "メッセージの最大数"
@@ -40431,6 +40529,10 @@ msgstr "メトリクス"
 
 msgid "Metrics Group"
 msgstr "メトリクスグループ"
+
+#, fuzzy
+msgid "Metrics backend is disabled."
+msgstr "Oracleインスタンス"
 
 msgid "Metrics graph of a single service"
 msgstr "単一サービスのメトリクスグラフ"
@@ -42778,6 +42880,10 @@ msgstr "バックアップコードはまだ作成されていません。"
 msgid "No baked agent for this host available"
 msgstr "このホストのベイクドエージェントは利用できません"
 
+#, fuzzy
+msgid "No bakery plug-ins using the deprecated API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
 msgid "No broken extensions were found."
 msgstr "壊れた拡張機能は見つかりませんでした。"
 
@@ -42830,6 +42936,10 @@ msgstr "どのサイトからのデータもありません"
 #, fuzzy
 msgid "No data from time provider"
 msgstr "どのサイトからのデータもありません"
+
+#, python-format
+msgid "No data generator found for figure type name '%s'"
+msgstr ""
 
 #, fuzzy
 msgid "No data was found with the current parameters of this widget."
@@ -45519,6 +45629,10 @@ msgstr ""
 
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "1つのサーバーに複数のMySQLインスタンスがある場合にのみ必要"
+
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "空にすることができるタグは1つだけです。"
@@ -48545,6 +48659,18 @@ msgstr "パフォーマンスオプション"
 
 msgid "Performance: IO stats"
 msgstr "パフォーマンス: IO ステータス"
+
+#, fuzzy
+msgid "Performing license online verification..."
+msgstr "ライセンスオンライン検証"
+
+#, fuzzy
+msgid "Performing license test verification..."
+msgstr "ライセンスオンライン検証"
+
+#, fuzzy
+msgid "Performing test authentication..."
+msgstr "テスト認証"
 
 msgid "Period"
 msgstr "ピリオド"
@@ -51706,6 +51832,10 @@ msgstr "すべてのサービスとホストラベルを更新します(タブ�
 msgid "Refresh interval"
 msgstr "更新間隔"
 
+#, fuzzy
+msgid "Refresh status"
+msgstr "サービスステータス"
+
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
 msgstr "ホスト '%s' の確認設定を更新しました"
@@ -51784,6 +51914,10 @@ msgstr "ホスト名の正規表現"
 
 msgid "Regex sets"
 msgstr "正規表現セット"
+
+#, fuzzy
+msgid "Region"
+msgstr "リージョン名"
 
 msgid "Region name"
 msgstr "リージョン名"
@@ -53157,6 +53291,10 @@ msgstr "属性をリセット"
 msgid "Resource consumption of Windows processes"
 msgstr "Windowsプロセスのリソース消費"
 
+#, fuzzy
+msgid "Resource group"
+msgstr "リソースグループ"
+
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr "リソースの固定: 監視対象のリソースが変更されていないことを確認します"
 
@@ -53579,6 +53717,9 @@ msgstr "Rittal CMC-IIIユニット: 現在"
 
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-IIIユニット:温度"
+
+msgid "Robot"
+msgstr ""
 
 msgid "Robot Framework parameters"
 msgstr "ロボットフレームワークのパラメータ"
@@ -54825,6 +54966,14 @@ msgstr ""
 msgid "Scheduler"
 msgstr "スケジューラ"
 
+#, fuzzy
+msgid "Scheduler Interval"
+msgstr "キャッシュ間隔"
+
+#, fuzzy
+msgid "Scheduler Plan Configs"
+msgstr "ダウンタイムをスケジュールしますか?"
+
 msgid "Scheduler job name"
 msgstr "スケジューラジョブ名"
 
@@ -55174,6 +55323,9 @@ msgstr "セキュリティレベル"
 msgid "Security advice"
 msgstr "セキュリティに関するアドバイス"
 
+msgid "Security checks have failed for the uploaded tar.gz file"
+msgstr ""
+
 #, python-format
 msgid "Security message #%d"
 msgstr "セキュリティメッセージ #%d"
@@ -55510,7 +55662,8 @@ msgstr ""
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
 "immediate encrypted connection. SMTP STARTTLS negotiates encryption after "
-"connecting in plain text."
+"connecting in plain text.Proxy connections allow to connect via a proxy "
+"server, only global and manual proxy configurations are supported."
 msgstr ""
 
 msgid ""
@@ -56995,6 +57148,11 @@ msgstr "'%s'に設定する"
 
 msgid "Set upper levels"
 msgstr "上位レベルを設定する"
+
+msgid ""
+"Set upper levels for the index overhead percentage. The index overhead is "
+"the ratio of index usage to total storage (index + data)."
+msgstr ""
 
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
@@ -61081,9 +61239,6 @@ msgstr ""
 msgid "Subject"
 msgstr "件名"
 
-msgid "Subject Name"
-msgstr "主題名"
-
 msgid "Subject for bulk notifications"
 msgstr "一括通知の対象"
 
@@ -61114,6 +61269,10 @@ msgstr "リクエストの送信と回答の取得"
 msgid "Submitting crash report..."
 msgstr "クラッシュレポートを送信しています..."
 
+#, fuzzy
+msgid "Submitting license usage online..."
+msgstr "ライセンスの使用状況をオンラインで提出する"
+
 msgid "Subnet groups"
 msgstr "サブネットグループ"
 
@@ -61131,6 +61290,10 @@ msgstr "サブスクリプションID"
 
 #, fuzzy
 msgid "Subscription Status"
+msgstr "サブスクリプション"
+
+#, fuzzy
+msgid "Subscription name"
 msgstr "サブスクリプション"
 
 #, fuzzy
@@ -61758,6 +61921,10 @@ msgstr "TLS 証明書の検証"
 msgid "TLS certificate verification"
 msgstr "TLS 証明書の検証"
 
+#, fuzzy
+msgid "TLS port"
+msgstr "TCPポート"
+
 msgid "TLS processed bytes"
 msgstr "TLS処理されたバイト"
 
@@ -62212,6 +62379,10 @@ msgstr "一時ファイルシステムがマウントされました"
 msgid "Temporary local destination"
 msgstr "ローカルでの一時的な保存先"
 
+#, fuzzy
+msgid "Tenant ID"
+msgstr "テナントID"
+
 msgid "Tenant ID / Directory ID"
 msgstr "テナントID / ディレクトリID"
 
@@ -62555,14 +62726,6 @@ msgstr ""
 "くのチェッカーを構成すると、コンテキストスイッチの数が増えるため、悪影響があ"
 "ります。"
 
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"Checkmk Managed Services Editionは、CMEを使用して他のサイトにのみ接続できま"
-"す。"
-
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
 "the command <tt>python3</tt>, and a Python 2 installation by looking for the "
@@ -62745,6 +62908,11 @@ msgstr ""
 "HTTPパスワードは、Gerritの設定ページ内の'/settings/#HTTPCredentials'から、ま"
 "たはREST APIから生成できます。注意：ここにはアカウントの認証情報を入力しない"
 "でください！"
+
+msgid ""
+"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
+"for standard operations."
+msgstr ""
 
 msgid "The HTTP resource path on which to fetch metrics from targets."
 msgstr "ターゲットからメトリクスを取得するためのHTTPリソースパス。"
@@ -62943,23 +63111,23 @@ msgstr ""
 "<tt>DISTRIBUTION</tt> タグと <tt>DISTTAG</tt>タグはRPM specファイル内で空のま"
 "まになります。ここでは、これらのタグを手動で指定できます。"
 
-#, fuzzy
-msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
-"improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
-"performance of your GUI and will decrease resource usage."
-msgstr ""
-"LivestatusプロキシデーモンはCheckmk Enterprise Editionで使用でき、livestatus"
-"を使用したサイト間接続の管理を改善します。Livestatusプロキシデーモンを使用す"
-"ると、GUIの応答性とパフォーマンスが向上し、リソースの使用量が減少します。"
-
 msgid ""
 "The Livestatus Proxy is not only good for remote sites, enable it for your "
 "central site"
 msgstr ""
 "Livestatus プロキシは、リモートサイトに適しているだけでなく、セントラルサイト"
 "にも有効です"
+
+#, fuzzy
+msgid ""
+"The Livestatus proxy daemon is available with all commercial editions and "
+"improves the management of the inter site connections using Livestatus. "
+"Using the Livestatus proxy daemon improves the responsiveness and "
+"performance of your GUI and will decrease resource usage."
+msgstr ""
+"LivestatusプロキシデーモンはCheckmk Enterprise Editionで使用でき、livestatus"
+"を使用したサイト間接続の管理を改善します。Livestatusプロキシデーモンを使用す"
+"ると、GUIの応答性とパフォーマンスが向上し、リソースの使用量が減少します。"
 
 msgid "The Logfile"
 msgstr "ログファイル"
@@ -64636,10 +64804,6 @@ msgstr ""
 "設定を調整してください。"
 
 #, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "ホスト%sはこのサイトでは監視されていません"
-
-#, python-format
 msgid "The host '%s' does not exist"
 msgstr "ホスト '%s' は存在しません"
 
@@ -65784,6 +65948,16 @@ msgstr ""
 "カウンタベースからの相対的な情報のオフセットです。Windows シェルで 'lodctr /"
 "s:counters.txt' コマンドを実行すると、利用可能なカウンターの詳細なリストが得"
 "られます。"
+
+#, fuzzy, python-format
+msgid ""
+"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
+"new API."
+msgstr ""
+"古いインベントリプラグイン API は、Checkmk バージョン 2.2 で削除されました。"
+"<tt>'%s'</tt> にあるプラグインファイルは無視されます。プラグインを新しい API "
+"に移行してください。"
 
 #, python-format
 msgid ""
@@ -67103,12 +67277,6 @@ msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 "アップロードされたZIPファイルの展開後のサイズが制限を超えています: %s > %s"
 
-#, python-format
-msgid ""
-"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-msgstr ""
-"アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s > %s"
-
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "アップロードされたファイルは有効なZIPファイルではありません。"
 
@@ -67943,15 +68111,6 @@ msgstr "このIDは、別のバックアップターゲットによってすで�
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "このIDは、一意の識別子として使用されます。後で変更することはできません。"
-
-msgid ""
-"This ID uniquely identifies this rule in Checkmk. Use this ID when working "
-"with rules in Checkmk REST API calls, e.g., to show, modify or delete the "
-"rule."
-msgstr ""
-"このIDは、Checkmk 内でこのルールを識別します。CheckmkのREST API呼び出しでルー"
-"ルを操作する場合（例：ルールを表示、変更、または削除するとき）には、このIDを"
-"使用してください。"
 
 msgid "This Ruleset sets the threshold limits for battery sensors"
 msgstr "このルールセットは、バッテリーセンサーのしきい値の上限を設定します"
@@ -69070,15 +69229,6 @@ msgid ""
 msgstr ""
 "この名前は、mk_filestatsコンフィギュレーションで定義されたセクションの名前と"
 "一致する必要があります。"
-
-msgid ""
-"This name uniquely identifies the rule set in Checkmk. Use this name when "
-"working with rule sets and rules in Checkmk REST API calls, e.g. to create a "
-"new rule."
-msgstr ""
-"この名前は、Checkmk内のルールセットを識別します。Checkmkの REST API 呼び出し"
-"でルールセットやルールを操作する際には、この名前を使用してください。例えば新"
-"しいルールを作成する際などです。"
 
 msgid "This name will be used in the description of the service"
 msgstr "この名前は、サービスの説明で使用されます"
@@ -78770,14 +78920,6 @@ msgstr ""
 "によるログインを有効にするには、このプロパティを使用します。"
 
 msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
-
-msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -82927,6 +83069,9 @@ msgstr ""
 "の行など)を挿入できます。このログファイルのすべてのパターンを以下に示します。"
 "\"試してみる\"ボタンをクリックすると、一致するパターンが強調表示されます。"
 
+msgid "You can leave this page. This backup continues in the background"
+msgstr ""
+
 msgid ""
 "You can limit the number of current events created by a single host here. "
 "This is meant to prevent you from message storms created by one device."
@@ -86868,9 +87013,15 @@ msgstr "上書きを確認する"
 msgid "Decline"
 msgstr "オンラインデバイス"
 
+msgid "Answer"
+msgstr ""
+
 #, fuzzy
 msgid "Generating response..."
 msgstr "レポートを生成しています..."
+
+msgid "AI-generated answer. Please verify critical facts."
+msgstr ""
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -86878,6 +87029,10 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "見つかりません"
+
+#, fuzzy
+msgid "Something went wrong. Please try again later."
+msgstr "何か問題が発生しました: %s"
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -87996,6 +88151,21 @@ msgstr "既存のビューをコピーする"
 msgid "explicit password"
 msgstr "新しいパスワード"
 
+#, fuzzy
+msgid "~Enter regex (pattern match)"
+msgstr "パターン一致を試す"
+
+msgid "Enter plain text (single match)"
+msgstr ""
+
+#, fuzzy
+msgid "show preview"
+msgstr "もっと表示"
+
+#, fuzzy
+msgid "Preview of matches:"
+msgstr "ルール一致"
+
 msgid "Auto"
 msgstr "自動"
 
@@ -88426,13 +88596,12 @@ msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 msgid "Select the folder your host(s) will be created in."
 msgstr "ホストが作成される場所を指定してください。"
 
-msgid "Deploy the relay to your environment"
+msgid "Download the relay to your environment"
 msgstr ""
 
-msgid ""
-"Download the Relay container image and run it in your environment to start "
-"the setup."
-msgstr ""
+#, fuzzy
+msgid "Download the Relay container image."
+msgstr "Dockerコンテナプラグインをデプロイする"
 
 #, fuzzy
 msgid "Name the relay"
@@ -88446,25 +88615,27 @@ msgid ""
 "code in the next step."
 msgstr ""
 
-msgid "Register the relay with your Checkmk site"
+#, fuzzy
+msgid "Register the relay with your Checkmk site and run it"
 msgstr "Checkmkサイトにリレーを登録する"
 
 msgid ""
 "Register the Relay to authorize it for communication with your Checkmk site."
 msgstr "リレーを登録し、Checkmkサイトとの通信を許可してください。"
 
-msgid ""
-"This code snippet includes a one-time token. If you plan to use it multiple "
-"times in larger environments, you can check "
+msgid " Go to "
 msgstr ""
 
 #, fuzzy
-msgid "this article"
-msgstr "このルール"
+msgid "this page"
+msgstr "1ページ目"
 
 #, fuzzy
-msgid " for more details."
-msgstr "詳細はこちらをクリックしてください。"
+msgid " and get an automation secret. Use it in place of [automation-secret]"
+msgstr "自動化ユーザーの有効な自動化シークレット"
+
+msgid "After successful registration, start the Relay daemon."
+msgstr ""
 
 #, fuzzy
 msgid "Verify registration"
@@ -88487,6 +88658,10 @@ msgstr ""
 #, fuzzy
 msgid "Continue to add host"
 msgstr "デグレードしたホストの数"
+
+#, fuzzy
+msgid "Go to relay overview"
+msgstr "%s概要へ"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -88956,6 +89131,66 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "Backup process has started. You can safely navigate away from this page "
+#~ "as the process will continue in the background. Refresh this page to "
+#~ "check the current status."
+#~ msgstr ""
+#~ "バックアップ処理が開始されました。処理はバックグラウンドで継続されますの"
+#~ "で、このページから離れても問題ありません。現在の状況を確認するにはこのペー"
+#~ "ジを更新してください。"
+
+#~ msgid "Issuer Name"
+#~ msgstr "発行名"
+
+#~ msgid "Subject Name"
+#~ msgstr "主題名"
+
+#, python-format
+#~ msgid ""
+#~ "The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+#~ msgstr ""
+#~ "アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s "
+#~ "> %s"
+
+#~ msgid ""
+#~ "This ID uniquely identifies this rule in Checkmk. Use this ID when "
+#~ "working with rules in Checkmk REST API calls, e.g., to show, modify or "
+#~ "delete the rule."
+#~ msgstr ""
+#~ "このIDは、Checkmk 内でこのルールを識別します。CheckmkのREST API呼び出しで"
+#~ "ルールを操作する場合（例：ルールを表示、変更、または削除するとき）には、こ"
+#~ "のIDを使用してください。"
+
+#~ msgid ""
+#~ "This name uniquely identifies the rule set in Checkmk. Use this name when "
+#~ "working with rule sets and rules in Checkmk REST API calls, e.g. to "
+#~ "create a new rule."
+#~ msgstr ""
+#~ "この名前は、Checkmk内のルールセットを識別します。Checkmkの REST API 呼び出"
+#~ "しでルールセットやルールを操作する際には、この名前を使用してください。例え"
+#~ "ば新しいルールを作成する際などです。"
+
+#, fuzzy
+#~ msgid "this article"
+#~ msgstr "このルール"
+
+#, fuzzy
+#~ msgid " for more details."
+#~ msgstr "詳細はこちらをクリックしてください。"
+
+#, fuzzy
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "Checkmk Managed Services Editionは、CMEを使用して他のサイトにのみ接続でき"
+#~ "ます。"
+
+#, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "ホスト%sはこのサイトでは監視されていません"
 
 #, fuzzy
 #~ msgid "Update widget"

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Folders
 
-# mypy: disable-error-code="no-untyped-call"
-
 Folders are used in Checkmk to organize the hosts in a tree structure.
 The root (or main) folder is always existing, other folders can be created manually.
 If you build the tree cleverly you can use it to pass on attributes in a meaningful manner.
@@ -32,8 +30,9 @@ A folder_config object can have the following relations present in `links`:
  * `urn:org.restfulobjects:rels/update` - The endpoint to update this folder.
  * `urn:org.restfulobjects:rels/delete` - The endpoint to delete this folder.
 
-
 """
+
+# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping
 from typing import Any

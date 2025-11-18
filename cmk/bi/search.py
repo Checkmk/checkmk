@@ -12,13 +12,14 @@
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Mapping
-from typing import cast, override, Self, TypedDict
+from collections.abc import Mapping, Sequence
+from typing import cast, Literal, override, Self, TypedDict
 
 from marshmallow import post_dump, post_load, pre_dump, pre_load
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
+from cmk.bi.fields import ReqConstant, ReqDict, ReqList, ReqNested, ReqString
 from cmk.bi.lib import (
     ABCBISearch,
     ABCBISearcher,
@@ -27,21 +28,12 @@ from cmk.bi.lib import (
     BIHostSearchMatch,
     BIServiceSearchMatch,
     replace_macros,
-    ReqConstant,
-    ReqDict,
-    ReqList,
-    ReqNested,
-    ReqString,
 )
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
     HostChoice,
     HostConditions,
     HostServiceConditions,
-    LabelGroupCondition,
-    ReferTo,
-    ReferToChildWith,
-    ReferToType,
     SearchKind,
     SearchMetadata,
     SearchResult,
@@ -49,6 +41,27 @@ from cmk.bi.type_defs import (
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.labels import AndOrNotLiteral, LabelGroup
+
+ReferToType = Literal["host", "child", "parent", "child_with"]
+
+
+class ReferTo(TypedDict):
+    type: ReferToType
+
+
+class ReferToChildWith(TypedDict):
+    conditions: HostConditions
+    host_choice: HostChoice
+
+
+class LabelCondition(TypedDict):
+    operator: AndOrNotLiteral
+    label: str
+
+
+class LabelGroupCondition(TypedDict):
+    operator: AndOrNotLiteral
+    label_group: Sequence[LabelCondition]
 
 
 class BIAllHostsChoiceSchema(Schema):
@@ -386,7 +399,7 @@ class BIHostSearch(ABCBISearch):
 
         # Filter childrens known to bi_searcher
         children_host_data: list[BIHostData] = [
-            bi_searcher.hosts[x] for x in all_children if x in bi_searcher.hosts
+            bi_searcher.hosts[child] for child in all_children if child in bi_searcher.hosts
         ]
 
         conditions = refer_to["conditions"]

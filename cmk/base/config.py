@@ -21,7 +21,6 @@ import copy
 import dataclasses
 import enum
 import itertools
-import json
 import numbers
 import os
 import pickle
@@ -43,6 +42,7 @@ from typing import (
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
+import cmk.ccc.translations
 import cmk.ccc.version as cmk_version
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
@@ -50,7 +50,6 @@ import cmk.utils.check_utils
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.timeperiod
-import cmk.utils.translations
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.base import default_config
@@ -71,6 +70,7 @@ from cmk.base.sources import ParserConfig
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.regex import regex
 from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import (
@@ -166,7 +166,6 @@ from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.misc import key_config_paths
 from cmk.utils.password_store import make_configured_passwords_lookup
-from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,
@@ -1155,7 +1154,12 @@ def _make_service_description_cb(
 @dataclasses.dataclass(frozen=True)
 class ServiceDependsOn:
     tag_list: Callable[[HostName], Sequence[TagID]]
-    service_dependencies: Sequence[tuple]  # :-(
+    service_dependencies: Sequence[
+        tuple[str, Sequence[TagID], Sequence[str], Sequence[str]]
+        | tuple[str, Sequence[TagID], Sequence[str], Sequence[str], dict[str, Any]]
+        | tuple[str, Sequence[str], Sequence[str]]
+        | tuple[str, Sequence[str], Sequence[str], dict[str, Any]]
+    ]
 
     def __call__(self, hostname: HostName, servicedesc: ServiceName) -> list[ServiceName]:
         """Return a list of services this service depends on"""
@@ -1166,7 +1170,7 @@ class ServiceDependsOn:
                 continue
             if len(entry) == 3:
                 depname, hostlist, patternlist = entry
-                tags: list[TagID] = []
+                tags: Sequence[TagID] = []
             elif len(entry) == 4:
                 depname, tags, hostlist, patternlist = entry
             else:
@@ -3872,13 +3876,16 @@ def _parse[T](raw: object, type_: Callable[..., T], /) -> T:
 def get_metric_backend_fetcher(
     host_name: HostAddress,
     explicit_host_attributes: Callable[[HostAddress], ObjectAttributes],
+    check_interval: Callable[[HostAddress], float],
     is_cmc: bool,
 ) -> ProgramFetcher | None:
     if (
         metrics_association := explicit_host_attributes(host_name).get("metrics_association")
     ) is not None:
         return make_metric_backend_fetcher(
-            host_name, make_metric_backend_fetcher_config(metrics_association), is_cmc
+            host_name,
+            make_metric_backend_fetcher_config(metrics_association, check_interval(host_name)),
+            is_cmc,
         )
     return None
 
@@ -3890,16 +3897,21 @@ def make_metric_backend_fetcher(
         agent_otel,
     )
 
-    metrics_association = json.loads(metric_backend_fetcher_config.metrics_association)
-    host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]
-    filter_args = []
-    for filter_ in metrics_association["attribute_filters"]:
-        filter_args += [
+    stdin = [
+        "--check-interval",
+        str(metric_backend_fetcher_config.check_interval),
+        "--host-name-resource-attribute-key",
+        metric_backend_fetcher_config.host_name_resource_attribute_key,
+        "--host-name",
+        host_name,
+    ]
+    for filter_ in metric_backend_fetcher_config.attribute_filters:
+        stdin += [
             "--filter",
-            f"{filter_['attribute_type']}:{filter_['attribute_key']}={filter_['attribute_value']}",
+            f"{filter_.attribute_type.value}:{filter_.attribute_key}={filter_.attribute_value}",
         ]
     return ProgramFetcher(
-        cmdline=f"python3 -m {agent_otel.__spec__.name} {host_name}",
-        stdin=f"--host-name-resource-attribute-key={host_name_resource_attribute_key} {' '.join(filter_args)}",
+        cmdline=f"python3 -m {agent_otel.__spec__.name}",
+        stdin=" ".join(stdin),
         is_cmc=is_cmc,
     )

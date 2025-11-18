@@ -7,7 +7,7 @@ from typing import Any, assert_never
 
 from cmk import fields
 from cmk.gui.http import Response
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas, type_defs
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
@@ -60,7 +60,9 @@ def list_endpoint_decorator(
 
 
 def serve_configuration_entity_list(
-    entity_type: ConfigEntityType, params: Mapping[str, Any]
+    entity_type: ConfigEntityType,
+    params: Mapping[str, Any],
+    user: LoggedInUser,
 ) -> Response:
     entity_type_specifier = params["entity_type_specifier"]
 
@@ -98,12 +100,14 @@ def get_endpoint_decorator(entity_type: ConfigEntityType) -> Endpoint:
 
 
 def serve_configuration_entity(
-    entity_type: ConfigEntityType, params: Mapping[str, Any]
+    entity_type: ConfigEntityType,
+    params: Mapping[str, Any],
+    user: LoggedInUser,
 ) -> Response:
     entity_id = EntityId(params["entity_id"])
 
     try:
-        entity = get_configuration_entity(entity_type, entity_id)
+        entity = get_configuration_entity(entity_type, entity_id, user)
     except KeyError:
         return problem(
             404, title="Not found", detail=f"Configuration entity {entity_id} not found."

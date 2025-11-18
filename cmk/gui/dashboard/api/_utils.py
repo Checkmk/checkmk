@@ -11,23 +11,36 @@ from livestatus import SiteConfigurations
 
 import cmk.gui.utils.permission_verification as permissions
 from cmk.ccc.user import UserId
+from cmk.gui.dashboard.dashlet import dashlet_registry
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
+from cmk.gui.openapi.framework.utils import dump_dict_without_omitted
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.user_async_replication import add_profile_replication_change
+from cmk.gui.userdb import load_user
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
 from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
-from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
+from cmk.gui.watolib.users import get_enabled_remote_sites_for_user
 
-from .. import DashboardConfig
-from ..store import DashboardStore, save_all_dashboards
+from ..store import DashboardStore, get_all_dashboards, save_all_dashboards
+from ..type_defs import DashboardConfig
+from .model.constants import (
+    DashboardConstantsResponse,
+    FilterContextConstants,
+    LayoutConstraints,
+    RelativeLayoutConstraints,
+    RESPONSIVE_GRID_BREAKPOINTS,
+    ResponsiveGridBreakpointConfig,
+    WidgetConstraints,
+)
 from .model.dashboard import (
     RelativeGridDashboardResponse,
 )
 from .model.response_model import RelativeGridDashboardDomainObject
+from .model.widget import WidgetRelativeGridPosition, WidgetRelativeGridSize
 
 INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "problem_graph": "problem_graph",
@@ -100,6 +113,13 @@ PERMISSIONS_DASHBOARD = permissions.AllPerm(
         PERMISSIONS_VIEW_WIDGET,
     ]
 )
+PERMISSIONS_DASHBOARD_EDIT = permissions.AllPerm(
+    [
+        *PERMISSIONS_DASHBOARD.perms,
+        # extra permissions required for editing foreign dashboards
+        permissions.Optional(permissions.Perm("general.edit_foreign_dashboards")),
+    ]
+)
 
 
 def get_permitted_user_id(owner: UserId | ApiOmitted, action: Literal["delete", "edit"]) -> UserId:
@@ -124,6 +144,21 @@ def get_permitted_user_id(owner: UserId | ApiOmitted, action: Literal["delete", 
     return owner
 
 
+def get_dashboard_for_edit(owner: UserId | ApiOmitted, dashboard_id: str) -> DashboardConfig:
+    """Load a dashboard for editing, verifying permissions."""
+    dashboard_owner = get_permitted_user_id(owner, action="edit")
+
+    key = (dashboard_owner, dashboard_id)
+    dashboards = get_all_dashboards()
+    if key not in dashboards:
+        raise ProblemException(
+            status=404,
+            title="Dashboard not found",
+            detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{dashboard_owner}'.",
+        )
+    return dashboards[key]
+
+
 def serialize_relative_grid_dashboard(
     dashboard_id: str, dashboard: RelativeGridDashboardResponse
 ) -> RelativeGridDashboardDomainObject:
@@ -136,23 +171,27 @@ def serialize_relative_grid_dashboard(
     )
 
 
-def save_dashboard_to_file(sites: SiteConfigurations, dashboard: DashboardConfig) -> None:
+def save_dashboard_to_file(
+    sites: SiteConfigurations, dashboard: DashboardConfig, user_id: UserId
+) -> None:
     dashboard_id = dashboard["name"]
     store = DashboardStore.get_instance()
-    store.all[(user.id, dashboard_id)] = dashboard
+    store.all[(user_id, dashboard_id)] = dashboard
 
-    save_all_dashboards()
-    sync_user_to_remotes(sites)
+    save_all_dashboards(user_id)
+    sync_user_to_remotes(sites, user_id)
 
 
-def sync_user_to_remotes(sites: SiteConfigurations) -> None:
-    """Synchronize the logged-in user profile and their dashboards to all enabled remote sites.
+def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId) -> None:
+    """Synchronize the user profile and their dashboards to all enabled remote sites.
 
-    This does not handle other users or visuals."""
-    if (user_id := user.id) is None:
-        return
+    This does not sync other visuals."""
+    if user_id == user.id:
+        user_spec = user.attributes
+    else:
+        user_spec = load_user(user_id)
 
-    user_remote_sites = get_enabled_remote_sites_for_logged_in_user(user, sites)
+    user_remote_sites = get_enabled_remote_sites_for_user(user_spec, sites)
     if not user_remote_sites:
         return
 
@@ -175,10 +214,56 @@ def sync_user_to_remotes(sites: SiteConfigurations) -> None:
     def push(automation_config: RemoteAutomationConfig) -> None:
         push_user_profiles_to_site_transitional_wrapper(
             automation_config=automation_config,
-            user_profiles={user_id: user.attributes},
+            user_profiles={user_id: user_spec},
             visuals=visuals,
             debug=False,
         )
 
     with ThreadPoolExecutor(max_workers=len(remote_configs)) as executor:
         executor.map(push, remote_configs)
+
+
+def convert_internal_relative_dashboard_to_api_model_dict(
+    dashboard_config: DashboardConfig,
+) -> dict[str, object]:
+    dashboard_relative_grid = RelativeGridDashboardResponse.from_internal(dashboard_config)
+    return dump_dict_without_omitted(RelativeGridDashboardResponse, dashboard_relative_grid)
+
+
+class DashboardConstants:
+    @staticmethod
+    def generate_api_response() -> DashboardConstantsResponse:
+        widgets_metadata = {}
+        for widget_type, widget in dashlet_registry.items():
+            if api_type_name := INTERNAL_TO_API_TYPE_NAME.get(widget_type):
+                widgets_metadata[api_type_name] = WidgetConstraints(
+                    layout=LayoutConstraints(
+                        relative=RelativeLayoutConstraints(
+                            initial_size=WidgetRelativeGridSize.from_internal(
+                                widget.initial_size()
+                            ),
+                            initial_position=WidgetRelativeGridPosition.from_internal(
+                                widget.initial_position()
+                            ),
+                            is_resizable=widget.is_resizable(),
+                        )
+                    ),
+                    filter_context=FilterContextConstants(
+                        restricted_to_single=list(widget.single_infos()),
+                    ),
+                )
+
+        return DashboardConstantsResponse(
+            widgets=widgets_metadata,
+            responsive_grid_breakpoints={
+                breakpoint_id: ResponsiveGridBreakpointConfig(
+                    min_width=config["min_width"], columns=config["columns"]
+                )
+                for breakpoint_id, config in RESPONSIVE_GRID_BREAKPOINTS.items()
+            },
+        )
+
+    @staticmethod
+    def dict_output() -> dict[str, object]:
+        response = DashboardConstants.generate_api_response()
+        return dump_dict_without_omitted(DashboardConstantsResponse, response)

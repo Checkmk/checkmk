@@ -26,7 +26,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 from cmk.gui import log, single_global_setting
 from cmk.gui.background_job import job_registry, ThreadedJobExecutor
-from cmk.gui.utils import get_failed_plugins
 from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
 from cmk.utils import paths
@@ -101,8 +100,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
             # pre-daemonize phase with this, because it also slows down "omd start" significantly.
             from cmk.gui import main_modules
 
-            main_modules.load_plugins()
-            if errors := get_failed_plugins():
+            if errors := main_modules.get_failed_plugins():
                 logger.error("The following errors occurred during plug-in loading: %r", errors)
 
             scheduler_thread = run_scheduler_threaded(

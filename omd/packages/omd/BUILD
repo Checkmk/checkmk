@@ -47,6 +47,7 @@ pkg_files(
     "scp",
     "pdftoppm",
     "curl",
+    "zypper",
 ]]
 
 genrule(
@@ -165,6 +166,7 @@ pkg_files(
         ":omdlib/contexts.py",
         ":omdlib/crash_reporting.py",
         ":omdlib/dialog.py",
+        ":omdlib/finalize.py",
         ":omdlib/global_options.py",
         ":omdlib/init_scripts.py",
         ":omdlib/instance_id.py",
@@ -172,6 +174,7 @@ pkg_files(
         ":omdlib/options.py",
         ":omdlib/package_manager.py",
         ":omdlib/restore.py",
+        ":omdlib/scripts.py",
         ":omdlib/site_name.py",
         ":omdlib/site_paths.py",
         ":omdlib/sites.py",
@@ -245,6 +248,7 @@ pkg_tar(
             ":wrapper_pdftoppm",
             ":wrapper_scp",
             ":wrapper_ssh",
+            ":wrapper_zypper",
         ],
         "@cmk//distro:debian-13": [
             ":wrapper_curl",

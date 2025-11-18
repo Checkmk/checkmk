@@ -22,6 +22,7 @@ from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
 from cmk.gui.exceptions import MKUserError
@@ -52,7 +53,6 @@ from cmk.utils import paths
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
-from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
 from cmk.utils.rulesets.definition import RuleGroup

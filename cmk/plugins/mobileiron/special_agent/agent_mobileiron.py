@@ -7,11 +7,11 @@ Special agent for monitoring MobileIron devices with Checkmk. The data
 is fetched from the MobileIron Cloud. Documentation:
 https://help.ivanti.com/mi/help/en_us/cld/76/api/Content/MobileIronCloudCustomerIntegrationAPIGuide/Device%20API%20Calls.htm#_Toc507757059
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-
 api call url parameters: "https://" + $tenantURL + "/api/v1/device?q=&rows=" + $interval + "&start=" + $start + "&dmPartitionId=" + $spaceId + "&fq=" + $filterCriteria + ""
 """
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 

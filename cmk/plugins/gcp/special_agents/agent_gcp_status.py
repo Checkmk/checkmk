@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special agent: agent_gcp_status.
 
-# mypy: disable-error-code="type-arg"
-
 This agent retrieves the service status from https://status.cloud.google.com/incidents.json.
 Since this feed is public, no authentication is required.
 """
+
+# mypy: disable-error-code="type-arg"
 
 import argparse
 import sys
@@ -18,8 +18,11 @@ from collections.abc import Sequence
 import pydantic
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable import agent_common
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+
+__version__ = "2.5.0b1"
+
+AGENT = "gcp_status"
 
 
 class DiscoveryParam(pydantic.BaseModel):
@@ -44,12 +47,7 @@ class AgentOutput(pydantic.BaseModel):
     health_info: pydantic.Json
 
 
-def _health_serializer(section: AgentOutput) -> None:
-    with agent_common.SectionWriter("gcp_status") as w:
-        w.append(section.model_dump_json())
-
-
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -94,12 +92,14 @@ def write_section(
         discovery_param=DiscoveryParam.model_validate(vars(args)),
         health_info=response,
     )
-    _health_serializer(section)
+    sys.stdout.write("<<<gcp_status:sep(0)>>>\n")
+    sys.stdout.write(f"{section.model_dump_json()}\n")
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return agent_common.special_agent_main(parse_arguments, write_section)
+    return write_section(parse_arguments(sys.argv[1:]))
 
 
 if __name__ == "__main__":

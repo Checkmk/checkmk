@@ -269,4 +269,4 @@ def test_azure_mysql_inventory() -> None:
         },
     )
     inventory = inventory_plugin_azure_mysql.inventory_function(section)
-    assert get_inventory_value(inventory, "Region") == "westeurope"
+    assert get_inventory_value(inventory, "region") == "westeurope"

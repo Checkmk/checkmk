@@ -51,6 +51,7 @@ DISTRO_CODES = {
     "sles-15sp2": "sles15sp2",
     "sles-15sp5": "sles15sp5",
     "sles-15sp6": "sles15sp6",
+    "sles-15sp7": "sles15sp7",
 }
 TCMKPackageInfos = CMKPackageInfo | CMKPackageInfoOld
 TypeCMKEditions = TypeCMKEdition | TypeCMKEditionOld
@@ -404,14 +405,14 @@ def package_info_from_path(package_path: Path) -> CMKPackageInfo:
         version_str = pkg_manager.get_version(package_path)
     else:
         match = re.match(
-            r"check-mk-(raw|enterprise|managed|cloud|saas|free)-([^_]+).(cme|cee|cre|cce).tar.gz$",
+            r"check-mk-(community|pro|ultimate|ultimatemt|cloud)-([^_]+).tar.gz$",
             package_path.name,
         )
         if not match:
             raise ValueError(
                 f"Could not extract edition and version from package: {package_path.name}"
             )
-        edition_text, version_str, _ = match.groups()
+        edition_text, version_str = match.groups()
         edition = CMKEdition.edition_from_text(edition_text)
     version = CMKVersion(version_str)
 

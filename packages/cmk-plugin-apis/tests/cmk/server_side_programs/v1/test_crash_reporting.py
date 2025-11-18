@@ -42,7 +42,10 @@ def test_crash_reported_for_exception(fixed_path: Path) -> None:
             "exc_value": "test exception",
             "exc_traceback": list(),
             "local_vars": str(),
-            "details": {"agent_name": "smith"},
+            "details": {
+                "program_type": "agent",
+                "program_name": "smith",
+            },
             "core": "N/A",
             "python_version": str(),
             "edition": "N/A",

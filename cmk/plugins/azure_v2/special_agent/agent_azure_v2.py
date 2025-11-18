@@ -5,16 +5,16 @@
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 
+Resources and resourcegroups are all treated lowercase because of:
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
+"""
+
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-
-Resources and resourcegroups are all treated lowercase because of:
-https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
-"""
 
 from __future__ import annotations
 
@@ -228,13 +228,21 @@ class AzureResourceGroup(_AzureEntity):
             **info,
             "tenant_id": subscription.tenant_id,
             "subscription_name": subscription.name,
-            "subscription_id": subscription.id,
+            "subscription": subscription.id,
             "group": info["name"].lower(),
         }
         self.subscription = subscription
 
     def _safename(self) -> str:
-        return self._compute_safename((self.subscription.tenant_id, self.subscription.id))
+        return self._compute_safename(
+            # adding type because a resource-group can have the same name of a subscription
+            # the type add more uniqueness
+            (
+                self.subscription.tenant_id,
+                self.subscription.id,
+                self.info["type"],  # "Microsoft.Resources/resourceGroups"
+            )
+        )
 
 
 class TagsImportPatternOption(enum.Enum):
@@ -1832,7 +1840,7 @@ def get_resource_host_labels_section(
         "resource_group": resource.group,
         "entity": resource.section,
         "subscription_name": subscription.hostname,
-        "subscription_id": subscription.id,
+        "subscription": subscription.id,
         **({"region": region} if (region := resource.info.get("location")) else {}),
     }
 
@@ -1893,7 +1901,7 @@ def write_group_info(
             labels={
                 "resource_group": group_name,
                 "subscription_name": subscription.hostname,
-                "subscription_id": subscription.id,
+                "subscription": subscription.id,
                 "entity": "resource_group",
                 **({"region": region} if (region := group.info.get("location")) else {}),
             },
@@ -1920,7 +1928,7 @@ def write_subscription_info(subscription: AzureSubscription) -> None:
         subscription.piggytarget,
         labels={
             "subscription_name": subscription.hostname,
-            "subscription_id": subscription.id,
+            "subscription": subscription.id,
             "entity": "subscription",
         },
         tags=subscription.tags,
@@ -2160,7 +2168,7 @@ async def process_resource_health(
             continue
         health_values.extend(response)
 
-    return _get_resource_health_sections(health_values, monitored_resources, subscription)
+    return _get_resource_health_sections(health_values, monitored_resources, monitored_groups)
 
 
 # TODO: test
@@ -2244,7 +2252,7 @@ class ResourceHealth(TypedDict, total=False):
 def _get_resource_health_sections(
     resource_health_view: Sequence[ResourceHealth],
     resources: Mapping[ResourceId, AzureResource],
-    subscription: AzureSubscription,
+    monitored_groups: Mapping[str, AzureResourceGroup],
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
@@ -2268,13 +2276,18 @@ def _get_resource_health_sections(
             "tags": resource.tags,
         }
 
-        health_section[group].append(json.dumps(health_data))
+        health_section[group.lower()].append(json.dumps(health_data))
 
     sections = []
-    for group, values in health_section.items():
+    for group_name, values in health_section.items():
+        if not (group_obj := monitored_groups.get(group_name)):
+            LOGGER.warning(
+                "Resource health data for resource group %s, which is not monitored", group_name
+            )
+            continue
         section = AzureSection(
             "resource_health",
-            piggytargets=[resource.piggytarget],
+            piggytargets=[group_obj.piggytarget],
             separator=0,
         )
         for value in values:

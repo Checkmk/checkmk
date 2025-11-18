@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any, Literal, NotRequired, TypedDict
 
-from cmk.utils.labels import AndOrNotLiteral, LabelGroups
+from cmk.utils.labels import LabelGroups
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 
+# action
+ActionArgument = tuple[str, ...]
 ActionKind = Literal[
     "call_a_rule",
     "state_of_host",
@@ -22,8 +24,8 @@ class ActionSerialized(TypedDict):
     type: ActionKind
 
 
+# search
 SearchResult = dict[str, str]
-
 SearchKind = Literal[
     "empty",
     "fixed_arguments",
@@ -41,11 +43,13 @@ class SearchMetadata:
     kind: SearchKind = dataclasses.field(repr=False)
 
 
+# node
 class NodeDict(TypedDict):
     search: SearchSerialized
     action: ActionSerialized
 
 
+# aggregation
 AggregationFunctionKind = Literal[
     "best",
     "count_ok",
@@ -66,6 +70,7 @@ class ComputationConfigDict(TypedDict):
     disabled: bool
     use_hard_states: bool
     escalate_downtimes_as_warn: bool
+    freeze_aggregations: NotRequired[bool]
 
 
 class AggrConfigDict(TypedDict):
@@ -78,6 +83,7 @@ class AggrConfigDict(TypedDict):
     aggregation_visualization: Any
 
 
+# search
 HostState = int
 HostRegexMatches = dict[str, tuple[str, ...]]
 
@@ -97,25 +103,3 @@ class HostConditions(TypedDict):
 class HostServiceConditions(HostConditions):
     service_regex: str
     service_label_groups: LabelGroups
-
-
-ReferToType = Literal["host", "child", "parent", "child_with"]
-
-
-class ReferTo(TypedDict):
-    type: ReferToType
-
-
-class ReferToChildWith(TypedDict):
-    conditions: HostConditions
-    host_choice: HostChoice
-
-
-class LabelCondition(TypedDict):
-    operator: AndOrNotLiteral
-    label: str
-
-
-class LabelGroupCondition(TypedDict):
-    operator: AndOrNotLiteral
-    label_group: Sequence[LabelCondition]

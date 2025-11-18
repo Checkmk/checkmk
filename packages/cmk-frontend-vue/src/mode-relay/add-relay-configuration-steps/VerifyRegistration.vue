@@ -22,7 +22,7 @@ const { _t } = usei18n()
 
 const props = defineProps<CmkWizardStepProps & { relayName: string }>()
 
-defineEmits(['openCreateHostPage'])
+defineEmits(['openCreateHostPage', 'openRelayOverviewPage'])
 
 const context = getWizardContext()
 
@@ -94,6 +94,13 @@ watch(
         type="finish"
         :override-label="_t('Continue to add host')"
         @click="$emit('openCreateHostPage')"
+      />
+      <CmkWizardButton
+        v-if="registrationSuccess"
+        type="other"
+        :override-label="_t('Go to relay overview')"
+        icon-name="relay-menu"
+        @click="$emit('openRelayOverviewPage')"
       />
       <CmkWizardButton type="previous" />
     </template>

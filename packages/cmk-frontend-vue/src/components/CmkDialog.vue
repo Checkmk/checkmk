@@ -15,12 +15,14 @@ import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
 
-const props = defineProps<{
+export interface CmkDialogProps {
   title?: TranslatedString | undefined
   message: TranslatedString
   buttons?: { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
   dismissal_button?: { title: TranslatedString; key: string }
-}>()
+}
+
+const props = defineProps<CmkDialogProps>()
 
 const dialogHidden = props.dismissal_button
   ? usePersistentRef(props.dismissal_button.key, false, (v) => v as boolean, 'session')

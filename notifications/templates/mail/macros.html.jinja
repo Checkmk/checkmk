@@ -1,24 +1,25 @@
 {% macro td_first_child(width, padding="0") %}
-    style="
-    padding: {{ padding }};
+    style="padding: {{ padding }};
     font-size: 14px;
     color: #2c3844;
     font-weight: 600;
     width: {{ width }};
-    height:33px;
-    "
+    height:33px;"
 {% endmacro %}
 {% macro td_last_child() %}
-    style="
-    font-size: 14px; color:#2c3844;
+    style="font-size: 14px;
+    color:#2c3844;
     word-break: break-word;
-    overflow-wrap: break-word;
-    "
+    overflow-wrap: break-word;"
 {% endmacro %}
 {% macro replace_statemarker(data) %}
-    {% set default_style = 'margin-left: 2px;padding: 1px 3px;border-radius: 4px;
-        font-size: 7pt;border: 1px solid #666;position: relative;top: -1px;' %}
-    {{ data | replace('(.)','<b style="'+default_style+'background-color: #ffff00; color: #000000">OK</b>') | replace('(!)', '<b style="'+default_style+'background-color: #ffff00; color: #000000">WARN</b>') | replace('(!!)', '<b style="'+default_style+'background-color: #ff0000; color: #ffffff">CRIT</b>') | replace('(?)', '<b style="'+default_style+'background-color: #ff8800; color: #ffffff">UNKN</b>') | safe }}
+    {% set default_style = "margin-left: 2px; padding: 1px 3px; border-radius: 4px; font-size: 7pt; border: 1px solid #666; position: relative; top: -1px;" %}
+    {{ data
+    | replace('(.)','<b style="'+default_style+'background-color: #13D389; color: #000000">OK</b>') 
+    | replace('(!)', '<b style="'+default_style+'background-color: #FFD703; color: #000000">WARN</b>')
+    | replace('(!!)', '<b style="'+default_style+'background-color: #C83232; color: #ffffff">CRIT</b>')
+    | replace('(?)', '<b style="'+default_style+'background-color: #ff8800; color: #ffffff">UNKN</b>')
+    | safe }}
 {% endmacro %}
 {% macro view_issue_button(href) %}
     <table role="button"
@@ -31,13 +32,13 @@
         <tr>
             <td align="center" style="padding: 0 0 20px 0;">
                 <!--[if mso]>
-      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ href }}" style="height:34px; v-text-anchor:middle; width:472px;" arcsize="8%" strokecolor="#2c3843" fillcolor="#2c3843">
-        <w:anchorlock />
-        <center style="color:#ffffff; font-family:Arial, sans-serif; font-size:14px; font-weight:600;">
-          View issue
-        </center>
-      </v:roundrect>
-      <![endif]-->
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ href }}" style="height:34px; v-text-anchor:middle; width:472px;" arcsize="8%" strokecolor="#2c3843" fillcolor="#2c3843">
+                <w:anchorlock />
+                <center style="color:#ffffff; font-family:Arial, sans-serif; font-size:14px; font-weight:600;">
+                  View issue
+                </center>
+            </v:roundrect>
+            <![endif]-->
                 <!--[if !mso]><!-- -->
                 <a href="{{ href }}"
                    style="display: inline-block;

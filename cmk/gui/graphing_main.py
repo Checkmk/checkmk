@@ -171,8 +171,7 @@ def _add_graphing_plugins(
             graphs_from_api.register(plugin)
 
 
-def load_plugins() -> None:
-    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+def register() -> None:
     _add_graphing_plugins(_load_graphing_plugins())
 
 

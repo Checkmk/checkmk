@@ -19,11 +19,10 @@ from pathlib import Path
 from shutil import disk_usage
 from typing import Final, Literal
 
-from cmk.utils.log import VERBOSE
-
 from .config import Config
 from .event import Event
 from .history import History, HistoryWhat
+from .log_level import VERBOSE
 from .query import Columns, QueryFilter, QueryGET
 from .settings import Options, Paths, Settings
 
@@ -162,9 +161,9 @@ def _unix_temp_file_dir(logger: Logger) -> Path | None:
     for path_candidate in [
         os.getenv("SQLITE_TMPDIR"),
         os.getenv("TMPDIR"),
-        "/var/tmp",  # nosec B108
+        "/var/tmp",  # nosec B108 # BNS:f9349e
         "/usr/tmp",
-        "/tmp",  # nosec B108
+        "/tmp",  # nosec B108 # BNS:f9349e
         ".",
     ]:
         try:

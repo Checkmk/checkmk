@@ -5,9 +5,6 @@
     "form_spec": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string"
-        },
         "title": {
           "type": "string"
         },
@@ -22,7 +19,7 @@
           }
         }
       },
-      "required": ["type", "title", "help", "validators"]
+      "required": ["title", "help", "validators"]
     },
     "integer": {
       "type": "object",
@@ -117,6 +114,40 @@
             }
           },
           "required": ["type", "label", "unit", "input_hint"]
+        }
+      ]
+    },
+    "regex": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "regex",
+              "default": "regex"
+            },
+            "label": {
+              "type": ["string"]
+            },
+            "input_type": {
+              "type": ["string"]
+            },
+            "no_results_hint": {
+              "type": ["string"]
+            },
+            "autocompleter": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/autocompleter"
+                }
+              ]
+            }
+          },
+          "required": ["type", "label", "input_type", "no_results_hint", "autocompleter"]
         }
       ]
     },
@@ -438,18 +469,47 @@
     "two_column_dictionary": {
       "id": "two_column_dictionary",
       "type": "object",
-      "properties": {
-        "type": {
-          "const": "two_column_dictionary",
-          "default": "two_column_dictionary"
-        }
-      },
       "allOf": [
         {
-          "$ref": "#/$defs/dictionary"
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "two_column_dictionary",
+              "default": "two_column_dictionary"
+            },
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dictionary_element"
+              },
+              "default": []
+            },
+            "groups": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dictionary_group"
+              }
+            },
+            "no_elements_text": {
+              "type": "string"
+            },
+            "additional_static_elements": {
+              "type": ["object", "null"]
+            }
+          },
+          "required": [
+            "type",
+            "elements",
+            "static_elements_key",
+            "additional_static_elements",
+            "no_elements_text",
+            "groups"
+          ]
         }
-      ],
-      "required": ["type"]
+      ]
     },
     "single_choice_element": {
       "type": "object",
@@ -805,19 +865,29 @@
     "comment_text_area": {
       "id": "comment_text_area",
       "type": "object",
-      "properties": {
-        "type": {
-          "const": "comment_text_area",
-          "default": "comment_text_area"
-        }
-      },
       "allOf": [
         {
-          "$ref": "#/$defs/multiline_text"
+          "$ref": "#/$defs/form_spec"
         },
         {
           "type": "object",
           "properties": {
+            "type": {
+              "const": "comment_text_area",
+              "default": "comment_text_area"
+            },
+            "label": {
+              "type": ["string", "null"]
+            },
+            "macro_support": {
+              "type": "boolean"
+            },
+            "monospaced": {
+              "type": "boolean"
+            },
+            "input_hint": {
+              "type": ["string", "null"]
+            },
             "user_name": {
               "type": "string"
             },
@@ -832,27 +902,52 @@
               "required": ["prefix_date_and_comment"]
             }
           },
-          "required": ["user_name", "i18n"]
+          "required": [
+            "type",
+            "label",
+            "macro_support",
+            "monospaced",
+            "input_hint",
+            "user_name",
+            "i18n"
+          ]
         }
-      ],
-      "required": ["type"]
+      ]
     },
     "metric": {
       "id": "metric",
       "type": "object",
-      "properties": {
-        "type": {
-          "const": "metric",
-          "default": "metric"
-        }
-      },
       "allOf": [
         {
-          "$ref": "#/$defs/string"
+          "$ref": "#/$defs/form_spec"
         },
         {
           "type": "object",
           "properties": {
+            "type": {
+              "const": "metric",
+              "default": "metric"
+            },
+            "label": {
+              "type": ["string", "null"]
+            },
+            "input_hint": {
+              "type": ["string", "null"]
+            },
+            "field_size": {
+              "title": "StringFieldSize",
+              "enum": ["SMALL", "MEDIUM", "LARGE"]
+            },
+            "autocompleter": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/autocompleter"
+                }
+              ]
+            },
             "service_filter_autocompleter": {
               "$ref": "#/$defs/autocompleter"
             },
@@ -879,10 +974,18 @@
               "required": ["host_input_hint", "host_filter", "service_input_hint", "service_filter"]
             }
           },
-          "required": ["service_filter_autocompleter", "host_filter_autocompleter", "i18n"]
+          "required": [
+            "type",
+            "label",
+            "input_hint",
+            "field_size",
+            "autocompleter",
+            "service_filter_autocompleter",
+            "host_filter_autocompleter",
+            "i18n"
+          ]
         }
-      ],
-      "required": ["type"]
+      ]
     },
     "data_size": {
       "type": "object",
@@ -1303,6 +1406,9 @@
                 },
                 "context": {
                   "type": "object"
+                },
+                "input_hint": {
+                  "type": "string"
                 }
               }
             }
@@ -1558,6 +1664,9 @@
         },
         {
           "$ref": "#/$defs/float"
+        },
+        {
+          "$ref": "#/$defs/regex"
         },
         {
           "$ref": "#/$defs/string"

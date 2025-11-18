@@ -518,9 +518,6 @@ def extend_context(context: dict[str, str], is_bulk: bool = False) -> None:
     if "graph" in context.get("PARAMETER_ELEMENTSS", "graph").split():
         context["GRAPH_URL"] = utils.graph_url_from_context(context)
 
-    if is_bulk:
-        context["EVENTHISTORYURL"] = utils.eventhistory_url_from_context(context)
-
     if context["HOSTALIAS"] and context["HOSTNAME"] != context["HOSTALIAS"]:
         context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$ ($HOSTALIAS$)"
         context["HOSTNAME_AND_ALIAS_HTML"] = "$LINKEDHOSTNAME$ ($HOSTALIAS$)"
@@ -608,11 +605,27 @@ class BulkEmailContent(EmailContent):
             extend_context(escaped_context, is_bulk=True)
             all_contexts_updated.append(escaped_context)
 
+        bulk_summary = _get_bulk_summary(all_contexts_updated)
+
+        content_html += TemplateRenderer().render_template(
+            "base.html.jinja",
+            {
+                "data": {
+                    "EVENTHISTORYURL": utils.eventhistory_url_from_context(all_contexts_updated[0])
+                },
+                "graphs": [],
+                "insert": "",
+                "is_bulk": True,
+                "bulk_summary": bulk_summary,
+                "last_bulk_entry": False,
+            },
+        )
+
         for i, c in enumerate(all_contexts_updated, 1):
             txt, html, att = construct_content(
                 c,
                 is_bulk=True,
-                bulk_summary=all_contexts_updated if i == 1 else None,
+                bulk_summary=None,
                 last_bulk_entry=i == len(all_contexts_updated),
                 notification_number=i,
             )
@@ -648,6 +661,32 @@ class BulkEmailContent(EmailContent):
             content_html=content_html,
             attachments=attachments,
         )
+
+
+def _get_bulk_summary(all_contexts_updated: list[dict[str, str]]) -> list[dict[str, str]]:
+    keys_to_include = {
+        "WHAT",
+        "PREVIOUSHOSTHARDSTATE",
+        "HOSTSTATE",
+        "HOSTNAME_AND_ALIAS_HTML",
+        "PREVIOUSSERVICEHARDSTATE",
+        "SERVICESTATE",
+        "LINKEDSERVICEDESC",
+        "SHORTDATETIME",
+    }
+
+    keys_to_substitute = {"HOSTNAME_AND_ALIAS_HTML", "LINKEDSERVICEDESC"}
+
+    return [
+        {
+            key: utils.substitute_context(part[key], part)
+            if key in keys_to_substitute
+            else part[key]
+            for key in keys_to_include
+            if key in part
+        }
+        for part in all_contexts_updated
+    ]
 
 
 class SingleEmailContent(EmailContent):
@@ -693,10 +732,16 @@ def _add_template_attachments(
 
     if context.get("PARAMETER_CONTACT_GROUPS"):
         attachments.append(attach_file(icon="contact_groups.png"))
+    # TODO these elements have to be removed from the choices, they are always
+    # shown in other sections of the HTML email
     if elements := context.get("PARAMETER_ELEMENTSS", "graph abstime longoutput").split():
         if "graph" in elements:
             attachments.append(attach_file(icon="graph.png"))
             elements.remove("graph")
+        if "longoutput" in elements:
+            elements.remove("longoutput")
+        if "abstime" in elements:
+            elements.remove("abstime")
         if elements:
             attachments.append(attach_file(icon="additional.png"))
     if context.get("PARAMETER_SVC_LABELS") or context.get("PARAMETER_HOST_LABELS"):

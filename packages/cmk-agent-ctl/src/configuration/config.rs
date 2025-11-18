@@ -51,6 +51,7 @@ pub trait TOMLLoaderMissingSafe: TOMLLoader + Default {
 pub struct RegisterExistingConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub host_name: String,
+    pub automatic_updates: bool,
 }
 
 impl RegisterExistingConfig {
@@ -64,6 +65,7 @@ impl RegisterExistingConfig {
                 register_opts.connection_opts,
             )?,
             host_name: register_opts.hostname,
+            automatic_updates: register_opts.automatic_updates,
         })
     }
 }
@@ -110,6 +112,7 @@ impl RegisterNewConfig {
     }
 }
 
+#[derive(Clone)]
 pub struct RegistrationConnectionConfig {
     pub site_id: site_spec::SiteID,
     pub receiver_port: u16,
@@ -165,6 +168,7 @@ pub struct PreConfiguredConnection {
     pub port: Option<u16>,
     pub credentials: types::Credentials,
     pub root_cert: String,
+    pub enable_auto_update: Option<bool>,
 }
 
 #[derive(Deserialize, Clone, Default)]
@@ -828,6 +832,7 @@ mod test_registration_config {
                 cli::RegisterOpts {
                     connection_opts: registration_connection_opts(),
                     hostname: String::from("host_name"),
+                    automatic_updates: false,
                 },
             )
             .unwrap()

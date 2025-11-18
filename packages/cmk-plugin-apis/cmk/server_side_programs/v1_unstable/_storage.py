@@ -12,22 +12,29 @@ _STORAGE_PATH_ENV: Final = "SERVER_SIDE_PROGRAM_STORAGE_PATH"
 
 class Storage:
     """
-    Storage interface for server side programs (special agents and active checks).
+    Storage interface for special agents and active checks.
+
     These programs may have the need to save some form of data in between runs.
-    Therefore, this interface transparently provides a possibility to read and write text to a persistent storage.
+    This interface provides a possibility to read and write text to a persistent storage.
+    You can instantiate the storage interface with a program identifier and a host name,
+    these are used to namespace the storage.
+
+    Args:
+        program_ident: A string identifying the program using the storage. This is used to
+            namespace the storage.
+        host: The host name the program is working for. This is used to namespace the storage.
     """
 
     def __init__(self, program_ident: str, host: str) -> None:
-        """
-        Initializes the storage interface. program_ident and host provide an identifier to namespace
-        the storage.
+        self._ident: Final = program_ident
+        self._host: Final = host
 
-        Raises a RuntimeError if OMD_ROOT environment variable is not set.
-        """
-        self._full_dir = Path(
+    @property
+    def _full_dir(self) -> Path:
+        return Path(
             self._get_base_path(),
-            self._sanitize_key(program_ident),
-            self._sanitize_key(host),
+            self._sanitize_key(self._host),
+            self._sanitize_key(self._ident),
         )
 
     @staticmethod
@@ -50,6 +57,8 @@ class Storage:
     def write(self, key: str, content: str) -> None:
         """
         Write text content to the storage.
+
+        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -58,6 +67,8 @@ class Storage:
     def unset(self, key: str) -> None:
         """
         Remove key and its content from the storage.
+
+        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         path.unlink(missing_ok=True)
@@ -67,6 +78,8 @@ class Storage:
         Read content from the storage.
 
         If the key is unknown or the content is corrupted, return default.
+
+        Raises a RuntimeError if SERVER_SIDE_PROGRAM_STORAGE_PATH environment variable is not set.
         """
         path = self._get_path(key)
         try:

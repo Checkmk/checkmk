@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from dataclasses import dataclass
 
@@ -41,7 +40,7 @@ class EndpointFamily:
 class EndpointFamilyRegistry:
     """Registry for all endpoint families in the REST API."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._families: dict[str, EndpointFamily] = {}
 
     def register(self, family: EndpointFamily, *, ignore_duplicates: bool) -> None:

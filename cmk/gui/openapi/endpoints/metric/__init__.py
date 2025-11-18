@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Metrics
 
-# mypy: disable-error-code="no-untyped-def"
-
 Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
+
+# mypy: disable-error-code="no-untyped-def"
 
 from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config

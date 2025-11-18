@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 
 import CmkIndent from '@/components/CmkIndent.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
 import type { FilterConfigState } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import { ElementSelection } from '@/dashboard-wip/components/Wizard/types.ts'
@@ -46,7 +46,7 @@ const modeSelection = defineModel<ElementSelection>('modeSelection', {
 
 <template>
   <template v-if="!props.singleOnly">
-    <ToggleButtonGroup
+    <CmkToggleButtonGroup
       v-model="modeSelection"
       :options="[
         { label: _t('Single %{n}', { n: props.objectType }), value: ElementSelection.SPECIFIC },

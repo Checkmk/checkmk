@@ -199,7 +199,6 @@ class _PaintBool:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, bool):
-            # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(self._field.style(value), self.default_alignment),
@@ -252,7 +251,6 @@ class _PaintNumber:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float)):
-            # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
 
         match self._field.render:
@@ -279,7 +277,6 @@ class _PaintText:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, str):
-            # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(self._field.style(value), self.default_alignment),
@@ -297,7 +294,6 @@ class _PaintChoice:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float | str)):
-            # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(self._field.style(value), self.default_alignment),
@@ -776,7 +772,7 @@ class AttributeDisplayHint:
         return _("Inventory attribute: %s") % self.long_title
 
 
-def _parse_attribute_hint(
+def _parse_attr_field_from_legacy(
     *,
     path: SDPath,
     node_name: str,
@@ -821,7 +817,7 @@ class ColumnDisplayHint:
         return _("Inventory column: %s") % self.long_title
 
 
-def _parse_column_hint(
+def _parse_col_field_from_legacy(
     *, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> ColumnDisplayHint:
     _data_type, paint_function = _get_paint_function(legacy_hint)
@@ -836,7 +832,7 @@ def _parse_column_hint(
     )
 
 
-def _parse_column_display_hint_filter_class(
+def _parse_col_filter_from_legacy(
     table_view_name: str,
     name: str,
     long_title: str,
@@ -951,7 +947,7 @@ class ColumnDisplayHintOfView:
         return _("Inventory column: %s") % self.long_title
 
 
-def _parse_column_hint_of_view(
+def _parse_col_field_from_legacy_of_view(
     *, table_view_name: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
 ) -> ColumnDisplayHintOfView:
     _data_type, paint_function = _get_paint_function(legacy_hint)
@@ -967,7 +963,7 @@ def _parse_column_hint_of_view(
         long_title=long_title,
         paint_function=_wrap_paint_function(paint_function),
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
-        filter=_parse_column_display_hint_filter_class(
+        filter=_parse_col_filter_from_legacy(
             table_view_name, name, long_title, legacy_hint.get("filter")
         ),
     )
@@ -1131,7 +1127,7 @@ def _parse_legacy_display_hints(
         ):
             table = TableWithView(
                 columns={
-                    SDKey(key): _parse_column_hint_of_view(
+                    SDKey(key): _parse_col_field_from_legacy_of_view(
                         table_view_name=table_view_name,
                         node_title=title,
                         key=key,
@@ -1151,7 +1147,7 @@ def _parse_legacy_display_hints(
         else:
             table = Table(
                 columns={
-                    SDKey(key): _parse_column_hint(
+                    SDKey(key): _parse_col_field_from_legacy(
                         node_title=title,
                         key=key,
                         legacy_hint=related_legacy_hints.by_column.get(key, {}),
@@ -1170,7 +1166,7 @@ def _parse_legacy_display_hints(
             long_title=long_title,
             icon=icon,
             attributes={
-                SDKey(key): _parse_attribute_hint(
+                SDKey(key): _parse_attr_field_from_legacy(
                     path=path,
                     node_name=name,
                     node_title=title,
@@ -1276,8 +1272,8 @@ def register_display_hints(
 ) -> None:
     non_canonical_filters = find_non_canonical_filters(legacy_hints)
 
-    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
-        inv_display_hints.add(_parse_node_from_api(node, non_canonical_filters))
-
     for hint in _parse_legacy_display_hints(legacy_hints, non_canonical_filters):
         inv_display_hints.add(hint)
+
+    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
+        inv_display_hints.add(_parse_node_from_api(node, non_canonical_filters))

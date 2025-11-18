@@ -36,9 +36,8 @@ from pysmi.searcher.pypackage import PyPackageSearcher
 from pysmi.searcher.stub import StubSearcher
 from pysmi.writer.pyfile import PyFileWriter
 
-from cmk.utils.log import VERBOSE
-
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
+from .log_level import VERBOSE
 from .settings import Paths, Settings
 
 VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
@@ -282,6 +281,7 @@ class SNMPTrapTranslator:
                 paths.checkmk_mibs_dir,
                 paths.system_mibs_dir,
                 paths.compiled_mibs_dir,
+                paths.checkmk_compiled_mibs_dir,
             ]:
                 builder.addMibSources(pysnmp.smi.builder.DirMibSource(source.value))
 

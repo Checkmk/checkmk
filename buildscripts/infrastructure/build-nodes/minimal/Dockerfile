@@ -7,7 +7,7 @@
 # --workdir /checkmk \
 # -v ./:/checkmk \
 # -v /var/run/docker.sock:/var/run/docker.sock \
-# --user ubuntu
+# --user ubuntu \
 # --name ubuntu-minimal \
 # minimal-ubuntu-checkmk-master:latest bash
 #

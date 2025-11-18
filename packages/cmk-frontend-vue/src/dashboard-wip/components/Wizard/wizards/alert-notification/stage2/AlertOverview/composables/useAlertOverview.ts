@@ -5,8 +5,6 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
-
 import { type GraphTimerange } from '@/dashboard-wip/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRange } from '@/dashboard-wip/components/TimeRange/useTimeRange'
 import {
@@ -23,8 +21,6 @@ import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
-
-const { _t } = usei18n()
 
 export interface UseAlertOverview extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
@@ -43,8 +39,6 @@ export const useAlertOverview = async (
   currentSpec?: WidgetSpec | null
 ): Promise<UseAlertOverview> => {
   const timeRangeType = ref<TimeRangeType>('current')
-  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(_t('Time range'))
-
   const {
     title,
     showTitle,
@@ -58,6 +52,9 @@ export const useAlertOverview = async (
   } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
   const currentContent = currentSpec?.content as AlertOverviewContent
+  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
+    currentContent?.time_range ?? null
+  )
 
   const objectsLimit = ref<number>(currentContent?.limit_objects ?? 0)
   const objectsEnabled = ref<boolean>(objectsLimit.value !== undefined)

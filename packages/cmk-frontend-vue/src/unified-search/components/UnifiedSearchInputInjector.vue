@@ -5,9 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import type { UnifiedSearchProviderIdentifier } from '@/lib/unified-search/providers/unified'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+
+import type { UnifiedSearchProviderIdentifier } from '@/unified-search/lib/providers/unified'
 
 import { getSearchUtils } from '../providers/search-utils'
 import type { SearchProviderKeys } from '../providers/search-utils.types'

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 
 from unittest import mock
-from unittest.mock import MagicMock
 
 import pytest
 from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
@@ -14,7 +13,6 @@ from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
 from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
 from cmk.plugins.azure_status.special_agent.agent_azure_status import (
     get_affected_regions,
-    main,
     parse_arguments,
     write_section,
 )
@@ -146,13 +144,4 @@ def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
         '"https://status.azure.com/en-us/status/", "regions": ["East US", "Central '
         'US", "North Central US", "West Europe", "Global"]}',
     ]
-    assert captured.err == ""
-
-
-@mock.patch("cmk.plugins.azure_status.special_agent.agent_azure_status.special_agent_main")
-def test_main(mock_agent: MagicMock, capsys: pytest.CaptureFixture[str]) -> None:
-    main()
-
-    captured = capsys.readouterr()
-    assert captured.out == ""
     assert captured.err == ""

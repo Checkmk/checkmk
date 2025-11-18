@@ -24,7 +24,7 @@ from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
-from cmk.gui.utils.loading_transition import LoadingTransition, with_loading_transition
+from cmk.gui.utils.loading_transition import with_loading_transition
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.utils.html import replace_state_markers
 from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources
@@ -226,7 +226,7 @@ def query_limit_exceeded_warn(limit: int | None, user_config: LoggedInUser) -> N
         )
 
     if ignore_limit_link is not None:
-        text += with_loading_transition(ignore_limit_link, template=LoadingTransition.table)
+        text += with_loading_transition(ignore_limit_link, template=None)
 
     text += escaping.escape_to_html_permissive(
         " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")

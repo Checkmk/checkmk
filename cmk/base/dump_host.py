@@ -8,6 +8,7 @@
 import socket
 import sys
 import time
+from collections import defaultdict
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from pathlib import Path
@@ -216,8 +217,13 @@ def dump_host(
         ca_store=Path(cmk.utils.paths.agent_cert_store),
         site_crt=Path(cmk.utils.paths.site_cert_file),
     )
+    # Which file will be used depends on who calls the fetcher in the end
+    # (core, relay, automations helper, ...).
+    # We assume that the locally available *pending* (a.k.a. WATO) password
+    # store is of most help to the caller.
     used_password_store = cmk.utils.password_store.pending_password_store_path()
-    passwords = cmk.utils.password_store.load(used_password_store)
+    # Don't show the real passwords here!
+    passwords = defaultdict[str, str](lambda: "****")
     agenttypes = (
         []
         if hostname in hosts_config.clusters
@@ -286,6 +292,7 @@ def dump_host(
                 metric_backend_fetcher=get_metric_backend_fetcher(
                     hostname,
                     config_cache.explicit_host_attributes,
+                    config_cache.check_mk_check_interval,
                     loaded_config.monitoring_core == "cmc",
                 ),
             )

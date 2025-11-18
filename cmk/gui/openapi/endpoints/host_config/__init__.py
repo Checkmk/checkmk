@@ -57,7 +57,11 @@ from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_tree,
+    Host,
+)
 
 BAKE_AGENT_PARAM_NAME = "bake_agent"
 BAKE_AGENT_PARAM = {
@@ -817,6 +821,11 @@ def _has_pending_changes(sites: Sequence[SiteId]) -> bool:
         ),
         404: "There is no running renaming job",
     },
+    permissions_required=permissions.AllPerm(
+        [
+            permissions.Perm("wato.rename_hosts"),
+        ]
+    ),
     additional_status_codes=[302, 404],
     output_empty=True,
     family_name=HOST_CONFIG_FAMILY.name,
@@ -826,6 +835,8 @@ def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
 
     This endpoint will redirect on itself to prevent timeouts.
     """
+    user.need_permission("wato.rename_hosts")
+
     job_exists, job_is_active = RenameHostsBackgroundJob.status_checks()
     if not job_exists:
         return problem(
@@ -977,11 +988,18 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     query_params=[EFFECTIVE_ATTRIBUTES],
     etag="output",
     response_schema=HostConfigSchema,
-    permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
+    permissions_required=permissions.AllPerm(
+        [
+            permissions.Perm("wato.see_all_folders"),
+        ]
+    ),
     family_name=HOST_CONFIG_FAMILY.name,
 )
 def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
+    # wato.see_all_folders permission check is duplicated here because we cannot rely on the
+    # check being performed deeper in the call stack; we need it close to the endpoint declaration
+    user.need_permission("wato.see_all_folders")
     host_name = params["host_name"]
     host: Host = Host.load_host(host_name)
     return _serve_host(

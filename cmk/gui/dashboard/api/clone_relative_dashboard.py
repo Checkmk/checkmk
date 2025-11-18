@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -70,6 +70,7 @@ def clone_as_relative_grid_dashboard_v1(
             detail=f"The dashboard with ID '{reference_dashboard_id}' is not a relative grid dashboard.",
         )
 
+    owner = user.ident
     general_settings = body.general_settings
     if not isinstance(general_settings, ApiOmitted):
         description = (
@@ -79,6 +80,7 @@ def clone_as_relative_grid_dashboard_v1(
         )
         cloned_dashboard: DashboardConfig = {
             **dashboard_to_clone,
+            "owner": owner,
             "name": body.dashboard_id,
             "add_context_to_title": general_settings.title.include_context,
             "title": general_settings.title.text,
@@ -96,9 +98,10 @@ def clone_as_relative_grid_dashboard_v1(
     else:
         cloned_dashboard = {
             **dashboard_to_clone,
+            "owner": owner,
             "name": body.dashboard_id,
         }
-    save_dashboard_to_file(api_context.config.sites, cloned_dashboard)
+    save_dashboard_to_file(api_context.config.sites, cloned_dashboard, owner)
 
 
 ENDPOINT_CLONE_AS_RELATIVE_GRID_DASHBOARD = VersionedEndpoint(

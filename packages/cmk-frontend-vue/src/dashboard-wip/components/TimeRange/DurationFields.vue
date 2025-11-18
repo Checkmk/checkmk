@@ -18,7 +18,7 @@ const durationModel = defineModel<Age>({
 </script>
 
 <template>
-  <div class="custom-duration-fields">
+  <div class="db-duration-fields--container">
     <CmkInput v-model="durationModel.days" type="number" :unit="_t('days')" field-size="SMALL" />
     <CmkInput v-model="durationModel.hours" type="number" :unit="_t('hours')" field-size="SMALL" />
     <CmkInput v-model="durationModel.minutes" type="number" :unit="_t('mins')" field-size="SMALL" />
@@ -27,8 +27,7 @@ const durationModel = defineModel<Age>({
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.custom-duration-fields {
+.db-duration-fields--container {
   display: flex;
   gap: var(--spacing);
   margin-top: var(--spacing);

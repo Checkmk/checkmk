@@ -5,8 +5,6 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
-
 import { type GraphTimerange } from '@/dashboard-wip/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRange } from '@/dashboard-wip/components/TimeRange/useTimeRange'
 import {
@@ -26,8 +24,6 @@ import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 import { VisualizationTimelineType } from '../../../composables/useSelectGraphTypes.ts'
 
-const { _t } = usei18n()
-
 export interface UseAlertTimeline extends UseWidgetHandler, UseWidgetVisualizationOptions {
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
@@ -45,8 +41,6 @@ export const useAlertTimeline = async (
 ): Promise<UseAlertTimeline> => {
   const isUpdating = ref(false)
   const timeRangeType = ref<TimeRangeType>('current')
-  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(_t('Time range'))
-
   const {
     title,
     showTitle,
@@ -62,6 +56,11 @@ export const useAlertTimeline = async (
   const timeResolution = ref<'hour' | 'day'>('hour')
   const visualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
   const widgetProps = ref<WidgetProps>()
+
+  const currentContent = currentSpec?.content as AlertTimelineContent
+  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
+    currentContent?.render_mode?.time_range ?? null
+  )
 
   const validate = (): boolean => {
     return validateTitle()

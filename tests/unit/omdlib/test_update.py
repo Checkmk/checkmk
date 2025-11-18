@@ -17,6 +17,7 @@ from omdlib.update import (
     _store_version_meta_dir,
     file_type,
     get_conflict_mode_update,
+    get_edition,
     ManagedTypes,
     ManageUpdate,
     PreFlight,
@@ -25,6 +26,8 @@ from omdlib.update import (
     walk_in_DFS_order,
     walk_managed,
 )
+
+from cmk.ccc import version
 
 
 @dataclasses.dataclass(frozen=True)
@@ -410,12 +413,25 @@ def test_restore_version_meta_dir(tmp_path: Path) -> None:
         ({"conflict": "ask"}, (Skeleton.ASK, PreFlight.ASK)),
         ({}, (Skeleton.ASK, PreFlight.ASK)),
         ({"conflict": "ignore"}, (Skeleton.INSTALL, PreFlight.IGNORE)),
-        ({"conflict": "keepold"}, (Skeleton.KEEPOLD, PreFlight.KEEPOLD)),
-        ({"conflict": "install"}, (Skeleton.INSTALL, PreFlight.INSTALL)),
+        ({"conflict": "keepold"}, (Skeleton.KEEPOLD, PreFlight.IGNORE)),
+        ({"conflict": "install"}, (Skeleton.INSTALL, PreFlight.IGNORE)),
         ({"conflict": "abort"}, (Skeleton.ABORT, PreFlight.ABORT)),
+        ({"skeleton": "ask"}, (Skeleton.ASK, PreFlight.ASK)),
+        ({"skeleton": "abort"}, (Skeleton.ABORT, PreFlight.ASK)),
+        ({"skeleton": "keepold"}, (Skeleton.KEEPOLD, PreFlight.ASK)),
+        ({"skeleton": "install"}, (Skeleton.INSTALL, PreFlight.ASK)),
+        ({"pre-flight": "ask"}, (Skeleton.ASK, PreFlight.ASK)),
+        ({"pre-flight": "ignore"}, (Skeleton.ASK, PreFlight.IGNORE)),
+        ({"pre-flight": "abort", "skeleton": "install"}, (Skeleton.INSTALL, PreFlight.ABORT)),
     ],
 )
 def test_get_conflict_mode_update(
     options: CommandOptions, expected: tuple[Skeleton, PreFlight]
 ) -> None:
     assert get_conflict_mode_update(options) == expected
+
+
+@pytest.mark.parametrize("edition", list(version.Edition))
+def test_get_edition(edition: version._EditionValue) -> None:
+    unknown = "unknown", "unknown"
+    assert get_edition(f"1.2.3.{edition.long}") != unknown

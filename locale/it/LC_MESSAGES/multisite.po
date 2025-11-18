@@ -1054,6 +1054,10 @@ msgstr "(Modulo senza titolo)"
 msgid ", "
 msgstr ""
 
+#, fuzzy, python-format
+msgid ", +%d more"
+msgstr "... (%d più)"
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
 ", ma è annullato da una corrispondenza in un pacchetto di regole precedenti."
@@ -1423,6 +1427,12 @@ msgstr ""
 "b><br>Specificare tag espliciti per questi servizi. I tag generali saranno "
 "ignorati per questi servizi. I tag generali saranno ignorati per questi "
 "servizi."
+
+#, python-format
+msgid ""
+"<b>Lookup IPv4 addresses of %d hosts failed.</b><br>Monitoring for these "
+"hosts may be incomplete.<br><br><b>Affected hosts:</b> %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -3018,6 +3028,12 @@ msgstr "Interrompere con un errore"
 
 msgid "Abort your modifications."
 msgstr "Interrompete le vostre modifiche."
+
+#, python-format
+msgid ""
+"Aborting because the number of hosts (%d) exceeds the configured maximum "
+"number of hosts (%d). You can adjust this limit in the connector settings."
+msgstr ""
 
 msgid "Aborting change."
 msgstr "Interrompere il cambiamento."
@@ -5261,6 +5277,14 @@ msgstr "Connessioni del controllore agente"
 msgid "Agent controller deployment"
 msgstr "Distribuzione del controller agente"
 
+msgid ""
+"Agent controller not registered at this site: You tried to register for "
+"agent updates with a user who's authorized to register agents. This is "
+"supported, but requires a prior agent controller registration. To register "
+"for agent updates only, you need an explicit permission for agent updater "
+"registration."
+msgstr ""
+
 #, fuzzy
 msgid "Agent controller user"
 msgstr "Agente controllore"
@@ -7312,6 +7336,9 @@ msgstr "Archivio eventi"
 msgid "Archive events of hosts"
 msgstr "Archivia gli eventi dei padroni di casa"
 
+msgid "Archive exceeds total size limit"
+msgstr ""
+
 msgid "Archive log"
 msgstr "Archivio log"
 
@@ -7487,6 +7514,10 @@ msgstr "Assegnare all'host di interrogazione"
 
 msgid "Assign via regular expressions"
 msgstr "Assegnare tramite espressioni regolari"
+
+#, fuzzy
+msgid "Assigned to host"
+msgstr "Assegnare al gruppo"
 
 msgid "Assignee"
 msgstr ""
@@ -9095,27 +9126,27 @@ msgid "Azure Redis Cache effectiveness"
 msgstr "Connessioni al database"
 
 #, fuzzy
-msgid "Azure Redis connections"
+msgid "Azure Redis Connections"
 msgstr "Connessioni al database"
 
 #, fuzzy
-msgid "Azure Redis latency"
+msgid "Azure Redis Latency"
 msgstr "Latenza media del disco"
 
 #, fuzzy
-msgid "Azure Redis memory"
+msgid "Azure Redis Memory"
 msgstr "Memoria assoluta utilizzata"
 
 #, fuzzy
-msgid "Azure Redis replication"
+msgid "Azure Redis Replication"
 msgstr "Connessioni al database"
 
 #, fuzzy
-msgid "Azure Redis server load"
+msgid "Azure Redis Server load"
 msgstr "Nome del server Redis"
 
 #, fuzzy
-msgid "Azure Redis throughput"
+msgid "Azure Redis Throughput"
 msgstr "Capacità di lettura"
 
 #, fuzzy
@@ -9536,17 +9567,14 @@ msgstr "Backup configurato"
 msgid "Backup encryption keys"
 msgstr "Chiavi di crittografia di backup"
 
+msgid "Backup in progress. Refresh to see the final status."
+msgstr ""
+
 msgid "Backup job"
 msgstr "Lavoro di backup"
 
 msgid "Backup modes"
 msgstr "Modalità di backup"
-
-msgid ""
-"Backup process has started. You can safely navigate away from this page as "
-"the process will continue in the background. Refresh this page to check the "
-"current status."
-msgstr ""
 
 msgid "Backup size"
 msgstr "Dimensione del backup"
@@ -9596,6 +9624,10 @@ msgstr "Agenti al forno"
 
 msgid "Baked host specific agent"
 msgstr "Agente specifico per l'ospite al forno"
+
+#, fuzzy
+msgid "Bakery plug-in"
+msgstr "Nome del plugin"
 
 #, fuzzy
 msgid "Bakery rules"
@@ -14666,6 +14698,14 @@ msgstr "Commette"
 msgid "Committed memory"
 msgstr "Memoria impegnata"
 
+#, fuzzy
+msgid "Common Name (Issuer)"
+msgstr "Nome comune (CN)"
+
+#, fuzzy
+msgid "Common Name (Subject)"
+msgstr "Nome comune (CN)"
+
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr ""
 
@@ -15575,7 +15615,8 @@ msgstr ""
 "Connetti Checkmk con il tuo LDAP o Active Directory per creare utenti in "
 "Checkmk."
 
-msgid "Connect directly (not available in CRE)"
+#, fuzzy
+msgid "Connect directly (not available in Checkmk Community)"
 msgstr "Collegarsi direttamente (non disponibile in CRE)"
 
 msgid "Connect directly to the destination instead of using a proxy."
@@ -20119,6 +20160,10 @@ msgid "Deprecated PNP templates"
 msgstr "Set di regole deprecate"
 
 #, fuzzy
+msgid "Deprecated bakery plug-ins"
+msgstr "Plugin di controllo deprecati"
+
+#, fuzzy
 msgid "Deprecated check man pages"
 msgstr "Plugin di controllo deprecati"
 
@@ -21386,6 +21431,10 @@ msgstr "Non aggiungere intestazioni di colonna"
 #, fuzzy
 msgid "Do not add text"
 msgstr "Non imbottire"
+
+#, fuzzy
+msgid "Do not apply this rule"
+msgstr "non applicare questa regola"
 
 msgid "Do not ask for a comment"
 msgstr "Non chiedere un commento"
@@ -23460,6 +23509,10 @@ msgid "Enable TLS"
 msgstr "Abilitare TLS"
 
 #, fuzzy
+msgid "Enable TLS certificate revocation checks"
+msgstr "Verifica del certificato SSL"
+
+#, fuzzy
 msgid "Enable TLS certificate validation"
 msgstr "Disattivare la convalida del certificato SSL"
 
@@ -23739,6 +23792,16 @@ msgstr ""
 "effettivi, ad esempio in una singola email. Questo riduce il numero di "
 "notifiche nei casi in cui molti problemi (correlati) si verificano in breve "
 "tempo."
+
+msgid ""
+"Enabling this option lets Checkmk create safe host names for piggyback "
+"hosts. This avoids conflicts caused by entities having the same name in "
+"Azure, which could lead to monitoring data being overwritten or lost. The "
+"option works by appending a unique hash to the Checkmk piggyback host names "
+"(Example: 'my-vm-1a2b3c4d'). Enable this if you have subscriptions, "
+"resources, or resource groups with the same name across multiple Azure "
+"tenants or subscriptions."
+msgstr ""
 
 msgid ""
 "Enabling this option results in additional performance data for the Checkmk "
@@ -24178,6 +24241,10 @@ msgstr "Voci per riga"
 
 msgid "Entry"
 msgstr "Ingresso"
+
+#, fuzzy
+msgid "Env Creation"
+msgstr "Creazione"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -25782,6 +25849,10 @@ msgstr ""
 "cartella \"%s\". Il valore di una regola è incompatibile con la specifica "
 "della regola corrente. Puoi provare a risolvere il problema aprendo la "
 "regola per la modifica e salvando nuovamente la regola senza modifiche."
+
+#, fuzzy
+msgid "Failed to query hosts from metric backend"
+msgstr "Configurazione dello stile selezionato"
 
 msgid "Failed to read the Apache process ID"
 msgstr "Impossibile leggere l'ID del processo Apache"
@@ -28564,6 +28635,13 @@ msgstr "Risposte fisse HTTP"
 msgid "HTTP method"
 msgstr "Metodo HTTP"
 
+#, fuzzy
+msgid "HTTP port"
+msgstr "Porta TCP"
+
+msgid "HTTP port (useful for accessing web UI)"
+msgstr ""
+
 msgid "HTTP proxies"
 msgstr "Proxy HTTP"
 
@@ -28597,10 +28675,6 @@ msgid "HTTP(S) load balancer"
 msgstr "Bilanciatori di carico"
 
 #, fuzzy
-msgid "HTTP(S) port"
-msgstr "Porta TCP"
-
-#, fuzzy
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, e-mail, ..."
 
@@ -28625,6 +28699,10 @@ msgstr ""
 "valida del vostro webserver Apache sul vostro server di monitoraggio. Quando "
 "si usa HTTP, i dati confidenziali che sono contenuti negli agenti cotti "
 "potrebbero essere spiati (come le password dei plugin)."
+
+#, fuzzy
+msgid "HTTPS port"
+msgstr "Porta TCP"
 
 msgid "HW Information"
 msgstr "Informazioni HW"
@@ -33194,6 +33272,11 @@ msgstr ""
 "contatto specifici tramite la regola dell'evento."
 
 msgid ""
+"If the VM is locked longer than the defined levels, a warning/critical state "
+"is triggered.If this is set to 'No Levels', the lock duration is not checked."
+msgstr ""
+
+msgid ""
 "If the application of the message matches this regular expression (case "
 "insensitive) and either no text to cancel is specified or that text also "
 "matched, then events created by this rule will automatically be cancelled "
@@ -35469,6 +35552,10 @@ msgstr "Guasto dell'indice nell'intervallo di tempo definito livelli superiori"
 msgid "Index hitratio"
 msgstr "Indice hitratio"
 
+#, fuzzy
+msgid "Index overhead"
+msgstr "Indici da ricercare"
+
 msgid "Index percentage bloat levels"
 msgstr "Indice percentuale dei livelli di gonfiore"
 
@@ -36792,10 +36879,6 @@ msgstr "Rilasciato a"
 
 msgid "Issuer"
 msgstr "Emittente"
-
-#, fuzzy
-msgid "Issuer Name"
-msgstr "Nome utente"
 
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
@@ -39034,6 +39117,11 @@ msgstr ""
 "Limitare il tempo di esecuzione della query, al fine di evitare un sistema "
 "sospeso."
 
+#, fuzzy
+msgid ""
+"Limit the maximum number of hosts that can be created by this connection."
+msgstr "Numero massimo di riesecuzioni"
+
 msgid "Limit the number of rows"
 msgstr "Limitare il numero di righe"
 
@@ -39679,6 +39767,10 @@ msgstr "Posizione"
 
 msgid "Locator"
 msgstr "Localizzatore"
+
+#, fuzzy
+msgid "Lock Duration levels"
+msgstr "Livelli di durata"
 
 msgid "Lock Requests / sec"
 msgstr "Richieste di blocco / sec"
@@ -41879,6 +41971,10 @@ msgid "Maximum number of access points"
 msgstr "Numero massimo di punti di accesso"
 
 #, fuzzy
+msgid "Maximum number of attempts"
+msgstr "Numero massimo di tentativi di consegna"
+
+#, fuzzy
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -41928,6 +42024,10 @@ msgstr "Numero massimo di esecuzioni"
 
 msgid "Maximum number of firewall connections"
 msgstr "Numero massimo di connessioni del firewall"
+
+#, fuzzy
+msgid "Maximum number of hosts"
+msgstr "Numero massimo di clienti"
 
 msgid "Maximum number of messages"
 msgstr "Numero massimo di messaggi"
@@ -42642,6 +42742,10 @@ msgstr "Metriche"
 #, fuzzy
 msgid "Metrics Group"
 msgstr "Metriche"
+
+#, fuzzy
+msgid "Metrics backend is disabled."
+msgstr "Istanze Oracle"
 
 msgid "Metrics graph of a single service"
 msgstr "Grafico delle metriche di un singolo servizio"
@@ -45131,6 +45235,10 @@ msgstr "Non sono ancora stati generati codici di backup."
 msgid "No baked agent for this host available"
 msgstr "Nessun baked agent per questo host disponibile"
 
+#, fuzzy
+msgid "No bakery plug-ins using the deprecated API"
+msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
 msgid "No broken extensions were found."
 msgstr "Non sono state trovate estensioni rotte."
 
@@ -45185,6 +45293,10 @@ msgstr "Nessun dato da nessun sito"
 #, fuzzy
 msgid "No data from time provider"
 msgstr "Nessun dato da nessun sito"
+
+#, python-format
+msgid "No data generator found for figure type name '%s'"
+msgstr ""
 
 #, fuzzy
 msgid "No data was found with the current parameters of this widget."
@@ -48029,6 +48141,10 @@ msgstr "Monitora solo i seguenti SID (se rilevati o aggiunti manualmente)"
 #, fuzzy
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Necessario solo se si hanno più istanze MySQL su un server"
+
+#, python-format
+msgid "Only one %s per site is supported currently."
+msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "Solo un tag può essere vuoto."
@@ -51371,6 +51487,18 @@ msgstr "Opzioni di performance"
 #, fuzzy
 msgid "Performance: IO stats"
 msgstr "Dati sulle prestazioni"
+
+#, fuzzy
+msgid "Performing license online verification..."
+msgstr "Verifica online delle licenze"
+
+#, fuzzy
+msgid "Performing license test verification..."
+msgstr "Verifica online delle licenze"
+
+#, fuzzy
+msgid "Performing test authentication..."
+msgstr "Test di autenticazione"
 
 msgid "Period"
 msgstr "Periodo"
@@ -54765,6 +54893,10 @@ msgstr "Aggiornare tutti i servizi e le etichette degli host (tabula rasa)"
 msgid "Refresh interval"
 msgstr "Intervallo di aggiornamento"
 
+#, fuzzy
+msgid "Refresh status"
+msgstr "Stato del servizio"
+
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
 msgstr "Aggiornata la configurazione di controllo dell'host '%s'"
@@ -54847,6 +54979,10 @@ msgstr "Regex per il nome dell'host"
 
 msgid "Regex sets"
 msgstr "Insiemi di Regex"
+
+#, fuzzy
+msgid "Region"
+msgstr "Nome della regione"
 
 msgid "Region name"
 msgstr "Nome della regione"
@@ -56281,6 +56417,10 @@ msgstr "Azzeramento degli attributi"
 msgid "Resource consumption of Windows processes"
 msgstr "Consumo di risorse dei processi di windows"
 
+#, fuzzy
+msgid "Resource group"
+msgstr "Gruppo di risorse"
+
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
 "Pinning delle risorse: Assicura che le risorse monitorate siano invariate"
@@ -56712,6 +56852,9 @@ msgstr "Unità Rittal CMC-III: Corrente"
 
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unità Rittal CMC-III: Temperature"
+
+msgid "Robot"
+msgstr ""
 
 msgid "Robot Framework parameters"
 msgstr "Parametri del Robot Framework"
@@ -58047,6 +58190,14 @@ msgid "Scheduler"
 msgstr "Scheduler"
 
 #, fuzzy
+msgid "Scheduler Interval"
+msgstr "Intervallo di cache"
+
+#, fuzzy
+msgid "Scheduler Plan Configs"
+msgstr "Programmare un periodo di inattività?"
+
+#, fuzzy
 msgid "Scheduler job name"
 msgstr "Nome del lavoro dello Scheduler"
 
@@ -58418,6 +58569,9 @@ msgstr "Livello di sicurezza"
 msgid "Security advice"
 msgstr "Nome di sicurezza"
 
+msgid "Security checks have failed for the uploaded tar.gz file"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Security message #%d"
 msgstr "Nome di sicurezza"
@@ -58732,7 +58886,8 @@ msgstr ""
 msgid ""
 "Select the connection type for the SSL/TLS check. Direct TLS establishes an "
 "immediate encrypted connection. SMTP STARTTLS negotiates encryption after "
-"connecting in plain text."
+"connecting in plain text.Proxy connections allow to connect via a proxy "
+"server, only global and manual proxy configurations are supported."
 msgstr ""
 
 msgid ""
@@ -60312,6 +60467,11 @@ msgstr "Impostare su '%s'."
 #, fuzzy
 msgid "Set upper levels"
 msgstr "Impostare i livelli superiori"
+
+msgid ""
+"Set upper levels for the index overhead percentage. The index overhead is "
+"the ratio of index usage to total storage (index + data)."
+msgstr ""
 
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
@@ -64589,10 +64749,6 @@ msgstr ""
 msgid "Subject"
 msgstr "Oggetto"
 
-#, fuzzy
-msgid "Subject Name"
-msgstr "Nome della sezione"
-
 msgid "Subject for bulk notifications"
 msgstr "Soggetto per le notifiche di massa"
 
@@ -64626,6 +64782,10 @@ msgstr "Invia la richiesta e ricevi la risposta"
 msgid "Submitting crash report..."
 msgstr "Invio del rapporto sull'incidente..."
 
+#, fuzzy
+msgid "Submitting license usage online..."
+msgstr "Invia l'utilizzo della licenza online"
+
 msgid "Subnet groups"
 msgstr "Gruppi di sottorete"
 
@@ -64643,6 +64803,10 @@ msgstr "ID dell'abbonamento"
 
 #, fuzzy
 msgid "Subscription Status"
+msgstr "Abbonamento"
+
+#, fuzzy
+msgid "Subscription name"
 msgstr "Abbonamento"
 
 #, fuzzy
@@ -65303,6 +65467,10 @@ msgstr "Convalida del certificato SSL"
 msgid "TLS certificate verification"
 msgstr "Verifica del certificato SSL"
 
+#, fuzzy
+msgid "TLS port"
+msgstr "Porta TCP"
+
 msgid "TLS processed bytes"
 msgstr "Byte elaborati TLS"
 
@@ -65796,6 +65964,10 @@ msgstr "File system temporaneo montato"
 msgid "Temporary local destination"
 msgstr "Destinazione locale temporanea"
 
+#, fuzzy
+msgid "Tenant ID"
+msgstr "ID inquilino"
+
 msgid "Tenant ID / Directory ID"
 msgstr "ID inquilino / ID elenco"
 
@@ -66169,14 +66341,6 @@ msgstr ""
 "disponibili ha un effetto negativo, perché aumenta la quantità di "
 "commutazioni di contesto."
 
-#, fuzzy
-msgid ""
-"The Checkmk Ultimate with multi-tenancy edition can only be connected with "
-"other sites using the Checkmk Ultimate with multi-tenancy edition."
-msgstr ""
-"La Checkmk Managed Services Edition può essere collegata ad altri siti solo "
-"tramite l'ECM."
-
 msgid ""
 "The Checkmk agent UNIX will detect a Python 3 installation by looking for "
 "the command <tt>python3</tt>, and a Python 2 installation by looking for the "
@@ -66362,6 +66526,11 @@ msgid ""
 "The HTTP password can be generated from the settings page in Gerrit under '/"
 "settings/#HTTPCredentials' or from the REST API. NOTE: you should NOT enter "
 "your account credentials here!"
+msgstr ""
+
+msgid ""
+"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
+"for standard operations."
 msgstr ""
 
 msgid "The HTTP resource path on which to fetch metrics from targets."
@@ -66576,23 +66745,23 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The Livestatus Proxy Daemon is available with the Checkmk Pro edition and "
-"improves the management of the inter site connections using livestatus. "
-"Using the Livestatus Proxy Daemon improves the responsiveness and "
+"The Livestatus Proxy is not only good for remote sites, enable it for your "
+"central site"
+msgstr ""
+"Il Proxy Livestatus non è solo buono per i siti slave, abilitatelo per il "
+"vostro sito principale"
+
+#, fuzzy
+msgid ""
+"The Livestatus proxy daemon is available with all commercial editions and "
+"improves the management of the inter site connections using Livestatus. "
+"Using the Livestatus proxy daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
 "Il demone proxy Livestatus è disponibile con Checkmk Enterprise Edition e "
 "migliora la gestione delle connessioni tra siti utilizzando livestatus. "
 "L'utilizzo del demone proxy Livestatus migliora la reattività e le "
 "prestazioni della tua GUI e diminuisce l'utilizzo delle risorse."
-
-#, fuzzy
-msgid ""
-"The Livestatus Proxy is not only good for remote sites, enable it for your "
-"central site"
-msgstr ""
-"Il Proxy Livestatus non è solo buono per i siti slave, abilitatelo per il "
-"vostro sito principale"
 
 msgid "The Logfile"
 msgstr "Il file di log"
@@ -68289,10 +68458,6 @@ msgid ""
 "customization."
 msgstr ""
 
-#, fuzzy, python-format
-msgid "The host %s is not monitored on this site"
-msgstr "Il login non è consentito su questo sito."
-
 #, python-format
 msgid "The host '%s' does not exist"
 msgstr "L'host '%s' non esiste"
@@ -69473,6 +69638,16 @@ msgstr ""
 "L'offset dell'informazione rispetto alla base del contatore. È possibile "
 "ottenere un elenco dettagliato dei contatori disponibili in una shell di "
 "Windows con il comando 'lodctr /s:counters.txt'."
+
+#, fuzzy, python-format
+msgid ""
+"The old bakery plug-in API will be removed in Checkmk version 2.6. Plug-in "
+"files in <tt>'%s'</tt> will be ignored. Please migrate the plug-ins to the "
+"new API."
+msgstr ""
+"La vecchia API per i plugin dell'inventario è stata rimossa nella versione "
+"2.2 di Checkmk. I file dei plugin in <tt>'%s'</tt> sono ignorati. Si prega "
+"di migrare i plugin alla nuova API."
 
 #, fuzzy, python-format
 msgid ""
@@ -70805,11 +70980,6 @@ msgstr "Il tipo del timestamp deve essere int o float, ma è %s"
 msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 
-#, python-format
-msgid ""
-"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-msgstr ""
-
 #, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "Il file non sembra un file chiave valido."
@@ -71664,16 +71834,6 @@ msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "Questo ID è usato come identificatore unico. Non può essere cambiato in "
 "seguito."
-
-#, fuzzy
-msgid ""
-"This ID uniquely identifies this rule in Checkmk. Use this ID when working "
-"with rules in Checkmk REST API calls, e.g., to show, modify or delete the "
-"rule."
-msgstr ""
-"Il nome del ruleset identifica il ruleset all'interno di Checkmk. Utilizzare "
-"questo nome quando si lavora con le regole e le chiamate API REST del "
-"ruleset."
 
 msgid "This Ruleset sets the threshold limits for battery sensors"
 msgstr ""
@@ -72822,16 +72982,6 @@ msgid ""
 msgstr ""
 "Questo nome deve corrispondere al nome della sezione definita nella "
 "configurazione di mk_filestats."
-
-#, fuzzy
-msgid ""
-"This name uniquely identifies the rule set in Checkmk. Use this name when "
-"working with rule sets and rules in Checkmk REST API calls, e.g. to create a "
-"new rule."
-msgstr ""
-"Il nome del ruleset identifica il ruleset all'interno di Checkmk. Utilizzare "
-"questo nome quando si lavora con le regole e le chiamate API REST del "
-"ruleset."
 
 msgid "This name will be used in the description of the service"
 msgstr "Questo nome sarà usato nella descrizione del servizio"
@@ -83376,14 +83526,6 @@ msgstr ""
 "tramite il metodo GET per tutti gli utenti."
 
 msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
-
-msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
@@ -87841,6 +87983,9 @@ msgstr ""
 "sono elencati qui sotto. I modelli corrispondenti saranno evidenziati dopo "
 "aver fatto clic sul pulsante \"Prova\"."
 
+msgid "You can leave this page. This backup continues in the background"
+msgstr ""
+
 msgid ""
 "You can limit the number of current events created by a single host here. "
 "This is meant to prevent you from message storms created by one device."
@@ -91894,9 +92039,15 @@ msgstr "Confermare la sovrascrittura"
 msgid "Decline"
 msgstr "Dispositivo online"
 
+msgid "Answer"
+msgstr ""
+
 #, fuzzy
 msgid "Generating response..."
 msgstr "Generazione di rapporti..."
+
+msgid "AI-generated answer. Please verify critical facts."
+msgstr ""
 
 msgid "What would you like the AI to do?"
 msgstr ""
@@ -91904,6 +92055,11 @@ msgstr ""
 #, fuzzy
 msgid "No actions found"
 msgstr "Non trovato"
+
+#, fuzzy
+msgid "Something went wrong. Please try again later."
+msgstr ""
+"Non ho trovato righe corrispondenti. Prova un altro termine di ricerca."
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
@@ -93044,6 +93200,21 @@ msgid "explicit password"
 msgstr "Nuova password"
 
 #, fuzzy
+msgid "~Enter regex (pattern match)"
+msgstr "Prova il pattern match"
+
+msgid "Enter plain text (single match)"
+msgstr ""
+
+#, fuzzy
+msgid "show preview"
+msgstr "mostra di più"
+
+#, fuzzy
+msgid "Preview of matches:"
+msgstr "Questa regola corrisponde a"
+
+#, fuzzy
 msgid "Auto"
 msgstr "Automatico"
 
@@ -93498,13 +93669,12 @@ msgstr ""
 "Specifica in quale periodo di tempo verrà creato un nuovo file per la "
 "cronologia degli eventi."
 
-msgid "Deploy the relay to your environment"
+msgid "Download the relay to your environment"
 msgstr ""
 
-msgid ""
-"Download the Relay container image and run it in your environment to start "
-"the setup."
-msgstr ""
+#, fuzzy
+msgid "Download the Relay container image."
+msgstr "Distribuire il plugin per container docker"
 
 #, fuzzy
 msgid "Name the relay"
@@ -93520,7 +93690,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Register the relay with your Checkmk site"
+msgid "Register the relay with your Checkmk site and run it"
 msgstr "Visualizzazione dello stato dei siti Checkmk\n"
 
 #, fuzzy
@@ -93528,18 +93698,19 @@ msgid ""
 "Register the Relay to authorize it for communication with your Checkmk site."
 msgstr "Visualizzazione dello stato dei siti Checkmk\n"
 
-msgid ""
-"This code snippet includes a one-time token. If you plan to use it multiple "
-"times in larger environments, you can check "
+msgid " Go to "
 msgstr ""
 
 #, fuzzy
-msgid "this article"
-msgstr "Questa regola"
+msgid "this page"
+msgstr "Prima pagina"
 
 #, fuzzy
-msgid " for more details."
-msgstr "Fare clic qui per i dettagli."
+msgid " and get an automation secret. Use it in place of [automation-secret]"
+msgstr "Segreto di automazione valido per l'utente di automazione"
+
+msgid "After successful registration, start the Relay daemon."
+msgstr ""
 
 #, fuzzy
 msgid "Verify registration"
@@ -93564,6 +93735,10 @@ msgstr ""
 #, fuzzy
 msgid "Continue to add host"
 msgstr "Conteggio degli host degradati"
+
+#, fuzzy
+msgid "Go to relay overview"
+msgstr "Panoramica dell'host"
 
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
@@ -94043,6 +94218,54 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Issuer Name"
+#~ msgstr "Nome utente"
+
+#, fuzzy
+#~ msgid "Subject Name"
+#~ msgstr "Nome della sezione"
+
+#, fuzzy
+#~ msgid ""
+#~ "This ID uniquely identifies this rule in Checkmk. Use this ID when "
+#~ "working with rules in Checkmk REST API calls, e.g., to show, modify or "
+#~ "delete the rule."
+#~ msgstr ""
+#~ "Il nome del ruleset identifica il ruleset all'interno di Checkmk. "
+#~ "Utilizzare questo nome quando si lavora con le regole e le chiamate API "
+#~ "REST del ruleset."
+
+#, fuzzy
+#~ msgid ""
+#~ "This name uniquely identifies the rule set in Checkmk. Use this name when "
+#~ "working with rule sets and rules in Checkmk REST API calls, e.g. to "
+#~ "create a new rule."
+#~ msgstr ""
+#~ "Il nome del ruleset identifica il ruleset all'interno di Checkmk. "
+#~ "Utilizzare questo nome quando si lavora con le regole e le chiamate API "
+#~ "REST del ruleset."
+
+#, fuzzy
+#~ msgid "this article"
+#~ msgstr "Questa regola"
+
+#, fuzzy
+#~ msgid " for more details."
+#~ msgstr "Fare clic qui per i dettagli."
+
+#, fuzzy
+#~ msgid ""
+#~ "The Checkmk Ultimate with multi-tenancy edition can only be connected "
+#~ "with other sites using the Checkmk Ultimate with multi-tenancy edition."
+#~ msgstr ""
+#~ "La Checkmk Managed Services Edition può essere collegata ad altri siti "
+#~ "solo tramite l'ECM."
+
+#, fuzzy, python-format
+#~ msgid "The host %s is not monitored on this site"
+#~ msgstr "Il login non è consentito su questo sito."
 
 #, fuzzy
 #~ msgid "Update widget"

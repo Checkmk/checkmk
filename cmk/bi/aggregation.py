@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from typing import Any, override
 
+from cmk.bi.fields import ReqString
 from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
@@ -18,7 +19,6 @@ from cmk.bi.lib import (
     BIAggregationGroups,
     create_nested_schema,
     create_nested_schema_for_class,
-    ReqString,
 )
 from cmk.bi.log import LOGGER
 from cmk.bi.node_generator import BINodeGenerator
@@ -110,7 +110,9 @@ class BIAggregation:
     def _verify_all_branches_start_with_rule(
         self, branches: list[ABCBICompiledNode]
     ) -> list[BICompiledRule]:
-        new_branches: list[BICompiledRule] = [x for x in branches if isinstance(x, BICompiledRule)]
+        new_branches: list[BICompiledRule] = [
+            branch for branch in branches if isinstance(branch, BICompiledRule)
+        ]
         assert len(branches) == len(new_branches)
         return new_branches
 
@@ -143,7 +145,7 @@ class BIAggregationSchema(Schema):
         example="Rule comment",
     )
     customer = String(
-        description="Checkmk Ultimate with multi-tennancy only: The customer id for this aggregation.",
+        description="[Only in editions: Ultimate with multi-tenancy] The customer id for this aggregation.",
         allow_none=True,
         example="customer1",
     )

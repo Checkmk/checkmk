@@ -12,7 +12,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkButton from '@/components/CmkButton.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
 import router from './router'
 
@@ -104,14 +104,14 @@ immediateWatch(
     <nav>
       <fieldset>
         <legend>global styles</legend>
-        <ToggleButtonGroup
+        <CmkToggleButtonGroup
           v-model="selectedCss"
           :options="[
             { label: 'cmk', value: 'cmk' },
             { label: 'none', value: 'none' }
           ]"
         />
-        <ToggleButtonGroup
+        <CmkToggleButtonGroup
           v-model="selectedTheme"
           :options="[
             { label: 'light', value: 'facelift' },

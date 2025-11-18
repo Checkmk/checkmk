@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
+from collections.abc import Iterator
 
-def inventory_fireeye_generic(info, has_item, has_params=False):
+
+def inventory_fireeye_generic(
+    info: list[list[str]], has_item: bool, has_params: bool = False
+) -> Iterator[tuple[str | None, dict | None]]:
     if info:
         params: dict | None = None
         if has_params:
@@ -19,7 +22,7 @@ def inventory_fireeye_generic(info, has_item, has_params=False):
             yield item, params
 
 
-def check_fireeye_states(states):
+def check_fireeye_states(states: list[tuple[str, str]]) -> dict[str, tuple[int, str]]:
     # Now we only known the OK states and health states
     # but we can expand if we know more
     map_states = {

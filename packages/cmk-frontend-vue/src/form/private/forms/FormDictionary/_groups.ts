@@ -83,7 +83,7 @@ export function titleRequired(element: FormSpec.DictionaryElement): boolean {
     !(
       element.required &&
       element.parameter_form.title === '' &&
-      element.parameter_form.type === 'boolean_choice'
+      (element.parameter_form as FormSpec.BooleanChoice).type === 'boolean_choice'
     )
   )
 }

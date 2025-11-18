@@ -45,7 +45,6 @@ from collections import Counter
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from logging import Logger
 from pathlib import Path
 from typing import Any, cast, Literal, override
 
@@ -287,24 +286,27 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
 
 @dataclass
 class SyncUsersResult:
+    fetched_users: dict[LdapUsername, FetchedLDAPUser]
+    sync_start_time: float
     changes: list[str] = field(default_factory=list)
     has_changed_passwords: bool = False
     profiles_to_synchronize: dict[UserId, UserSpec] = field(default_factory=dict)
+    security_events: list[UserManagementEvent] = field(default_factory=list)
 
 
 def _load_copy_of_existing_user(
-    user_id: UserId,
+    ldap_user_name: LdapUsername,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
 ) -> tuple[UserId, UserSpec] | None:
     """Will return the matching user_id and a copy of the user if it exists for the connector,
     else it will return None."""
 
-    if users.get(user_id, {}).get("connector") == ldap_user_connector.id:
-        return user_id, copy.deepcopy(users[user_id])
+    if users.get(UserId(ldap_user_name), {}).get("connector") == ldap_user_connector.id:
+        return UserId(ldap_user_name), copy.deepcopy(users[UserId(ldap_user_name)])
 
     if ldap_user_connector.has_suffix():
-        userid_with_suffix = ldap_user_connector.add_suffix(user_id)
+        userid_with_suffix = ldap_user_connector.add_suffix(ldap_user_name)
         if (
             userid_with_suffix in users
             and users[userid_with_suffix].get("connector") == ldap_user_connector.id
@@ -340,7 +342,7 @@ def _create_checkmk_user_for_this_ldap_connection(
 
 
 def _create_new_user_spec(
-    ldap_user_id: UserId,
+    ldap_user_name: LdapUsername,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
     default_user_profile: UserSpec,
@@ -350,16 +352,16 @@ def _create_new_user_spec(
     new user spec using the user_id + the suffix. If this is also already taken, None
     will be returned."""
 
-    if ldap_user_id not in users:
-        return ldap_user_id, _create_checkmk_user_for_this_ldap_connection(
-            new_user_id=ldap_user_id,
+    if UserId(ldap_user_name) not in users:
+        return UserId(ldap_user_name), _create_checkmk_user_for_this_ldap_connection(
+            new_user_id=UserId(ldap_user_name),
             existing_users=users,
             ldap_connector_id=ldap_user_connector.id,
             ldap_connector_customer_id=ldap_user_connector.customer_id,
             default_user_profile=default_user_profile,
         )
 
-    user_id_with_suffix = ldap_user_connector.add_suffix(ldap_user_id)
+    user_id_with_suffix = ldap_user_connector.add_suffix(ldap_user_name)
     if ldap_user_connector.has_suffix() and user_id_with_suffix not in users:
         return (
             user_id_with_suffix,
@@ -415,21 +417,20 @@ def _identify_user_modifications(
     return modifications
 
 
-def _sync_existing_user(
+def _sync_plugins_existing_user(
     checkmk_user_id: UserId,
-    only_username: UserId | None,
-    ldap_user: LDAPUserSpec,
+    ldap_user_spec: LDAPUserSpec,
     checkmk_user_copy: UserSpec,
     users: Users,
     sync_user_result: SyncUsersResult,
     ldap_user_connector: LDAPUserConnector,
     user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> None:
-    if only_username and checkmk_user_id != only_username:
-        return
-
     ldap_user_connector.execute_active_sync_plugins(
-        checkmk_user_id, ldap_user, checkmk_user_copy, user_attributes
+        checkmk_user_id,
+        ldap_user_spec,
+        checkmk_user_copy,
+        user_attributes,
     )
 
     if checkmk_user_copy == users[checkmk_user_id]:
@@ -445,7 +446,7 @@ def _sync_existing_user(
             _("LDAP [%s]: Modified user %s (%s)")
             % (ldap_user_connector.id, checkmk_user_id, ", ".join(modifications))
         )
-        log_security_event(
+        sync_user_result.security_events.append(
             UserManagementEvent(
                 event="user modified",
                 affected_user=checkmk_user_id,
@@ -458,30 +459,20 @@ def _sync_existing_user(
         users[checkmk_user_id] = checkmk_user_copy
 
 
-def _sync_new_user(
+def _sync_plugins_new_user(
     checkmk_user_id: UserId,
-    only_username: UserId | None,
-    ldap_user: LDAPUserSpec,
+    ldap_user_spec: LDAPUserSpec,
     new_checkmk_user: UserSpec,
     users: Users,
     sync_user_result: SyncUsersResult,
     ldap_user_connector: LDAPUserConnector,
-    ldap_user_connector_logger: Logger,
     user_attributes: Sequence[tuple[str, UserAttribute]],
 ) -> None:
-    if ldap_user_connector.create_users_only_on_login():
-        ldap_user_connector_logger.info(
-            f'  SKIP SYNC "{checkmk_user_id}" '
-            f'(Only create user of "{ldap_user_connector.id}" connector on login)'
-        )
-        return
-
-    # Only one user should be synced, skip others.
-    if only_username and checkmk_user_id != only_username:
-        return
-
     ldap_user_connector.execute_active_sync_plugins(
-        checkmk_user_id, ldap_user, new_checkmk_user, user_attributes
+        checkmk_user_id,
+        ldap_user_spec,
+        new_checkmk_user,
+        user_attributes,
     )
 
     users[checkmk_user_id] = new_checkmk_user
@@ -489,11 +480,11 @@ def _sync_new_user(
     sync_user_result.changes.append(
         _("LDAP [%s]: Created user %s") % (ldap_user_connector.id, checkmk_user_id)
     )
-    log_security_event(
+    sync_user_result.security_events.append(
         UserManagementEvent(
             event="user created",
             affected_user=checkmk_user_id,
-            acting_user=logged_in_user.id,
+            acting_user=logged_in_user_id(),
             connector=ConnectorType.LDAP,
             connection_id=ldap_user_connector.id,
         )
@@ -501,68 +492,78 @@ def _sync_new_user(
 
 
 def _sync_ldap_user(
-    ldap_user_id: UserId,
+    fetched_ldap_user: FetchedLDAPUser,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
-    ldap_user_connector_logger: Logger,
-    only_username: UserId | None,
-    ldap_user: LDAPUserSpec,
     sync_users_result: SyncUsersResult,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     default_user_profile: UserSpec,
-) -> None:
-    """Will attempt to find a user spec for the given ldap_user_id. If it doesn't exist, it
+    login_attempt: bool = False,
+) -> UserId | None:
+    """Will attempt to find a user spec for the given ldap_user_name. If it doesn't exist, it
     will attempt to create a new one. If it can't find or create a user spec, we just log a
     'skip sync' message"""
     if (
         userid_and_user := _load_copy_of_existing_user(
-            user_id=ldap_user_id,
+            ldap_user_name=fetched_ldap_user.ldap_user_name,
             users=users,
             ldap_user_connector=ldap_user_connector,
         )
     ) is not None:
         existing_user_id, copied_user_spec = userid_and_user
-        _sync_existing_user(
+        _sync_plugins_existing_user(
             checkmk_user_id=existing_user_id,
-            only_username=only_username,
-            ldap_user=ldap_user,
+            ldap_user_spec=fetched_ldap_user.ldap_user_spec,
             checkmk_user_copy=copied_user_spec,
             users=users,
             sync_user_result=sync_users_result,
             ldap_user_connector=ldap_user_connector,
             user_attributes=user_attributes,
         )
-        return
+        return existing_user_id
+
+    if ldap_user_connector.create_users_only_on_login() and not login_attempt:
+        ldap_user_connector._logger.info(
+            f'  SKIP SYNC "{fetched_ldap_user.ldap_user_name}" '
+            f'(Only create user of "{ldap_user_connector.id}" connector on login)'
+        )
+        return None
 
     if (
         userid_and_new_user := _create_new_user_spec(
-            ldap_user_id=ldap_user_id,
+            ldap_user_name=fetched_ldap_user.ldap_user_name,
             users=users,
             ldap_user_connector=ldap_user_connector,
             default_user_profile=default_user_profile,
         )
     ) is not None:
         new_user_id, new_user_spec = userid_and_new_user
-        _sync_new_user(
+        _sync_plugins_new_user(
             checkmk_user_id=new_user_id,
-            only_username=only_username,
-            ldap_user=ldap_user,
+            ldap_user_spec=fetched_ldap_user.ldap_user_spec,
             new_checkmk_user=new_user_spec,
             users=users,
             sync_user_result=sync_users_result,
             ldap_user_connector=ldap_user_connector,
-            ldap_user_connector_logger=ldap_user_connector_logger,
             user_attributes=user_attributes,
         )
-        return
+        return new_user_id
 
     cant_sync_msg = (
-        f'  SKIP SYNC "{ldap_user_id}" name conflict with user from '
+        f'  SKIP SYNC "{fetched_ldap_user.ldap_user_name}" name conflict with user from '
         f'"{ldap_user_connector.id}" connector.'
     )
     if not ldap_user_connector.has_suffix():
         cant_sync_msg += " A suffix should be added to this connector."
-    ldap_user_connector_logger.info(cant_sync_msg)
+    ldap_user_connector._logger.info(cant_sync_msg)
+    return None
+
+
+@dataclass
+class FetchedLDAPUser:
+    dn: str
+    ldap_user_name: LdapUsername
+    ldap_user_spec: LDAPUserSpec
 
 
 class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
@@ -578,7 +579,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id)
 
         self._num_queries = 0
-        self._user_cache: dict[LdapUsername, tuple[str, LdapUsername]] = {}
+        self._user_cache: dict[LdapUsername, FetchedLDAPUser] = {}
         self._group_cache: dict = {}
         self._group_search_cache: dict = {}
 
@@ -1016,13 +1017,15 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         tries_left = 2
         success = False
         last_exc = None
+
+        result: list[tuple[str, dict[str, list[str]]]] = []
         while not success:
             tries_left -= 1
             try:
                 if implicit_connect:
                     self.connect()
 
-                result = []
+                result.clear()
                 try:
                     for dn, obj in self._ldap_paged_async_search(
                         base, self._ldap_get_scope(scope), filt, columns
@@ -1151,8 +1154,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return UserId(user_id)
 
     def _get_user(
-        self, username: LdapUsername, no_escape: bool = False
-    ) -> tuple[str, LdapUsername] | None:
+        self,
+        username: LdapUsername,
+        no_escape: bool = False,
+    ) -> FetchedLDAPUser | None:
+        """Returns None when the user is not found in the LDAP instance
+        or is not uniq, else returns FetchedLDAPUser which includes the
+        distinguished name."""
+
         if username in self._user_cache:
             return self._user_cache[username]
 
@@ -1197,15 +1206,21 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         user_id = self._sanitize_user_id(raw_user_id)
         if user_id is None:
             return None
-        self._user_cache[username] = (dn, user_id)
 
-        if no_escape:
-            return (dn, user_id)
-        return (dn.replace("\\", "\\\\"), user_id)
+        fetched_ldap_user = FetchedLDAPUser(
+            dn=dn if no_escape else dn.replace("\\", "\\\\"),
+            ldap_user_name=LdapUsername(user_id),
+            ldap_user_spec=result[0][1],
+        )
+
+        self._user_cache[username] = fetched_ldap_user
+        return fetched_ldap_user
 
     def get_users(
-        self, user_attributes: Sequence[tuple[str, UserAttribute]], add_filter: str = ""
-    ) -> dict[UserId, LDAPUserSpec]:
+        self,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        add_filter: str = "",
+    ) -> dict[LdapUsername, FetchedLDAPUser]:
         user_id_attr = self._user_id_attr()
 
         columns = [
@@ -1239,7 +1254,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         if add_filter:
             filt = f"(&{filt}{add_filter})"
 
-        result = {}
+        fetched_ldap_users = {}
         for dn, ldap_user in self._ldap_search(
             self._get_user_dn(), filt, columns, self._config["user_scope"]
         ):
@@ -1256,10 +1271,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 continue
 
             if user_id:
-                result[user_id] = ldap_user
-                result[user_id]["dn"] = [dn]  # also add the DN
+                ldap_user["dn"] = [dn]
+                fetched_ldap_users[LdapUsername(user_id)] = FetchedLDAPUser(
+                    dn=dn,
+                    ldap_user_name=LdapUsername(user_id),
+                    ldap_user_spec=ldap_user,
+                )
 
-        return result
+        return fetched_ldap_users
 
     def get_groups(self, specific_dn: DistinguishedName | None = None) -> SearchResult:
         filt = self._ldap_filter("groups")
@@ -1502,93 +1521,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         return ldap.dn.dn2str(base_dn)
 
-    def _create_ldap_user_on_login(
-        self,
-        userid: UserId,
-        existing_users: Users,
-        user_attributes: Sequence[tuple[str, UserAttribute]],
-        user_connections: Sequence[UserConnectionConfig],
-        default_user_profile: UserSpec,
-    ) -> None:
-        new_user = _create_checkmk_user_for_this_ldap_connection(
-            new_user_id=userid,
-            existing_users=existing_users,
-            ldap_connector_id=self.id,
-            ldap_connector_customer_id=self.customer_id,
-            default_user_profile=default_user_profile,
-        )
-        existing_users[userid] = new_user
-        save_users(
-            existing_users,
-            user_attributes,
-            user_connections,
-            now=datetime.now(),
-            pprint_value=active_config.wato_pprint_config,
-            call_users_saved_hook=True,
-        )
-
-        try:
-            # logged_in_user_id() can return None when a user is created on login
-            # via the REST-API.
-            log_security_event(
-                UserManagementEvent(
-                    event="user created",
-                    affected_user=userid,
-                    acting_user=logged_in_user_id(),
-                    connector=self.type(),
-                    connection_id=self.id,
-                )
-            )
-
-            self.do_sync(
-                add_to_changelog=False,
-                only_username=userid,
-                user_attributes=user_attributes,
-                load_users_func=load_users,
-                save_users_func=save_users,
-                default_user_profile=default_user_profile,
-            )
-
-            # When a user is created on login via the REST-API, the user may or may not
-            # be authorized for the request that triggered the user creation. If they
-            # are authorized, the active_config.multisite_users has not yet been updated
-            # when the response is formed. So we need to update it here.
-            active_config.multisite_users[userid] = new_user
-
-        except MKLDAPException as e:
-            _show_exception(self.id, _("Error during sync"), e, debug=active_config.debug)
-        except Exception as e:
-            _show_exception(self.id, _("Error during sync"), e)
-
-    def _get_matching_user_profile(
-        self,
-        user_id: UserId,
-        user_attributes: Sequence[tuple[str, UserAttribute]],
-        user_connections: Sequence[UserConnectionConfig],
-        default_user_profile: UserSpec,
-    ) -> UserId | None:
-        """This function will try to match an existing user profile, or create a new one if
-        it doesn't exist yet. If no user_id can be matched/created, return None."""
-        existing_users = load_users(lock=True)
-
-        def get_user_id_create_user_if_neccessary(user_id_to_check: UserId) -> UserId | None:
-            if (user_from_config := existing_users.get(user_id_to_check, None)) is None:
-                self._create_ldap_user_on_login(
-                    user_id_to_check,
-                    existing_users,
-                    user_attributes,
-                    user_connections,
-                    default_user_profile,
-                )
-                return user_id_to_check
-            return user_id_to_check if user_from_config.get("connector") == self.id else None
-
-        matched_user_id = get_user_id_create_user_if_neccessary(user_id)
-        if matched_user_id is None and self.has_suffix():
-            return get_user_id_create_user_if_neccessary(UserId(f"{user_id}@{self._get_suffix()}"))
-
-        return matched_user_id
-
     #
     # USERDB API METHODS
     #
@@ -1630,29 +1562,37 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             enforce_this_connection = self._user_enforces_this_connection(user_id)
             if enforce_this_connection is False:
                 return None  # Skip this connection, another one is enforced
-        # Always use the stripped user ID for communication with the LDAP server
-        ldap_user_id = self._strip_suffix(user_id)
 
-        # Returns None when the user is not found or not uniq, else returns the
-        # distinguished name and the ldap_user_id as tuple which are both needed for
-        # the further login process.
-        fetch_user_result = self._get_user(ldap_user_id, True)
-        if not fetch_user_result:
-            # The user does not exist
+        if (
+            fetched_ldap_user := self._get_user(self._strip_suffix(user_id), True)
+        ) is None:  # The user does not exist on the LDAP server
             if enforce_this_connection:
                 return False  # Refuse login
             return None  # Try next connection (if available)
 
-        user_dn, ldap_user_id = fetch_user_result
-
-        # Try to bind with the user provided credentials. This unbinds the default
-        # authentication which should be rebound again after trying this.
-        try:
-            self._bind(user_dn, ("password", password.raw))
-            userid = self._get_matching_user_profile(
-                UserId(ldap_user_id), user_attributes, user_connections, default_user_profile
+        return (
+            False
+            if self._bind_single_ldap_user(
+                dn=fetched_ldap_user.dn,
+                password=password,
+                user_id=user_id,
             )
-            result: CheckCredentialsResult = False if userid is None else userid
+            is False
+            else self._sync_and_save_single_ldap_user(
+                fetched_ldap_user=fetched_ldap_user,
+                user_connections=user_connections,
+                user_attributes=user_attributes,
+                default_user_profile=default_user_profile,
+            )
+        )
+
+    def _bind_single_ldap_user(self, dn: str, password: Password, user_id: UserId) -> bool:
+        """Try to bind with the user provided credentials. Binds the default
+        authentication when done.
+        """
+        try:
+            self._bind(dn, ("password", password.raw))
+            result = True
         except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
                 "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)
@@ -1664,6 +1604,44 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         self._default_bind(self._ldap_obj)
         return result
+
+    def _sync_and_save_single_ldap_user(
+        self,
+        fetched_ldap_user: FetchedLDAPUser,
+        user_connections: Sequence[UserConnectionConfig],
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        default_user_profile: UserSpec,
+    ) -> CheckCredentialsResult | None:
+        """Sync the LDAP user with the Checkmk user. Will attempt to create
+        the Checkmk user if it does not exist. Saves any changes when done.
+        Returns the userid of the sync'd user, or False when sync fails.
+        """
+
+        sync_user_result = SyncUsersResult(
+            sync_start_time=time.time(),
+            fetched_users={fetched_ldap_user.ldap_user_name: fetched_ldap_user},
+        )
+        users = load_users(lock=True)
+        self._logger.info("SYNC STARTED")
+        self._num_queries = 0
+
+        userid = _sync_ldap_user(
+            fetched_ldap_user=fetched_ldap_user,
+            users=users,
+            ldap_user_connector=self,
+            sync_users_result=sync_user_result,
+            user_attributes=user_attributes,
+            default_user_profile=default_user_profile,
+            login_attempt=True,
+        )
+        self._complete_sync(
+            sync_users_result=sync_user_result,
+            users=users,
+            user_connections=user_connections,
+            save_users_func=save_users,
+            user_attributes=user_attributes,
+        )
+        return False if userid is None else userid
 
     def _connection_id_of_user(self, user_id: UserId) -> str | None:
         if not Path.exists(cmk.utils.paths.profile_dir / user_id):
@@ -1704,16 +1682,16 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
         self,
         users: Users,
-        ldap_users: dict[UserId, LDAPUserSpec],
-    ) -> list[str]:
-        changes = []
+        ldap_users: dict[LdapUsername, FetchedLDAPUser],
+        sync_users_result: SyncUsersResult,
+    ) -> None:
         for user_id, user in list(users.items()):
             user_connection_id = user.get("connector")
             if user_connection_id == self.id and self._strip_suffix(user_id) not in ldap_users:
                 del users[user_id]  # remove the user
-                changes.append(_("LDAP [%s]: Removed user %s") % (self.id, user_id))
-                # When a user is created on login via the REST-API, and then we do the
-                # user sync, logged_in_user_id() can return None.
+                sync_users_result.changes.append(
+                    _("LDAP [%s]: Removed user %s") % (self.id, user_id)
+                )
                 log_security_event(
                     UserManagementEvent(
                         event="user deleted",
@@ -1723,7 +1701,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                         connection_id=self.id,
                     )
                 )
-        return changes
 
     @override
     def do_sync(
@@ -1766,29 +1743,59 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         start_time = time.time()
 
-        ldap_users: dict[UserId, LDAPUserSpec] = self.get_users(user_attributes)
+        fetched_ldap_users = self.get_users(user_attributes)
         users: Users = load_users_func(True)  # too lazy to add a protocol for the "lock" kwarg...
 
         sync_users_result = SyncUsersResult(
-            changes=self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
-                users=users,
-                ldap_users=ldap_users,
-            ),
+            sync_start_time=start_time,
+            fetched_users=fetched_ldap_users,
         )
 
-        for ldap_user_id, ldap_user in ldap_users.items():
+        self._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
+            users=users,
+            ldap_users=fetched_ldap_users,
+            sync_users_result=sync_users_result,
+        )
+
+        for fetched_ldap_user in fetched_ldap_users.values():
             _sync_ldap_user(
-                ldap_user_id=ldap_user_id,
+                fetched_ldap_user=fetched_ldap_user,
                 users=users,
                 ldap_user_connector=self,
-                ldap_user_connector_logger=self._logger,
-                only_username=only_username,
-                ldap_user=ldap_user,
                 sync_users_result=sync_users_result,
                 user_attributes=user_attributes,
                 default_user_profile=default_user_profile,
             )
 
+        self._complete_sync(
+            sync_users_result=sync_users_result,
+            users=users,
+            user_connections=active_config.user_connections,  # TODO user connections should be independent of active config
+            save_users_func=save_users_func,
+            user_attributes=user_attributes,
+        )
+
+        self._set_last_sync_time()
+
+    def _complete_sync(
+        self,
+        sync_users_result: SyncUsersResult,
+        users: Users,
+        user_connections: Sequence[UserConnectionConfig],
+        save_users_func: Callable[
+            [
+                Users,
+                Sequence[tuple[str, UserAttribute]],
+                Sequence[UserConnectionConfig],
+                datetime,
+                bool,
+                bool,
+            ],
+            None,
+        ],
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+    ) -> None:
+        """Call hook, log changes, save changes, release locks"""
         try:
             hooks.call(
                 "ldap-sync-finished",
@@ -1805,16 +1812,20 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # modified by the ldap sync process but the user has been updated correctly.
             pass
 
-        duration = time.time() - start_time
+        duration = time.time() - sync_users_result.sync_start_time
         self._logger.info(
             "SYNC FINISHED - Duration: %0.3f sec, Queries: %d" % (duration, self._num_queries)
         )
+
+        # TODO: Maybe move this to the ldap-sync-finished hook?
+        for security_event in sync_users_result.security_events:
+            log_security_event(security_event)
 
         if sync_users_result.changes or sync_users_result.has_changed_passwords:
             save_users_func(
                 users,
                 user_attributes,
-                active_config.user_connections,
+                user_connections,
                 datetime.now(),
                 active_config.wato_pprint_config,
                 True,

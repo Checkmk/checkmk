@@ -1,5 +1,5 @@
 =============================================================================
-Auto-registration of hosts (`cmk.gui.cce.plugins.watolib.agent_registration`)
+Auto-registration of hosts (`cmk.gui.nonfree.ultimate.agent_registration`)
 =============================================================================
 
 Introduction and goals
@@ -9,7 +9,7 @@ Introduction and goals
 
 Requirements overview
 ---------------------
-* This is a CCE feature
+* This is a Checkmk Ultimate feature
 * It must be able to deal with many incoming requests at once
 * It must respect the users role & permissions
 

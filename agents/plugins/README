@@ -31,7 +31,7 @@ The format in which the Bakery-Plugin writes and the Agent-Plugin reads the conf
 for new Plugins a `ConfigParser` solution would be preferable.
 
 You should also create an example configuration in ``agents/cfg_examples/`` so
-users of checkmk raw edition know how to configure the Agent-Plugin without
+users of Checkmk Community know how to configure the Agent-Plugin without
 being able to bake agents.
 
 Recent Examples:

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """LDAP Connections
 
-# mypy: disable-error-code="comparison-overlap"
-
 Checkmk provides a facility for using LDAP-based services for managing users, automatically
 synchronizing users from the home directories, and for assigning contact groups, roles and
 other attributes to these users in Checkmk automatically. Checkmk is not restricted to a
@@ -18,8 +16,9 @@ connections.
 If you need help during configuration or experience problems, please refer to the LDAP
 Documentation: https://docs.checkmk.com/latest/en/ldap.html.
 
-
 """
+
+# mypy: disable-error-code="comparison-overlap"
 
 from collections.abc import Mapping
 from typing import Any

@@ -7,6 +7,8 @@
 # mypy: disable-error-code="redundant-expr"
 
 import argparse
+import json
+import sys
 from collections.abc import Iterable, Iterator, Sequence
 
 import feedparser
@@ -16,11 +18,11 @@ from lxml.html import fromstring, HtmlElement
 from pydantic import BaseModel
 
 from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import (
-    SectionWriter,
-    special_agent_main,
-)
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+
+__version__ = "2.5.0b1"
+
+AGENT = "azure_status"
 
 
 class AzureIssue(BaseModel, frozen=True):
@@ -125,13 +127,14 @@ def write_section(args: argparse.Namespace) -> int:
 
     azure_status = AzureStatus(link=feed.feed.link, regions=selected_regions, issues=azure_issues)
 
-    with SectionWriter("azure_status") as writer:
-        writer.append_json(azure_status.model_dump())
+    section_payload = json.dumps(azure_status.model_dump(), sort_keys=True)
+    sys.stdout.write(f"<<<azure_status:sep(0)>>>\n{section_payload}\n")
     return 0
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(parse_arguments, write_section)
+    return write_section(parse_arguments(sys.argv[1:]))
 
 
 if __name__ == "__main__":

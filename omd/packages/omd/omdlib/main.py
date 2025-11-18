@@ -8,12 +8,10 @@
 from __future__ import annotations
 
 import contextlib
-import enum
 import errno
 import fcntl
 import io
 import os
-import pty
 import pwd
 import re
 import shutil
@@ -22,8 +20,7 @@ import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Iterable, Iterator, Mapping, Sequence
-from enum import auto, Enum
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import (
     assert_never,
@@ -34,7 +31,6 @@ from typing import (
     override,
     TextIO,
 )
-from uuid import uuid4
 
 import omdlib
 import omdlib.backup
@@ -50,7 +46,6 @@ from omdlib.config_hooks import (
     load_config_hooks,
     load_hook_dependencies,
     save_site_conf,
-    update_cmk_core_config,
 )
 from omdlib.console import ok, show_success
 from omdlib.contexts import RootContext, SiteContext
@@ -63,9 +58,9 @@ from omdlib.dialog import (
     dialog_yesno,
     user_confirms,
 )
+from omdlib.finalize import CommandType, finalize_site, finalize_site_as_user, FinalizeOutcome
 from omdlib.global_options import GlobalOptions
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.instance_id import create_instance_id
 from omdlib.options import (
     Arguments,
     Command,
@@ -74,8 +69,9 @@ from omdlib.options import (
     main_help,
     parse_args_or_exec_other_omd,
 )
-from omdlib.package_manager import get_edition, PackageManager, select_matching_packages
+from omdlib.package_manager import PackageManager
 from omdlib.restore import prepare_restore_as_root, prepare_restore_as_site_user
+from omdlib.scripts import _call_script, call_scripts
 from omdlib.site_name import site_name_from_uid, sitename_must_be_valid
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites, is_disabled, main_sites
@@ -100,7 +96,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs,
 )
 from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements, Skeleton
-from omdlib.update import get_conflict_mode_update, ManageUpdate, PreFlight
+from omdlib.update import get_conflict_mode_update, get_edition, ManageUpdate, PreFlight
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
 from omdlib.users_and_groups import (
@@ -202,32 +198,6 @@ def with_update_logging_stderr(logfile: Path) -> Iterator[None]:
             yield
     finally:
         sys.stderr = original
-
-
-class CommandType(Enum):
-    create = auto()
-    move = auto()
-    copy = auto()
-
-    # reuse in options or not:
-    restore_existing_site = auto()
-    restore_as_new_site = auto()
-
-    @property
-    def short(self) -> str:
-        if self is CommandType.create:
-            return "create"
-
-        if self is CommandType.move:
-            return "mv"
-
-        if self is CommandType.copy:
-            return "cp"
-
-        if self in [CommandType.restore_as_new_site, CommandType.restore_existing_site]:
-            return "restore"
-
-        raise TypeError()
 
 
 # .
@@ -946,16 +916,11 @@ def update_file(
         "###EDITION###": new_edition,
     }
 
-    old_replacements = _patch_livestatus_nagios_cfg_replacements(
-        relpath,
-        old_edition,
-        site_home,
-        {
-            "###SITE###": site.name,
-            "###ROOT###": site_home,
-            "###EDITION###": old_edition,
-        },
-    )
+    old_replacements = {
+        "###SITE###": site.name,
+        "###ROOT###": site_home,
+        "###EDITION###": old_edition,
+    }
 
     old_path = old_skel + "/" + relpath
     new_path = new_skel + "/" + relpath
@@ -1294,28 +1259,6 @@ def update_file(
             )
 
 
-def _patch_livestatus_nagios_cfg_replacements(
-    relpath: str, old_edition: str, site_home: str, replacements: Replacements
-) -> Replacements:
-    """Patch replacements for mk-livestatus.cfg to make transition from 2.2 sites work
-
-    Previously "edition=raw" was written into the mk-livestatus.cfg for all sites which were
-    created with 2.2.0 or newer, independent of the actual used edition. Sites updated from 2.1.0
-    are not affected. This was due to the fact that the edition detection was broken during site
-    creation. The previous mechanism always reported 'raw' instead of the correct edition. We now
-    specifically detect this situation and fix it. See also #15721.
-
-    This can be removed in 2.4.
-    """
-    if (
-        relpath == "etc/mk-livestatus/nagios.cfg"
-        and old_edition != "raw"
-        and "edition=raw" in Path(site_home, "etc/mk-livestatus/nagios.cfg").read_text()
-    ):
-        return {**replacements, "###EDITION###": "raw"}
-    return replacements
-
-
 def permission_action(
     *,
     site_home: str,
@@ -1492,7 +1435,7 @@ def config_change(
 
         changed: list[str] = []
         for key, value in settings:
-            config_set_value(site, config, key, value, verbose, save=False)
+            config_set_value(site, site_home, config, key, value, verbose, save=False)
             changed.append(key)
 
         save_site_conf(site_home, config)
@@ -1532,7 +1475,12 @@ def validate_config_change_commands(
 
 
 def config_set(
-    site: SiteContext, config: Config, config_hooks: ConfigHooks, args: Arguments, verbose: bool
+    site: SiteContext,
+    site_home: str,
+    config: Config,
+    config_hooks: ConfigHooks,
+    args: Arguments,
+    verbose: bool,
 ) -> list[str]:
     if len(args) != 2:
         sys.stderr.write("Please specify variable name and value\n")
@@ -1555,7 +1503,7 @@ def config_set(
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
         return []
 
-    config_set_value(site, config, hook_name, value, verbose)
+    config_set_value(site, site_home, config, hook_name, value, verbose)
     return [hook_name]
 
 
@@ -1699,7 +1647,7 @@ def config_configure_hook(
         assert_never(choices)
 
     if change:
-        config_set_value(site, config, hook.name, new_value, verbose)
+        config_set_value(site, site_home, config, hook.name, new_value, verbose)
         save_site_conf(site_home, config)
         config_hooks = load_hook_dependencies(site, config_hooks, verbose)
         yield hook_name
@@ -1838,77 +1786,6 @@ def pipe_pager() -> str:
     return ""
 
 
-def call_scripts(
-    site: SiteContext, phase: str, open_pty: bool, add_env: Mapping[str, str] | None = None
-) -> None:
-    """Calls hook scripts in defined directories."""
-    site_home = SitePaths.from_site_name(site.name).home
-    path = Path(site_home, "lib", "omd", "scripts", phase)
-    if not path.exists():
-        return
-
-    env = {
-        **os.environ,
-        "OMD_ROOT": site_home,
-        "OMD_SITE": site.name,
-        **(add_env if add_env else {}),
-    }
-
-    # NOTE: scripts have an order!
-    for file in sorted(path.iterdir()):
-        if file.name[0] == ".":
-            continue
-        if not file.is_file():
-            continue
-        sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-        returncode = _call_script(open_pty, env, [str(file)])
-
-        if not returncode:
-            sys.stdout.write(tty.ok + "\n")
-        else:
-            sys.stdout.write(tty.error + " (exit code: %d)\n" % returncode)
-            raise SystemExit(1)
-
-
-def _call_script(
-    open_pty: bool,
-    env: Mapping[str, str],
-    command: Sequence[str],
-) -> int:
-    def forward_to_stdout(text_io: IO[str]) -> None:
-        line = text_io.readline()
-        if line:
-            sys.stdout.write("\n")
-            sys.stdout.write(f"-| {line}")
-            for line in text_io:
-                sys.stdout.write(f"-| {line}")
-
-    if open_pty:
-        fd_parent, fd_child = pty.openpty()
-        with subprocess.Popen(
-            command,
-            stdout=fd_child,
-            stderr=fd_child,
-            encoding="utf-8",
-            env=env,
-        ) as proc:
-            os.close(fd_child)
-            with open(fd_parent) as parent:
-                with contextlib.suppress(OSError):
-                    forward_to_stdout(parent)
-    else:
-        with subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-            env=env,
-        ) as proc:
-            assert proc.stdout is not None
-            forward_to_stdout(proc.stdout)
-    return proc.returncode
-
-
 # .
 #   .--Commands------------------------------------------------------------.
 #   |         ____                                          _              |
@@ -1977,19 +1854,6 @@ def main_setversion(
 
 def use_update_alternatives() -> bool:
     return os.path.exists("/var/lib/dpkg/alternatives/omd")
-
-
-def _crontab_access() -> bool:
-    return (
-        subprocess.run(
-            ["crontab", "-e"],
-            env={"VISUAL": "true", "EDITOR": "true"},
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ).returncode
-        == 0
-    )
 
 
 def main_create(
@@ -2157,114 +2021,6 @@ def init_site(
         version_info, site, config, CommandType.create, apache_reload, global_opts.verbose
     )
     return outcome, admin_password
-
-
-# Is being called at the end of create, cp and mv.
-# What is "create", "mv" or "cp". It is used for
-# running the appropriate hooks.
-def finalize_site(
-    version_info: VersionInfo,
-    site: SiteContext,
-    config: Config,
-    command_type: CommandType,
-    apache_reload: bool,
-    verbose: bool,
-) -> FinalizeOutcome:
-    # Now we need to do a few things as site user. Note:
-    # - We cannot use setuid() here, since we need to get back to root.
-    # - We cannot use seteuid() here, since the id command call will then still
-    #   report root and confuse some tools
-    # - We cannot sue setresuid() here, since that is not supported an Python 2.4
-    # So we need to fork() and use a real setuid() here and leave the main process
-    # at being root.
-    pid = os.fork()
-    if pid == 0:
-        try:
-            # From now on we run as normal site user!
-            switch_to_site_user(site.name)
-
-            # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
-            # see CMK-3067
-            outcome = finalize_site_as_user(
-                version_info, site, config, command_type, verbose, ignored_hooks=["TMPFS"]
-            )
-            sys.exit(outcome.value)
-        except Exception as e:
-            sys.stderr.write(f"Failed to finalize site: {e}\n")
-            sys.exit(FinalizeOutcome.ABORTED.value)
-    else:
-        _wpid, status = os.waitpid(pid, 0)
-        if (
-            not os.WIFEXITED(status)
-            or (outcome := FinalizeOutcome(os.WEXITSTATUS(status))) is FinalizeOutcome.ABORTED
-        ):
-            sys.exit("Error in non-priviledged sub-process.")
-
-    # The config changes above, made with the site user, have to be also available for
-    # the root user, so load the site config again. Otherwise e.g. changed
-    # APACHE_TCP_PORT would not be recognized
-    config = load_config(site, verbose)
-    site_home = SitePaths.from_site_name(site.name).home
-    register_with_system_apache(
-        version_info,
-        SitePaths.from_site_name(site.name).apache_conf,
-        site.name,
-        site_home,
-        config["APACHE_TCP_ADDR"],
-        config["APACHE_TCP_PORT"],
-        apache_reload,
-        verbose=verbose,
-    )
-    return outcome
-
-
-class FinalizeOutcome(enum.Enum):
-    OK = 0
-    ABORTED = 1
-    WARN = 2
-
-
-def finalize_site_as_user(
-    version_info: VersionInfo,
-    site: SiteContext,
-    config: Config,
-    command_type: CommandType,
-    verbose: bool,
-    ignored_hooks: Sequence[str],
-) -> FinalizeOutcome:
-    # Mount and create contents of tmpfs. This must be done as normal
-    # user. We also could do this at 'omd start', but this might confuse
-    # users. They could create files below tmp which would be shadowed
-    # by the mount.
-    site_home = SitePaths.from_site_name(site.name).home
-    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    prepare_and_populate_tmpfs(
-        config,
-        version_info,
-        site.name,
-        site_home,
-        site.tmp_dir,
-        site.replacements(),
-        site.skel_permissions,
-        skelroot,
-    )
-
-    # Run all hooks in order to setup things according to the
-    # configuration settings
-    config_set_all(site, config, verbose, ignored_hooks)
-    initialize_site_ca(site)
-    initialize_agent_ca(site)
-    save_site_conf(site_home, config)
-    update_cmk_core_config(config)
-
-    if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
-        create_instance_id(site_home=Path(site_home), instance_id=uuid4())
-
-    call_scripts(site, "post-" + command_type.short, open_pty=sys.stdout.isatty())
-    if not _crontab_access():
-        sys.stderr.write("Warning: site user cannot access crontab\n")
-        return FinalizeOutcome.WARN
-    return FinalizeOutcome.OK
 
 
 def main_rm(
@@ -2771,10 +2527,11 @@ def main_update(
     # Target version: the version of the OMD binary
     to_version = omdlib.__version__
 
-    from_edition, to_edition = get_edition(from_version), get_edition(to_version)
+    old_from_edition, new_from_edition = get_edition(from_version)
+    _old_to_edition, new_to_edition = get_edition(to_version)
     check_update_possible(
-        from_edition,
-        to_edition,
+        new_from_edition,
+        new_to_edition,
         from_version,
         to_version,
         site.name,
@@ -2819,8 +2576,8 @@ def main_update(
                     skeleton_mode,
                     from_version,
                     to_version,
-                    from_edition,
-                    to_edition,
+                    old_from_edition,
+                    new_to_edition,
                     old_permissions,
                     new_permissions,
                 )
@@ -2833,8 +2590,8 @@ def main_update(
                     skeleton_mode,
                     from_version,
                     to_version,
-                    from_edition,
-                    to_edition,
+                    old_from_edition,
+                    new_to_edition,
                     old_permissions,
                     new_permissions,
                 )
@@ -2858,9 +2615,9 @@ def main_update(
             )
 
             additional_update_env = {
-                "OMD_FROM_EDITION": from_edition,
+                "OMD_FROM_EDITION": new_from_edition,
                 "OMD_FROM_VERSION": from_version,
-                "OMD_TO_EDITION": to_edition,
+                "OMD_TO_EDITION": new_to_edition,
                 "OMD_TO_VERSION": to_version,
             }
             if conflict_mode != PreFlight.IGNORE:
@@ -2885,19 +2642,19 @@ def main_update(
             )
 
         call_scripts(
-            site,
+            site.name,
             "post-update",
             open_pty=is_tty,
             add_env=additional_update_env,
         )
 
-        if from_edition != to_edition and edition_has_enforced_licensing(
-            to_ed := Edition.from_long_edition(to_edition)
+        if new_from_edition != new_to_edition and edition_has_enforced_licensing(
+            to_ed := Edition.from_long_edition(new_to_edition)
         ):
             sys.stdout.write(
                 f"{tty.bold}You have now upgraded your product to {to_ed.title}. If you have not "
-                f"applied a valid license yet, you are now starting your trial of {to_ed.title}. If you"
-                f" are intending to use Checkmk to monitor more than 750 services after 30 days, you "
+                f"applied a valid license yet, you will be in trial period in {to_ed.title}. If you"
+                f" are intending to use Checkmk to monitor more than 750 services after the trial period, you "
                 f"must purchase a license. In case you already have a license, please enter your "
                 f"license credentials on the product's licensing page "
                 f"(Setup > Maintenance > Licensing > Edit settings)..{tty.normal}\n"
@@ -3146,7 +2903,7 @@ def main_config(
         if command == "show":
             config_show(config, config_hooks, args)
         elif command == "set":
-            set_hooks = config_set(site, config, config_hooks, args, global_opts.verbose)
+            set_hooks = config_set(site, site_home, config, config_hooks, args, global_opts.verbose)
         elif command == "change":
             set_hooks = config_change(version_info, site, config, config_hooks, global_opts.verbose)
         else:
@@ -3411,8 +3168,6 @@ def main_cleanup(
     if package_manager is None:
         sys.exit("Command is not supported on this platform")
 
-    all_installed_packages = package_manager.get_all_installed_packages(global_opts.verbose)
-
     for version in omd_versions(versions_path):
         if version == default_version(versions_path):
             sys.stdout.write(
@@ -3437,7 +3192,9 @@ def main_cleanup(
             )
             continue
 
-        matching_installed_packages = select_matching_packages(version, all_installed_packages)
+        matching_installed_packages = package_manager.get_package(
+            f"{version_info.OMD_PHYSICAL_BASE}/versions/{version}", global_opts.verbose
+        )
 
         if len(matching_installed_packages) != 1:
             sys.stdout.write(

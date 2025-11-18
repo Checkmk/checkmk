@@ -22,6 +22,7 @@ def parser_add_secret_option(
     """Add mutually exclusive secret options to an argument parser.
 
     Creates two mutually exclusive options for handling secrets:
+
      * A direct secret option using the provided long an short names.
        This is intended for debuggnig purposes, but keep in mind that
        using it will expose the actual secret in the commandline.
@@ -92,6 +93,14 @@ def resolve_secret_option(args: argparse.Namespace, option_name: str) -> Secret[
 
     Raises:
         TypeError: If neither of the two options where specified.
+
+    Example usage (assuming you created the options using :func:`parser_add_secret_option`):
+
+        #!/usr/bin/env python3
+        ...
+        args = parser.parse_args()
+        secret = resolve_secret_option(args, OPTION_NAME)
+
 
     """
     if (secret_id := getattr(args, f"{option_name}_id", None)) is not None:

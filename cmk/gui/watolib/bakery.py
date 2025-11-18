@@ -8,6 +8,6 @@ from collections.abc import Sequence
 from cmk.ccc.hostaddress import HostName
 
 
-# Get's replaced by the actual implementation in non CRE editions
+# Get's replaced by the actual implementation in commercial editions
 def try_bake_agents_for_hosts(hosts: Sequence[HostName], *, debug: bool) -> None:
     pass

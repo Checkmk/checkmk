@@ -9,7 +9,7 @@
 
 import os
 import re
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypedDict
@@ -40,6 +40,13 @@ class DiagnosticsParameters(TypedDict):
     checkmk_server_host: str
 
 
+class FileMapConfig(TypedDict):
+    file_type: Literal["config", "core", "licensing", "log"]
+    component_folder: Path
+    base_folder: Path
+    map_generator: Callable[[Path, Path], CheckmkFilesMap]
+
+
 OPT_BI_RUNTIME_DATA = "bi-runtime-data"
 OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"
@@ -49,6 +56,7 @@ OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
 OPT_CHECKMK_CORE_FILES = "checkmk-core-files"
 OPT_CHECKMK_LICENSING_FILES = "checkmk-licensing-files"
 OPT_CHECKMK_LOG_FILES = "checkmk-log-files"
+
 
 # CEE specific options
 OPT_PERFORMANCE_GRAPHS = "performance-graphs"
@@ -233,43 +241,43 @@ def deserialize_modes_parameters(
     return deserialized_parameters
 
 
-def get_checkmk_config_files_map() -> CheckmkFilesMap:
+def _get_checkmk_config_files_map(base_folder: Path, component_folder: Path) -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(str(cmk.utils.paths.default_config_dir)):
+    for root, _dirs, files in os.walk(str(component_folder)):
         for file_name in files:
             if file_name == "ca-certificates.mk":
                 continue
             filepath = Path(root).joinpath(file_name)
             if filepath.suffix in (".mk", ".conf", ".bi") or filepath.name == ".wato":
-                rel_filepath = str(filepath.relative_to(cmk.utils.paths.default_config_dir))
+                rel_filepath = str(filepath.relative_to(base_folder))
                 files_map.setdefault(rel_filepath, filepath)
     return files_map
 
 
-def get_checkmk_core_files_map() -> CheckmkFilesMap:
+def _get_checkmk_core_files_map(base_folder: Path, component_folder: Path) -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(str(cmk.utils.paths.var_dir / "core")):
+    for root, _dirs, files in os.walk(str(component_folder)):
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
             if filepath.stem in ("state", "history", "config"):
-                rel_filepath = str(filepath.relative_to(cmk.utils.paths.var_dir))
+                rel_filepath = str(filepath.relative_to(base_folder))
                 files_map.setdefault(rel_filepath, filepath)
     return files_map
 
 
-def get_checkmk_licensing_files_map() -> CheckmkFilesMap:
+def _get_checkmk_licensing_files_map(base_folder: Path, component_folder: Path) -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(str(cmk.utils.paths.var_dir / "licensing")):
+    for root, _dirs, files in os.walk(str(component_folder)):
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
-            rel_filepath = str(filepath.relative_to(cmk.utils.paths.var_dir))
+            rel_filepath = str(filepath.relative_to(base_folder))
             files_map.setdefault(rel_filepath, filepath)
     return files_map
 
 
-def get_checkmk_log_files_map() -> CheckmkFilesMap:
+def _get_checkmk_log_files_map(base_folder: Path, component_folder: Path) -> CheckmkFilesMap:
     files_map: CheckmkFilesMap = {}
-    for root, _dirs, files in os.walk(str(cmk.utils.paths.log_dir)):
+    for root, _dirs, files in os.walk(str(component_folder)):
         for file_name in files:
             filepath = Path(root) / file_name
             if (
@@ -282,9 +290,35 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
                 )
                 or filepath.name.startswith("update.log")
             ):
-                rel_filepath = str(filepath.relative_to(cmk.utils.paths.log_dir))
+                rel_filepath = str(filepath.relative_to(base_folder))
                 files_map.setdefault(rel_filepath, filepath)
     return files_map
+
+
+FILE_MAP_CONFIG = FileMapConfig(
+    file_type="config",
+    component_folder=cmk.utils.paths.default_config_dir,
+    base_folder=cmk.utils.paths.default_config_dir,
+    map_generator=_get_checkmk_config_files_map,
+)
+FILE_MAP_CORE = FileMapConfig(
+    file_type="core",
+    component_folder=cmk.utils.paths.var_dir.joinpath("core"),
+    base_folder=cmk.utils.paths.var_dir,
+    map_generator=_get_checkmk_core_files_map,
+)
+FILE_MAP_LICENSING = FileMapConfig(
+    file_type="licensing",
+    component_folder=cmk.utils.paths.var_dir.joinpath("licensing"),
+    base_folder=cmk.utils.paths.var_dir,
+    map_generator=_get_checkmk_licensing_files_map,
+)
+FILE_MAP_LOG = FileMapConfig(
+    file_type="log",
+    component_folder=cmk.utils.paths.log_dir,
+    base_folder=cmk.utils.paths.log_dir,
+    map_generator=_get_checkmk_log_files_map,
+)
 
 
 class CheckmkFileEncryption(Enum):

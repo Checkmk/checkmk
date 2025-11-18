@@ -3,41 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 import dataclasses
 from pathlib import Path
 
-from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
+import pytest
+
+from cmk.plugins.gerrit.lib.schema import VersionInfo
 from cmk.plugins.gerrit.lib.storage import VersionCache
 
 
-def test_version_cache_used(tmp_path: Path) -> None:
-    interval = 600.0  # 10 mins
+@pytest.mark.parametrize(
+    "ttl, n_times, expected",
+    [
+        pytest.param(600, 2, 1, id="cache is used"),
+        pytest.param(600, 100, 1, id="cache is used many times"),
+        pytest.param(0, 2, 2, id="cache is not used"),
+    ],
+)
+def test_version_cache(tmp_path: Path, ttl: int, n_times: int, expected: int) -> None:
     collector = _VersionCollectorSpy()
-    cache = VersionCache(collector=collector, interval=interval, directory=tmp_path)
-    cache.get_sections()  # trigger once beforehand
+    cache = VersionCache(collector=collector, interval=ttl, directory=tmp_path)
 
-    value = cache.get_sections()
-    expected = {"version": {"times": 1}}
+    for _ in range(n_times):
+        cache.get_data()
 
-    assert value == expected
-
-
-def test_version_cache_not_used(tmp_path: Path) -> None:
-    interval = 0.0
-    collector = _VersionCollectorSpy()
-    cache = VersionCache(collector=collector, interval=interval, directory=tmp_path)
-    cache.get_sections()  # trigger once beforehand
-
-    value = cache.get_sections()
-    expected = {"version": {"times": 2}}
-
-    assert value == expected
+    assert collector.number_of_times_data_was_fetched == expected
 
 
 @dataclasses.dataclass
 class _VersionCollectorSpy:
     number_of_times_data_was_fetched: int = 0
 
-    def collect(self) -> Sections:
+    def collect(self) -> VersionInfo:
         self.number_of_times_data_was_fetched += 1
-        return {SectionName("version"): {"times": self.number_of_times_data_was_fetched}}
+        return {
+            "current": "1.2.3",
+            "latest": {"major": "2.0.0", "minor": "1.3.0", "patch": "1.2.4"},
+        }

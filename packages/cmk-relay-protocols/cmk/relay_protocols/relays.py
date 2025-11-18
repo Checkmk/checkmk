@@ -7,9 +7,12 @@ from pydantic import BaseModel
 
 
 class RelayRegistrationRequest(BaseModel, frozen=True):
-    relay_name: str
+    relay_id: str
+    alias: str
     csr: str
 
 
 class RelayRegistrationResponse(BaseModel, frozen=True):
     relay_id: str
+    root_cert: str
+    client_cert: str

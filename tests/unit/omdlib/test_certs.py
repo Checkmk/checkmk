@@ -28,7 +28,8 @@ def fixture_ca(tmp_path: Path) -> SiteCA:
 
 
 def test_initialize(ca: SiteCA) -> None:
-    assert ca.root_ca.certificate.common_name == f"Site '{SITE_ID}' local CA"
+    assert isinstance(ca.root_ca.certificate.common_name, str)
+    assert ca.root_ca.certificate.common_name.startswith(f"Site '{SITE_ID}' local CA")
     assert ca.root_ca.certificate.public_key == ca.root_ca.private_key.public_key
 
 

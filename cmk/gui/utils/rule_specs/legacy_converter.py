@@ -9,7 +9,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
@@ -69,8 +68,10 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     RulespecSubGroup,
 )
+from cmk.rulesets import internal as ruleset_api_internal
 from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
+from cmk.utils.http_proxy_config import ProxyAuthSpec, ProxyConfigSpec
 from cmk.utils.rulesets.definition import RuleGroup
 
 RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
@@ -263,9 +264,6 @@ def _convert_to_legacy_check_parameter_rulespec(
             ),
             is_deprecated=to_convert.is_deprecated,
             create_manual_check=False,
-            # weird field since the CME, as well as the CSE is based on a CCE, but we currently only
-            # want to mark rulespecs that are available in both the CCE and CME as such
-            is_ultimate_and_ultimatemt_only=edition_only is Edition.ULTIMATE,
             form_spec_definition=FormSpecDefinition(
                 to_convert.parameter_form, lambda: item_form_spec
             ),
@@ -281,7 +279,6 @@ def _convert_to_legacy_check_parameter_rulespec(
             convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
         create_manual_check=False,
-        is_ultimate_and_ultimatemt_only=edition_only is Edition.ULTIMATE,
         form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
@@ -298,7 +295,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         case ruleset_api_v1.rule_specs.HostAndItemCondition():
             item_spec, item_as_form_spec = _get_item_spec_maker(to_convert.condition, localizer)
 
-            def wrapped_value():
+            def wrapped_value() -> ruleset_api_v1.form_specs.FormSpec:
                 return item_as_form_spec
 
             item_form_spec = wrapped_value
@@ -321,7 +318,6 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         is_deprecated=False,
         match_type="all",
         item_spec=item_spec,
-        is_ultimate_and_ultimatemt_only=edition_only is Edition.ULTIMATE,
         form_spec_definition=None
         if to_convert.parameter_form is None
         else FormSpecDefinition(to_convert.parameter_form, item_form_spec),
@@ -798,6 +794,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_v1.form_specs.Proxy():
             return _convert_to_legacy_http_proxy(to_convert, localizer)
+
+        case ruleset_api_internal.form_specs.InternalProxy():
+            return _convert_to_legacy_http_internal_proxy(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.Metric():
             return _convert_to_legacy_metric_name(to_convert, localizer)
@@ -2230,6 +2229,265 @@ def _convert_to_legacy_http_proxy(
         ),
         forth=_transform_proxy_forth,
         back=_transform_proxy_back,
+    )
+
+
+type LegacyInternalProxySpec = (
+    tuple[Literal["environment"], Literal["environment"]]
+    | tuple[Literal["no_proxy"], None]
+    | tuple[Literal["global"], str]
+    | tuple[Literal["manual"], ProxyConfigSpec]
+)
+
+
+def _transform_to_legacy_internal_proxy(value: object) -> LegacyInternalProxySpec:
+    match value:
+        case "cmk_postprocessed", "environment_proxy", str():
+            return "environment", "environment"
+
+        case "cmk_postprocessed", "no_proxy", str():
+            return "no_proxy", None
+
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            return "global", stored_proxy_id
+
+        case "cmk_postprocessed", "explicit_proxy", {
+            "scheme": str(scheme),
+            "proxy_server_name": str(proxy_server_name),
+            "port": int(port),
+            "auth": {
+                "user": str(user),
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    (str(id_), str(password)),
+                ),
+            },
+        }:
+            return (
+                "manual",
+                ProxyConfigSpec(
+                    scheme=scheme,
+                    proxy_server_name=proxy_server_name,
+                    port=port,
+                    auth=ProxyAuthSpec(
+                        user=user,
+                        password=(
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            (id_, password),
+                        ),
+                    ),
+                ),
+            )
+
+        case "cmk_postprocessed", "explicit_proxy", {
+            "scheme": str(scheme),
+            "proxy_server_name": str(proxy_server_name),
+            "port": int(port),
+        }:
+            return (
+                "manual",
+                ProxyConfigSpec(
+                    scheme=scheme,
+                    proxy_server_name=proxy_server_name,
+                    port=port,
+                ),
+            )
+
+        case _:
+            raise ValueError(f"Could not transform to legacy internal proxy.\n{value!r} ")
+
+
+def _transform_from_legacy_internal_proxy(
+    value: LegacyInternalProxySpec,
+) -> (
+    tuple[
+        Literal["cmk_postprocessed"],
+        Literal["environment_proxy", "no_proxy", "stored_proxy"],
+        str,
+    ]
+    | tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_proxy"],
+        ProxyConfigSpec,
+    ]
+):
+    match value:
+        case "environment", "environment":
+            return "cmk_postprocessed", "environment_proxy", ""
+
+        case "no_proxy", None:
+            return "cmk_postprocessed", "no_proxy", ""
+
+        case "global", str(stored_proxy_id):
+            return "cmk_postprocessed", "stored_proxy", stored_proxy_id
+
+        case "manual", {
+            "scheme": str(scheme),
+            "proxy_server_name": str(proxy_server_name),
+            "port": int(port),
+            "auth": {
+                "user": str(user),
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    (str(id_), str(password)),
+                ),
+            },
+        }:
+            return (
+                "cmk_postprocessed",
+                "explicit_proxy",
+                ProxyConfigSpec(
+                    scheme=scheme,
+                    proxy_server_name=proxy_server_name,
+                    port=port,
+                    auth=ProxyAuthSpec(
+                        user=user,
+                        password=(
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            (id_, password),
+                        ),
+                    ),
+                ),
+            )
+
+        case "manual", {
+            "scheme": str(scheme),
+            "proxy_server_name": str(proxy_server_name),
+            "port": int(port),
+        }:
+            return (
+                "cmk_postprocessed",
+                "explicit_proxy",
+                ProxyConfigSpec(
+                    scheme=scheme,
+                    proxy_server_name=proxy_server_name,
+                    port=port,
+                ),
+            )
+
+        case _:
+            raise ValueError(f"Could not transform from legacy internal proxy.\n{value!r} ")
+
+
+def _convert_to_legacy_http_internal_proxy(
+    to_convert: ruleset_api_internal.form_specs.InternalProxy, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Transform:
+    allowed_schemas = {s.value for s in to_convert.allowed_schemas}
+
+    def _global_proxy_choices() -> legacy_valuespecs.DropdownChoiceEntries:
+        settings = legacy_config_domains.ConfigDomainCore().load()
+        return [(p["ident"], p["title"]) for p in settings.get("http_proxies", {}).values()]
+
+    return Transform(
+        legacy_valuespecs.CascadingDropdown(
+            title=ruleset_api_v1.Title("HTTP proxy").localize(localizer),
+            default_value=("environment", "environment"),
+            choices=[
+                (
+                    "environment",
+                    ruleset_api_v1.Title("Auto-detect proxy settings for this network").localize(
+                        localizer
+                    ),
+                    legacy_valuespecs.FixedValue(
+                        value="environment",
+                        help=ruleset_api_v1.Help(
+                            "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
+                            "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
+                            "Have a look at the python requests module documentation for further information. Note "
+                            "that these variables must be defined as a site-user in ~/etc/environment and that "
+                            "this might affect other notification methods which also use the requests module."
+                        ).localize(localizer),
+                        totext=ruleset_api_v1.Label(
+                            "Use proxy settings from the process environment. This is the default."
+                        ).localize(localizer),
+                    ),
+                ),
+                (
+                    "no_proxy",
+                    ruleset_api_v1.Title("No proxy").localize(localizer),
+                    legacy_valuespecs.FixedValue(
+                        value=None,
+                        totext=ruleset_api_v1.Label(
+                            "Connect directly to the destination instead of using a proxy."
+                        ).localize(localizer),
+                    ),
+                ),
+                (
+                    "global",
+                    ruleset_api_v1.Title("Globally configured proxy").localize(localizer),
+                    legacy_valuespecs.DropdownChoice(
+                        choices=_global_proxy_choices,
+                        sorted=True,
+                    ),
+                ),
+                (
+                    "manual",
+                    ruleset_api_v1.Title("Manual proxy configuration").localize(localizer),
+                    legacy_valuespecs.Dictionary(
+                        required_keys=["scheme", "proxy_server_name", "port"],
+                        title=ruleset_api_v1.Title("Proxy").localize(localizer),
+                        elements=[
+                            (
+                                "scheme",
+                                legacy_valuespecs.DropdownChoice(
+                                    title=ruleset_api_v1.Title("Scheme").localize(localizer),
+                                    choices=[(scheme, scheme) for scheme in allowed_schemas],
+                                    default_value="http",
+                                ),
+                            ),
+                            (
+                                "proxy_server_name",
+                                legacy_valuespecs.TextInput(
+                                    title=ruleset_api_v1.Title(
+                                        "Proxy server name or IP address"
+                                    ).localize(localizer)
+                                ),
+                            ),
+                            (
+                                "port",
+                                legacy_valuespecs.NetworkPort(
+                                    title=ruleset_api_v1.Title("Port").localize(localizer)
+                                ),
+                            ),
+                            (
+                                "auth",
+                                legacy_valuespecs.Dictionary(
+                                    required_keys=["user", "password"],
+                                    title=ruleset_api_v1.Title(
+                                        "Authentication for proxy required"
+                                    ).localize(localizer),
+                                    elements=[
+                                        (
+                                            "user",
+                                            legacy_valuespecs.TextInput(
+                                                title=ruleset_api_v1.Title("Username").localize(
+                                                    localizer
+                                                )
+                                            ),
+                                        ),
+                                        (
+                                            "password",
+                                            postprocessable_ios_password(
+                                                title=ruleset_api_v1.Title("Password").localize(
+                                                    localizer
+                                                )
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+            sorted=False,
+        ),
+        forth=_transform_to_legacy_internal_proxy,
+        back=_transform_from_legacy_internal_proxy,
     )
 
 

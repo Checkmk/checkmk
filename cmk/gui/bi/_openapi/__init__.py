@@ -4,11 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Business intelligence (BI)
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 BI is used in Checkmk to set up a tree based on the status of hosts and services as branches and to
 extend with higher level nodes summarizing (or aggregating) the status of the contained objects.
 A BI pack contains the configuration data by means of BI aggregations and BI rules.
@@ -18,6 +13,10 @@ You can find an introduction to BI in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/bi.html).
 """
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
+
 import http
 import http.client
 from collections.abc import Mapping
@@ -26,7 +25,8 @@ from typing import Any
 from cmk import fields
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.computer import BIAggregationFilter
-from cmk.bi.lib import BIStates, NodeResultBundle, ReqBoolean, ReqList, ReqString
+from cmk.bi.fields import ReqBoolean, ReqList, ReqString
+from cmk.bi.lib import BIState, NodeResultBundle
 from cmk.bi.packs import (
     AggregationNotFoundException,
     BIAggregationPack,
@@ -335,7 +335,7 @@ def _aggregation_state(
         if actual_result.custom_infos:
             own_infos["custom"] = actual_result.custom_infos
 
-        if actual_result.state not in [BIStates.OK, BIStates.PENDING]:
+        if actual_result.state not in [BIState.OK, BIState.PENDING]:
             node_instance = node_result_bundle.instance
             line_tokens = []
             if isinstance(node_instance, BICompiledRule):
@@ -353,10 +353,10 @@ def _aggregation_state(
             own_infos["error"] = {"state": actual_result.state, "output": ", ".join(line_tokens)}
 
         nested_infos = [
-            x
-            for y in node_result_bundle.nested_results
-            for x in [collect_infos(y, is_single_host_aggregation)]
-            if x is not None
+            info
+            for nested_result in node_result_bundle.nested_results
+            for info in [collect_infos(nested_result, is_single_host_aggregation)]
+            if info is not None
         ]
 
         if own_infos or nested_infos:
@@ -368,7 +368,10 @@ def _aggregation_state(
     for _compiled_aggregation, node_result_bundles in results:
         for node_result_bundle in node_result_bundles:
             aggr_title = node_result_bundle.instance.properties.title
-            required_hosts = [x[1] for x in node_result_bundle.instance.get_required_hosts()]
+            required_hosts = [
+                required_host[1]
+                for required_host in node_result_bundle.instance.get_required_hosts()
+            ]
             is_single_host_aggregation = len(required_hosts) == 1
             aggregations[aggr_title] = {
                 "state": node_result_bundle.actual_result.state,
@@ -380,13 +383,13 @@ def _aggregation_state(
                 "infos": collect_infos(node_result_bundle, is_single_host_aggregation),
             }
 
-    have_sites = {x[0] for x in bi_manager.status_fetcher.states}
+    have_sites = {state[0] for state in bi_manager.status_fetcher.states}
     missing_aggregations = []
     required_sites = set()
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
     for _bi_aggregation, branches in required_aggregations:
         for branch in branches:
-            branch_sites = {x[0] for x in branch.required_elements()}
+            branch_sites = {required_element[0] for required_element in branch.required_elements()}
             required_sites.update(branch_sites)
             if branch.properties.title not in aggregations:
                 missing_aggregations.append(branch.properties.title)

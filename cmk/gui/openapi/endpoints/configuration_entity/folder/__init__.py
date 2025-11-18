@@ -4,16 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Configuration entities / Folder
 
-# mypy: disable-error-code="mutable-override"
-
 These endpoints can be used to manipulate folders via the configuration entity API,
 for more information see "Configuration entities" endpoints."""
+
+# mypy: disable-error-code="mutable-override"
 
 from collections.abc import Mapping
 from typing import Any
 
 from cmk import fields
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.configuration_entity._common import (
     list_endpoint_decorator,
     serve_configuration_entity_list,
@@ -44,7 +45,7 @@ class FolderResponseCollection(DomainObjectCollection):
 @list_endpoint_decorator(ConfigEntityType.folder, FolderResponseCollection)
 def _list_folder(params: Mapping[str, Any]) -> Response:
     """List existing folder"""
-    return serve_configuration_entity_list(ConfigEntityType.folder, params)
+    return serve_configuration_entity_list(ConfigEntityType.folder, params, user)
 
 
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:

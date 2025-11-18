@@ -48,9 +48,6 @@ interface HwSwInventoryWizardProps {
 }
 
 const props = withDefaults(defineProps<HwSwInventoryWizardProps>(), {
-  contextFilters: () => {
-    return {} as ContextFilters
-  },
   editWidgetSpec: null
 })
 
@@ -103,7 +100,7 @@ const wizardStages: QuickSetupStageSpec[] = [
 ]
 
 const contextConfiguredFilters = computed((): ConfiguredFilters => {
-  return parseContextConfiguredFilters(props.contextFilters || {})
+  return parseContextConfiguredFilters(props.contextFilters)
 })
 
 const recapAndNext = () => {

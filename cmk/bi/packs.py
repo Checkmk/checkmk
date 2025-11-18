@@ -23,7 +23,7 @@ from cmk.bi.actions import (
     BIStateOfServiceAction,
 )
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
-from cmk.bi.lib import ReqBoolean, ReqList, ReqNested, ReqString
+from cmk.bi.fields import ReqBoolean, ReqList, ReqNested, ReqString
 from cmk.bi.node_generator import BINodeGenerator
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.rule_interface import bi_rule_id_registry
@@ -95,9 +95,10 @@ class BIAggregationPack:
         self.contact_groups = pack_config["contact_groups"]
         self.public = pack_config["public"]
 
-        self.rules = {x["id"]: BIRule(x, self.id) for x in pack_config.get("rules", [])}
+        self.rules = {rule["id"]: BIRule(rule, self.id) for rule in pack_config.get("rules", [])}
         self.aggregations = {
-            x["id"]: BIAggregation(x, self.id) for x in pack_config.get("aggregations", [])
+            aggregation["id"]: BIAggregation(aggregation, self.id)
+            for aggregation in pack_config.get("aggregations", [])
         }
 
     @classmethod
@@ -225,7 +226,7 @@ class BIAggregationPacks:
         for aggregation in self.get_all_aggregations():
             if aggregation.computation_options.disabled:
                 continue
-            all_groups.update(["/".join(x) for x in aggregation.groups.paths])
+            all_groups.update(["/".join(path) for path in aggregation.groups.paths])
         return sorted(all_groups)
 
     def get_aggregation_group_choices(self) -> list[tuple[str, str]]:
@@ -235,7 +236,7 @@ class BIAggregationPacks:
             if aggregation.computation_options.disabled:
                 continue
             all_groups.update(map(str, aggregation.groups.names))
-            all_groups.update(["/".join(x) for x in aggregation.groups.paths])
+            all_groups.update(["/".join(path) for path in aggregation.groups.paths])
         return [(gn, gn) for gn in sorted(all_groups, key=lambda x: x.lower())]
 
     def get_aggregation(self, aggregation_id: str) -> BIAggregation | None:
@@ -319,7 +320,7 @@ class BIAggregationPacks:
         self._instantiate_packs(config["packs"])
 
     def _instantiate_packs(self, packs_data: list[BIPackConfig]) -> None:
-        self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
+        self.packs = {pack["id"]: BIAggregationPack(pack) for pack in packs_data}
 
     def save_config(self) -> None:
         store.save_text_to_file(self._bi_configuration_file, repr(self.generate_config()))
@@ -486,7 +487,7 @@ class BIHostRenamer:
 
         for bi_pack in bi_packs.get_packs().values():
             for bi_rule in bi_pack.get_rules().values():
-                renamed += sum(self.rename_node(x, oldname, newname) for x in bi_rule.nodes)
+                renamed += sum(self.rename_node(node, oldname, newname) for node in bi_rule.nodes)
 
             for bi_aggregation in bi_pack.get_aggregations().values():
                 renamed += self.rename_node(bi_aggregation.node, oldname, newname)
@@ -515,7 +516,7 @@ class BIHostRenamer:
         elif isinstance(bi_node.action, BICallARuleAction):
             arguments = bi_node.action.params.arguments
             if oldname in arguments:
-                new_arguments = [newname if x == oldname else x for x in arguments]
+                new_arguments = [newname if arg == oldname else arg for arg in arguments]
                 bi_node.action.params.arguments = new_arguments
                 return 1
 

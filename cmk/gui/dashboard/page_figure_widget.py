@@ -123,18 +123,23 @@ GENERATOR_BY_FIGURE_TYPE: Mapping[
 }
 
 
-def get_response_data_by_figure_type(
-    figure_type_name: str, dashlet_spec: T, context: VisualContext, infos: SingleInfos
-) -> FigureResponseData:
-    if not (generator := GENERATOR_BY_FIGURE_TYPE.get(figure_type_name)):
-        raise KeyError(_("No data generator found for figure type name '%s'") % figure_type_name)
-    return generator(dashlet_spec, context, infos)
-
-
 class FigureWidgetPage(AjaxPage):
     @classmethod
     def ident(cls) -> str:
         return "widget_figure"
+
+    def get_response_data_by_figure_type(
+        self,
+        figure_type_name: str,
+        figure_config: T,
+        context: VisualContext,
+        single_infos: SingleInfos,
+    ) -> FigureResponseData:
+        if not (generator := GENERATOR_BY_FIGURE_TYPE.get(figure_type_name)):
+            raise KeyError(
+                _("No data generator found for figure type name '%s'") % figure_type_name
+            )
+        return generator(figure_config, context, single_infos)
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
@@ -143,14 +148,25 @@ class FigureWidgetPage(AjaxPage):
         single_infos: SingleInfos = json.loads(
             ctx.request.get_ascii_input_mandatory("single_infos")
         )
+        general_settings = json.loads(ctx.request.get_ascii_input_mandatory("general_settings"))
         figure_config.update(
             {
                 "context": context,
                 "single_infos": single_infos,
             }
         )
+        if (title := general_settings.get("title")) is not None and title[
+            "render_mode"
+        ] != "hidden":
+            figure_config.update(
+                {
+                    "title": title["text"],
+                    "title_url": title.get("url"),
+                }
+            )
+
         return create_figures_response(
-            get_response_data_by_figure_type(
+            self.get_response_data_by_figure_type(
                 figure_config["type"], figure_config, context, single_infos
             )
         )

@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import uuid
+import json
 from collections.abc import Iterator
 from datetime import datetime, UTC
 from http import HTTPStatus
@@ -12,7 +12,7 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
-from cmk.agent_receiver.config import Config
+from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
 )
@@ -38,6 +38,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
 from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
 def create_relay_mock_transport() -> httpx.MockTransport:
@@ -49,7 +50,8 @@ def create_relay_mock_transport() -> httpx.MockTransport:
         if request.method == "POST" and request.url.path.endswith(
             "/domain-types/relay/collections/all"
         ):
-            relay_id = str(uuid.uuid4())
+            request_data = json.loads(request.content)
+            relay_id = request_data["relay_id"]
             registered_relays.add(relay_id)
             return httpx.Response(HTTPStatus.OK, json={"id": relay_id})
 
@@ -119,7 +121,7 @@ def relays_repository(site_context: Config) -> Iterator[RelaysRepository]:
 @pytest.fixture()
 def tasks_repository() -> Iterator[TasksRepository]:
     """Provides a TasksRepository for testing."""
-    repository = TasksRepository(ttl_seconds=10, max_tasks_per_relay=5)
+    repository = TasksRepository(ttl_seconds=10, max_pending_tasks_per_relay=5)
     yield repository
 
 
@@ -186,7 +188,9 @@ def populated_repos(
 ) -> tuple[RelayID, RelayTask, RelaysRepository, TasksRepository]:
     # arrange
     # register a relay in the repository
-    relay_id = relays_repository.add_relay(test_user, alias="test-relay")
+    relay_id = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay"
+    )
 
     # insert a task in the repository
     now = datetime.now(UTC)

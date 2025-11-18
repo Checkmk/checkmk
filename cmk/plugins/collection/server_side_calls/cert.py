@@ -16,7 +16,10 @@ from cmk.server_side_calls.internal import (
     ActiveCheckConfig,
     HostConfig,
     replace_macros,
+    URLProxy,
+    URLProxyAuth,
 )
+from cmk.server_side_calls.v1 import EnvProxy, NoProxy, Secret
 
 _DAY: Final[int] = 24 * 3600
 
@@ -31,11 +34,20 @@ class ServicePrefix(StrEnum):
     NONE = "none"
 
 
-class ConnectionType(StrEnum):
+class NonConfigurableConnectionType(StrEnum):
     TLS = "tls"
     SMTP_STARTTLS = "smtp_starttls"
     POSTGRES_STARTTLS = "postgres_starttls"
 
+
+class ConfigurableConnectionType(StrEnum):
+    PROXY_TLS = "proxy_tls"
+
+
+Connection = (
+    tuple[NonConfigurableConnectionType, None]
+    | tuple[ConfigurableConnectionType, EnvProxy | URLProxy | NoProxy]
+)
 
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
@@ -83,7 +95,7 @@ class CertificateDetails(BaseModel):
 
 
 class Settings(BaseModel):
-    connection_type: ConnectionType | None = None
+    connection: Connection | None = None
     response_time: FloatLevels | None = None
     validity: Certificate | None = None
     cert_details: CertificateDetails | None = None
@@ -142,7 +154,39 @@ def generate_cert_services(
         )
 
 
-def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Iterator[str]:
+def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str | Secret]:
+    match proxy:
+        case EnvProxy():
+            yield from ()
+        case NoProxy():
+            yield from ()
+        case URLProxy(
+            scheme=scheme,
+            proxy_server_name=proxy_server_name,
+            port=port,
+            auth=auth,
+        ):
+            yield "--proxy-url"
+            yield f"{scheme}://{proxy_server_name}"
+            yield "--proxy-port"
+            yield str(port)
+
+            match auth:
+                case None:
+                    pass
+                case URLProxyAuth(user=user, password=secret):
+                    yield "--proxy-user"
+                    yield user
+                    yield "--proxy-pw-pwstore"
+                    yield secret
+                case _:
+                    raise ValueError(f"Unknown proxy auth settings: {auth}")
+
+        case _:
+            raise ValueError(f"Unknown proxy configuration: {proxy}")
+
+
+def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Iterator[str | Secret]:
     yield "--hostname"
     yield endpoint.address
 
@@ -153,9 +197,12 @@ def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Itera
     if (settings := endpoint.individual_settings) is None:
         return
 
-    if (connection_type := settings.connection_type) is not None:
+    if (connection := settings.connection) is not None:
+        connection_type, config = connection
         yield "--connection-type"
         yield connection_type
+        if connection_type == ConfigurableConnectionType.PROXY_TLS and config is not None:
+            yield from _proxy_args(config)
     if (response_time := settings.response_time) is not None:
         yield from _response_time_args(response_time)
     if (validity := settings.validity) is not None:

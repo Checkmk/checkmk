@@ -5,13 +5,8 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-# Initialize the UI environment to make loading of the dashlet possible.
-from cmk.gui import main_modules
 
-# Needs to come before the following import (adds some compatibility names)
-main_modules.load_plugins()
-
-from cmk.gui.plugins.dashboard import (  # type: ignore[attr-defined] # noqa: E402
+from cmk.gui.plugins.dashboard import (  # type: ignore[attr-defined]
     Dashlet,
     dashlet_registry,
 )

@@ -87,6 +87,10 @@ py_library(
     name = "rulesets",
     srcs = [
         "cmk/rulesets/__init__.py",
+        "cmk/rulesets/internal/__init__.py",
+        "cmk/rulesets/internal/form_specs/__init__.py",
+        "cmk/rulesets/internal/form_specs/_migrations.py",
+        "cmk/rulesets/internal/form_specs/_preconfigured.py",
         "cmk/rulesets/v1/__init__.py",
         "cmk/rulesets/v1/_localize.py",
         "cmk/rulesets/v1/form_specs/__init__.py",
@@ -126,6 +130,7 @@ py_library(
         "cmk/server_side_calls/internal/__init__.py",
         "cmk/server_side_calls/internal/_active_checks.py",
         "cmk/server_side_calls/internal/_special_agents.py",
+        "cmk/server_side_calls/internal/_utils.py",
         "cmk/server_side_calls/v1/__init__.py",
         "cmk/server_side_calls/v1/_active_checks.py",
         "cmk/server_side_calls/v1/_special_agents.py",

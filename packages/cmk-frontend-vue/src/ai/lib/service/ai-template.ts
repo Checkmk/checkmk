@@ -37,46 +37,46 @@ export interface IAiConversationConfig<T> {
 export type TBaseConversationElementEmits = { (e: 'done'): void }
 
 export interface BaseConversationElementContent {
-  type: string
+  content_type: string
   title?: string | undefined
   noAnimation?: boolean | undefined
 }
 
 export interface AlertConversationElementContent extends BaseConversationElementContent {
-  type: 'alert'
+  content_type: 'alert'
   text: string
   variant: 'error' | 'warning' | 'success' | 'info'
 }
 
 export interface CodeBlockConversationElementContent extends BaseConversationElementContent {
-  type: 'code'
+  content_type: 'code'
   code: string
 }
 
 export interface DialogConversationElementContent extends BaseConversationElementContent {
-  type: 'dialog'
+  content_type: 'dialog'
   message: string
 }
 
 export interface ImageConversationElementContent extends BaseConversationElementContent {
-  type: 'image'
+  content_type: 'image'
   src: string
   altText?: string | undefined
 }
 
 export interface ListConversationElementContent extends BaseConversationElementContent {
-  type: 'list'
+  content_type: 'list'
   listType: 'ordered' | 'unordered'
   items: string[]
 }
 
 export interface MarkdownConversationElementContent extends BaseConversationElementContent {
-  type: 'markdown'
+  content_type: 'markdown'
   content: string
 }
 
 export interface TextConversationElementContent extends BaseConversationElementContent {
-  type: 'text'
+  content_type: 'text'
   text: string
 }
 
@@ -101,8 +101,7 @@ export interface IAiConversationElement {
   error?: string | undefined
 }
 
-export type OnAddElementCallback = (element: IAiConversationElement) => void
-export type OnUserActionChangeCallback = (actions: AiActionButton[]) => void
+export type OnAnimationActiveChangeCallback = (active: boolean) => void
 
 export class AiTemplateService extends ServiceBase {
   public conversationOpen = ref(false)
@@ -139,6 +138,14 @@ export class AiTemplateService extends ServiceBase {
     consented.value = true
 
     void this.loadAiUserActions()
+  }
+
+  public setAnimationActiveChange(active: boolean) {
+    this.dispatchCallback('animation-active-change', active)
+  }
+
+  public onAnimationActiveChange(cb: OnAnimationActiveChangeCallback) {
+    this.pushCallBack('animation-active-change', cb)
   }
 
   public setActiveRole(role: AiRole) {
@@ -179,7 +186,7 @@ export class AiTemplateService extends ServiceBase {
         role: AiRole.user,
         content: [
           {
-            type: 'text',
+            content_type: 'text',
             text: userAction.action_name
           }
         ],
@@ -208,20 +215,22 @@ export class AiTemplateService extends ServiceBase {
   protected async getAiInferenceElement(
     action: AiServiceAction
   ): Promise<TAiConversationElementContent[]> {
+    const contents: TAiConversationElementContent[] = []
     try {
       const res = await this.api.inference(action, this.data)
-      return res.explanation_sections.filter(
-        (s) => s.type === 'markdown'
-      ) as MarkdownConversationElementContent[]
+
+      for (const es of res.explanation_sections) {
+        contents.push(es as MarkdownConversationElementContent)
+      }
     } catch {
-      return [
-        {
-          type: 'alert',
-          variant: 'error',
-          text: _t('Something went wrong. Please try again later.')
-        }
-      ]
+      contents.push({
+        content_type: 'alert',
+        variant: 'error',
+        text: _t('Something went wrong. Please try again later.')
+      })
     }
+
+    return contents
   }
 
   protected getInitialElements(): IAiConversationElement[] {

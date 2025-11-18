@@ -10,7 +10,7 @@ from typing import override
 
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
+from cmk.gui.utils import remove_failed_plugin
 from cmk.mkp_tool import Manifest, PackageID
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import (
@@ -42,14 +42,13 @@ class PreUpdateUIExtensions(PreUpdateAction):
 
     @override
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
-        main_modules.load_plugins()
         # no ui stuff to update
         if (path_config := make_path_config()) is None:
             return
         installer, package_map = get_installer_and_package_map(path_config)
         dealt_with_packages: set[PackageID] = set()
 
-        for path, _gui_part, _module_name, error in get_failed_plugins():
+        for path, _gui_part, _module_name, error in main_modules.get_failed_plugins():
             manifest = _get_package_manifest(package_map, str(path))
             # unpackaged files
             if manifest is None:
@@ -86,8 +85,6 @@ def _continue_on_incomp_local_file(conflict_mode: ConflictMode) -> Resume:
         case ConflictMode.FORCE:
             return Resume.UPDATE
         case ConflictMode.ABORT:
-            return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
             return Resume.ABORT
         case ConflictMode.ASK:
             return continue_per_users_choice(

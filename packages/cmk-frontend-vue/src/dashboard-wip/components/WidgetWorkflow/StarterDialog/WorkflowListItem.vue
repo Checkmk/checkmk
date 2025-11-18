@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import IconWithEmblem from '../IconWithEmblem.vue'
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 
 defineProps<WorkflowItem>()
@@ -16,7 +17,7 @@ const emit = defineEmits(['select'])
 
 <template>
   <button class="db-workflow-list-item" @click="emit('select')">
-    <IconWithEmblem :icon="icon" :icon_emblem="icon_emblem" />
+    <CmkIconEmblem :emblem="icon_emblem"><CmkIcon :name="icon" size="xxlarge" /></CmkIconEmblem>
     <div class="db-workflow-list-item__content">
       <CmkHeading type="h2">
         {{ title }}

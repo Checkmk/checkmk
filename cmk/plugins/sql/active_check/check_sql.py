@@ -22,12 +22,13 @@ import logging
 import os
 import sys
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any, NoReturn
 
-from cmk.utils.password_store import lookup as password_store_lookup
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
 LOG = logging.getLogger(__name__)
+
+PASSWORD_OPTION = "password"
 
 DEFAULT_PORTS = {
     "postgres": 5432,
@@ -160,15 +161,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         required=True,
         help="""Username for database access""",
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--password-reference",
-        help="Password store reference of the password for the database access.",
-    )
-    group.add_argument(
-        "-p",
-        "--password",
-        help="""Password for database access""",
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", help="Password for database access.", required=False
     )
     parser.add_argument(
         "cmd",
@@ -198,9 +192,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     logging.basicConfig(level=max(30 - 10 * args.verbose, 0), format=fmt)
 
     # V-VERBOSE INFO
-    for key, val in args.__dict__.items():
-        if key in ("user", "password"):
-            val = "****"
+    for key, val in vars(args).items():
         LOG.debug("argparse: %s = %r", key, val)
     return args
 
@@ -485,21 +477,18 @@ def process_result(
     return state, text + perf
 
 
-def _make_secret(args: argparse.Namespace) -> str:
-    if (ref := args.password_reference) is None:
-        return args.password
-
-    pw_id, pw_file = ref.split(":", 1)
-    return password_store_lookup(Path(pw_file), pw_id)
-
-
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv or sys.argv)
 
     msg = "connecting to database"
     try:
         conn = connect(
-            args.dbms, args.hostname, args.port, args.name, args.user, _make_secret(args)
+            args.dbms,
+            args.hostname,
+            args.port,
+            args.name,
+            args.user,
+            resolve_secret_option(args, PASSWORD_OPTION).reveal(),
         )
 
         msg = "executing SQL command"

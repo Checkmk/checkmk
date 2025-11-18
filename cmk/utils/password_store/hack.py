@@ -5,10 +5,10 @@
 """This consolidates the hack that we currently use to make plugins
 password store compatible.
 
-# mypy: disable-error-code="redundant-expr"
-
 We are working towards a more staight forward solution.
 """
+
+# mypy: disable-error-code="redundant-expr"
 
 import shlex
 import sys
@@ -76,7 +76,7 @@ HACK_AGENTS = {
     "smb_share": False,
     "splunk": False,
     "storeonce4x": False,
-    "storeonce": True,
+    "storeonce": False,
     "three_par": False,
     "tinkerforge": False,  # needs no secret
     "ucs_bladecenter": False,

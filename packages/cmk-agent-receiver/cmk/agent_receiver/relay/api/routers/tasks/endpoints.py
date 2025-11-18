@@ -7,7 +7,7 @@ from typing import Annotated
 
 import fastapi
 
-from cmk.agent_receiver.log import bound_contextvars
+from cmk.agent_receiver.lib.log import bound_contextvars
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
     get_activate_config_handler,
     get_create_task_handler,

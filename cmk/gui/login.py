@@ -117,6 +117,8 @@ def del_auth_cookie(request: Request) -> None:
 # - It calls userdb.create_non_existing_user() but we don't
 # - It calls connection.is_locked() but we don't
 
+LOGIN_BUTTON_ID = "_login"
+
 
 class LoginPage(Page):
     def __init__(self) -> None:
@@ -143,7 +145,7 @@ class LoginPage(Page):
 
     def _do_login(self, request: Request, config: Config) -> None:
         """handle the login form"""
-        if not request.var("_login"):
+        if not request.var(LOGIN_BUTTON_ID):
             return
 
         try:
@@ -319,8 +321,14 @@ class LoginPage(Page):
         except LicenseStateError:
             pass
 
-        with html.form_context("login", method="POST", add_transid=False, action="login.py"):
-            html.hidden_field("_login", "1")
+        with html.form_context(
+            "login",
+            method="POST",
+            add_transid=False,
+            action="login.py",
+            onsubmit=f"document.getElementById('{LOGIN_BUTTON_ID}').classList.add('shimmer-input-button');",
+        ):
+            html.hidden_field(LOGIN_BUTTON_ID, "1")
             html.hidden_field("_origtarget", origtarget)
 
             saml2_user_error: str | None = None
@@ -363,7 +371,7 @@ class LoginPage(Page):
             html.close_table()
 
             html.open_div(id_="button_text")
-            html.button("_login", _("Login"), cssclass=None if saml_connections else "hot")
+            html.button(LOGIN_BUTTON_ID, _("Login"), cssclass=None if saml_connections else "hot")
             html.close_div()
 
             if user_errors and not saml2_user_error:

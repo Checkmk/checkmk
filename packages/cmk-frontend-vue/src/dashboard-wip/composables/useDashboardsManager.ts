@@ -18,7 +18,7 @@ import {
   type EditResponsiveDashboardBody
 } from '@/dashboard-wip/types/dashboard'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
-import { dashboardAPI } from '@/dashboard-wip/utils.ts'
+import { createDashboardModel, dashboardAPI } from '@/dashboard-wip/utils.ts'
 
 export function useDashboardsManager() {
   const constants = ref<DashboardConstants>()
@@ -45,33 +45,17 @@ export function useDashboardsManager() {
   }
 
   async function loadDashboard(name: string, layoutType: DashboardLayout): Promise<DashboardModel> {
-    let content: ContentRelativeGrid | ContentResponsiveGrid
     let dashboardResp
 
     if (layoutType === DashboardLayout.RELATIVE_GRID) {
       const resp = await dashboardAPI.getRelativeDashboard(name)
       dashboardResp = resp.extensions
-      content = {
-        layout: dashboardResp.layout,
-        widgets: dashboardResp.widgets
-      } as ContentRelativeGrid
     } else {
       const resp = await dashboardAPI.getResponsiveDashboard(name)
       dashboardResp = resp.extensions
-      content = {
-        layout: dashboardResp.layout,
-        widgets: dashboardResp.widgets
-      } as ContentResponsiveGrid
     }
 
-    const dashboard: DashboardModel = {
-      owner: dashboardResp.owner,
-      general_settings: dashboardResp.general_settings,
-      filter_context: dashboardResp.filter_context,
-      type: dashboardResp.is_built_in ? DashboardOwnerType.BUILT_IN : DashboardOwnerType.CUSTOM,
-      content
-    }
-
+    const dashboard = createDashboardModel(dashboardResp, layoutType)
     return setActiveDashboard(name, dashboard)
   }
 

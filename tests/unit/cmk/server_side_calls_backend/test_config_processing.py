@@ -166,15 +166,25 @@ def test_process_configuration_to_parameter_env_proxy_internal() -> None:
 
 def test_process_configuration_to_parameter_explicit_proxy_internal() -> None:
     assert process_configuration_to_parameters(
-        params={"proxy": ("cmk_postprocessed", "explicit_proxy", "hurray.com")},
+        params={
+            "proxy": (
+                "cmk_postprocessed",
+                "explicit_proxy",
+                {"scheme": "http", "proxy_server_name": "hurray.com", "port": 6532},
+            )
+        },
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_internal=False,
+        is_internal=True,
     ) == ReplacementResult(
-        value={"proxy": internal.URLProxy("url_proxy", "hurray.com")},
+        value={
+            "proxy": internal.URLProxy(
+                scheme="http", proxy_server_name="hurray.com", port=6532, auth=None
+            )
+        },
         found_secrets={},
         surrogates={},
     )
@@ -194,9 +204,16 @@ def test_process_configuration_to_parameter_global_proxy_ok_internal() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_internal=False,
+        is_internal=True,
     ) == ReplacementResult(
-        value={"proxy": internal.URLProxy("url_proxy", "http://proxy.example.com:3128")},
+        value={
+            "proxy": internal.URLProxy(
+                scheme="http",
+                proxy_server_name="proxy.example.com",
+                port=3128,
+                auth=None,
+            )
+        },
         found_secrets={},
         surrogates={},
     )

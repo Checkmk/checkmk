@@ -14,6 +14,7 @@ string_flag(
         "debian-13",
         "sles-15sp5",
         "sles-15sp6",
+        "sles-15sp7",
         "ubuntu-22.04",
         "ubuntu-24.04",
     ],
@@ -71,11 +72,17 @@ config_setting(
     flag_values = {":distro": "sles-15sp6"},
 )
 
+config_setting(
+    name = "sles-15sp7",
+    flag_values = {":distro": "sles-15sp7"},
+)
+
 selects.config_setting_group(
     name = "sles",
     match_any = [
         ":sles-15sp5",
         ":sles-15sp6",
+        ":sles-15sp7",
     ],
 )
 

@@ -54,7 +54,7 @@
       flex-basis: 35px;
       padding: 2 * $spacing 25px 6px $spacing;
       background-color: transparent;
-      background-image: url('images/icon_quicksearch.png');
+      background-image: url('../facelift/images/icon_quicksearch.png');
       background-position: center;
       background-repeat: no-repeat;
       background-size: 16px;
@@ -63,7 +63,7 @@
 
       &.clearable {
         cursor: pointer;
-        background-image: url('images/icon_close.svg');
+        background-image: url('../facelift/images/icon_close.svg');
         background-size: 12px;
       }
     }

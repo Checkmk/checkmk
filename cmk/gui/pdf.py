@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 # Coords:
@@ -376,7 +375,8 @@ class Document:
 
         anchor = position[0]
         if anchor in ("s", "n", "w", "e"):
-            offset = position[1] * mm  # type: ignore[operator]
+            assert isinstance(position[1], float)
+            offset = position[1] * mm
             if anchor == "n":
                 return h_center, self._top - offset
             if anchor == "s":

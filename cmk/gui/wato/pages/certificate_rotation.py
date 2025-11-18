@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import shutil
+from dataclasses import dataclass
+from pathlib import Path
+
+from dateutil.relativedelta import relativedelta
+
+import cmk.utils.paths
+from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
+from cmk.gui.http import Request
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
+from cmk.utils.certs import cert_dir, CertManagementEvent, SiteCA
+from cmk.utils.log.security_event import log_security_event
+
+CERTIFICATE_DIRECTORY = cert_dir(cmk.utils.paths.omd_root)
+CERTIFICATE_TMP_PATH = CERTIFICATE_DIRECTORY / "temp_certificate"
+TEMPORARY_CA_FILE_PATH = Path(CERTIFICATE_TMP_PATH / "ca.pem")
+
+
+def register(
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
+    automation_command_registry.register(AutomationStageCertificateRotation)
+    automation_command_registry.register(AutomationFinalizeCertificateRotation)
+
+
+@dataclass
+class CertificateRotationParameters:
+    site_id: str
+    expiry: int
+    key_size: int
+
+    @classmethod
+    def from_request(cls, request: Request) -> "CertificateRotationParameters":
+        return cls(
+            site_id=request.get_str_input_mandatory("site_id"),
+            expiry=request.get_integer_input_mandatory("expiry"),
+            key_size=request.get_integer_input_mandatory("key_size"),
+        )
+
+
+class AutomationStageCertificateRotation(AutomationCommand[CertificateRotationParameters]):
+    def command_name(self) -> str:
+        return "stage-certificate-rotation"
+
+    def execute(self, api_request: CertificateRotationParameters) -> str:
+        site_ca = _stage_certificate_rotation(
+            site_id=api_request.site_id,
+            expiry=api_request.expiry,
+            key_size=api_request.key_size,
+        )
+        return site_ca.root_ca.certificate.dump_pem().bytes.decode("utf-8")
+
+    def get_request(self, config: Config, request: Request) -> CertificateRotationParameters:
+        return CertificateRotationParameters.from_request(request=request)
+
+
+def _stage_certificate_rotation(site_id: str, expiry: int, key_size: int) -> SiteCA:
+    site_ca = SiteCA.create(
+        cert_dir=Path(CERTIFICATE_TMP_PATH),
+        site_id=SiteId(site_id),
+        expiry=relativedelta(days=expiry),
+        key_size=key_size,
+    )
+    return site_ca
+
+
+class AutomationFinalizeCertificateRotation(AutomationCommand[CertificateRotationParameters]):
+    def command_name(self) -> str:
+        return "finalize-certificate-rotation"
+
+    def execute(self, api_request: CertificateRotationParameters) -> str:
+        return _finalize_certificate_rotation(
+            site_id=api_request.site_id,
+            expiry=api_request.expiry,
+            key_size=api_request.key_size,
+        )
+
+    def get_request(self, config: Config, request: Request) -> CertificateRotationParameters:
+        return CertificateRotationParameters.from_request(request=request)
+
+
+def _finalize_certificate_rotation(site_id: str, expiry: int, key_size: int) -> str:
+    site_ca = SiteCA.load(certificate_directory=CERTIFICATE_TMP_PATH)
+
+    shutil.move(TEMPORARY_CA_FILE_PATH, Path(CERTIFICATE_DIRECTORY / "ca.pem"))
+
+    site_ca.cert_dir = CERTIFICATE_DIRECTORY
+    site_ca.create_site_certificate(
+        site_id=SiteId(site_id),
+        expiry=relativedelta(days=expiry),
+        key_size=key_size,
+    )
+
+    site_cert = SiteCA.load_site_certificate(
+        cert_dir=CERTIFICATE_DIRECTORY, site_id=SiteId(site_id)
+    )
+
+    log_security_event(
+        CertManagementEvent(
+            event="certificate rotated",
+            component="site certificate",
+            actor="cmk-cert",
+            cert=site_cert.certificate if site_cert else None,
+        )
+    )
+
+    log_security_event(
+        CertManagementEvent(
+            event="certificate rotated",
+            component="site certificate authority",
+            actor="cmk-cert",
+            cert=site_ca.root_ca.certificate,
+        )
+    )
+
+    shutil.rmtree(CERTIFICATE_TMP_PATH, ignore_errors=True)
+
+    return "success"

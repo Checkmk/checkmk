@@ -2,8 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import itertools
 import logging
+import os
 from collections.abc import Generator
 from contextlib import contextmanager
 
@@ -25,7 +26,7 @@ from tests.update.helpers import (
     create_site,
     DUMPS_DIR,
     inject_rules,
-    TestParams,
+    InteractiveModeDistros,
 )
 
 logger = logging.getLogger(__name__)
@@ -86,7 +87,7 @@ def _setup_host(site: Site, hostname: str, ip_address: str) -> Generator[None]:
         site.openapi.changes.activate_and_wait_for_completion()
 
 
-@pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")
+@pytest.fixture(name="test_setup", scope="module")
 def _setup(
     request: pytest.FixtureRequest,
 ) -> Generator[tuple[Site, TypeCMKEdition, bool, str]]:
@@ -103,7 +104,7 @@ def _setup(
 
     if (
         request.config.getoption(name="--latest-base-version")
-        and base_package.version != BaseVersions.base_packages[-1].version
+        and base_package.version != BaseVersions.get_latest_base_package().version
     ):
         pytest.skip("Only latest base-version selected")
 
@@ -129,3 +130,24 @@ def _setup(
         if cleanup:
             test_site.rm()
         cleanup_cmk_package(test_site, request)
+
+
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
+    if "test_setup" in metafunc.fixturenames:
+        # Generate test parameters for test_setup fixture. This has to be done here to be able to
+        # access --cmk-edition command line option
+        test_params = [
+            pytest.param(
+                (base_package, interactive_mode),
+                id=(
+                    f"base-version={base_package.version.version}"
+                    f"|interactive-mode={interactive_mode}"
+                ),
+            )
+            for base_package, interactive_mode in itertools.product(
+                BaseVersions.get_base_packages(), [True, False]
+            )
+            # interactive mode enabled for some specific distros
+            if interactive_mode == (os.environ.get("DISTRO") in InteractiveModeDistros.DISTROS)
+        ]
+        metafunc.parametrize("test_setup", test_params, indirect=True)

@@ -8,20 +8,17 @@ import { type InjectionKey, inject, provide, ref } from 'vue'
 
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import { randomId } from '@/lib/randomId'
-import type { UnifiedSearchProviderIdentifier } from '@/lib/unified-search/providers/unified'
-import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
-import type { UnifiedSearch } from '@/lib/unified-search/unified-search'
 
-import type { CmkIconProps } from '@/components/CmkIcon'
+import type { UnifiedSearchProviderIdentifier } from '@/unified-search/lib/providers/unified'
+import type { SearchHistoryService } from '@/unified-search/lib/searchHistory'
+import type { UnifiedSearch } from '@/unified-search/lib/unified-search'
 
 import type {
   FilterOption,
   ProviderOption,
   QueryProvider,
-  SearchProviderKeys,
   UnifiedSearchQueryLike
 } from './search-utils.types'
-import { topicIconMapping } from './topic-icon-mapping'
 
 declare const cmk: any
 
@@ -283,22 +280,6 @@ function breadcrumb(provider: UnifiedSearchProviderIdentifier, topic: string): s
   return breadcrumb
 }
 
-export function mapIcon(topic: string, provider: SearchProviderKeys): CmkIconProps {
-  topic = topic
-    .toLowerCase()
-    .replace(/ /g, '_')
-    .replace(/[^a-zA-Z0-9_]+/g, '')
-
-  const name = topicIconMapping[provider][topic]
-  if (!name) {
-    throw new Error(`Icon for topic "${topic}" not found for provider "${provider}"`)
-  }
-
-  return {
-    name
-  }
-}
-
 export interface SearchShortCuts {
   enable: typeof enableShortCuts
   disable: typeof disableShortCuts
@@ -350,7 +331,6 @@ export interface InitSearchUtils {
 export interface SearchUtils extends InitSearchUtils {
   highlightQuery: typeof highlightQuery
   breadcrumb: typeof breadcrumb
-  mapIcon: typeof mapIcon
   search?: UnifiedSearch
   history?: SearchHistoryService
 }
@@ -380,7 +360,6 @@ export function initSearchUtils(): SearchUtils {
     },
     highlightQuery,
     breadcrumb,
-    mapIcon,
     query: query,
     input: {
       setQuery,

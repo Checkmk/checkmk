@@ -38,6 +38,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
@@ -117,7 +118,6 @@ from cmk.utils.host_storage import (
 from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
-from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
 _ContactgroupName = str
@@ -4071,3 +4071,7 @@ class FolderValidatorsRegistry(Registry[FolderValidators]):
 
 
 folder_validators_registry = FolderValidatorsRegistry()
+
+
+def strip_hostname_whitespace_chars(host: str) -> str:
+    return host.strip(" \n\t\r")

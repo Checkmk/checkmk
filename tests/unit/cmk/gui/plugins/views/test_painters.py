@@ -490,6 +490,8 @@ def test_registered_painters() -> None:
         "inv_software_applications_synthetic_monitoring",
         "inv_software_applications_synthetic_monitoring_plans",
         "inv_software_applications_synthetic_monitoring_tests",
+        "inv_software_applications_synthetic_monitoring_scheduler",
+        "inv_software_applications_synthetic_monitoring_scheduler_config",
         "inv_software_applications_vmwareesx",
         "inv_software_bios",
         "inv_software_bios_date",

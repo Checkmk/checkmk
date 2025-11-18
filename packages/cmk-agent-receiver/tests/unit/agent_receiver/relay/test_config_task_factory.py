@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import datetime
 
-from cmk.agent_receiver.config import Config
+from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     RelayConfigSpec,
@@ -12,6 +12,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
 def test_create_tasks_for_all_relays(
@@ -22,8 +23,12 @@ def test_create_tasks_for_all_relays(
     site_context: Config,
 ) -> None:
     # Register two relays
-    relay_id_1 = relays_repository.add_relay(test_user, alias="test-relay-1")
-    relay_id_2 = relays_repository.add_relay(test_user, alias="test-relay-2")
+    relay_id_1 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-1"
+    )
+    relay_id_2 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-2"
+    )
 
     cf = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_2])
 
@@ -58,9 +63,15 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
     """
 
     # Register more relays
-    relay_id_1 = relays_repository.add_relay(test_user, alias="test-relay-1")
-    relay_id_2 = relays_repository.add_relay(test_user, alias="test-relay-2")
-    relay_id_3 = relays_repository.add_relay(test_user, alias="test-relay-3")
+    relay_id_1 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-1"
+    )
+    relay_id_2 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-2"
+    )
+    relay_id_3 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-3"
+    )
 
     cf = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
 
@@ -96,9 +107,15 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
     """
 
     # Register more relays
-    relay_id_1 = relays_repository.add_relay(test_user, alias="test-relay-1")
-    relay_id_2 = relays_repository.add_relay(test_user, alias="test-relay-2")
-    relay_id_3 = relays_repository.add_relay(test_user, alias="test-relay-3")
+    relay_id_1 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-1"
+    )
+    relay_id_2 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-2"
+    )
+    relay_id_3 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-3"
+    )
 
     cf = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
 
@@ -145,9 +162,15 @@ def test_create_task_for_single_chosen_relay_when_relay_folder_does_not_exist(
     """
 
     # Register more relays
-    relay_id_1 = relays_repository.add_relay(test_user, alias="test-relay-1")
-    relay_id_2 = relays_repository.add_relay(test_user, alias="test-relay-2")
-    relay_id_3 = relays_repository.add_relay(test_user, alias="test-relay-3")
+    relay_id_1 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-1"
+    )
+    relay_id_2 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-2"
+    )
+    relay_id_3 = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay-3"
+    )
 
     # If we don't have a relay folder for relay 2 for this serial...
 

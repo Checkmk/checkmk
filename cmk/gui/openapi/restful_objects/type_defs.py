@@ -30,7 +30,9 @@ DomainType = Literal[
     "dashboard_metadata",
     "dashboard_relative_grid",
     "dashboard_responsive_grid",
+    "dashboard_token",
     "dcd",
+    "dcd_metric_backend",
     "discovery_run",
     "downtime",
     "event_console",
@@ -117,12 +119,14 @@ CmkEndpointName = Literal[
     "cmk/create_cluster",
     "cmk/create_dashboard_relative_grid",
     "cmk/create_dashboard_responsive_grid",
+    "cmk/create_dashboard_token",
     "cmk/download",
     "cmk/download_by_hash",
     "cmk/download_by_host",
     "cmk/download_license_request",
     "cmk/edit_dashboard_relative_grid",
     "cmk/edit_dashboard_responsive_grid",
+    "cmk/edit_dashboard_token",
     "cmk/fetch",
     "cmk/fetch_phase_one",
     "cmk/list",
@@ -141,6 +145,7 @@ CmkEndpointName = Literal[
     "cmk/delete_bi_rule",
     "cmk/delete_bi_aggregation",
     "cmk/delete_bi_pack",
+    "cmk/delete_dashboard_token",
     "cmk/put_bi_rule",
     "cmk/post_bi_rule",
     "cmk/bi_aggregation_state_post",
@@ -452,12 +457,6 @@ ResponseType = TypedDict(
 )
 
 
-class EditionLabel(TypedDict, total=True):
-    name: str
-    color: str
-    position: Literal["before", "after"]
-
-
 class CodeSample(TypedDict, total=True):
     label: str
     lang: str
@@ -470,7 +469,6 @@ OperationSpecType = TypedDict(
     "OperationSpecType",
     {
         "x-codeSamples": list[CodeSample],
-        "x-badges": NotRequired[Sequence[EditionLabel]],
         "operationId": str,
         "tags": list[str],
         "description": str,

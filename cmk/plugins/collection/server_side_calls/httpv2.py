@@ -25,6 +25,7 @@ from cmk.server_side_calls.internal import (
     replace_macros,
     Secret,
     URLProxy,
+    URLProxyAuth,
 )
 
 _DAY: Final[int] = 24 * 3600
@@ -349,20 +350,34 @@ def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
     yield tls_version_arg
 
 
-def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str]:
+def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str | Secret]:
     match proxy:
         case EnvProxy():
             return
         case NoProxy():
             yield "--ignore-proxy-env"
-        # Note: check_httpv2 is capable of taking the credentials separately,
-        # and to read the password from password store, with arguments
-        # --proxy-user and --proxy-pw-plain/--proxy-pw-pwstore.
-        # However, if everthing is passed via url, as it's done now, check_httpv2 is
-        # also capable of handling that correctly.
-        case URLProxy(url=url):
+        case URLProxy(
+            scheme=scheme,
+            proxy_server_name=proxy_server_name,
+            port=port,
+            auth=auth,
+        ):
             yield "--proxy-url"
-            yield url
+            yield f"{scheme}://{proxy_server_name}:{port}"
+
+            match auth:
+                case None:
+                    pass
+                case URLProxyAuth(user=user, password=secret):
+                    yield "--proxy-user"
+                    yield user
+                    yield "--proxy-pw-pwstore"
+                    yield secret
+                case _:
+                    raise ValueError(f"Unknown proxy auth settings: {auth}")
+
+        case _:
+            raise ValueError(f"Unknown proxy configuration: {proxy}")
 
 
 def _address_family_args(address_family: AddressFamily, host_config: HostConfig) -> Iterator[str]:

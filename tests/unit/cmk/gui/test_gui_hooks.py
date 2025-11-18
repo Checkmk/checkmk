@@ -294,7 +294,7 @@ def test_builtin_vs_plugin_hooks() -> None:
     hooks.register_from_plugin("blub", lambda: True)
     assert hooks.registered("blub") is True
 
-    hooks.load_plugins()
+    hooks.unregister_plugin_hooks()
 
     assert hooks.registered("bla") is True
     assert hooks.registered("blub") is False

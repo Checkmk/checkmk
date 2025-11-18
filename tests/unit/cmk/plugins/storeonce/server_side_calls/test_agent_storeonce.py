@@ -21,57 +21,17 @@ HOST_CONFIG = HostConfig(
     [
         pytest.param(
             {
-                "password": Secret(23),
-                "user": "username",
-                "ignore_tls": False,
-            },
-            SpecialAgentCommand(
-                command_arguments=[
-                    "--address=hostname",
-                    "--user=username",
-                    f"--password={Secret(23).unsafe()}",
-                ]
-            ),
-            id="with explicit password",
-        ),
-        pytest.param(
-            {
-                "password": Secret(id=1, pass_safely=True),
-                "user": "username",
-                "ignore_tls": False,
-            },
-            SpecialAgentCommand(
-                command_arguments=[
-                    "--address=hostname",
-                    "--user=username",
-                    "--password=Secret(id=1, format='%s', pass_safely=False)",
-                ]
-            ),
-            id="with password from store",
-        ),
-    ],
-)
-def test_storeonce_argument_parsing_password(
-    raw_params: Mapping[str, object],
-    expected_args: SpecialAgentCommand,
-) -> None:
-    assert list(special_agent_storeonce(raw_params, HOST_CONFIG)) == [expected_args]
-
-
-@pytest.mark.parametrize(
-    ["raw_params", "expected_args"],
-    [
-        pytest.param(
-            {
-                "password": Secret(id=1, pass_safely=True),
+                "password": Secret(1),
                 "user": "username",
                 "ignore_tls": True,
             },
             SpecialAgentCommand(
                 command_arguments=[
-                    "--address=hostname",
-                    "--user=username",
-                    "--password=Secret(id=1, format='%s', pass_safely=False)",
+                    "--username",
+                    "username",
+                    "--password-id",
+                    Secret(1),
+                    "hostname",
                     "--no-cert-check",
                 ]
             ),
@@ -79,15 +39,17 @@ def test_storeonce_argument_parsing_password(
         ),
         pytest.param(
             {
-                "password": Secret(id=1, pass_safely=True),
+                "password": Secret(1),
                 "user": "username",
                 "ignore_tls": False,
             },
             SpecialAgentCommand(
                 command_arguments=[
-                    "--address=hostname",
-                    "--user=username",
-                    "--password=Secret(id=1, format='%s', pass_safely=False)",
+                    "--username",
+                    "username",
+                    "--password-id",
+                    Secret(1),
+                    "hostname",
                 ]
             ),
             id="Do not ignore TLS certificate",

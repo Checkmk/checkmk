@@ -29,16 +29,18 @@ from livestatus import (
     SiteConfigurations,
 )
 
+import cmk.ccc.translations
+
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.changes as _changes
 import cmk.mkp_tool
 import cmk.utils.paths
 import cmk.utils.render
-import cmk.utils.translations
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.regex import RegexFutureWarning
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition, edition
 from cmk.gui import forms, hooks, log, sites, watolib
@@ -193,7 +195,6 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     String,
 )
-from cmk.utils.regex import RegexFutureWarning
 from cmk.utils.rulesets.definition import RuleGroup
 
 from ._rulespecs import RulespecLogwatchEC
@@ -2515,8 +2516,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         "disabled", _("This rule is currently disabled and will not be applied")
                     )
                 elif event:
-                    event["host"] = cmk.utils.translations.translate_hostname(
-                        eventd_configuration()["hostname_translation"], event["host"]
+                    event["host"] = HostName(
+                        cmk.ccc.translations.translate(
+                            eventd_configuration()["hostname_translation"], event["host"]
+                        )
                     )
                     result = match_event_rule(
                         self._rule_pack, rule, event, site_configs[event["site"]]

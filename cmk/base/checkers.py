@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Concrete implementation of checkers functionality."""
@@ -717,7 +715,7 @@ def _compute_final_check_parameters(
     # Most of the following are only needed for individual plugins, actually.
     # We delay every computation until needed.
 
-    def make_prediction():
+    def make_prediction() -> InjectedParameters:
         prediction_store = PredictionStore(host_name=host_name, service_name=service.description)
         # In the past the creation of predictions (and the livestatus query needed)
         # was performed inside the check plug-ins context.
@@ -1054,7 +1052,8 @@ def _needs_postprocessing(params: object) -> bool:
             return True
         case {**mapping}:
             return any(_needs_postprocessing(p) for p in mapping.values())
-    return False
+        case _:
+            return False
 
 
 @dataclass
@@ -1108,7 +1107,8 @@ def postprocess_configuration(
                 )
                 for k, v in params.items()
             }
-    return params
+        case _:
+            return params
 
 
 def _postprocess_predictive_levels(
@@ -1116,7 +1116,7 @@ def _postprocess_predictive_levels(
 ) -> tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
     match params:
         case {
-            "__reference_metric__": str(metric),
+            "__reference_metric__": str() as metric,
             "__direction__": "upper" | "lower" as direction,
             **raw_prediction_params,
         }:
@@ -1132,7 +1132,8 @@ def _postprocess_predictive_levels(
                     ),
                 ),
             )
-    raise ValueError(f"Invalid predictive levels: {params!r}")
+        case _:
+            raise ValueError(f"Invalid predictive levels: {params!r}")
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

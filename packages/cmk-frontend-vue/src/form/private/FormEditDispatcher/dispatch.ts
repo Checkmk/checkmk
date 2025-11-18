@@ -30,6 +30,7 @@ import FormMetric from '@/form/private/forms/FormMetric.vue'
 import FormMultilineText from '@/form/private/forms/FormMultilineText.vue'
 import FormOptionalChoice from '@/form/private/forms/FormOptionalChoice.vue'
 import FormPassword from '@/form/private/forms/FormPassword.vue'
+import FormRegex from '@/form/private/forms/FormRegex/FormRegex.vue'
 import FormSimplePassword from '@/form/private/forms/FormSimplePassword.vue'
 import FormSingleChoice from '@/form/private/forms/FormSingleChoice.vue'
 import FormSingleChoiceEditable from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditable.vue'
@@ -72,7 +73,8 @@ const components: Record<Components['type'], Component> = {
   string: FormString,
   time_span: FormTimeSpan,
   time_specific: FormTimeSpecific,
-  tuple: FormTuple
+  tuple: FormTuple,
+  regex: FormRegex
 }
 
 export function getComponent(type: string): Component {

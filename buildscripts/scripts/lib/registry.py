@@ -193,11 +193,6 @@ class Registry:
             return True
         return False
 
-    def image_exists_and_can_be_pulled_enterprise(self, image: DockerImage, edition: str) -> bool:
-        if not self.image_exists_enterprise(image, edition):
-            return False
-        return self.image_can_be_pulled_enterprise(image, edition)
-
     def image_exists_enterprise(self, image: DockerImage, _edition: str) -> bool:
         url = f"{self.url}/v2/{image.image_name}/tags/list"
         sys.stdout.write(f"Test if {image.tag} can be found in {url}...")
@@ -211,23 +206,6 @@ class Registry:
         )
         if not exists:
             sys.stdout.write(" NO!\n")
-            return False
-        sys.stdout.write(" OK\n")
-        return True
-
-    def image_can_be_pulled_enterprise(self, image: DockerImage, edition: str) -> bool:
-        repository = f"{urlparse(self.url).netloc}/{edition}/check-mk-{edition}"
-        sys.stdout.write(f"Test if {image.tag} can be pulled from {repository}...")
-        # Be sure we don't have the image locally... there is no force pull
-        with suppress(docker.errors.ImageNotFound):
-            self.client.images.remove(f"{repository}:{image.tag}")
-        try:
-            self.client.images.pull(
-                tag=image.tag,
-                repository=repository,
-            )
-        except docker.errors.APIError as e:
-            sys.stdout.write(f" NO! Error was: {e}\n")
             return False
         sys.stdout.write(" OK\n")
         return True
@@ -337,21 +315,11 @@ class Registry:
         self.client = docker.client.from_env(**kwargs)
         self.credentials = get_credentials()
         match self.editions:
-            case ["enterprise"]:
-                self.url = "https://registry.checkmk.com"
-                # Asking why we're also pulling? -> CMK-14567
-                self.image_exists = self.image_exists_and_can_be_pulled_enterprise
-                self.get_image_tags = self._get_image_tags_enterprise
-                self.client.login(
-                    registry=self.url,
-                    username=self.credentials.username,
-                    password=self.credentials.password,
-                )
-            case ["raw", "cloud", "managed"]:
+            case ["community", "ultimate", "ultimatemt", "pro"]:
                 self.url = "https://hub.docker.com/"
                 self.image_exists = self.image_exists_docker_hub
                 self.get_image_tags = self._get_image_tags_docker_hub
-            case ["saas"]:
+            case ["cloud"]:
                 self.url = "https://artifacts.lan.tribe29.com:4000"
                 self.image_exists = self.image_exists_enterprise
                 # For nexus, d-intern is not authorized
@@ -377,10 +345,10 @@ def get_default_registries() -> list[Registry]:
             timeout=300,  # Our enterprise registry is a bit _slow_, let's give it some more time
         ),
         Registry(
-            editions=["raw", "cloud", "managed"],
+            editions=["community", "ultimate", "ultimatemt"],
         ),
         Registry(
-            editions=["saas"],
+            editions=["cloud"],
         ),
     ]
 

@@ -40,6 +40,7 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     EntityId,
     get_configuration_entity_schema,
     save_configuration_entity,
+    update_configuration_entity,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -107,8 +108,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type_specifier,
             data,
             folder_tree(),
-            user,
-            object_id=None,
+            user=user,
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,
         )
@@ -136,15 +136,13 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     data = body["data"]
 
     try:
-        data = save_configuration_entity(
+        data = update_configuration_entity(
             entity_type,
             entity_type_specifier,
             data,
-            folder_tree(),
-            user,
+            user=user,
             object_id=entity_id,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
         )
     except FormSpecValidationError as exc:
         return _serve_validations(exc.messages)

@@ -216,18 +216,35 @@ def _redacted_site_states_for_logging() -> dict[SiteId, dict[str, object]]:
     }
 
 
-def _edition_from_livestatus(livestatus_edition: str | None) -> Edition | None:
+def _edition_from_livestatus(*, version_str: str, edition_str: str | None) -> Edition | None:
     # TODO The legacy edition names can be removed with Checkmk 2.6
-    match livestatus_edition:
-        case "cre" | Edition.COMMUNITY.long:
+    version = Version.from_str(version_str)
+    if version.base is None:
+        return None
+    if version.base.major > 2 or (version.base.major == 2 and version.base.minor >= 5):
+        match edition_str:
+            case Edition.COMMUNITY.long:
+                return Edition.COMMUNITY
+            case Edition.PRO.long:
+                return Edition.PRO
+            case Edition.ULTIMATE.long:
+                return Edition.ULTIMATE
+            case Edition.ULTIMATEMT.long:
+                return Edition.ULTIMATEMT
+            case Edition.CLOUD.long:
+                return Edition.CLOUD
+            case _:
+                return None
+    match edition_str:
+        case "raw":
             return Edition.COMMUNITY
-        case "cee" | Edition.PRO.long:
+        case "enterprise":
             return Edition.PRO
-        case "cce" | Edition.ULTIMATE.long:
+        case "cloud":
             return Edition.ULTIMATE
-        case "cme" | Edition.ULTIMATEMT.long:
+        case "managed":
             return Edition.ULTIMATEMT
-        case "cse" | Edition.CLOUD.long:
+        case "saas":
             return Edition.CLOUD
         case _:
             return None
@@ -318,9 +335,9 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
         try:
             (
                 site_id,
-                v1,
-                v2,
-                ps,
+                livestatus_version,
+                program_version,
+                program_start,
                 num_hosts,
                 num_services,
                 max_long_output_size,
@@ -342,7 +359,9 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
 
         central_edition = edition(paths.omd_root)
         central_version = __version__
-        remote_edition = _edition_from_livestatus(remote_edition)
+        remote_edition = _edition_from_livestatus(
+            version_str=livestatus_version, edition_str=remote_edition
+        )
         central_license_state = get_license_state()
 
         compatibility = _get_distributed_monitoring_compatibility(
@@ -355,7 +374,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
                 central_version,
                 central_edition,
                 central_license_state,
-                v2,
+                program_version,
                 remote_edition,
                 compatibility,
             )
@@ -363,13 +382,13 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             g.site_status[site_id].update(
                 {
                     "state": "online",
-                    "livestatus_version": v1,
-                    "program_version": v2,
-                    "program_start": ps,
+                    "livestatus_version": livestatus_version,
+                    "program_version": program_version,
+                    "program_start": program_start,
                     "num_hosts": num_hosts,
                     "num_services": num_services,
                     "max_long_output_size": max_long_output_size,
-                    "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+                    "core": program_version.startswith("Check_MK") and "cmc" or "nagios",
                     "core_pid": pid,
                 }
             )

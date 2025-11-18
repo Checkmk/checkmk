@@ -121,7 +121,7 @@ class SiteManagement:
         return FixedValue(
             value=None,
             title=_("Use Livestatus proxy daemon"),
-            totext=_("Connect directly (not available in CRE)"),
+            totext=_("Connect directly (not available in Checkmk Community)"),
         )
 
     @classmethod

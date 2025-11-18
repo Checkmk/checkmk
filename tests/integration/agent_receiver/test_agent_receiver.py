@@ -24,10 +24,10 @@ from cryptography.x509 import (
 from cryptography.x509.oid import NameOID
 
 # TODO: Integration tests are not allowed to import application code. We need to get rid of this
-from cmk.agent_receiver.certs import (  # pylint: disable=cmk-module-layer-violation
+from cmk.agent_receiver.lib.certs import (  # pylint: disable=cmk-module-layer-violation
     current_time_naive,
     serialize_to_pem,
-    sign_agent_csr,
+    sign_csr,
 )
 from tests.testlib.site import Site
 from tests.testlib.tls import CMKTLSError, tls_connect
@@ -138,7 +138,7 @@ def paired_keypair_fixture(
     public_key_path = tmp_path_factory.mktemp("certs") / "public.pem"
     with public_key_path.open("w") as public_key_file:
         public_key_file.write(
-            serialize_to_pem(sign_agent_csr(csr, 12, (root_cert, root_key), current_time_naive()))
+            serialize_to_pem(sign_csr(csr, 12, (root_cert, root_key), current_time_naive()))
         )
 
     return KeyPairInfo(

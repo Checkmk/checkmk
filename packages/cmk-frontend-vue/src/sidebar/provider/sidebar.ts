@@ -5,7 +5,7 @@
  */
 import { type InjectionKey, inject } from 'vue'
 
-import type { SidebarService } from '@/lib/sidebar/sidebar'
+import type { SidebarService } from '@/sidebar/lib/sidebar'
 
 export const sidebarKey = Symbol() as InjectionKey<SidebarService>
 

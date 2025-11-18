@@ -49,7 +49,8 @@ def bake_agent(site: Site, hostname: str) -> tuple[str, Path]:
 
 
 def get_cre_agent_path(site: Site) -> Path:
-    # On CRE we can't bake agents since agent baking is a CEE feature so we use the vanilla agent
+    # On Checkmk Community we can't bake agents since agent baking is a commercial feature so we
+    # use the vanilla agent
     package_extension = get_package_extension()
     agent_folder = site.resolve_path(Path("share", "check_mk", "agents"))
     # The locations of the 2 agent packages in the raw edition are:

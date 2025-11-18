@@ -11,6 +11,8 @@
 
 import datetime
 from collections.abc import Sequence
+from dataclasses import dataclass
+from time import time
 from unittest import mock
 from unittest.mock import ANY, MagicMock
 
@@ -20,15 +22,25 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
-from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
-from cmk.gui.type_defs import Users
+from cmk.gui.ldap_integration.ldap_connector import (
+    _sync_ldap_user,
+    FetchedLDAPUser,
+    LDAPUserConnector,
+    LdapUsername,
+    SyncUsersResult,
+)
+from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.user_connection_config_types import (
+    ActivePlugins,
     Fixed,
     LDAPConnectionConfigFixed,
     LDAPUserConnectionConfig,
+    SyncAttribute,
     UserConnectionConfig,
 )
 from cmk.gui.userdb import get_user_attributes, UserAttribute
+from cmk.gui.userdb.user_attributes import StartURLUserAttribute, TemperatureUnitUserAttribute
+from cmk.gui.utils.security_log_events import UserManagementEvent
 
 
 @pytest.fixture(name="mock_ldap", autouse=True)
@@ -63,7 +75,10 @@ _test_config = LDAPUserConnectionConfig(
     user_id_umlauts="keep",
     group_dn="ou=Groups,dc=ldap_golden,dc=unit_tests,dc=local",
     group_scope="sub",
-    active_plugins={"email": {}},
+    active_plugins=ActivePlugins(
+        start_url=SyncAttribute(attr="ldap_start_url"),
+        temperature_unit=SyncAttribute(attr="ldap_temp_unit"),
+    ),
     cache_livetime=300,
     type="ldap",
     bind=("bind_dn", ("store", "ldap_golden_unknown_password")),  # not in password_store
@@ -148,7 +163,14 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
         ("user2", {"uid": [b"USER2_ID#"]}),  # user with invalid user ID
     ]
     # note that the key is lower-cased due to 'lower_user_ids'
-    expected_result = {"user1_id": {"dn": ["user1"], "uid": ["USER1_ID"]}}
+    expected_result = {
+        "user1_id": FetchedLDAPUser(
+            dn="user1",
+            ldap_user_name="user1_id",
+            ldap_user_spec={"dn": ["user1"], "uid": ["USER1_ID"]},
+        )
+    }
+
     add_filter = "my(*)filter"
     expected_filter = f"(&(objectclass=person){add_filter})"
 
@@ -325,3 +347,136 @@ def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
         connector.connect()
 
     mock_ldap.assert_called_with("ldap://lolcathorst")
+
+
+@dataclass
+class SyncLdapData:
+    fetched_ldap_user: FetchedLDAPUser
+    existing_users: Users
+    change_str: str
+    expected_user_after_sync: dict[UserId, UserSpec]
+    security_event: UserManagementEvent
+
+
+sync_data: list[SyncLdapData] = [
+    SyncLdapData(
+        fetched_ldap_user=FetchedLDAPUser(
+            dn="carol",
+            ldap_user_name=LdapUsername("carol"),
+            ldap_user_spec={
+                "dn": ["carol"],
+                "uid": ["CAROL_ID"],
+                "ldap_start_url": ["mr_bojangles.py"],
+                "ldap_temp_unit": ["celsius"],
+            },
+        ),
+        existing_users=Users(
+            {
+                UserId("carol"): UserSpec(
+                    alias="carol",
+                    connector="test-golden-ldap-connector",
+                    contactgroups=[],
+                    customer="provider",
+                    force_authuser=False,
+                    locked=False,
+                    roles=["user"],
+                    serial=0,
+                    start_url="welcome.py",
+                    user_scheme_serial=1,
+                )
+            }
+        ),
+        change_str="Changed start_url from welcome.py to mr_bojangles.py, Added: temperature_unit",
+        expected_user_after_sync={
+            UserId("carol"): UserSpec(
+                alias="carol",
+                connector="test-golden-ldap-connector",
+                contactgroups=[],
+                customer="provider",
+                force_authuser=False,
+                locked=False,
+                roles=["user"],
+                serial=0,
+                user_scheme_serial=1,
+                start_url="mr_bojangles.py",
+                temperature_unit="celsius",
+            )
+        },
+        security_event=UserManagementEvent(
+            event="user modified",
+            affected_user=UserId("carol"),
+            acting_user=UserId("admin_gav"),
+            connector="ldap",
+            connection_id="test-golden-ldap-connector",
+        ),
+    ),
+    SyncLdapData(
+        fetched_ldap_user=FetchedLDAPUser(
+            dn="carol",
+            ldap_user_name=LdapUsername("carol"),
+            ldap_user_spec={
+                "dn": ["carol"],
+                "uid": ["CAROL_ID"],
+                "ldap_start_url": ["mr_bojangles.py"],
+                "ldap_temp_unit": ["celsius"],
+            },
+        ),
+        existing_users=Users({}),
+        change_str="Created user",
+        expected_user_after_sync={
+            UserId("carol"): UserSpec(
+                alias="carol",
+                connector="test-golden-ldap-connector",
+                contactgroups=[],
+                customer="provider",
+                force_authuser=False,
+                locked=False,
+                roles=["user"],
+                serial=0,
+                user_scheme_serial=1,
+                start_url="mr_bojangles.py",
+                temperature_unit="celsius",
+            )
+        },
+        security_event=UserManagementEvent(
+            event="user created",
+            affected_user=UserId("carol"),
+            acting_user=UserId("admin_gav"),
+            connector="ldap",
+            connection_id="test-golden-ldap-connector",
+        ),
+    ),
+]
+
+
+@pytest.mark.parametrize("sync_ldap_data", sync_data)
+def test_ldap_sync(mocker: MockerFixture, sync_ldap_data: SyncLdapData) -> None:
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={
+            sync_ldap_data.fetched_ldap_user.ldap_user_name: sync_ldap_data.fetched_ldap_user
+        },
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=sync_ldap_data.fetched_ldap_user,
+        ldap_user_connector=LDAPUserConnector(_test_config),
+        users=sync_ldap_data.existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=[
+            ("start_url", StartURLUserAttribute()),
+            ("temperature_unit", TemperatureUnitUserAttribute()),
+        ],
+        default_user_profile=UserSpec(
+            contactgroups=[],
+            roles=["user"],
+            force_authuser=False,
+        ),
+    )
+
+    assert user_id == UserId(sync_ldap_data.fetched_ldap_user.ldap_user_name)
+    assert len(sync_user_result.changes) == 1
+    assert sync_ldap_data.change_str in sync_user_result.changes[0]
+    assert len(sync_user_result.security_events) == 1
+    assert sync_user_result.security_events[0] == sync_ldap_data.security_event

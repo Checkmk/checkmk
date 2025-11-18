@@ -25,18 +25,11 @@ type _RulesetProxySpec = tuple[
 
 class ProxyAuthSpec(TypedDict):
     user: str
-    password: (
-        tuple[
-            Literal["cmk_postprocessed"],
-            Literal["explicit_password"],
-            tuple[str, str],
-        ]
-        | tuple[
-            Literal["cmk_postprocessed"],
-            Literal["stored_password"],
-            tuple[str, str],
-        ]
-    )
+    password: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_password", "stored_password"],
+        tuple[str, str],
+    ]
 
 
 class ProxyConfigSpec(TypedDict):
@@ -180,12 +173,13 @@ def http_proxy_config_from_user_setting(
         and (global_proxy := http_proxies_global_settings.get(str(value))) is not None
     ):
         proxy_config = global_proxy["proxy_config"]
-
-        proxy_auth = (
-            ""
-            if (auth := proxy_config.get("auth")) is None
-            else f"{auth['user']}:{extract_formspec_password(auth['password'])}@"
-        )
+        proxy_auth = ""
+        if (auth := proxy_config.get("auth")) is not None:
+            proxy_auth = (
+                f"{auth['user']}:{extract_formspec_password((auth['password'][0], 'explicit_password', auth['password'][2]))}@"
+                if auth["password"][1] == "explicit_password"
+                else f"{auth['user']}:{extract_formspec_password((auth['password'][0], 'stored_password', auth['password'][2]))}@"
+            )
 
         return ExplicitProxyConfig(
             url=f"{proxy_config['scheme']}://{proxy_auth}"

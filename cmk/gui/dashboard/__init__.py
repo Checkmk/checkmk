@@ -60,8 +60,7 @@ __all__ = [
 ]
 
 
-def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+def register() -> None:
     _register_pre_21_plugin_api()
 
     # Load plug-ins for dashboards. Currently these files

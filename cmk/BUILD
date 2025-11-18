@@ -6,16 +6,19 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("do_not_deploy.bzl", "DO_NOT_DEPLOY")
 
 # To update the list run the following command:
 # echo "LEGACY_CHECKS = [" > legacy_checks_list.bzl;for F in $(ls *.py); do echo $F | sed 's/\(.*\)\.py/    "\1",/' >> legacy_checks_list.bzl; done; echo "]" >> legacy_checks_list.bzl
 load("legacy_checks_list.bzl", "LEGACY_CHECKS")
 
+LEGACY_CHECKS_DICT = {"base/legacy_checks/" + name + ".py": name for name in LEGACY_CHECKS}
+
 exports_files([
     "requirements.in",
     "utils/password_store/cli.py",
     "gui/openapi/spec/spec_generator/generate_api_spec.py",
-])
+] + LEGACY_CHECKS_DICT.keys())
 
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order
@@ -49,7 +52,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "meraki",
     "msal",
     "mypy-boto3-logs",
-    "netapp-ontap",  # provided elsewhere
     "numpy",
     "oauthlib",
     "openapi-spec-validator",
@@ -118,6 +120,7 @@ COMMUNITY_PY = glob(
         "**/community/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 ULTIMATE_PY = glob(
@@ -125,6 +128,7 @@ ULTIMATE_PY = glob(
         "**/ultimate/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 PRO_PY = glob(
@@ -132,6 +136,7 @@ PRO_PY = glob(
         "**/pro/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 ULTIMATEMT_PY = glob(
@@ -139,6 +144,7 @@ ULTIMATEMT_PY = glob(
         "**/ultimatemt/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 CLOUD_PY = glob(
@@ -146,6 +152,7 @@ CLOUD_PY = glob(
         "**/cloud/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 filegroup(
@@ -154,6 +161,7 @@ filegroup(
         [
             "**/checkman/*",
         ],
+        exclude = ["**/OWNERS"],
     ),
 )
 
@@ -164,6 +172,7 @@ filegroup(
             "**/libexec/*",
         ],
     ),
+    visibility = ["//omd:__subpackages__"],
 )
 
 filegroup(
@@ -194,10 +203,12 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:observer",
     "//packages/cmk-ccc:plugin-registry",
     "//packages/cmk-ccc:profile",
+    "//packages/cmk-ccc:regex",
     "//packages/cmk-ccc:resulttype",
     "//packages/cmk-ccc:site",
     "//packages/cmk-ccc:store",
     "//packages/cmk-ccc:timeout",
+    "//packages/cmk-ccc:translations",
     "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
     "//packages/cmk-ccc:version",
@@ -244,7 +255,7 @@ py_library(
     srcs = glob(
         # Keep in sync with `REPO_PATCH_RULES` from `versioning.groovy`.
         include = ["**/*.py"],
-        exclude = COMMUNITY_PY + ULTIMATE_PY + PRO_PY + ULTIMATEMT_PY + CLOUD_PY,
+        exclude = COMMUNITY_PY + ULTIMATE_PY + PRO_PY + ULTIMATEMT_PY + CLOUD_PY + DO_NOT_DEPLOY + ["base/legacy_checks/*"],
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
@@ -317,7 +328,6 @@ py_wheel(
         "lib_cmk",
         "lib_cmk_community",
         ":checkman",
-        ":libexec",
         ":miscellaneous",
     ],
 )
@@ -331,6 +341,9 @@ py_wheel(
     visibility = ["//visibility:public"],
     deps = CMC_PROTO_DEPS + [
         "lib_cmk",
+        ":checkman",
+        ":libexec",
+        ":miscellaneous",
         "lib_cmk_" + edition,
     ],
 ) for edition in [
@@ -342,6 +355,7 @@ py_wheel(
 
 [package_wheel(
     name = "cmk_tar_" + edition,
+    prefix = "lib/python3",
     visibility = ["//visibility:public"],
     whl = "cmk_" + edition,
 ) for edition in [
@@ -383,8 +397,6 @@ py_binary(
         "lib_cmk_repo",
     ],
 )
-
-LEGACY_CHECKS_DICT = {"base/legacy_checks/" + name + ".py": name for name in LEGACY_CHECKS}
 
 pkg_files(
     name = "legacy_checks_pkg",

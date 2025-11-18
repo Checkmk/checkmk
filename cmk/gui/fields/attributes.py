@@ -839,7 +839,7 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
     privacy_protocol = String(
         description=(
             "The privacy protocol. "
-            "The only supported values in the Raw Edition are CBC-DES and AES-128. "
+            "The only supported values in Checkmk Community are CBC-DES and AES-128. "
             "If selected, privacy_password needs to be supplied as well."
         ),
         required=True,

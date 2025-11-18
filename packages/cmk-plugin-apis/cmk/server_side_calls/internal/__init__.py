@@ -18,11 +18,11 @@ from cmk.server_side_calls.v1 import (
     replace_macros,
     Secret,
     SpecialAgentCommand,
-    URLProxy,
 )
 
 from ._active_checks import ActiveCheckConfig
 from ._special_agents import SpecialAgentConfig
+from ._utils import URLProxy, URLProxyAuth
 
 
 def entry_point_prefixes() -> Mapping[
@@ -64,4 +64,5 @@ __all__ = [
     "SpecialAgentCommand",
     "SpecialAgentConfig",
     "URLProxy",
+    "URLProxyAuth",
 ]

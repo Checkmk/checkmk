@@ -11,6 +11,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay impor
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
 from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
 def test_process_removes_relay_id_from_registry(
@@ -19,7 +20,9 @@ def test_process_removes_relay_id_from_registry(
     test_user: UserAuth,
 ) -> None:
     # First add a relay to remove
-    relay_id = relays_repository.add_relay(test_user, alias="test-relay")
+    relay_id = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay"
+    )
     assert relays_repository.has_relay(relay_id, test_user)
 
     # Now unregister it

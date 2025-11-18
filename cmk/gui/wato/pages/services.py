@@ -58,6 +58,7 @@ from cmk.gui.type_defs import HTTPVariables, PermissionName
 from cmk.gui.utils.agent_commands import agent_commands_registry
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
@@ -2045,7 +2046,8 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
             title=_("Effective parameters"),
             icon_name="rulesets",
             item=make_simple_link(
-                folder_preserving_link([("mode", "object_parameters"), ("host", host.name())])
+                folder_preserving_link([("mode", "object_parameters"), ("host", host.name())]),
+                transition=LoadingTransition.catalog,
             ),
         )
 

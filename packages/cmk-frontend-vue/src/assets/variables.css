@@ -26,6 +26,10 @@
   --default-help-icon-bg-color: rgb(6 103 193);
   --default-help-icon-bg-color-hover: rgb(56 133 205);
   --scrollbar-color: rgb(78 93 105);
+  --popup-dialog-success: var(--color-corporate-green-50);
+  --popup-dialog-warning: var(--color-yellow-50);
+  --popup-dialog-danger: var(--color-light-red-50);
+  --popup-dialog-info: var(--color-light-blue-50);
 
   /* Fonts */
   --font-size-xxlarge: 18px;
@@ -125,6 +129,7 @@
   --icon-new: url('~cmk-frontend/themes/facelift/images/icon_new.svg');
   --icon-copied: url('~cmk-frontend/themes/facelift/images/icon_copied.svg');
   --icon-global-settings: url('~cmk-frontend/themes/facelift/images/icon_global_settings.svg');
+  --icon-relay-menu: url('~cmk-frontend/themes/facelift/images/icon_relay_menu.svg');
   --icon-topic-administration: url('~cmk-frontend/themes/facelift/images/icon_topic_administration.png');
   --icon-topic-agents: url('~cmk-frontend/themes/facelift/images/icon_topic_agents.png');
   --icon-topic-analyze: url('~cmk-frontend/themes/facelift/images/icon_topic_analyze.png');
@@ -208,6 +213,9 @@
     --color-skeleton-shimmer-2: rgb(30 38 46 / 6%);
     --color-warning: rgb(255 208 0);
     --color-danger: rgb(229 63 63);
+    --popup-dialog-bg-color: var(--color-daylight-grey-10);
+    --popup-dialog-title-color: var(--color-conference-grey-100);
+    --popup-dialog-message-color: var(--color-mid-grey-100);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
@@ -264,6 +272,11 @@
     --perfometer-bg-color: var(--color-white-100);
     --inline-help-text-bg: rgb(223 239 251);
     --inline-help-icon-bg: rgb(12 129 238);
+
+    /* breadcrumb colors */
+    --font-color-breadcrumb-inactive: var(--color-conference-grey-70);
+    --font-color-breadcrumb-interactive: var(--color-conference-grey-100);
+    --font-color-breadcrumb-hover: var(--color-corporate-green-70);
   }
 
   body[data-theme='modern-dark'] {
@@ -287,6 +300,9 @@
     --color-warning: rgb(255 215 3);
     --color-danger: rgb(180 45 45);
     --ux-nav-bg-color: rgb(17 24 29);
+    --popup-dialog-bg-color: var(--color-midnight-grey-50);
+    --popup-dialog-title-color: var(--color-white-100);
+    --popup-dialog-message-color: var(--color-mid-grey-0);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 
@@ -346,6 +362,11 @@
     --perfometer-bg-color: var(--color-mist-grey-30);
     --inline-help-text-bg: rgb(17 24 29);
     --inline-help-icon-bg: rgb(6 103 193);
+
+    /* breadcrumb colors */
+    --font-color-breadcrumb-inactive: var(--color-white-70);
+    --font-color-breadcrumb-interactive: var(--color-white-100);
+    --font-color-breadcrumb-hover: var(--color-corporate-green-50);
   }
 }
 

@@ -7,15 +7,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import { type UnifiedSearchResultElement } from '@/lib/unified-search/providers/unified'
-import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 import { immediateWatch } from '@/lib/watch'
 
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import { getSearchUtils } from '../../providers/search-utils'
-import ResultItem from '../result/ResultItem.vue'
-import ResultList from '../result/ResultList.vue'
+import ResultItem from '@/unified-search/components/result/ResultItem.vue'
+import ResultList from '@/unified-search/components/result/ResultList.vue'
+import { type UnifiedSearchResultElement } from '@/unified-search/lib/providers/unified'
+import { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
 const { _t } = usei18n()
 
@@ -66,13 +67,13 @@ immediateWatch(
       <ResultItem
         v-for="(item, idx) in recentlyViewed"
         ref="recently-viewed-item"
-        :key="item.element.url"
+        :key="item.element.target.url"
         :idx="idx"
         :title="item.element.title"
         :context="item.element.context"
-        :icon="searchUtils.mapIcon(item.element.topic, item.element.provider)"
+        :icon="{ name: item.element.icon as SimpleIcons }"
         :inline-buttons="item.element.inlineButtons"
-        :url="item.element.url"
+        :target="item.element.target"
         :html="searchUtils.highlightQuery(item.element.title)"
         :breadcrumb="searchUtils.breadcrumb(item.element.provider, item.element.topic)"
         :focus="isFocused(idx)"

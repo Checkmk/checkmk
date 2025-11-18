@@ -57,12 +57,12 @@ onMounted(async () => {
       <CmkSkeleton v-for="i in 3" :key="i" class="ai-conversation-user-action__skeleton" />
     </template>
     <template v-if="userActions && userActions.length === 0">
-      <AlertContent type="alert" variant="warning" :text="_t('No actions found')" />
+      <AlertContent content_type="alert" variant="warning" :text="_t('No actions found')" />
     </template>
     <template v-else>
       <template v-if="actionsError">
         <AlertContent
-          type="alert"
+          content_type="alert"
           variant="error"
           :text="actionsError.message"
           :title="actionsError.name"

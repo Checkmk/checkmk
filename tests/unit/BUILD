@@ -1,8 +1,11 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//cmk:legacy_checks_list.bzl", "LEGACY_CHECKS")
 
 package(default_visibility = [":__subpackages__"])
+
+LEGACY_CHECKS_IMPORTS = ["//cmk:base/legacy_checks/" + name + ".py" for name in LEGACY_CHECKS]
 
 py_library(
     name = "conftest",
@@ -65,7 +68,7 @@ py_test(
     name = "repo",
     # https://bazel.build/reference/be/common-definitions#test.size
     size = "large",
-    srcs = ["__test__.py"] + glob(
+    srcs = ["__test__.py"] + LEGACY_CHECKS_IMPORTS + glob(
         include = ["**/*.py"],
         exclude = [
             "omdlib/**/*.py",

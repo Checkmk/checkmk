@@ -16,6 +16,7 @@ import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon'
 
+import { showLoadingTransition } from '@/loading-transition/loadingTransition'
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
 import type {
@@ -143,7 +144,7 @@ async function activateAllChanges() {
           .filter(
             (site) =>
               site.changes > 0 &&
-              site.onlineStatus === 'online' &&
+              ['online', 'disabled'].includes(site.onlineStatus) &&
               selectedSites.value.includes(site.siteId)
           )
           .map((site) => site.siteId),
@@ -172,7 +173,7 @@ function setSelectedSites() {
    * selectedSites array.
    */
   selectedSites.value = sitesAndChanges.value.sites
-    .filter((site: Site) => site.changes > 0 && site.onlineStatus === 'online')
+    .filter((site: Site) => site.changes > 0 && ['online', 'disabled'].includes(site.onlineStatus))
     .map((site: Site) => site.siteId)
 }
 
@@ -224,6 +225,7 @@ async function fetchPendingChangesAjax(): Promise<void> {
 
 function openActivateChangesPage() {
   cmk.popup_menu.close_popup()
+  showLoadingTransition('table', _t('Activate pending changes'))
   window.open(props.activate_changes_url, 'main')
 }
 
@@ -254,7 +256,7 @@ const activateChangesButtonDisabled = computed((): boolean => {
     return true
   }
   return !sitesAndChanges.value.sites.some(
-    (site) => site.onlineStatus === 'online' && site.changes > 0
+    (site) => ['online', 'disabled'].includes(site.onlineStatus) && site.changes > 0
   )
 })
 

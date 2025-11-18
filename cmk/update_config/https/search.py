@@ -9,7 +9,6 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from typing import NamedTuple
 
-from cmk.gui.main_modules import load_plugins
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
@@ -65,8 +64,6 @@ def select(ruleset: Ruleset, search_args: SearchArgs) -> Iterator[tuple[Folder, 
 
 @contextmanager
 def with_allrulesets() -> Iterator[AllRulesets]:
-    sys.stdout.write("Loading plugins...\n")
-    load_plugins()
     sys.stdout.write("Loading rule sets...\n")
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()

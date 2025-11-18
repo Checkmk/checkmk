@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type Ref,
   computed,
-  defineEmits,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -18,7 +17,7 @@ import {
 
 import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
 
-import { FigureBase } from './cmk_figures.ts'
+import { type DashletSpec, FigureBase } from './cmk_figures.ts'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
@@ -84,12 +83,13 @@ const httpVars: Ref<FilterHTTPVars> = computed(() => {
   return {
     content: JSON.stringify(props.content),
     context: JSON.stringify(props.effective_filter_context.filters),
+    general_settings: JSON.stringify(props.general_settings),
     single_infos: JSON.stringify(props.effective_filter_context.uses_infos)
   }
 })
 
 // Resolve figure type for special cases where figure and content type are not the same
-const figureType = computed(() => {
+const figureType: Ref<string> = computed(() => {
   // NOTE: this logic must match with the keys generated in DashboardContent componentKey()
   if (props.content.type === 'alert_timeline' || props.content.type === 'notification_timeline') {
     const renderType: string = props.content.render_mode.type
@@ -101,20 +101,43 @@ const figureType = computed(() => {
   }
   return props.content.type
 })
+const typeMap: Record<string, string> = {
+  event_stats: 'eventstats',
+  host_stats: 'hoststats',
+  service_stats: 'servicestats',
+  host_state: 'state_host',
+  service_state: 'state_service'
+}
+const legacyFigureType: Ref<string> = computed(() => {
+  const newType: string = figureType.value
+  if (newType in typeMap && typeMap[newType]) {
+    return typeMap[newType]
+  }
+  return newType
+})
 
 // We need to style SVGs for some figure types to make them responsive
-const sizeSvg = computed(() => ['host_stats', 'service_stats'].includes(figureType.value))
+const sizeSvg = computed(() =>
+  ['event_stats', 'host_stats', 'service_stats'].includes(figureType.value)
+)
 
 const ajaxPage: string = 'widget_figure.py'
 const updateInterval = 60
 
+// This is needed by the old cmk_figures.ts code, hence the old naming "dashlet"
+const dashletSpec: Ref<DashletSpec> = computed(() => {
+  return {
+    ...props.content,
+    show_title: props.general_settings.title?.render_mode === 'with_background'
+  }
+})
 const initializeFigure = () => {
   figure = new FigureBase(
-    figureType.value,
+    legacyFigureType.value,
     `#db-content-figure-${props.widget_id}`,
     ajaxPage,
     new URLSearchParams(httpVars.value).toString(),
-    props.content,
+    dashletSpec.value,
     updateInterval
   )
 }
@@ -127,7 +150,7 @@ onMounted(async () => {
 
 watch(httpVars, (newHttpVars) => {
   if (figure) {
-    figure.update(ajaxPage, new URLSearchParams(newHttpVars).toString(), props.content)
+    figure.update(ajaxPage, new URLSearchParams(newHttpVars).toString(), dashletSpec.value)
   }
 })
 
@@ -141,17 +164,21 @@ onBeforeUnmount(() => {
     <div
       :id="`db-content-figure-${widget_id}`"
       ref="contentDiv"
-      class="db-content-figure"
-      :class="{
-        'db-content-figure__size-svg': sizeSvg,
-        'db-content-figure__background': !!general_settings.render_background
-      }"
+      class="db-content-figure cmk_figure"
+      :class="[
+        {
+          'db-content-figure__size-svg': sizeSvg,
+          'db-content-figure__background': !!general_settings.render_background
+        },
+        legacyFigureType
+      ]"
     ></div>
   </div>
 </template>
 
 <style scoped>
 .db-content-figure__wrapper {
+  display: flex;
   width: 100%;
   height: 100%;
 }

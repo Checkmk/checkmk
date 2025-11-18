@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Page menu processing
 
-# mypy: disable-error-code="type-arg"
-
 Cares about the page navigation of our GUI. This is the menu bar that can be found on top of each
 page. It is meant to be used for page wide actions and navigation to other related pages.
 
@@ -13,6 +11,8 @@ The hierarchy here is:
 
     PageMenu > PageMenuDropdown > PageMenuTopic > PageMenuEntry > ABCPageMenuItem
 """
+
+# mypy: disable-error-code="type-arg"
 
 import abc
 import json
@@ -29,6 +29,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables, Icon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.selection_id import SelectionId
@@ -53,6 +54,7 @@ class Link:
     url: str | None = None
     target: str | None = None
     onclick: str | None = None
+    transition: LoadingTransition | None = None
 
 
 class ABCPageMenuItem(abc.ABC):
@@ -68,8 +70,8 @@ class PageMenuLink(ABCPageMenuItem):
     link: Link
 
 
-def make_simple_link(url: str) -> PageMenuLink:
-    return PageMenuLink(Link(url=url))
+def make_simple_link(url: str, *, transition: LoadingTransition | None = None) -> PageMenuLink:
+    return PageMenuLink(Link(url=url, transition=transition))
 
 
 def make_external_link(url: str) -> PageMenuLink:
@@ -482,6 +484,7 @@ def make_help_dropdown() -> PageMenuDropdown:
 
 def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     parent_item = breadcrumb[-2]
+    assert parent_item.url is not None
     return PageMenuDropdown(
         name="dummy",
         title="dummy",
@@ -490,7 +493,7 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
                 title=_("Dummy"),
                 entries=[
                     PageMenuEntry(
-                        title=parent_item.title,
+                        title=str(parent_item.title),
                         icon_name="up",
                         item=make_simple_link(parent_item.url),
                         name="up",
@@ -585,7 +588,6 @@ def _make_form_cancel_link(breadcrumb: Breadcrumb, cancel_url: str | None) -> Pa
         if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
             raise ValueError("Can not create back link for this page")
         cancel_url = breadcrumb[-2].url
-    assert cancel_url is not None
 
     return PageMenuEntry(
         title=_("Cancel"),
@@ -842,7 +844,11 @@ class DropdownEntryRenderer:
     def _show_link_item(self, title: str, icon: Icon, item: PageMenuLink) -> None:
         if item.link.url is not None:
             url = item.link.url
-            onclick = None
+            onclick = (
+                None
+                if item.link.transition is None
+                else loading_transition_onclick(item.link.transition, title=title)
+            )
         else:
             url = "javascript:void(0)"
             onclick = item.link.onclick

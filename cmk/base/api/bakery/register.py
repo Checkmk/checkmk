@@ -68,7 +68,13 @@ def bakery_plugin(
 
 def get_bakery_plugins() -> dict[str, BakeryPlugin]:
     for plugin, exception in chain(
+        # This is where our unmigrated shipped bakery plugins reside:
         load_plugins_with_exceptions("cmk.base.nonfree.pro.plugins.bakery"),
+        # This is where third party bakery plugins likely reside, as this is the
+        # path we advertised previous to our edition renaming.
+        # Let's be as undisruptive as possible, we're in the process of replacing the
+        # registration approach completely anyway (see Werk #18600 for a timeline)
+        load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"),
         # We are in the process of deprecating cmk.base.api.bakery.register,
         # and migrate our plugins to the new cmk.bakery.v2 API.
         # For the time being, we also load this namespace, to allow to separate the

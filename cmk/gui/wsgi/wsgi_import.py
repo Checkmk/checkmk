@@ -11,6 +11,9 @@ before a request can be handled by the process, so it should not slow down the s
 https://modwsgi.readthedocs.io/en/develop/configuration-directives/WSGIImportScript.html
 """
 
+import sys
+
 from cmk.gui import main_modules
 
-main_modules.load_plugins()
+if errors := main_modules.get_failed_plugins():
+    sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")

@@ -37,7 +37,7 @@ PYTHON3_PATHS=(
     inventory
 )
 
-echo "Copy check files (checks from the CRE are special: remove vanished files)..."
+echo "Copy check files (checks from Checkmk Community are special: remove vanished files)..."
 # legacy checks:
 TARGET="${ROOT}/share/check_mk/checks/"
 # NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it

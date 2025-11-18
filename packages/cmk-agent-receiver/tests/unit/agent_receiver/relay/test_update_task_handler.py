@@ -19,6 +19,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     TaskNotFoundError,
 )
 from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
 @pytest.mark.usefixtures("site_context")
@@ -55,7 +56,9 @@ def test_process_update_task_non_existent_task(
 ) -> None:
     # arrange
     # register a relay in the repository
-    relay_id = relays_repository.add_relay(test_user, alias="test-relay")
+    relay_id = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay"
+    )
 
     task_id = TaskID("non-existent-task-id")
 

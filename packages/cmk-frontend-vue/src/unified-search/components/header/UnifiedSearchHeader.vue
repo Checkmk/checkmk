@@ -8,14 +8,14 @@ import { computed, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { staticAssertNever } from '@/lib/typeUtils'
-import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 
 import CmkIcon from '@/components/CmkIcon'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 
+import { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
-import { getSearchUtils } from '../../providers/search-utils'
 import UnifiedSearchFilters from './UnifiedSearchFilters.vue'
 import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
 import UnifiedSearchProviderSelect from './UnifiedSearchProviderSelect.vue'
@@ -94,10 +94,11 @@ function onInputEnter() {
       searchUtils.history?.add(
         new HistoryEntry(searchUtils.query.toQueryLike(), {
           title: searchUtils.query.input.value,
-          url,
+          target: { url },
           topic: 'Host/service search',
           provider: 'monitoring',
-          context: ''
+          context: '',
+          icon: 'topic-search'
         })
       )
       ;(top!.frames as CmkWindow).main.location.href = url

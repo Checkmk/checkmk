@@ -269,3 +269,4 @@ class DashboardConfig(Visual):
     embedded_views: NotRequired[
         dict[str, DashboardEmbeddedViewSpec]
     ]  # view definitions for embedded view widgets
+    public_token_id: NotRequired[str | None]

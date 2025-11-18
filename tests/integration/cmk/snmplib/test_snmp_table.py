@@ -41,10 +41,14 @@ INFO_TREE = BackendSNMPTree(
         ("TimeTicks", ".1.3.6.1.2.1.1.3.0", "449613886"),
     ],
 )
-@pytest.mark.usefixtures("snmpsim")
 def test_get_data_types(
-    site: Site, backend_type: SNMPBackendEnum, type_name: str, oid: str, expected_response: str
+    site: Site,
+    backend_type_dockerized: SNMPBackendEnum,
+    type_name: str,
+    oid: str,
+    expected_response: str,
 ) -> None:
+    backend_type = backend_type_dockerized
     response = get_single_oid(site, oid, backend_type, default_config(backend_type))[0]
     assert response == expected_response
     assert isinstance(response, str)
@@ -61,7 +65,6 @@ def test_get_data_types(
     assert isinstance(table[0][0], str)
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
@@ -90,7 +93,6 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
     assert exc_match in e.value.stderr
 
 
-@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPBackendEnum) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
@@ -119,8 +121,9 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
 
 @pytest.mark.parametrize("bulk", [True, False])
 def test_get_simple_snmp_table_bulkwalk(
-    site: Site, backend_type: SNMPBackendEnum, bulk: bool
+    site: Site, backend_type_dockerized: SNMPBackendEnum, bulk: bool
 ) -> None:
+    backend_type = backend_type_dockerized
     config = dataclasses.replace(default_config(backend_type), bulkwalk_enabled=bulk)
     table, _ = get_snmp_table(site, INFO_TREE, backend_type, config)
 
@@ -134,8 +137,10 @@ def test_get_simple_snmp_table_bulkwalk(
     assert isinstance(table[0][0], str)
 
 
-@pytest.mark.usefixtures("snmpsim")
-def test_get_simple_snmp_table_fills_cache(site: Site, backend_type: SNMPBackendEnum) -> None:
+def test_get_simple_snmp_table_fills_cache(
+    site: Site, backend_type_dockerized: SNMPBackendEnum
+) -> None:
+    backend_type = backend_type_dockerized
     _, walk_cache = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
     assert sorted(walk_cache) == [
         (".1.3.6.1.2.1.1.1.0", "f3a8901547f4c88fd9947f9e401ce2", False),
@@ -144,8 +149,8 @@ def test_get_simple_snmp_table_fills_cache(site: Site, backend_type: SNMPBackend
     ]
 
 
-@pytest.mark.usefixtures("snmpsim")
-def test_get_simple_snmp_table(site: Site, backend_type: SNMPBackendEnum) -> None:
+def test_get_simple_snmp_table(site: Site, backend_type_dockerized: SNMPBackendEnum) -> None:
+    backend_type = backend_type_dockerized
     table, _ = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
 
     assert table == [
@@ -158,8 +163,10 @@ def test_get_simple_snmp_table(site: Site, backend_type: SNMPBackendEnum) -> Non
     assert isinstance(table[0][0], str)
 
 
-@pytest.mark.usefixtures("snmpsim")
-def test_get_simple_snmp_table_oid_end(site: Site, backend_type: SNMPBackendEnum) -> None:
+def test_get_simple_snmp_table_oid_end(
+    site: Site, backend_type_dockerized: SNMPBackendEnum
+) -> None:
+    backend_type = backend_type_dockerized
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         oids=[
@@ -177,8 +184,10 @@ def test_get_simple_snmp_table_oid_end(site: Site, backend_type: SNMPBackendEnum
     ]
 
 
-@pytest.mark.usefixtures("snmpsim")
-def test_get_simple_snmp_table_oid_string(site: Site, backend_type: SNMPBackendEnum) -> None:
+def test_get_simple_snmp_table_oid_string(
+    site: Site, backend_type_dockerized: SNMPBackendEnum
+) -> None:
+    backend_type = backend_type_dockerized
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
@@ -197,8 +206,10 @@ def test_get_simple_snmp_table_oid_string(site: Site, backend_type: SNMPBackendE
     ]
 
 
-@pytest.mark.usefixtures("snmpsim")
-def test_get_simple_snmp_table_oid_bin(site: Site, backend_type: SNMPBackendEnum) -> None:
+def test_get_simple_snmp_table_oid_bin(
+    site: Site, backend_type_dockerized: SNMPBackendEnum
+) -> None:
+    backend_type = backend_type_dockerized
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
@@ -217,8 +228,10 @@ def test_get_simple_snmp_table_oid_bin(site: Site, backend_type: SNMPBackendEnum
     ]
 
 
-@pytest.mark.usefixtures("snmpsim")
-def test_get_simple_snmp_table_oid_end_bin(site: Site, backend_type: SNMPBackendEnum) -> None:
+def test_get_simple_snmp_table_oid_end_bin(
+    site: Site, backend_type_dockerized: SNMPBackendEnum
+) -> None:
+    backend_type = backend_type_dockerized
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
@@ -237,8 +250,10 @@ def test_get_simple_snmp_table_oid_end_bin(site: Site, backend_type: SNMPBackend
     ]
 
 
-@pytest.mark.usefixtures("snmpsim")
-def test_get_simple_snmp_table_with_hex_str(site: Site, backend_type: SNMPBackendEnum) -> None:
+def test_get_simple_snmp_table_with_hex_str(
+    site: Site, backend_type_dockerized: SNMPBackendEnum
+) -> None:
+    backend_type = backend_type_dockerized
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         oids=[BackendOIDSpec("6", "string", False)],

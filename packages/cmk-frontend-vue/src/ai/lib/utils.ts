@@ -13,14 +13,15 @@ export enum AiRole {
 
 export function typewriter(ref: Ref<string>, text: string, onTyped: () => void) {
   ref.value = ''
+  const tokenSize = 20
   let i = 0
   const interval = setInterval(() => {
     if (i < text.length) {
-      ref.value += text[i]
-      i++
+      ref.value += text.substring(i, i + tokenSize)
+      i += tokenSize
     } else {
       clearInterval(interval)
       onTyped()
     }
-  }, 25)
+  }, 20)
 }

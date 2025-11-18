@@ -33,13 +33,12 @@ from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violat
     InventoryPluginName,
 )
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
+from cmk.gui import main_modules  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.form_specs import (  # pylint: disable=cmk-module-layer-violation
     get_visitor,
     RawDiskData,
     VisitorOptions,
 )
-from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils import get_failed_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.rule_specs.types import RuleSpec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
@@ -118,10 +117,9 @@ def _validate_special_agent_loading() -> ActiveCheckResult:
 
 
 def _validate_rule_spec_loading() -> ActiveCheckResult:
-    load_plugins()
     errors = [
         f"Error in rule spec {module_name}: {exc}"
-        for path, subcomponent, module_name, exc in get_failed_plugins()
+        for path, subcomponent, module_name, exc in main_modules.get_failed_plugins()
     ]
     return to_result(ValidationStep.RULE_SPECS, errors)
 

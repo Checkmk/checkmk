@@ -10,11 +10,12 @@ import { provide, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
-import { SidebarService } from '@/lib/sidebar/sidebar'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+
+import { SidebarService } from '@/sidebar/lib/sidebar'
 
 import AddSnapinSlideout from './components/AddSnapinSlideout.vue'
 import SidebarSnapin from './components/snapin/SidebarSnapin.vue'

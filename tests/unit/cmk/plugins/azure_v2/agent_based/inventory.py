@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any
 
-from cmk.agent_based.v2 import InventoryResult, TableRow
+from cmk.agent_based.v2 import Attributes, InventoryResult
 
 
 def get_inventory_value(inventory: InventoryResult, key: str) -> Any:
     for row in inventory:
-        assert isinstance(row, TableRow)
-        if row.key_columns["information"] == key:
-            return row.inventory_columns["value"]
+        assert isinstance(row, Attributes)
+        return row.inventory_attributes[key]

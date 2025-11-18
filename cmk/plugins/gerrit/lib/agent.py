@@ -4,24 +4,44 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
 
 import argparse
-import pathlib
+import dataclasses
+import json
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
-from cmk.plugins.gerrit.lib import collectors, storage
-from cmk.plugins.gerrit.lib.shared_typing import Sections
-from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.utils.password_store import lookup as password_store_lookup
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.plugins.gerrit.lib import storage
+from cmk.plugins.gerrit.lib.collectors import Collector, GerritVersion
+from cmk.plugins.gerrit.lib.schema import VersionInfo
+from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+
+__version__ = "2.5.0b1"
+
+AGENT = "gerrit"
+
+PASSWORD_OPTION = "password"
 
 
+@report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return special_agent_main(parse_arguments, run_agent)
+    args = parse_arguments(sys.argv[1:])
+
+    api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
+    auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
+
+    ctx = GerritRunContext(
+        ttl=TTLCache(version=args.version_cache),
+        collectors=Collectors(version=GerritVersion(api_url=api_url, auth=auth)),
+    )
+
+    return run(ctx)
 
 
-def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -44,12 +64,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
 
     parser.add_argument("-u", "--user", default="", help="Username for Gerrit login")
-    group_password = parser.add_mutually_exclusive_group(required=True)
-    group_password.add_argument(
-        "--password-ref",
-        help="Password store reference to the secret password for your Gerrit account.",
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password for Gerrit login"
     )
-    group_password.add_argument("-s", "--password", help="Password for Gerrit login")
     parser.add_argument(
         "--version-cache",
         default=28800.0,  # 8 hours
@@ -69,34 +86,38 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def run_agent(args: argparse.Namespace) -> int:
-    api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
-    auth = (args.user, get_password_from_args(args))
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class TTLCache:
+    version: int
 
-    sections: Sections = {}
 
-    version_collector = collectors.GerritVersion(api_url=api_url, auth=auth)
-    version_cache = storage.VersionCache(collector=version_collector, interval=args.version_cache)
-    sections.update(version_cache.get_sections())
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class Collectors:
+    version: Collector[VersionInfo]
 
-    write_sections(sections)
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class GerritRunContext:
+    ttl: TTLCache
+    collectors: Collectors
+    cache_dir: Path | None = None
+
+
+def run(ctx: GerritRunContext) -> int:
+    version_cache = storage.VersionCache(
+        collector=ctx.collectors.version,
+        interval=ctx.ttl.version,
+        directory=ctx.cache_dir,
+    )
+    _write_section(version_cache.get_data(), name="gerrit_version")
 
     return 0
 
 
-def get_password_from_args(args: argparse.Namespace) -> str:
-    if args.password:
-        return args.password
-
-    pw_id, pw_file = args.password_ref.split(":", maxsplit=1)
-
-    return password_store_lookup(pathlib.Path(pw_file), pw_id)
-
-
-def write_sections(sections: Sections) -> None:
-    for name, data in sections.items():
-        with SectionWriter(f"gerrit_{name}") as writer:
-            writer.append_json(data)
+def _write_section(data: object, *, name: str) -> None:
+    section_payload = json.dumps(data, sort_keys=True)
+    sys.stdout.write(f"<<<{name}:sep(0)>>>\n")
+    sys.stdout.write(f"{section_payload}\n")
 
 
 if __name__ == "__main__":

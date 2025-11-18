@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Place for common code shared among different Check_MK special agents
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 Please don't add code to this file and allow new components to have a module for their own.
 """
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import abc
 import datetime

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk import fields
+from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import BaseSchema
 
 
@@ -16,5 +17,5 @@ class InstalledVersions(BaseSchema):
     )
     rest_api = fields.Dict(description="The REST-API version", example={"revision": "1.0.0"})
     versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
-    edition = fields.String(description="The Checkmk edition.", example="raw")
+    edition = fields.String(description="The Checkmk edition.", example=Edition.COMMUNITY.long)
     demo = fields.Boolean(description="Whether this is a demo version or not.", example=False)

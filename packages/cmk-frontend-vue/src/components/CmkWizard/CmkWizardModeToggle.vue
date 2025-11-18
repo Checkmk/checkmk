@@ -7,14 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
 const { _t } = usei18n()
 const currentMode = defineModel<string>({ required: true })
 </script>
 
 <template>
-  <ToggleButtonGroup
+  <CmkToggleButtonGroup
     v-model="currentMode"
     :options="[
       { label: _t('Guided'), value: 'guided' },

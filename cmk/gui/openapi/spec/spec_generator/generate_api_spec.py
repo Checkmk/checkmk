@@ -135,8 +135,8 @@ def process_version(args: argparse.Namespace) -> None:
     _import_ultimatemt_endpoints()
     _import_cloud_endpoints()
 
-    # this registers some permissions (dashboards, views)
-    main_modules.load_plugins()
+    if errors := main_modules.get_failed_plugins():
+        sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")
 
     version = APIVersion.from_string(args.version)
     build_spec(args.target, args.out, version, args.format)

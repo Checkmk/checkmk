@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 
@@ -17,8 +16,9 @@ AutocompleterFunc = Callable[[Config, str, dict], Choices]
 
 
 class AutocompleterRegistry(Registry[AutocompleterFunc]):
-    def plugin_name(self, instance):
-        return instance._ident
+    def plugin_name(self, instance: AutocompleterFunc) -> str:
+        # _ident is dynamically added in register_autocompleter
+        return instance._ident  # type: ignore[attr-defined, no-any-return]
 
     def register_autocompleter(self, ident: str, func: AutocompleterFunc) -> None:
         if not callable(func):

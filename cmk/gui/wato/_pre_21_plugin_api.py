@@ -6,11 +6,8 @@
 import cmk.gui.plugins.wato as api_module  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.plugins.wato.utils as wato_utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.valuespec
-import cmk.gui.view_utils
 import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
-import cmk.gui.watolib.config_domain_name
-import cmk.gui.watolib.config_domains
 import cmk.gui.watolib.config_hostname
 import cmk.gui.watolib.host_attributes
 import cmk.gui.watolib.hosts_and_folders
@@ -18,15 +15,12 @@ import cmk.gui.watolib.hosts_and_folders
 # Make some functions of watolib available to Setup plug-ins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep
 # the current plug-in API functions working
-import cmk.gui.watolib.network_scan
-import cmk.gui.watolib.read_only
 import cmk.gui.watolib.rulespecs
 import cmk.gui.watolib.sites
 import cmk.gui.watolib.timeperiods
 import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
-import cmk.utils.paths
 from cmk.gui.hooks import register_hook
 from cmk.gui.plugins.wato import datasource_programs  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.wato.utils import (  # pylint: disable=cmk-module-layer-violation
@@ -189,13 +183,6 @@ def register() -> None:
         api_module.__dict__[name] = cmk.gui.watolib.attributes.__dict__[name]
     for name in ("add_change",):
         api_module.__dict__[name] = cmk.gui.watolib.changes.__dict__[name]
-    for name in (
-        "ConfigDomainCACertificates",
-        "ConfigDomainCore",
-        "ConfigDomainGUI",
-        "ConfigDomainOMD",
-    ):
-        api_module.__dict__[name] = cmk.gui.watolib.config_domains.__dict__[name]
     for name in ("ConfigHostname",):
         api_module.__dict__[name] = cmk.gui.watolib.config_hostname.__dict__[name]
     for name in (
@@ -229,19 +216,6 @@ def register() -> None:
         "user_script_title",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.user_scripts.__dict__[name]
-    for name in (
-        "ABCConfigDomain",
-        "config_domain_registry",
-        "config_variable_group_registry",
-        "config_variable_registry",
-        "ConfigVariable",
-        "ConfigVariableGroup",
-        "register_configvar",
-        "sample_config_generator_registry",
-        "SampleConfigGenerator",
-        "wato_fileheader",
-    ):
-        api_module.__dict__[name] = cmk.gui.watolib.config_domain_name.__dict__[name]
     for name in ("rule_option_elements",):
         api_module.__dict__[name] = cmk.gui.valuespec.__dict__[name]
 

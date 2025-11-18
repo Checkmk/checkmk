@@ -105,7 +105,7 @@ pip_compile(
 )
 
 compile_requirements_in(
-    name = "raw-requirements-in",
+    name = "community-requirements-in",
     constraints = [
         ":bazel-requirements-constraints.txt",
         ":requirements.txt",
@@ -119,9 +119,9 @@ compile_requirements_in(
 )
 
 pip_compile(
-    name = "raw_requirements",
-    requirements_in = ":raw-requirements-in",
-    requirements_txt = ":raw-requirements.txt",
+    name = "community_requirements",
+    requirements_in = ":community-requirements-in",
+    requirements_txt = ":community-requirements.txt",
     tags = ["manual"],
 )
 
@@ -152,7 +152,7 @@ multirun(
     name = "lock_python_requirements",
     commands = [
         ":requirements",
-        ":raw_requirements",
+        ":community_requirements",
         ":runtime_requirements",
     ],
     # Running in a single threaded mode allows consecutive `uv` invocations to benefit
@@ -163,7 +163,7 @@ multirun(
 test_suite(
     name = "py_requirements_test_nonfree",
     tests = [
-        ":raw_requirements_test",
+        ":community_requirements_test",
         ":requirements_test",
         ":runtime_requirements_test",
     ],
@@ -171,7 +171,7 @@ test_suite(
 
 test_suite(
     name = "py_requirements_test_gpl",
-    tests = [":raw_requirements_test"],
+    tests = [":community_requirements_test"],
 )
 
 write_file(
@@ -212,7 +212,7 @@ create_venv(
     destination_folder = ".venv",
     requirements_txt = select({
         "@//:gpl+nonfree_repo": ":requirements.txt",
-        "@//:gpl_repo": ":raw-requirements.txt",
+        "@//:gpl_repo": ":community-requirements.txt",
     }),
     site_packages_extra_files = [":sitecustomize.py"],
     whls = [

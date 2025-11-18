@@ -9,18 +9,11 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from typing import Any, override
 
-from cmk.bi.lib import (
-    ABCBICompiledNode,
-    ABCBISearcher,
-    ABCWithSchema,
-    ActionArgument,
-    BIParams,
-    ReqBoolean,
-    ReqDict,
-    ReqString,
-)
+from cmk.bi.fields import ReqBoolean, ReqDict, ReqString
+from cmk.bi.lib import ABCBICompiledNode, ABCBISearcher, ABCWithSchema, BIParams
 from cmk.bi.node_generator_interface import ABCBINodeGenerator
 from cmk.bi.schema import Schema
+from cmk.bi.type_defs import ActionArgument
 from cmk.ccc.plugin_registry import Registry
 
 

@@ -20,9 +20,9 @@ from pathlib import Path
 from typing import Final, Literal, ParamSpec, Self
 
 _P = ParamSpec("_P")
-_CrashType = Literal["agent"]  # extend for active checks?
+_CrashType = Literal["agent", "active_check"]
 
-_SPECIAL_AGENT_CRASH_REPORT_PATH_ENV_VAR = "SERVER_SIDE_PROGRAM_CRASH_PATH"
+_SSP_CRASH_REPORT_PATH_ENV_VAR = "SERVER_SIDE_PROGRAM_CRASH_PATH"
 
 _SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
 
@@ -30,18 +30,55 @@ _REDACTED_STRING: Final = "redacted"
 
 
 def _get_crash_report_path() -> Path | None:
-    return (
-        Path(crash_path)
-        if (crash_path := os.getenv(_SPECIAL_AGENT_CRASH_REPORT_PATH_ENV_VAR))
-        else None
-    )
+    return Path(crash_path) if (crash_path := os.getenv(_SSP_CRASH_REPORT_PATH_ENV_VAR)) else None
 
 
 def report_agent_crashes(
     name: str,
     version: str,
 ) -> Callable[[Callable[_P, int]], Callable[_P, int]]:
+    """ "Decorator factory to report crashes from agents
+
+    Wrapping a function with the returned decorator will catch all exceptions raised by the function
+    and create a crash report.
+
+    Args:
+        name: The name of the agent
+        version: The version of the agent
+
+    Example:
+
+        >>> @report_agent_crashes("smith", "1.0.0")
+        ... def main() -> int:
+        ...     # your code here
+        ...     return 0
+
+    """
     return _report_crashes("agent", name, version)
+
+
+def report_check_crashes(
+    name: str,
+    version: str,
+) -> Callable[[Callable[_P, int]], Callable[_P, int]]:
+    """Decorator factory to report crashes from active checks
+
+    Wrapping a function with the returned decorator will catch all exceptions raised by the function
+    and create a crash report.
+
+    Args:
+        name: The name of the active check
+        version: The version of the active check
+
+    Example:
+
+        >>> @report_check_crashes("norris", "1.0.0")
+        ... def main() -> int:
+        ...     # your code here
+        ...     return 0
+
+    """
+    return _report_crashes("active_check", name, version)
 
 
 def _report_crashes(
@@ -110,7 +147,8 @@ class _CrashReport:
                 for e in traceback.extract_tb(exc.__traceback__)
             ],
             details={
-                "agent_name": name,
+                "program_type": type_,
+                "program_name": name,
             },
             core="N/A",
             python_version=sys.version,

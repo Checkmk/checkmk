@@ -44,6 +44,7 @@ RUN yum -y makecache \
     gmp-devel \
     gtk-doc \
     httpd-devel \
+    iproute \
     kernel-headers \
     libXpm-devel \
     libevent-devel \

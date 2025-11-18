@@ -342,4 +342,4 @@ def test_check_azure_storageaccounts_performance_defaults():
 def test_azure_storageaccounts_inventory() -> None:
     resource = _parse_section(STRING_TABLE_STORAGETESTACCOUNT)
     inventory = inventory_plugin_azure_storageaccounts.inventory_function(resource)
-    assert get_inventory_value(inventory, "Region") == "westeurope"
+    assert get_inventory_value(inventory, "region") == "westeurope"

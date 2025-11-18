@@ -2,12 +2,15 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::constants::CMK_UPDATE_AGENT_CMD;
+use crate::site_spec::Protocol;
 use crate::{
     agent_receiver_api::{self, RegistrationStatusV2},
     certs, config, misc, site_spec, types, version,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 use log::{error, info};
+use std::process::Command;
 
 trait TrustEstablishing {
     fn prompt_server_certificate(&self, server: &str, port: &u16) -> AnyhowResult<()>;
@@ -238,18 +241,25 @@ impl RegistrationEndpointCall for RegistrationCallNew<'_> {
     }
 }
 
+#[derive(Clone)]
+pub struct UpdaterRegistrationInput {
+    pub site_id: site_spec::SiteID,
+    pub username: String,
+    pub password: String,
+    pub protocol: Protocol,
+    pub hostname: String,
+}
+
 fn direct_registration(
     config: &config::RegistrationConnectionConfig,
+    registration_input: &RegistrationInput,
     registry: &mut config::Registry,
     agent_rec_api: &impl agent_receiver_api::Registration,
-    trust_establisher: &impl TrustEstablishing,
     endpoint_call: &impl RegistrationEndpointCall,
 ) -> AnyhowResult<()> {
-    let registration_input = prepare_registration(config, trust_establisher)?;
-
     let registration_result = endpoint_call.call(
         &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
-        &registration_input,
+        registration_input,
         agent_rec_api,
     )?;
 
@@ -259,7 +269,7 @@ fn direct_registration(
         config::TrustedConnectionWithRemote {
             trust: config::TrustedConnection {
                 uuid: registration_input.uuid,
-                private_key: registration_input.private_key,
+                private_key: registration_input.private_key.clone(),
                 certificate: registration_result.agent_cert,
                 root_cert: registration_result.root_cert,
             },
@@ -325,18 +335,33 @@ pub fn register_existing(
     config: &config::RegisterExistingConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
+    let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
     direct_registration(
         &config.connection_config,
+        &registration_input,
         registry,
         &agent_receiver_api::Api {
             use_proxy: config.connection_config.client_config.use_proxy,
         },
-        &InteractiveTrust {},
         &RegistrationCallExisting {
             host_name: &config.host_name,
         },
     )?;
     println!("Registration complete.");
+
+    if config.automatic_updates {
+        let protocol = site_spec::discover_protocol(
+            &config.connection_config.site_id,
+            &config.connection_config.client_config,
+        )?;
+        register_updater_subprocess(&UpdaterRegistrationInput {
+            site_id: config.connection_config.site_id.clone(),
+            username: config.connection_config.username.clone(),
+            password: registration_input.credentials.password.clone(),
+            hostname: config.host_name.clone(),
+            protocol,
+        })?;
+    }
     Ok(())
 }
 
@@ -344,13 +369,14 @@ pub fn register_new(
     config: &config::RegisterNewConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
+    let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
     direct_registration(
         &config.connection_config,
+        &registration_input,
         registry,
         &agent_receiver_api::Api {
             use_proxy: config.connection_config.client_config.use_proxy,
         },
-        &InteractiveTrust {},
         &RegistrationCallNew {
             agent_labels: &config.agent_labels,
         },
@@ -503,6 +529,34 @@ fn process_pre_configured_connection(
     registration_pre_configured.register(&registration_config, registry)?;
     info!("Registered new connection {}", site_id);
 
+    if pre_configured.enable_auto_update.unwrap_or(false) {
+        let protocol = site_spec::discover_protocol(site_id, client_config)?;
+
+        let response = registration_pre_configured.registration_status_v2(
+            site_id,
+            registry.get_connection_as_mut(site_id).unwrap(),
+            client_config,
+        )?;
+
+        let hostname = match response {
+            agent_receiver_api::RegistrationStatusV2Response::Registered(registered_response) => {
+                registered_response.hostname
+            }
+            _ => {
+                error!("Cannot get hostname from registration status response for site {}. Skipping updater registration.", site_id);
+                return Ok(());
+            }
+        };
+
+        register_updater_subprocess(&UpdaterRegistrationInput {
+            site_id: site_id.clone(),
+            username: pre_configured.credentials.username.clone(),
+            password: pre_configured.credentials.password.clone(),
+            hostname,
+            protocol,
+        })?;
+    }
+
     Ok(())
 }
 
@@ -531,6 +585,82 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
         },
         &InteractiveTrust {},
     )
+}
+
+fn _prepare_register_updater_cmd(
+    updater_registration_config: &UpdaterRegistrationInput,
+) -> AnyhowResult<Command> {
+    let mut cmd = Command::new(CMK_UPDATE_AGENT_CMD);
+    #[cfg(windows)]
+    {
+        cmd.arg("updater");
+    }
+    cmd.arg("register")
+        .arg("-s")
+        .arg(&updater_registration_config.site_id.server)
+        .arg("-i")
+        .arg(&updater_registration_config.site_id.site)
+        .arg("-H")
+        .arg(&updater_registration_config.hostname)
+        .arg("-U")
+        .arg(&updater_registration_config.username)
+        .arg("-p")
+        .arg(updater_registration_config.protocol.as_str())
+        // this is a temporary solution, will be replaced with a more secure one in the future
+        .arg("-P")
+        .arg(&updater_registration_config.password);
+    cmd.stdin(std::process::Stdio::null());
+    Ok(cmd)
+}
+
+pub fn register_updater_subprocess(
+    updater_registration_config: &UpdaterRegistrationInput,
+) -> AnyhowResult<()> {
+    let check_cmd = if cfg!(windows) {
+        Command::new("where").arg(CMK_UPDATE_AGENT_CMD).output()
+    } else {
+        Command::new("which").arg(CMK_UPDATE_AGENT_CMD).output()
+    };
+
+    match check_cmd {
+        Ok(output) if output.status.success() => {
+            info!("Found {} command", CMK_UPDATE_AGENT_CMD);
+        }
+        _ => {
+            error!("Command '{}' not found in PATH", CMK_UPDATE_AGENT_CMD);
+            return Ok(()); // Skip updater registration gracefully
+        }
+    };
+
+    let mut cmd = match _prepare_register_updater_cmd(updater_registration_config) {
+        Ok(cmd) => cmd,
+        Err(e) => {
+            error!(
+                "Warning: can't build {} command, error: {}",
+                CMK_UPDATE_AGENT_CMD, e
+            );
+            return Ok(()); // Skip updater registration gracefully
+        }
+    };
+
+    info!(
+        "Registering updater for site {}",
+        updater_registration_config.site_id
+    );
+    let output = cmd.output().context(format!(
+        "Failed to execute {CMK_UPDATE_AGENT_CMD} register command"
+    ))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("Updater registration failed: {}", stderr);
+    }
+
+    info!(
+        "Successfully registered updater for site {}",
+        updater_registration_config.site_id
+    );
+    Ok(())
 }
 
 #[cfg(test)]
@@ -740,17 +870,23 @@ mod tests {
         fn test_existing() {
             let mut r = TestRegistry::new();
             let registry = &mut r.registry;
+            let registration_config = registration_connection_config(None, None, false);
+            let registration_input = prepare_registration(
+                &registration_config,
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: true,
+                    expect_password_prompt: true,
+                },
+            )
+            .unwrap();
             assert!(!registry.path().exists());
             assert!(direct_registration(
-                &registration_connection_config(None, None, false),
+                &registration_config,
+                &registration_input,
                 registry,
                 &MockApi {
                     expect_root_cert: false,
                     expected_registration_method: Some(RegistrationMethod::Existing),
-                },
-                &MockInteractiveTrust {
-                    expect_server_cert_prompt: true,
-                    expect_password_prompt: true,
                 },
                 &RegistrationCallExisting {
                     host_name: HOST_NAME
@@ -765,21 +901,27 @@ mod tests {
         fn test_new() {
             let mut r = TestRegistry::new();
             let registry = &mut r.registry;
+            let registration_config = registration_connection_config(
+                Some(String::from("root_certificate")),
+                Some(String::from("password")),
+                false,
+            );
+            let registration_input = prepare_registration(
+                &registration_config,
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: false,
+                },
+            )
+            .unwrap();
             assert!(!registry.path().exists());
             assert!(direct_registration(
-                &registration_connection_config(
-                    Some(String::from("root_certificate")),
-                    Some(String::from("password")),
-                    false
-                ),
+                &registration_config,
+                &registration_input,
                 registry,
                 &MockApi {
                     expect_root_cert: true,
                     expected_registration_method: Some(RegistrationMethod::New),
-                },
-                &MockInteractiveTrust {
-                    expect_server_cert_prompt: false,
-                    expect_password_prompt: false,
                 },
                 &RegistrationCallNew {
                     agent_labels: &agent_labels()
@@ -796,6 +938,7 @@ mod tests {
                 &config::RegisterExistingConfig {
                     connection_config: registration_connection_config(None, None, true),
                     host_name: String::from(HOST_NAME),
+                    automatic_updates: false
                 },
                 &MockApi {
                     expect_root_cert: false,
@@ -852,6 +995,7 @@ mod tests {
                                 password: String::from("password"),
                             },
                             root_cert: String::from("root_cert"),
+                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -863,6 +1007,7 @@ mod tests {
                                 password: String::from("password"),
                             },
                             root_cert: String::from("root_cert"),
+                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -874,6 +1019,7 @@ mod tests {
                                 password: String::from("password"),
                             },
                             root_cert: String::from("root_cert"),
+                            enable_auto_update: Some(false),
                         },
                     ),
                     (
@@ -885,6 +1031,7 @@ mod tests {
                                 password: String::from("password"),
                             },
                             root_cert: String::from("root_cert"),
+                            enable_auto_update: Some(false),
                         },
                     ),
                 ]),
@@ -1077,6 +1224,7 @@ mod tests {
                             password: String::from("password"),
                         },
                         root_cert: String::from("root_cert"),
+                        enable_auto_update: Some(false),
                     },
                 )]),
                 agent_labels: types::AgentLabels::from([(
@@ -1143,6 +1291,72 @@ mod tests {
                 }
             }
             Ok(())
+        }
+    }
+
+    mod test_prepare_register_updater_cmd {
+        use super::*;
+        use std::ffi::OsStr;
+
+        #[test]
+        fn test_prepare_register_updater_cmd() {
+            let site_id = site_spec::SiteID {
+                server: "test-server".to_string(),
+                site: "test-site".to_string(),
+            };
+            let protocol = site_spec::Protocol::Http;
+
+            let cmd = _prepare_register_updater_cmd(&UpdaterRegistrationInput {
+                site_id: site_id.clone(),
+                username: "test-user".to_string(),
+                password: "test-password".to_string(),
+                hostname: "test-host".to_string(),
+                protocol,
+            })
+            .unwrap();
+
+            let args: Vec<&OsStr> = cmd.get_args().collect();
+
+            #[cfg(windows)]
+            let expected_args = [
+                "updater",
+                "register",
+                "-s",
+                "test-server",
+                "-i",
+                "test-site",
+                "-H",
+                "test-host",
+                "-U",
+                "test-user",
+                "-p",
+                "http",
+                "-P",
+                "test-password",
+            ];
+            #[cfg(unix)]
+            let expected_args = [
+                "register",
+                "-s",
+                "test-server",
+                "-i",
+                "test-site",
+                "-H",
+                "test-host",
+                "-U",
+                "test-user",
+                "-p",
+                "http",
+                "-P",
+                "test-password",
+            ];
+
+            assert_eq!(cmd.get_program(), CMK_UPDATE_AGENT_CMD);
+            assert_eq!(args.len(), expected_args.len());
+
+            for (actual, expected) in args.iter().zip(expected_args.iter()) {
+                assert_eq!(actual, expected);
+            }
         }
     }
 }

@@ -40,6 +40,7 @@ from .page_show_dashboard import (
     page_dashboard,
     page_dashboard_app,
 )
+from .page_show_shared_dashboard import page_shared_dashboard
 from .visual_type import VisualTypeDashboards
 
 
@@ -70,6 +71,7 @@ def register(
     # TODO: old dashboard page should be removed
     page_registry.register(PageEndpoint("dashboard", page_dashboard))
     page_registry.register(PageEndpoint("dashboard_wip", page_dashboard_app))
+    page_registry.register(PageEndpoint("shared_dashboard", page_shared_dashboard))
     page_registry.register(PageEndpoint("dashboard_dashlet", ajax_dashlet))
     page_registry.register(PageEndpoint(PAGE_EDIT_DASHBOARDS_LINK, page_edit_dashboards))
     page_registry.register(PageEndpoint("create_dashboard", page_create_dashboard))

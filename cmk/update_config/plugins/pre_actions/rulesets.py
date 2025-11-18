@@ -14,6 +14,7 @@ from typing import override
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.regex import regex, RegexFutureWarning
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.groups import GroupSpec
@@ -34,7 +35,6 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
-from cmk.utils.regex import regex, RegexFutureWarning
 
 
 class PreUpdateRulesets(PreUpdateAction):
@@ -130,8 +130,6 @@ def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:
             return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
-            return Resume.UPDATE
         case ConflictMode.ASK:
             return continue_per_users_choice(
                 "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
@@ -144,8 +142,6 @@ def _continue_on_invalid_rule(conflict_mode: ConflictMode) -> Resume:
             return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
-            return Resume.UPDATE
         case ConflictMode.ASK:
             return continue_per_users_choice(
                 "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
@@ -157,8 +153,6 @@ def _continue_on_ruleset_exception(conflict_mode: ConflictMode) -> Resume:
         case ConflictMode.FORCE:
             return Resume.UPDATE
         case ConflictMode.ABORT:
-            return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
             return Resume.ABORT
         case ConflictMode.ASK:
             return continue_per_users_choice(

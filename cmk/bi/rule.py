@@ -22,19 +22,17 @@ from typing import Any, override
 
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
+from cmk.bi.fields import ReqList, ReqString
 from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
     ABCWithSchema,
-    ActionArgument,
     bi_aggregation_function_registry,
     BIParams,
     create_nested_schema,
     create_nested_schema_for_class,
     get_schema_default_config,
     replace_macros,
-    ReqList,
-    ReqString,
 )
 from cmk.bi.node_generator import BINodeGenerator, BINodeGeneratorSchema
 from cmk.bi.node_vis import BINodeVisBlockStyleSchema, BINodeVisLayoutStyleSchema
@@ -46,6 +44,7 @@ from cmk.bi.rule_interface import (
 )
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule
+from cmk.bi.type_defs import ActionArgument
 
 
 class BIRule(ABCBIRule, ABCWithSchema):
@@ -68,7 +67,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         self.node_visualization = rule_config["node_visualization"]
         self._properties = BIRuleProperties(rule_config["properties"])
 
-        self.nodes = [BINodeGenerator(x) for x in rule_config["nodes"]]
+        self.nodes = [BINodeGenerator(node) for node in rule_config["nodes"]]
         bi_rule_id_registry.register(self)
 
     @property
@@ -131,7 +130,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
             return []
 
         mapped_rule_arguments: Mapping[str, str] = dict(
-            zip([f"${x}$" for x in self._params.arguments], extern_arguments)
+            zip([f"${arg}$" for arg in self._params.arguments], extern_arguments)
         )
 
         action_results = []
@@ -168,8 +167,11 @@ class BIRule(ABCBIRule, ABCWithSchema):
     def create_tree_from_schema(cls, schema_config: dict[str, Any]) -> BICompiledRule:
         rule_id = schema_config["id"]
         pack_id = schema_config["pack_id"]
-        nodes = [cls._create_node(x) for x in schema_config["nodes"]]
-        required_hosts = [(x["site_id"], x["host_name"]) for x in schema_config["required_hosts"]]
+        nodes = [cls._create_node(node) for node in schema_config["nodes"]]
+        required_hosts = [
+            (required_host["site_id"], required_host["host_name"])
+            for required_host in schema_config["required_hosts"]
+        ]
         properties = BIRuleProperties(schema_config["properties"])
         aggregation_function = bi_aggregation_function_registry.instantiate(
             schema_config["aggregation_function"]

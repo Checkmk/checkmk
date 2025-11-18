@@ -4,8 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { cmkIconVariants } from './icons.constants.ts'
 import type { CmkIconProps, SimpleIcons } from './types.ts'
+import { iconSizeNametoNumber } from './utils'
 
 function getIconVariable(iconName: SimpleIcons): string {
   /*
@@ -42,6 +45,8 @@ function getIconVariable(iconName: SimpleIcons): string {
 
 const props = defineProps<CmkIconProps>()
 
+const iconSize = computed(() => iconSizeNametoNumber(props.size))
+
 const getTransformRotate = () => {
   return `rotate(${props.rotate || 0}deg)`
 }
@@ -50,9 +55,11 @@ const getTransformRotate = () => {
 <template>
   <img
     class="cmk-icon"
-    :class="cmkIconVariants({ variant: props.variant, size: null, colored: props.colored })"
+    :class="cmkIconVariants({ variant: props.variant, colored: props.colored })"
     :title="title || ''"
     :alt="title || ''"
+    :width="iconSize"
+    :height="iconSize"
   />
 </template>
 
@@ -62,8 +69,6 @@ const getTransformRotate = () => {
   padding: 0;
   vertical-align: baseline;
   content: v-bind('getIconVariable(name)');
-  width: v-bind('cmkIconVariants({size})') !important;
-  height: v-bind('cmkIconVariants({size})') !important;
   transform: v-bind('getTransformRotate()');
 
   &.cmk-icon--inline {

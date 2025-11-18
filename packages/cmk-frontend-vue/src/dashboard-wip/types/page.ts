@@ -3,7 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { DashboardLayout, DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
+import type {
+  DashboardConstants,
+  DashboardLayout,
+  DashboardMetadata,
+  RelativeGridDashboardResponse,
+  ResponsiveGridDashboardResponse
+} from '@/dashboard-wip/types/dashboard.ts'
 
 export interface BreadcrumbItem {
   title: string
@@ -37,4 +43,15 @@ export interface DashboardPageProperties {
     navigation_embedding_page: string
   }
   available_layouts: DashboardLayout[]
+}
+
+export interface SharedDashboardPageProperties {
+  dashboard: {
+    spec: RelativeGridDashboardResponse | ResponsiveGridDashboardResponse
+    name: string
+    title: string
+  }
+  dashboard_constants: DashboardConstants
+  url_params: string
+  token_value: string
 }

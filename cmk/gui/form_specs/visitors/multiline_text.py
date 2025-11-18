@@ -44,7 +44,7 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, _ParsedValueModel, _Fa
     @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
-    ) -> tuple[shared_type_defs.MultilineText, object]:
+    ) -> tuple[shared_type_defs.FormSpec, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.MultilineText(

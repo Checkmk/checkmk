@@ -62,7 +62,7 @@ export const usePercentageOfServiceProblems = async (
   )
 
   const currentContent = currentSpec?.content as ProblemGraphContent
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
+  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(currentContent?.timerange)
   const {
     horizontalAxis,
     verticalAxis,

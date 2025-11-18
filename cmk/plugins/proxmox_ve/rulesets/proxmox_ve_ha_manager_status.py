@@ -37,7 +37,7 @@ def _parameter_valuespec_proxmox_ve_ha_manager_status():
 
 rule_spec_proxmox_ve_ha_manager_status = CheckParameters(
     name="proxmox_ve_ha_manager_status",
-    topic=Topic.VIRTUALIZATION,
+    topic=Topic.CLOUD,
     parameter_form=_parameter_valuespec_proxmox_ve_ha_manager_status,
     title=Title("Proxmox VE HA Manager Watcher"),
     condition=HostAndItemCondition(Title("Node")),

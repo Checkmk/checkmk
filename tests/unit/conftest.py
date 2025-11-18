@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import json
@@ -16,7 +15,7 @@ import pprint
 import queue
 import shutil
 import tempfile
-from collections.abc import Callable, Generator, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Final
 from unittest.mock import patch
@@ -137,7 +136,7 @@ def _fake_version_and_paths() -> None:
 
 # Cleanup temporary directory created above
 @pytest.fixture(scope="session", autouse=True)
-def cleanup_cmk():
+def cleanup_cmk() -> Generator[None]:
     yield
 
     import cmk.utils.paths
@@ -172,7 +171,7 @@ def pytest_exception_interact(
 
 
 @pytest.fixture(autouse=True)
-def enable_debug_fixture():
+def enable_debug_fixture() -> Generator[None]:
     debug_mode = cmk.ccc.debug.debug_mode
     cmk.ccc.debug.enable()
     yield
@@ -195,7 +194,7 @@ def as_path(tmp_path: Path) -> Callable[[str], Path]:
 
 
 @pytest.fixture
-def disable_debug():
+def disable_debug() -> Generator[None]:
     debug_mode = cmk.ccc.debug.debug_mode
     cmk.ccc.debug.disable()
     yield
@@ -203,7 +202,7 @@ def disable_debug():
 
 
 @pytest.fixture(autouse=True, scope="session")
-def fixture_umask():
+def fixture_umask() -> Generator[None]:
     """Ensure the unit tests always use the same umask"""
     old_mask = os.umask(0o0007)
     try:
@@ -367,7 +366,7 @@ def _touch(path: Path) -> None:
 
 
 @pytest.fixture(autouse=True)
-def cleanup_after_test():
+def cleanup_after_test() -> Generator[None]:
     yield
 
     if cmk.utils.paths.omd_root == Path(""):
@@ -406,24 +405,24 @@ def _report_crashes() -> None:
 # Unit tests should not be executed in site.
 # -> Disabled site fixture for them
 @pytest.fixture(scope="session")
-def site(request):
+def site(request: pytest.FixtureRequest) -> None:
     pass
 
 
-def _clear_caches():
+def _clear_caches() -> None:
     cmk.utils.caching.cache_manager.clear()
     cmk_version.edition.cache_clear()
 
 
 @pytest.fixture(autouse=True, scope="module")
-def clear_caches_per_module():
+def clear_caches_per_module() -> Generator[None]:
     """Ensures that module-scope fixtures are executed with clean caches."""
     _clear_caches()
     yield
 
 
 @pytest.fixture(autouse=True)
-def clear_caches_per_function():
+def clear_caches_per_function() -> Generator[None]:
     """Ensures that each test is executed with a non-polluted cache from a previous test."""
     _clear_caches()
     yield
@@ -453,8 +452,15 @@ def prevent_livestatus_connect() -> Iterator[None]:
 
     orig_init = livestatus.MultiSiteConnection.__init__
 
-    def init_mock(self, *args, **kwargs):
-        orig_init(self, *args, **kwargs)
+    def init_mock(
+        self: livestatus.MultiSiteConnection,
+        sites: livestatus.SiteConfigurations,
+        disabled_sites: livestatus.SiteConfigurations | None = None,
+        only_sites_postprocess: Callable[
+            [Sequence[SiteId] | None], list[SiteId] | None
+        ] = lambda x: list(x) if x else None,
+    ) -> None:
+        orig_init(self, sites, disabled_sites, only_sites_postprocess)
         if self.deadsites:
             pytest.fail("Dead sites: %r" % self.deadsites)
 

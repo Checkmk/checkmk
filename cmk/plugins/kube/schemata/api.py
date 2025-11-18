@@ -7,10 +7,6 @@ The schemas contained in this file define the stable API between kubernetes and
 the special agent.
 The schemas should not be affected by different kubernetes server or client versions.
 
-# mypy: disable-error-code="mutable-override"
-
-# mypy: disable-error-code="type-arg"
-
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 
@@ -24,6 +20,9 @@ class Correct(BaseModel):
     a: int | None = None
 
 """
+
+# mypy: disable-error-code="mutable-override"
+# mypy: disable-error-code="type-arg"
 
 import datetime
 import enum

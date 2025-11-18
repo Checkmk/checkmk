@@ -5,7 +5,7 @@
 import dataclasses
 from datetime import datetime, UTC
 
-from cmk.agent_receiver.log import bound_contextvars
+from cmk.agent_receiver.lib.log import bound_contextvars
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     RelayTask,
     Spec,

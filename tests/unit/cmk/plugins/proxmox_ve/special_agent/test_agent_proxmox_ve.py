@@ -15,6 +15,7 @@ from cmk.plugins.proxmox_ve.special_agent.libbackups import (
     BackupTask,
     collect_vm_backup_info,
 )
+from cmk.server_side_programs.v1_unstable import Storage
 
 
 @pytest.mark.parametrize(
@@ -476,7 +477,16 @@ def test_parse_backup_logs(
         if expected_exception:
             exit_stack.enter_context(pytest.raises(expected_exception))
         results = collect_vm_backup_info(
-            [BackupTask({}, log, strict=True, dump_logs=False, dump_erroneous_logs=False)]
+            [
+                BackupTask(
+                    {},
+                    log,
+                    Storage("proxmox_ve", "myhost"),
+                    strict=True,
+                    dump_logs=False,
+                    dump_erroneous_logs=False,
+                )
+            ]
         )
         assert results == expected_results
 
@@ -511,7 +521,9 @@ def test_parsing_backuped_log_formats(
             {"n": 3, "t": log},
             {"n": 4, "t": "INFO: Finished Backup of VM 1 (01:05:00)"},
         ],
+        storage=Storage("proxmox_ve", "myhost"),
         strict=True,
+        dump_logs=False,
         dump_erroneous_logs=False,
     )
 

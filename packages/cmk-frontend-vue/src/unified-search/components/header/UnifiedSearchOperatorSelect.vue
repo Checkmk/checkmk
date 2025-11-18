@@ -11,9 +11,9 @@ import useClickOutside from '@/lib/useClickOutside'
 
 import CmkIcon from '@/components/CmkIcon'
 
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 
-import { getSearchUtils } from '../../providers/search-utils'
 import DropDownIndicator from './DropDownIndicator.vue'
 import { availableFilterOptions } from './QueryOptions'
 import SearchOperatorOptionEntry from './SearchOperatorOptionEntry.vue'

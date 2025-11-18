@@ -64,7 +64,7 @@ function renderForm(
   value: unknown,
   backendValidation: ValidationMessages = []
 ): VNode {
-  switch (formSpec.type as Components['type']) {
+  switch ((formSpec as Components).type) {
     case 'dictionary':
       return renderDict(
         formSpec as Dictionary,
@@ -87,6 +87,7 @@ function renderForm(
     case 'float':
       return renderFloatUnit(formSpec as Float, value as number)
     case 'metric':
+    case 'regex':
     case 'date_picker':
     case 'time_picker':
       return renderSimpleValue(formSpec, value as string, backendValidation)

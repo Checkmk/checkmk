@@ -8,7 +8,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
-import type { TSidebarSnapin } from '@/lib/sidebar/type-defs'
 
 import CmkCollapsible from '@/components/CmkCollapsible/CmkCollapsible.vue'
 import CmkCollapsibleTitle from '@/components/CmkCollapsible/CmkCollapsibleTitle.vue'
@@ -17,6 +16,7 @@ import type { CmkMultitoneIconColor, OneColorIcons } from '@/components/CmkIcon/
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSkeleton from '@/components/CmkSkeleton.vue'
 
+import type { TSidebarSnapin } from '@/sidebar/lib/type-defs'
 import { getInjectedSidebar } from '@/sidebar/provider/sidebar'
 
 interface SidebarSnapinProps extends TSidebarSnapin {

@@ -75,13 +75,13 @@ from cmk.utils.diagnostics import (
     CheckmkFileSensitivity,
     CheckmkFilesMap,
     DiagnosticsParameters,
-    get_checkmk_config_files_map,
-    get_checkmk_core_files_map,
+    FILE_MAP_CONFIG,
+    FILE_MAP_CORE,
+    FILE_MAP_LICENSING,
+    FILE_MAP_LOG,
     get_checkmk_file_description,
     get_checkmk_file_info,
     get_checkmk_file_sensitivity_for_humans,
-    get_checkmk_licensing_files_map,
-    get_checkmk_log_files_map,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CRASH_REPORTS,
@@ -98,6 +98,13 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
     serialize_wato_parameters,
 )
+
+_FILE_MAPS = [
+    FILE_MAP_CONFIG,
+    FILE_MAP_CORE,
+    FILE_MAP_LICENSING,
+    FILE_MAP_LOG,
+]
 
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"
@@ -131,10 +138,12 @@ class ModeDiagnostics(WatoMode):
         return ["diagnostics"]
 
     def _from_vars(self) -> None:
-        self._checkmk_config_files_map = get_checkmk_config_files_map()
-        self._checkmk_core_files_map = get_checkmk_core_files_map()
-        self._checkmk_licensing_files_map = get_checkmk_licensing_files_map()
-        self._checkmk_log_files_map = get_checkmk_log_files_map()
+        self._checkmk_files_map: dict[str, CheckmkFilesMap] = {}
+        for file_map in _FILE_MAPS:
+            self._checkmk_files_map[file_map["file_type"]] = file_map["map_generator"](
+                file_map["base_folder"], file_map["component_folder"]
+            )
+
         self._collect_dump = bool(request.get_ascii_input("_collect_dump"))
         self._diagnostics_parameters = self._get_diagnostics_parameters(active_config.sites)
         self._job = DiagnosticsDumpBackgroundJob()
@@ -439,14 +448,20 @@ class ModeDiagnostics(WatoMode):
                 OPT_CHECKMK_LOG_FILES,
                 self._get_component_specific_checkmk_files_choices(
                     _("Checkmk Log files"),
-                    [(f, get_checkmk_file_info(f)) for f in self._checkmk_log_files_map],
+                    [
+                        (f, get_checkmk_file_info(f))
+                        for f in self._checkmk_files_map[FILE_MAP_LOG["file_type"]]
+                    ],
                 ),
             ),
             (
                 OPT_CHECKMK_CONFIG_FILES,
                 self._get_component_specific_checkmk_files_choices(
                     _("Checkmk Configuration files"),
-                    [(f, get_checkmk_file_info(f)) for f in self._checkmk_config_files_map],
+                    [
+                        (f, get_checkmk_file_info(f))
+                        for f in self._checkmk_files_map[FILE_MAP_CONFIG["file_type"]]
+                    ],
                 ),
             ),
         ]
@@ -600,10 +615,18 @@ class ModeDiagnostics(WatoMode):
     ) -> list[tuple[str, ValueSpec]]:
         elements: list[tuple[str, ValueSpec]] = []
         for filetype in [
-            ("config_files", _("Configuration files"), self._checkmk_config_files_map),
-            ("core_files", _("Core files"), self._checkmk_core_files_map),
-            ("licensing_files", _("Licensing files"), self._checkmk_licensing_files_map),
-            ("log_files", _("Log files"), self._checkmk_log_files_map),
+            (
+                "config_files",
+                _("Configuration files"),
+                self._checkmk_files_map[FILE_MAP_CONFIG["file_type"]],
+            ),
+            ("core_files", _("Core files"), self._checkmk_files_map[FILE_MAP_CORE["file_type"]]),
+            (
+                "licensing_files",
+                _("Licensing files"),
+                self._checkmk_files_map[FILE_MAP_LICENSING["file_type"]],
+            ),
+            ("log_files", _("Log files"), self._checkmk_files_map[FILE_MAP_LOG["file_type"]]),
         ]:
             element_id, element_title, files_map = filetype
             for cs_element in self._get_cs_elements_for(

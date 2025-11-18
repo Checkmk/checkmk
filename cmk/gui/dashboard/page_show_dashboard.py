@@ -209,7 +209,7 @@ def _get_default_dashboard_name() -> str:
     and service problems that are relevant for the user.
     """
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
-        return "main"  # problems = main in raw edition
+        return "main"  # problems = main in community edition
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
 
@@ -370,8 +370,23 @@ cmk.dashboard.register_event_handlers();
 def _get_dashlets(name: DashboardName, owner: UserId, board: DashboardConfig) -> list[Dashlet]:
     """Return dashlet instances of the dashboard"""
     dashlets: list[Dashlet] = []
+    embedded_views = board.get("embedded_views", {})
     for nr, dashlet_spec in enumerate(board["dashlets"]):
         try:
+            # TODO: temporary solution to support the legacy dashboard painter
+            if dashlet_spec["type"] == "embedded_view":
+                reference_view = dashlet_spec["name"]  # type: ignore[typeddict-item]
+                assert isinstance(reference_view, str)
+                dashlet_spec = {  # type: ignore[typeddict-unknown-key]
+                    **dashlet_spec,
+                    **embedded_views[reference_view],
+                    "type": "view",
+                    # the following are required but have no influence since it's an iframe context
+                    "sort_index": 100,
+                    "is_show_more": False,
+                    "add_context_to_title": False,
+                }
+
             dashlet_type = get_dashlet_type(dashlet_spec)
             dashlet = dashlet_type(name, owner, board, nr, dashlet_spec)
         except KeyError as e:
@@ -1337,6 +1352,21 @@ def ajax_dashlet(ctx: PageContext) -> None:
         raise MKUserError("id", _("The requested element type does not exist."))
 
     mtime = request.get_integer_input_mandatory("mtime", 0)
+
+    # TODO: temporary solution to enable embedded_view for old view dashlet
+    embedded_views = board.get("embedded_views", {})
+    if dashlet_spec["type"] == "embedded_view":
+        reference_view = dashlet_spec["name"]  # type: ignore[typeddict-item]
+        assert isinstance(reference_view, str)
+        dashlet_spec = {  # type: ignore[typeddict-unknown-key]
+            **dashlet_spec,
+            **embedded_views[reference_view],
+            "type": "view",
+            # the following are required but have no influence since it's an iframe context
+            "sort_index": 100,
+            "is_show_more": False,
+            "add_context_to_title": False,
+        }
 
     dashlet = None
     try:

@@ -6,21 +6,13 @@
 
 from fastapi import FastAPI
 
-from cmk.agent_receiver.endpoints import AGENT_RECEIVER_ROUTER, UUID_VALIDATION_ROUTER
+from cmk.agent_receiver.lib.config import get_config
+from cmk.agent_receiver.lib.log import configure_logger
+from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware
 
-from .config import get_config
-from .log import configure_logger
-from .middleware import B3RequestIDMiddleware
+from .agent_receiver.app import create_app as create_ar_app
 from .relay.app import create_app as create_relay_app
 from .relay.app import lifespan as relay_lifespan
-
-
-def create_sub_app() -> FastAPI:
-    app = FastAPI(title="Checkmk Agent Receiver")
-    app.add_middleware(B3RequestIDMiddleware)
-    app.include_router(AGENT_RECEIVER_ROUTER)
-    app.include_router(UUID_VALIDATION_ROUTER)
-    return app
 
 
 def main_app() -> FastAPI:
@@ -37,5 +29,5 @@ def main_app() -> FastAPI:
 
     # Mount the sub-app
     main_app_.mount(f"/{config.site_name}/relays", create_relay_app())
-    main_app_.mount(f"/{config.site_name}/agent-receiver", create_sub_app())
+    main_app_.mount(f"/{config.site_name}/agent-receiver", create_ar_app())
     return main_app_

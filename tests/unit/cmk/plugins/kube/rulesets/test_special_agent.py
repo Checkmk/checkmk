@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.ccc.version import Edition
-from cmk.plugins.kube.rulesets.special_agent import _migrate_and_transform
+from cmk.plugins.kube.rulesets.special_agent import migrate_and_transform
 
 
 def test_migrate_raw() -> None:
@@ -21,7 +20,7 @@ def test_migrate_raw() -> None:
         "monitored-objects": ["deployments"],
     }
     # Act
-    migrated = _migrate_and_transform(value, Edition.COMMUNITY)
+    migrated = migrate_and_transform(value)
     # Assert
     assert migrated == {
         "cluster_name": "asdf",

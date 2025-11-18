@@ -201,6 +201,8 @@ def test_paths() -> None:
             ("software", "applications", "synthetic_monitoring"),
             ("software", "applications", "synthetic_monitoring", "plans"),
             ("software", "applications", "synthetic_monitoring", "tests"),
+            ("software", "applications", "synthetic_monitoring", "scheduler"),
+            ("software", "applications", "synthetic_monitoring", "scheduler", "config"),
             ("software", "applications", "vmwareesx"),
             ("software", "bios"),
             ("software", "configuration"),
@@ -708,6 +710,14 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "application",
         "suite_name",
         "variant",
+        "plan_id",
+    ],
+    ("software", "applications", "synthetic_monitoring", "scheduler", "config"): [
+        "scheduler_interval",
+        "env_creation",
+        "n_attempts_max",
+        "robot_type",
+        "assigned_to_host",
         "plan_id",
     ],
     ("software", "applications", "synthetic_monitoring", "tests"): [

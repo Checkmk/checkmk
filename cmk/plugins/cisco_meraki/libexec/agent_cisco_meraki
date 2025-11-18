@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.plugins.cisco_meraki.special_agent.agent_cisco_meraki import main
+from cmk.plugins.cisco_meraki.lib.agent import main
 
 if __name__ == "__main__":
     sys.exit(main())

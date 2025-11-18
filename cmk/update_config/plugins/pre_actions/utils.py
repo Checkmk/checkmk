@@ -81,8 +81,6 @@ PACKAGE_STORE = PackageStore(
 
 class ConflictMode(enum.StrEnum):
     ASK = "ask"
-    INSTALL = "install"
-    KEEP_OLD = "keepold"
     ABORT = "abort"
     FORCE = "force"
 
@@ -133,8 +131,6 @@ def _request_user_input_on_incompatible_file(conflict_mode: ConflictMode) -> Res
             return Resume.UPDATE
         case ConflictMode.ABORT:
             return Resume.ABORT
-        case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
-            return Resume.UPDATE
         case ConflictMode.ASK:
             return _disable_per_users_choice(
                 "You can abort the update process (A) or disable the "

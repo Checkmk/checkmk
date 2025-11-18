@@ -12,8 +12,7 @@ from typing import assert_never, final, NewType
 
 from pydantic import BaseModel, Field
 
-from cmk.agent_receiver.utils import B64SiteInternalSecret
-
+from ...agent_receiver.lib.auth import B64SiteInternalSecret
 from .schema import JsonSchema
 from .wiremock import Request, Response, Wiremock, WMapping
 

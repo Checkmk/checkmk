@@ -16,6 +16,7 @@ import requests
 import urllib3
 from pydantic import BaseModel, ConfigDict, RootModel, ValidationError
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.kube.prometheus_api import parse_raw_response, Response, ResponseSuccess, Vector
 from cmk.plugins.lib import node_exporter
 
@@ -68,7 +69,6 @@ def _to_requests_proxies(raw: str) -> MutableMapping[str, str]:
 
 
 class SessionConfig(BaseModel, frozen=True):
-    token: str
     usage_proxy: str
     usage_read_timeout: int
     usage_connect_timeout: int
@@ -85,7 +85,6 @@ class APISessionConfig(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     api_server_endpoint: str
-    token: str
     api_server_proxy: str
     k8s_api_read_timeout: int
     k8s_api_connect_timeout: int
@@ -112,7 +111,9 @@ class PrometheusSessionConfig(SessionConfig):
         return self.prometheus_endpoint.removesuffix("/") + PrometheusEndpoints.query
 
 
-def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Session:
+def create_session(
+    token: Secret[str], config: SessionConfig, logger: logging.Logger
+) -> requests.Session:
     session = requests.Session()
     if config.usage_verify_cert:
         session.verify = (
@@ -123,7 +124,7 @@ def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Se
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         session.verify = False
     session.proxies.update(config.requests_proxies())
-    session.headers.update({"Authorization": f"Bearer {config.token}"})
+    session.headers.update({"Authorization": f"Bearer {token.reveal()}"})
     return session
 
 
@@ -138,11 +139,12 @@ def parse_session_config(arguments: argparse.Namespace) -> _AllConfigs:
 
 
 def send_requests(
+    token: Secret[str],
     config: PrometheusSessionConfig,
     queries: Iterable[Query],
     logger: logging.Logger,
 ) -> Iterator[HTTPResponse]:
-    session = create_session(config, logger)
+    session = create_session(token, config, logger)
 
     for query in queries:
         yield _send_query_request_get(
@@ -169,9 +171,14 @@ def _send_query_request_get(
 
 
 def node_exporter_getter(
-    config: PrometheusSessionConfig, logger: logging.Logger, promql_expression: str
+    token: Secret[str],
+    config: PrometheusSessionConfig,
+    logger: logging.Logger,
+    promql_expression: str,
 ) -> list[node_exporter.PromQLMetric]:
-    _query, result = next(send_requests(config=config, queries=[promql_expression], logger=logger))  # type: ignore[list-item] # NodeExporter passes queries as str
+    _query, result = next(
+        send_requests(token, config=config, queries=[promql_expression], logger=logger)  # type: ignore[list-item] # NodeExporter passes queries as str
+    )
     if isinstance(result, ResponseSuccess) and isinstance(result.data, Vector):
         return [
             {"value": sample.value[1], "labels": sample.metric} for sample in result.data.result
@@ -179,7 +186,9 @@ def node_exporter_getter(
     return []
 
 
-def make_api_client_requests(config: APISessionConfig, logger: logging.Logger) -> requests.Session:
+def make_api_client_requests(
+    token: Secret[str], config: APISessionConfig, logger: logging.Logger
+) -> requests.Session:
     session = requests.Session()
     if config.verify_cert_api:
         session.verify = (
@@ -190,6 +199,6 @@ def make_api_client_requests(config: APISessionConfig, logger: logging.Logger) -
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         session.verify = False
     session.proxies.update(config.requests_proxies())
-    session.headers.update({"Authorization": f"Bearer {config.token}"})
+    session.headers.update({"Authorization": f"Bearer {token.reveal()}"})
     session.headers.update({"Content-Type": "application/json"})
     return session

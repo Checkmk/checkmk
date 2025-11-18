@@ -3,8 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { SearchHistorySearchProvider } from '@/lib/unified-search/providers/history'
-import { HistoryEntry, SearchHistoryService } from '@/lib/unified-search/searchHistory'
+import { SearchHistorySearchProvider } from '@/unified-search/lib/providers/history'
+import { HistoryEntry, SearchHistoryService } from '@/unified-search/lib/searchHistory'
 
 beforeEach(() => {
   localStorage.clear()
@@ -17,10 +17,11 @@ test('Add hist entry on search history service', async () => {
     { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
-      url: 'www.google.com',
+      target: { url: 'www.google.com' },
       context: 'test-context',
       provider: 'monitoring',
-      topic: 'testTopic'
+      topic: 'testTopic',
+      icon: 'topic-search'
     }
   )
   searchHistory.add(histE)
@@ -34,10 +35,11 @@ test('Add hist entry twice on search history service', async () => {
     { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
-      url: 'www.google.com',
+      target: { url: 'www.google.com' },
       context: 'test-context',
       provider: 'monitoring',
-      topic: 'testTopic'
+      topic: 'testTopic',
+      icon: 'topic-search'
     }
   )
   searchHistory.add(histE)
@@ -53,10 +55,11 @@ test('Test SearchHistorySearchProvider', async () => {
     { input: 'test', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'testTitle',
-      url: 'www.google.com',
+      target: { url: 'www.google.com' },
       context: 'test-context',
       provider: 'monitoring',
-      topic: 'testTopic'
+      topic: 'testTopic',
+      icon: 'topic-search'
     }
   )
 
@@ -64,10 +67,11 @@ test('Test SearchHistorySearchProvider', async () => {
     { input: 'abc', filters: [], sort: 'none', provider: 'all' },
     {
       title: 'abcTitle',
-      url: 'www.abc.com',
+      target: { url: 'www.abc.com' },
       context: 'abc-context',
       provider: 'setup',
-      topic: 'testTopic'
+      topic: 'testTopic',
+      icon: 'topic-search'
     }
   )
   searchHistory.add(histE1)

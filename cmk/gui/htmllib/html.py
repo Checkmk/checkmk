@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="unreachable"
 
 from __future__ import annotations
@@ -71,7 +70,7 @@ class _Manifest(typing.NamedTuple):
     stage1: str
 
 
-def inject_js_profiling_code():
+def inject_js_profiling_code() -> bool:
     return active_config.inject_js_profiling_code or html.request.has_var(
         "inject_js_profiling_code"
     )
@@ -276,7 +275,7 @@ class HTMLGenerator(HTMLWriter):
         stage1 = f"cmk-frontend-vue/{manifest['src/stage1.ts']['file']}"
         return _Manifest(main, main_stylesheets, stage1)
 
-    def _inject_vue_frontend(self):
+    def _inject_vue_frontend(self) -> None:
         manifest = self._load_vue_manifest()
         if active_config.load_frontend_vue == "inject":
             # stage1 will try to load the hot reloading files. if this fails,
@@ -292,7 +291,7 @@ class HTMLGenerator(HTMLWriter):
             for stylesheet in manifest.main_stylesheets:
                 self.stylesheet(f"cmk-frontend-vue/{stylesheet}")
 
-    def _inject_profiling_code(self):
+    def _inject_profiling_code(self) -> None:
         self.javascript("const startTime = Date.now();")
         # A lambda, so it will get evaluated at the end of the request, not the beginning.
         self.final_javascript(

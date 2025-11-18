@@ -10,6 +10,27 @@ from urllib3.connection import HTTPSConnection
 
 
 class HostnameValidationAdapter(HTTPAdapter):
+    """An HTTPAdapter that enforces hostname validation against a given hostname.
+
+    In Checkmk we often find ourselves in situations where we want to connect to a server via
+    its IP address, but the server's SSL certificate is issued for a hostname. This adapter allows
+    us to enforce hostname validation against the expected hostname, even when connecting via IP.
+
+    Example:
+
+        #!/usr/bin/env/python3
+        ...
+        address = "[12600:1406:5e00:6::17ce:bc1b]"  # this how we contact the server
+        cert_server_name = "example.com"  # this is the name we expect in the server's certificate
+        session = requests.Session()
+
+        session.mount(f"https://{address}", HostnameValidationAdapter(cert_server_name))
+
+        response = session.get(f"https://{address}/some/api/endpoint")
+        ...
+
+    """
+
     def __init__(self, hostname: str) -> None:
         super().__init__()
         self._reference_hostname = hostname

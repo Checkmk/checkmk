@@ -1,0 +1,407 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="type-arg"
+
+from collections.abc import Generator
+from unittest import mock
+
+import pytest
+
+import cmk.gui.watolib.configuration_entity.configuration_entity
+from cmk.ccc.user import UserId
+from cmk.gui.form_specs import RawFrontendData
+from cmk.gui.form_specs.unstable import DictionaryExtended, not_empty
+from cmk.gui.logged_in import user
+from cmk.gui.permissions import declare_permission, permission_registry
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import (
+    get_notification_parameter,
+    NotificationParameter,
+    NotificationParameterRegistry,
+    save_notification_parameter,
+)
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    String,
+)
+from cmk.shared_typing.configuration_entity import ConfigEntityType
+from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.unit.utils import reset_registries
+
+
+def spec() -> ValueSpecDictionary:
+    raise NotImplementedError()
+
+
+def form_spec() -> DictionaryExtended:
+    return DictionaryExtended(
+        title=Title("Create notification with the following parameters"),
+        elements={
+            "test_param": DictElement(
+                parameter_form=String(
+                    custom_validate=[not_empty()], prefill=DefaultValue("some_default_value")
+                ),
+                required=True,
+            ),
+        },
+    )
+
+
+@pytest.fixture(name="registry", autouse=True)
+def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> Generator[NotificationParameterRegistry]:
+    notification_parameter_registry = NotificationParameterRegistry()
+    notification_parameter_registry.register(
+        NotificationParameter(
+            ident="dummy_params",
+            spec=spec,
+            form_spec=form_spec,
+        )
+    )
+    monkeypatch.setattr(
+        cmk.gui.watolib.configuration_entity.configuration_entity,
+        "notification_parameter_registry",
+        notification_parameter_registry,
+    )
+
+    with reset_registries([permission_registry]):
+        declare_permission(
+            "notification_plugin.dummy_params",
+            "Use Dummy Notification Parameters",
+            "Allows the user to create and edit notification parameters of type Dummy.",
+            defaults=["admin"],
+        )
+        yield notification_parameter_registry
+
+
+def test_save_notif_param(clients: ClientRegistry) -> None:
+    # WHEN
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "data": {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
+            },
+        }
+    )
+
+    # THEN
+    resp.assert_status_code(200)
+    assert resp.json["title"] == "foo"
+
+
+def test_save_configuration_entity_non_admin(
+    clients: ClientRegistry, with_automation_user_not_admin: tuple[UserId, str]
+) -> None:
+    # WHEN
+    clients.ConfigurationEntity.request_handler.set_credentials(
+        with_automation_user_not_admin[0], with_automation_user_not_admin[1]
+    )
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "data": {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 401, (
+        f"Expected status code 401 for non-admin user, got {resp.status_code}"
+    )
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_update_configuration_entity(
+    clients: ClientRegistry, registry: NotificationParameterRegistry
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
+            }
+        ),
+        user=user,
+        object_id=None,
+        pprint_value=False,
+    )
+
+    # WHEN
+    clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "entity_id": entity.ident,
+            "data": {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
+            },
+        }
+    )
+
+    # THEN
+    updated_entity = get_notification_parameter(registry, entity.ident, user).data
+    # Ignore is needed because every plugin model has different keys (and not "test_param"
+    assert updated_entity["parameter_properties"]["method_parameters"]["test_param"] == "bar"
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_update_configuration_entity_non_admin(
+    clients: ClientRegistry,
+    registry: NotificationParameterRegistry,
+    with_automation_user_not_admin: tuple[UserId, str],
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
+            }
+        ),
+        user=user,
+        object_id=None,
+        pprint_value=False,
+    )
+
+    # WHEN
+    clients.ConfigurationEntity.request_handler.set_credentials(
+        with_automation_user_not_admin[0], with_automation_user_not_admin[1]
+    )
+    resp = clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "entity_id": entity.ident,
+            "data": {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 401, (
+        f"Expected status code 401 for non-admin user, got {resp.status_code}"
+    )
+
+
+@pytest.mark.parametrize(
+    "data, expected_error_fields",
+    [
+        (
+            {},
+            {
+                "general": {
+                    "description": {"": [mock.ANY]},
+                    "comment": {"": [mock.ANY]},
+                    "docu_url": {"": [mock.ANY]},
+                }
+            },
+        ),
+        (
+            {"general": {}, "parameter_properties": {}},
+            {
+                "general": {"description": {"": [mock.ANY]}},
+            },
+        ),
+        (
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": {}}},
+            },
+            {"parameter_properties": {"method_parameters": {"test_param": {"": [mock.ANY]}}}},
+        ),
+    ],
+)
+def test_save_configuration_validation(
+    clients: ClientRegistry, data: dict, expected_error_fields: dict
+) -> None:
+    # WHEN
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "data": data,
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.json["ext"]["validation_errors"]
+    assert resp.json["fields"]["data"] == expected_error_fields
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_configuration_entities(
+    clients: ClientRegistry, registry: NotificationParameterRegistry
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
+            }
+        ),
+        user=user,
+        object_id=None,
+        pprint_value=False,
+    )
+
+    # WHEN
+    resp = clients.ConfigurationEntity.list_configuration_entities(
+        entity_type=ConfigEntityType.notification_parameter,
+        entity_type_specifier="dummy_params",
+    )
+
+    # THEN
+    assert len(resp.json["value"]) == 1
+    assert resp.json["value"][0]["id"] == entity.ident
+    assert resp.json["value"][0]["title"] == "foo"
+
+
+def test_list_configuration_entities_without_permissions(
+    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
+) -> None:
+    # GIVEN
+    clients.User.create(
+        username="guest_user1",
+        fullname="guest_user1_alias",
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["guest"],
+    )
+    clients.ConfigurationEntity.set_credentials("guest_user1", "supersecretish")
+
+    # WHEN
+    resp = clients.ConfigurationEntity.list_configuration_entities(
+        entity_type=ConfigEntityType.notification_parameter,
+        entity_type_specifier="dummy_params",
+        expect_ok=False,
+    )
+
+    # THEN
+    resp.assert_status_code(401)
+    assert resp.json["title"] == "Unauthorized"
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_get_notif_param(
+    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
+            }
+        ),
+        user=user,
+        object_id=None,
+        pprint_value=False,
+    )
+
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity(
+        entity_type=ConfigEntityType.notification_parameter,
+        entity_id=entity.ident,
+    )
+
+    # THEN
+    assert resp.json["title"] == "foo"
+    assert resp.json["extensions"]["general"]["description"] == "foo"
+    assert (
+        resp.json["extensions"]["parameter_properties"]["method_parameters"]["test_param"]
+        == "some_value"
+    )
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_get_notif_param_without_permissions(
+    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
+            }
+        ),
+        user=user,
+        object_id=None,
+        pprint_value=False,
+    )
+
+    clients.User.create(
+        username="guest_user1",
+        fullname="guest_user1_alias",
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["guest"],
+    )
+    clients.ConfigurationEntity.set_credentials("guest_user1", "supersecretish")
+
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity(
+        entity_type=ConfigEntityType.notification_parameter,
+        entity_id=entity.ident,
+        expect_ok=False,
+    )
+
+    # THEN
+    resp.assert_status_code(401)
+    assert resp.json["title"] == "Unauthorized"
+
+
+def test_get_notif_param_throws_404(clients: ClientRegistry) -> None:
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity(
+        entity_type=ConfigEntityType.notification_parameter, entity_id="foo_bar", expect_ok=False
+    )
+
+    # THEN
+    assert resp.status_code == 404
+
+
+def test_get_confguration_entity_fs_schema(clients: ClientRegistry) -> None:
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity_schema(
+        entity_type=ConfigEntityType.notification_parameter,
+        entity_type_specifier="dummy_params",
+    )
+
+    # THEN
+    schema = resp.json["extensions"]["schema"]
+    default_values = resp.json["extensions"]["default_values"]
+    assert schema["type"] == "catalog"
+    dictionary = schema["elements"][1]["elements"][0]["parameter_form"]
+    assert dictionary["elements"][0]["parameter_form"]["type"] == "string"
+    assert (
+        default_values["parameter_properties"]["method_parameters"]["test_param"]
+        == "some_default_value"
+    )

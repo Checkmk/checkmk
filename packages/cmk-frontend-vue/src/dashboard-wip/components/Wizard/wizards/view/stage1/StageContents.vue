@@ -8,7 +8,7 @@ import { computed, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
@@ -187,7 +187,7 @@ const sortedContextInfos = computed(() => {
       {{ _t('View selection') }}
     </CmkHeading>
     <ContentSpacer />
-    <ToggleButtonGroup
+    <CmkToggleButtonGroup
       v-model="modeSelection"
       :options="[
         { label: _t('New view'), value: ViewSelectionMode.NEW },

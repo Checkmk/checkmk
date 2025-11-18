@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkSkeleton from '@/components/CmkSkeleton.vue'
 
-import ResultItemSkeleton from '../result/ResultItemSkeleton.vue'
-import ResultList from '../result/ResultList.vue'
+import ResultItemSkeleton from '@/unified-search/components/result/ResultItemSkeleton.vue'
+import ResultList from '@/unified-search/components/result/ResultList.vue'
 
 function getSkelNum(): number {
   const resultItemHeight = 54

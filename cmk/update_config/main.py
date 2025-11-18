@@ -33,7 +33,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
@@ -131,7 +130,7 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         type=ConflictMode,
         help=(
             f"If you choose '{ConflictMode.ASK}', you will need to manually answer all upcoming questions. "
-            f"With '{ConflictMode.FORCE}', '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"With '{ConflictMode.FORCE}' or '{ConflictMode.ABORT}' no interaction is needed. "
             f"'{ConflictMode.FORCE}' continues the update even if errors occur during the pre-flight checks. "
             f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
         ),
@@ -229,8 +228,6 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     total = len(pre_update_actions)
     logger.info("Verifying Checkmk configuration...")
 
-    main_modules.load_plugins()
-
     # Note: Redis has to be disabled first, the other contexts depend on it
     with disable_redis(), gui_context():
         _initialize_base_environment()
@@ -245,8 +242,6 @@ def update_config(logger: logging.Logger) -> Literal[0, 1]:
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
-
-    main_modules.load_plugins()
 
     actions = sorted(update_action_registry.values(), key=lambda a: a.sort_index)
     total = len(actions)
@@ -289,7 +284,7 @@ def update_config(logger: logging.Logger) -> Literal[0, 1]:
 
 
 def _check_failed_gui_plugins(logger: logging.Logger) -> None:
-    if get_failed_plugins():
+    if main_modules.get_failed_plugins():
         logger.error(
             "\n"
             "ERROR: Failed to load some GUI plugins. You will either have \n"

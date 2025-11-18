@@ -54,10 +54,11 @@ from cmk.utils.diagnostics import (
     DiagnosticsElementFilepaths,
     DiagnosticsElementJSONResult,
     DiagnosticsOptionalParameters,
-    get_checkmk_config_files_map,
-    get_checkmk_core_files_map,
-    get_checkmk_licensing_files_map,
-    get_checkmk_log_files_map,
+    FILE_MAP_CONFIG,
+    FILE_MAP_CORE,
+    FILE_MAP_LICENSING,
+    FILE_MAP_LOG,
+    FileMapConfig,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
@@ -1051,11 +1052,19 @@ def _get_checkmk_overview_content(inventory_store: InventoryStore, checkmk_serve
 class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def __init__(self, rel_checkmk_files: list[str]) -> None:
         self.rel_checkmk_files = rel_checkmk_files
+        self.file_map_config = self._file_map_config
+
+    @property
+    def _checkmk_files_map(self) -> CheckmkFilesMap:
+        return self.file_map_config["map_generator"](
+            self.file_map_config["base_folder"],
+            self.file_map_config["component_folder"],
+        )
 
     @property
     @abc.abstractmethod
-    def _checkmk_files_map(self) -> CheckmkFilesMap:
-        raise NotImplementedError
+    def _file_map_config(self) -> FileMapConfig:
+        raise NotImplementedError()
 
     def _copy_and_decrypt(self, rel_filepath: Path, tmp_dump_folder: Path) -> Path | None:
         checkmk_files_map = self._checkmk_files_map
@@ -1132,6 +1141,11 @@ class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
     @override
     @property
+    def _file_map_config(self) -> FileMapConfig:
+        return FILE_MAP_CONFIG
+
+    @override
+    @property
     def title(self) -> str:
         return _("Checkmk Configuration Files")
 
@@ -1142,10 +1156,6 @@ class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
             self.rel_checkmk_files
         )
 
-    @property
-    def _checkmk_files_map(self) -> CheckmkFilesMap:
-        return get_checkmk_config_files_map()
-
 
 class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
@@ -1153,6 +1163,11 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     def ident(self) -> str:
         # Unused because we directly pack the .log or .state file
         return "checkmk_log_files"
+
+    @override
+    @property
+    def _file_map_config(self) -> FileMapConfig:
+        return FILE_MAP_LOG
 
     @override
     @property
@@ -1165,10 +1180,6 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
         return _("Log files ('*.log' or '*.state') from var/log: %s") % ", ".join(
             self.rel_checkmk_files
         )
-
-    @property
-    def _checkmk_files_map(self) -> CheckmkFilesMap:
-        return get_checkmk_log_files_map()
 
 
 #   ---cee dumps------------------------------------------------------------
@@ -1183,6 +1194,11 @@ class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
     @override
     @property
+    def _file_map_config(self) -> FileMapConfig:
+        return FILE_MAP_CORE
+
+    @override
+    @property
     def title(self) -> str:
         return _("Checkmk Core Files")
 
@@ -1193,10 +1209,6 @@ class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
             self.rel_checkmk_files
         )
 
-    @property
-    def _checkmk_files_map(self) -> CheckmkFilesMap:
-        return get_checkmk_core_files_map()
-
 
 class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
@@ -1204,6 +1216,11 @@ class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement)
     def ident(self) -> str:
         # Unused because we directly pack the config, state and history file
         return "checkmk_licensing_files"
+
+    @override
+    @property
+    def _file_map_config(self) -> FileMapConfig:
+        return FILE_MAP_LICENSING
 
     @override
     @property
@@ -1216,10 +1233,6 @@ class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement)
         return _(
             "Licensing files (data, config and logs) from var/check_mk/licensing, etc/check_mk/multisite.d and var/log: %s"
         ) % ", ".join(self.rel_checkmk_files)
-
-    @property
-    def _checkmk_files_map(self) -> CheckmkFilesMap:
-        return get_checkmk_licensing_files_map()
 
 
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):

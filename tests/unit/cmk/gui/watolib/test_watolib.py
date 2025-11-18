@@ -37,18 +37,14 @@ def test_registered_config_domains() -> None:
             "mknotifyd",
         ]
 
-    if cmk_version.edition(paths.omd_root) in [
-        cmk_version.Edition.ULTIMATE,
-        cmk_version.Edition.ULTIMATEMT,
-    ]:
-        expected_config_domains.append("otel_collector")
-
     if cmk_version.edition(paths.omd_root) in {
         cmk_version.Edition.ULTIMATE,
         cmk_version.Edition.ULTIMATEMT,
-        cmk_version.Edition.CLOUD,
     }:
-        expected_config_domains.append("metric_backend")
+        expected_config_domains += [
+            "metric_backend",
+            "otel_collector",
+        ]
 
     registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
@@ -57,32 +53,34 @@ def test_registered_config_domains() -> None:
 def test_registered_automation_commands() -> None:
     expected_automation_commands = [
         "activate-changes",
-        "push-profiles",
         "check-analyze-config",
+        "checkmk-remote-automation-get-status",
+        "checkmk-remote-automation-start",
+        "clear-site-changes",
         "create-broker-certs",
         "diagnostics-dump-get-file",
+        "discovered-host-label-sync",
         "fetch-agent-output-get-file",
         "fetch-agent-output-get-status",
         "fetch-agent-output-start",
         "fetch-background-job-snapshot",
-        "store-broker-certs",
+        "fetch-quick-setup-stage-action-result",
+        "finalize-certificate-rotation",
+        "get-config-sync-state",
+        "hosts-for-auto-removal",
         "network-scan",
         "notification-test",
         "ping",
-        "get-config-sync-state",
+        "push-profiles",
         "receive-config-sync",
+        "remove-tls-registration",
+        "rename-hosts-uuid-link",
         "service-discovery-job",
         "service-discovery-job-snapshot",
-        "checkmk-remote-automation-start",
-        "checkmk-remote-automation-get-status",
-        "discovered-host-label-sync",
-        "remove-tls-registration",
-        "sync-remote-site",
-        "clear-site-changes",
-        "hosts-for-auto-removal",
-        "rename-hosts-uuid-link",
+        "stage-certificate-rotation",
         "start-quick-setup-stage-action",
-        "fetch-quick-setup-stage-action-result",
+        "store-broker-certs",
+        "sync-remote-site",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
@@ -307,10 +305,9 @@ def test_registered_configvars() -> None:
     if cmk_version.edition(paths.omd_root) in {
         cmk_version.Edition.ULTIMATE,
         cmk_version.Edition.ULTIMATEMT,
-        cmk_version.Edition.CLOUD,
     }:
         expected_vars += [
-            "metric_backend_instance",
+            "metric_backend",
             "site_opentelemetry_collector",
             "site_opentelemetry_collector_memory_limit",
         ]

@@ -600,9 +600,9 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str, *, debug
         ] not in ["cme", cmk_version.Edition.ULTIMATEMT.short]:
             raise MKUserError(
                 None,
-                _(
-                    "The Checkmk Ultimate with multi-tenancy edition can only "
-                    "be connected with other sites using the Checkmk Ultimate with multi-tenancy edition."
+                (
+                    "Checkmk Ultimate with multi-tenancy can only be connected with other sites"
+                    " using Checkmk Ultimate with multi-tenancy."
                 ),
             )
         return eval_response["login_secret"]
@@ -697,9 +697,9 @@ def _start_remote_automation_job(
     return job_id
 
 
-def _edition_from_short(edition_short: str) -> cmk_version.Edition:
+def _edition_from_short(edition_str: str) -> cmk_version.Edition:
     # TODO The legacy edition names can be removed with Checkmk 2.6
-    match edition_short:
+    match edition_str:
         case "cre" | cmk_version.Edition.COMMUNITY.short:
             return cmk_version.Edition.COMMUNITY
         case "cee" | cmk_version.Edition.PRO.short:
@@ -711,7 +711,7 @@ def _edition_from_short(edition_short: str) -> cmk_version.Edition:
         case "cse" | cmk_version.Edition.CLOUD.short:
             return cmk_version.Edition.CLOUD
         case _:
-            raise ValueError(edition_short)
+            raise ValueError(edition_str)
 
 
 def _compatible_with_central_site(

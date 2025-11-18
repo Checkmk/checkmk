@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides a class for managing web sessions with a Checkmk site.
 
-# mypy: disable-error-code="type-arg"
-
 It contains methods for handling HTTP requests, verifying HTML page resources, and
 managing authentication.
 
 Note: this implementation is purely request-based and does not manage cookies or running
 JavaScript scripts.
 """
+
+# mypy: disable-error-code="type-arg"
 
 import logging
 import os

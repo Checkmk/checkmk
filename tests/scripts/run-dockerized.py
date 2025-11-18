@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Starts a docker container and executes tests in it
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 The tests are executed in the container using the MAKE_TARGET given as first argument
 to this script.
 
@@ -16,6 +13,9 @@ saved in the given RESULT_PATH.
 Environment variables VERSION, EDITION, BRANCH affect the package used for
 the test.
 """
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import logging

@@ -8,9 +8,10 @@ import sys
 from cmk.gui import main_modules
 
 # Needs to come before the following import (adds some compatibility names)
-main_modules.load_plugins()
+if errors := main_modules.get_failed_plugins():
+    sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")
 
-from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]  # noqa: E402
+from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]
     dashlet_registry,
 )
 

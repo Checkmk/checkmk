@@ -3,6 +3,19 @@
 #
 # We are using make variables, $, and $@ because we have no correct labels
 
+filegroup(
+    name = "plugins",
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "BUILD",
+            "**/OWNERS",
+            ".f12",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+)
+
 TO_SIGN_SCRIPTS = [
     "arcserve_backup.ps1",
     "citrix_farm.ps1",

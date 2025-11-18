@@ -13,6 +13,7 @@ def test_builtin_autocompleters_registered() -> None:
         "add_to_dashboard_choices",
         "allgroups",
         "available_graph_templates",
+        "azure_labels",
         "check_cmd",
         "check_types",
         "config_hostname",
@@ -36,9 +37,9 @@ def test_builtin_autocompleters_registered() -> None:
             "combined_graphs",
             "custom_graphs",
             "monitored_metrics_backend",
-            "monitored_resource_attributes_backend",
-            "monitored_scope_attributes_backend",
-            "monitored_data_point_attributes_backend",
+            "monitored_resource_attributes_keys_backend",
+            "monitored_scope_attributes_keys_backend",
+            "monitored_data_point_attributes_keys_backend",
         ]
 
     if is_ultimate_repo():

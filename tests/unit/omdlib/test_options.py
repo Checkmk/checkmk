@@ -92,7 +92,6 @@ def test_parse_command_options_update() -> None:
             "--confirm-version",
             "--confirm-edition",
             "--ignore-editions-incompatible",
-            "--confirm-requires-root",
             "--ignore-versions-incompatible",
         ],
         command.options,

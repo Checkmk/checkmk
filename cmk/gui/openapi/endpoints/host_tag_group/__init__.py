@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host tag groups
 
-# mypy: disable-error-code="no-untyped-def"
-
 Host tag groups are, besides the static folder structure, another more flexible way to
 organize hosts in Checkmk for configuration.
 A host tag group is a collection of different host tags, with each host receiving exactly one
@@ -15,10 +13,13 @@ You can find an introduction to hosts including host tags and host tag groups in
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 
+# mypy: disable-error-code="no-untyped-def"
+
 from collections.abc import Mapping
 from typing import Any
 
 from cmk import fields
+from cmk.ccc.regex import REGEX_ID
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -49,7 +50,6 @@ from cmk.gui.watolib.tags import (
     TagCleanupMode,
     update_tag_config,
 )
-from cmk.utils.regex import REGEX_ID
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
 
 PERMISSIONS = permissions.AllPerm(

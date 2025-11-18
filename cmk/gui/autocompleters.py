@@ -7,10 +7,11 @@
 
 import re
 from collections.abc import Callable, Collection, Sequence
-from typing import Any, get_args, override
+from typing import get_args, override
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
+from cmk.ccc.regex import regex
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -23,7 +24,6 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, AutocompleterRegistry, Labels
 from cmk.gui.visuals import get_only_sites_from_context, livestatus_query_bare_string
 from cmk.gui.watolib.check_mk_automations import get_check_information_cached
-from cmk.utils.regex import regex
 
 
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:
@@ -39,6 +39,7 @@ def register(page_registry: PageRegistry, autocompleter_registry_: Autocompleter
     autocompleter_registry_.register_autocompleter(
         "kubernetes_labels", kubernetes_labels_autocompleter
     )
+    autocompleter_registry_.register_autocompleter("azure_labels", azure_labels_autocompleter)
     autocompleter_registry_.register_autocompleter("tag_groups", tag_group_autocompleter)
     autocompleter_registry_.register_autocompleter("tag_groups_opt", tag_group_opt_autocompleter)
     autocompleter_registry_.register_autocompleter("label", label_autocompleter)
@@ -184,6 +185,34 @@ def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) ->
     return __live_query_to_choices(_query_callback, 200, value, params)
 
 
+def azure_labels_autocompleter(config: Config, value: str, params: dict) -> Choices:
+    filter_id = params["group_type"]
+    object_type = filter_id.removeprefix("azure_")
+    label_name = f"cmk/azure/{object_type}"
+
+    def _query_callback(sites_live: MultiSiteConnection) -> Collection[LivestatusColumn]:
+        """
+        we search for hosts having a certain label
+        ('cmk/azure/entity:{object_type}') and want a list of unique labels
+        values of labels with the key label_name ('cmk/azure/{object_type}')
+        """
+        label_filter = encode_label_for_livestatus(
+            column="labels",
+            label=Label("cmk/azure/entity", object_type, False),
+        )
+        query = f"GET hosts\nColumns: labels\n{label_filter}"
+
+        query_result = sites_live.query_column(query)
+        label_values = set()
+        for element in query_result:
+            for label_key, label_value in element.items():
+                if label_key == label_name:
+                    label_values.add(label_value)
+        return label_values
+
+    return __live_query_to_choices(_query_callback, 200, value, params)
+
+
 def tag_group_autocompleter(config: Config, value: str, params: dict) -> Choices:
     return sorted(
         (v for v in config.tags.get_tag_group_choices() if _matches_id_or_title(value, v)),
@@ -231,7 +260,7 @@ def check_types_autocompleter(config: Config, value: str, params: dict) -> Choic
     ]
 
 
-def validate_autocompleter_data(api_request: dict[str, Any]) -> None:
+def validate_autocompleter_data(api_request: dict[str, object]) -> None:
     params = api_request.get("params")
     if params is None:
         raise MKUserError("params", _('You need to set the "%s" parameter.') % "params")

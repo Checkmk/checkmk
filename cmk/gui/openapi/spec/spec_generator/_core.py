@@ -422,7 +422,6 @@ from cmk.gui.openapi.spec.spec_generator._doc_pydantic import pydantic_endpoint_
 from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.utils.paths import omd_root
 
@@ -430,8 +429,7 @@ Ident = tuple[str, str]
 
 
 def main(version: APIVersion) -> int:
-    main_modules.load_plugins()
-    if errors := get_failed_plugins():
+    if errors := main_modules.get_failed_plugins():
         raise Exception(f"The following errors occurred during plug-in loading: {errors}")
 
     with gui_context(), SuperUserContext():

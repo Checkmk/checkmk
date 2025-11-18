@@ -50,7 +50,7 @@ from cmk.gui.search import match_item_generator_registry
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.sites import site_choices
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
-from cmk.gui.utils import agent_commands
+from cmk.gui.utils import agent_commands, plugins
 from cmk.gui.utils.agent_commands import agent_commands_registry
 from cmk.gui.utils.rule_specs.legacy_converter import (
     convert_dictionary_formspec_to_valuespec,
@@ -327,6 +327,7 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         config_variable_registry,
         autocompleter_registry,
     )
+    plugins.register()
 
 
 def _openapi_registration(*, ignore_duplicates: bool) -> None:

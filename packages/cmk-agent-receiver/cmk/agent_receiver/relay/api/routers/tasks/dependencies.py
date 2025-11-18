@@ -7,7 +7,7 @@ from typing import Annotated
 
 import fastapi
 
-from cmk.agent_receiver.config import Config, get_config
+from cmk.agent_receiver.lib.config import Config, get_config
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import get_relays_repository
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     ActivateConfigHandler,
@@ -26,7 +26,7 @@ def get_tasks_repository(
 ) -> TasksRepository:
     return TasksRepository(
         ttl_seconds=config.task_ttl,
-        max_tasks_per_relay=config.max_tasks_per_relay,
+        max_pending_tasks_per_relay=config.max_pending_tasks_per_relay,
     )
 
 

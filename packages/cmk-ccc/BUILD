@@ -131,6 +131,18 @@ py_library(
 )
 
 py_library(
+    name = "regex",
+    srcs = ["cmk/ccc/regex.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "exceptions",
+        "i18n",
+    ],
+)
+
+py_library(
     name = "site",
     srcs = ["cmk/ccc/site.py"],
     imports = ["."],
@@ -156,6 +168,17 @@ py_library(
         "exceptions",
         "i18n",
         "//packages/cmk-trace",
+    ],
+)
+
+py_library(
+    name = "translations",
+    srcs = ["cmk/ccc/translations.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "regex",
     ],
 )
 
@@ -215,9 +238,11 @@ _ALL = [
     "plugin-registry",
     "profile",
     "resulttype",
+    "regex",
     "site",
     "store",
     "timeout",
+    "translations",
     "tty",
     "user",
     "version",
@@ -285,6 +310,21 @@ py_test(
 )
 
 py_test(
+    name = "regex-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_regex.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "regex",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
     name = "resulttype-tests",
     size = "small",
     srcs = [
@@ -295,6 +335,21 @@ py_test(
     deps = [
         "__test__",
         "resulttype",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "translations-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_translations.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "translations",
         requirement("pytest"),
     ],
 )

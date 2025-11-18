@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkIcon, { type CmkIconVariants } from '@/components/CmkIcon'
+import CmkIcon, { type IconSizeNames } from '@/components/CmkIcon'
 import type { SimpleIcons } from '@/components/CmkIcon'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 
@@ -65,7 +65,7 @@ function getButtonConfig(
 ): {
   variant?: ButtonVariants['variant']
   icon: { name: SimpleIcons; rotate: number }
-  iconSize?: CmkIconVariants['size']
+  iconSize?: IconSizeNames
 } {
   let icon: { name: SimpleIcons; rotate: number } = {
     name: 'continue',

@@ -200,7 +200,7 @@ def main() {
 
                 smart_stage(
                     name: "Upload ${image_name}",
-                    condition: publish_images,
+                    condition: publish_special_images && publish_images,
                     raiseOnError: true,
                 ) {
                     docker.withRegistry(DOCKER_REGISTRY, "nexus") {

@@ -12,8 +12,8 @@ def test_type_adapter_instantiable() -> None:
     # NOTE: The config_file_registry is filled via importing cmk.gui.main_modules
     # in test/unit/cmk/conftest.py. First let's make sure that the registry *is*
     # actually filled: With an empty registry this test would turn into a no-op.
-    # The 10 is just an ad hoc value, currently we register 12 (CRE) or 13 (all
-    # other editions) config files.
+    # The 10 is just an ad hoc value, currently we register 12 (Checkmk community)
+    # or 13 (commercial editions) config files.
     assert len(config_file_registry) > 10
 
     for wato_config_file in config_file_registry.values():

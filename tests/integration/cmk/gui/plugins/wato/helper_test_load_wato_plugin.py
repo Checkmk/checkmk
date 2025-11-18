@@ -8,5 +8,7 @@ import sys
 from cmk.gui import main_modules
 from cmk.gui.plugins.wato.utils import rulespec_registry
 
-main_modules.load_plugins()
+if errors := main_modules.get_failed_plugins():
+    sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")
+
 sys.stdout.write(f"{'checkgroup_parameters:test' in rulespec_registry}\n")

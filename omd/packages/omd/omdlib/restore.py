@@ -35,6 +35,15 @@ def prepare_restore_as_root(
     sitename_must_be_valid(site.name, Path(site_home), reuse)
 
     if reuse:
+        # shutil.rmtree will default to an unsafe way of deleting a user-controlled directory, if
+        # `avoids_symlink_attacks` is false.
+        #
+        # This assertion should always pass on distros we support: The value of
+        # `avoids_symlink_attacks` depends on macro variables set during the python build process.
+        # The interpreter we ship with Checkmk always sets these such that the operation is safe.
+        #
+        # We call the assertion here to avoid unmounting tmpfs.
+        assert shutil.rmtree.avoids_symlink_attacks, "Can't run shutil.rmtree"
         if not site.is_stopped(verbose) and "kill" not in options:
             sys.exit("Cannot restore '%s' while it is running." % (site.name))
         else:
@@ -46,12 +55,11 @@ def prepare_restore_as_root(
         uid = options.get("uid")
         gid = options.get("gid")
         useradd(version_info, site, uid, gid)  # None for uid/gid means: let Linux decide
+        os.mkdir(site_home)
     else:
         sys.stdout.write("Deleting existing site data...\n")
-        shutil.rmtree(site_home)
+        _clear_site_home(Path(site_home))
         ok()
-
-    os.mkdir(site_home)
 
 
 def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, verbose: bool) -> None:
@@ -68,12 +76,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, ver
     unmount_tmpfs(site.name, site_home, site.tmp_dir)
 
     sys.stdout.write("Deleting existing site data...")
-    for f in os.listdir(site_home):
-        path = site_home + "/" + f
-        if os.path.islink(path) or os.path.isfile(path):
-            os.unlink(path)
-        else:
-            shutil.rmtree(path)
+    _clear_site_home(Path(site_home))
     ok()
 
 
@@ -97,3 +100,30 @@ def _verify_directory_write_access(site_home: str) -> None:
             "the backup. Missing write access on the following paths:\n\n"
             "    %s" % "\n    ".join(wrong)
         )
+
+
+def _restore_working_dir(site_home: Path) -> Path:
+    return site_home / ".restore_working_dir"
+
+
+def _clickhouse_dir(site_home: Path) -> Path:
+    return site_home / "var" / "clickhouse-server"
+
+
+def _clear_site_home(site_home: Path) -> None:
+    restore_working_dir = _restore_working_dir(site_home)
+    clickhouse_dir = site_home / "var" / "clickhouse-server"
+    restore_clickhouse_dir = restore_working_dir / "clickhouse-server"
+    if clickhouse_dir.exists():
+        clickhouse_dir.rename(restore_clickhouse_dir)
+    with os.scandir(site_home) as scaniter:
+        for entry in scaniter:
+            if entry.name == restore_working_dir.name:
+                continue
+            elif entry.is_dir(follow_symlinks=False):
+                shutil.rmtree(entry.path)
+            else:
+                os.unlink(entry.path)
+    if restore_clickhouse_dir.exists():
+        clickhouse_dir.parent.mkdir(parents=True)
+        restore_clickhouse_dir.rename(clickhouse_dir)

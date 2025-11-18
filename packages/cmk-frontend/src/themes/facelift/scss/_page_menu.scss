@@ -42,7 +42,7 @@ div#top_heading {
   div.titlebar {
     display: flex;
     height: 53px;
-    padding: 0.5 * $spacing $spacing 0;
+    padding: $titlebar-spacing-vertical $titlebar-spacing-horizontal 0;
     background-color: $bg-color;
 
     > div:first-child {
@@ -182,18 +182,28 @@ div#top_heading {
       &:last-child:after {
         content: '';
       }
+    }
 
-      color: $font-color-dimmed;
+    span {
+      color: $font-color-breadcrumb-inactive;
       text-decoration: none;
     }
 
-    a:hover {
-      color: $font-color;
+    a {
+      color: $font-color-breadcrumb-interactive;
+      text-decoration: underline;
+      &:hover {
+        color: $font-color-breadcrumb-hover;
+      }
     }
 
     > :after {
+      color: $font-color-breadcrumb-inactive;
+      content: '>';
+      cursor: default;
+      display: inline-block;
+      padding: 0 $spacing-half;
       text-decoration: none;
-      content: ' > ';
     }
   }
 
@@ -449,7 +459,7 @@ div#top_heading {
       input#inpage_search_form_reset {
         width: 8px;
         height: 8px;
-        background-image: url('images/icon_close.svg');
+        background-image: url('../facelift/images/icon_close.svg');
         background-size: 8px 8px;
         border-radius: 0;
       }
@@ -458,7 +468,7 @@ div#top_heading {
         width: 18px;
         height: 18px;
         background-color: $success-dimmed;
-        background-image: url('images/icon_search_action_button.svg');
+        background-image: url('../facelift/images/icon_search_action_button.svg');
         background-size: 14px 14px;
         background-position: center;
         filter: none;
@@ -566,6 +576,7 @@ div#page_menu_popups {
       padding: 16px;
       background-color: $headline-color;
       margin-bottom: $spacing;
+      box-shadow: none;
 
       button.confirm_question,
       button.confirm_success,

@@ -12,7 +12,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkChip from '@/components/CmkChip.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
-import { getInjectedMainMenu } from '../../provider/main-menu'
+import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 
 const mainMenu = getInjectedMainMenu()
 

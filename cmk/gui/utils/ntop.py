@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Some helpers for ntop related GUI code
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-
 Needs to be part of the generic code, not packed into NTOP addon.
 """
 
-from cmk.ccc.site import SiteId
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -31,7 +31,7 @@ def get_ntop_connection_by_site() -> dict[SiteId, dict]:
     return {
         site_id: get_site_globals(site_id, site_config).get("ntop_connection", {})
         for site_id, site_config in active_config.sites.items()
-    }
+    } | {omd_site(): get_ntop_connection()}
 
 
 def get_ntop_connection_mandatory() -> NtopConnectionSpec:

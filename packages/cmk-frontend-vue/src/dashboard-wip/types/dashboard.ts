@@ -21,6 +21,9 @@ export type RelativeGridDashboardDomainObject =
   components['schemas']['RelativeGridDashboardDomainObject']
 export type ResponsiveGridDashboardDomainObject =
   components['schemas']['ResponsiveGridDashboardDomainObject']
+export type RelativeGridDashboardResponse = components['schemas']['RelativeGridDashboardResponse']
+export type ResponsiveGridDashboardResponse =
+  components['schemas']['ResponsiveGridDashboardResponse']
 export type DashboardFilterContext = components['schemas']['DashboardFilterContext']
 export type DashboardFilterContextWithSingleInfos =
   components['schemas']['DashboardFilterContextResponse']
@@ -30,12 +33,12 @@ export type DashboardResponsiveGridLayout = components['schemas']['DashboardResp
 
 export type ContentRelativeGrid = {
   layout: DashboardRelativeGridLayout
-  widgets: components['schemas']['RelativeGridDashboardResponse']['widgets']
+  widgets: RelativeGridDashboardResponse['widgets']
 }
 
 export type ContentResponsiveGrid = {
   layout: DashboardResponsiveGridLayout
-  widgets: components['schemas']['ResponsiveGridDashboardResponse']['widgets']
+  widgets: ResponsiveGridDashboardResponse['widgets']
 }
 
 export enum DashboardOwnerType {

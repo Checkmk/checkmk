@@ -11,7 +11,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -20,7 +19,6 @@ import abc
 import json
 import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
-from dataclasses import asdict
 from enum import auto, Enum
 from pprint import pformat
 from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
@@ -31,6 +29,7 @@ import cmk.gui.watolib.changes as _changes
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.site import SiteId
 from cmk.gui import deprecations, forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -49,7 +48,8 @@ from cmk.gui.form_specs import (
     render_form_spec,
     VisitorOptions,
 )
-from cmk.gui.form_specs.unstable import LegacyValueSpec
+from cmk.gui.form_specs.unstable import CommentTextArea, LegacyValueSpec
+from cmk.gui.form_specs.unstable.catalog import Catalog, Topic, TopicElement
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -102,11 +102,9 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     DropdownChoices,
-    FixedValue,
     ListChoice,
     ListOfStrings,
     RegExp,
-    rule_option_elements,
     Transform,
     Tuple,
     ValueSpec,
@@ -140,6 +138,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
     Host,
     make_action_link,
+    strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -173,9 +172,21 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.gui.watolib.utils import mk_eval, mk_repr
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice as BooleanChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    FieldSize as FieldSizeAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    FixedValue as FixedValueAPI,
+)
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1.form_specs import (
+    String as StringAPI,
+)
 from cmk.utils.labels import LabelGroups
-from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import (
     allow_host_label_conditions,
@@ -1591,7 +1602,7 @@ class ModeEditRuleset(WatoMode):
         # Value
         table.cell(_("Value"), css=["value"])
 
-        def _show_rule_backend():
+        def _show_rule_backend() -> None:
             valuespec = self._rulespec.valuespec
             try:
                 value_html = valuespec.value_to_html(value)
@@ -2011,7 +2022,7 @@ class ABCEditRuleMode(WatoMode):
     VAR_RULE_SPEC_NAME: Final = "varname"
     VAR_RULE_ID: Final = "rule_id"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._do_validate_on_render = False
         super().__init__()
 
@@ -2167,15 +2178,19 @@ class ABCEditRuleMode(WatoMode):
             return redirect(self._back_url())
 
         tree = folder_tree()
-        if redirect_ := self._update_rule_from_vars(tree.folder_choices):
-            return redirect_
+        is_locked = is_locked_by_quick_setup(self._rule.locked_by)
+        if not (
+            self._rule_is_updated_from_vars(folder_choices=tree.folder_choices, is_locked=is_locked)
+        ):
+            return redirect(self._back_url())
+
+        self._do_validate_on_render = True
 
         # Check permissions on folders
         new_rule_folder = tree.folder(
             self._get_rule_conditions_from_vars(tree.folder_choices).host_folder
         )
-        if not isinstance(self, ModeNewRule | ModeCloneRule):
-            self._folder.permissions.need_permission("write")
+        self._check_folder_permissions()
         new_rule_folder.permissions.need_permission("write")
 
         if new_rule_folder == self._folder:
@@ -2185,65 +2200,184 @@ class ABCEditRuleMode(WatoMode):
                 debug=config.debug,
                 use_git=config.wato_use_git,
             )
+            flash(self._success_message())
+            return redirect(self._back_url())
 
-        elif is_locked_by_quick_setup(self._rule.locked_by):
+        if is_locked:
             flash(_("Cannot change folder of rules managed by Quick setup."), msg_type="error")
             return redirect(self._back_url())
 
-        else:
-            # Move rule to new folder during editing
-            self._remove_from_orig_folder(
-                pprint_value=config.wato_pprint_config,
-                debug=config.debug,
-                use_git=config.wato_use_git,
-            )
+        # Move rule to new folder during editing
+        self._remove_from_orig_folder(
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
+            use_git=config.wato_use_git,
+        )
 
-            # Set new folder
-            self._rule.folder = new_rule_folder
+        # Set new folder
+        self._rule.folder = new_rule_folder
 
-            self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
-            self._ruleset = self._rulesets.get(self._name)
-            self._ruleset.append_rule(new_rule_folder, self._rule)
-            self._rulesets.save_folder(pprint_value=config.wato_pprint_config, debug=config.debug)
+        self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
+        self._ruleset = self._rulesets.get(self._name)
+        self._ruleset.append_rule(new_rule_folder, self._rule)
+        self._rulesets.save_folder(pprint_value=config.wato_pprint_config, debug=config.debug)
 
-            affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
-            _changes.add_change(
-                action_name="edit-rule",
-                text=_('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
-                % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
-                user_id=user.id,
-                sites=affected_sites,
-                diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
-                object_ref=self._rule.object_ref(),
-                use_git=config.wato_use_git,
-            )
+        affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
+        _changes.add_change(
+            action_name="edit-rule",
+            text=_('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
+            % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
+            user_id=user.id,
+            sites=affected_sites,
+            diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
+            object_ref=self._rule.object_ref(),
+            use_git=config.wato_use_git,
+        )
 
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _update_rule_from_vars(self, folder_choices: DropdownChoices) -> HTTPRedirect | None:
-        # Additional options
-        rule_options = self._vs_rule_options(self._rule).from_html_vars("options")
-        self._vs_rule_options(self._rule).validate_value(rule_options, "options")
-
-        self._rule.rule_options = RuleOptions(
-            disabled=rule_options["disabled"],
-            description=rule_options["description"],
-            comment=rule_options["comment"],
-            docu_url=rule_options["docu_url"],
+    def _create_rule_properties_catalog(self, *, is_locked: bool) -> Catalog:
+        elements = {
+            "description": TopicElement(
+                parameter_form=StringAPI(
+                    title=Title("Description"),
+                    field_size=FieldSizeAPI.LARGE,
+                ),
+                required=True,
+            ),
+            "comment": TopicElement(
+                parameter_form=CommentTextArea(
+                    title=Title("Comment"),
+                ),
+                required=True,
+            ),
+            "docu_url": TopicElement(
+                parameter_form=StringAPI(
+                    title=Title("Documentation URL"),
+                    field_size=FieldSizeAPI.LARGE,
+                ),
+                required=True,
+            ),
+            "disabled": TopicElement(
+                parameter_form=BooleanChoiceAPI(
+                    title=Title("Rule activation"),
+                    label=Label("Do not apply this rule"),
+                ),
+                required=True,
+            ),
+            "id": TopicElement(
+                parameter_form=FixedValueAPI(
+                    title=Title("Rule ID"),
+                    value=self._rule.id,
+                ),
+                required=True,
+            ),
+            "_name": TopicElement(
+                parameter_form=FixedValueAPI(
+                    title=Title("Ruleset name"),
+                    value=self._rule.ruleset.name,
+                ),
+                required=True,
+            ),
+        }
+        if is_locked:
+            assert self._rule.locked_by is not None
+            elements.update(
+                {
+                    "source": TopicElement(
+                        parameter_form=FixedValueAPI(
+                            title=Title("Source"),
+                            value=self._rule.locked_by["instance_id"],
+                            label=Label("%s") % str(quick_setup_render_link(self._rule.locked_by)),
+                        )
+                    )
+                }
+            )
+        return Catalog(
+            elements={
+                "properties": Topic(
+                    title=Title("Rule properties"),
+                    elements=elements,
+                )
+            }
         )
 
-        # CONDITION
+    def _create_rule_value_catalog(
+        self, *, title: str | None, value_parameter_form: FormSpec
+    ) -> Catalog:
+        return Catalog(
+            elements={
+                "value": Topic(
+                    title=Title("%s") % title if title else Title("Value"),
+                    elements={
+                        "value": TopicElement(
+                            parameter_form=value_parameter_form,
+                            required=True,
+                        )
+                    },
+                )
+            }
+        )
+
+    def _get_rule_options_from_catalog_value(self, raw_value: object) -> RuleOptions:
+        if not isinstance(raw_value, dict):
+            raise TypeError(raw_value)
+        raw_properties = raw_value["properties"]
+        return RuleOptions(
+            description=raw_properties["description"],
+            comment=raw_properties["comment"],
+            docu_url=raw_properties["docu_url"],
+            disabled=raw_properties["disabled"],
+        )
+
+    def _get_rule_value_from_catalog_value(self, raw_value: object) -> object:
+        if not isinstance(raw_value, dict):
+            raise TypeError(raw_value)
+        return raw_value["value"]["value"]
+
+    def _get_rule_properties_from_rule(self) -> RawDiskData:
+        return RawDiskData(
+            {
+                "properties": {
+                    "description": self._rule.rule_options.description,
+                    "comment": self._rule.rule_options.comment,
+                    "docu_url": self._rule.rule_options.docu_url,
+                    "disabled": self._rule.rule_options.disabled or False,
+                    "id": self._rule.id,
+                    "_name": self._rule.ruleset.name,
+                }
+            }
+        )
+
+    def _get_rule_value_from_request_or_rule(self) -> IncomingData:
+        if request.has_var(self._vue_field_id()):
+            return RawFrontendData(
+                json.loads(request.get_str_input_mandatory(self._vue_field_id()))
+            )
+        return (
+            self._rule.value
+            if isinstance(self._rule.value, DefaultValue)
+            else RawDiskData({"value": {"value": self._rule.value}})
+        )
+
+    def _rule_is_updated_from_vars(
+        self, *, folder_choices: DropdownChoices, is_locked: bool
+    ) -> bool:
+        self._rule.rule_options = self._get_rule_options_from_catalog_value(
+            parse_data_from_field_id(
+                self._create_rule_properties_catalog(is_locked=is_locked),
+                "_vue_edit_rule_properties",
+            )
+        )
+
         rule_conditions = self._get_rule_conditions_from_vars(folder_choices)
-        if (
-            is_locked_by_quick_setup(self._rule.locked_by)
-            and self._rule.conditions != rule_conditions
-        ):
+        if is_locked and self._rule.conditions != rule_conditions:
             flash(
                 _("Cannot change rule conditions for rules managed by Quick setup."),
                 msg_type="error",
             )
-            return redirect(self._back_url())
+            return False
 
         if self._get_condition_type_from_vars() == "predefined":
             condition_id = self._get_condition_id_from_vars()
@@ -2251,22 +2385,24 @@ class ABCEditRuleMode(WatoMode):
 
         self._rule.update_conditions(rule_conditions)
 
-        # VALUE
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
-        self._do_validate_on_render = True
         match render_mode:
             case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
-                value = parse_data_from_field_id(
-                    registered_form_spec,
-                    self._vue_field_id(),
+                value = self._get_rule_value_from_catalog_value(
+                    parse_data_from_field_id(
+                        self._create_rule_value_catalog(
+                            title=None, value_parameter_form=registered_form_spec
+                        ),
+                        self._vue_field_id(),
+                    )
                 )
             case RenderMode.BACKEND:
                 value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
                 self._ruleset.rulespec.valuespec.validate_value(value, "ve")
 
         self._rule.value = value
-        return None
+        return True
 
     def _get_condition_type_from_vars(self) -> str | None:
         condition_type = self._vs_condition_type().from_html_vars("condition_type")
@@ -2292,6 +2428,9 @@ class ABCEditRuleMode(WatoMode):
 
     @abc.abstractmethod
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None: ...
+
+    @abc.abstractmethod
+    def _check_folder_permissions(self) -> None: ...
 
     def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         self._ruleset.delete_rule(self._orig_rule, create_change=False, use_git=use_git)
@@ -2332,17 +2471,6 @@ class ABCEditRuleMode(WatoMode):
         with html.form_context("rule_editor", method="POST"):
             self._page_form(folder_tree(), debug=config.debug)
 
-    def _get_rule_value(self) -> IncomingData:
-        if request.has_var(self._vue_field_id()):
-            return RawFrontendData(
-                json.loads(request.get_str_input_mandatory(self._vue_field_id()))
-            )
-        return (
-            self._rule.value
-            if isinstance(self._rule.value, DefaultValue)
-            else RawDiskData(self._rule.value)
-        )
-
     @property
     def folder(self) -> Folder:
         return self._folder
@@ -2364,10 +2492,20 @@ class ABCEditRuleMode(WatoMode):
     def _page_form(self, tree: FolderTree, *, debug: bool) -> None:
         self._page_form_quick_setup_warning()
 
-        # Additional rule options
-        self._vs_rule_options(self._rule).render_input("options", asdict(self._rule.rule_options))
+        html.form_has_submit_button = True
+        html.prevent_password_auto_completion()
 
-        # Value
+        render_form_spec(
+            self._create_rule_properties_catalog(
+                is_locked=is_locked_by_quick_setup(
+                    self._rule.locked_by, check_reference_exists=False
+                )
+            ),
+            "_vue_edit_rule_properties",
+            self._get_rule_properties_from_rule(),
+            self._should_validate_on_render(),
+        )
+
         try:
             title: str | None = localize_or_none(
                 self._ruleset.rulespec.form_spec.title, translate_to_current_language
@@ -2378,25 +2516,24 @@ class ABCEditRuleMode(WatoMode):
             title = valuespec.title()
             has_show_more = valuespec.has_show_more()
 
-        forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
-        forms.section()
-        html.form_has_submit_button = True
-        html.prevent_password_auto_completion()
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         try:
             match render_mode:
                 case RenderMode.BACKEND:
+                    forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
+                    forms.section()
                     valuespec = self._ruleset.rulespec.valuespec
                     valuespec.validate_datatype(self._rule.value, "ve")
                     valuespec.render_input("ve", self._rule.value)
                     valuespec.set_focus("ve")
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
-                    value = self._get_rule_value()
                     render_form_spec(
-                        registered_form_spec,
+                        self._create_rule_value_catalog(
+                            title=title, value_parameter_form=registered_form_spec
+                        ),
                         self._vue_field_id(),
-                        value,
+                        self._get_rule_value_from_request_or_rule(),
                         self._should_validate_on_render(),
                     )
         except Exception as e:
@@ -2412,20 +2549,26 @@ class ABCEditRuleMode(WatoMode):
             )
             match render_mode:
                 case RenderMode.BACKEND:
+                    forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
+                    forms.section()
                     valuespec = self._ruleset.rulespec.valuespec
                     valuespec.render_input("ve", valuespec.default_value())
                     valuespec.set_focus("ve")
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
                     render_form_spec(
-                        registered_form_spec, self._vue_field_id(), DEFAULT_VALUE, False
+                        self._create_rule_value_catalog(
+                            title=title, value_parameter_form=registered_form_spec
+                        ),
+                        self._vue_field_id(),
+                        DEFAULT_VALUE,
+                        False,
                     )
 
         self._show_conditions(tree.folder_choices)
         forms.end()
 
         html.hidden_fields()
-        self._vs_rule_options(self._rule).set_focus("options")
 
     def _show_conditions(self, folder_choices: DropdownChoices) -> None:
         locked = is_locked_by_quick_setup(self._rule.locked_by)
@@ -2547,57 +2690,6 @@ class ABCEditRuleMode(WatoMode):
     ) -> VSExplicitConditions:
         return VSExplicitConditions(
             rulespec=self._rulespec, folder_choices=folder_choices, render=render
-        )
-
-    def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
-        elements = rule_option_elements(disabling)
-        elements.extend(
-            (
-                (
-                    "id",
-                    FixedValue(
-                        value=rule.id,
-                        title=_("Rule ID"),
-                        help=_(
-                            "This ID uniquely identifies this rule in Checkmk. "
-                            "Use this ID when working with rules in Checkmk REST API "
-                            "calls, e.g., to show, modify or delete the rule."
-                        ),
-                    ),
-                ),
-                (
-                    "_name",
-                    FixedValue(
-                        value=rule.ruleset.name,
-                        title=_("Ruleset name"),
-                        help=_(
-                            "This name uniquely identifies the rule set in Checkmk. "
-                            "Use this name when working with rule sets and rules in "
-                            "Checkmk REST API calls, e.g. to create a new rule."
-                        ),
-                    ),
-                ),
-            )
-        )
-
-        if is_locked_by_quick_setup(rule.locked_by, check_reference_exists=False):
-            elements.append(
-                (
-                    "source",
-                    FixedValue(
-                        value=rule.locked_by["instance_id"],
-                        title=_("Source"),
-                        totext=quick_setup_render_link(rule.locked_by),
-                    ),
-                )
-            )
-
-        return Dictionary(
-            title=_("Rule properties"),
-            optional_keys=False,
-            render="form",
-            elements=elements,
-            show_more_keys=["id", "_name"],
         )
 
 
@@ -2742,6 +2834,8 @@ class VSExplicitConditions(Transform):
             if is_service:
                 sub_conditions.append({"$regex": entry})
                 continue
+
+            entry = strip_hostname_whitespace_chars(entry)
 
             if entry[0] == "~":
                 sub_conditions.append({"$regex": entry[1:]})
@@ -3213,6 +3307,9 @@ class ModeEditRule(ABCEditRuleMode):
         self._ruleset.edit_rule(self._orig_rule, self._rule, use_git=use_git)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
+    def _check_folder_permissions(self) -> None:
+        self._folder.permissions.need_permission("write")
+
 
 class ModeCloneRule(ABCEditRuleMode):
     @classmethod
@@ -3229,6 +3326,9 @@ class ModeCloneRule(ABCEditRuleMode):
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         self._ruleset.clone_rule(self._orig_rule, self._rule, use_git=use_git)
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
+
+    def _check_folder_permissions(self) -> None:
+        pass
 
     def _remove_from_orig_folder(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
@@ -3321,6 +3421,9 @@ class ModeNewRule(ABCEditRuleMode):
         self._rulesets.save_folder(pprint_value=pprint_value, debug=debug)
         self._ruleset.add_new_rule_change(index, self._folder, self._rule, use_git=use_git)
 
+    def _check_folder_permissions(self) -> None:
+        pass
+
     def _success_message(self) -> str:
         return _('Created new rule in ruleset "%s" in folder "%s"') % (
             self._ruleset.title(),
@@ -3338,6 +3441,9 @@ class ModeExportRule(ABCEditRuleMode):
 
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
         pass
+
+    def _check_folder_permissions(self) -> None:
+        self._folder.permissions.need_permission("write")
 
     def page(self, config: Config) -> None:
         try:

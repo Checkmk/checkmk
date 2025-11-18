@@ -492,4 +492,4 @@ def test_check_health_stale(section: LoadBalancer) -> None:
 
 def test_azure_load_balancer_inventory() -> None:
     inventory = inventory_plugin_azure_load_balancer.inventory_function(SECTION)
-    assert get_inventory_value(inventory, "Region") == "fijieast"
+    assert get_inventory_value(inventory, "region") == "fijieast"

@@ -21,6 +21,7 @@ const emit = defineEmits<TBaseConversationElementEmits>()
 onMounted(() => {
   if (props.noAnimation) {
     typedText.value = props.text
+    emit('done')
   } else {
     typewriter(typedText, props.text, () => {
       emit('done')

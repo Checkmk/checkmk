@@ -38,7 +38,7 @@ from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
 from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo, SubscriptionInfo
 from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, StorageLink
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
-from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
+from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import CannotRecover, ProxmoxVeAPI
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
@@ -414,6 +414,8 @@ def _create_vm_sections(
     logged_backup_data: Mapping[str, object],
     snapshot_data: Mapping[str, object],
 ) -> Iterable[tuple[str, object]]:
+    lock_str = config_lock_data.get(vmid, {}).get("lock")
+    lock_state = LockState(lock_str) if lock_str else None
     yield (
         "proxmox_ve_vm_info",
         SectionVMInfo(
@@ -423,7 +425,7 @@ def _create_vm_sections(
             status=vm["status"],
             name=vm["name"],
             uptime=vm["uptime"],
-            lock=config_lock_data.get(vmid, {}).get("lock"),
+            lock=lock_state,
         ).model_dump(),
     )
     if vm["type"] != "qemu":

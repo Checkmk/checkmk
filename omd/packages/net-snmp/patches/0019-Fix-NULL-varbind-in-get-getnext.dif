@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Checkmk <feedback@checkmk.com>
+Date: Thu, 2 Oct 2025 00:00:00 +0000
+Subject: [PATCH] Fix segfault in netsnmp_get_or_getnext when varbind is NULL
+
+PySequence_GetItem can return NULL if the sequence access fails (e.g., due to
+malformed SNMP responses, timing issues, or device errors). This causes a
+segfault when build_python_varbind is called with a NULL varbind, as it
+immediately calls PyObject_HasAttrString(varbind, "tag") without checking.
+
+This is the same issue fixed for walk/getbulk in patch 0008, but was missed
+for get/getnext operations.
+
+The crash manifests as:
+  #0  PyObject_HasAttrString (v=0x0, name="tag")
+  #1-2 Inside client_intf.so (build_python_varbind)
+  #3  cfunction_call (calling get/getnext)
+
+---
+ python/netsnmp/client_intf.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
+index e5e737230..94da39fe3 100644
+--- a/python/netsnmp/client_intf.c
++++ b/python/netsnmp/client_intf.c
+@@ -1533,6 +1533,10 @@ netsnmp_get_or_getnext(PyObject *self, PyObject *args, int pdu_type,
+            vars = vars->next_variable, varlist_ind++) {
+
+       varbind = PySequence_GetItem(varlist, varlist_ind);
++      if (varbind == NULL) {
++        /* PySequence_GetItem failed - break to avoid NULL deref in build_python_varbind */
++        break;
++      }
+       type = build_python_varbind(varbind, vars, varlist_ind, sprintval_flag,
+                                   &len, &str_buf, getlabel_flag);
+       if (type != TYPE_OTHER) {
+--
+2.43.0

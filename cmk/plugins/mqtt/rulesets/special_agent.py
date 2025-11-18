@@ -3,23 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
-
-from cmk.ccc.hostaddress import HostAddress
-from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    FieldSize,
     Integer,
     migrate_to_password,
     Password,
     SingleChoice,
+    SingleChoiceElement,
     String,
     validators,
 )
-from cmk.rulesets.v1.form_specs._basic import FieldSize, SingleChoiceElement
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
@@ -65,8 +63,13 @@ def parameter_form() -> Dictionary:
                     ),
                     field_size=FieldSize.MEDIUM,
                     custom_validate=(
+                        # Do not validate against being a _Checkmk_ hostname here. Users can enter
+                        # * an IP address
+                        # * an legal hostname
+                        # * a macro like $HOSTNAME$
+                        # The only thing validation can achieve here is catching typos that introduce invalid characters beyond that;
+                        # but those do no more harm than any other typo (which we can't prevent anyway).
                         validators.LengthInRange(min_value=1),
-                        _validate_hostname,
                     ),
                 ),
             ),
@@ -119,18 +122,6 @@ def parameter_form() -> Dictionary:
     )
 
 
-def _validate_hostname(value: str) -> None:
-    try:
-        HostAddress(value)
-    except ValueError as exception:
-        raise validators.ValidationError(
-            message=Message(
-                "Please enter a valid host name or IPv4 address. "
-                "Only letters, digits, dash, underscore and dot are allowed."
-            )
-        ) from exception
-
-
 def _migrate_instance_and_client_id(params: object) -> dict[str, object]:
     match params:
         case {"instance-id": instance_value, "client-id": client_value, **rest}:
@@ -151,7 +142,8 @@ def _migrate_instance_and_client_id(params: object) -> dict[str, object]:
             }
         case dict():
             return {**params}
-    raise ValueError(f"Invalid parameters: {params!r}")
+        case _:
+            raise ValueError(f"Invalid parameters: {params!r}")
 
 
 rule_spec_special_agent_mqtt = SpecialAgent(

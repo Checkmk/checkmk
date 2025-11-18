@@ -6,14 +6,18 @@
 import contextlib
 import dataclasses
 import queue
+import secrets
 import select
 import socket
-import tempfile
 import threading
 import time
 from collections.abc import Iterator
 
-_SOCKET_TIMEOUT = 2.0
+
+@dataclasses.dataclass
+class DataChunk:
+    socket_id: str
+    data: bytes
 
 
 @dataclasses.dataclass
@@ -21,7 +25,9 @@ class MockSocket:
     socket_path: str
     _soc: socket.socket
     _buffer_size: int
-    data_queue: queue.SimpleQueue[bytes] = queue.SimpleQueue()
+    _socket_timeout: float
+    delay: float | None = None
+    data_queue: queue.SimpleQueue[DataChunk] = dataclasses.field(init=False)
 
     # This threading barrier is used to synchronize the main (calling) thread with the socket thread
     # about the moment when the socket itself is ready to be used. Must be `wait`-ed in both
@@ -33,6 +39,9 @@ class MockSocket:
     _stop_event: threading.Event = threading.Event()
     _running_thread: threading.Thread | None = None
 
+    def __post_init__(self) -> None:
+        self.data_queue = queue.SimpleQueue()
+
     def start(self) -> None:
         def thread_func() -> None:
             soc = self._soc
@@ -41,11 +50,18 @@ class MockSocket:
                 # Check if the socket is ready to be used
                 rlist, _, _ = select.select([soc], [], [], 5.0)
                 if rlist:
-                    soc.settimeout(_SOCKET_TIMEOUT)
+                    soc.settimeout(self._socket_timeout)
                     try:
                         conn, _ = soc.accept()
+                        socket_id = str(secrets.token_urlsafe(6))
+                        conn.settimeout(self._socket_timeout)
+                        if self.delay:
+                            time.sleep(self.delay)
                         data = conn.recv(self._buffer_size)
-                        self.data_queue.put_nowait(data)
+                        while data != b"":
+                            self.data_queue.put_nowait(DataChunk(socket_id=socket_id, data=data))
+                            data = conn.recv(self._buffer_size)
+                        conn.shutdown(socket.SHUT_RDWR)
                         conn.close()
                     except TimeoutError:
                         pass
@@ -78,15 +94,31 @@ class MockSocket:
 
 
 @contextlib.contextmanager
-def create_socket(buffer_size: int = 1024) -> Iterator[MockSocket]:
+def create_socket(
+    *, socket_path: str, socket_timeout: float, buffer_size: int = 1024, delay: float | None = None
+) -> Iterator[MockSocket]:
     with (
-        tempfile.TemporaryDirectory() as folder,
         socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as soc,
     ):
-        socket_path = f"{folder}/test.sock"
         soc.bind(socket_path)
         soc.listen()
-        ms = MockSocket(_soc=soc, socket_path=socket_path, _buffer_size=buffer_size)
+        ms = MockSocket(
+            _soc=soc,
+            socket_path=socket_path,
+            _buffer_size=buffer_size,
+            _socket_timeout=socket_timeout,
+            delay=delay,
+        )
         ms.start()
         yield ms
         ms.stop()
+
+
+@contextlib.contextmanager
+def create_non_listening_socket(socket_path: str) -> Iterator[str]:
+    with (
+        socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as soc,
+    ):
+        # bind, but don't listen (also works without it)
+        soc.bind(socket_path)
+        yield socket_path

@@ -19,7 +19,8 @@ class Secret(NamedTuple):
 
     Example:
 
-        # This is passed by the backend to the bakery plugin
+        This is passed by the backend to the bakery plugin
+
         >>> s = Secret("s3cr3t", "", "")
 
         >>> print(f"This is the secret as string: {s}")
@@ -28,7 +29,8 @@ class Secret(NamedTuple):
         >>> print(f"But we can see the actual value: {s.revealed!r}")
         But we can see the actual value: 's3cr3t'
 
-        # Deviating from what we'd ususally expect from `repr`, this deliberately does not show the actual value:
+        Deviating from what we'd ususally expect from `repr`, this deliberately does not show the actual value:
+
         >>> s.revealed in repr(s)
         False
 

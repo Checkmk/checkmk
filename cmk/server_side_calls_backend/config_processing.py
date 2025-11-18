@@ -6,6 +6,7 @@
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, Literal, TypeVar
+from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
@@ -187,9 +188,9 @@ def _processed_config_value(
                     return _replace_v1_stored_proxy(
                         proxy_name, global_proxies_with_lookup, usage_hint
                     )
-                case ("explicit_proxy", str() as proxy_spec, True):
+                case ("explicit_proxy", str() | Mapping() as proxy_spec, True):
                     return _replace_internal_explicit_proxy(proxy_spec)
-                case ("explicit_proxy", str() as proxy_spec, False):
+                case ("explicit_proxy", str() | Mapping() as proxy_spec, False):
                     return _replace_v1_explicit_proxy(proxy_spec)
                 case _:
                     raise ValueError(
@@ -229,14 +230,14 @@ def _replace_password(
 
 
 def _replace_v1_stored_proxy(
-    proxy_spec: str,
+    proxy_name: str,
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     usage_hint: str,
 ) -> ReplacementResult[v1.EnvProxy | v1.URLProxy]:
     try:
-        global_proxy = global_proxies_with_lookup.global_proxies[proxy_spec]
+        global_proxy = global_proxies_with_lookup.global_proxies[proxy_name]
     except KeyError:
-        config_warnings.warn(f'The global proxy "{proxy_spec}" ({usage_hint}) does not exist.')
+        config_warnings.warn(f'The global proxy "{proxy_name}" ({usage_hint}) does not exist.')
         return ReplacementResult(v1.EnvProxy(), {}, {})
 
     return ReplacementResult(
@@ -247,25 +248,57 @@ def _replace_v1_stored_proxy(
 
 
 def _replace_v1_explicit_proxy(
-    proxy_spec: str,
+    proxy_spec: Mapping[str, object] | str,
 ) -> ReplacementResult[v1.EnvProxy | v1.URLProxy]:
-    return ReplacementResult(v1.URLProxy(url=proxy_spec), {}, {})
+    match proxy_spec:
+        case str():
+            return ReplacementResult(v1.URLProxy(url=proxy_spec), {}, {})
+        case {"scheme": scheme, "proxy_server_name": server_name, "port": port}:
+            return ReplacementResult(v1.URLProxy(url=f"{scheme}://{server_name}:{port}"), {}, {})
+        case _:
+            return ReplacementResult(internal.EnvProxy(), {}, {})
 
 
 def _replace_internal_stored_proxy(
-    proxy_spec: str,
+    proxy_name: str,
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     usage_hint: str,
 ) -> ReplacementResult[internal.EnvProxy | internal.URLProxy]:
     try:
-        global_proxy = global_proxies_with_lookup.global_proxies[proxy_spec]
+        global_proxy = global_proxies_with_lookup.global_proxies[proxy_name]
     except KeyError:
-        config_warnings.warn(f'The global proxy "{proxy_spec}" ({usage_hint}) does not exist.')
+        config_warnings.warn(f'The global proxy "{proxy_name}" ({usage_hint}) does not exist.')
         return ReplacementResult(internal.EnvProxy(), {}, {})
+
+    if global_proxy.auth is not None:
+        _replaced_password = _replace_password(
+            name=global_proxy.auth.password[2][0],
+            value=None
+            if global_proxy.auth.password[1] == "stored_password"
+            else global_proxy.auth.password[2][1],
+            is_internal=True,
+        )
+
+        return ReplacementResult(
+            internal.URLProxy(
+                scheme=global_proxy.scheme,
+                proxy_server_name=global_proxy.proxy_server_name,
+                port=global_proxy.port,
+                auth=internal.URLProxyAuth(
+                    user=global_proxy.auth.user,
+                    password=_replaced_password.value,
+                ),
+            ),
+            _replaced_password.found_secrets,
+            _replaced_password.surrogates,
+        )
 
     return ReplacementResult(
         internal.URLProxy(
-            url=global_proxy.url(global_proxies_with_lookup.password_lookup, usage_hint)
+            scheme=global_proxy.scheme,
+            proxy_server_name=global_proxy.proxy_server_name,
+            port=global_proxy.port,
+            auth=None,
         ),
         {},
         {},
@@ -273,6 +306,67 @@ def _replace_internal_stored_proxy(
 
 
 def _replace_internal_explicit_proxy(
-    proxy_spec: str,
+    proxy_spec: Mapping[str, object] | str,
 ) -> ReplacementResult[internal.EnvProxy | internal.URLProxy]:
-    return ReplacementResult(internal.URLProxy(url=proxy_spec), {}, {})
+    match proxy_spec:
+        case str():
+            parsed_url = urlparse(proxy_spec)
+            if parsed_url.hostname is None or parsed_url.port is None:
+                return ReplacementResult(internal.EnvProxy(), {}, {})
+
+            if parsed_url.username is not None and parsed_url.password is not None:
+                config_warnings.warn(
+                    "Explicit proxy URLs with embedded authentication are not supported."
+                )
+
+            return ReplacementResult(
+                internal.URLProxy(
+                    parsed_url.scheme,
+                    parsed_url.hostname,
+                    parsed_url.port,
+                    auth=None,
+                ),
+                {},
+                {},
+            )
+
+        case {
+            "scheme": str() as scheme,
+            "proxy_server_name": str() as name,
+            "port": int() as port,
+            "auth": {
+                "user": str() as user,
+                "password": (
+                    "cmk_postprocessed",
+                    "stored_password" | "explicit_password" as password_type,
+                    (str(part1), str(part2)),
+                ),
+            },
+        }:
+            _replaced_password = _replace_password(
+                name=part1,
+                value=None if password_type == "stored_password" else part2,
+                is_internal=True,
+            )
+
+            return ReplacementResult(
+                internal.URLProxy(
+                    scheme=scheme,
+                    proxy_server_name=name,
+                    port=port,
+                    auth=internal.URLProxyAuth(
+                        user=user,
+                        password=_replaced_password.value,
+                    ),
+                ),
+                _replaced_password.found_secrets,
+                _replaced_password.surrogates,
+            )
+
+        case {"scheme": str() as scheme, "proxy_server_name": str() as name, "port": int() as port}:
+            return ReplacementResult(
+                internal.URLProxy(scheme=scheme, proxy_server_name=name, port=port), {}, {}
+            )
+
+        case _:
+            raise ValueError(f"Unknown explicit proxy specification: {proxy_spec}")

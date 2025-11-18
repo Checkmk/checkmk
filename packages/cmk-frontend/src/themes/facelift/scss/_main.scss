@@ -60,7 +60,7 @@ textarea {
 /* consistent dropdown field styling for all browsers */
 select:not([multiple]) {
   padding-right: 2.5em;
-  background-image: url('images/select_arrow.png');
+  background-image: url('../facelift/images/select_arrow.png');
   background-position: right 50%;
   background-repeat: no-repeat;
   background-size: 20px 11px;
@@ -69,8 +69,8 @@ select:not([multiple]) {
 }
 
 div.popup_menu select:not([multiple]) {
-  background: $popup-menu-select-bg-color url('images/select_arrow.png') right 10% / 20px 11px
-    no-repeat;
+  background: $popup-menu-select-bg-color url('../facelift/images/select_arrow.png') right 10% /
+    20px 11px no-repeat;
 }
 
 select::-ms-expand {
@@ -523,11 +523,11 @@ div.error {
 }
 
 .success.flashed {
-  @include flashed-mixin($success, url('images/icon_checkmark.svg'));
+  @include flashed-mixin($success, url('../facelift/images/icon_checkmark.svg'));
 }
 
 .warning.flashed {
-  @include flashed-mixin($yellow, url('images/icon_problem.svg'));
+  @include flashed-mixin($yellow, url('../facelift/images/icon_problem.svg'));
 }
 
 .waiting.flashed {

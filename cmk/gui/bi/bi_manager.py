@@ -24,7 +24,11 @@ from cmk.gui.i18n import _
 
 class BIManager:
     def __init__(self) -> None:
-        sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
+        sites_callback = SitesCallback(
+            all_sites_with_id_and_online=all_sites_with_id_and_online,
+            query=bi_livestatus_query,
+            translate=_,
+        )
         self.compiler = BICompiler(self.bi_configuration_file(), sites_callback)
         self.compiler.load_compiled_aggregations()
         self.status_fetcher = BIStatusFetcher(sites_callback)

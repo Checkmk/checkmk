@@ -7,7 +7,7 @@
 # By default the 'reference image' will be used to create the container, but this
 # behavior can be customized using either @IMAGE_ALIAS or @IMAGE_ID as follows:
 #   run-in-docker.sh <CMD>                                     will use reference image
-#   IMAGE_ALIAS=IMAGE_SLES_15sp6 run-in-docker.sh <CMD>        will use dereferenced image alias IMAGE_SLES_15sp6
+#   IMAGE_ALIAS=IMAGE_SLES_15sp7 run-in-docker.sh <CMD>        will use dereferenced image alias IMAGE_SLES_15sp7
 #   IMAGE_ID=ubuntu-22.04:master-latest run-in-docker.sh <CMD>  will use provided image id directly
 # Also DOCKER_RUN_ADDOPTS can be set to add additional arguments to be passed to `docker run`
 #

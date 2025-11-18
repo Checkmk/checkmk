@@ -4,15 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterable, Sequence
 from re import Pattern
+from typing import Any
 
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.utils.regex import combine_patterns, regex
+from cmk.ccc.regex import combine_patterns, regex
 from cmk.utils.tags import TagID
 
 # Conveniance macros for legacy tuple based host and service rules
@@ -28,7 +28,18 @@ NEGATE = "@negate"  # negation in boolean lists
 # - What's about compilation of the regexes?
 
 
-def get_rule_options(entry):
+def get_rule_options(
+    entry: (
+        tuple[str, Sequence[TagID], Sequence[str], Sequence[str], dict[str, Any]]
+        | tuple[str, Sequence[TagID], Sequence[str], Sequence[str]]
+        | tuple[str, Sequence[str], Sequence[str], dict[str, Any]]
+        | tuple[str, Sequence[str], Sequence[str]]
+    ),
+) -> tuple[
+    tuple[str, Sequence[TagID], Sequence[str], Sequence[str]]
+    | tuple[str, Sequence[str], Sequence[str]],
+    dict[str, Any],
+]:
     """Get the options from a rule.
 
     Pick out the option element of a rule. Currently the options "disabled"
@@ -39,7 +50,7 @@ def get_rule_options(entry):
     return entry, {}
 
 
-def in_extraconf_hostlist(hostlist, hostname):
+def in_extraconf_hostlist(hostlist: Sequence[str], hostname: str | bool) -> bool:
     """Whether or not the given host matches the hostlist.
 
     Entries in list are hostnames that must equal the hostname.
@@ -90,7 +101,7 @@ def in_extraconf_hostlist(hostlist, hostname):
             if not use_regex and hostname == hostentry:
                 return not negate
             # Handle Regex. Note: hostname == True -> generic unknown host
-            if use_regex and hostname is not True:
+            if use_regex and isinstance(hostname, str):
                 if regex(hostentry).match(hostname) is not None:
                     return not negate
         except MKGeneralException:
@@ -116,17 +127,17 @@ def hosttags_match_taglist(hosttags: Sequence[TagID], required_tags: Iterable[Ta
     for those negated with '!'. Those the host must *not* have!
     A trailing + means a prefix match."""
     for tag in required_tags:
-        negate, tag = _parse_negated(tag)
-        if tag and tag[-1] == "+":
-            tag = TagID(tag[:-1])
+        negate, tag_str = _parse_negated(tag)
+        if tag_str and tag_str[-1] == "+":
+            tag_prefix = TagID(tag_str[:-1])
             matches = False
             for t in hosttags:
-                if t.startswith(tag):
+                if t.startswith(tag_prefix):
                     matches = True
                     break
 
         else:
-            matches = tag in hosttags
+            matches = TagID(tag_str) in hosttags
 
         if matches == negate:
             return False
@@ -155,7 +166,7 @@ def convert_pattern_list(patterns: list[str]) -> Pattern[str] | None:
     return regex(combine_patterns(pattern_parts))
 
 
-def _parse_negated(pattern):
+def _parse_negated(pattern: str) -> tuple[bool, str]:
     # Allow negation of pattern with prefix '!'
     try:
         negate = pattern[0] == "!"

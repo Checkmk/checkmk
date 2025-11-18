@@ -5,8 +5,6 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
-
 import type { GraphTimerange } from '@/dashboard-wip/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRange } from '@/dashboard-wip/components/TimeRange/useTimeRange'
 import {
@@ -30,8 +28,6 @@ import {
   useGraphRenderOptions
 } from '../../../../../components/GraphRenderOptions/useGraphRenderOptions.ts'
 
-const { _t } = usei18n()
-
 export interface UseCombinedGraph
   extends UseWidgetHandler,
     UseGraphRenderOptions,
@@ -50,7 +46,9 @@ export const useCombinedGraph = async (
 ): Promise<UseCombinedGraph> => {
   const currentContent = currentSpec?.content as CombinedGraphContent
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
+  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
+    currentContent?.timerange ?? null
+  )
 
   const {
     title,

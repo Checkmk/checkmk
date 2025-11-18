@@ -50,7 +50,9 @@ export const useCustomGraph = async (
   const customGraph = ref<string | null>(currentContent?.custom_graph || null)
   const customGraphValidationErrors = ref<string[]>([])
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
+  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
+    currentContent?.timerange ?? null
+  )
 
   const {
     title,

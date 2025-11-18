@@ -34,7 +34,10 @@ def main(args: list[str]) -> int:
     log.setup_console_logging()
     log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
 
-    main_modules.load_plugins()
+    if errors := main_modules.get_failed_plugins():
+        log.logger.error("The following errors occurred during plug-in loading: %r", errors)
+        return 1
+
     with gui_context(), SuperUserContext():
         init_wato_datastructures()
     return 0

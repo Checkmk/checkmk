@@ -10,8 +10,8 @@ from typing import override
 
 from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 from cmk.bi.type_defs import HostChoice, HostConditions, HostRegexMatches, HostServiceConditions
+from cmk.ccc.regex import regex
 from cmk.utils.labels import LabelGroups
-from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition, TagCondition
 from cmk.utils.tags import TagGroupID
 
@@ -57,7 +57,10 @@ class BISearcher(ABCBISearcher):
         matched_hosts = self.filter_host_folder(hosts, conditions["host_folder"])
         matched_hosts = self.filter_host_tags(matched_hosts, conditions["host_tags"])
         matched_hosts = self.filter_host_labels(matched_hosts, conditions["host_label_groups"])
-        return [BIHostSearchMatch(x, matched_re_groups[x.name]) for x in matched_hosts]
+        return [
+            BIHostSearchMatch(host=matched_host, match_groups=matched_re_groups[matched_host.name])
+            for matched_host in matched_hosts
+        ]
 
     @override
     def filter_host_choice(
@@ -91,7 +94,7 @@ class BISearcher(ABCBISearcher):
         if pattern == "(.*)":
             return hosts, self._get_host_match_groups_by_name(hosts)
 
-        is_regex_match = any(map(lambda x: x in pattern, ["(", ")", "*", "$", "|", "[", "]"]))
+        is_regex_match = any(map(lambda char: char in pattern, ["(", ")", "*", "$", "|", "[", "]"]))
         if not is_regex_match:
             host = self.hosts.get(pattern)
             if host:
@@ -161,7 +164,11 @@ class BISearcher(ABCBISearcher):
             for service_description in host_match.host.services.keys():
                 if match := regex_pattern.match(service_description):
                     matched_services.append(
-                        BIServiceSearchMatch(host_match, service_description, tuple(match.groups()))
+                        BIServiceSearchMatch(
+                            host_match=host_match,
+                            service_description=service_description,
+                            match_groups=tuple(match.groups()),
+                        )
                     )
         return matched_services
 
@@ -186,7 +193,7 @@ class BISearcher(ABCBISearcher):
             return hosts
 
         folder_path = f"{folder_path}/"
-        return (x for x in hosts if x.folder.startswith(folder_path))
+        return (host for host in hosts if host.folder.startswith(folder_path))
 
     @override
     def filter_host_tags(
@@ -213,7 +220,11 @@ class BISearcher(ABCBISearcher):
     ) -> Iterable[BIHostData]:
         if not required_label_groups:
             return hosts
-        return (x for x in hosts if matches_labels(x.labels, required_label_groups))
+        return (
+            matched_label
+            for matched_label in hosts
+            if matches_labels(matched_label.labels, required_label_groups)
+        )
 
     def filter_service_labels(
         self, services: list[BIServiceSearchMatch], required_label_groups: LabelGroups

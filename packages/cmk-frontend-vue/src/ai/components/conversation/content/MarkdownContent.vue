@@ -6,25 +6,36 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { marked } from 'marked'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import type {
   MarkdownConversationElementContent,
   TBaseConversationElementEmits
 } from '@/ai/lib/service/ai-template'
+import { typewriter } from '@/ai/lib/utils'
 
 const props = defineProps<MarkdownConversationElementContent>()
-
+const parsedMarkdown = ref<string>()
+const typedText = ref<string>('')
 const emit = defineEmits<TBaseConversationElementEmits>()
 
-onMounted(() => {
-  emit('done')
+onMounted(async () => {
+  parsedMarkdown.value = await marked.parse(props.content)
+
+  if (props.noAnimation) {
+    typedText.value = parsedMarkdown.value
+    emit('done')
+  } else {
+    typewriter(typedText, parsedMarkdown.value, () => {
+      emit('done')
+    })
+  }
 })
 </script>
 
 <template>
   <!-- eslint-disable-next-line vue/no-v-html -->
-  <div class="ai-markdown-content" v-html="marked.parse(props.content)"></div>
+  <div class="ai-markdown-content" v-html="typedText"></div>
 </template>
 
 <style scoped>

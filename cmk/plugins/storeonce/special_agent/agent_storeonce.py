@@ -5,33 +5,20 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="union-attr"
 
-import getopt
+import argparse
 import re
 import sys
 import xml.etree.ElementTree as ET
+from collections.abc import Sequence
 
 import requests
 import urllib3
 
-from cmk.utils.password_store import replace_passwords
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 
-
-def usage():
-    sys.stderr.write(
-        """Check_MK StoreOnce
-
-USAGE: agent_storeonce [OPTIONS] HOST
-
-OPTIONS:
-  -h, --help                    Show this help message and exit
-  --address                     Host address
-  --user                        Username
-  --password                    Password
-  --no-cert-check               Disable certificate check
-"""
-    )
-    sys.exit(1)
+PASSWORD_OPTION = "password"
 
 
 #   .--defines-------------------------------------------------------------.
@@ -4541,12 +4528,10 @@ stores_xml = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http:/
 # .
 
 
-def query(url, args_dict, opt_cert):
+def query(url: str, username: str, password: Secret[str], *, opt_cert: bool) -> ET.Element:
     if not opt_cert:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    response = requests.get(
-        url, auth=(args_dict["username"], args_dict["password"]), verify=opt_cert, timeout=900
-    )
+    response = requests.get(url, auth=(username, password.reveal()), verify=opt_cert, timeout=900)
     raw_xml = response.text
     # Remove namespace nonsense
     raw_xml = re.sub(' xmlns="[^"]+"', "", raw_xml, count=1)
@@ -4554,9 +4539,13 @@ def query(url, args_dict, opt_cert):
     return xml_instance
 
 
-def process_cluster_info(args_dict, opt_demo, opt_cert):
+def process_cluster_info(
+    host: str, username: str, password: Secret[str], *, opt_demo: bool, opt_cert: bool
+) -> list[str]:
     output_lines = ["<<<storeonce_clusterinfo:sep(9)>>>"]
-    xml_instance = query_cluster_info(args_dict, opt_demo, opt_cert)
+    xml_instance = query_cluster_info(
+        host, username, password, opt_demo=opt_demo, opt_cert=opt_cert
+    )
     tbody = xml_instance.find("body").find("div").find("table").find("tbody")
     for child in tbody:
         name = child[0].text
@@ -4565,24 +4554,28 @@ def process_cluster_info(args_dict, opt_demo, opt_cert):
     return output_lines
 
 
-def query_cluster_info(args_dict, opt_demo, opt_cert):
+def query_cluster_info(
+    host: str, username: str, password: Secret[str], *, opt_demo: bool, opt_cert: bool
+) -> ET.Element:
     if opt_demo:
         raw_xml = re.sub(' xmlns="[^"]+"', "", cluster_xml, count=1)
         return ET.fromstring(raw_xml)
-    url = "https://%(address)s/storeonceservices/cluster/" % args_dict
-    return query(url, args_dict, opt_cert)
+    url = f"https://{host}/storeonceservices/cluster/"
+    return query(url, username, password, opt_cert=opt_cert)
 
 
-serviceset_ids = set()
+serviceset_ids = set[str]()
 
 
-def process_servicesets(args_dict, opt_demo, opt_cert):
+def process_servicesets(
+    host: str, username: str, password: Secret[str], *, opt_demo: bool, opt_cert: bool
+) -> list[str]:
     output_lines = ["<<<storeonce_servicesets:sep(9)>>>"]
-    xml_instance = query_servicesets(args_dict, opt_demo, opt_cert)
+    xml_instance = query_servicesets(host, username, password, opt_demo=opt_demo, opt_cert=opt_cert)
     servicesets = xml_instance.find("body").find("div")
     for element in servicesets:
         tbody = element.find("table").find("tbody")
-        serviceset_id = tbody[0][1].text
+        serviceset_id = str(tbody[0][1].text)  # type: ignore[index]
         serviceset_ids.add(serviceset_id)
         output_lines.append("[%s]" % serviceset_id)
         for child in tbody:
@@ -4592,22 +4585,28 @@ def process_servicesets(args_dict, opt_demo, opt_cert):
     return output_lines
 
 
-def query_servicesets(args_dict, opt_demo, opt_cert):
+def query_servicesets(
+    host: str, username: str, password: Secret[str], *, opt_demo: bool, opt_cert: bool
+) -> ET.Element:
     if opt_demo:
         raw_xml = re.sub(' xmlns="[^"]+"', "", servicesets_xml, count=1)
         return ET.fromstring(raw_xml)
-    url = "https://%(address)s/storeonceservices/cluster/servicesets/" % args_dict
-    return query(url, args_dict, opt_cert)
+    url = f"https://{host}/storeonceservices/cluster/servicesets/"
+    return query(url, username, password, opt_cert=opt_cert)
 
 
-def process_stores_info(args_dict, opt_demo, opt_cert):
+def process_stores_info(
+    host: str, username: str, password: Secret[str], *, opt_demo: bool, opt_cert: bool
+) -> list[str]:
     output_lines = ["<<<storeonce_stores:sep(9)>>>"]
     for serviceset_id in serviceset_ids:
-        xml_instance = query_stores_info(serviceset_id, args_dict, opt_demo, opt_cert)
+        xml_instance = query_stores_info(
+            serviceset_id, host, username, password, opt_demo=opt_demo, opt_cert=opt_cert
+        )
         stores = xml_instance.find("body").find("div")
         for element in stores:
             tbody = element.find("table").find("tbody")
-            store_id = tbody[0][1].text
+            store_id = tbody[0][1].text  # type: ignore[index]
             output_lines.append(f"[{serviceset_id}/{store_id}]")
             for child in tbody:
                 name = child[0].text
@@ -4616,62 +4615,70 @@ def process_stores_info(args_dict, opt_demo, opt_cert):
     return output_lines
 
 
-def query_stores_info(serviceset_id, args_dict, opt_demo, opt_cert):
+def query_stores_info(
+    serviceset_id: str,
+    host: str,
+    username: str,
+    password: Secret[str],
+    *,
+    opt_demo: bool,
+    opt_cert: bool,
+) -> ET.Element:
     if opt_demo:
         raw_xml = re.sub(' xmlns="[^"]+"', "", stores_xml, count=1)
         return ET.fromstring(raw_xml)
     url = (
-        "https://%(address)s/storeonceservices/cluster/servicesets/" % args_dict
-        + "%s/services/cat/stores/" % serviceset_id
+        f"https://{host}/storeonceservices/cluster/servicesets/{serviceset_id}/services/cat/stores/"
     )
-    return query(url, args_dict, opt_cert)
+
+    return query(url, username, password, opt_cert=opt_cert)
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        replace_passwords()
-        sys_argv = sys.argv[1:]
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("--demo", action="store_true", help="Enable demo mode")
+    parser.add_argument(
+        "--no-cert-check", action="store_true", help="Disable SSL certificate verification"
+    )
+    parser.add_argument("--username", required=True, help="""Username for Observer Role""")
+    parser_add_secret_option(
+        parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password for Observer Role"
+    )
+    parser.add_argument("host", metavar="HOST", help="""APPLIANCE-ADDRESS of HP StoreOnce""")
+    return parser.parse_args(argv)
 
-    short_options = "h"
-    long_options = ["help", "username=", "password=", "address=", "demo", "no-cert-check"]
 
-    try:
-        opts, _args = getopt.getopt(sys_argv, short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        return 1
-
+def main() -> int:
+    args = parse_arguments(sys.argv[1:])
     output_lines = []
-    opt_demo = False
-    opt_cert = True
-    args_dict = {}
 
-    for o, a in opts:
-        if o in ["--address"]:
-            args_dict["address"] = a
-        elif o in ["--username"]:
-            args_dict["username"] = a
-        elif o in ["--password"]:
-            args_dict["password"] = a
-        elif o in ["--demo"]:
-            opt_demo = True
-        elif o in ["--no-cert-check"]:
-            opt_cert = False
-        elif o in ["-h", "--help"]:
-            usage()
-
+    password = resolve_secret_option(args, PASSWORD_OPTION)
     try:
         # Get cluster info
-        output_lines.extend(process_cluster_info(args_dict, opt_demo, opt_cert))
+        output_lines.extend(
+            process_cluster_info(
+                args.host, args.username, password, opt_demo=args.demo, opt_cert=args.no_cert_check
+            )
+        )
 
         # Get servicesets
-        output_lines.extend(process_servicesets(args_dict, opt_demo, opt_cert))
+        output_lines.extend(
+            process_servicesets(
+                args.host, args.username, password, opt_demo=args.demo, opt_cert=args.no_cert_check
+            )
+        )
 
         # Get stores info
-        output_lines.extend(process_stores_info(args_dict, opt_demo, opt_cert))
+        output_lines.extend(
+            process_stores_info(
+                args.host, args.username, password, opt_demo=args.demo, opt_cert=args.no_cert_check
+            )
+        )
 
         sys.stdout.write("\n".join(output_lines) + "\n")
     except Exception as e:
         sys.stderr.write("Connection error: %s" % e)
         return 1
-    return None
+    return 0

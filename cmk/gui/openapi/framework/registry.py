@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -138,7 +137,7 @@ class EndpointDefinition:
 class VersionedEndpointRegistry:
     """Registry for versioned REST API endpoints"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._versions: dict[APIVersion, dict[EndpointKey, EndpointDefinition]] = dict()
 
     @staticmethod

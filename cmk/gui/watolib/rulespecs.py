@@ -20,7 +20,7 @@ from typing import Any, cast, Literal, NamedTuple
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import Edition, edition, mark_edition_only
+from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.unstable import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
@@ -351,7 +351,6 @@ class Rulespec(abc.ABC):
         is_optional: bool,
         is_deprecated: bool,
         deprecation_planned: bool,
-        is_ultimate_and_ultimatemt_only: bool,
         is_for_services: bool,
         is_binary_ruleset: bool,  # unused
         factory_default: Any,
@@ -395,7 +394,6 @@ class Rulespec(abc.ABC):
         self._is_optional = is_optional
         self._is_deprecated = is_deprecated
         self._deprecation_planned = deprecation_planned
-        self._is_ultimate_and_ultimatemt_only = is_ultimate_and_ultimatemt_only
         self._is_binary_ruleset = is_binary_ruleset
         self._is_for_services = is_for_services
         self._factory_default = factory_default
@@ -462,8 +460,6 @@ class Rulespec(abc.ABC):
             return None
         if self._is_deprecated:
             return "{}: {}".format(_("Deprecated"), plain_title)
-        if self._is_ultimate_and_ultimatemt_only:
-            return mark_edition_only(plain_title, [Edition.ULTIMATEMT, Edition.ULTIMATE])
         return plain_title
 
     @property
@@ -562,10 +558,6 @@ class Rulespec(abc.ABC):
         return self._deprecation_planned
 
     @property
-    def is_ultimate_and_ultimatemt_only(self) -> bool:
-        return self._is_ultimate_and_ultimatemt_only
-
-    @property
     def doc_references(self) -> dict[DocReference, str]:
         """Doc references of this rulespec and their titles"""
         return self._doc_references or {}
@@ -586,7 +578,6 @@ class HostRulespec(Rulespec):
         is_deprecated: bool = False,
         deprecation_planned: bool = False,
         is_binary_ruleset: bool = False,
-        is_ultimate_and_ultimatemt_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
         doc_references: dict[DocReference, str] | None = None,
@@ -601,7 +592,6 @@ class HostRulespec(Rulespec):
             is_optional=is_optional,
             is_deprecated=is_deprecated,
             deprecation_planned=deprecation_planned,
-            is_ultimate_and_ultimatemt_only=is_ultimate_and_ultimatemt_only,
             is_binary_ruleset=is_binary_ruleset,
             factory_default=factory_default,
             help_func=help_func,
@@ -635,7 +625,6 @@ class ServiceRulespec(Rulespec):
         is_optional: bool = False,
         is_deprecated: bool = False,
         deprecation_planned: bool = False,
-        is_ultimate_and_ultimatemt_only: bool = False,
         is_binary_ruleset: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
@@ -656,7 +645,6 @@ class ServiceRulespec(Rulespec):
             is_optional=is_optional,
             is_deprecated=is_deprecated,
             deprecation_planned=deprecation_planned,
-            is_ultimate_and_ultimatemt_only=is_ultimate_and_ultimatemt_only,
             factory_default=factory_default,
             help_func=help_func,
             doc_references=doc_references,
@@ -789,7 +777,6 @@ def _get_manual_check_parameter_rulespec_instance(
     item_spec: Callable[[], ValueSpec] | None = None,
     is_optional: bool = False,
     is_deprecated: bool = False,
-    is_ultimate_and_ultimatemt_only: bool = False,
     form_spec_definition: FormSpecDefinition | None = None,
 ) -> "ManualCheckParameterRulespec":
     # There may be no RulespecGroup declaration for the static checks.
@@ -815,7 +802,6 @@ def _get_manual_check_parameter_rulespec_instance(
         item_spec=item_spec,
         is_optional=is_optional,
         is_deprecated=is_deprecated,
-        is_ultimate_and_ultimatemt_only=is_ultimate_and_ultimatemt_only,
         form_spec_definition=form_spec_definition,
     )
 
@@ -859,7 +845,6 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         item_type: Literal["item", "service"] = "item",
         is_optional: bool = False,
         is_deprecated: bool = False,
-        is_ultimate_and_ultimatemt_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         create_manual_check: bool = True,
         form_spec_definition: FormSpecDefinition | None = None,
@@ -885,7 +870,6 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             item_spec=item_spec,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
-            is_ultimate_and_ultimatemt_only=is_ultimate_and_ultimatemt_only,
             # Excplicit set
             is_binary_ruleset=False,
             match_type=match_type or "first",
@@ -939,7 +923,6 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
         match_type: MatchType | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
-        is_ultimate_and_ultimatemt_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         create_manual_check: bool = True,
         form_spec_definition: FormSpecDefinition | None = None,
@@ -960,7 +943,6 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
             title=title,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
-            is_ultimate_and_ultimatemt_only=is_ultimate_and_ultimatemt_only,
             # Excplicit set
             name=name,
             is_binary_ruleset=False,
@@ -1034,7 +1016,6 @@ class ManualCheckParameterRulespec(HostRulespec):
         item_spec: Callable[[], ValueSpec] | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
-        is_ultimate_and_ultimatemt_only: bool = False,
         name: str | None = None,
         match_type: MatchType = "all",
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
@@ -1061,7 +1042,6 @@ class ManualCheckParameterRulespec(HostRulespec):
             is_optional=is_optional,
             is_deprecated=is_deprecated,
             factory_default=factory_default,
-            is_ultimate_and_ultimatemt_only=is_ultimate_and_ultimatemt_only,
             # Explicit set
             valuespec=self._rulespec_valuespec,
             form_spec_definition=None

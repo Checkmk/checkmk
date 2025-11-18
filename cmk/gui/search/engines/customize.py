@@ -5,7 +5,10 @@
 
 from collections.abc import Iterable
 
-from ..type_defs import UnifiedSearchResultItem
+from cmk.gui.utils.loading_transition import LoadingTransition
+
+from ..icon_mapping import get_icon_for_topic
+from ..type_defs import UnifiedSearchResultItem, UnifiedSearchResultTarget
 
 
 class CustomizeSearchEngine:
@@ -14,22 +17,41 @@ class CustomizeSearchEngine:
         # Customize menu. For simplicity, we'll just read from this hardcoded store, but will want
         # to migrate to a more robust cache when improving customize search capability.
         self._result_store = (
-            ("General", "Topics", "pagetype_topics.py"),
-            ("General", "Custom sidebar elements", "custom_snapins.py"),
-            ("General", "Bookmark lists", "bookmark_lists.py"),
-            ("Visualization", "Views", "edit_views.py"),
-            ("Visualization", "Dashboards", "edit_dashboards.py"),
-            ("Graphs", "Forecast graphs", "forecast_graphs.py"),
-            ("Graphs", "Custom graphs", "custom_graphs.py"),
-            ("Graphs", "Graph collections graphs", "graph_collections.py"),
-            ("Graphs", "Graph tunings", "graph_tunings.py"),
-            ("Business reporting", "Reports", "edit_reports.py"),
-            ("Business reporting", "Service Level Agreements", "sla_configurations.py"),
+            ("General", "Topics", "pagetype_topics.py", LoadingTransition.table),
+            ("General", "Custom sidebar elements", "custom_snapins.py", LoadingTransition.table),
+            ("General", "Bookmark lists", "bookmark_lists.py", LoadingTransition.table),
+            ("Visualization", "Views", "edit_views.py", LoadingTransition.dashboard),
+            ("Visualization", "Dashboards", "edit_dashboards.py", LoadingTransition.dashboard),
+            ("Graphs", "Forecast graphs", "forecast_graphs.py", LoadingTransition.dashboard),
+            ("Graphs", "Custom graphs", "custom_graphs.py", LoadingTransition.dashboard),
+            (
+                "Graphs",
+                "Graph collections graphs",
+                "graph_collections.py",
+                LoadingTransition.dashboard,
+            ),
+            ("Graphs", "Graph tunings", "graph_tunings.py", LoadingTransition.dashboard),
+            ("Business reporting", "Reports", "edit_reports.py", LoadingTransition.table),
+            (
+                "Business reporting",
+                "Service Level Agreements",
+                "sla_configurations.py",
+                LoadingTransition.table,
+            ),
         )
 
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
         return (
-            UnifiedSearchResultItem(provider="customize", title=title, topic=topic, url=url)
-            for topic, title, url in self._result_store
+            UnifiedSearchResultItem(
+                provider="customize",
+                title=title,
+                topic=topic,
+                target=UnifiedSearchResultTarget(
+                    url=url,
+                    transition=loading_transition,
+                ),
+                icon=get_icon_for_topic(topic, "customize"),
+            )
+            for topic, title, url, loading_transition in self._result_store
             if query.lower() in title.lower()
         )

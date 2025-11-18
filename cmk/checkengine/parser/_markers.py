@@ -9,9 +9,9 @@ from collections.abc import Sequence
 from typing import Final, NamedTuple
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.translations import translate, TranslationOptions
 from cmk.checkengine.plugins import SectionName
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.translations import translate_raw_host_name, TranslationOptions
 
 __all__ = ["PiggybackMarker", "SectionMarker"]
 
@@ -28,7 +28,7 @@ class PiggybackMarker(NamedTuple):
         encoding_fallback: str,
     ) -> "PiggybackMarker":
         # ? ensure_str called on a bytes object with different possible encodings
-        raw_host_name = translate_raw_host_name(
+        raw_host_name = translate(
             translation,
             ensure_str_with_fallback(
                 header,

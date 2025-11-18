@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
@@ -93,7 +92,7 @@ def global_var(name: RequestLocalVarName, default: Any | Unset = unset) -> Any:
 
 
 def session_attr(name: SessionVarName, type_class: type[T]) -> T:
-    def get_attr_or_item(obj, key):
+    def get_attr_or_item(obj: Any, key: str) -> Any:
         if hasattr(obj, key):
             return getattr(obj, key)
 

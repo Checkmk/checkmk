@@ -28,8 +28,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
             [
                 "-u",
                 "user",
-                "-p",
-                Secret(23).unsafe(),
+                "--password-id",
+                Secret(23),
                 "--port",
                 "443",
                 "--no-cert-check",
@@ -50,8 +50,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
             [
                 "-u",
                 "user",
-                "-p",
-                Secret(23).unsafe(),
+                "--password-id",
+                Secret(23),
                 "hurz",
             ],
             id="connect_ip_address",
@@ -65,8 +65,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
             [
                 "-u",
                 "user",
-                "-p",
-                Secret(23).unsafe(),
+                "--password-id",
+                Secret(23),
                 "testhost",
             ],
             id="connect_host_name",
@@ -80,8 +80,8 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
             [
                 "-u",
                 "user",
-                "-p",
-                Secret(23).unsafe(),
+                "--password-id",
+                Secret(23),
                 "custom-hostname",
             ],
             id="connect_custom",

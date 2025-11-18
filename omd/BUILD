@@ -2,7 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
@@ -122,9 +122,78 @@ pkg_files(
     prefix = "lib/omd/hooks",
 )
 
+pkg_files(
+    name = "agents",
+    srcs = ["//agents"],
+    prefix = "share/check_mk/agents",
+)
+
+pkg_files(
+    name = "agents_cfg_examples",
+    srcs = ["//agents/cfg_examples:srcs"],
+    prefix = "share/check_mk/agents/cfg_examples",
+)
+
+pkg_files(
+    name = "agents_plugins",
+    srcs = ["//agents/plugins:srcs"],
+    prefix = "share/check_mk/agents/plugins",
+)
+
+pkg_files(
+    name = "agents_sap",
+    srcs = ["//agents/sap:srcs"],
+    prefix = "share/check_mk/agents/sap",
+)
+
+pkg_tar(
+    name = "agents_windows",
+    srcs = [
+        "//agents/windows:cfg_examples",
+        "//agents/windows:mrpe",
+        "//agents/windows/plugins",
+    ],
+    package_dir = "share/check_mk",
+    strip_prefix = ".",
+)
+
+pkg_files(
+    name = "agents_scripts",
+    srcs = ["//agents:srcs"],
+    prefix = "share/check_mk/agents/scripts",
+)
+
+pkg_tar(
+    name = "agents_scripts_super_server",
+    srcs = ["//agents:super-server"],
+    package_dir = "share/check_mk",
+    strip_prefix = "scripts",
+)
+
+pkg_files(
+    name = "agents_z_os",
+    srcs = ["//agents/z_os:srcs"],
+    prefix = "share/check_mk/agents/z_os",
+)
+
+pkg_files(
+    name = "cmk_libexec",
+    srcs = ["//cmk:libexec"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "lib/python3/cmk",
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
+        ":agents",
+        ":agents_cfg_examples",
+        ":agents_plugins",
+        ":agents_sap",
+        ":agents_scripts",
+        ":agents_z_os",
+        ":cmk_libexec",
         ":diskspace_cleanup_plugin",
         ":omd_hooks",
         ":rest_api_spec",
@@ -200,6 +269,8 @@ pkg_files(
                "//packages/neb:neb_pkg",
                "//packages/cmk-shared-typing:pkg_tar",
                "//packages/unixcat:unixcat_tar",
+               ":agents_scripts_super_server",
+               ":agents_windows",
                ":license_info",
            ] + select({
                "@cmk//distro:almalinux": ["//omd/packages/xinetd"],
@@ -315,6 +386,7 @@ pkg_tar(
         "@cmk//distro:debian-13": "0.trixie",
         "@cmk//distro:sles-15sp5": "sles15sp5",
         "@cmk//distro:sles-15sp6": "sles15sp6",
+        "@cmk//distro:sles-15sp7": "sles15sp7",
         "@cmk//distro:ubuntu-22.04": "0.jammy",
         "@cmk//distro:ubuntu-24.04": "0.noble",
     }),

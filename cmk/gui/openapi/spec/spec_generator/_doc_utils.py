@@ -8,19 +8,16 @@
 # mypy: disable-error-code="type-arg"
 
 import enum
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Container, Mapping
 
 from apispec import APISpec
 from apispec.utils import dedent
 from werkzeug.utils import import_string
 
 from cmk.ccc.version import Edition
+from cmk.gui.fields.utils import get_multiple_edition_description
 from cmk.gui.openapi import endpoint_family_registry
-from cmk.gui.openapi.restful_objects.type_defs import (
-    EditionLabel,
-    OpenAPITag,
-    TagGroup,
-)
+from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag, TagGroup
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import permission_verification as permissions
 
@@ -46,34 +43,6 @@ class DefaultStatusCodeDescription(enum.Enum):
     Code204 = "Operation done successfully. No further output."
 
 
-def format_endpoint_supported_editions(editions: set[Edition]) -> Sequence[EditionLabel]:
-    colors: Mapping[Edition, str] = {
-        Edition.PRO: "#74ebdd",
-        Edition.COMMUNITY: "#afb9c2",
-        Edition.ULTIMATE: "#586aa2",
-        Edition.CLOUD: "#7e96f3",
-        Edition.ULTIMATEMT: "#70a8db",
-    }
-    ordered_editions = (
-        Edition.COMMUNITY,
-        Edition.PRO,
-        Edition.ULTIMATE,
-        Edition.ULTIMATEMT,
-        Edition.CLOUD,
-    )
-    edition_labels: list[EditionLabel] = []
-    for edition in ordered_editions:
-        if edition in editions:
-            edition_labels.append(
-                {
-                    "name": edition.short.upper(),
-                    "position": "after",
-                    "color": colors[edition],
-                }
-            )
-    return edition_labels
-
-
 def endpoint_title_and_description_from_docstring(
     endpoint_func: Callable, operation_id: str
 ) -> tuple[str, str | None]:
@@ -96,11 +65,12 @@ def endpoint_title_and_description_from_docstring(
 def build_spec_description(
     endpoint_description: str | None,
     werk_id: int | None,
+    editions: Container[Edition] | None,
     permissions_required: permissions.BasePerm | None,
     permissions_description: Mapping[str, str] | None,
 ) -> str:
     # The validator will complain on empty descriptions being set, even though it's valid.
-    spec_description = _build_description(endpoint_description, werk_id)
+    spec_description = _build_description(endpoint_description, werk_id, editions)
 
     if permissions_required is not None:
         # Check that all the names are known to the system.
@@ -120,7 +90,7 @@ def build_spec_description(
         if permissions_spec_description := _permission_descriptions(
             permissions_required, permissions_description
         ):
-            if not spec_description:
+            if spec_description:
                 spec_description += "\n\n"
             spec_description += permissions_spec_description
 
@@ -155,7 +125,11 @@ def _assign_to_tag_group(spec: APISpec, tag_group: TagGroup, name: str) -> None:
         raise ValueError(f"x-tagGroup {tag_group} not found. Please add it to specification.py")
 
 
-def _build_description(description_text: str | None, werk_id: int | None = None) -> str:
+def _build_description(
+    description_text: str | None,
+    werk_id: int | None = None,
+    editions: Container[Edition] | None = None,
+) -> str:
     r"""Build a OperationSpecType description.
 
     Examples:
@@ -166,11 +140,17 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
         >>> _build_description("Foo")
         'Foo'
 
+        >>> _build_description("Foo", editions={Edition.COMMUNITY, Edition.PRO})
+        'Available in the following editions: Community, Pro\n\nFoo'
+
         >>> _build_description(None, 12345)
-        '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\n'
+        '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.'
 
         >>> _build_description('Foo', 12345)
         '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\nFoo'
+
+        >>> _build_description('Foo', 12345, {Edition.COMMUNITY})
+        '`WARNING`: This URL is deprecated, see [Werk 12345](https://checkmk.com/werk/12345) for more details.\n\nAvailable in the following editions: Community\n\nFoo'
 
     Args:
         description_text:
@@ -178,6 +158,9 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
 
         werk_id:
             A Werk ID for a deprecation warning. This may be None.
+
+        editions:
+            The editions this endpoint is available in. This may be None.
 
     Returns:
         Either a complete description or None
@@ -192,10 +175,14 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
     else:
         description = ""
 
+    if editions is not None:
+        editions_description = get_multiple_edition_description(editions)
+        description += f"Available in the following editions: {editions_description}\n\n"
+
     if description_text is not None:
         description += description_text
 
-    return description
+    return description.strip()
 
 
 def _permission_descriptions(

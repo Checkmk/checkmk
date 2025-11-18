@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host status
 
-# mypy: disable-error-code="type-arg"
-
 The host status provides the host's "health" information.
 
 ### Related documentation
@@ -39,6 +37,8 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
+
+# mypy: disable-error-code="type-arg"
 
 import ast
 from collections.abc import Generator, Mapping, Sequence

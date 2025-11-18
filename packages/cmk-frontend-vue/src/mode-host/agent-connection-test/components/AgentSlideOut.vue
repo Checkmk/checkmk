@@ -16,8 +16,8 @@ import CmkIcon from '@/components/CmkIcon'
 import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkLinkCard from '@/components/CmkLinkCard'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
@@ -129,7 +129,7 @@ function getInitStep() {
     </template>
     <template #tab-contents>
       <CmkTabContent v-for="tab in tabs" :id="tab.id" :key="tab.id">
-        <ToggleButtonGroup
+        <CmkToggleButtonGroup
           v-if="tab.toggleButtonOptions"
           v-model="model"
           :options="tab.toggleButtonOptions"

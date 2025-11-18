@@ -40,22 +40,28 @@ pub enum Mode {
     /// The gathered connection information is written to standard output.
     ProxyRegister(RegisterOpts),
 
-    /// Push monitoring data to all Checkmk sites configured for 'push'
+    /// Push monitoring data to all Checkmk sites configured for push direction
     ///
     /// This command will collect monitoring data, send them to all
-    /// Checkmk site configured for 'push' and exit.
+    /// Checkmk site configured for push direction and exit.
+    /// Mainly intended for testing and debugging purposes -
+    ///  `push` mode normally runs as part of the `daemon` mode.
     Push(ClientOpts),
 
     /// Handle incoming connections from Checkmk sites collecting monitoring data
     ///
-    /// This command will listen for incoming connections
+    /// This command will listen for incoming connections.
+    /// Mainly intended for testing and debugging purposes -
+    ///  `pull` mode normally runs as part of the `daemon` mode.
+    /// Fails when a `daemon` mode is already active because the
+    /// configured TCP Port is already listening.
     Pull(PullOpts),
 
     /// Run as daemon and handle all pull and push connections
     ///
-    /// Listen for incoming connections (as the 'pull' command does),
-    /// and send data to all Checkmk sites configured for 'push'
-    /// (as the 'push' command does) once a minute.
+    /// Listen for incoming connections (as the `pull` mode does),
+    /// and send data to all Checkmk sites configured for push direction
+    /// (as the `push` mode does) once a minute.
     Daemon(DaemonOpts),
 
     /// Collect monitoring data and write it to standard output
@@ -73,13 +79,13 @@ pub enum Mode {
     /// Import a pull connection from file or standard input
     ///
     /// A connection is imported from the JSON-encoded connection information.
-    /// A compatible dataset can be created using the 'proxy-register' command.
+    /// A compatible dataset can be created using the `proxy-register` command.
     Import(ImportOpts),
 
     /// Renew the certificate for a connection to a Checkmk instance.
     ///
     /// Only possible for non-imported connections. To renew imported connections,
-    /// please proxy-register and import again.
+    /// please `proxy-register` and import again.
     RenewCertificate(RenewCertificateOpts),
 }
 
@@ -93,6 +99,10 @@ pub struct RegisterOpts {
     // We are consistent with agent updater, which uses "hostname", not "host-name".
     #[arg(long, short = 'H', long, value_parser = clap::value_parser!(String))]
     pub hostname: String,
+
+    /// Enable automatic updates for the Checkmk agent
+    #[arg(long = "automatic-updates")]
+    pub automatic_updates: bool,
 }
 
 #[derive(Parser)]
@@ -153,6 +163,10 @@ pub struct RegisterNewOpts {
     /// User-defined agent labels in the form KEY:VALUE. These labels supersede the automatic labels.
     #[arg(long = "agent-labels", name = "KEY:VALUE",  value_parser = parse_agent_labels, )]
     pub agent_labels_raw: Vec<(String, String)>,
+
+    /// Enable automatic updates for the Checkmk agent
+    #[arg(long = "automatic-updates")]
+    pub automatic_updates: bool,
 }
 
 //https://github.com/clap-rs/clap/blob/master/examples/tutorial_derive/04_02_validate.rs

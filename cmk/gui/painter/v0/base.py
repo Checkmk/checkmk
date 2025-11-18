@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -581,7 +580,7 @@ class Cell:
         self, row: Row, time_range: tuple[int, int], user: LoggedInUser
     ) -> PDFCellSpec:
         # TODO: Move this somewhere else!
-        def find_htdocs_image_path(filename):
+        def find_htdocs_image_path(filename: str) -> str | None:
             themes = theme.icon_themes()
             for file_path in [
                 cmk.utils.paths.local_web_dir / "htdocs" / filename,

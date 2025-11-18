@@ -51,6 +51,7 @@ def register(
         PageEndpoint("clear_failed_notifications", ClearFailedNotificationPage())
     )
     permission_section_registry.register(PERMISSION_SECTION_NOTIFICATION_PLUGINS)
+    declare_dynamic_permissions(declare_notification_plugin_permissions)
 
 
 class FailedNotificationTimes(NamedTuple):
@@ -72,11 +73,6 @@ PERMISSION_SECTION_NOTIFICATION_PLUGINS = PermissionSection(
     title=_("Notification plug-ins"),
     do_sort=True,
 )
-
-
-def load_plugins() -> None:
-    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
-    declare_dynamic_permissions(declare_notification_plugin_permissions)
 
 
 def _acknowledge_failed_notifications(timestamp: float, now: float) -> None:

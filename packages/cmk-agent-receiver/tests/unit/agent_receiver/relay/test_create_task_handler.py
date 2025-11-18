@@ -15,6 +15,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
+from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
 @pytest.mark.usefixtures("site_context")
@@ -28,7 +29,9 @@ def test_process_create_task(
     payload = FetchSpec(payload='{"url": "http://example.com/data"}', timeout=60)
 
     # Register a relay first
-    relay_id = relays_repository.add_relay(test_user, alias="test-relay")
+    relay_id = relays_repository.add_relay(
+        test_user, relay_id=random_relay_id(), alias="test-relay"
+    )
 
     # act
     task_id = create_task_handler.process(relay_id=relay_id, spec=payload)
@@ -44,12 +47,12 @@ def test_tasks_repository_ttl_validation() -> None:
     """Test that TasksRepository validates TTL is greater than 0."""
     # Test zero TTL raises ValueError
     with pytest.raises(ValueError, match="ttl_seconds must be greater than 0"):
-        TasksRepository(ttl_seconds=0.0, max_tasks_per_relay=5)
+        TasksRepository(ttl_seconds=0.0, max_pending_tasks_per_relay=5)
 
     # Test negative TTL raises ValueError
     with pytest.raises(ValueError, match="ttl_seconds must be greater than 0"):
-        TasksRepository(ttl_seconds=-1.0, max_tasks_per_relay=5)
+        TasksRepository(ttl_seconds=-1.0, max_pending_tasks_per_relay=5)
 
     # Test positive TTL works
-    repository = TasksRepository(ttl_seconds=120.0, max_tasks_per_relay=5)
+    repository = TasksRepository(ttl_seconds=120.0, max_pending_tasks_per_relay=5)
     assert repository.ttl_seconds == 120.0

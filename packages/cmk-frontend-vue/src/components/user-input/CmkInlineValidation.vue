@@ -25,6 +25,9 @@ const props = defineProps<{
 
 <style scoped>
 div.cmk-inline-validation {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   margin-top: var(--spacing);
   padding: 8px 12px;
   background-color: var(--error-msg-bg-color);

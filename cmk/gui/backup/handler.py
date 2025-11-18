@@ -538,6 +538,10 @@ class PageBackup:
         elif action == "stop":
             self._stop_job(job)
 
+        elif action == "refresh":
+            if not job.is_running():
+                flash("Backup completed")
+
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def _delete_job(self, job: Job) -> None:
@@ -553,13 +557,6 @@ class PageBackup:
 
     def _start_job(self, job: Job) -> None:
         job.start()
-        flash(
-            _(
-                "Backup process has started. You can safely navigate away from "
-                "this page as the process will continue in the background. "
-                "Refresh this page to check the current status."
-            )
-        )
 
     def _stop_job(self, job: Job) -> None:
         job.stop()
@@ -567,14 +564,45 @@ class PageBackup:
 
     def page(self, config: Config) -> None:
         show_key_download_warning(self.key_store.load())
-        self._show_job_list()
+        backup_jobs = sorted(BackupConfig.load().jobs.values(), key=lambda j: j.ident)
 
-    def _show_job_list(self) -> None:
+        # relying on restriction that only one backup job can run at a time
+        running_job = next((job for job in backup_jobs if job.is_running()), None)
+        if running_job is not None:
+            html.vue_component(
+                "cmk-dialog",
+                data={
+                    "title": _("Backup in progress. Refresh to see the final status."),
+                    "message": _(
+                        "You can leave this page. This backup continues in the background"
+                    ),
+                    "buttons": [
+                        {
+                            "title": _("Refresh status"),
+                            "variant": "info",
+                            "action": {
+                                "type": "redirect",
+                                "url": makeactionuri_contextless(
+                                    request,
+                                    transactions,
+                                    [
+                                        ("mode", "backup"),
+                                        ("_action", "refresh"),
+                                        ("_job", running_job.ident),
+                                    ],
+                                ),
+                            },
+                        }
+                    ],
+                },
+            )
+        self._show_job_list(backup_jobs)
+
+    def _show_job_list(self, backup_jobs: Sequence[Job]) -> None:
         html.h3(_("Jobs"))
+
         with table_element(sortable=False, searchable=False) as table:
-            for nr, job in enumerate(
-                sorted(BackupConfig.load().jobs.values(), key=lambda j: j.ident)
-            ):
+            for nr, job in enumerate(backup_jobs):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text_permissive(nr)

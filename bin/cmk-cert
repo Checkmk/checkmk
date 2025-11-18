@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.cmkcert import main
+from cmk.gui.cmkcert import main
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

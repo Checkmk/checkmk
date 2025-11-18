@@ -7,15 +7,70 @@ Common functions used in Prometheus related Special agents
 """
 
 from argparse import ArgumentParser, Namespace
+from collections.abc import Mapping
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Literal
+from urllib.parse import urljoin
 
+from requests import Response, Session
 from requests.auth import HTTPBasicAuth
 
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
-from cmk.special_agents.v0_unstable.request_helper import ApiSession
-from cmk.utils.password_store import lookup
+
+PASSWORD_OPTION = "password"
+TOKEN_OPTION = "token"
+
+
+class ApiSession:
+    """Class for issuing multiple API calls
+
+    ApiSession behaves similar to requests.Session with the exception that a
+    base URL is provided and persisted.
+    All requests use the base URL and append the provided url to it.
+    """
+
+    def __init__(
+        self,
+        base_url: str,
+        auth: HTTPBasicAuth | None = None,
+        tls_cert_verification: bool | HostnameValidationAdapter = True,
+        additional_headers: Mapping[str, str] | None = None,
+    ):
+        self._session = Session()
+        self._session.auth = auth
+        self._session.headers.update(additional_headers or {})
+        self._base_url = base_url
+
+        if isinstance(tls_cert_verification, HostnameValidationAdapter):
+            self._session.mount(self._base_url, tls_cert_verification)
+            self.verify = True
+        else:
+            self.verify = tls_cert_verification
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self._session.request(
+            method,
+            urljoin(self._base_url, url),
+            params=params,
+            verify=self.verify,
+        )
+
+    def get(
+        self,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self.request(
+            "get",
+            url,
+            params=params,
+        )
 
 
 def add_authentication_args(parser: ArgumentParser) -> None:
@@ -34,30 +89,22 @@ def add_authentication_args(parser: ArgumentParser) -> None:
         required=True,
         metavar="USERNAME",
     )
-    group_auth_token = parser_auth_login.add_mutually_exclusive_group(required=True)
-    group_auth_token.add_argument(
-        "--password",
-        metavar="PASSWORD",
-    )
-    group_auth_token.add_argument(
-        "--password-reference",
-        metavar="PASSWORD-REFERENCE",
-        help="Password store reference of the password for API authentication.",
+    parser_add_secret_option(
+        parser_auth_login,
+        long=f"--{PASSWORD_OPTION}",
+        required=True,
+        help="Password for API authentication.",
     )
 
     parser_auth_token = auth_method_subparsers.add_parser(
         "auth_token",
-        help="Authentication with otken",
+        help="Authentication with token",
     )
-    group_auth_token = parser_auth_token.add_mutually_exclusive_group(required=True)
-    group_auth_token.add_argument(
-        "--token",
-        metavar="TOKEN",
-    )
-    group_auth_token.add_argument(
-        "--token-reference",
-        metavar="TOKEN-REFERENCE",
-        help="Password store reference of the token for API authentication.",
+    parser_add_secret_option(
+        parser_auth_token,
+        long=f"--{TOKEN_OPTION}",
+        required=True,
+        help="Token for API authentication.",
     )
 
 
@@ -77,25 +124,12 @@ def authentication_from_args(args: Namespace) -> LoginAuth | TokenAuth | None:
         case "auth_login":
             return LoginAuth(
                 username=args.username,
-                password=(
-                    _lookup_from_password_store(args.password_reference)
-                    if args.password_reference
-                    else args.password
-                ),
+                password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
             )
         case "auth_token":
-            return TokenAuth(
-                _lookup_from_password_store(args.token_reference)
-                if args.token_reference
-                else args.token
-            )
+            return TokenAuth(resolve_secret_option(args, TOKEN_OPTION).reveal())
         case _:
             return None
-
-
-def _lookup_from_password_store(raw_reference: str) -> str:
-    pw_id, pw_file = raw_reference.split(":", 1)
-    return lookup(Path(pw_file), pw_id)
 
 
 def get_api_url(connection: str, protocol: Literal["http", "https"]) -> str:

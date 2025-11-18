@@ -28,7 +28,6 @@ marshmallow
 marshmallow-oneofschema
 meraki
 msal
-netapp-ontap
 numpy
 oauthlib
 openapi-spec-validator

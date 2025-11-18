@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, RootModel
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import AnnotatedUserId
+from cmk.utils import paths
 
 
 class InvalidToken(ValueError):
@@ -34,6 +35,8 @@ class DashboardToken(BaseModel):
     owner: AnnotatedUserId
     dashboard_name: str
     type_: Literal["dashboard"] = "dashboard"
+    comment: str = ""
+    disabled: bool = False
 
 
 TokenId = NewType("TokenId", str)
@@ -41,6 +44,7 @@ TokenId = NewType("TokenId", str)
 
 class AuthToken(BaseModel):
     issuer: AnnotatedUserId
+    issued_at: datetime
     valid_until: datetime
     details: DashboardToken = Field(discriminator="type_")
     token_id: TokenId
@@ -58,6 +62,9 @@ class _SerializedTokens(RootModel[dict[TokenId, AuthToken]]):
 
     def get(self, token_id: TokenId) -> AuthToken | None:
         return self.root.get(token_id)
+
+    def delete(self, token_id: TokenId) -> None:
+        del self.root[token_id]
 
 
 class TokenStore:
@@ -107,6 +114,10 @@ class TokenStore:
         with self.read_locked() as data:
             data.revoke(token_id)
 
+    def delete(self, token_id: TokenId) -> None:
+        with self.read_locked() as data:
+            data.delete(token_id)
+
     def issue(
         self,
         token_details: DashboardToken,
@@ -123,6 +134,7 @@ class TokenStore:
 
         token = AuthToken(
             issuer=issuer,
+            issued_at=now,
             valid_until=now + valid_for,
             details=token_details,
             token_id=TokenId(str(uuid.uuid4())),
@@ -131,3 +143,7 @@ class TokenStore:
         with self.read_locked() as data:
             data.add(token)
         return token
+
+
+def get_token_store() -> TokenStore:
+    return TokenStore(paths.var_dir / "token.store")

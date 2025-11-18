@@ -21,6 +21,7 @@ from pydantic import AfterValidator, model_validator, WithJsonSchema
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
+from cmk.ccc.translations import TranslationOptions
 from cmk.ccc.user import UserId
 from cmk.gui.fields.attributes import (
     AuthProtocolConverter,
@@ -47,7 +48,6 @@ from cmk.gui.watolib.host_attributes import (
     NetworkScanResult,
     NetworkScanSpec,
 )
-from cmk.utils.translations import TranslationOptionsSpec
 
 
 @api_model
@@ -148,7 +148,7 @@ class SNMPv3AuthPrivacyModel:
         description="Authentication pass phrase.",
     )
     privacy_protocol: PrivacyProtocolType = api_field(
-        description="The privacy protocol. The only supported values in the Raw Edition are CBC-DES and AES-128. If selected, privacy_password needs to be supplied as well."
+        description="The privacy protocol. The only supported values in the Community Edition are CBC-DES and AES-128. If selected, privacy_password needs to be supplied as well."
     )
     privacy_password: Annotated[str, MinLen(8)] = api_field(
         description="Privacy pass phrase. If filled, privacy_protocol needs to be selected as well.",
@@ -459,7 +459,7 @@ class TranslateNamesModel:
         return value
 
     @classmethod
-    def from_internal(cls, value: TranslationOptionsSpec) -> "TranslateNamesModel":
+    def from_internal(cls, value: TranslationOptions) -> "TranslateNamesModel":
         return cls(
             case=TranslateNamesModel.case_from_internal(value.get("case")),
             drop_domain=value["drop_domain"] if "drop_domain" in value else ApiOmitted(),
@@ -467,7 +467,7 @@ class TranslateNamesModel:
             mapping=[DirectMappingModel.from_internal(entry) for entry in value["mapping"]],
         )
 
-    def to_internal(self) -> TranslationOptionsSpec:
+    def to_internal(self) -> TranslationOptions:
         if not isinstance(self.regex, ApiOmitted):
             regex = [entry.to_internal() for entry in self.regex]
         else:
@@ -476,7 +476,7 @@ class TranslateNamesModel:
             mapping = [entry.to_internal() for entry in self.mapping]
         else:
             mapping = []
-        spec = TranslationOptionsSpec(
+        spec = TranslationOptions(
             case=TranslateNamesModel.case_to_internal(self.case),
             regex=regex,
             mapping=mapping,

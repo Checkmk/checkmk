@@ -129,8 +129,61 @@ def _allow(
 
 
 _CLEAN_PLUGIN_FAMILIES = {
+    "acme",
+    "activemq",
+    "alertmanager",
+    "allnet_ip_sensoric",
+    "appdynamics",
+    # "aws",  # :cmk.ccc.store
+    "azure_status",
+    "azure",
+    # "azure_v2",  # :DataCache, Edition, HostAddress
+    # "bazel",  # :DataCache
+    "cisco_meraki",
+    "cisco",
+    "couchbase",
+    # "datadog", This cannot be fixed easily. It bypasses APIs to talk to the EC
+    "ddn_s2a",
+    "elasticsearch",
+    "fritzbox",
+    # "gcp",  # : Edition
+    # "gerrit",  # :DataCache
+    "graylog",
+    "hivemanager_ng",
+    "hivemanager",
+    "hp_msa",
+    "hpe_par",
+    "ibmsvc",
+    "innovaphone",
+    "ipmi",
+    "jenkins",
+    "jira",
+    # "jolokia",  # : import hack. resolve by migrating the bakery plugin
+    # "kube",  # :HostAddress, Edition, cmk.gui.form_specs.unstable.ListExtended, omd_root,
+    # "metric_backend",  # :cmk.metric_backend, cmk.utils.paths
+    "mobileiron",
+    "mqtt",
     "netapp",
+    # "otel", # :
+    "prism",
+    # "prometheus",  # :HostAddress
+    "proxmox_ve",
+    "pure_storage_fa",
+    "rabbitmq",
+    "random",
     "redfish",
+    "ruckus_spot",
+    "salesforce",
+    "siemens_plc",
+    # "smb",  # :cmk.ccc.hostaddress.HostAddress
+    "splunk",
+    "storeonce4x",
+    "storeonce",
+    "tinkerforge",
+    "ucs_bladecenter",
+    # "vnx_quotas", TODO. make the authorized keys configurable?
+    "vsphere",
+    "zerto",
 }
 
 
@@ -159,10 +212,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
-    "bazel": (
-        "cmk.utils.semantic_version",
-        "cmk.utils.paths",
-    ),
+    "bazel": ("cmk.utils.paths",),
     "checkmk": (
         "cmk.agent_based.v1",  # FIXME
         # These plugins are tightly coupled to Checkmk.
@@ -203,10 +253,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.paths",  # edition detection
         "cmk.plugins.lib",  # diskstat + X
     ),
-    "gerrit": (
-        "cmk.utils.semantic_version",
-        "cmk.utils.paths",
-    ),
+    "gerrit": ("cmk.utils.paths",),
     "jolokia": ("cmk.utils.paths",),
     "kube": (
         "cmk.ccc.hostaddress",
@@ -230,9 +277,13 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.plugins.lib",
         "cmk.utils.paths",
     ),
+    "metric_backend": (
+        "cmk.metric_backend",
+        "cmk.utils.paths",
+    ),
     "mobileiron": (
+        "cmk.ccc.regex",
         "cmk.utils.http_proxy_config",
-        "cmk.utils.regex",
     ),
     "mqtt": ("cmk.ccc.hostaddress",),
     "prometheus": (
@@ -278,6 +329,7 @@ PACKAGE_PLUGIN_APIS = (
     "cmk.inventory_ui.v1_unstable",
     "cmk.password_store.v1_unstable",
     "cmk.rulesets.v1",
+    "cmk.rulesets.internal",
     "cmk.server_side_calls.internal",
     "cmk.server_side_calls.v1",
     "cmk.server_side_programs.v1_unstable",
@@ -523,11 +575,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.metrics",
         "cmk.utils.parameters",
         "cmk.utils.paths",
-        "cmk.utils.regex",
         "cmk.utils.rulesets",
         "cmk.utils.servicename",
         "cmk.utils.timeperiod",
-        "cmk.utils.translations",
     ),
     Component("cmk.fetcher_helper"): _allow(
         *PACKAGE_CCC,
@@ -537,7 +587,14 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.caching",
         "cmk.utils.paths",
     ),
-    Component("cmk.cmkcert"): _allow(
+    Component("cmk.gui.cmkcert"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MESSAGING,
+        "cmk.gui",
+        "cmk.utils",
+        "cmk.crypto.certificate",
+    ),
+    Component("cmk.message_broker_certs"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MESSAGING,
         "cmk.utils",
@@ -562,6 +619,13 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.snmplib",
     ),
     Component("cmk.fields"): _allow(*PACKAGE_CCC),
+    Component("cmk.gui.main_modules"): _allow(
+        *PACKAGE_CCC,
+        "cmk.utils.paths",
+        "cmk.gui.utils",
+        "cmk.gui.nonfree",
+        "cmk.gui.community_registration",
+    ),
     Component("cmk.gui.plugins"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
@@ -603,6 +667,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui",
         "cmk.shared_typing",
         "cmk.livestatus_client",
+        "cmk.utils.agent_registration",
         "cmk.utils.caching",
         "cmk.utils.nonfree.pro",
         "cmk.utils.certs",
@@ -652,10 +717,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.macros",
         "cmk.utils.password_store",
         "cmk.utils.paths",
-        "cmk.utils.regex",
         "cmk.utils.render",
         "cmk.utils.rulesets",
-        "cmk.utils.translations",
         exclude=("cmk.gui.plugins", "cmk.gui.nonfree.pro.plugins"),
     ),
     Component("cmk.gui.nonfree.ultimatemt"): _allow(
@@ -760,7 +823,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.plugin_loader",
         "cmk.utils.prediction",
         "cmk.utils.redis",
-        "cmk.utils.regex",
         "cmk.utils.render",
         "cmk.utils.rulesets",
         "cmk.utils.schedule",
@@ -769,8 +831,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.statename",
         "cmk.utils.tags",
         "cmk.utils.timeperiod",
-        "cmk.utils.translations",
         "cmk.utils.urls",
+        "cmk.utils.http_proxy_config",
         "cmk.utils.visuals",
         "cmk.utils.werks",
         exclude=(
@@ -784,7 +846,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),  # should become a package
     Component("cmk.inventory"): _allow(
         *PACKAGE_CCC,
-        "cmk.utils.regex",
     ),
     Component("cmk.notification_plugins"): _allow(
         *PACKAGE_CCC,
@@ -795,15 +856,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_MESSAGING,
         "cmk.utils.paths",
     ),
-    # These are ready to be moved to a package.
-    # PLEASE DO NOT INTRODUCE NEW DEPENDENCIES!
-    **{
-        Component(f"cmk.plugins.{family}"): _allow(
-            *PACKAGE_PLUGIN_APIS,
-            "cmk.plugins.lib",
-        )
-        for family in _CLEAN_PLUGIN_FAMILIES
-    },
     **{  # some plugin families that refuse to play by the rules:
         Component(f"cmk.plugins.{family}"): _allow(
             *PACKAGE_PLUGIN_APIS,
@@ -812,6 +864,15 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
             *violations,
         )
         for family, violations in _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS.items()
+    },
+    # These are ready to be moved to a package.
+    # PLEASE DO NOT INTRODUCE NEW DEPENDENCIES!
+    **{
+        Component(f"cmk.plugins.{family}"): _allow(
+            *PACKAGE_PLUGIN_APIS,
+            "cmk.plugins.lib",
+        )
+        for family in _CLEAN_PLUGIN_FAMILIES
     },
     Component("cmk.plugins"): _allow(
         *PACKAGE_PLUGIN_APIS,
@@ -940,7 +1001,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.labels",
         "cmk.utils.parameters",
         "cmk.utils.paths",
-        "cmk.utils.regex",
         "cmk.utils.servicename",
         "cmk.utils.tags",
     ),
@@ -1076,7 +1136,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("tests.integration.nonfree.ultimate.relay"): _allow(
         *PACKAGE_RELAY_PROTOCOLS,
-        "cmk.agent_receiver.certs",
+        "cmk.agent_receiver.lib.certs",
     ),
     Component("tests.integration"): _allow(
         *PACKAGE_CCC,
@@ -1137,7 +1197,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.nonfree.pro.liveproxy",
         "cmk.nonfree.pro.robotmk",
         "cmk.checkengine",
-        "cmk.cmkcert",
+        "cmk.message_broker_certs",
         "cmk.cmkpasswd",
         "cmk.discover_plugins",
         "cmk.diskspace",
@@ -1182,7 +1242,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
 _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-automation-helper"): Component("cmk.base"),
-    ModulePath("bin/cmk-cert"): Component("cmk.cmkcert"),
+    ModulePath("bin/cmk-cert"): Component("cmk.gui.cmkcert"),
+    ModulePath("bin/message-broker-certs"): Component("cmk.message_broker_certs"),
     ModulePath("bin/cmk-convert-rrds"): Component("cmk.rrd"),
     ModulePath("bin/cmk-create-rrd"): Component("cmk.rrd"),
     ModulePath("bin/cmk-migrate-extension-rulesets"): Component("cmk.update_config"),

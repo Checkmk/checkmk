@@ -14,7 +14,6 @@ from contextlib import suppress
 import cmk.utils.paths
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.utils.password_store import replace_passwords
 
 # TODO: is there a better way to do this?
 # yes there is. Migrate bakery plugin; cleanup; problem goes away.
@@ -69,7 +68,6 @@ def parse_arguments(argv):
 
 def main(sys_argv=None):
     if sys_argv is None:
-        replace_passwords()
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)

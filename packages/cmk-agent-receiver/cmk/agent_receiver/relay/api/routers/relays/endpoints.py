@@ -52,13 +52,12 @@ async def register_relay(
         - Collision with existing relay IDs is not allowed
     """
     try:
-        relay_id = handler.process(authorization, alias=payload.relay_name)
+        return handler.process(authorization, request=payload)
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
-    return RelayRegistrationResponse(relay_id=relay_id)
 
 
 # Do not use check_relay here, because we actually return 200 if the relay does not exist.

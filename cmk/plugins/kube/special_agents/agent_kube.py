@@ -32,7 +32,7 @@ import requests
 import urllib3
 from pydantic import TypeAdapter
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.plugins.kube import common, performance, prometheus_section, query
 from cmk.plugins.kube.agent_handlers import (
     cluster_handler,
@@ -475,11 +475,12 @@ def _parse_raw_metrics(content: bytes) -> list[RawMetrics]:
 
 
 def request_cluster_collector(
+    token: Secret[str],
     path: query.CollectorPath,
     config: query.CollectorSessionConfig,
     parser: Callable[[bytes], Model],
 ) -> Model:
-    session = query.create_session(config, LOGGER)
+    session = query.create_session(token, config, LOGGER)
     url = config.cluster_collector_endpoint.removesuffix("/") + path
     request = requests.Request("GET", url)
     prepare_request = session.prepare_request(request)
@@ -823,11 +824,12 @@ def piggyback_formatter_with_cluster_name(
 
 
 def _collect_api_data(
-    api_session_config: query.APISessionConfig, query_kubelet_endpoints: bool
+    token: Secret[str], api_session_config: query.APISessionConfig, query_kubelet_endpoints: bool
 ) -> APIData:
     LOGGER.info("Collecting API data")
     try:
         return from_kubernetes(
+            token,
             api_session_config,
             LOGGER,
             query_kubelet_endpoints,
@@ -1051,13 +1053,14 @@ def _write_sections_based_on_api_data(
 
 
 def _create_metadata_based_cluster_collector(
-    debug: bool, usage_config: query.CollectorSessionConfig
+    debug: bool, token: Secret[str], usage_config: query.CollectorSessionConfig
 ) -> (
     tuple[section.ClusterCollectorMetadata, Sequence[section.NodeMetadata]]
     | CollectorHandlingException
 ):
     try:
         metadata = request_cluster_collector(
+            token,
             query.CollectorPath.metadata,
             usage_config,
             section.Metadata.model_validate_json,
@@ -1095,11 +1098,13 @@ def _create_sections_based_on_container_metrics(
     debug: bool,
     cluster_name: str,
     pods_to_host: PodsToHost,
+    token: Secret[str],
     usage_config: query.CollectorSessionConfig,
 ) -> section.CollectorHandlerLog:
     try:
         LOGGER.info("Collecting container metrics from cluster collector")
         container_metrics = request_cluster_collector(
+            token,
             query.CollectorPath.container_metrics,
             usage_config,
             performance.parse_performance_metrics,
@@ -1152,11 +1157,13 @@ def _create_sections_based_on_machine_section(
     monitor_nodes: bool,
     composed_entities: ComposedEntities,
     piggyback_formatter: PiggybackFormatter,
+    token: Secret[str],
     usage_config: query.CollectorSessionConfig,
 ) -> section.CollectorHandlerLog:
     try:
         LOGGER.info("Collecting machine sections from cluster collector")
         machine_sections = request_cluster_collector(
+            token,
             query.CollectorPath.machine_sections,
             usage_config,
             _parse_raw_metrics,
@@ -1195,14 +1202,12 @@ def _create_sections_based_on_machine_section(
 
 
 def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSettings) -> None:
-    client_config = query.APISessionConfig.model_validate(
-        {
-            **arguments.__dict__,
-            "token": resolve_secret_option(arguments, TOKEN_OPTION),
-        }
-    )
+    token = resolve_secret_option(arguments, TOKEN_OPTION)
+    client_config = query.APISessionConfig.model_validate(arguments.__dict__)
 
-    api_data = _collect_api_data(client_config, MonitoredObject.pvcs in arguments.monitored_objects)
+    api_data = _collect_api_data(
+        token, client_config, MonitoredObject.pvcs in arguments.monitored_objects
+    )
     # Namespaces are handled independently from the cluster object in order to improve
     # testability. The long term goal is to remove all objects from the cluster object
     composed_entities = ComposedEntities.from_api_resources(
@@ -1259,6 +1264,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
 
     if isinstance(usage_config, query.PrometheusSessionConfig):
         cpu, memory = query.send_requests(
+            token,
             usage_config,
             [
                 query.Query.sum_rate_container_cpu_usage_seconds_total,
@@ -1276,7 +1282,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         )
         write_machine_sections(
             composed_entities,
-            machine_sections=prometheus_section.machine_sections(usage_config),
+            machine_sections=prometheus_section.machine_sections(token, usage_config),
             piggyback_formatter=piggyback_formatter,
         )
         return
@@ -1287,7 +1293,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     # would discard all the API data. Special Agent failures of the Cluster Collector
     # components will not be highlighted in the usual Checkmk service but in a separate
     # service
-    metadata_or_err = _create_metadata_based_cluster_collector(arguments.debug, usage_config)
+    metadata_or_err = _create_metadata_based_cluster_collector(arguments.debug, token, usage_config)
     if isinstance(metadata_or_err, CollectorHandlingException):
         write_cluster_collector_info_section(processing_log=metadata_or_err.to_section())
         return
@@ -1304,6 +1310,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         arguments.debug,
         arguments.cluster,
         pods_to_host,
+        token,
         usage_config,
     )
 
@@ -1312,6 +1319,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         MonitoredObject.nodes in arguments.monitored_objects,
         composed_entities,
         piggyback_formatter,
+        token,
         usage_config,
     )
 

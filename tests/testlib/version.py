@@ -144,13 +144,26 @@ class TypeCMKEdition:
         return self.edition_data.title
 
     @property
+    def old_edition_data(self) -> EditionOld:
+        """Return the legacy edition matching the new edition.
+
+        Raises:
+            KeyError: raised when the edition is not found.
+        """
+        return EditionOld(
+            {
+                Edition.COMMUNITY: EditionOld.CRE,
+                Edition.PRO: EditionOld.CEE,
+                Edition.ULTIMATE: EditionOld.CCE,
+                Edition.ULTIMATEMT: EditionOld.CME,
+                Edition.CLOUD: EditionOld.CSE,
+            }[self.edition_data]
+        )
+
+    @property
     def license_edition(self) -> str:
         """Return the legacy edition short name used in the licensing logic."""
-        return {
-            "ultimate": "cce",
-            "ultimatemt": "cme",
-            "cloud": "cse",
-        }.get(self.short, "cee")
+        return self.old_edition_data.short
 
     def is_ultimatemt_edition(self) -> bool:
         return self.edition_data is self.ULTIMATEMT
@@ -233,11 +246,13 @@ class TypeCMKEdition:
 class TypeCMKEditionOld:
     """Wrap `EditionOld` and extend with test-framework functionality."""
 
-    COMMUNITY = EditionOld.CRE
-    PRO = EditionOld.CEE
-    ULTIMATE = EditionOld.CCE
-    CLOUD = EditionOld.CSE
-    ULTIMATEMT = EditionOld.CME
+    # map new attribute-names to old edition values
+    # keep old attribute-names for backward-compatibility
+    COMMUNITY = CRE = EditionOld.CRE
+    PRO = CEE = EditionOld.CEE
+    ULTIMATE = CCE = EditionOld.CCE
+    CLOUD = CSE = EditionOld.CSE
+    ULTIMATEMT = CME = EditionOld.CME
 
     def __init__(self, edition: EditionOld | None = None) -> None:
         self._edition_data: type[EditionOld] | EditionOld
@@ -284,6 +299,23 @@ class TypeCMKEditionOld:
     def title(self) -> str:
         """Return edition as displayed on Checkmk UI."""
         return self.edition_data.title
+
+    @property
+    def new_edition_data(self) -> Edition:
+        """Return the new edition matching the legacy edition.
+
+        Raises:
+            KeyError: raised when the edition is not found.
+        """
+        return Edition(
+            {
+                EditionOld.CRE: Edition.COMMUNITY,
+                EditionOld.CEE: Edition.PRO,
+                EditionOld.CCE: Edition.ULTIMATE,
+                EditionOld.CME: Edition.ULTIMATEMT,
+                EditionOld.CSE: Edition.CLOUD,
+            }[self.edition_data]
+        )
 
     def is_ultimatemt_edition(self) -> bool:
         return self.edition_data is self.ULTIMATEMT
@@ -574,22 +606,18 @@ def version_from_env(
 
 def edition_from_env(fallback: TypeCMKEdition = CMKEdition(CMKEdition.PRO)) -> TypeCMKEdition:
     value = os.getenv("EDITION", "")
-    try:
-        edition = CMKEdition.edition_from_text(value)
-    except ValueError:
-        edition = fallback
-    return edition
+    if not value:
+        return fallback
+    return CMKEdition.edition_from_text(value)
 
 
 def edition_from_env_old(
     fallback: TypeCMKEditionOld = CMKEditionOld(CMKEditionOld.PRO),
 ) -> TypeCMKEditionOld:
     value = os.getenv("EDITION", "")
-    try:
-        edition = CMKEditionOld.edition_from_text(value)
-    except ValueError:
-        edition = fallback
-    return edition
+    if not value:
+        return fallback
+    return CMKEditionOld.edition_from_text(value)
 
 
 def get_min_version() -> CMKVersion:

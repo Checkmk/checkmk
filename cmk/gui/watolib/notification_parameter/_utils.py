@@ -17,6 +17,8 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
 from cmk.utils.notify_types import (
@@ -64,6 +66,7 @@ def save_notification_parameter(
     data: RawFrontendData,
     *,
     object_id: NotificationParameterID | None,
+    user: LoggedInUser,
     pprint_value: bool,
 ) -> NotificationParameterDescription:
     """Save a notification parameter set.
@@ -71,6 +74,9 @@ def save_notification_parameter(
     Raises:
         FormSpecValidationError: if the data does not match the form spec
     """
+    load_dynamic_permissions()
+    user.need_permission(f"notification_plugin.{parameter_method}")
+
     form_spec = registry.form_spec(parameter_method)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
 
@@ -95,7 +101,11 @@ def save_notification_parameter(
 
 def get_list_of_notification_parameter(
     parameter_method: NotificationParameterMethod,
+    user: LoggedInUser,
 ) -> Sequence[NotificationParameterDescription]:
+    load_dynamic_permissions()
+    user.need_permission(f"notification_plugin.{parameter_method}")
+
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
     return [
         NotificationParameterDescription(ident=k, description=v["general"]["description"])
@@ -111,6 +121,7 @@ class NotificationParameter(NamedTuple):
 def get_notification_parameter(
     registry: NotificationParameterRegistry,
     parameter_id: NotificationParameterID,
+    user: LoggedInUser,
 ) -> NotificationParameter:
     """Get notification parameter to supply to frontend.
 
@@ -128,6 +139,10 @@ def get_notification_parameter(
     )
     if item is None or method is None:
         raise KeyError(parameter_id)
+
+    load_dynamic_permissions()
+    user.need_permission(f"notification_plugin.{method}")
+
     form_spec = registry.form_spec(method)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     _, values = visitor.to_vue(RawDiskData(item))

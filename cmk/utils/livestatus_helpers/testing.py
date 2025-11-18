@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module collects code which helps with testing Checkmk.
 
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
-
 For code to be admitted to this module, it should itself be tested thoroughly, so we won't
 have any friction during testing with these helpers themselves.
 
 """
+
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 

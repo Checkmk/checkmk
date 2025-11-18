@@ -38,37 +38,37 @@ const dateRangeModel = defineModel<{
 </script>
 
 <template>
-  <div class="custom-date-range">
-    <div class="from_date">
-      <div class="date_title">{{ _t('From:') }}</div>
-      <div class="date_fields">
-        <div class="field">
-          <span class="unit">{{ _t('Year') }}</span>
+  <div class="db-date-range-fields">
+    <div class="db-date-range-fields--from-date">
+      <div class="db-date-range-fields--title">{{ _t('From:') }}</div>
+      <div>
+        <div class="db-date-range-fields--field">
+          <span>{{ _t('Year') }}</span>
           <CmkInput v-model="dateRangeModel.from.year" type="number" field-size="SMALL" />
         </div>
-        <div class="field">
-          <span class="unit">{{ _t('Month') }}</span>
+        <div class="db-date-range-fields--field">
+          <span>{{ _t('Month') }}</span>
           <CmkInput v-model="dateRangeModel.from.month" type="number" field-size="SMALL" />
         </div>
-        <div class="field">
-          <span class="unit">{{ _t('Day') }}</span>
+        <div class="db-date-range-fields--field">
+          <span>{{ _t('Day') }}</span>
           <CmkInput v-model="dateRangeModel.from.day" type="number" field-size="SMALL" />
         </div>
       </div>
     </div>
-    <div class="to_date">
-      <div class="date_title">{{ _t('To:') }}</div>
-      <div class="date_fields">
-        <div class="field">
-          <span class="unit">{{ _t('Year') }}</span>
+    <div class="db-date-range-fields--to-date">
+      <div class="db-date-range-fields--title">{{ _t('To:') }}</div>
+      <div>
+        <div class="db-date-range-fields--field">
+          <span>{{ _t('Year') }}</span>
           <CmkInput v-model="dateRangeModel.to.year" type="number" field-size="SMALL" />
         </div>
-        <div class="field">
-          <span class="unit">{{ _t('Month') }}</span>
+        <div class="db-date-range-fields--field">
+          <span>{{ _t('Month') }}</span>
           <CmkInput v-model="dateRangeModel.to.month" type="number" field-size="SMALL" />
         </div>
-        <div class="field">
-          <span class="unit">{{ _t('Day') }}</span>
+        <div class="db-date-range-fields--field">
+          <span>{{ _t('Day') }}</span>
           <CmkInput v-model="dateRangeModel.to.day" type="number" field-size="SMALL" />
         </div>
       </div>
@@ -77,30 +77,26 @@ const dateRangeModel = defineModel<{
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.custom-date-range {
+.db-date-range-fields {
   margin-top: var(--spacing);
   min-height: 40px;
   font-size: var(--font-size-small);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.custom-date-range .from_date,
-.custom-date-range .to_date {
+.db-date-range-fields .db-date-range-fields--from-date,
+.db-date-range-fields .db-date-range-fields--to-date {
   float: left;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.custom-date-range .date_title {
+.db-date-range-fields .db-date-range-fields--title {
   display: inline;
   margin-right: var(--spacing);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.custom-date-range .field {
+.db-date-range-fields .db-date-range-fields--field {
   position: relative;
   height: 40px;
   width: 60px;

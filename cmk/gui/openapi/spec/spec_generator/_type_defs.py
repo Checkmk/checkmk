@@ -47,7 +47,7 @@ class SpecEndpoint:
     permissions_required: permissions.BasePerm | None
     permissions_description: Mapping[str, str] | None
     does_redirects: bool
-    supported_editions: set[Edition] | None
+    supported_editions: set[Edition]
 
 
 @dataclass

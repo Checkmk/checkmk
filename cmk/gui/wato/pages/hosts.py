@@ -53,6 +53,7 @@ from cmk.gui.utils.agent_commands import (
 )
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     make_confirm_delete_link,
@@ -88,6 +89,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_preserving_link,
     folder_tree,
     Host,
+    strip_hostname_whitespace_chars,
     validate_all_hosts,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -132,7 +134,7 @@ class UpdateDnsCacheLoadingContainer:
         html.open_div(id=cls.div_load_container_id, style="display: none")
         html.show_message_by_msg_type(
             msg=_("Updating site DNS cache"),
-            msg_type="message",
+            msg_type="waiting",
             flashed=True,
         )
         html.close_div()
@@ -597,12 +599,28 @@ class ModeEditHost(ABCHostMode):
                 if n == 1
                 else _("Site DNS cache updated for %d hosts.") % n
             )
+            flash(infotext)
 
             if update_dns_cache_result.failed_hosts:
-                infotext += "<br><br><b>Host names failed to lookup:</b> " + ", ".join(
-                    ["<tt>%s</tt>" % h for h in update_dns_cache_result.failed_hosts]
-                )
-            flash(infotext)
+                failed_hosts = update_dns_cache_result.failed_hosts
+                display_limit = 5
+
+                if len(failed_hosts) <= display_limit:
+                    hosts_display = ", ".join(["<code>%s</code>" % h for h in failed_hosts])
+                else:
+                    hosts_display = ", ".join(
+                        ["<code>%s</code>" % h for h in failed_hosts[:display_limit]]
+                    )
+                    remaining = len(failed_hosts) - display_limit
+                    hosts_display += _(", +%d more") % remaining
+
+                failed_warning_message = _(
+                    "<b>Lookup IPv4 addresses of %d hosts failed.</b><br>"
+                    "Monitoring for these hosts may be incomplete.<br><br>"
+                    "<b>Affected hosts:</b> %s"
+                ) % (len(failed_hosts), hosts_display)
+
+                flash(failed_warning_message, msg_type="warning")
             return None
 
         if request.var("delete"):  # Delete this host
@@ -743,7 +761,8 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             item=make_simple_link(
                 folder_preserving_link(
                     [("mode", "object_parameters"), (ABCHostMode.VAR_HOST, host.name())]
-                )
+                ),
+                transition=LoadingTransition.catalog,
             ),
         )
 
@@ -906,7 +925,10 @@ class CreateHostMode(ABCHostMode):
         )
         cluster_nodes = self._get_cluster_nodes(attributes)
         try:
-            hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
+            hostname = strip_hostname_whitespace_chars(
+                request.get_ascii_input_mandatory(self.VAR_HOST)
+            )
+            hostname = HostName(hostname)
         except MKUserError:
             hostname = HostName("")
 
@@ -987,9 +1009,10 @@ class ModeCreateHost(CreateHostMode):
     @classmethod
     def _init_new_host_object(cls) -> Host:
         try:
-            host_name = request.get_validated_type_input_mandatory(
-                HostName, cls.VAR_HOST, deflt=HostName("")
+            host_name = strip_hostname_whitespace_chars(
+                request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
+            host_name = HostName(host_name)
         except MKUserError:
             host_name = HostName("")
         if prefill := request.get_ascii_input("prefill"):
@@ -1047,9 +1070,10 @@ class ModeCreateCluster(CreateHostMode):
     @classmethod
     def _init_new_host_object(cls) -> Host:
         try:
-            host_name = request.get_validated_type_input_mandatory(
-                HostName, cls.VAR_HOST, deflt=HostName("")
+            host_name = strip_hostname_whitespace_chars(
+                request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
+            host_name = HostName(host_name)
         except MKUserError:
             host_name = HostName("")
         return Host(

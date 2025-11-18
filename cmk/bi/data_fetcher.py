@@ -129,7 +129,7 @@ class BIStructureFetcher:
                 ]
             )
 
-        site_data: dict[SiteId, dict] = {x: {} for x in only_sites}
+        site_data: dict[SiteId, dict] = {site_id: {} for site_id in only_sites}
         for (
             site,
             host_name,
@@ -177,7 +177,7 @@ class BIStructureFetcher:
             self._marshal_save_data(path, hosts)
 
     def _read_cached_data(self, required_program_starts: set[SiteProgramStart]) -> None:
-        required_sites = {x[0] for x in required_program_starts}
+        required_sites = {program_starts[0] for program_starts in required_program_starts}
         for path_object, (site_id, _timestamp) in self._get_site_data_files():
             if site_id in self._have_sites:
                 # This data was already read during the live query
@@ -222,15 +222,15 @@ class BIStructureFetcher:
         for host_name, values in hosts.items():
             site_id, tags, labels, folder, services, children, parents, alias, name = values
             self._hosts[host_name] = BIHostData(
-                site_id,
-                tags,
-                labels,
-                folder,
-                {x: BIServiceData(*y) for x, y in services.items()},
-                children,
-                parents,
-                alias,
-                name,
+                site_id=site_id,
+                tags=tags,
+                labels=labels,
+                folder=folder,
+                services={x: BIServiceData(*y) for x, y in services.items()},
+                children=children,
+                parents=parents,
+                alias=alias,
+                name=name,
             )
 
         self._have_sites.add(site_id)
@@ -360,7 +360,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         data = self.sites_callback.query(query, only_sites)
 
         # Now determine aggregation branches which include the site hosts
-        site_hosts = {BIHostSpec(row[0], row[1]) for row in data}
+        site_hosts = {BIHostSpec(site_id=row[0], host_name=row[1]) for row in data}
         required_hosts = set()
         for _compiled_aggregation, branches in required_aggregations:
             for branch in branches:
@@ -375,7 +375,7 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         if only_sites:
             for site_id, host_name in missing_hosts:
                 if site_id in only_sites:
-                    remaining_hosts.add(BIHostSpec(site_id, host_name))
+                    remaining_hosts.add(BIHostSpec(site_id=site_id, host_name=host_name))
         else:
             remaining_hosts = missing_hosts
 
@@ -403,7 +403,17 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         for row in rows:
             # Convert services_with_fullstate to dict
             services_with_fullstate = {
-                fix_encoding(e[0]): BIServiceWithFullState(e[1], e[2], fix_encoding(e[3]), *e[4:])
+                fix_encoding(e[0]): BIServiceWithFullState(
+                    state=e[1],
+                    has_been_checked=e[2],
+                    plugin_output=fix_encoding(e[3]),
+                    hard_state=e[4],
+                    current_attempt=e[5],
+                    max_check_attempts=e[6],
+                    scheduled_downtime_depth=e[7],
+                    acknowledged=e[8],
+                    in_service_period=e[9],
+                )
                 for e in row[idx_svc_full_state]
             }
             remaining_row_keys = {}
@@ -411,7 +421,17 @@ class BIStatusFetcher(ABCBIStatusFetcher):
                 remaining_row_keys = dict(zip(extra_columns, row[-len(extra_columns) :]))
 
             args = row[2:bi_data_end] + [services_with_fullstate] + [remaining_row_keys]
-            response[BIHostSpec(row[0], row[1])] = BIHostStatusInfoRow(*args)
+            response[BIHostSpec(site_id=row[0], host_name=row[1])] = BIHostStatusInfoRow(
+                state=args[0],
+                has_been_checked=args[1],
+                hard_state=args[2],
+                plugin_output=args[3],
+                scheduled_downtime_depth=args[4],
+                in_service_period=args[5],
+                acknowledged=args[6],
+                services_with_fullstate=args[7],
+                remaining_row_keys=args[8],
+            )
         return response
 
     @classmethod

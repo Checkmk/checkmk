@@ -12,7 +12,7 @@ import sys
 from collections.abc import Iterator
 from pathlib import Path
 from types import TracebackType
-from typing import Literal, Self
+from typing import assert_never, Literal, Self
 
 from omdlib.crash_reporting import report_crash
 from omdlib.options import CommandOptions
@@ -22,6 +22,49 @@ from omdlib.type_defs import Config, Replacements, Skeleton
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.crash_reporting import make_crash_report_base_path
+
+
+def get_edition(
+    omd_version: str,
+) -> tuple[
+    Literal[
+        "raw",
+        "enterprise",
+        "managed",
+        "cloud",
+        "saas",
+        "unknown",
+        "community",
+        "pro",
+        "ultimate",
+        "ultimatemt",
+    ],
+    Literal[
+        "cloud",
+        "community",
+        "pro",
+        "ultimate",
+        "ultimatemt",
+        "unknown",
+    ],
+]:
+    """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
+    # TODO: Needs to be able to deal with 2.4 edition names in 2.5. Can be removed with 2.6
+    match omd_version.split(".")[-1]:
+        case "community" | "pro" | "ultimate" | "ultimatemt" | "cloud" as new_edition:
+            return new_edition, new_edition
+        case "cre":
+            return "raw", "community"
+        case "cee":
+            return "enterprise", "pro"
+        case "cce":
+            return "cloud", "ultimate"
+        case "cme":
+            return "managed", "ultimatemt"
+        case "cse":
+            return "saas", "cloud"
+        case _:
+            return "unknown", "unknown"
 
 
 def store(site_home: Path, relpath: Path | str, backup_dir: Path) -> None:
@@ -240,27 +283,60 @@ class ManageUpdate:
 
 class PreFlight(enum.Enum):
     ASK = "ask"
-    INSTALL = "install"
-    KEEPOLD = "keepold"
     ABORT = "abort"
     IGNORE = "ignore"
 
 
 def get_conflict_mode_update(options: CommandOptions) -> tuple[Skeleton, PreFlight]:
-    match options.get("conflict", "ask"):
+    if "conflict" in options:
+        if "pre-flight" in options or "skeleton" in options:
+            sys.exit("argument --conflict cannot be combined with --pre-flight or --skeleton")
+        match options["conflict"]:
+            case "ask":
+                return Skeleton.ASK, PreFlight.ASK
+            case "install":
+                return Skeleton.INSTALL, PreFlight.IGNORE
+            case "keepold":
+                return Skeleton.KEEPOLD, PreFlight.IGNORE
+            case "abort":
+                return Skeleton.ABORT, PreFlight.ABORT
+            case "ignore":
+                return Skeleton.INSTALL, PreFlight.IGNORE
+            case None:  # mismatch between our yanky argument parsing and reading the result.
+                raise NotImplementedError()
+            case _:
+                sys.exit(
+                    "Argument to --conflict must be one of ask, install, keepold, ignore and abort."
+                )
+
+    match options.get("skeleton", "ask"):
         case "ask":
-            return Skeleton.ASK, PreFlight.ASK
-        case "install":
-            return Skeleton.INSTALL, PreFlight.INSTALL
-        case "keepold":
-            return Skeleton.KEEPOLD, PreFlight.KEEPOLD
+            skel = Skeleton.ASK
         case "abort":
-            return Skeleton.ABORT, PreFlight.ABORT
-        case "ignore":
-            return Skeleton.INSTALL, PreFlight.IGNORE
+            skel = Skeleton.ABORT
+        case "install":
+            skel = Skeleton.INSTALL
+        case "keepold":
+            skel = Skeleton.KEEPOLD
+        case str(_):
+            sys.exit("Argument to --skeleton must be one of ask, install, keepold and abort.")
         case None:  # mismatch between our yanky argument parsing and reading the result.
             raise NotImplementedError()
-        case _:
-            sys.exit(
-                "Argument to --conflict must be one of ask, install, keepold, ignore and abort."
-            )
+        case never:
+            assert_never(never)
+
+    match options.get("pre-flight", "ask"):
+        case "ask":
+            pre = PreFlight.ASK
+        case "abort":
+            pre = PreFlight.ABORT
+        case "ignore":
+            pre = PreFlight.IGNORE
+        case str(_):
+            sys.exit("Argument to --pre-flight must be one of ask, ignore and abort.")
+        case None:  # mismatch between our yanky argument parsing and reading the result.
+            raise NotImplementedError()
+        case never:
+            assert_never(never)
+
+    return skel, pre

@@ -23,4 +23,4 @@ AGENT_LINES = [
 def test_azure_resourcegroups_inventory() -> None:
     parsed = agent_section_azure_resourcegroups.parse_function(AGENT_LINES)
     inventory = inventory_plugin_azure_resourcegroups.inventory_function(parsed)
-    assert get_inventory_value(inventory, "Subscription name") == "Subscription-Name_here-Yipeee"
+    assert get_inventory_value(inventory, "subscription_name") == "Subscription-Name_here-Yipeee"

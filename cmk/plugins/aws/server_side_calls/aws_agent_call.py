@@ -133,7 +133,7 @@ def _proxy_args(details: ProxyDetails) -> list[str | Secret]:
             (
                 "--proxy-user",
                 details.proxy_user,
-                "--proxy-password-reference",
+                "--proxysecret-id",
                 details.proxy_password,
             )
         )
@@ -157,12 +157,12 @@ def aws_arguments(
                 args.extend(("--external-id", sts.external_id))
         case ("access_key", ak):
             assert isinstance(ak, AuthAccessKey)
-            args.extend(("--access-key-id", ak.access_key_id))
-            args.extend(("--secret-access-key-reference", ak.secret_access_key))
+            args.extend(("--access-key-identity", ak.access_key_id))
+            args.extend(("--secret-id", ak.secret_access_key))
         case ("access_key_sts", aksts):
             assert isinstance(aksts, AuthAccessKeySts)
-            args.extend(("--access-key-id", aksts.access_key_id))
-            args.extend(("--secret-access-key-reference", aksts.secret_access_key))
+            args.extend(("--access-key-identity", aksts.access_key_id))
+            args.extend(("--secret-id", aksts.secret_access_key))
             args.extend(("--assume-role", "--role-arn", aksts.role_arn_id))
             if aksts.external_id:
                 args.extend(("--external-id", aksts.external_id))

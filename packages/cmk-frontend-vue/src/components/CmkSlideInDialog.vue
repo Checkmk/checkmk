@@ -9,7 +9,7 @@ import { DialogClose, DialogTitle } from 'radix-vue'
 import usei18n from '@/lib/i18n'
 
 import CmkIcon, { type CmkIconProps } from '@/components/CmkIcon'
-import CmkSlideIn from '@/components/CmkSlideIn.vue'
+import CmkSlideIn, { type SlideInVariants } from '@/components/CmkSlideIn.vue'
 
 import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkHeading from './typography/CmkHeading.vue'
@@ -18,6 +18,7 @@ const { _t } = usei18n()
 
 export interface CmkSlideInDialogProps {
   open: boolean
+  size?: SlideInVariants['size']
   isIndexPage?: boolean | undefined // will be removed after the removal of the iframe
   header?: {
     title: string
@@ -30,7 +31,7 @@ const emit = defineEmits(['close'])
 </script>
 
 <template>
-  <CmkSlideIn :open="open" :is-index-page="isIndexPage" @close="emit('close')">
+  <CmkSlideIn :open="open" :is-index-page="isIndexPage" :size="size" @close="emit('close')">
     <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">
       <CmkHeading type="h1" class="cmk-slide-in-dialog__title-header">
         <CmkIcon v-if="header.icon" v-bind="header.icon" />

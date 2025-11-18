@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 import pytest
 
 from cmk.utils.host_storage import (
@@ -87,7 +85,7 @@ host_attributes.update({'test': {'contactgroups': {'groups': ['contactgroup_omni
 """
 
 
-def tests_standard_format_loader():
+def tests_standard_format_loader() -> None:
     # More tests will follow once the UnifiedHostStorage has been changed to a dataclass
     standard_loader = StandardStorageLoader(get_standard_hosts_storage())
     variables = get_hosts_file_variables()

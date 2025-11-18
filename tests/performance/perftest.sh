@@ -5,8 +5,8 @@
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 REPO_PATH="$(dirname "$(dirname "${SCRIPT_DIR}")")"
 BRANCH="$(make --no-print-directory --file="${REPO_PATH}/defines.make" print-BRANCH_VERSION)"
-EDITION=${EDITION:-pro}
-RELEASE="${BRANCH}-$(date '+%Y.%m.%d').${EDITION}"
+EDITION="${EDITION:-pro}"
+RELEASE="${RELEASE:-${VERSION:-${BRANCH}-$(date '+%Y.%m.%d')}.${EDITION}}"
 ROOT_DIR="${RESULT_PATH:-${REPO_PATH}/results}/performance"
 BENCHMARK_DIR="${ROOT_DIR}/${RELEASE}"
 mkdir -p "${BENCHMARK_DIR}"

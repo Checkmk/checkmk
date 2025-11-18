@@ -5,11 +5,11 @@
 """
 Consolidated helper functions for interacting with the repository.
 
-# mypy: disable-error-code="no-untyped-def"
-
 The functions in this module are designed with caching where appropriate to optimize performance.
 They almost all require a Git repository to be present.
 """
+
+# mypy: disable-error-code="no-untyped-def"
 
 import logging
 import os

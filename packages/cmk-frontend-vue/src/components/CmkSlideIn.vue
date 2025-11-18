@@ -4,11 +4,27 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
+import { type VariantProps, cva } from 'class-variance-authority'
+import { DialogContent, DialogPortal, DialogRoot } from 'radix-vue'
 import { nextTick, ref, watch } from 'vue'
+
+const slideInVariants = cva('', {
+  variants: {
+    size: {
+      medium: 'cmk-slide-in--size-medium',
+      small: 'cmk-slide-in--size-small'
+    }
+  },
+  defaultVariants: {
+    size: 'medium'
+  }
+})
+
+export type SlideInVariants = VariantProps<typeof slideInVariants>
 
 export interface CmkSlideInProps {
   open: boolean
+  size?: SlideInVariants['size']
   isIndexPage?: boolean | undefined // will be removed after the removal of the iframe
 }
 
@@ -32,12 +48,13 @@ watch(
   <DialogRoot :open="open" :modal="!!isIndexPage">
     <DialogPortal :to="isIndexPage ? '#content_area' : 'body'">
       <!-- @vue-ignore @click is not a property of DialogOverlay -->
-      <DialogOverlay class="cmk-slide-in__overlay" @click="emit('close')" />
+      <div v-if="open" class="cmk-slide-in__overlay" @click="emit('close')" />
       <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
       <!-- @vue-ignore aria-describedby it not a property of DialogContent -->
       <DialogContent
         ref="dialogContentRef"
         class="cmk-vue-app cmk-slide-in__container"
+        :class="slideInVariants({ size: props.size })"
         :aria-describedby="undefined"
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
@@ -63,6 +80,10 @@ watch(
   border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);
 
+  &.cmk-slide-in--size-small {
+    max-width: 768px;
+  }
+
   &[data-state='open'] {
     animation: cmk-slide-in__container-show 0.2s ease-in-out;
   }
@@ -74,7 +95,14 @@ watch(
 
 /* Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
 @media screen and (width <= 1024px) {
-  .cmk-slide-in__container {
+  .cmk-slide-in--size-medium {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media screen and (width <= 768px) {
+  .cmk-slide-in--size-small {
     width: 100%;
     max-width: 100%;
   }
@@ -109,6 +137,7 @@ watch(
   position: absolute;
   inset: 0;
   animation: cmk-slide-in__overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: +1;
 }
 
 @keyframes cmk-slide-in__overlay-show {

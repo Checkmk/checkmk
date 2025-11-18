@@ -28,12 +28,12 @@ from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
     TaskInfo,
 )
 from cmk.server_side_programs.v1_unstable import Storage
-from cmk.utils.paths import tmp_dir
 
 LOGGER = logging.getLogger("agent_proxmox_ve.backups")
 
 BackupInfo = MutableMapping[str, Any]
-LogCacheFilePath = tmp_dir / "special_agents" / "agent_proxmox_ve"
+
+AGENT = "proxmox_ve"
 
 
 def to_bytes(string: str) -> int:
@@ -116,18 +116,17 @@ class BackupTask:
         self,
         task: TaskInfo,
         logs: LogData,
+        storage: Storage,
+        *,
         strict: bool,
-        dump_logs: bool = False,
+        dump_logs: bool,
         dump_erroneous_logs: bool = True,
     ) -> None:
         self.upid, self.type, self.starttime, self.status = "", "", 0, ""
         self.__dict__.update(task)
 
         if dump_logs:
-            LogCacheFilePath.mkdir(parents=True, exist_ok=True)
-            with (LogCacheFilePath / (f"{task['upid']}.log")).open("w") as file:
-                LOGGER.debug("wrote log to: %s", file.name)
-                file.write("\n".join(line["t"] for line in logs))
+            storage.write(f"{task['upid']}.log", "\n".join(line["t"] for line in logs))
 
         try:
             self.backup_data, errors = self._extract_logs(self._to_lines(logs), strict)
@@ -146,16 +145,17 @@ class BackupTask:
             self.backup_data, errors = {}, [(exc.line, str(exc))]
 
         if errors and dump_erroneous_logs:
-            LogCacheFilePath.mkdir(parents=True, exist_ok=True)
-            with (LogCacheFilePath / (f"erroneous-{task['upid']}.log")).open("w") as file:
-                LOGGER.error(
-                    "Parsing the log for UPID=%r resulted in a error(s) - write log content to %r",
-                    task["upid"],
-                    file.name,
-                )
-                file.write("\n".join(line["t"] for line in logs))
-                for linenr, text in errors:
-                    file.write("PARSE-ERROR: %d: %s\n" % (linenr, text))
+            storage.write(
+                f"erroneous-{task['upid']}.log",
+                "\n".join(
+                    *(line["t"] for line in logs),
+                    *("PARSE-ERROR: %d: %s" % (linenr, text) for linenr, text in errors),
+                ),
+            )
+            LOGGER.error(
+                "Parsing the log for UPID=%r resulted in a error(s) - stored log content",
+                task["upid"],
+            )
 
     @staticmethod
     def _to_lines(lines_with_numbers: LogData) -> Iterable[str]:
@@ -418,7 +418,7 @@ def fetch_backup_data(
     # Fetching log files is by far the most time consuming process issued by the ProxmoxVE agent.
     # Since logs have a unique UPID we can safely cache them
     cutoff_date = int((datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timestamp())
-    storage = Storage(program_ident="agent_proxmox_ve", host=args.hostname)
+    storage = Storage(program_ident=AGENT, host=args.hostname)
     with JsonCachedData(
         storage=storage,
         storage_key="upid.log.cache.json",
@@ -444,7 +444,13 @@ def fetch_backup_data(
         # todo: check vmid, typefilter source
         #       https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/tasks
         return collect_vm_backup_info(
-            BackupTask(task, backup_log, strict=args.debug, dump_logs=args.dump_logs)
+            BackupTask(
+                task,
+                backup_log,
+                storage,
+                strict=args.debug,
+                dump_logs=args.dump_logs,
+            )
             for node in nodes
             for task in node["tasks"]
             if (task["type"] == "vzdump" and int(task["starttime"]) >= cutoff_date)

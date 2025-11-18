@@ -18,6 +18,7 @@ import DemoFormList from './DemoFormList.vue'
 import DemoFormListOfStrings from './DemoFormListOfStrings.vue'
 import DemoFormMetric from './DemoFormMetric.vue'
 import DemoFormOptionalChoice from './DemoFormOptionalChoice.vue'
+import DemoFormRegex from './DemoFormRegex.vue'
 import DemoFormSingleChoice from './DemoFormSingleChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
@@ -34,6 +35,7 @@ export const pages: Array<Folder | Page> = [
   new Page('FormCheckboxListChoice', DemoFormCheckboxListChoice),
   new Page('FormSingleChoice', DemoFormSingleChoice),
   new Page('FormTuple', DemoFormTuple),
+  new Page('FormRegex', DemoFormRegex),
   new Page('FormLabels', DemoFormLabels),
   new Page('FormSingleChoiceEditableEditAsync', DemoFormSingleChoiceEditableEditAsync),
   new Page('FormListOfStrings', DemoFormListOfStrings),

@@ -147,7 +147,7 @@ def test_single_choice_valid_value(
     visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
 
     vue_spec, vue_value = visitor.to_vue(valid_choice)
-    assert vue_spec.type == "single_choice"
+
     assert vue_value == SingleChoiceVisitor.option_id("bar")
 
     validation_messages = visitor.validate(valid_choice)

@@ -6,9 +6,13 @@
 import { type Folder, Page } from '@demo/_demo/page'
 
 import DemoCmkCheckbox from './DemoCmkCheckbox.vue'
+import DemoCmkInlineValidation from './DemoCmkInlineValidation.vue'
 import DemoCmkInput from './DemoCmkInput.vue'
+import DemoCmkLabelRequired from './DemoCmkLabelRequired.vue'
 
 export const pages: Array<Folder | Page> = [
   new Page('CmkInput', DemoCmkInput),
-  new Page('CmkCheckbox', DemoCmkCheckbox)
+  new Page('CmkCheckbox', DemoCmkCheckbox),
+  new Page('CmkInlineValidation', DemoCmkInlineValidation),
+  new Page('CmkLabelRequired', DemoCmkLabelRequired)
 ]

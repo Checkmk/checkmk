@@ -134,6 +134,7 @@ class CMKOpenApiSession(requests.Session):
         self.rules = RulesAPI(self)
         self.rulesets = RulesetsAPI(self)
         self.broker_connections = BrokerConnectionsAPI(self)
+        self.bi_aggregation = BIAggregationAPI(self)
         self.sites = SitesAPI(self)
         self.background_jobs = BackgroundJobsAPI(self)
         self.dcd = DcdAPI(self)
@@ -1181,6 +1182,57 @@ class BackgroundJobsAPI(BaseAPI):
         return value
 
 
+class BIAggregationAPI(BaseAPI):
+    def get(self, aggregation_id: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value
+
+    def update(self, aggregation_id: str, body: dict[str, Any]) -> None:
+        response = self.session.put(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json=body,
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, aggregation_id: str) -> None:
+        response = self.session.delete(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def create(self, aggregation_id: str, body: dict[str, Any]) -> None:
+        response = self.session.post(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json=body,
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+
 class DcdAPI(BaseAPI):
     def create(
         self,
@@ -1419,9 +1471,34 @@ class PasswordsAPI(BaseAPI):
 
 
 class LicenseAPI(BaseAPI):
+    def configure(self, settings: Mapping[str, str | Mapping[str, str]]) -> requests.Response:
+        response = self.session.put(
+            "/domain-types/licensing/actions/configure/invoke",
+            json={"settings": settings} if settings else {},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
     def download(self) -> requests.Response:
         response = self.session.get("/domain-types/license_request/actions/download/invoke")
         if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def upload(self, verification_response: object) -> requests.Response:
+        response = self.session.post(
+            url="/domain-types/license_response/actions/upload/invoke",
+            json=verification_response,
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def verify(self) -> requests.Response:
+        """Trigger the license verification and receive its results"""
+        response = self.session.post("/domain-types/licensing/actions/verify/invoke")
+        if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
         return response
 
@@ -1657,7 +1734,7 @@ class MetricBackendAPI(BaseAPI):
         super().__init__(session)
         self._base_url_internal = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
 
-    def disable_metric_backend(self, site_id: str) -> None:
+    def disable(self, site_id: str) -> None:
         response = self.session.put(
             url=self._config_endpoint_url(),
             json={
@@ -1671,41 +1748,13 @@ class MetricBackendAPI(BaseAPI):
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
 
-    def enable_site_local_metric_backend(self, site_id: str) -> None:
+    def enable(self, site_id: str) -> None:
         response = self.session.put(
             url=self._config_endpoint_url(),
             json={
                 "site_id": site_id,
                 "config": {
-                    "type": "site_local",
-                },
-            },
-        )
-
-        if not response.ok:
-            raise UnexpectedResponse.from_response(response)
-
-    def enable_custom_metric_backend(
-        self,
-        *,
-        site_id: str,
-        address: str,
-        tcp_port: int,
-        http_port: int,
-        username: str,
-        password: str,
-    ) -> None:
-        response = self.session.put(
-            url=self._config_endpoint_url(),
-            json={
-                "site_id": site_id,
-                "config": {
-                    "type": "custom",
-                    "address": address,
-                    "tcp_port": tcp_port,
-                    "http_port": http_port,
-                    "username": username,
-                    "password": password,
+                    "type": "enabled",
                 },
             },
         )
@@ -1722,8 +1771,8 @@ class AgentReceiverRelayAPI(ARBaseAPI):
     def base_url(self) -> str:
         return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"
 
-    def register(self, alias: str, csr: str) -> str:
-        body = RelayRegistrationRequest(relay_name=alias, csr=csr)
+    def register(self, relay_id: str, alias: str, csr: str) -> str:
+        body = RelayRegistrationRequest(relay_id=relay_id, alias=alias, csr=csr)
         response = self.session.post(
             url=urllib.parse.urljoin(self.base_url, "relays/"),
             json=body.model_dump(),

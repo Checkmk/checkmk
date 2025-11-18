@@ -7,11 +7,10 @@
         </td>
     </tr>
 {% endmacro %}
-<table align="center"
-       width="100%"
+<table width="100%"
        style="border-spacing: 0;
-              min-width: 220px;
-              max-width: 536px">
+              max-width: 600px;
+              margin: 0 auto">
     <tr>
         <td style="height: 20px;
                    line-height: 20px;
@@ -23,17 +22,26 @@
             style="font-size: 18px;
                    font-weight: 600;
                    text-align: left">
-            <img src="cid:additional.png" style="width: 18px; height: 19px;" />
+            <img class="section-icon"
+                 src="cid:additional.png"
+                 alt="Additional icon"
+                 width="18"
+                 height="19"
+                 style="display:inline-block;
+                        vertical-align:middle;
+                        width:18px;
+                        height:19px;
+                        border:0;
+                        background-color:#ffffff;
+                        color-scheme:light dark;
+                        supported-color-schemes:light dark;
+                        mso-line-height-rule:exactly" />
             Additional details
         </th>
     </tr>
     <tr>
         <td>
-            <table width="100%"
-                   style="height: 54px;
-                          min-width: 220px;
-                          max-width: 536px;
-                          table-layout: fixed">
+            <table width="100%" style="height: 54px; table-layout: fixed">
                 {% for element in data.PARAMETER_ELEMENTSS.split(' ') %}
                     {% if element =="ack_author" %}
                         {% if service_notification %}
@@ -87,12 +95,12 @@
                         </tr>
                         <tr>
                             <td>
-                                <table style="border: 1px solid #dfdfdf;
-                                              min-width: 220px;
-                                              max-width: 536px;
-                                              width: 100%;
+                                <table width="100%"
+                                       style="border: 1px solid #dfdfdf;
                                               border-collapse: collapse;
-                                              table-layout: fixed">
+                                              table-layout: fixed;
+                                              max-width: 600px;
+                                              margin: 0 auto">
                                     {% for key, value in data.items() %}
                                         <tr style="border: 1px solid #dfdfdf;">
                                             <td style="border: 1px solid #dfdfdf;

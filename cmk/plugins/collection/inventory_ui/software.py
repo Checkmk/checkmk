@@ -1080,6 +1080,27 @@ node_software_applications_synthetic_monitoring_tests = Node(
     ),
 )
 
+node_software_applications_synthetic_monitoring_scheduler = Node(
+    name="software_applications_synthetic_monitoring_scheduler",
+    path=["software", "applications", "synthetic_monitoring", "scheduler"],
+    title=Title("Scheduler"),
+)
+
+node_software_applications_synthetic_monitoring_scheduler_config = Node(
+    name="software_applications_synthetic_monitoring_scheduler_config",
+    path=["software", "applications", "synthetic_monitoring", "scheduler", "config"],
+    title=Title("Scheduler Plan Configs"),
+    table=Table(
+        columns={
+            "scheduler_interval": NumberField(Title("Scheduler Interval")),
+            "env_creation": TextField(Title("Env Creation")),
+            "n_attempts_max": NumberField(Title("Maximum number of attempts")),
+            "robot_type": TextField(Title("Robot")),
+            "assigned_to_host": TextField(Title("Assigned to host")),
+            "plan_id": TextField(Title("Plan ID")),
+        },
+    ),
+)
 node_software_applications_vmwareesx = Node(
     name="software_applications_vmwareesx",
     path=["software", "applications", "vmwareesx"],

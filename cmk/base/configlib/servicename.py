@@ -10,16 +10,12 @@ from collections.abc import Callable, Container, Mapping, Sequence
 from typing import Final
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.translations import parse_translation_options, translate, TranslationOptions
 from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.utils.caching import cache_manager
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.translations import (
-    parse_translation_options,
-    translate_service_description,
-    TranslationOptions,
-)
 
 from .loaded_config import LoadedConfigFragment
 
@@ -46,7 +42,7 @@ class FinalServiceNameConfig:
         # Some plugins introduce trailing whitespaces, but Nagios silently drops leading
         # and trailing spaces in the configuration file.
         description = (
-            translate_service_description(translations, description).strip()
+            _translate_service_description(translations, description).strip()
             if translations
             else description.strip()
         )
@@ -80,6 +76,20 @@ class FinalServiceNameConfig:
             merged["mapping"] = list(set(merged["mapping"]) | set(parsed_rule["mapping"]))
 
         return translations_cache.setdefault(hostname, parse_translation_options(merged))
+
+
+def _translate_service_description(
+    translation: TranslationOptions, service_description: str
+) -> ServiceName:
+    if (descr := service_description.strip()) in {
+        "Check_MK",
+        "Check_MK Agent",
+        "Check_MK Discovery",
+        "Check_MK inventory",
+        "Check_MK HW/SW Inventory",
+    }:
+        return descr
+    return ServiceName(translate(translation, service_description))
 
 
 def make_final_service_name_config(

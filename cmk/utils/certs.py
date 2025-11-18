@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Final, Literal
 
@@ -27,6 +28,8 @@ from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 from cmk.utils.log.security_event import SecurityEvent
+
+CertificateType = Literal["site", "site-ca", "agent-ca", "broker-ca", "broker"]
 
 
 class _CNTemplate:
@@ -188,7 +191,9 @@ class SiteCA:
         key_size: int,
     ) -> SiteCA:
         ca = CertificateWithPrivateKey.generate_self_signed(
-            common_name=CN_TEMPLATE.format(site=site_id),
+            common_name=(
+                f"{CN_TEMPLATE.format(site=site_id)} {datetime.now().isoformat(timespec='seconds')}"
+            ),
             organization=f"Checkmk Site {site_id}",
             expiry=expiry,
             key_size=key_size,

@@ -1,3 +1,2 @@
 #!/bin/bash
-cmk-cert "broker-ca" "--replace"
-cmk-cert "broker" "--replace"
+message-broker-certs "${OMD_ROOT:?}" "${OMD_SITE:?}"

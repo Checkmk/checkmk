@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.cisco.agent_based.cisco_ucs_fault_section import (
+    parse_cisco_ucs_fault,
+    Section,
+)
 from cmk.plugins.cisco.agent_based.cisco_ucs_faults import (
     check_cisco_ucs_faults,
     discover_cisco_ucs_faults,
-)
-from cmk.plugins.collection.agent_based.cisco_ucs_fault_section import (
-    parse_cisco_ucs_fault,
-    Section,
 )
 
 

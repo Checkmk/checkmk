@@ -17,6 +17,7 @@ from typing import Literal, NamedTuple, override, TypeGuard
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.translations import translate, TranslationOptions
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import Config
@@ -29,7 +30,6 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.translations import translate_hostname, TranslationOptions
 
 from . import bakery, builtin_attributes
 from .automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -154,22 +154,20 @@ def _add_scanned_hosts_to_folder(
     if (network_scan_properties := folder.attributes.get("network_scan")) is None:
         return
 
-    translate_names = network_scan_properties.get("translate_names")
-    if translate_names is None:
-        translation = TranslationOptions({})
-    else:
-        translation = TranslationOptions(
-            {
-                "case": translate_names.get("case"),
-                "mapping": translate_names.get("mapping", []),
-                "drop_domain": translate_names.get("drop_domain", False),
-                "regex": translate_names.get("regex", []),
-            }
+    translation = (
+        TranslationOptions()
+        if (translate_names := network_scan_properties.get("translate_names")) is None
+        else TranslationOptions(
+            case=translate_names.get("case"),
+            mapping=translate_names.get("mapping", []),
+            drop_domain=translate_names.get("drop_domain", False),
+            regex=translate_names.get("regex", []),
         )
+    )
 
     entries = []
     for host_name, ipaddr in found:
-        host_name = translate_hostname(translation, host_name)
+        host_name = HostName(translate(translation, host_name))
 
         attrs = update_metadata(HostAttributes(), created_by=username)
 

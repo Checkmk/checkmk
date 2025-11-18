@@ -14,11 +14,12 @@ import subprocess
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Protocol
 
 from cmk.agent_based.v2 import render
-from cmk.utils.password_store import lookup as password_store_lookup
+from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+
+PASSWORD_OPTION = "password"
 
 
 @dataclass
@@ -131,17 +132,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         metavar="USER",
         help='Username to log in to server. (Defaults to "guest")',
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--password-reference",
+    parser_add_secret_option(
+        parser,
+        long=f"--{PASSWORD_OPTION}",
+        required=False,
         help="Password store reference to the password to log in to server.",
-    )
-    group.add_argument(
-        "--password",
-        type=str,
-        default="",
-        metavar="PASSWORD",
-        help="Password to log in to server. (Defaults to an empty password)",
     )
     parser.add_argument(
         "-a",
@@ -159,14 +154,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
 
     return parser.parse_args(argv)
-
-
-def _make_secret(args: argparse.Namespace) -> str:
-    if (ref := args.password_reference) is None:
-        return args.password
-
-    pw_id, pw_file = ref.split(":", 1)
-    return password_store_lookup(Path(pw_file), pw_id)
 
 
 @dataclass(frozen=True)
@@ -414,7 +401,7 @@ def _check_disk_usage_main(
             share=args.share,
             hostname=args.hostname,
             user=args.user,
-            password=_make_secret(args),
+            password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
             workgroup=args.workgroup or None,
             port=args.port or None,
             ip_address=args.address or None,

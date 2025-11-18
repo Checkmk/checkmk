@@ -40,6 +40,7 @@ RUN yum -y makecache \
     gettext \
     gtk-doc \
     httpd-devel \
+    iproute \
     kernel-headers \
     libXpm-devel \
     libevent-devel \

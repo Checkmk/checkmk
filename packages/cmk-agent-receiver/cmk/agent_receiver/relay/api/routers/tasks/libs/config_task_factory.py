@@ -8,8 +8,8 @@ import tarfile
 from datetime import datetime, UTC
 from pathlib import Path
 
-from cmk.agent_receiver.config import get_config
-from cmk.agent_receiver.log import bound_contextvars, logger
+from cmk.agent_receiver.lib.config import get_config
+from cmk.agent_receiver.lib.log import bound_contextvars, logger
 from cmk.agent_receiver.relay.api.routers.tasks.libs.retrieve_config_serial import (
     retrieve_config_serial,
 )
@@ -121,7 +121,7 @@ def create_tar(parent: Path) -> bytes:
         ...     '/home/user/project/src/utils.py',
         ...     '/home/user/project/tests/test_main.py'
         ... ]
-        >>> base64_tar = create_tar('/home/user/project')
+        >>> base64_tar = create_tar('/home/user/project')  # doctest: +SKIP
         >>> # Archive will contain:
         >>> # config/src/main.py
         >>> # config/src/utils.py

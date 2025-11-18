@@ -8,7 +8,6 @@
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -21,6 +20,7 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
+from cmk.bi.fields import ReqConstant, ReqList, ReqNested, ReqString
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
     ABCBICompiledNode,
@@ -31,17 +31,13 @@ from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
     BIServiceWithFullState,
-    BIStates,
+    BIState,
     CompiledNodeKind,
     create_nested_schema_for_class,
     FrozenMarker,
     NodeComputeResult,
     NodeIdentifierInfo,
     NodeResultBundle,
-    ReqConstant,
-    ReqList,
-    ReqNested,
-    ReqString,
     RequiredBIElement,
 )
 from cmk.bi.node_vis import (
@@ -164,14 +160,20 @@ class BICompiledLeaf(ABCBICompiledNode):
     @override
     @instance_method_lru_cache()
     def required_elements(self) -> set[RequiredBIElement]:
-        return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
+        return {
+            RequiredBIElement(
+                site_id=self.site_id,
+                host_name=self.host_name,
+                service_description=self.service_description,
+            )
+        }
 
     @override
     def __str__(self) -> str:
         return f"BICompiledLeaf[Site {self.site_id}, Host: {self.host_name}, Service {self.service_description}]"
 
     @override
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self} / frozen: {self.frozen_marker}"
 
     @override
@@ -194,18 +196,18 @@ class BICompiledLeaf(ABCBICompiledNode):
             #       For frozen aggregations the leaf remains, but reports the state CRIT
             if computation_options.freeze_aggregations:
                 return NodeResultBundle(
-                    NodeComputeResult(
-                        2,
-                        False,
-                        False,
-                        f"{'Host ' if self.service_description is None else 'Service'} not found",
-                        True,
-                        {},
-                        {},
+                    actual_result=NodeComputeResult(
+                        state=BIState.CRIT,
+                        in_downtime=False,
+                        acknowledged=False,
+                        output=f"{'Host ' if self.service_description is None else 'Service'} not found",
+                        in_service_period=True,
+                        state_messages={},
+                        custom_infos={},
                     ),
-                    None,
-                    [],
-                    self,
+                    assumed_result=None,
+                    nested_results=[],
+                    instance=self,
                 )
             return None
 
@@ -219,50 +221,54 @@ class BICompiledLeaf(ABCBICompiledNode):
             if self.service_description is None:
                 state = self._map_hoststate_to_bistate(state)
         else:
-            state = BIStates.PENDING
+            state = BIState.PENDING
 
         # Assumed
         assumed_result = None
         if use_assumed:
             assumed_state = bi_status_fetcher.assumed_states.get(
-                RequiredBIElement(self.site_id, self.host_name, self.service_description)
+                RequiredBIElement(
+                    site_id=self.site_id,
+                    host_name=self.host_name,
+                    service_description=self.service_description,
+                )
             )
             if assumed_state is not None:
                 # Make the i18n call explicit for our tooling
                 _ = bi_status_fetcher.sites_callback.translate
                 assumed_result = NodeComputeResult(
-                    int(assumed_state),
-                    in_downtime,
-                    bool(entity.acknowledged),
-                    _("Assumed to be %s") % self._get_state_name(assumed_state),
-                    entity.in_service_period,
-                    {},
-                    {},
+                    state=int(assumed_state),
+                    in_downtime=in_downtime,
+                    acknowledged=bool(entity.acknowledged),
+                    output=_("Assumed to be %s") % self._get_state_name(assumed_state),
+                    in_service_period=entity.in_service_period,
+                    state_messages={},
+                    custom_infos={},
                 )
 
         return NodeResultBundle(
-            NodeComputeResult(
-                state,
-                in_downtime,
-                bool(entity.acknowledged),
-                entity.plugin_output,
-                bool(entity.in_service_period),
-                {},
-                {},
+            actual_result=NodeComputeResult(
+                state=state,
+                in_downtime=in_downtime,
+                acknowledged=bool(entity.acknowledged),
+                output=entity.plugin_output,
+                in_service_period=bool(entity.in_service_period),
+                state_messages={},
+                custom_infos={},
             ),
-            assumed_result,
-            [],
-            self,
+            assumed_result=assumed_result,
+            nested_results=[],
+            instance=self,
         )
 
     def _map_hoststate_to_bistate(self, host_state: HostState) -> int:
         match host_state:
-            case BIStates.HOST_UP:
-                return BIStates.OK
-            case BIStates.HOST_DOWN:
-                return BIStates.CRIT
+            case BIState.HOST_UP:
+                return BIState.OK
+            case BIState.HOST_DOWN:
+                return BIState.CRIT
             case _:  # also BIStates.HOST_UNREACHABLE:
-                return BIStates.UNKNOWN
+                return BIState.UNKNOWN
 
     def _get_state_name(self, state: HostState | ServiceState) -> str:
         return service_state_name(state) if self.service_description else host_state_name(state)
@@ -272,7 +278,9 @@ class BICompiledLeaf(ABCBICompiledNode):
     ) -> tuple[int | None, BIHostStatusInfoRow | BIServiceWithFullState | None]:
         assert self.site_id is not None
 
-        if entity := bi_status_fetcher.states.get(BIHostSpec(self.site_id, self.host_name)):
+        if entity := bi_status_fetcher.states.get(
+            BIHostSpec(site_id=self.site_id, host_name=self.host_name)
+        ):
             if self.service_description is None:
                 return entity.scheduled_downtime_depth, entity
             return entity.scheduled_downtime_depth, entity.services_with_fullstate.get(
@@ -286,7 +294,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return BICompiledLeafSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "type": self.kind(),
             "required_hosts": list(
@@ -355,13 +363,13 @@ class BICompiledRule(ABCBICompiledNode):
     def __str__(self) -> str:
         return "BICompiledRule[%s, %d rules, %d leaves %d remaining]" % (
             self.properties.title,
-            len([x for x in self.nodes if x.kind() == "rule"]),
-            len([x for x in self.nodes if x.kind() == "leaf"]),
-            len([x for x in self.nodes if x.kind() == "remaining"]),
+            len([node for node in self.nodes if node.kind() == "rule"]),
+            len([node for node in self.nodes if node.kind() == "leaf"]),
+            len([node for node in self.nodes if node.kind() == "remaining"]),
         )
 
     @override
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"repr(self) / frozen: {self.frozen_marker}"
 
     @override
@@ -408,7 +416,8 @@ class BICompiledRule(ABCBICompiledNode):
 
     def get_required_hosts(self) -> set[BIHostSpec]:
         return {
-            BIHostSpec(element.site_id, element.host_name) for element in self.required_elements()
+            BIHostSpec(site_id=element.site_id, host_name=element.host_name)
+            for element in self.required_elements()
         }
 
     @override
@@ -429,11 +438,16 @@ class BICompiledRule(ABCBICompiledNode):
         if not bundled_results:
             return None
         actual_result = self._process_node_compute_result(
-            [x.actual_result for x in bundled_results], computation_options
+            [result.actual_result for result in bundled_results], computation_options
         )
 
         if not use_assumed:
-            return NodeResultBundle(actual_result, None, bundled_results, self)
+            return NodeResultBundle(
+                actual_result=actual_result,
+                assumed_result=None,
+                nested_results=bundled_results,
+                instance=self,
+            )
 
         assumed_result_items = [
             bundle.assumed_result if bundle.assumed_result is not None else bundle.actual_result
@@ -442,7 +456,12 @@ class BICompiledRule(ABCBICompiledNode):
         assumed_result = self._process_node_compute_result(
             assumed_result_items, computation_options
         )
-        return NodeResultBundle(actual_result, assumed_result, bundled_results, self)
+        return NodeResultBundle(
+            actual_result=actual_result,
+            assumed_result=assumed_result,
+            nested_results=bundled_results,
+            instance=self,
+        )
 
     def _process_node_compute_result(
         self, results: list[NodeComputeResult], computation_options: BIAggregationComputationOptions
@@ -472,14 +491,14 @@ class BICompiledRule(ABCBICompiledNode):
         )
 
         return NodeComputeResult(
-            state,
-            in_downtime,
-            is_acknowledged,
+            state=state,
+            in_downtime=in_downtime,
+            acknowledged=is_acknowledged,
             # TODO: fix str casting in later commit
-            self.properties.state_messages.get(str(state), ""),
-            in_service_period,
-            self.properties.state_messages,
-            {},
+            output=self.properties.state_messages.get(str(state), ""),
+            in_service_period=in_service_period,
+            state_messages=self.properties.state_messages,
+            custom_infos={},
         )
 
     @classmethod
@@ -487,7 +506,7 @@ class BICompiledRule(ABCBICompiledNode):
         return BICompiledRuleSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "pack_id": self.pack_id,
@@ -639,7 +658,7 @@ class BICompiledAggregation:
         return aggregation_results
 
     def convert_result_to_legacy_format(self, node_result_bundle: NodeResultBundle) -> dict:
-        def generate_state(item):
+        def generate_state(item: NodeComputeResult | None) -> dict[str, Any] | None:
             if not item:
                 return None
             return {
@@ -650,8 +669,10 @@ class BICompiledAggregation:
                 "output": item.output,
             }
 
-        def create_tree_state(bundle: NodeResultBundle, is_toplevel: bool = False) -> tuple:
-            response = []
+        def create_tree_state(
+            bundle: NodeResultBundle, is_toplevel: bool = False
+        ) -> tuple[Any, ...]:
+            response: list[Any] = []
             response.append(generate_state(bundle.actual_result))
             response.append(generate_state(bundle.assumed_result))
             if is_toplevel:
@@ -697,7 +718,8 @@ class BICompiledAggregation:
                 "reqhosts": list(bi_compiled_branch.required_hosts),
                 "nodes": list(map(self.eval_result_node, bi_compiled_branch.nodes)),
                 "rule_layout_style": bi_compiled_branch.node_visualization,
-                "aggr_group_tree": self.groups.names + ["/".join(x) for x in self.groups.paths],
+                "aggr_group_tree": self.groups.names
+                + ["/".join(path) for path in self.groups.paths],
                 "aggr_type": "multi",
                 "aggregation_id": self.id,
                 "downtime_aggr_warn": self.computation_options.escalate_downtimes_as_warn,
@@ -751,7 +773,7 @@ class BICompiledAggregation:
     def schema(cls) -> type[BICompiledAggregationSchema]:
         return BICompiledAggregationSchema
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "branches": [branch.serialize() for branch in self.branches],
@@ -761,11 +783,11 @@ class BICompiledAggregation:
         }
 
     @override
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Aggregation: {self.id}, NumBranches: {len(self.branches)}"
 
     @override
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Aggregation: {self.id}, NumBranches: {len(self.branches)}"
 
 

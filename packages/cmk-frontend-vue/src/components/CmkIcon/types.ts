@@ -5,19 +5,19 @@
  */
 import type { VariantProps } from 'class-variance-authority'
 
-import type { oneColorIcons, simpleIcons, twoColorIcons } from './icons.constants'
-import type { cmkIconVariants, cmkMultitoneIconVariants } from './icons.constants'
+import type { emblems, oneColorIcons, simpleIcons, twoColorIcons } from './icons.constants'
+import type { cmkIconVariants, cmkMultitoneIconVariants, iconSizes } from './icons.constants'
 
 export type SimpleIcons = (typeof simpleIcons)[number]
+export type IconEmblems = (typeof emblems)[number]
 export type OneColorIcons = (typeof oneColorIcons)[number]
 export type TwoColorIcons = (typeof twoColorIcons)[number]
 
 export type CmkMultitoneIconNames = OneColorIcons | TwoColorIcons
-export type CmkMultitoneIconProps = OneColorIconProps | TwoColorIconProps
 export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
 
-export type CmkIconSize = VariantProps<typeof cmkIconVariants>['size']
 export type CmkMultitoneIconColor = VariantProps<typeof cmkMultitoneIconVariants>['color']
+export type IconSizeNames = keyof typeof iconSizes
 
 export interface CmkIconProps {
   /** @property {SimpleIcons} name - Name of the icon */
@@ -27,7 +27,7 @@ export interface CmkIconProps {
   variant?: CmkIconVariants['variant'] | undefined
 
   /** @property {undefined | CmkIconVariants['size']} size - Width and height of the icon */
-  size?: CmkIconVariants['size'] | undefined
+  size?: IconSizeNames | undefined
 
   /** @property {undefined | CmkIconVariants['colored']} colored - Whether the icon is colored or black and white */
   colored?: CmkIconVariants['colored'] | undefined
@@ -37,21 +37,4 @@ export interface CmkIconProps {
 
   /** @property {undefined | string} title - Title to be displayed on hover */
   title?: string | undefined
-}
-
-export interface OneColorIconProps {
-  name: OneColorIcons
-  primaryColor: CmkMultitoneIconColor
-  size?: CmkIconSize | undefined
-  title?: string | undefined
-  rotate?: number | undefined
-}
-
-export interface TwoColorIconProps {
-  name: TwoColorIcons
-  primaryColor: CmkMultitoneIconColor
-  secondaryColor: CmkMultitoneIconColor
-  size?: CmkIconSize | undefined
-  title?: string | undefined
-  rotate?: number | undefined
 }

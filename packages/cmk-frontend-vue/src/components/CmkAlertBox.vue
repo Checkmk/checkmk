@@ -7,7 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import { computed } from 'vue'
 
-import CmkIcon from '@/components/CmkIcon'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
+
+import CmkHeading from './typography/CmkHeading.vue'
 
 const propsCva = cva('', {
   variants: {
@@ -27,31 +29,50 @@ export type Variants = VariantProps<typeof propsCva>['variant']
 
 export interface CmkAlertBoxProps {
   variant?: Variants
+  heading?: string | undefined
 }
 
-const props = withDefaults(defineProps<CmkAlertBoxProps>(), {
-  variant: 'info'
-})
+const props = defineProps<CmkAlertBoxProps>()
 
 const alertIconName = computed(() => {
   switch (props.variant) {
     case 'error':
-      return 'alert-crit'
+      return 'error'
     case 'warning':
-      return 'alert-warn'
+      return 'warning'
     case 'success':
-      return 'alert-up'
+      return 'success'
     default:
-      return 'about-checkmk'
+      return 'help'
+  }
+})
+
+const alertIconColor = computed(() => {
+  switch (props.variant) {
+    case 'error':
+      return 'danger'
+    case 'warning':
+      return 'warning'
+    case 'success':
+      return 'success'
+    default:
+      return 'info'
   }
 })
 </script>
 
 <template>
   <div class="cmk-alert-box" :class="propsCva({ variant })">
-    <CmkIcon :name="alertIconName" variant="inline" size="large" />
-    <div class="content">
-      <slot />
+    <div class="cmk-alert-box__icon">
+      <CmkMultitoneIcon :name="alertIconName" :primary-color="alertIconColor" size="large" />
+    </div>
+    <div class="cmk-alert-box__text">
+      <CmkHeading v-if="$slots.heading || heading" type="h4">
+        <slot name="heading">{{ heading }}</slot>
+      </CmkHeading>
+      <div class="cmk-alert-box__body">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
@@ -62,14 +83,27 @@ const alertIconName = computed(() => {
 .cmk-alert-box {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-radius: var(--border-radius);
   margin: 12px 0;
+  gap: var(--dimension-5);
+}
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  & > .content {
-    margin-left: 7px;
-  }
+.cmk-alert-box__icon {
+  flex-shrink: 0;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmk-alert-box__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--dimension-3);
+  max-width: 100%;
 }
 
 .cmk-alert-box--error {

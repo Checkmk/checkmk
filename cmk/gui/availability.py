@@ -32,6 +32,7 @@ from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
     BIServiceWithFullState,
+    BIState,
     BIStatusInfo,
     NodeComputeResult,
     NodeResultBundle,
@@ -2780,7 +2781,7 @@ def _compute_node_result_bundle(
     services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]] = {}
     hosts: dict[BIHostSpec, AVBITimelineState] = {}
     for site_host_service, state_output in status.items():
-        site_host = BIHostSpec(site_host_service[0], site_host_service[1])
+        site_host = BIHostSpec(site_id=site_host_service[0], host_name=site_host_service[1])
         service = site_host_service[2]
         state: int | None = state_output[0]
 
@@ -2792,15 +2793,15 @@ def _compute_node_result_bundle(
                 continue
             services_by_host.setdefault(site_host, {})
             services_by_host[site_host][service] = BIServiceWithFullState(
-                state,
-                True,  # has_been_checked
-                state_output[1],  # output
-                state,  # hard state (we use the soft state here)
-                1,  # attempt
-                1,  # max_attempts (not relevant)
-                state_output[2],  # in_downtime
-                False,  # acknowledged
-                state_output[3],  # in_service_period
+                state=state,
+                has_been_checked=True,
+                plugin_output=state_output[1],
+                hard_state=state,
+                current_attempt=1,
+                max_check_attempts=1,
+                scheduled_downtime_depth=state_output[2],
+                acknowledged=False,
+                in_service_period=state_output[3],
             )
         else:
             hosts[site_host] = state_output
@@ -2813,7 +2814,15 @@ def _compute_node_result_bundle(
     if not results:
         # The aggregation did not find any hosts or services. Return "Not yet monitored"
         return NodeResultBundle(
-            NodeComputeResult(-1, False, False, _("Not yet monitored"), True, {}, {}),
+            NodeComputeResult(
+                state=BIState.PENDING,
+                in_downtime=False,
+                acknowledged=False,
+                output=_("Not yet monitored"),
+                in_service_period=True,
+                state_messages={},
+                custom_infos={},
+            ),
             None,
             [],
             None,
@@ -2835,15 +2844,15 @@ def _compute_status_info(
             state = None  # Means: consider this object as missing
 
         status_info[site_host] = BIHostStatusInfoRow(
-            state,  # state
-            True,  # has_been_checked
-            state,  # host hard state
-            state_output[1],  # plug-in output
-            state_output[2],  # in_downtime
-            state_output[3],  # in_service_period
-            False,  # acknowledged
-            services_by_host.get(site_host, {}),
-            {},  # remaining keys N/A
+            state=state,
+            has_been_checked=True,
+            hard_state=state,
+            plugin_output=state_output[1],
+            scheduled_downtime_depth=state_output[2],
+            in_service_period=state_output[3],
+            acknowledged=False,
+            services_with_fullstate=services_by_host.get(site_host, {}),
+            remaining_row_keys={},
         )
     return status_info
 

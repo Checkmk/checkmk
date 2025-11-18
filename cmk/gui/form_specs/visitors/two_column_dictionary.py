@@ -19,7 +19,7 @@ class TwoColumnDictionaryVisitor(DictionaryVisitor):
     @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
-    ) -> tuple[shared_type_defs.TwoColumnDictionary, object]:
+    ) -> tuple[shared_type_defs.FormSpec, object]:
         schema, value = super()._to_vue(parsed_value)
         schema_args = asdict(schema)
         del schema_args["type"]

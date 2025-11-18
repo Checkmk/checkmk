@@ -5,14 +5,6 @@
 """
 Plot performance data from filesystem or database.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 This script provides a CLI tool for aggregating, storing, and visualizing performance test results
 from either a PostgreSQL database or the local filesystem.
 
@@ -50,8 +42,16 @@ Options:
     job_names                List of job names to process.
 
 Example:
-    python perftest_plot.py --dbhost qa.lan.checkmk.net 2.5.0-2025.09.10.cce
+    python perftest_plot.py --dbhost qa.lan.checkmk.net 2.5.0-2025.09.10.ultimate
 """
+
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import json

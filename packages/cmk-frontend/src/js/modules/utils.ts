@@ -943,10 +943,19 @@ function getContentBody(): HTMLElement {
     : document.body
 }
 
-export function makeLoadingTransition(template: string, delay: number): void {
+export function makeLoadingTransition(
+  template: string | null,
+  delay: number,
+  title?: string
+): void {
   const contentBody = getContentBody()
   contentBody.setAttribute('data-prepare-loading-transition', 'true')
   contentBody.style.cursor = 'wait'
+
+  if (template === null) {
+    return
+  }
+
   setTimeout(() => {
     const body = getContentBody()
     if (!body.hasAttribute('data-prepare-loading-transition')) {
@@ -956,7 +965,7 @@ export function makeLoadingTransition(template: string, delay: number): void {
     // Removing attribute is not really needed, since the whole body is going to be replaced
     body.removeAttribute('data-prepare-loading-transition')
     const transition = document.createElement('cmk-loading-transition')
-    transition.setAttribute('data', JSON.stringify({ template: template }))
+    transition.setAttribute('data', JSON.stringify({ template, title }))
     for (const child of body.children) {
       if (child.nodeType === Node.ELEMENT_NODE) {
         ;(child as HTMLElement).style.display = 'none'

@@ -3,33 +3,32 @@
 /// file: test-update-single-f12less.groovy
 
 def build_make_target(edition, cross_edition_target="") {
-    def prefix = "test-update-";
-    def suffix = "-docker";
     switch(edition) {
+        // The make targets are written without the -docker suffix in tests/Makefile.
         case 'community':
             switch(cross_edition_target) {
                 case 'ultimate':
+                    return "test-update-cross-edition-community-to-ultimate-docker";
                 case 'pro':
-                    // from community to ultimate or pro
-                    return prefix + "cross-edition-community-to-" + cross_edition_target + suffix;
+                    return "test-update-cross-edition-community-to-pro-docker";
                 default:
-                    return prefix + "community" + suffix;
+                    return "test-update-community-docker";
             }
         case 'pro':
             switch(cross_edition_target) {
                 case 'ultimate':
+                    return "test-update-cross-edition-pro-to-ultimate-docker";
                 case 'ultimatemt':
-                    // from pro to ultimate or ultimatemt
-                    return prefix + "cross-edition-pro-to-" + cross_edition_target + suffix;
+                    return "test-update-cross-edition-pro-to-ultimatemt-docker";
                 default:
-                    return prefix + "pro" + suffix;
+                    return "test-update-pro-docker";
             }
         case 'ultimate':
-            return prefix + "ultimate" + suffix;
+            return "test-update-ultimate-docker";
         case 'cloud':
-            return prefix + "cloud" + suffix;
+            return "test-update-cloud-docker";
         case 'ultimatemt':
-            return prefix + "ultimatemt" + suffix;
+            return "test-update-ultimatemt-docker";
         default:
             error("The update tests are not yet enabled for edition: " + edition);
     }

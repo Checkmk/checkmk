@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -741,7 +740,7 @@ class PainterSvcMetrics(Painter):
         return ["service_check_command", "service_perf_data"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["show_internal_graph_and_metric_ids"]
 
     @property
@@ -2082,7 +2081,7 @@ class PainterHostPluginOutput(Painter):
     def title(self, cell: Cell) -> str:
         return _("Summary")
 
-    def list_title(self, cell):
+    def list_title(self, cell: Cell) -> str:
         return _("Summary (Previously named: Status details or plug-in output)")
 
     @property
@@ -3085,10 +3084,10 @@ class PainterNumServicesPending(Painter):
 
 
 def _paint_service_list(row: Row, columnname: str, *, renderer: RenderLink) -> CellSpec:
-    def sort_key(entry):
-        if columnname.startswith("servicegroup"):
+    def sort_key(entry: tuple[str, int, int] | tuple[str, str, int, int]) -> tuple[str, ...]:
+        if columnname.startswith("servicegroup") and isinstance(entry[1], str):
             return entry[0].lower(), entry[1].lower()
-        return entry[0].lower()
+        return (entry[0].lower(),)
 
     h = HTML.empty()
     for entry in sorted(row[columnname], key=sort_key):
@@ -5233,7 +5232,7 @@ class PainterHostTags(Painter):
 class ABCPainterTagsWithTitles(Painter, abc.ABC):
     @property
     @abc.abstractmethod
-    def object_type(self):
+    def object_type(self) -> str:
         raise NotImplementedError()
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -5245,7 +5244,7 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
             ]
         )
 
-    def _get_entries(self, row):
+    def _get_entries(self, row: Row) -> list[tuple[str, str]]:
         entries = []
         for tag_group_id, tag_id in get_tag_groups(row, self.object_type).items():
             tag_group = self.config.tags.get_tag_group(tag_group_id)

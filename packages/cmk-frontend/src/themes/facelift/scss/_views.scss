@@ -603,6 +603,10 @@ table.data.single {
     &.perfometer div.glass {
       width: 100%;
     }
+
+    &.inv_cell_no_padding {
+      padding: 0;
+    }
   }
 }
 
@@ -669,6 +673,10 @@ table.data.matrix {
       width: 100%;
       padding: 0;
     }
+  }
+
+  td.inv_cell_no_padding {
+    padding: 0;
   }
 }
 
@@ -750,7 +758,7 @@ table.timeline td.ooservice,
 div.avlegend.timeline div.state.ooservice {
   color: $font-color-black;
   background-color: $middarkgrey;
-  background-image: url('images/ooservice.png');
+  background-image: url('../facelift/images/ooservice.png');
   background-repeat: repeat;
 }
 
@@ -951,6 +959,10 @@ td.invtree {
       height: 14px;
       padding: 2px 6px;
       background-color: $nested-table-td-bg-color;
+
+      &.inv_cell_no_padding {
+        padding: 0;
+      }
 
       &.inactive_cell {
         background-color: $nested-table-td-inactive-bg-color;
@@ -1231,4 +1243,10 @@ td.agent_config table.rulesets td {
 
 span.muted_text {
   color: $font-color-dimmed;
+}
+
+table.data {
+  td.inv_cell_no_padding {
+    padding: 0 !important;
+  }
 }

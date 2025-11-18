@@ -17,7 +17,7 @@ class CommentTextAreaVisitor(MultilineTextVisitor):
     @override
     def _to_vue(
         self, parsed_value: str | InvalidValue[str]
-    ) -> tuple[shared_type_defs.CommentTextArea, object]:
+    ) -> tuple[shared_type_defs.FormSpec, object]:
         multiline_text, value = super()._to_vue(parsed_value)
         multiline_text_args = asdict(multiline_text)
         multiline_text_args["type"] = "comment_text_area"

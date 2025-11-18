@@ -4,16 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
 from __future__ import annotations
 
+import enum
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from functools import partial
 from typing import (
     Any,
     Literal,
@@ -29,8 +28,10 @@ from marshmallow import Schema as marshmallow_Schema
 
 from livestatus import LivestatusResponse, Query
 
+from cmk.bi.fields import ReqBoolean, ReqList, ReqNested, ReqString
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
+    ActionArgument,
     ActionKind,
     ActionSerialized,
     AggregationFunctionKind,
@@ -53,28 +54,15 @@ from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-vio
     ServiceDetails,
     ServiceState,
 )
-from cmk.fields import Boolean, Constant, Dict, Integer, List, Nested, String
+from cmk.fields import Boolean, List, Nested, String
 from cmk.utils.labels import LabelGroups
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
-ReqList = partial(List, required=True)
-ReqDict = partial(Dict, required=True)
-ReqConstant = partial(Constant, required=True)
-ReqInteger = partial(Integer, required=True)
-ReqString = partial(String, required=True)
-ReqNested = partial(Nested, required=True)
-ReqBoolean = partial(Boolean, required=True)
 
-SearchResult = dict[str, str]
-SearchResults = list[SearchResult]
-ActionArgument = tuple[str, ...]
-ActionArguments = list[ActionArgument]
-
-
-class BIStates:
+class BIState(enum.IntEnum):
     OK = 0
     WARN = 1
     CRIT = 2
@@ -279,7 +267,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
     def schema(cls) -> type[BIAggregationComputationOptionsSchema]:
         return BIAggregationComputationOptionsSchema
 
-    def serialize(self):
+    def serialize(self) -> ComputationConfigDict:
         return {
             "disabled": self.disabled,
             "freeze_aggregations": self.freeze_aggregations,
@@ -319,14 +307,14 @@ class BIAggregationGroups(ABCWithSchema):
         return len(self.names) + len(self.paths)
 
     def combined_groups(self) -> set[str]:
-        return set(self.names + ["/".join(x) for x in self.paths])
+        return set(self.names + ["/".join(path) for path in self.paths])
 
     @override
     @classmethod
     def schema(cls) -> type[BIAggregationGroupsSchema]:
         return BIAggregationGroupsSchema
 
-    def serialize(self):
+    def serialize(self) -> GroupConfigDict:
         return {
             "names": self.names,
             "paths": self.paths,
@@ -360,7 +348,7 @@ class BIParams(ABCWithSchema):
     def schema(cls) -> type[BIParamsSchema]:
         return BIParamsSchema
 
-    def serialize(self):
+    def serialize(self) -> dict[str, list[str]]:
         return {
             "arguments": self.arguments,
         }
@@ -523,7 +511,7 @@ class ABCBICompiledNode(ABC):
         self._frozen_marker: FrozenMarker | None = None
 
     @property
-    def frozen_marker(self):
+    def frozen_marker(self) -> FrozenMarker | None:
         return self._frozen_marker
 
     def set_frozen_marker(self, frozen_marker: FrozenMarker) -> None:
@@ -606,7 +594,7 @@ class ABCBIAction(ABC):
 
     def _generate_action_arguments(
         self, search_results: list[dict[str, str]], macros: Mapping[str, str]
-    ) -> ActionArguments:
+    ) -> list[ActionArgument]:
         raise NotImplementedError()
 
     def execute_search_results(
@@ -616,7 +604,9 @@ class ABCBIAction(ABC):
         for argument in self._deduplicate_action_arguments(action_arguments):
             yield from self.execute(argument, bi_searcher)
 
-    def _deduplicate_action_arguments(self, arguments: ActionArguments) -> ActionArguments:
+    def _deduplicate_action_arguments(
+        self, arguments: list[ActionArgument]
+    ) -> list[ActionArgument]:
         return list(dict.fromkeys(arguments).keys())
 
     @abstractmethod

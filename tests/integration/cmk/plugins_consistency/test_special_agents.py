@@ -23,7 +23,7 @@ from cmk.plugins.azure_v2.special_agent import agent_azure_v2 as agent_azure_v2
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.checkmk.special_agents import agent_bi
 from cmk.plugins.cisco.special_agent import agent_cisco_prime
-from cmk.plugins.cisco_meraki.special_agent import agent_cisco_meraki
+from cmk.plugins.cisco_meraki.lib import agent as agent_cisco_meraki
 from cmk.plugins.couchbase.special_agent import agent_couchbase
 from cmk.plugins.datadog.special_agent import agent_datadog
 from cmk.plugins.elasticsearch.special_agent import agent_elasticsearch
@@ -134,9 +134,9 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "alertmanager": ["--config", "{}"],
     "allnet_ip_sensoric": ["HOSTNAME"],
     "aws": [
-        "--access-key-id",
+        "--access-key-identity",
         "ACCESS_KEY_ID",
-        "--secret-access-key",
+        "--secret",
         "SECRET_ACCESS_KEY",
         "--hostname",
         "HOSTNAME",
@@ -268,7 +268,14 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "gcp_status": [],
     "pure_storage_fa": ["--apitoken", "API-TOKEN", "SERVER"],
     "bazel_cache": ["--host", "SERVER"],
-    "otel": ["HOSTNAME"],
+    "otel": [
+        "--check-interval",
+        "60.0",
+        "--host-name-resource-attribute-key",
+        "host.name",
+        "--host-name",
+        "HOSTNAME",
+    ],
     "metric_backend_custom_query": [
         json.dumps(
             {

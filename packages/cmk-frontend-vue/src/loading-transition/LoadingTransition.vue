@@ -6,7 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type LoadingTransition } from 'cmk-shared-typing/typescript/loading_transition'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import CmkSkeleton from '@/components/CmkSkeleton.vue'
+import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import CatalogSkeleton from './CatalogSkeleton.vue'
 import DashboardSkeleton from './DashboardSkeleton.vue'
@@ -14,14 +17,23 @@ import TableSkeleton from './TableSkeleton.vue'
 
 defineProps<{
   template: LoadingTransition
+  title?: TranslatedString
 }>()
 </script>
 
 <template>
   <div class="loading-transition__container">
     <div class="loading-transition__titlebar">
-      <CmkSkeleton type="h1" :width="'400px'" class="loading-transition__skel-title" />
-      <span class="loading-transition__skel-breadcrumbs">
+      <CmkHeading v-if="title" :type="'h1'" class="loading-transition__title">
+        {{ title }}
+      </CmkHeading>
+      <CmkSkeleton
+        v-else
+        type="h1"
+        :width="'400px'"
+        class="loading-transition__title loading-transition__skel-title"
+      />
+      <span class="loading-transition__breadcrumbs">
         <CmkSkeleton type="text" /> > <CmkSkeleton type="text" /> >
         <CmkSkeleton type="text" :width="'100px'" />
       </span>
@@ -52,12 +64,15 @@ defineProps<{
   color: var(--font-color-dimmed);
 }
 
-.loading-transition__skel-title {
-  background: var(--ux-theme-4);
+.loading-transition__title {
   margin-top: 6px;
 }
 
-.loading-transition__skel-breadcrumbs {
+.loading-transition__skel-title {
+  background: var(--ux-theme-4);
+}
+
+.loading-transition__breadcrumbs {
   margin-top: 3px;
 }
 

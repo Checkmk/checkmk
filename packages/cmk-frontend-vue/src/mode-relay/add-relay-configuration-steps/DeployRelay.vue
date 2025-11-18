@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkCode from '@/components/CmkCode.vue'
@@ -15,26 +17,24 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const { _t } = usei18n()
 
-defineProps<CmkWizardStepProps>()
+const props = defineProps<CmkWizardStepProps & { siteVersion: string }>()
 
-const codeText = ``
+const relayImageReference = computed(() => `checkmk/check-mk-relay:${props.siteVersion}`)
+
+const codeText = computed(() => `docker pull ${relayImageReference.value}`)
 </script>
 
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
-      <CmkHeading type="h2"> {{ _t('Deploy the relay to your environment') }}</CmkHeading>
+      <CmkHeading type="h2"> {{ _t('Download the relay to your environment') }}</CmkHeading>
     </template>
 
     <template #content>
       <CmkParagraph>
-        {{
-          _t(
-            'Download the Relay container image and run it in your environment to start the setup.'
-          )
-        }}
+        {{ _t('Download the Relay container image.') }}
       </CmkParagraph>
-      <CmkCode :code_txt="codeText"> </CmkCode>
+      <CmkCode :code_txt="codeText"></CmkCode>
     </template>
 
     <template #actions>

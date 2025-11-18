@@ -14,14 +14,14 @@ from tenacity import (
     wait_exponential,
 )
 
+from cmk.agent_receiver.lib.config import get_config
+from cmk.agent_receiver.lib.log import logger
+from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError, RelaysRepository
 from cmk.ccc import version as cmk_version
 
-from ..config import get_config
-from ..log import logger
-from ..middleware import B3RequestIDMiddleware
 from .api.routers.relays import router as relay_router
 from .api.routers.tasks import router as task_router
 
@@ -30,7 +30,7 @@ def _build_config_task_factory() -> ConfigTaskFactory:
     config = get_config()
     tasks_repository = TasksRepository(
         ttl_seconds=config.task_ttl,
-        max_tasks_per_relay=config.max_tasks_per_relay,
+        max_pending_tasks_per_relay=config.max_pending_tasks_per_relay,
     )
     relays_repository = RelaysRepository.from_site(
         config.site_url, config.site_name, config.helper_config_dir

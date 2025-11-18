@@ -85,7 +85,10 @@ class WithDynamicFields:
         ):
             # the schema for `dynamic_fields` is a dict. `additionalProperties` in the json schema
             # should only be the value schema, as the keys are implicitly strings.
-            dynamic_field_schema.update(dynamic_field_schema.pop("additionalProperties", {}))
+            if isinstance((additional := dynamic_field_schema.get("additionalProperties")), dict):
+                del dynamic_field_schema["additionalProperties"]
+                dynamic_field_schema.update(additional)
+
             json_schema["additionalProperties"] = dynamic_field_schema
         else:
             # this is supported by OpenAPI

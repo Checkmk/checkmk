@@ -36,8 +36,7 @@ multisite_sorters: dict[str, Any] = {}
 multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
 
 
-def load_plugins() -> None:
-    """Plug-in initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+def register() -> None:
     _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
     inventory.register_inv_paint_functions(globals())

@@ -8,7 +8,8 @@ def package_wheel(
         whl,
         excludes = [],
         visibility = None,
-        additional_files = []):
+        additional_files = [],
+        prefix = "lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR):
     """Packages a python wheel into our omd site-packages.
 
     Args:
@@ -17,6 +18,7 @@ def package_wheel(
         excludes: Optional, exclude files from packaging.
         visibility: The visibility attribute on the target.
         additional_files: List of additional files to be put in the tar.
+        prefix: where will the python packages will be deployed. Default is set to the location for the 3rd party packages.
     """
     whl_filegroup_name = name + "_fg"
     filtered_name = name + "_filtered"
@@ -42,7 +44,7 @@ def package_wheel(
     pkg_files(
         name = pkg_files_name + "2",
         srcs = [pkg_files_name + "1"],
-        prefix = "lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR,
+        prefix = prefix,
         strip_prefix = filtered_name,
     )
     pkg_tar(

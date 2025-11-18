@@ -11,6 +11,7 @@ import { randomId } from '@/lib/randomId'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkIcon from '@/components/CmkIcon'
 
+import DashboardBreadcrumb from '@/dashboard-wip/components/DashboardBreadcrumb/DashboardBreadcrumb.vue'
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import DashboardFilterSettings from '@/dashboard-wip/components/DashboardFilterSettings/DashboardFilterSettings.vue'
 import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
@@ -38,6 +39,7 @@ import {
   type DashboardModel
 } from '@/dashboard-wip/types/dashboard.ts'
 import { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
+import type { BreadcrumbItem } from '@/dashboard-wip/types/page'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import type {
   WidgetContent,
@@ -64,6 +66,7 @@ const openDashboardCloneDialog = ref(false)
 const openWizard = ref(false)
 const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
+const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
@@ -102,6 +105,7 @@ const dashboardWidgets = useDashboardWidgets(
 
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   await dashboardsManager.loadDashboard(dashboard.name, dashboard.layout_type as DashboardLayout)
+  selectedDashboardBreadcrumb.value = dashboard.display?.topic?.breadcrumb ?? null
 }
 
 const selectedDashboard = computed(() => {
@@ -334,6 +338,11 @@ function deepClone<T>(obj: T): T {
 <template>
   <CmkErrorBoundary>
     <div>
+      <DashboardBreadcrumb
+        :selected-dashboard="selectedDashboard ?? null"
+        :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
+        :initial-breadcrumb="initial_breadcrumb"
+      />
       <DashboardMenuHeader
         v-model:is-edit-mode="isDashboardEditingMode"
         :selected-dashboard="selectedDashboard"

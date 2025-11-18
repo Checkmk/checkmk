@@ -4,16 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Configuration entities / Notification Parameter
 
-# mypy: disable-error-code="mutable-override"
-
 These endpoints can be used to manipulate notification parameter via the configuration
 entity API, for more information see "Configuration entities" endpoints."""
+
+# mypy: disable-error-code="mutable-override"
 
 from collections.abc import Mapping
 from typing import Any
 
 from cmk import fields
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.configuration_entity._common import (
     get_endpoint_decorator,
     list_endpoint_decorator,
@@ -48,13 +49,13 @@ class NotificationParamResponseCollection(DomainObjectCollection):
 )
 def _list_notification_parameters(params: Mapping[str, Any]) -> Response:
     """List existing notification parameters"""
-    return serve_configuration_entity_list(ConfigEntityType.notification_parameter, params)
+    return serve_configuration_entity_list(ConfigEntityType.notification_parameter, params, user)
 
 
 @get_endpoint_decorator(ConfigEntityType.notification_parameter)
 def _get_notification_parameter(params: Mapping[str, Any]) -> Response:
     """Get a notification parameter"""
-    return serve_configuration_entity(ConfigEntityType.notification_parameter, params)
+    return serve_configuration_entity(ConfigEntityType.notification_parameter, params, user)
 
 
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:

@@ -11,6 +11,7 @@ filegroup(
         "//packages/cmk-messaging:requirements.in",
         "//packages/cmk-mkp-tool:requirements.in",
         "//packages/cmk-plugin-apis:requirements.in",
+        "//packages/cmk-plugins:requirements.in",
         "//packages/cmk-trace:requirements.in",
         "//packages/cmk-werks:requirements.in",
     ],

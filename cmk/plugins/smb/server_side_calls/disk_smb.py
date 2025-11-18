@@ -66,7 +66,7 @@ def commands_check_disk_smb(
         args += ["--port", str(params.port)]
 
     if params.auth is not None:
-        args += ["-u", params.auth.user, "--password-reference", params.auth.password]
+        args += ["-u", params.auth.user, "--password-id", params.auth.password]
 
     if params.ip_address is not None:
         args += ["-a", replace_macros(params.ip_address, host_config.macros)]

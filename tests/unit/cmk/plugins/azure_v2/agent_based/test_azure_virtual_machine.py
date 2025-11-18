@@ -404,4 +404,4 @@ def test_check_azure_vm_network_io(
 
 def test_azure_virtualmachines_inventory() -> None:
     inventory = inventory_plugin_azure_virtualmachines.inventory_function(SECTION)
-    assert get_inventory_value(inventory, "Region") == "uksouth"
+    assert get_inventory_value(inventory, "region") == "uksouth"

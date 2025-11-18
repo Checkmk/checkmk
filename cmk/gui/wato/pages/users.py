@@ -5,7 +5,6 @@
 """Modes for managing users and contacts"""
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -66,7 +65,6 @@ from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import (
     get_ntop_connection_by_site,
-    get_ntop_connection_mandatory,
     is_ntop_available,
 )
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -286,7 +284,7 @@ class ModeUsers(WatoMode):
                 item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
             )
 
-        # The SAML2 config mode is only registered under non-CRE, non-CSE editions
+        # The SAML2 config mode is only registered under commercial (non cloud) editions
         if mode_registry.get("saml_config") is not None:
             yield PageMenuEntry(
                 title=_("SAML authentication"),
@@ -465,10 +463,10 @@ class ModeUsers(WatoMode):
             )
         self._show_user_list_footer(users)
 
-    def _job_details_link(self):
+    def _job_details_link(self) -> HTML:
         return HTMLWriter.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
 
-    def _job_details_url(self):
+    def _job_details_url(self) -> str:
         return makeuri_contextless(
             request,
             [
@@ -479,7 +477,7 @@ class ModeUsers(WatoMode):
             filename="wato.py",
         )
 
-    def _show_job_info(self):
+    def _show_job_info(self) -> None:
         if self._job_snapshot.is_active:
             html.h3(_("Current status of synchronization process"))
             html.browser_reload = 0.8
@@ -1000,15 +998,21 @@ class ModeEditUser(WatoMode):
 
         # ntopng
         if is_ntop_available():
-            ntop_connection = get_ntop_connection_mandatory()
-            # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding Setup rule
-            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
-            if ntop_username_attribute:
-                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[typeddict-unknown-key]
-                    ntop_username_attribute
+            ntop_connections = get_ntop_connection_by_site()
+            for _site_id, ntop_connection in ntop_connections.items():
+                if not ntop_connection:
+                    continue
+                # ntop_username_attribute will be the name of the custom attribute or false
+                # see corresponding Setup rule
+                ntop_username_attribute = ntop_connection.get(
+                    "use_custom_attribute_as_ntop_username"
                 )
+                if ntop_username_attribute:
+                    # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+                    user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
+                        ntop_username_attribute
+                    )
+                    return
 
     def _increment_auth_serial(self, user_attrs: UserSpec) -> None:
         user_attrs["serial"] = user_attrs.get("serial", 0) + 1
@@ -1322,6 +1326,8 @@ class ModeEditUser(WatoMode):
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding Setup rule
             for site_id, ntop_connection in ntop_connections.items():
+                if not ntop_connection:
+                    continue
                 ntop_username_attribute = ntop_connection.get(
                     "use_custom_attribute_as_ntop_username"
                 )
@@ -1543,7 +1549,7 @@ class ModeEditUser(WatoMode):
         checked when modifying an existing user"""
         return not self._is_new_user and attr in self._locked_attributes
 
-    def _vs_sites(self):
+    def _vs_sites(self) -> Alternative:
         return Alternative(
             title=_("Monitored sites"),
             help=_(

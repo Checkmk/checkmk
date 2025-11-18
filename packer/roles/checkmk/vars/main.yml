@@ -4,4 +4,4 @@ checkmk_server_download_url: "{{ checkmk_server_base_url }}/{{ checkmk_server_ve
 
 # Due to inconsitent naming of editions, we normalize them here for convenience
 checkmk_server_edition_mapping:
-  cce: cloud
+  ultimate: ultimate

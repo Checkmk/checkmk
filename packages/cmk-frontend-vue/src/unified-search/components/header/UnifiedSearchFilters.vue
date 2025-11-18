@@ -11,9 +11,9 @@ import useClickOutside from '@/lib/useClickOutside'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
 import type { FilterOption, ProviderOption } from '@/unified-search/providers/search-utils.types'
 
-import { getSearchUtils } from '../../providers/search-utils'
 import FilterOptionEntry from './FilterOptionEntry.vue'
 import { availableFilterOptions, availableProviderOptions } from './QueryOptions'
 

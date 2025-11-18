@@ -50,7 +50,7 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fal
     @override
     def _to_vue(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
-    ) -> tuple[shared_type_defs.String, object]:
+    ) -> tuple[shared_type_defs.FormSpec, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.String(

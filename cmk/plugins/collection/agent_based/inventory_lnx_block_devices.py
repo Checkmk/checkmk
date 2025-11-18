@@ -5,9 +5,6 @@
 """Create block devices inventory from Linux device tree information
 Sample agent output:
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
     <<<lnx_block_devices:sep(0):persist(1593783273)>>>
     |device|/sys/devices/pci0000:00/0000:00:1d.4/0000:3b:00.0/nvme/nvme0/nvme0n1|
     |size|1000215216|
@@ -17,6 +14,9 @@ Sample agent output:
     |device/model|PC601 NVMe SK hynix 512GB               |
     |device/serial|AJ98N635810808T29   |
 """
+
+# mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
 from itertools import groupby

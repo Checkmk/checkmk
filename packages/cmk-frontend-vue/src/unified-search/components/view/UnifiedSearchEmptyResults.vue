@@ -7,12 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import type { HistoryEntry } from '@/lib/unified-search/searchHistory'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 
-import { getSearchUtils } from '../../providers/search-utils'
+import type { HistoryEntry } from '@/unified-search/lib/searchHistory'
+import { getSearchUtils } from '@/unified-search/providers/search-utils'
+
 import UnifiedSearchRecentlyViewed from './UnifiedSearchRecentlyViewed.vue'
 
 const maxRecentlyViewed = 5

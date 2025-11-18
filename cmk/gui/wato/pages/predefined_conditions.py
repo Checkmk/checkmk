@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection
@@ -59,7 +58,7 @@ class DummyRulespecGroup(RulespecGroup):
         return "Dummy"
 
     @property
-    def help(self):
+    def help(self) -> str:
         return "Dummy"
 
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mange custom attributes of users and hosts"""
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -69,7 +68,7 @@ def custom_attr_types() -> Choices:
 
 # TODO: Refactor to be valuespec based
 class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._name = request.get_ascii_input("edit")  # missing -> new custom attr
         self._new = self._name is None
 
@@ -631,7 +630,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
     def title(self) -> str:
         return _("Custom host attributes")
 
-    def get_attributes(self):
+    def get_attributes(self) -> list[CustomHostAttrSpec]:
         return self._attrs
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:

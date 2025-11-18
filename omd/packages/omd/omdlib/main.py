@@ -134,14 +134,12 @@ from omdlib.version_info import VersionInfo
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.resulttype import Error, OK, Result
-from cmk.ccc.site import SiteId
 from cmk.ccc.version import (
     Edition,
     edition_has_enforced_licensing,
 )
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import hash_password
-from cmk.utils.certs import agent_root_ca_path, cert_dir, RootCA, SiteCA
 
 ConfigChangeCommands = list[tuple[str, str]]
 
@@ -1381,34 +1379,6 @@ def _instantiate_skel(path: str, replacements: Replacements) -> bytes:
     except Exception:
         # TODO: This is a bad exception handler. Drop it
         return b""  # e.g. due to permission error
-
-
-def initialize_site_ca(
-    site: SiteContext, site_key_size: int = 4096, root_key_size: int = 4096
-) -> None:
-    """Initialize the site local CA and create the default site certificate
-    This will be used e.g. for serving SSL secured livestatus
-
-    site_key_size specifies the length of the site certificate's private key. It should only be
-    changed for testing purposes.
-    """
-    site_home = SitePaths.from_site_name(site.name).home
-    site_id = SiteId(site.name)
-    ca_path = cert_dir(Path(site_home))
-    ca = SiteCA.load_or_create(site_id, ca_path, key_size=root_key_size)
-
-    if not ca.site_certificate_exists(ca.cert_dir, site_id):
-        ca.create_site_certificate(site_id, key_size=site_key_size)
-
-
-def initialize_agent_ca(site: SiteContext) -> None:
-    """Initialize the agents CA folder alongside a default agent signing CA.
-    The default CA shall be used for issuing certificates for requesting agent controllers.
-    Additional CAs/root certs that may be placed at the agent CA folder shall be used as additional
-    root certs for agent receiver certificate verification (either as client or server cert)
-    """
-    site_home = Path(SitePaths.from_site_name(site.name).home)
-    RootCA.load_or_create(agent_root_ca_path(site_home), f"Site '{site.name}' agent signing CA")
 
 
 def config_change(

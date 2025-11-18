@@ -13,6 +13,7 @@ from typing import TypedDict
 import pytest
 from pytest_mock import MockerFixture
 
+import omdlib.finalize
 import omdlib.main
 from omdlib.contexts import SiteContext
 
@@ -252,13 +253,15 @@ class TestConfigDomainCACertificates:
         site_pem = ca_path / "sites" / ("%s.pem" % site_id)
 
         monkeypatch.setattr(
-            omdlib.main,
+            omdlib.finalize,
             "cert_dir",
             lambda x: ca_path,
         )
 
         assert not site_pem.exists()
-        omdlib.main.initialize_site_ca(SiteContext(site_id), site_key_size=1024, root_key_size=1024)
+        omdlib.finalize.initialize_site_ca(
+            SiteContext(site_id), site_key_size=1024, root_key_size=1024
+        )
 
         remote_cas = ConfigDomainCACertificates()._remote_sites_cas([ca_pem.read_text()])
         assert SiteId(site_id) in remote_cas

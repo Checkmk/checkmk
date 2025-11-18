@@ -13,6 +13,7 @@ from cryptography.x509.oid import NameOID
 from pytest_mock import MockerFixture
 
 import omdlib
+import omdlib.finalize
 import omdlib.main
 import omdlib.utils
 from omdlib.contexts import SiteContext
@@ -30,12 +31,12 @@ def test_initialize_site_ca(
     site_pem = ca_path / "sites" / ("%s.pem" % site_id)
 
     mocker.patch(
-        "omdlib.main.cert_dir",
+        "omdlib.finalize.cert_dir",
         return_value=ca_path,
     )
 
     assert not site_pem.exists()
-    omdlib.main.initialize_site_ca(SiteContext(site_id), site_key_size=1024, root_key_size=1024)
+    omdlib.finalize.initialize_site_ca(SiteContext(site_id), site_key_size=1024, root_key_size=1024)
 
     assert ca_pem.exists()
     ca_cert = load_pem_x509_certificate(ca_pem.read_bytes())

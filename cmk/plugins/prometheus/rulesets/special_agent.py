@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ipaddress
+import re
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
+from typing import Final
 
-from cmk.ccc.hostaddress import HostAddress
 from cmk.plugins.prometheus.lib_form_elements import api_request_authentication, connection
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -526,16 +529,30 @@ rule_spec_special_agent_prometheus = SpecialAgent(
 )
 
 
-def _validate_hostname(value: str) -> None:
-    try:
-        HostAddress(value)
-    except ValueError as exception:
-        raise validators.ValidationError(
-            message=Message(
-                "Please enter a valid host name or IPv4 address. "
-                "Only letters, digits, dash, underscore and dot are allowed."
-            )
-        ) from exception
+REGEX_HOST_NAME: Final = re.compile(r"^\w[-0-9a-zA-Z_.]*$", re.ASCII)
+
+
+def _validate_hostname(text: str) -> None:
+    if len(text) > 240:
+        # Ext4 and others allow filenames of up to 255 bytes.
+        # As we add prefixes and/or suffixes, the number has to be way lower.
+        # 240 seems to be OK to still be able to delete a host if it causes
+        # trouble elsewhere
+        raise validators.ValidationError(Message("Host name too long: %s") % f"{text[:16] + '…'!r}")
+
+    with suppress(ValueError):
+        ipaddress.ip_address(text)
+        return
+
+    if REGEX_HOST_NAME.match(text):
+        return
+
+    raise validators.ValidationError(
+        message=Message(
+            "Please enter a valid host name or IPv4 address. "
+            "Only letters, digits, dash, underscore and dot are allowed."
+        )
+    )
 
 
 def _validate_service_metrics(value: Sequence[Mapping[str, object]]) -> None:

@@ -166,7 +166,7 @@ _CLEAN_PLUGIN_FAMILIES = {
     "netapp",
     # "otel", # :
     "prism",
-    # "prometheus",  # :HostAddress
+    "prometheus",
     "proxmox_ve",
     "pure_storage_fa",
     "rabbitmq",

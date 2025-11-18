@@ -51,6 +51,12 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	    windows/windows_files_hashes.txt \
 	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents/
 
+	# install mk-oracle explicitly
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/plugins/oracle/agents/
+	cp $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.aix $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/plugins/oracle/agents/
+	cp $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.exe $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/plugins/oracle/agents/
+	cp $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.solaris $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/plugins/oracle/agents/
+
 	# legacy checks have been moved to checks/ in a dedicated step above.
 	rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
 

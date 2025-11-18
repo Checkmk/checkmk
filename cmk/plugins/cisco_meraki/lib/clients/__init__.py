@@ -41,15 +41,11 @@ class MerakiSDK(Protocol):
     def sensor(self) -> SensorSDK: ...
 
 
-class OrganisationCallable[T](Protocol):
-    def __call__(self, id_: str, name: str) -> T: ...
-
-
 @dataclass(frozen=True, kw_only=True)
 class MerakiClient:
-    get_devices: OrganisationCallable[dict[str, schema.Device]]
+    get_devices: Callable[[str, str], dict[str, schema.Device]]
     get_devices_statuses: Callable[[str], Sequence[schema.RawDevicesStatus]]
-    get_licenses_overview: OrganisationCallable[schema.LicensesOverview | None]
+    get_licenses_overview: Callable[[str, str], schema.LicensesOverview | None]
     get_organizations: Callable[[], Sequence[schema.RawOrganisation]]
     get_sensor_readings: Callable[[str], Sequence[schema.RawSensorReadings]]
 

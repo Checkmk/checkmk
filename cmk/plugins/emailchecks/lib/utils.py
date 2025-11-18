@@ -26,7 +26,6 @@ from typing import Any
 
 import urllib3
 
-import cmk.utils.password_store
 from cmk.plugins.emailchecks.lib import connections
 from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, Scope
 
@@ -173,12 +172,7 @@ def active_check_main(
     WARN: 1
     CRIT: 2
     UNKNOWN: 3
-
-    Because it modifies sys.argv and part of the functionality is terminating the process with
-    the correct return code it's hard to test in unit tests.
-    Therefore _active_check_main_core and _output_check_result should be used for unit tests since
-    they are not meant to modify the system environment or terminate the process."""
-    cmk.utils.password_store.replace_passwords()
+    """
     exitcode, status, perfdata = _active_check_main_core(argument_parser, check_fn, sys.argv[1:])
     _output_check_result(status, perfdata)
     raise SystemExit(exitcode)

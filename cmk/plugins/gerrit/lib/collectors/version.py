@@ -10,8 +10,8 @@ from typing import Self
 
 import requests
 
+from cmk.plugins.gerrit.lib.schema import LatestVersion, VersionInfo
 from cmk.plugins.gerrit.lib.semantic_version import SemanticVersion
-from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
 
 
 @dataclasses.dataclass
@@ -34,24 +34,21 @@ class LatestVersions:
             patch=str(max(patches, default="")) or None,
         )
 
+    def serialize(self) -> LatestVersion:
+        return LatestVersion(major=self.major, minor=self.minor, patch=self.patch)
+
 
 class GerritVersion:
     def __init__(self, api_url: str, auth: tuple[str, str]) -> None:
         self.api_url = api_url
         self.auth = auth
 
-    def collect(self) -> Sections:
-        current_version = self._get_current_section()
+    def collect(self) -> VersionInfo:
+        current_version = self._get_current_version()
         latest_versions = self._get_latest_versions(current_version)
+        return {"current": str(current_version), "latest": latest_versions.serialize()}
 
-        return {
-            SectionName("version"): {
-                "current": str(current_version),
-                "latest": dataclasses.asdict(latest_versions),
-            },
-        }
-
-    def _get_current_section(self) -> SemanticVersion:
+    def _get_current_version(self) -> SemanticVersion:
         uri = "/config/server/version?verbose"
 
         resp = requests.get(self.api_url + uri, auth=self.auth, timeout=30)

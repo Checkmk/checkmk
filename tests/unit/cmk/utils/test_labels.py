@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -54,7 +52,7 @@ class _LabelConfig(ABCLabelConfig):
 
 
 class _LabelManagerWithMockedDiscoerdLabels(LabelManager):
-    def _discovered_labels_of_host(self, hostname):
+    def _discovered_labels_of_host(self, hostname: HostName) -> Mapping[str, str]:
         return {
             "prio-1": "discovered-value",
             "prio-2": "discovered-value",

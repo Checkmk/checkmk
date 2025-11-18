@@ -4,15 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
 
 import argparse
+import dataclasses
 import json
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.plugins.gerrit.lib import collectors, storage
-from cmk.plugins.gerrit.lib.shared_typing import Sections
+from cmk.plugins.gerrit.lib import storage
+from cmk.plugins.gerrit.lib.collectors import Collector, GerritVersion
+from cmk.plugins.gerrit.lib.schema import VersionInfo
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
 __version__ = "2.5.0b1"
@@ -24,7 +28,17 @@ PASSWORD_OPTION = "password"
 
 @report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return run_agent(parse_arguments(sys.argv[1:]))
+    args = parse_arguments(sys.argv[1:])
+
+    api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
+    auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
+
+    ctx = GerritRunContext(
+        ttl=TTLCache(version=args.version_cache),
+        collectors=Collectors(version=GerritVersion(api_url=api_url, auth=auth)),
+    )
+
+    return run(ctx)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -72,25 +86,38 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def run_agent(args: argparse.Namespace) -> int:
-    api_url = f"{args.proto}://{args.hostname}:{args.port}/a"
-    auth = (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class TTLCache:
+    version: int
 
-    sections: Sections = {}
 
-    version_collector = collectors.GerritVersion(api_url=api_url, auth=auth)
-    version_cache = storage.VersionCache(collector=version_collector, interval=args.version_cache)
-    sections.update(version_cache.get_sections())
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class Collectors:
+    version: Collector[VersionInfo]
 
-    write_sections(sections)
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class GerritRunContext:
+    ttl: TTLCache
+    collectors: Collectors
+    cache_dir: Path | None = None
+
+
+def run(ctx: GerritRunContext) -> int:
+    version_cache = storage.VersionCache(
+        collector=ctx.collectors.version,
+        interval=ctx.ttl.version,
+        directory=ctx.cache_dir,
+    )
+    _write_section(version_cache.get_data(), name="gerrit_version")
 
     return 0
 
 
-def write_sections(sections: Sections) -> None:
-    for name, data in sections.items():
-        section_payload = json.dumps(data, sort_keys=True)
-        sys.stdout.write(f"<<<gerrit_{name}:sep(0)>>>\n{section_payload}\n")
+def _write_section(data: object, *, name: str) -> None:
+    section_payload = json.dumps(data, sort_keys=True)
+    sys.stdout.write(f"<<<{name}:sep(0)>>>\n")
+    sys.stdout.write(f"{section_payload}\n")
 
 
 if __name__ == "__main__":

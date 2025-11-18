@@ -38,11 +38,11 @@
   ],
   "Hosts to be monitored": [
     {
-      "locator": "form[id='form_rule_editor'] table:has-text('Value') button.cmk-dropdown-button",
+      "locator": "form[id='form_rule_editor'] div[id='form-app--_vue_edit_rule'] button:has-text('Value')",
       "action": "click"
     },
     {
-      "locator": "ul.cmk-suggestions li[role='option']:has-text('Positive match')",
+      "locator": "button[id='cmk-vue-app-1-2']:has-text('Positive match')",
       "action": "click"
     }
   ]

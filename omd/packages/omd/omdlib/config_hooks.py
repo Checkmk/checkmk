@@ -363,6 +363,7 @@ def _config_set(site: "SiteContext", config: Config, hook_name: str, verbose: bo
 
 def config_set_value(
     site: "SiteContext",
+    site_home: str,
     config: Config,
     hook_name: str,
     value: str,
@@ -373,18 +374,26 @@ def config_set_value(
     _config_set(site, config, hook_name, verbose)
 
     if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
-        update_cmk_core_config(config)
+        update_cmk_core_config(site_home, config)
 
     if save:
         save_site_conf(SitePaths.from_site_name(site.name).home, config)
 
 
-def update_cmk_core_config(config: Config) -> None:
+def update_cmk_core_config(site_home: str, config: Config) -> None:
     if config["CORE"] == "none":
         return  # No core config is needed in this case
 
     sys.stdout.write("Updating core configuration...\n")
     try:
-        subprocess.check_call(["cmk", "-U"], shell=False)
+        # TODO: try to find an easier way to create the default config!
+        subprocess.check_call(
+            ["cmk", "-U"],
+            env={
+                **os.environ,
+                "PASSWORD_STORE_SECRET_FILE": f"{site_home}/etc/password_store.secret",
+            },
+            shell=False,
+        )
     except subprocess.SubprocessError:
         sys.exit("Could not update core configuration. Aborting.")

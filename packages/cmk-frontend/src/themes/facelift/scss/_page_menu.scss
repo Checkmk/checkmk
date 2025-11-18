@@ -42,7 +42,7 @@ div#top_heading {
   div.titlebar {
     display: flex;
     height: 53px;
-    padding: 0.5 * $spacing $spacing 0;
+    padding: $titlebar-spacing-vertical $titlebar-spacing-horizontal 0;
     background-color: $bg-color;
 
     > div:first-child {

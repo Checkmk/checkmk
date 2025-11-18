@@ -46,7 +46,7 @@ export const useGraph = async (
   const currentContent = currentSpec?.content as GraphContent
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent.timerange ?? null
+    currentContent?.timerange ?? null
   )
 
   const {

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.ccc.user import UserId
 from cmk.gui.groups import GroupName
@@ -61,14 +60,14 @@ def find_timeperiod_usage_in_users(time_period_name: str) -> list[tuple[str, str
 def find_timeperiod_usage_in_notification_rule(
     time_period_name: str, index: int, rule: EventRule, user_id: UserId | None = None
 ) -> list[tuple[str, str]]:
-    def _used_in_tp_condition(rule, time_period_name):
+    def _used_in_tp_condition(rule: EventRule, time_period_name: str) -> bool:
         return rule.get("match_timeperiod") == time_period_name
 
-    def _used_in_bulking(rule, time_period_name):
+    def _used_in_bulking(rule: EventRule, time_period_name: str) -> bool:
         bulk = rule.get("bulk")
-        if isinstance(bulk, tuple):
+        if isinstance(bulk, tuple) and len(bulk) == 2:
             method, params = bulk
-            return method == "timeperiod" and params["timeperiod"] == time_period_name
+            return method == "timeperiod" and params.get("timeperiod") == time_period_name
         return False
 
     used_in: list[tuple[str, str]] = []

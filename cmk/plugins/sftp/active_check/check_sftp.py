@@ -15,7 +15,7 @@ from typing import NamedTuple
 import paramiko
 from pydantic import BaseModel
 
-from cmk.utils.password_store import lookup as password_store_lookup
+from cmk.password_store.v1_unstable import dereference_secret
 from cmk.utils.paths import omd_root
 
 _LOCAL_DIR = "var/check_mk/active_checks/check_sftp"
@@ -64,8 +64,7 @@ class Args(BaseModel):
         if self.secret is not None:
             return self.secret
         if self.secret_reference is not None:
-            secret_id, file = self.secret_reference.split(":", 1)
-            return password_store_lookup(Path(file), secret_id)
+            return dereference_secret(self.secret_reference).reveal()
         return None
 
 
@@ -141,8 +140,8 @@ class CheckSftp:
         local: str
         remote: str
 
-    def __init__(self, client: paramiko.SSHClient, omd_root: str, args: Args):
-        self.omd_root = omd_root
+    def __init__(self, client: paramiko.SSHClient, omd_root_: str, args: Args):
+        self.omd_root = omd_root_
         self.host: str = args.host
         self.user: str | None = args.user
         self.pass_: str | None = args.resolve_secret()
@@ -302,14 +301,10 @@ class CheckSftp:
 
 
 def main() -> int:
-    if (omd_root := os.getenv("OMD_ROOT")) is None:
-        sys.stderr.write("This check must be executed from within a site\n")
-        sys.exit(1)
-
     args = parse_arguments(sys.argv[1:])
 
     try:
-        check = CheckSftp(get_ssh_client(), omd_root, args)
+        check = CheckSftp(get_ssh_client(), str(omd_root), args)
     except SecurityError as e:
         if args.debug:
             raise

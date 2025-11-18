@@ -25,7 +25,7 @@ from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_user
 
-from ..store import DashboardStore, save_all_dashboards
+from ..store import DashboardStore, get_all_dashboards, save_all_dashboards
 from ..type_defs import DashboardConfig
 from .model.constants import (
     DashboardConstantsResponse,
@@ -113,6 +113,13 @@ PERMISSIONS_DASHBOARD = permissions.AllPerm(
         PERMISSIONS_VIEW_WIDGET,
     ]
 )
+PERMISSIONS_DASHBOARD_EDIT = permissions.AllPerm(
+    [
+        *PERMISSIONS_DASHBOARD.perms,
+        # extra permissions required for editing foreign dashboards
+        permissions.Optional(permissions.Perm("general.edit_foreign_dashboards")),
+    ]
+)
 
 
 def get_permitted_user_id(owner: UserId | ApiOmitted, action: Literal["delete", "edit"]) -> UserId:
@@ -135,6 +142,21 @@ def get_permitted_user_id(owner: UserId | ApiOmitted, action: Literal["delete", 
 
     user.need_permission(f"general.{action}_foreign_dashboards")
     return owner
+
+
+def get_dashboard_for_edit(owner: UserId | ApiOmitted, dashboard_id: str) -> DashboardConfig:
+    """Load a dashboard for editing, verifying permissions."""
+    dashboard_owner = get_permitted_user_id(owner, action="edit")
+
+    key = (dashboard_owner, dashboard_id)
+    dashboards = get_all_dashboards()
+    if key not in dashboards:
+        raise ProblemException(
+            status=404,
+            title="Dashboard not found",
+            detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{dashboard_owner}'.",
+        )
+    return dashboards[key]
 
 
 def serialize_relative_grid_dashboard(

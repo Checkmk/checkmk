@@ -24,8 +24,6 @@ from omdlib.global_options import GlobalOptions
 from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
 
-from cmk.ccc.archive import BaseSafeTarFile
-
 
 def _try_backup_site_to_tarfile(
     tar: tarfile.TarFile,
@@ -148,6 +146,10 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     # does not allow this.
     excludes.append("var/check_mk/persisted/*")
     excludes.append("var/check_mk/persisted_sections/*")
+
+    # exclude ClickHouse data. This is used in monitoring, and thus old data would only confuse the
+    # monitoring. Once we use a more long-term storage, we will have to come with a backup.
+    excludes.append("var/clickhouse-server/*")
 
     if "no-rrds" in options or "no-past" in options:
         excludes.append("var/pnp4nagios/perfdata/*")
@@ -354,12 +356,11 @@ def _tar_add(
         )
 
 
-def get_site_and_version_from_backup(tar: BaseSafeTarFile) -> tuple[str, str]:
+def get_site_and_version_from_backup(tar: tarfile.TarFile) -> tuple[str, str]:
     """Get the first file of the tar archive. Expecting <site>/version symlink
     for validation reasons."""
-    try:
-        site_tarinfo = next(tar)
-    except StopIteration:
+    site_tarinfo = tar.next()
+    if site_tarinfo is None:
         raise Exception("Failed to detect version of backed up site.")
 
     try:

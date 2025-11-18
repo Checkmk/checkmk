@@ -121,7 +121,7 @@ def relays_repository(site_context: Config) -> Iterator[RelaysRepository]:
 @pytest.fixture()
 def tasks_repository() -> Iterator[TasksRepository]:
     """Provides a TasksRepository for testing."""
-    repository = TasksRepository(ttl_seconds=10, max_tasks_per_relay=5)
+    repository = TasksRepository(ttl_seconds=10, max_pending_tasks_per_relay=5)
     yield repository
 
 

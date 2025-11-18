@@ -40,7 +40,7 @@ Describe "ProcessSearchResult" {
         $sr = [PSCustomObject]@{ ResultCode = 2; Updates = $updates }
         $output = ProcessSearchResult -SearchResult $sr -RebootRequired $true -RebootTime "2024-01-01T00:00:00"
         $output | Should -Contain "<<<windows_updates>>>"
-        $output | Should -Contain "True 2 1"
+        $output | Should -Contain "1 2 1"
         $output | Should -Contain "Important1; Important2"
         $output | Should -Contain "Optional1"
         $output | Should -Contain "2024-01-01T00:00:00"
@@ -50,7 +50,7 @@ Describe "ProcessSearchResult" {
         $sr = [PSCustomObject]@{ ResultCode = 2; Updates = @() }
         $output = ProcessSearchResult -SearchResult $sr -RebootRequired $false -RebootTime "no_key"
         $output | Should -Contain "<<<windows_updates>>>"
-        $output | Should -Contain "False 0 0"
+        $output | Should -Contain "0 0 0"
         $output | Should -Contain ""
         $output | Should -Contain "no_key"
     }

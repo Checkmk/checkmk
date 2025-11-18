@@ -47,12 +47,12 @@ def test_tasks_repository_ttl_validation() -> None:
     """Test that TasksRepository validates TTL is greater than 0."""
     # Test zero TTL raises ValueError
     with pytest.raises(ValueError, match="ttl_seconds must be greater than 0"):
-        TasksRepository(ttl_seconds=0.0, max_tasks_per_relay=5)
+        TasksRepository(ttl_seconds=0.0, max_pending_tasks_per_relay=5)
 
     # Test negative TTL raises ValueError
     with pytest.raises(ValueError, match="ttl_seconds must be greater than 0"):
-        TasksRepository(ttl_seconds=-1.0, max_tasks_per_relay=5)
+        TasksRepository(ttl_seconds=-1.0, max_pending_tasks_per_relay=5)
 
     # Test positive TTL works
-    repository = TasksRepository(ttl_seconds=120.0, max_tasks_per_relay=5)
+    repository = TasksRepository(ttl_seconds=120.0, max_pending_tasks_per_relay=5)
     assert repository.ttl_seconds == 120.0

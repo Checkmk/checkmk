@@ -2539,10 +2539,11 @@ class PythonHelper:
     of the Checkmk site under test. This object helps to copy
     and execute the script."""
 
-    def __init__(self, site: Site, helper_path: Path) -> None:
+    def __init__(self, site: Site, helper_path: Path, args: list[str] | None = None) -> None:
         self.site: Final = site
         self.helper_path: Final = helper_path
         self.site_path: Final = site.root / self.helper_path.name
+        self.args: Final = args
 
     @contextmanager
     def copy_helper(self) -> Iterator[None]:
@@ -2562,7 +2563,7 @@ class PythonHelper:
     ) -> str:
         with self.copy_helper():
             output = self.site.check_output(
-                ["python3", str(self.site_path)],
+                ["python3", str(self.site_path)] + (self.args or []),
                 input_=input_,
                 encoding=encoding,
                 stderr=subprocess.PIPE,
@@ -2572,7 +2573,9 @@ class PythonHelper:
     @contextmanager
     def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]
         with self.copy_helper():
-            yield self.site.execute(["python3", str(self.site_path)], *args, **kwargs)
+            yield self.site.execute(
+                ["python3", str(self.site_path)] + (self.args or []), *args, **kwargs
+            )
 
 
 def _assert_tmpfs(site: Site, from_version: CMKVersion) -> None:
@@ -2642,25 +2645,28 @@ def connection(
         "alias": "Remote Testsite",
         "site_id": remote_site.id,
     }
-
     if central_site.edition.is_ultimatemt_edition():
         basic_settings["customer"] = "provider"
-
-    configuration_connection = {
-        "enable_replication": True,
-        "url_of_remote_site": remote_site.internal_url,
-        "disable_remote_configuration": True,
-        "ignore_tls_errors": True,
-        "direct_login_to_web_gui_allowed": True,
-        "user_sync": {"sync_with_ldap_connections": "all"},
-        "replicate_event_console": True,
-        "replicate_extensions": True,
-        "is_trusted": False,
-    }
-    # stay backwards-compatible for performance tests:
-    # only set message_broker_port for CMK2.4.0+
-    if remote_site.version >= CMKVersion("2.4.0"):
-        configuration_connection["message_broker_port"] = remote_site.message_broker_port
+    if central_site.edition == remote_site.edition:
+        configuration_connection = {
+            "enable_replication": True,
+            "url_of_remote_site": remote_site.internal_url,
+            "disable_remote_configuration": True,
+            "ignore_tls_errors": True,
+            "direct_login_to_web_gui_allowed": True,
+            "user_sync": {"sync_with_ldap_connections": "all"},
+            "replicate_event_console": True,
+            "replicate_extensions": True,
+            "is_trusted": False,
+        }
+        # stay backwards-compatible for adding older remote sites:
+        # only set message_broker_port for CMK2.4.0+
+        if remote_site.version >= CMKVersion("2.4.0"):
+            configuration_connection["message_broker_port"] = remote_site.message_broker_port
+    else:
+        configuration_connection = {
+            "enable_replication": False,
+        }
     site_config: dict[str, object] = {
         "basic_settings": basic_settings,
         "status_connection": {
@@ -2684,8 +2690,11 @@ def connection(
     }
     logger.info("Create site connection from '%s' to '%s'", central_site.id, remote_site.id)
     central_site.openapi.sites.create(site_config)
-    logger.info("Establish site login '%s' to '%s'", central_site.id, remote_site.id)
-    central_site.openapi.sites.login(remote_site.id)
+    if configuration_connection.get("enable_replication"):
+        # CMK-27517: login won't work when replication is disabled
+        # CMK-27518: login won't work for the community edition (even if site URL is set via UI)
+        logger.info("Establish site login '%s' to '%s'", central_site.id, remote_site.id)
+        central_site.openapi.sites.login(remote_site.id)
     logger.info("Activating site setup changes")
     central_site.openapi.changes.activate_and_wait_for_completion(
         # this seems to be necessary to avoid sporadic CI failures

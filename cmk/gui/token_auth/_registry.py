@@ -18,10 +18,10 @@ from cmk.gui.http import Request, Response
 from cmk.gui.pages import PageContext, PageResult
 from cmk.gui.token_auth._store import (
     AuthToken,
+    get_token_store,
     InvalidToken,
     TokenExpired,
     TokenRevoked,
-    TokenStore,
 )
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
 from cmk.utils.log.security_event import log_security_event
@@ -56,7 +56,7 @@ def handle_token_page(
     ident: str, request: Request, response: Response
 ) -> Callable[[PageContext], Response]:
     user_provided_token = request.args.get("cmk-token", "")
-    token_store = TokenStore(cmk.utils.paths.var_dir / "token.store")
+    token_store = get_token_store()
     try:
         token = token_store.verify(user_provided_token, datetime.datetime.now(tz=datetime.UTC))
     except (InvalidToken, TokenExpired, TokenRevoked) as e:

@@ -5,8 +5,8 @@ Rulesets
 .. automodule:: cmk.rulesets
    :members:
 
-Version 1
-=========
+Version 1: `cmk.rulesets.v1`
+============================
 
 .. toctree::
 

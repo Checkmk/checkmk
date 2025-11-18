@@ -121,7 +121,7 @@ def create_tar(parent: Path) -> bytes:
         ...     '/home/user/project/src/utils.py',
         ...     '/home/user/project/tests/test_main.py'
         ... ]
-        >>> base64_tar = create_tar('/home/user/project')
+        >>> base64_tar = create_tar('/home/user/project')  # doctest: +SKIP
         >>> # Archive will contain:
         >>> # config/src/main.py
         >>> # config/src/utils.py

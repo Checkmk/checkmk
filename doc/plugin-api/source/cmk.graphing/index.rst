@@ -5,8 +5,8 @@ Graphing
 .. automodule:: cmk.graphing
    :members:
 
-Version 1
-=========
+Version 1: `cmk.graphing.v1`
+============================
 
 .. toctree::
 

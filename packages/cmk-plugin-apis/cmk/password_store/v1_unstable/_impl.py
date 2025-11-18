@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
 import os
+import secrets
 from collections.abc import Mapping
 from pathlib import Path
 from typing import final
@@ -47,6 +48,54 @@ class Secret[T]:
 
     def reveal(self) -> T:
         return self._value
+
+
+def _get_store_secret_path() -> Path:
+    if not (raw_key_file := os.environ.get("PASSWORD_STORE_SECRET_FILE")):
+        raise PasswordStoreError("Environment variable PASSWORD_STORE_SECRET_FILE is not set")
+    return Path(raw_key_file)
+
+
+def _read_store_secret() -> Secret[bytes] | None:
+    """Read the main secret of the password store.
+
+    Raises:
+        PasswordStoreError: If the secret file cannot be determined.
+
+    Returns:
+        The master secret as bytes or None if no such secret exists.
+    """
+    key_file = _get_store_secret_path()
+    try:
+        return Secret(key_file.read_bytes())
+    except FileNotFoundError:
+        return None
+
+
+def get_store_secret() -> Secret[bytes]:
+    """Read the main secret of the password store.
+
+    **This is not intended to be used by plugins directly!**
+
+    Raises:
+        PasswordStoreError: If the secret file cannot be determined.
+
+    Returns:
+        The master secret as bytes or None if no such secret exists.
+    """
+    if secret := _read_store_secret():
+        return secret
+
+    # We create it if it does not exist.
+    # Watch out, this is not race condition free!
+    # But this is created upon user interaction when the first password is stored,
+    # so this is acceptable.
+
+    secret = Secret(secrets.token_bytes(32))
+    key_file = _get_store_secret_path()
+    key_file.parent.mkdir(parents=True, exist_ok=True)
+    key_file.write_bytes(secret.reveal())
+    return secret
 
 
 @final
@@ -101,7 +150,7 @@ class PasswordStore:
 
                 passwords[ident] = password
         finally:
-            pass  # raw = line = sline = "<redacted>"  # wipe sensitive data
+            raw = line = sline = "<redacted>"  # wipe sensitive data
 
         return passwords
 
@@ -143,26 +192,6 @@ class PasswordStore:
         return hashlib.scrypt(self._secret.reveal(), salt=salt, n=2**14, r=8, p=1, dklen=32)
 
 
-def _load(
-    store_file: Path,
-    key_file: Path,
-) -> Mapping[str, Secret[str]]:
-    try:
-        store_bytes = store_file.read_bytes()
-    except FileNotFoundError:
-        # We might well have never written any passwords. This is not an error.
-        return {}
-
-    try:
-        store_secret = Secret(key_file.read_bytes())
-    except FileNotFoundError as exc:
-        raise PasswordStoreError(
-            f"Password store key file not found. Cannot decrypt {store_file}"
-        ) from exc
-
-    return PasswordStore(store_secret).load_bytes(store_bytes)
-
-
 def dereference_secret(raw: str, /) -> Secret[str]:
     """Look up the password with id <id> in the file <file> and return it.
 
@@ -178,13 +207,15 @@ def dereference_secret(raw: str, /) -> Secret[str]:
     Returns:
         The password as found in the password store.
     """
-    if not (raw_key_file := os.environ.get("PASSWORD_STORE_SECRET_FILE")):
-        raise PasswordStoreError("Environment variable PASSWORD_STORE_SECRET_FILE is not set")
+    secret_id, store_file = raw.split(":", 1)
 
-    secret_id, pws_path = raw.split(":", 1)
-    store = _load(store_file=Path(pws_path), key_file=Path(raw_key_file))
+    if (store_secret := _read_store_secret()) is None:
+        raise PasswordStoreError(f"Password store key file not found. Cannot decrypt {store_file}")
+    store_bytes = Path(store_file).read_bytes()
+
+    store = PasswordStore(store_secret).load_bytes(store_bytes)
     try:
         return store[secret_id]
     except KeyError:
         # the fact that this is a dict is an implementation detail.
-        raise PasswordStoreError(f"Password '{secret_id}' not found in {pws_path}")
+        raise PasswordStoreError(f"Password '{secret_id}' not found in {store_file}")

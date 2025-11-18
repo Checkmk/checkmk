@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 from collections.abc import Sequence
 from pathlib import Path
@@ -31,7 +29,7 @@ EXPECTED_P_NO_HASH: Final = msi_engine._Parameters(
 )
 
 
-def test_extract_major_version():
+def test_extract_major_version() -> None:
     assert msi_engine._extract_major_version("2015.04.12") == "2015.04"
     assert msi_engine._extract_major_version("2.2.0p15") == "2.2"
     assert msi_engine._extract_major_version("ups") == "2.3"

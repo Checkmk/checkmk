@@ -6,6 +6,7 @@ filegroup(
             "_*/**",
             ".*",
             "OWNERS",
+            "BUILD",
         ],
     ),
     visibility = ["//:__subpackages__"],

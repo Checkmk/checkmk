@@ -8,16 +8,20 @@
 
 import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
-from cmk.plugins.gerrit.lib.shared_typing import SectionCollector, Sections
+from cmk.plugins.gerrit.lib.schema import VersionInfo
 from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
 
 
+class VersionCollector(Protocol):
+    def collect(self) -> VersionInfo: ...
+
+
 class VersionCache(DataCache):
     def __init__(
-        self, *, collector: SectionCollector, interval: float, directory: Path | None = None
+        self, *, collector: VersionCollector, interval: float, directory: Path | None = None
     ) -> None:
         super().__init__(
             cache_file_dir=directory or (tmp_dir / "agents"),
@@ -35,6 +39,3 @@ class VersionCache(DataCache):
 
     def get_live_data(self, *args: Any) -> Any:
         return self._collector.collect()
-
-    def get_sections(self) -> Sections:
-        return super().get_data()

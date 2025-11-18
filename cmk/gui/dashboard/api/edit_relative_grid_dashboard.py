@@ -24,7 +24,7 @@ from ..store import get_all_dashboards
 from ._family import DASHBOARD_FAMILY
 from ._utils import (
     get_permitted_user_id,
-    PERMISSIONS_DASHBOARD,
+    PERMISSIONS_DASHBOARD_EDIT,
     save_dashboard_to_file,
     serialize_relative_grid_dashboard,
 )
@@ -64,14 +64,17 @@ def edit_relative_grid_dashboard_v1(
             detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{user_id}'.",
         )
 
-    embedded_views = dashboards[key].get("embedded_views", {})
+    old_dashboard = dashboards[key]
+    embedded_views = old_dashboard.get("embedded_views", {})
     body.validate(api_context, embedded_views=embedded_views)
 
-    save_dashboard_to_file(
-        api_context.config.sites, body.to_internal(user_id, dashboard_id, embedded_views), user_id
+    new_dashboard = body.to_internal(
+        user_id, dashboard_id, embedded_views, old_dashboard.get("public_token_id")
     )
+
+    save_dashboard_to_file(api_context.config.sites, new_dashboard, user_id)
     return serialize_relative_grid_dashboard(
-        dashboard_id, RelativeGridDashboardResponse.from_internal(dashboards[key])
+        dashboard_id, RelativeGridDashboardResponse.from_internal(new_dashboard)
     )
 
 
@@ -81,7 +84,7 @@ ENDPOINT_EDIT_RELATIVE_GRID_DASHBOARD = VersionedEndpoint(
         link_relation="cmk/edit_dashboard_relative_grid",
         method="put",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
+    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD_EDIT),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=edit_relative_grid_dashboard_v1)},
 )

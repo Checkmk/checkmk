@@ -8,13 +8,13 @@ Tests for legacy tuple rulesets.
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
 from typing import Final
 
 import pytest
+from pytest import MonkeyPatch
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
@@ -31,12 +31,12 @@ from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 @pytest.fixture(autouse=True)
-def fake_version(monkeypatch):
+def fake_version(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(cmk_version, "omd_version", lambda *args, **kw: "1.4.0i1.cee")
 
 
 @pytest.fixture()
-def ts(monkeypatch):
+def ts(monkeypatch: MonkeyPatch) -> Scenario:
     ts = Scenario(site_id="site1")
     ts.add_host(
         HostName("host1"),

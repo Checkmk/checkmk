@@ -3,8 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+
+from typing import NotRequired, TypedDict
+
+
+class HwgSensorData(TypedDict, total=False):
+    descr: str
+    humidity: float
+    temperature: NotRequired[float | None]
+    dev_unit: NotRequired[str | None]
+    dev_status_name: str
+    dev_status: str
 
 
 map_units = {"1": "c", "2": "f", "3": "k", "4": "%"}
@@ -19,8 +29,8 @@ map_dev_states = {
 }
 
 
-def parse_hwg(info):
-    parsed: dict[str, dict] = {}
+def parse_hwg(info: list[list[str]]) -> dict[str, HwgSensorData]:
+    parsed: dict[str, HwgSensorData] = {}
 
     for index, descr, sensorstatus, current, unit in info:
         # Parse Humidity

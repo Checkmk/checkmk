@@ -143,3 +143,23 @@ package_wheel(
     visibility = ["//visibility:public"],
     whl = "wheel",
 )
+
+# One wheel per family:
+# Very similar to the above, but with the loop outside.
+[py_wheel(
+    name = "wheel-%s" % family,
+    distribution = "cmk-plugins-%s" % family,
+    strip_path_prefixes = ["packages/cmk-plugins"],
+    version = "1.0.0",
+    deps = [
+        ":%s" % family,
+        ":checkman-%s" % family,
+    ],
+) for family in FAMILIES]
+
+[package_wheel(
+    name = "pkg_tar-%s" % family,
+    additional_files = [":libexec-%s" % family],
+    visibility = ["//visibility:public"],
+    whl = "wheel-%s" % family,
+) for family in FAMILIES]

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -76,7 +75,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         self["_user"] = user
 
     @property
-    def user_id(self):
+    def user_id(self) -> None:
         raise AttributeError("Don't set user_id please.")
 
     @property

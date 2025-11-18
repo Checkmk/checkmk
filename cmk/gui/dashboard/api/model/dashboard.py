@@ -34,6 +34,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 
+from .token import DashboardTokenModel, get_dashboard_auth_token
 from .type_defs import AnnotatedInfoName
 from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
 from .widget_content.view import EmbeddedViewContent
@@ -287,7 +288,11 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
 
     @abstractmethod
     def to_internal(
-        self, owner: UserId, dashboard_id: str, embedded_views: dict[str, DashboardEmbeddedViewSpec]
+        self,
+        owner: UserId,
+        dashboard_id: str,
+        embedded_views: dict[str, DashboardEmbeddedViewSpec],
+        public_token_id: str | None,
     ) -> DashboardConfig:
         """Convert the API model to the internal representation."""
         pass
@@ -305,6 +310,7 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
         owner: UserId,
         dashboard_id: str,
         raw_embedded_views: dict[str, DashboardEmbeddedViewSpec],
+        public_token_id: str | None,
     ) -> DashboardConfig:
         used_embedded_views = self._get_used_embedded_views()
         updated_embedded_views = {}
@@ -343,6 +349,7 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
             mandatory_context_filters=self.filter_context.mandatory_context_filters,
             dashlets=[widget.to_internal() for widget in self._iter_widgets()],
             embedded_views=updated_embedded_views,
+            public_token_id=public_token_id,
         )
 
 
@@ -356,9 +363,18 @@ class BaseDashboardResponse(_BaseDashboard):
     is_built_in: bool = api_field(
         description="Whether the dashboard is a built-in (system) dashboard."
     )
+    public_token: DashboardTokenModel | None = api_field(
+        description="The public token for sharing the dashboard, if it exists."
+    )
     filter_context: DashboardFilterContextResponse = api_field(
         description="Filter context for the dashboard."
     )
+
+    @staticmethod
+    def _public_token_from_internal(dashboard: DashboardConfig) -> DashboardTokenModel | None:
+        if token := get_dashboard_auth_token(dashboard):
+            return DashboardTokenModel.from_internal(token)
+        return None
 
 
 @api_model
@@ -393,9 +409,15 @@ class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
 
     @override
     def to_internal(
-        self, owner: UserId, dashboard_id: str, embedded_views: dict[str, DashboardEmbeddedViewSpec]
+        self,
+        owner: UserId,
+        dashboard_id: str,
+        embedded_views: dict[str, DashboardEmbeddedViewSpec],
+        public_token_id: str | None,
     ) -> DashboardConfig:
-        config = self._to_internal_without_layout(owner, dashboard_id, embedded_views)
+        config = self._to_internal_without_layout(
+            owner, dashboard_id, embedded_views, public_token_id
+        )
         config["layout"] = self.layout.to_internal()
         return config
 
@@ -413,6 +435,7 @@ class RelativeGridDashboardResponse(BaseDashboardResponse):
             owner=dashboard["owner"],
             last_modified_at=dt.datetime.fromtimestamp(dashboard["mtime"], tz=dt.UTC),
             is_built_in=dashboard["owner"] == UserId.builtin(),
+            public_token=cls._public_token_from_internal(dashboard),
             general_settings=DashboardGeneralSettings.from_internal(dashboard),
             filter_context=DashboardFilterContextResponse.from_internal(dashboard),
             widgets={

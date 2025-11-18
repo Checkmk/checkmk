@@ -14,16 +14,18 @@ import type { WidgetContent } from '@/dashboard-wip/types/widget.ts'
  * this file.
  */
 
+export type DashletSpec = WidgetContent & { show_title: boolean }
+
 export class FigureBase {
   // the correct type of instance would be FigureBase from the JS figures code
   instance
 
   constructor(
-    figureType: string,
+    legacyFigureType: string,
     divSelector: string,
     ajaxPage: string,
     postBody: string,
-    figureSpec: WidgetContent,
+    dashletSpec: DashletSpec,
     updateInterval: number
   ) {
     // @ts-expect-error comes from different javascript file
@@ -35,24 +37,10 @@ export class FigureBase {
       return
     }
 
-    const typeMap: Record<string, string> = {
-      event_stats: 'eventstats',
-      host_stats: 'hoststats',
-      service_stats: 'servicestats',
-      host_state: 'state_host',
-      service_state: 'state_service'
-    }
-    function newToLegacyType(newType: string): string {
-      if (newType in typeMap && typeMap[newType]) {
-        return typeMap[newType]
-      }
-      return newType
-    }
-    const legacyFigureType: string = newToLegacyType(figureType)
     const figureCtor = registry.get_figure(legacyFigureType)
     this.instance = new figureCtor(divSelector)
     this.instance.set_post_url_and_body(ajaxPage, postBody)
-    this.instance.set_dashlet_spec(figureSpec)
+    this.instance.set_dashlet_spec(dashletSpec)
     this.instance.initialize()
     this.forceUpdate(updateInterval)
 
@@ -71,10 +59,10 @@ export class FigureBase {
     }
   }
 
-  public update(ajaxPage: string, postBody: string, figureSpec: WidgetContent) {
+  public update(ajaxPage: string, postBody: string, dashletSpec: DashletSpec) {
     this.instance.set_post_url_and_body(ajaxPage, postBody)
     this.forceUpdate() // running the scheduler and fetching data
-    this.instance.set_dashlet_spec(figureSpec)
+    this.instance.set_dashlet_spec(dashletSpec)
     this.instance.update_gui()
   }
 

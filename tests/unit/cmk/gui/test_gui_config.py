@@ -201,7 +201,7 @@ def test_default_config_from_plugins() -> None:
         ]
 
     if any((is_ultimate_repo(), is_ultimatemt_repo(), is_cloud_repo())):
-        expected += ["metric_backend_instance"]
+        expected += ["metric_backend"]
 
     default_config = cmk.gui.config.get_default_config()
     assert sorted(list(default_config.keys())) == sorted(expected)

@@ -2168,7 +2168,7 @@ async def process_resource_health(
             continue
         health_values.extend(response)
 
-    return _get_resource_health_sections(health_values, monitored_resources, subscription)
+    return _get_resource_health_sections(health_values, monitored_resources, monitored_groups)
 
 
 # TODO: test
@@ -2252,7 +2252,7 @@ class ResourceHealth(TypedDict, total=False):
 def _get_resource_health_sections(
     resource_health_view: Sequence[ResourceHealth],
     resources: Mapping[ResourceId, AzureResource],
-    subscription: AzureSubscription,
+    monitored_groups: Mapping[str, AzureResourceGroup],
 ) -> Sequence[AzureSection]:
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
@@ -2276,13 +2276,18 @@ def _get_resource_health_sections(
             "tags": resource.tags,
         }
 
-        health_section[group].append(json.dumps(health_data))
+        health_section[group.lower()].append(json.dumps(health_data))
 
     sections = []
-    for group, values in health_section.items():
+    for group_name, values in health_section.items():
+        if not (group_obj := monitored_groups.get(group_name)):
+            LOGGER.warning(
+                "Resource health data for resource group %s, which is not monitored", group_name
+            )
+            continue
         section = AzureSection(
             "resource_health",
-            piggytargets=[resource.piggytarget],
+            piggytargets=[group_obj.piggytarget],
             separator=0,
         )
         for value in values:

@@ -8,6 +8,8 @@ filegroup(
         exclude = [
             "__init__.py",
             "BUILD",
+            "OWNERS",
+            ".f12",
             "Makefile",
         ],
     ),

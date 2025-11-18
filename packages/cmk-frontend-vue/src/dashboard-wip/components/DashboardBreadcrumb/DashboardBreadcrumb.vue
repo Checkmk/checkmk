@@ -54,7 +54,7 @@ const activeBreadcrumb = computed<BreadcrumbItem[]>(() => {
   white-space: nowrap;
   width: 100%;
   font-size: var(--font-size-normal);
-  padding: var(--spacing-half) var(--spacing) 0;
+  padding: var(--dimension-3) var(--dimension-4) 0;
 }
 
 .db-breadcrumb--static-item {

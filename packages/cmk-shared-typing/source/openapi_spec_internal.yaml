@@ -5300,7 +5300,7 @@ paths:
         description: Filter by names
         schema:
           type: array
-          example: &id111
+          example: &id113
           - Host foo
           items:
             type: string
@@ -5312,7 +5312,7 @@ paths:
         description: Filter by group
         schema:
           type: array
-          example: &id112
+          example: &id114
           - My Group
           items:
             type: string
@@ -10327,7 +10327,8 @@ paths:
         \ Is needed for seeing views that other users have created.\n       * See\
         \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
         \ that are provided via extension packages.\n       * Some permissions starting\
-        \ with `view`:\n"
+        \ with `view`:\n   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n"
       summary: Edit a dashboard.
       operationId: Dashboards.edit_relative_grid_dashboard_v1
       parameters:
@@ -10607,7 +10608,8 @@ paths:
         \ Is needed for seeing views that other users have created.\n       * See\
         \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
         \ that are provided via extension packages.\n       * Some permissions starting\
-        \ with `view`:\n"
+        \ with `view`:\n   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n"
       summary: Edit a dashboard.
       operationId: Dashboards.edit_responsive_grid_dashboard_v1
       parameters:
@@ -11501,6 +11503,388 @@ paths:
           \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
           \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
           \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  \"$API_URL/domain-types/dashboard_responsive_grid/collections/all\""
+  /domain-types/dashboard_token/actions/delete/invoke:
+    post:
+      tags:
+      - Dashboards
+      description: "Available in the following editions: all\n\nThis endpoint requires\
+        \ the following permissions: \n * All of:\n   * Customize dashboards and use\
+        \ them (`general.edit_dashboards`): Allows to create own dashboards, customize\
+        \ built-in dashboards and use them.\n   * Optionally:\n     * Modify built-in\
+        \ dashboards (`general.force_dashboards`): Make own published dashboards override\
+        \ built-in dashboards for all users.\n   * Optionally:\n     * See user dashboards\
+        \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
+        \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
+        \ Is needed for seeing dashboards that are provided via extension packages.\n\
+        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \ Is needed for seeing topics that other users have created.\n       * Some\
+        \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
+        \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
+        \ views and use them (`general.edit_views`): Allows to create own views, customize\
+        \ built-in views and use them.\n       * See user views (`general.see_user_views`):\
+        \ Is needed for seeing views that other users have created.\n       * See\
+        \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
+        \ that are provided via extension packages.\n       * Some permissions starting\
+        \ with `view`:\n   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n"
+      summary: Deletes an existing dashboard token.
+      operationId: Dashboards.delete_dashboard_token_v1
+      parameters:
+      - name: Content-Type
+        description: A header specifying which type of content is in the request/response
+          body. This is required when sending encoded data in a POST/PUT body. When
+          the request body is empty, this header should not be sent.
+        in: header
+        required: true
+        schema:
+          type: string
+        example: application/json
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
+        '400':
+          description: 'Bad Request: Parameter or validation failure.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
+        '415':
+          description: 'Unsupported Media Type: The submitted content-type is not
+            supported.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
+        '204':
+          description: 'No Content: Operation done successfully. No further output.'
+          content: {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteDashboardToken'
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.max_redirects\
+          \ = 100  # increase if necessary\n\nresp = session.post(\n    f\"{API_URL}/domain-types/dashboard_token/actions/delete/invoke\"\
+          ,\n    headers={\n        \"Content-Type\": 'application/json',  # (required)\
+          \ A header specifying which type of content is in the request/response body.\n\
+          \    },\n    allow_redirects=True,\n)\nif resp.status_code == 201:\nelif\
+          \ resp.status_code == 204:\n    print('Done')\nelse:\n    raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/dashboard_token/actions/delete/invoke\",\n\
+          \    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Content-Type\": 'application/json',\
+          \  # (required) A header specifying which type of content is in the request/response\
+          \ body.\n    },\n)\n# Will raise an HTTPError if status code is >= 400\n\
+          resp = urllib.request.urlopen(request)\nif resp.status == 201:\nelif resp.status\
+          \ == 204:\n    print('Done')"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp POST \"$API_URL/domain-types/dashboard_token/actions/delete/invoke\"\
+          \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
+          \ $PASSWORD\" \\\n    'Content-Type:application/json' "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --request POST \\\n  --write-out\
+          \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Content-Type: application/json\"\
+          \ \\\n  \"$API_URL/domain-types/dashboard_token/actions/delete/invoke\""
+  /domain-types/dashboard_token/actions/edit/invoke:
+    post:
+      tags:
+      - Dashboards
+      description: "Available in the following editions: all\n\nThis endpoint requires\
+        \ the following permissions: \n * All of:\n   * Customize dashboards and use\
+        \ them (`general.edit_dashboards`): Allows to create own dashboards, customize\
+        \ built-in dashboards and use them.\n   * Optionally:\n     * Modify built-in\
+        \ dashboards (`general.force_dashboards`): Make own published dashboards override\
+        \ built-in dashboards for all users.\n   * Optionally:\n     * See user dashboards\
+        \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
+        \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
+        \ Is needed for seeing dashboards that are provided via extension packages.\n\
+        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \ Is needed for seeing topics that other users have created.\n       * Some\
+        \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
+        \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
+        \ views and use them (`general.edit_views`): Allows to create own views, customize\
+        \ built-in views and use them.\n       * See user views (`general.see_user_views`):\
+        \ Is needed for seeing views that other users have created.\n       * See\
+        \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
+        \ that are provided via extension packages.\n       * Some permissions starting\
+        \ with `view`:\n   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n"
+      summary: Edit a dashboard token and returns its metadata.
+      operationId: Dashboards.edit_dashboard_token_v1
+      parameters:
+      - name: Content-Type
+        description: A header specifying which type of content is in the request/response
+          body. This is required when sending encoded data in a POST/PUT body. When
+          the request body is empty, this header should not be sent.
+        in: header
+        required: true
+        schema: &id029
+          type: string
+        example: application/json
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
+        '400':
+          description: 'Bad Request: Parameter or validation failure.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
+        '415':
+          description: 'Unsupported Media Type: The submitted content-type is not
+            supported.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardTokenObjectModel'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema: *id029
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditDashboardToken'
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\nsession.max_redirects = 100  # increase if necessary\n\
+          \nresp = session.post(\n    f\"{API_URL}/domain-types/dashboard_token/actions/edit/invoke\"\
+          ,\n    headers={\n        \"Content-Type\": 'application/json',  # (required)\
+          \ A header specifying which type of content is in the request/response body.\n\
+          \    },\n    allow_redirects=True,\n)\nif resp.status_code == 200:\n   \
+          \ pprint.pprint(resp.json())\nelif resp.status_code == 201:\nelse:\n   \
+          \ raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/dashboard_token/actions/edit/invoke\",\n\
+          \    method=\"POST\",\n    headers={\n        \"Authorization\": f\"Bearer\
+          \ {USERNAME} {PASSWORD}\",\n        \"Accept\": \"application/json\",\n\
+          \        \n        \"Content-Type\": 'application/json',  # (required) A\
+          \ header specifying which type of content is in the request/response body.\n\
+          \    },\n)\n# Will raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))\n\
+          elif resp.status == 201:"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp POST \"$API_URL/domain-types/dashboard_token/actions/edit/invoke\"\
+          \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
+          \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json' "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --request POST \\\n  --write-out\
+          \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
+          \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  \"$API_URL/domain-types/dashboard_token/actions/edit/invoke\""
+  /domain-types/dashboard_token/collections/all:
+    post:
+      tags:
+      - Dashboards
+      description: "Available in the following editions: all\n\nThis endpoint requires\
+        \ the following permissions: \n * All of:\n   * Customize dashboards and use\
+        \ them (`general.edit_dashboards`): Allows to create own dashboards, customize\
+        \ built-in dashboards and use them.\n   * Optionally:\n     * Modify built-in\
+        \ dashboards (`general.force_dashboards`): Make own published dashboards override\
+        \ built-in dashboards for all users.\n   * Optionally:\n     * See user dashboards\
+        \ (`general.see_user_dashboards`): Is needed for seeing dashboards that other\
+        \ users have created.\n   * Optionally:\n     * See packaged dashboards (`general.see_packaged_dashboards`):\
+        \ Is needed for seeing dashboards that are provided via extension packages.\n\
+        \   * Optionally:\n     * All of:\n       * See user topics (`general.see_user_pagetype_topic`):\
+        \ Is needed for seeing topics that other users have created.\n       * Some\
+        \ permissions starting with `pagetype_topic`:\n   * Some permissions starting\
+        \ with `dashboard`:\n   * Optionally:\n     * All of:\n       * Customize\
+        \ views and use them (`general.edit_views`): Allows to create own views, customize\
+        \ built-in views and use them.\n       * See user views (`general.see_user_views`):\
+        \ Is needed for seeing views that other users have created.\n       * See\
+        \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
+        \ that are provided via extension packages.\n       * Some permissions starting\
+        \ with `view`:\n   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n"
+      summary: Creates a new dashboard token and returns its metadata.
+      operationId: Dashboards.create_dashboard_token_v1
+      parameters:
+      - name: Content-Type
+        description: A header specifying which type of content is in the request/response
+          body. This is required when sending encoded data in a POST/PUT body. When
+          the request body is empty, this header should not be sent.
+        in: header
+        required: true
+        schema: &id030
+          type: string
+        example: application/json
+      responses:
+        '406':
+          description: 'Not Acceptable: The requests accept headers can not be satisfied.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api406DefaultErrorA94076090B8FA3C0'
+        '400':
+          description: 'Bad Request: Parameter or validation failure.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api400DefaultErrorE40947496A3FF3F8'
+        '415':
+          description: 'Unsupported Media Type: The submitted content-type is not
+            supported.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Api415DefaultError3A6CC372948DF091'
+        '200':
+          description: 'OK: The operation was done successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardTokenObjectModel'
+          headers:
+            Content-Type:
+              description: A header specifying which type of content is in the request/response
+                body. This is required when sending encoded data in a POST/PUT body.
+                When the request body is empty, this header should not be sent.
+              required: true
+              schema: *id030
+              example: application/json
+            X-Checkmk-Edition:
+              description: The checkmk edition.
+              required: true
+              schema:
+                type: string
+              example: community
+            X-Checkmk-Version:
+              description: The checkmk version.
+              required: true
+              schema:
+                type: string
+              example: 2.2.0p10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDashboardToken'
+      x-codeSamples:
+      - label: requests
+        lang: python
+        source: "#!/usr/bin/env python3\nimport pprint\nimport requests\n\nHOST_NAME\
+          \ = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nsession = requests.session()\n\
+          session.headers['Authorization'] = f\"Bearer {USERNAME} {PASSWORD}\"\nsession.headers['Accept']\
+          \ = 'application/json'\nsession.max_redirects = 100  # increase if necessary\n\
+          \nresp = session.post(\n    f\"{API_URL}/domain-types/dashboard_token/collections/all\"\
+          ,\n    headers={\n        \"Content-Type\": 'application/json',  # (required)\
+          \ A header specifying which type of content is in the request/response body.\n\
+          \    },\n    allow_redirects=True,\n)\nif resp.status_code == 200:\n   \
+          \ pprint.pprint(resp.json())\nelif resp.status_code == 201:\nelse:\n   \
+          \ raise RuntimeError(pprint.pformat(resp.json()))"
+      - label: urllib
+        lang: python
+        source: "#!/usr/bin/env python3\nimport json\nimport pprint\nimport urllib.request\n\
+          \nHOST_NAME = \"localhost\"\nSITE_NAME = \"checkmk\"\nPROTO = \"http\" #[http|https]\n\
+          API_URL = f\"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0\"\n\nUSERNAME\
+          \ = \"automation\"\nPASSWORD = \"test123\"\n\nrequest = urllib.request.Request(\n\
+          \    f\"{API_URL}/domain-types/dashboard_token/collections/all\",\n    method=\"\
+          POST\",\n    headers={\n        \"Authorization\": f\"Bearer {USERNAME}\
+          \ {PASSWORD}\",\n        \"Accept\": \"application/json\",\n        \n \
+          \       \"Content-Type\": 'application/json',  # (required) A header specifying\
+          \ which type of content is in the request/response body.\n    },\n)\n# Will\
+          \ raise an HTTPError if status code is >= 400\nresp = urllib.request.urlopen(request)\n\
+          if resp.status == 200:\n    pprint.pprint(json.loads(resp.read().decode()))\n\
+          elif resp.status == 201:"
+      - label: httpie
+        lang: bash
+        source: "#!/bin/bash\nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"\
+          http\" #[http|https]\nAPI_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\
+          \n\nUSERNAME=\"automation\"\nPASSWORD=\"test123\"\n\n# Requires httpie version\
+          \ >= 3\n\nhttp POST \"$API_URL/domain-types/dashboard_token/collections/all\"\
+          \ \\\n    --follow \\\n    --all \\\n    \"Authorization: Bearer $USERNAME\
+          \ $PASSWORD\" \\\n    \"Accept: application/json\" \\\n    \n    'Content-Type:application/json' "
+      - label: curl
+        lang: bash
+        source: "#!/bin/bash\n\n# NOTE: We recommend all shell users to use the \"\
+          httpie\" examples instead.\n#       `curl` should not be used for writing\
+          \ large scripts.\n#       This code is provided for debugging purposes only.\n\
+          \nHOST_NAME=\"localhost\"\nSITE_NAME=\"checkmk\"\nPROTO=\"http\" #[http|https]\n\
+          API_URL=\"$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0\"\n\nUSERNAME=\"\
+          automation\"\nPASSWORD=\"test123\"\n\ncurl \\\n  --request POST \\\n  --write-out\
+          \ \"\\nxxx-status_code=%{http_code}\\n\" \\\n  --header \"Authorization:\
+          \ Bearer $USERNAME $PASSWORD\" \\\n  --header \"Accept: application/json\"\
+          \ \\\n  \n  --header \"Content-Type: application/json\" \\\n  \"$API_URL/domain-types/dashboard_token/collections/all\""
   /objects/dashboard/{dashboard_id}:
     delete:
       tags:
@@ -11523,7 +11907,8 @@ paths:
         \ Is needed for seeing views that other users have created.\n       * See\
         \ packaged views (`general.see_packaged_views`): Is needed for seeing views\
         \ that are provided via extension packages.\n       * Some permissions starting\
-        \ with `view`:\n"
+        \ with `view`:\n   * Optionally:\n     * Edit foreign dashboards (`general.edit_foreign_dashboards`):\
+        \ Allows to edit dashboards created by other users.\n"
       summary: Delete a dashboard.
       operationId: Dashboards.delete_dashboard_v1
       parameters:
@@ -12679,7 +13064,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id029
+        schema: &id031
           type: string
         example: application/json
       responses:
@@ -12720,7 +13105,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id029
+              schema: *id031
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -12814,7 +13199,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id030
+        schema: &id032
           type: string
         example: application/json
       responses:
@@ -12855,7 +13240,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id030
+              schema: *id032
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -13096,7 +13481,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id031
+        schema: &id033
           type: string
         example: application/json
       responses:
@@ -13131,7 +13516,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id031
+              schema: *id033
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -14325,7 +14710,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id032
+        schema: &id034
           type: string
         example: application/json
       responses:
@@ -14366,7 +14751,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id032
+              schema: *id034
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -14629,7 +15014,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id033
+        schema: &id035
           type: string
         example: application/json
       - in: path
@@ -14703,7 +15088,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id033
+              schema: *id035
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -15079,7 +15464,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id034
+        schema: &id036
           type: string
         example: application/json
       responses:
@@ -15120,7 +15505,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id034
+              schema: *id036
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -15233,7 +15618,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id035
+        schema: &id037
           type: string
         example: application/json
       - in: path
@@ -15307,7 +15692,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id035
+              schema: *id037
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -15797,7 +16182,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id036
+        schema: &id038
           type: string
         example: application/json
       responses:
@@ -15838,7 +16223,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id036
+              schema: *id038
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -16067,7 +16452,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id037
+        schema: &id039
           type: string
         example: application/json
       - in: path
@@ -16135,7 +16520,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id037
+              schema: *id039
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -16330,7 +16715,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id038
+        schema: &id040
           type: string
         example: application/json
       responses:
@@ -16371,7 +16756,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id038
+              schema: *id040
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -16469,7 +16854,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id039
+        schema: &id041
           type: string
         example: application/json
       responses:
@@ -16510,7 +16895,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id039
+              schema: *id041
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -16727,7 +17112,7 @@ paths:
         schema:
           type: array
           default: []
-          example: &id139
+          example: &id141
           - heute
           items:
             type: string
@@ -16754,7 +17139,7 @@ paths:
           type: array
           default:
           - name
-          example: &id140
+          example: &id142
           - name
           items:
             type: string
@@ -16873,7 +17258,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id040
+        schema: &id042
           type: string
         example: application/json
       responses:
@@ -16908,7 +17293,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id040
+              schema: *id042
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -17234,7 +17619,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id041
+        schema: &id043
           type: string
         example: application/json
       responses:
@@ -17275,7 +17660,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id041
+              schema: *id043
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -17521,7 +17906,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id042
+        schema: &id044
           type: string
         example: application/json
       - in: path
@@ -17602,7 +17987,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id042
+              schema: *id044
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -18137,7 +18522,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id043
+        schema: &id045
           type: string
         example: application/json
       - in: query
@@ -18192,7 +18577,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id043
+              schema: *id045
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -18426,7 +18811,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id044
+        schema: &id046
           type: string
         example: application/json
       - in: path
@@ -18497,7 +18882,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id044
+              schema: *id046
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -18688,7 +19073,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id045
+        schema: &id047
           type: string
         example: application/json
       responses:
@@ -18729,7 +19114,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id045
+              schema: *id047
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -18832,7 +19217,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id046
+        schema: &id048
           type: string
         example: application/json
       - in: path
@@ -18917,7 +19302,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id046
+              schema: *id048
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -19040,7 +19425,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id047
+        schema: &id049
           type: string
         example: application/json
       - in: path
@@ -19111,7 +19496,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id047
+              schema: *id049
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -19214,7 +19599,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id048
+        schema: &id050
           type: string
         example: application/json
       - in: query
@@ -19268,7 +19653,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id048
+              schema: *id050
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -19481,7 +19866,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id049
+        schema: &id051
           type: string
         example: application/json
       - in: query
@@ -19536,7 +19921,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id049
+              schema: *id051
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -19661,7 +20046,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id050
+        schema: &id052
           type: string
         example: application/json
       - in: path
@@ -19729,7 +20114,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id050
+              schema: *id052
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -20072,7 +20457,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id051
+        schema: &id053
           type: string
         example: application/json
       - in: path
@@ -20135,7 +20520,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id051
+              schema: *id053
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -20319,7 +20704,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id052
+        schema: &id054
           type: string
         example: application/json
       responses:
@@ -20360,7 +20745,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id052
+              schema: *id054
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -20734,7 +21119,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id053
+        schema: &id055
           type: string
         example: application/json
       - in: path
@@ -20801,7 +21186,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id053
+              schema: *id055
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -21334,7 +21719,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id054
+        schema: &id056
           type: string
         example: application/json
       responses:
@@ -21369,7 +21754,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id054
+              schema: *id056
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -21463,7 +21848,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id055
+        schema: &id057
           type: string
         example: application/json
       responses:
@@ -21505,7 +21890,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id055
+              schema: *id057
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -21729,7 +22114,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id056
+        schema: &id058
           type: string
         example: application/json
       responses:
@@ -21770,7 +22155,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id056
+              schema: *id058
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -22041,7 +22426,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id057
+        schema: &id059
           type: string
         example: application/json
       responses:
@@ -22076,7 +22461,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id057
+              schema: *id059
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -22363,7 +22748,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id058
+        schema: &id060
           type: string
         example: application/json
       responses:
@@ -22404,7 +22789,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id058
+              schema: *id060
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -22914,7 +23299,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id059
+        schema: &id061
           type: string
         example: application/json
       - in: path
@@ -22968,7 +23353,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id059
+              schema: *id061
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -23653,7 +24038,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id060
+        schema: &id062
           type: string
         example: application/json
       responses:
@@ -23700,7 +24085,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id060
+              schema: *id062
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -23906,7 +24291,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id061
+        schema: &id063
           type: string
         example: application/json
       responses:
@@ -23947,7 +24332,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id061
+              schema: *id063
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -24177,7 +24562,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id062
+        schema: &id064
           type: string
         example: application/json
       - in: path
@@ -24249,7 +24634,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id062
+              schema: *id064
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -24458,7 +24843,7 @@ paths:
         schema:
           type: string
           default: guided
-          enum: &id064
+          enum: &id066
           - guided
           - overview
           example: overview
@@ -24917,7 +25302,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id063
+        schema: &id065
           type: string
         example: application/json
       - in: query
@@ -24977,7 +25362,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id063
+              schema: *id065
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -25078,7 +25463,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id065
+        schema: &id067
           type: string
         example: application/json
       - in: query
@@ -25087,7 +25472,7 @@ paths:
         schema:
           type: string
           default: guided
-          enum: *id064
+          enum: *id066
           example: overview
         required: false
       - in: path
@@ -25140,7 +25525,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id065
+              schema: *id067
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -25238,7 +25623,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id066
+        schema: &id068
           type: string
         example: application/json
       - in: path
@@ -25291,7 +25676,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id066
+              schema: *id068
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -25468,7 +25853,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id067
+        schema: &id069
           type: string
         example: application/json
       responses:
@@ -25503,7 +25888,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id067
+              schema: *id069
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -25713,7 +26098,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id068
+        schema: &id070
           type: string
         example: application/json
       - in: path
@@ -25778,7 +26163,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id068
+              schema: *id070
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -26094,7 +26479,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id069
+        schema: &id071
           type: string
         example: application/json
       responses:
@@ -26135,7 +26520,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id069
+              schema: *id071
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -26448,7 +26833,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id070
+        schema: &id072
           type: string
         example: application/json
       - in: path
@@ -26515,7 +26900,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id070
+              schema: *id072
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -26810,7 +27195,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id071
+        schema: &id073
           type: string
         example: application/json
       - in: path
@@ -26877,7 +27262,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id071
+              schema: *id073
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -27337,7 +27722,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id072
+        schema: &id074
           type: string
         example: application/json
       responses:
@@ -27378,7 +27763,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id072
+              schema: *id074
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -27773,7 +28158,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id073
+        schema: &id075
           type: string
         example: application/json
       responses:
@@ -27814,7 +28199,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id073
+              schema: *id075
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -28541,7 +28926,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id074
+        schema: &id076
           type: string
         example: application/json
       responses:
@@ -28593,7 +28978,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id074
+              schema: *id076
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -28777,7 +29162,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id075
+        schema: &id077
           type: string
         example: application/json
       responses:
@@ -28818,7 +29203,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id075
+              schema: *id077
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -29047,7 +29432,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id076
+        schema: &id078
           type: string
         example: application/json
       - in: path
@@ -29115,7 +29500,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id076
+              schema: *id078
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -29310,7 +29695,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id077
+        schema: &id079
           type: string
         example: application/json
       responses:
@@ -29351,7 +29736,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id077
+              schema: *id079
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -29449,7 +29834,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id078
+        schema: &id080
           type: string
         example: application/json
       responses:
@@ -29490,7 +29875,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id078
+              schema: *id080
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -29708,7 +30093,7 @@ paths:
         schema:
           type: array
           default: []
-          example: &id080
+          example: &id082
           - heute
           items:
             type: string
@@ -29724,7 +30109,7 @@ paths:
           default:
           - host_name
           - description
-          example: &id081
+          example: &id083
           - host_name
           - description
           items:
@@ -29864,7 +30249,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id079
+        schema: &id081
           type: string
         example: application/json
       responses:
@@ -29899,7 +30284,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id079
+              schema: *id081
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -30141,7 +30526,7 @@ paths:
         schema:
           type: array
           default: []
-          example: *id080
+          example: *id082
           items:
             type: string
         required: false
@@ -30156,7 +30541,7 @@ paths:
           default:
           - host_name
           - description
-          example: *id081
+          example: *id083
           items:
             type: string
         required: false
@@ -30298,7 +30683,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id082
+        schema: &id084
           type: string
         example: application/json
       - in: path
@@ -30347,7 +30732,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id082
+              schema: *id084
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -30615,7 +31000,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id083
+        schema: &id085
           type: string
         example: application/json
       responses:
@@ -30656,7 +31041,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id083
+              schema: *id085
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -30846,7 +31231,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id084
+        schema: &id086
           type: string
         example: application/json
       - in: path
@@ -30904,7 +31289,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id084
+              schema: *id086
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -31390,7 +31775,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id085
+        schema: &id087
           type: string
         example: application/json
       responses:
@@ -31431,7 +31816,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id085
+              schema: *id087
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -31693,7 +32078,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id086
+        schema: &id088
           type: string
         example: application/json
       - in: path
@@ -31769,7 +32154,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id086
+              schema: *id088
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -32279,7 +32664,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id087
+        schema: &id089
           type: string
         example: application/json
       responses:
@@ -32320,7 +32705,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id087
+              schema: *id089
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -32513,7 +32898,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id088
+        schema: &id090
           type: string
         example: application/json
       - in: path
@@ -32571,7 +32956,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id088
+              schema: *id090
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -32830,7 +33215,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id089
+        schema: &id091
           type: string
         example: application/json
       responses:
@@ -32871,7 +33256,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id089
+              schema: *id091
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -33137,7 +33522,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id090
+        schema: &id092
           type: string
         example: application/json
       - in: path
@@ -33204,7 +33589,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id090
+              schema: *id092
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -33869,7 +34254,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id091
+        schema: &id093
           type: string
         example: application/json
       responses:
@@ -33910,7 +34295,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id091
+              schema: *id093
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -34084,7 +34469,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id092
+        schema: &id094
           type: string
         example: application/json
       responses:
@@ -34125,7 +34510,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id092
+              schema: *id094
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -34315,7 +34700,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id093
+        schema: &id095
           type: string
         example: application/json
       - in: path
@@ -34373,7 +34758,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id093
+              schema: *id095
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -34536,7 +34921,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id094
+        schema: &id096
           type: string
         example: application/json
       - in: path
@@ -34594,7 +34979,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id094
+              schema: *id096
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -34762,7 +35147,7 @@ paths:
           the request body is empty, this header should not be sent.
         in: header
         required: true
-        schema: &id095
+        schema: &id097
           type: string
         example: application/json
       responses:
@@ -34803,7 +35188,7 @@ paths:
                 body. This is required when sending encoded data in a POST/PUT body.
                 When the request body is empty, this header should not be sent.
               required: true
-              schema: *id095
+              schema: *id097
               example: application/json
             X-Checkmk-Edition:
               description: The checkmk edition.
@@ -35561,7 +35946,7 @@ components:
         acknowledge_type:
           type: string
           description: Select a specific host.
-          enum: &id096
+          enum: &id098
           - host
           example: host
         host_name:
@@ -35579,7 +35964,7 @@ components:
         acknowledge_type:
           type: string
           description: Select all hosts in a host group.
-          enum: &id097
+          enum: &id099
           - hostgroup
           example: hostgroup
         hostgroup_name:
@@ -35675,7 +36060,7 @@ components:
         acknowledge_type:
           type: string
           description: Select hosts with a query.
-          enum: &id098
+          enum: &id100
           - host_by_query
           example: host_by_query
         query:
@@ -35695,7 +36080,7 @@ components:
         acknowledge_type:
           type: string
           description: Select a specific service on a host.
-          enum: &id099
+          enum: &id101
           - service
           example: service
         host_name:
@@ -35719,7 +36104,7 @@ components:
         acknowledge_type:
           type: string
           description: Select all services in a service group.
-          enum: &id100
+          enum: &id102
           - servicegroup
           example: servicegroup
         servicegroup_name:
@@ -35738,7 +36123,7 @@ components:
         acknowledge_type:
           type: string
           description: Select services with a query.
-          enum: &id101
+          enum: &id103
           - service_by_query
           example: service_by_query
         query:
@@ -35875,7 +36260,7 @@ components:
         acknowledge_type:
           type: string
           description: Select a specific host.
-          enum: *id096
+          enum: *id098
           example: host
         host_name:
           type: string
@@ -35919,7 +36304,7 @@ components:
         acknowledge_type:
           type: string
           description: Select all hosts in a host group.
-          enum: *id097
+          enum: *id099
           example: hostgroup
         hostgroup_name:
           type: string
@@ -35962,7 +36347,7 @@ components:
         acknowledge_type:
           type: string
           description: Select hosts with a query.
-          enum: *id098
+          enum: *id100
           example: host_by_query
         query:
           description: An query expression of the Livestatus 'hosts' table in nested
@@ -36046,7 +36431,7 @@ components:
         acknowledge_type:
           type: string
           description: Select a specific service on a host.
-          enum: *id099
+          enum: *id101
           example: service
         host_name:
           type: string
@@ -36096,7 +36481,7 @@ components:
         acknowledge_type:
           type: string
           description: Select all services in a service group.
-          enum: *id100
+          enum: *id102
           example: servicegroup
         servicegroup_name:
           type: string
@@ -36141,7 +36526,7 @@ components:
         acknowledge_type:
           type: string
           description: Select services with a query.
-          enum: *id101
+          enum: *id103
           example: service_by_query
         query:
           description: An query expression of the Livestatus 'services' table in nested
@@ -36387,7 +36772,7 @@ components:
         sites:
           type: array
           description: Sites affected by this activation
-          example: &id103
+          example: &id105
           - site1
           - site2
           items:
@@ -36414,7 +36799,7 @@ components:
         status_per_site:
           type: array
           description: A list of sites with their activation status.
-          example: &id102
+          example: &id104
           - site: heute
             status_text: Activating
             status_details: 'Started at: 15:23:09. Finished at: 15:23:13.'
@@ -36469,7 +36854,7 @@ components:
             sites:
             - heute
             comment: ''
-            status_per_site: *id102
+            status_per_site: *id104
           $ref: '#/components/schemas/ActivationExtensionStatusFields'
       required:
       - links
@@ -36516,7 +36901,7 @@ components:
               sites:
               - heute
               comment: ''
-              status_per_site: *id102
+              status_per_site: *id104
           items:
             $ref: '#/components/schemas/ActivationStatusResponse'
         extensions:
@@ -36773,7 +37158,7 @@ components:
         sites:
           type: array
           description: Sites affected by this activation
-          example: *id103
+          example: *id105
           items:
             type: string
         is_running:
@@ -36869,13 +37254,13 @@ components:
         resultType:
           type: string
           description: The type of the result.
-          enum: &id104
+          enum: &id106
           - object
           - scalar
         extensions:
           type: object
           description: Some attributes alongside the result.
-          example: &id105
+          example: &id107
             some: values
           additionalProperties: {}
         result:
@@ -37053,11 +37438,11 @@ components:
         resultType:
           type: string
           description: The type of the result.
-          enum: *id104
+          enum: *id106
         extensions:
           type: object
           description: Some attributes alongside the result.
-          example: *id105
+          example: *id107
           additionalProperties: {}
         result:
           description: The scalar result of the action.
@@ -37245,7 +37630,7 @@ components:
           additionalProperties: {}
         extensions:
           description: The Auxiliary Tag attributes.
-          example: &id106
+          example: &id108
             id: snmp
             title: Monitoring via SNMP
             topic: Monitoring agents
@@ -37283,7 +37668,7 @@ components:
             id: snmp
             title: Monitoring via SNMP
             members: {}
-            extensions: *id106
+            extensions: *id108
           items:
             $ref: '#/components/schemas/AuxTagResponse'
         extensions:
@@ -37803,7 +38188,7 @@ components:
           description: Host label conditions. Although all items in this list have
             a default operator value, the operator value for the the first item in
             the list does not have any effect.
-          example: &id107
+          example: &id109
           - label_group:
             - operator: and
               label: db:mssql
@@ -37816,11 +38201,11 @@ components:
         host_tags:
           type: object
           description: Host tags.
-          example: &id108 {}
+          example: &id110 {}
           additionalProperties: {}
         host_choice:
           description: Host selection.
-          example: &id109
+          example: &id111
             type: all_hosts
           $ref: '#/components/schemas/BIHostChoice'
       required:
@@ -37922,17 +38307,17 @@ components:
           description: Host label conditions. Although all items in this list have
             a default operator value, the operator value for the the first item in
             the list does not have any effect.
-          example: *id107
+          example: *id109
           items:
             $ref: '#/components/schemas/LabelGroupCondition'
         host_tags:
           type: object
           description: Host tags.
-          example: *id108
+          example: *id110
           additionalProperties: {}
         host_choice:
           description: Host selection.
-          example: *id109
+          example: *id111
           $ref: '#/components/schemas/BIHostChoice'
         service_regex:
           type: string
@@ -38200,8 +38585,8 @@ components:
           type:
           - string
           - 'null'
-          description: 'Checkmk Ultimate with multi-tennancy only: The customer id
-            for this aggregation.'
+          description: '[Only in editions: Ultimate with multi-tenancy] The customer
+            id for this aggregation.'
           example: customer1
         groups:
           description: Groups.
@@ -38273,7 +38658,7 @@ components:
           default: block
           description: Visualize child nodes as a block.
         style_config:
-          default: &id110 {}
+          default: &id112 {}
           description: No configuration options for this style.
       required:
       - style_config
@@ -38529,7 +38914,7 @@ components:
           description: Node visualization.
           example:
             type: block
-            style_config: *id110
+            style_config: *id112
           $ref: '#/components/schemas/BINodeVisLayoutStyle'
         properties:
           description: Rule properties.
@@ -38597,13 +38982,13 @@ components:
         filter_names:
           type: array
           description: Filter by names
-          example: *id111
+          example: *id113
           items:
             type: string
         filter_groups:
           type: array
           description: Filter by group
-          example: *id112
+          example: *id114
           items:
             type: string
       additionalProperties: false
@@ -38823,7 +39208,7 @@ components:
         delete_type:
           type: string
           description: How you would like to delete comments.
-          enum: &id113
+          enum: &id115
           - by_id
           - params
           - query
@@ -38846,7 +39231,7 @@ components:
         delete_type:
           type: string
           description: How you would like to delete comments.
-          enum: *id113
+          enum: *id115
           example: delete_by_query
         query:
           description: An query expression of the Livestatus 'comments' table in nested
@@ -38863,7 +39248,7 @@ components:
         delete_type:
           type: string
           description: How you would like to delete comments.
-          enum: *id113
+          enum: *id115
           example: delete_by_query
         host_name:
           type: string
@@ -38914,7 +39299,7 @@ components:
         comment_type:
           type: string
           description: How you would like to leave a comment.
-          enum: &id114
+          enum: &id116
           - host
           - host_by_query
           example: host
@@ -38943,7 +39328,7 @@ components:
         comment_type:
           type: string
           description: How you would like to leave a comment.
-          enum: *id114
+          enum: *id116
           example: host
         query:
           description: An query expression of the Livestatus 'hosts' table in nested
@@ -38983,7 +39368,7 @@ components:
         comment_type:
           type: string
           description: How you would like to leave a comment.
-          enum: &id115
+          enum: &id117
           - service
           - service_by_query
           example: service
@@ -39018,7 +39403,7 @@ components:
         comment_type:
           type: string
           description: How you would like to leave a comment.
-          enum: *id115
+          enum: *id117
           example: service
         query:
           description: An query expression of the Livestatus 'services' table in nested
@@ -40645,6 +41030,44 @@ components:
       - include_context
       title: DashboardTitle
       type: object
+    DashboardTokenModel:
+      properties:
+        is_disabled:
+          description: Indicates whether the token is disabled.
+          title: Is Disabled
+          type: boolean
+        comment:
+          description: Internal comment for the token. Not displayed to users.
+          title: Comment
+          type: string
+        issued_at:
+          description: The date and time when the token was issued.
+          examples:
+          - '2024-01-01T00:00:00Z'
+          format: date-time
+          title: Issued At
+          type: string
+        expires_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: The date and time when the token will expire.
+          examples:
+          - '2025-12-31T23:59:59Z'
+          title: Expires At
+        token_id:
+          description: The unique identifier of the dashboard token.
+          title: Token Id
+          type: string
+      required:
+      - is_disabled
+      - comment
+      - issued_at
+      - expires_at
+      - token_id
+      title: DashboardTokenModel
+      type: object
     DashboardVisibility:
       properties:
         hide_in_monitor_menu:
@@ -41171,6 +41594,11 @@ components:
           description: Whether the dashboard is a built-in (system) dashboard.
           title: Is Built In
           type: boolean
+        public_token:
+          anyOf:
+          - $ref: '#/components/schemas/DashboardTokenModel'
+          - type: 'null'
+          description: The public token for sharing the dashboard, if it exists.
         layout:
           $ref: '#/components/schemas/DashboardRelativeGridLayout'
           description: The layout the dashboard uses.
@@ -41186,6 +41614,7 @@ components:
       - owner
       - last_modified_at
       - is_built_in
+      - public_token
       - layout
       - widgets
       title: RelativeGridDashboardResponse
@@ -41890,6 +42319,11 @@ components:
           description: Whether the dashboard is a built-in (system) dashboard.
           title: Is Built In
           type: boolean
+        public_token:
+          anyOf:
+          - $ref: '#/components/schemas/DashboardTokenModel'
+          - type: 'null'
+          description: The public token for sharing the dashboard, if it exists.
         layout:
           $ref: '#/components/schemas/DashboardResponsiveGridLayout'
           description: The layout the dashboard uses.
@@ -41905,6 +42339,7 @@ components:
       - owner
       - last_modified_at
       - is_built_in
+      - public_token
       - layout
       - widgets
       title: ResponsiveGridDashboardResponse
@@ -42637,6 +43072,155 @@ components:
       - id
       title: CreateResponsiveGridDashboardV1
       type: object
+    DeleteDashboardToken:
+      additionalProperties: false
+      properties:
+        dashboard_owner:
+          description: The user ID of the dashboard owner.
+          title: Dashboard Owner
+        dashboard_id:
+          description: The ID of the dashboard for which the token is being created.
+          title: Dashboard Id
+          type: string
+      required:
+      - dashboard_owner
+      - dashboard_id
+      title: DeleteDashboardToken
+      type: object
+    EditDashboardToken:
+      additionalProperties: false
+      properties:
+        dashboard_owner:
+          description: The user ID of the dashboard owner.
+          title: Dashboard Owner
+        dashboard_id:
+          description: The ID of the dashboard for which the token is being created.
+          title: Dashboard Id
+          type: string
+        comment:
+          description: Internal comment for the token. Not displayed to users.
+          title: Comment
+          type: string
+        is_disabled:
+          description: Indicates whether the token is disabled.
+          title: Is Disabled
+          type: boolean
+        expires_at:
+          description: The date and time when the token will expire.
+          examples:
+          - '2025-12-31T23:59:59Z'
+          format: date-time
+          title: Expires At
+          type: string
+      required:
+      - dashboard_owner
+      - dashboard_id
+      - comment
+      - is_disabled
+      - expires_at
+      title: EditDashboardToken
+      type: object
+    DashboardTokenMetadata:
+      properties:
+        is_disabled:
+          description: Indicates whether the token is disabled.
+          title: Is Disabled
+          type: boolean
+        comment:
+          description: Internal comment for the token. Not displayed to users.
+          title: Comment
+          type: string
+        issued_at:
+          description: The date and time when the token was issued.
+          examples:
+          - '2024-01-01T00:00:00Z'
+          format: date-time
+          title: Issued At
+          type: string
+        expires_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: The date and time when the token will expire.
+          examples:
+          - '2025-12-31T23:59:59Z'
+          title: Expires At
+      required:
+      - is_disabled
+      - comment
+      - issued_at
+      - expires_at
+      title: DashboardTokenMetadata
+      type: object
+    DashboardTokenObjectModel:
+      properties:
+        links:
+          description: List of links to other resources.
+          examples:
+          - - href: https://.../api_resource
+              method: GET
+              rel: self
+              type: application/json
+          items:
+            $ref: '#/components/schemas/LinkModel'
+          title: Links
+          type: array
+        domainType:
+          const: dashboard_token
+          description: The domain type of the object.
+          title: Domaintype
+          type: string
+        id:
+          description: The unique identifier for this domain-object type.
+          examples:
+          - host1
+          title: ID
+          type: string
+        title:
+          description: A human readable title of this object. Can be used for user
+            interfaces.
+          examples:
+          - My Host
+          title: Title
+          type: string
+        extensions:
+          $ref: '#/components/schemas/DashboardTokenMetadata'
+          description: The metadata of this token.
+      required:
+      - links
+      - domainType
+      - extensions
+      title: DashboardTokenObjectModel
+      type: object
+    CreateDashboardToken:
+      additionalProperties: false
+      properties:
+        dashboard_owner:
+          description: The user ID of the dashboard owner.
+          title: Dashboard Owner
+        dashboard_id:
+          description: The ID of the dashboard for which the token is being created.
+          title: Dashboard Id
+          type: string
+        comment:
+          description: Internal comment for the token. Not displayed to users.
+          title: Comment
+          type: string
+        expires_at:
+          description: The date and time when the token will expire. Defaults to one
+            year from now.
+          examples:
+          - '2025-12-31T23:59:59Z'
+          format: date-time
+          title: Expires At
+          type: string
+      required:
+      - dashboard_owner
+      - dashboard_id
+      - comment
+      title: CreateDashboardToken
+      type: object
     DataSourceExtensions:
       properties:
         infos:
@@ -42808,7 +43392,7 @@ components:
           example: Down for update
         mode:
           description: The mode of the downtime, either fixed or flexible.
-          example: &id116
+          example: &id118
             type: flexible
             duration_minutes: 120
           $ref: '#/components/schemas/DowntimeMode'
@@ -42863,7 +43447,7 @@ components:
           example: Down for update
         mode:
           description: The mode of the downtime, either fixed or flexible.
-          example: *id116
+          example: *id118
           $ref: '#/components/schemas/DowntimeMode'
         is_service:
           default: true
@@ -42965,7 +43549,7 @@ components:
         modify_type:
           type: string
           description: How to modify the end time of a downtime.
-          enum: &id117
+          enum: &id119
           - absolute
           - relative
           example: absolute
@@ -42984,7 +43568,7 @@ components:
         modify_type:
           type: string
           description: How to modify the end time of a downtime.
-          enum: *id117
+          enum: *id119
           example: absolute
         value:
           type: integer
@@ -43014,7 +43598,7 @@ components:
           type: string
           description: The option of how to select the downtimes to be targeted by
             the modification.
-          enum: &id118
+          enum: &id120
           - by_id
           - hostgroup
           - params
@@ -43028,7 +43612,7 @@ components:
             end time will be modified by the amount of minutes specified in the value
             field. If this attribute is not present, then the end time will not be
             modified.
-          example: &id119
+          example: &id121
             modify_type: absolute
             value: '2024-03-06T12:00:00Z'
           $ref: '#/components/schemas/ModifyEndTimeType'
@@ -43056,7 +43640,7 @@ components:
           type: string
           description: The option of how to select the downtimes to be targeted by
             the modification.
-          enum: *id118
+          enum: *id120
           example: params
         end_time:
           description: The option how to modify the end time of a downtime. If modify_type
@@ -43065,7 +43649,7 @@ components:
             end time will be modified by the amount of minutes specified in the value
             field. If this attribute is not present, then the end time will not be
             modified.
-          example: *id119
+          example: *id121
           $ref: '#/components/schemas/ModifyEndTimeType'
         comment:
           type: string
@@ -43098,7 +43682,7 @@ components:
           type: string
           description: The option of how to select the downtimes to be targeted by
             the modification.
-          enum: *id118
+          enum: *id120
           example: params
         end_time:
           description: The option how to modify the end time of a downtime. If modify_type
@@ -43107,7 +43691,7 @@ components:
             end time will be modified by the amount of minutes specified in the value
             field. If this attribute is not present, then the end time will not be
             modified.
-          example: *id119
+          example: *id121
           $ref: '#/components/schemas/ModifyEndTimeType'
         comment:
           type: string
@@ -43130,7 +43714,7 @@ components:
           type: string
           description: The option of how to select the downtimes to be targeted by
             the modification.
-          enum: *id118
+          enum: *id120
           example: params
         end_time:
           description: The option how to modify the end time of a downtime. If modify_type
@@ -43139,7 +43723,7 @@ components:
             end time will be modified by the amount of minutes specified in the value
             field. If this attribute is not present, then the end time will not be
             modified.
-          example: *id119
+          example: *id121
           $ref: '#/components/schemas/ModifyEndTimeType'
         comment:
           type: string
@@ -43161,7 +43745,7 @@ components:
           type: string
           description: The option of how to select the downtimes to be targeted by
             the modification.
-          enum: *id118
+          enum: *id120
           example: params
         end_time:
           description: The option how to modify the end time of a downtime. If modify_type
@@ -43170,7 +43754,7 @@ components:
             end time will be modified by the amount of minutes specified in the value
             field. If this attribute is not present, then the end time will not be
             modified.
-          example: *id119
+          example: *id121
           $ref: '#/components/schemas/ModifyEndTimeType'
         comment:
           type: string
@@ -43209,7 +43793,7 @@ components:
         delete_type:
           type: string
           description: The option how to delete a downtime.
-          enum: &id120
+          enum: &id122
           - by_id
           - hostgroup
           - params
@@ -43235,7 +43819,7 @@ components:
         delete_type:
           type: string
           description: The option how to delete a downtime.
-          enum: *id120
+          enum: *id122
           example: params
         host_name:
           type: string
@@ -43263,7 +43847,7 @@ components:
         delete_type:
           type: string
           description: The option how to delete a downtime.
-          enum: *id120
+          enum: *id122
           example: params
         query:
           description: An query expression of the Livestatus 'downtimes' table in
@@ -43281,7 +43865,7 @@ components:
         delete_type:
           type: string
           description: The option how to delete a downtime.
-          enum: *id120
+          enum: *id122
           example: params
         hostgroup_name:
           type: string
@@ -43298,7 +43882,7 @@ components:
         delete_type:
           type: string
           description: The option how to delete a downtime.
-          enum: *id120
+          enum: *id122
           example: params
         servicegroup_name:
           type: string
@@ -43349,7 +43933,7 @@ components:
             fixed     * hour     * day     * week     * second_week     * fourth_week     *
             weekday_start     * weekday_end     * day_of_month  This only works in
             the commercial editions of Checkmk.  Defaults to ''fixed''.'
-          enum: &id121
+          enum: &id123
           - day
           - day_of_month
           - fixed
@@ -43378,7 +43962,7 @@ components:
             \ IP address\n * `hostgroup` - Schedule downtimes for all hosts belonging\
             \ to the specified hostgroup\n * `host_by_query` - Schedule downtimes\
             \ for all host matching the query\n"
-          enum: &id122
+          enum: &id124
           - host
           - host_by_query
           - hostgroup
@@ -43416,7 +44000,7 @@ components:
             fixed     * hour     * day     * week     * second_week     * fourth_week     *
             weekday_start     * weekday_end     * day_of_month  This only works in
             the commercial editions of Checkmk.  Defaults to ''fixed''.'
-          enum: *id121
+          enum: *id123
           example: hour
         duration:
           type: integer
@@ -43436,7 +44020,7 @@ components:
             \ IP address\n * `hostgroup` - Schedule downtimes for all hosts belonging\
             \ to the specified hostgroup\n * `host_by_query` - Schedule downtimes\
             \ for all host matching the query\n"
-          enum: *id122
+          enum: *id124
           example: host
         hostgroup_name:
           type: string
@@ -43471,7 +44055,7 @@ components:
             fixed     * hour     * day     * week     * second_week     * fourth_week     *
             weekday_start     * weekday_end     * day_of_month  This only works in
             the commercial editions of Checkmk.  Defaults to ''fixed''.'
-          enum: *id121
+          enum: *id123
           example: hour
         duration:
           type: integer
@@ -43491,7 +44075,7 @@ components:
             \ IP address\n * `hostgroup` - Schedule downtimes for all hosts belonging\
             \ to the specified hostgroup\n * `host_by_query` - Schedule downtimes\
             \ for all host matching the query\n"
-          enum: *id122
+          enum: *id124
           example: host
         query:
           description: An query expression of the Livestatus 'hosts' table in nested
@@ -43542,7 +44126,7 @@ components:
             fixed     * hour     * day     * week     * second_week     * fourth_week     *
             weekday_start     * weekday_end     * day_of_month  This only works in
             the commercial editions of Checkmk.  Defaults to ''fixed''.'
-          enum: *id121
+          enum: *id123
           example: hour
         duration:
           type: integer
@@ -43563,7 +44147,7 @@ components:
             \ IP address in host_name.\n * `servicegroup` - Schedule downtimes for\
             \ all services in a given service group\n * `service_by_query` - Schedule\
             \ downtimes for services matching the query\n"
-          enum: &id123
+          enum: &id125
           - service
           - service_by_query
           - servicegroup
@@ -43610,7 +44194,7 @@ components:
             fixed     * hour     * day     * week     * second_week     * fourth_week     *
             weekday_start     * weekday_end     * day_of_month  This only works in
             the commercial editions of Checkmk.  Defaults to ''fixed''.'
-          enum: *id121
+          enum: *id123
           example: hour
         duration:
           type: integer
@@ -43631,7 +44215,7 @@ components:
             \ IP address in host_name.\n * `servicegroup` - Schedule downtimes for\
             \ all services in a given service group\n * `service_by_query` - Schedule\
             \ downtimes for services matching the query\n"
-          enum: *id123
+          enum: *id125
           example: service
         servicegroup_name:
           type: string
@@ -43667,7 +44251,7 @@ components:
             fixed     * hour     * day     * week     * second_week     * fourth_week     *
             weekday_start     * weekday_end     * day_of_month  This only works in
             the commercial editions of Checkmk.  Defaults to ''fixed''.'
-          enum: *id121
+          enum: *id123
           example: hour
         duration:
           type: integer
@@ -43688,7 +44272,7 @@ components:
             \ IP address in host_name.\n * `servicegroup` - Schedule downtimes for\
             \ all services in a given service group\n * `service_by_query` - Schedule\
             \ downtimes for services matching the query\n"
-          enum: *id123
+          enum: *id125
           example: service
         query:
           description: An query expression of the Livestatus 'services' table in nested
@@ -44144,7 +44728,7 @@ components:
         tag_address_family:
           type: string
           description: The IP address family of the host.
-          enum: &id124
+          enum: &id126
           - ip-v4-only
           - ip-v4v6
           - ip-v6-only
@@ -44153,7 +44737,7 @@ components:
         tag_agent:
           type: string
           description: Agent and API integrations
-          enum: &id125
+          enum: &id127
           - all-agents
           - cmk-agent
           - no-agent
@@ -44162,7 +44746,7 @@ components:
         tag_snmp_ds:
           type: string
           description: The SNMP data source of the host.
-          enum: &id126
+          enum: &id128
           - no-snmp
           - snmp-v1
           - snmp-v2
@@ -44170,7 +44754,7 @@ components:
         tag_piggyback:
           type: string
           description: Use piggyback data for this host.
-          enum: &id127
+          enum: &id129
           - auto-piggyback
           - no-piggyback
           - piggyback
@@ -44222,7 +44806,7 @@ components:
             \ the data by initializing a TCP connection\n * `push-agent` - the host\
             \ is expected to send the data to the monitoring server without being\
             \ triggered\n"
-          enum: &id128
+          enum: &id130
           - pull-agent
           - push-agent
         snmp_community:
@@ -44264,7 +44848,7 @@ components:
           description: "The protocol used to connect to the management board.\n\n\
             Valid options are:\n\n * `none` - No management board\n * `snmp` - Connect\
             \ using SNMP\n * `ipmi` - Connect using IPMI\n"
-          enum: &id129
+          enum: &id131
           - ipmi
           - none
           - snmp
@@ -44510,22 +45094,22 @@ components:
         tag_address_family:
           type: string
           description: The IP address family of the host.
-          enum: *id124
+          enum: *id126
           example: ip-v4-only
         tag_agent:
           type: string
           description: Agent and API integrations
-          enum: *id125
+          enum: *id127
           example: cmk-agent
         tag_snmp_ds:
           type: string
           description: The SNMP data source of the host.
-          enum: *id126
+          enum: *id128
           example: snmp-v2
         tag_piggyback:
           type: string
           description: Use piggyback data for this host.
-          enum: *id127
+          enum: *id129
           example: piggyback
         alias:
           type: string
@@ -44574,7 +45158,7 @@ components:
             \ the data by initializing a TCP connection\n * `push-agent` - the host\
             \ is expected to send the data to the monitoring server without being\
             \ triggered\n"
-          enum: *id128
+          enum: *id130
         snmp_community:
           description: The SNMP access configuration. A configured SNMP v1/v2 community
             here will have precedence over any configured SNMP community rule. For
@@ -44614,7 +45198,7 @@ components:
           description: "The protocol used to connect to the management board.\n\n\
             Valid options are:\n\n * `none` - No management board\n * `snmp` - Connect\
             \ using SNMP\n * `ipmi` - Connect using IPMI\n"
-          enum: *id129
+          enum: *id131
         management_address:
           type: string
           description: Address (IPv4, IPv6 or host name) under which the management
@@ -46415,7 +46999,7 @@ components:
         filter_type:
           type: string
           description: The way you would like to filter events.
-          enum: &id130
+          enum: &id132
           - params
           - query
           example: params
@@ -46426,7 +47010,7 @@ components:
         new_state:
           type: string
           description: The state
-          enum: &id131
+          enum: &id133
           - critical
           - ok
           - unknown
@@ -46480,7 +47064,7 @@ components:
         filter_type:
           type: string
           description: The way you would like to filter events.
-          enum: *id130
+          enum: *id132
           example: params
         site_id:
           type: string
@@ -46489,7 +47073,7 @@ components:
         new_state:
           type: string
           description: The state
-          enum: *id131
+          enum: *id133
           example: ok
         filters:
           $ref: '#/components/schemas/FilterParams'
@@ -46516,7 +47100,7 @@ components:
         filter_type:
           type: string
           description: The way you would like to filter events.
-          enum: &id132
+          enum: &id134
           - by_id
           - params
           - query
@@ -46540,7 +47124,7 @@ components:
         filter_type:
           type: string
           description: The way you would like to filter events.
-          enum: *id132
+          enum: *id134
           example: by_id
         query:
           description: An query expression of the Livestatus 'eventconsoleevents'
@@ -46559,7 +47143,7 @@ components:
         filter_type:
           type: string
           description: The way you would like to filter events.
-          enum: *id132
+          enum: *id134
           example: by_id
         filters:
           $ref: '#/components/schemas/FilterParams'
@@ -46588,7 +47172,7 @@ components:
           type: string
           default: ack
           description: To change the phase of an event
-          enum: &id133
+          enum: &id135
           - ack
           - open
           example: ack
@@ -46603,7 +47187,7 @@ components:
         filter_type:
           type: string
           description: The way you would like to filter events.
-          enum: &id134
+          enum: &id136
           - all
           - params
           - query
@@ -46653,7 +47237,7 @@ components:
           type: string
           default: ack
           description: To change the phase of an event
-          enum: *id133
+          enum: *id135
           example: ack
         change_comment:
           type: string
@@ -46666,7 +47250,7 @@ components:
         filter_type:
           type: string
           description: The way you would like to filter events.
-          enum: *id134
+          enum: *id136
           example: all
         site_id:
           type: string
@@ -46685,7 +47269,7 @@ components:
           type: string
           default: ack
           description: To change the phase of an event
-          enum: *id133
+          enum: *id135
           example: ack
         change_comment:
           type: string
@@ -46698,7 +47282,7 @@ components:
         filter_type:
           type: string
           description: The way you would like to filter events.
-          enum: *id134
+          enum: *id136
           example: all
         site_id:
           type: string
@@ -46748,7 +47332,7 @@ components:
           type: string
           default: ack
           description: To change the phase of an event
-          enum: *id133
+          enum: *id135
           example: ack
         change_comment:
           type: string
@@ -46881,22 +47465,22 @@ components:
         tag_address_family:
           type: string
           description: The IP address family of the host.
-          enum: *id124
+          enum: *id126
           example: ip-v4-only
         tag_agent:
           type: string
           description: Agent and API integrations
-          enum: *id125
+          enum: *id127
           example: cmk-agent
         tag_snmp_ds:
           type: string
           description: The SNMP data source of the host.
-          enum: *id126
+          enum: *id128
           example: snmp-v2
         tag_piggyback:
           type: string
           description: Use piggyback data for this host.
-          enum: *id127
+          enum: *id129
           example: piggyback
         site:
           type: string
@@ -46945,7 +47529,7 @@ components:
           description: "The protocol used to connect to the management board.\n\n\
             Valid options are:\n\n * `none` - No management board\n * `snmp` - Connect\
             \ using SNMP\n * `ipmi` - Connect using IPMI\n"
-          enum: &id135
+          enum: &id137
           - ipmi
           - none
           - snmp
@@ -47157,22 +47741,22 @@ components:
         tag_address_family:
           type: string
           description: The IP address family of the host.
-          enum: *id124
+          enum: *id126
           example: ip-v4-only
         tag_agent:
           type: string
           description: Agent and API integrations
-          enum: *id125
+          enum: *id127
           example: cmk-agent
         tag_snmp_ds:
           type: string
           description: The SNMP data source of the host.
-          enum: *id126
+          enum: *id128
           example: snmp-v2
         tag_piggyback:
           type: string
           description: Use piggyback data for this host.
-          enum: *id127
+          enum: *id129
           example: piggyback
         site:
           type: string
@@ -47221,7 +47805,7 @@ components:
           description: "The protocol used to connect to the management board.\n\n\
             Valid options are:\n\n * `none` - No management board\n * `snmp` - Connect\
             \ using SNMP\n * `ipmi` - Connect using IPMI\n"
-          enum: *id135
+          enum: *id137
         management_snmp_community:
           description: SNMP credentials
           anyOf:
@@ -47249,21 +47833,21 @@ components:
           description: Replace all attributes with the ones given in this field. Already
             setattributes, not given here, will be removed. Can't be used together
             with update_attributes or remove_attributes fields.
-          example: &id136
+          example: &id138
             tag_networking: wan
           $ref: '#/components/schemas/FolderUpdateAttribute'
         update_attributes:
           description: Just update the folder attributes with these attributes. The
             previously set attributes will be overwritten. Can't be used together
             with attributes or remove_attributes fields.
-          example: &id137
+          example: &id139
             tag_criticality: prod
           $ref: '#/components/schemas/FolderUpdateAttribute'
         remove_attributes:
           type: array
           description: A list of attributes which should be removed. Can't be used
             together with attributes or update_attributes fields.
-          example: &id138
+          example: &id140
           - tag_foobar
           items:
             type: string
@@ -47306,19 +47890,19 @@ components:
           description: Replace all attributes with the ones given in this field. Already
             setattributes, not given here, will be removed. Can't be used together
             with update_attributes or remove_attributes fields.
-          example: *id136
+          example: *id138
           $ref: '#/components/schemas/FolderUpdateAttribute'
         update_attributes:
           description: Just update the folder attributes with these attributes. The
             previously set attributes will be overwritten. Can't be used together
             with attributes or remove_attributes fields.
-          example: *id137
+          example: *id139
           $ref: '#/components/schemas/FolderUpdateAttribute'
         remove_attributes:
           type: array
           description: A list of attributes which should be removed. Can't be used
             together with attributes or update_attributes fields.
-          example: *id138
+          example: *id140
           items:
             type: string
       additionalProperties: false
@@ -47328,22 +47912,22 @@ components:
         tag_address_family:
           type: string
           description: The IP address family of the host.
-          enum: *id124
+          enum: *id126
           example: ip-v4-only
         tag_agent:
           type: string
           description: Agent and API integrations
-          enum: *id125
+          enum: *id127
           example: cmk-agent
         tag_snmp_ds:
           type: string
           description: The SNMP data source of the host.
-          enum: *id126
+          enum: *id128
           example: snmp-v2
         tag_piggyback:
           type: string
           description: Use piggyback data for this host.
-          enum: *id127
+          enum: *id129
           example: piggyback
         site:
           type: string
@@ -47392,7 +47976,7 @@ components:
           description: "The protocol used to connect to the management board.\n\n\
             Valid options are:\n\n * `none` - No management board\n * `snmp` - Connect\
             \ using SNMP\n * `ipmi` - Connect using IPMI\n"
-          enum: *id135
+          enum: *id137
         management_snmp_community:
           description: SNMP credentials
           anyOf:
@@ -47915,7 +48499,7 @@ components:
           type: array
           default: []
           description: Restrict the query to this particular site.
-          example: *id139
+          example: *id141
           items:
             type: string
         query:
@@ -47931,7 +48515,7 @@ components:
           - name
           description: The desired columns of the `hosts` table. If left empty, a
             default set of columns is used.
-          example: *id140
+          example: *id142
           items:
             type: string
       additionalProperties: false
@@ -49337,7 +49921,7 @@ components:
             \ the data by initializing a TCP connection\n * `push-agent` - the host\
             \ is expected to send the data to the monitoring server without being\
             \ triggered\n"
-          enum: *id128
+          enum: *id130
       additionalProperties: false
     LDAPGeneralProperties:
       type: object
@@ -49413,7 +49997,7 @@ components:
         state:
           type: string
           description: ''
-          enum: &id141
+          enum: &id143
           - disabled
           - enabled
           example: enabled
@@ -49449,7 +50033,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         port:
           type: integer
@@ -49462,7 +50046,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         seconds:
           type: number
@@ -49475,7 +50059,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         version:
           type: integer
@@ -49492,7 +50076,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         size:
           type: integer
@@ -49507,7 +50091,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         seconds:
           type: integer
@@ -49520,7 +50104,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         suffix:
           type: string
@@ -49606,7 +50190,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         filter:
           type: string
@@ -49621,7 +50205,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         filter:
           type: string
@@ -49635,7 +50219,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute:
           type: string
@@ -49713,7 +50297,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         filter:
           type: string
@@ -49728,7 +50312,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute:
           type: string
@@ -49772,7 +50356,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49784,7 +50368,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49799,7 +50383,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49812,7 +50396,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49824,7 +50408,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49837,7 +50421,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49850,7 +50434,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49862,7 +50446,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49875,7 +50459,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49888,7 +50472,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49901,7 +50485,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49914,7 +50498,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49927,7 +50511,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         attribute_to_sync:
           type: string
@@ -49940,7 +50524,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         handle_nested:
           type: boolean
@@ -49965,7 +50549,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         from_time:
           type: string
@@ -50048,7 +50632,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         handle_nested:
           type: boolean
@@ -50086,7 +50670,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         group_dn:
           type: string
@@ -50104,7 +50688,7 @@ components:
         state:
           type: string
           description: ''
-          enum: *id141
+          enum: *id143
           example: enabled
         handle_nested:
           type: boolean
@@ -50279,7 +50863,7 @@ components:
           additionalProperties: {}
         extensions:
           description: The configuration attributes of a user LDAP connection.
-          example: &id142
+          example: &id144
             general_properties:
               id: LDAP_1
               description: ''
@@ -50396,7 +50980,7 @@ components:
             id: LDAP_1
             title: ''
             members: {}
-            extensions: *id142
+            extensions: *id144
           items:
             $ref: '#/components/schemas/LDAPConnectionResponse'
         extensions:
@@ -50738,7 +51322,7 @@ components:
           default: []
           description: The LDAP attribute whose contents shall be synced into this
             custom attribute.
-          example: &id143
+          example: &id145
           - LDAP_1
           - LDAP_2
           items:
@@ -50908,7 +51492,7 @@ components:
           default: []
           description: The LDAP attribute whose contents shall be synced into this
             custom attribute.
-          example: *id143
+          example: *id145
           items:
             type: string
             description: An LDAP connection ID string.
@@ -51178,7 +51762,7 @@ components:
           default: activated
           description: Selecting 'deactivated' will disable the rule, but it will
             remain in the configuration.
-          enum: &id145
+          enum: &id147
           - activated
           - deactivated
         id:
@@ -51193,7 +51777,7 @@ components:
         type:
           type: string
           description: Select the software the LDAP directory is based on.
-          enum: &id144
+          enum: &id146
           - 389_directory_server
           - active_directory_automatic
           - active_directory_manual
@@ -51231,7 +51815,7 @@ components:
         type:
           type: string
           description: Select the software the LDAP directory is based on.
-          enum: *id144
+          enum: *id146
           example: active_directory_manual
         domain:
           type: string
@@ -51517,7 +52101,7 @@ components:
             whole connection is read only. In some environment an anonymous connect/bind
             is allowed, in this case you don't have to configure anything here.It
             must be possible to list all needed user and group objects from the directory.
-          example: &id146
+          example: &id148
             type: active_directory_manual
             ldap_server: your_ldap_server.example.com
             failover_servers:
@@ -51528,7 +52112,7 @@ components:
           default:
             state: disabled
           description: The credentials used to connect to the LDAP server.
-          example: &id147
+          example: &id149
             state: enabled
             bind_dn: CN=bind_user,OU=users,DC=example,DC=com
             password_store_id: pw_store_id
@@ -51537,7 +52121,7 @@ components:
           default:
             state: disabled
           description: The TCP port to be used to connect to the LDAP server.
-          example: &id148
+          example: &id150
             state: enabled
             port: 389
           $ref: '#/components/schemas/LDAPTCPPortSelectorRequest'
@@ -51547,7 +52131,7 @@ components:
           description: Connect to the LDAP server with a SSL encrypted connection.
             The trusted certificates authorities configured in Checkmk will be used
             to validate the certificate provided by the LDAP server.
-          enum: &id149
+          enum: &id151
           - disable_ssl
           - enable_ssl
           example: enable_ssl
@@ -51555,7 +52139,7 @@ components:
           default:
             state: disabled
           description: If the connection timeout is set and its value.
-          example: &id150
+          example: &id152
             state: enabled
             seconds: 2.0
           $ref: '#/components/schemas/LDAPConnectTimeoutSelectorRequest'
@@ -51563,7 +52147,7 @@ components:
           default:
             state: disabled
           description: If the ldap version is set and the version it's set to.
-          example: &id151
+          example: &id153
             state: enabled
             version: 3
           $ref: '#/components/schemas/LDAPVersionSelectorRequest'
@@ -51571,7 +52155,7 @@ components:
           default:
             state: disabled
           description: If the page size is enabled and its value.
-          example: &id152
+          example: &id154
             state: enabled
             size: 1000
           $ref: '#/components/schemas/LDAPPageSizeSelectorRequest'
@@ -51579,7 +52163,7 @@ components:
           default:
             state: disabled
           description: Enable the response timeout and define its value.
-          example: &id153
+          example: &id155
             state: enabled
             seconds: 5
           $ref: '#/components/schemas/LDAPResponseTimeoutSelectorRequest'
@@ -51611,7 +52195,7 @@ components:
             umlauts_in_user_ids: keep_umlauts
             create_users: on_login
           description: The LDAP user configuration
-          example: &id154
+          example: &id156
             user_base_dn: ou=OrgUnit,dc=domaincomp,dc=de
             search_scope: search_only_base_dn_entry
             search_filter:
@@ -51636,7 +52220,7 @@ components:
             member_attribute:
               state: disabled
           description: The LDAP group configuration
-          example: &id155
+          example: &id157
             group_base_dn: ou=OrgUnit,dc=domaincomp,dc=de
             search_scope: search_whole_subtree
             search_filter:
@@ -51649,7 +52233,7 @@ components:
         sync_plugins:
           default: {}
           description: The LDAP sync plug-ins configuration
-          example: &id156 {}
+          example: &id158 {}
           $ref: '#/components/schemas/LDAPSyncPluginsRequest'
         other:
           default:
@@ -51658,7 +52242,7 @@ components:
               hours: 0
               minutes: 5
           description: Other config options for the LDAP connection.
-          example: &id157
+          example: &id159
             sync_interval:
               days: 0
               hours: 0
@@ -51666,7 +52250,7 @@ components:
           $ref: '#/components/schemas/LDAPOtherRequest'
         general_properties:
           description: General properties of an LDAP connection.
-          example: &id158
+          example: &id160
             id: ldap_1
             description: 1st ldap connection
             comment: test_comment
@@ -51675,7 +52259,7 @@ components:
           $ref: '#/components/schemas/LDAPGeneralPropertiesUpdateRequest'
         ldap_connection:
           description: The LDAP connection configuration
-          example: &id159
+          example: &id161
             directory_type:
               type: active_directory_manual
               ldap_server: 123.31.12.34
@@ -51733,7 +52317,7 @@ components:
           default: activated
           description: Selecting 'deactivated' will disable the rule, but it will
             remain in the configuration.
-          enum: *id145
+          enum: *id147
         id:
           type: string
           description: An LDAP connection ID string.
@@ -51778,19 +52362,19 @@ components:
             whole connection is read only. In some environment an anonymous connect/bind
             is allowed, in this case you don't have to configure anything here.It
             must be possible to list all needed user and group objects from the directory.
-          example: *id146
+          example: *id148
           $ref: '#/components/schemas/DirectoryTypeSelectorRequest'
         bind_credentials:
           default:
             state: disabled
           description: The credentials used to connect to the LDAP server.
-          example: *id147
+          example: *id149
           $ref: '#/components/schemas/BindCredentialsSelectorRequest'
         tcp_port:
           default:
             state: disabled
           description: The TCP port to be used to connect to the LDAP server.
-          example: *id148
+          example: *id150
           $ref: '#/components/schemas/LDAPTCPPortSelectorRequest'
         ssl_encryption:
           type: string
@@ -51798,31 +52382,31 @@ components:
           description: Connect to the LDAP server with a SSL encrypted connection.
             The trusted certificates authorities configured in Checkmk will be used
             to validate the certificate provided by the LDAP server.
-          enum: *id149
+          enum: *id151
           example: enable_ssl
         connect_timeout:
           default:
             state: disabled
           description: If the connection timeout is set and its value.
-          example: *id150
+          example: *id152
           $ref: '#/components/schemas/LDAPConnectTimeoutSelectorRequest'
         ldap_version:
           default:
             state: disabled
           description: If the ldap version is set and the version it's set to.
-          example: *id151
+          example: *id153
           $ref: '#/components/schemas/LDAPVersionSelectorRequest'
         page_size:
           default:
             state: disabled
           description: If the page size is enabled and its value.
-          example: *id152
+          example: *id154
           $ref: '#/components/schemas/LDAPPageSizeSelectorRequest'
         response_timeout:
           default:
             state: disabled
           description: Enable the response timeout and define its value.
-          example: *id153
+          example: *id155
           $ref: '#/components/schemas/LDAPResponseTimeoutSelectorRequest'
         connection_suffix:
           default:
@@ -51852,7 +52436,7 @@ components:
             umlauts_in_user_ids: keep_umlauts
             create_users: on_login
           description: The LDAP user configuration
-          example: *id154
+          example: *id156
           $ref: '#/components/schemas/LDAPUsersRequest'
         groups:
           default:
@@ -51863,12 +52447,12 @@ components:
             member_attribute:
               state: disabled
           description: The LDAP group configuration
-          example: *id155
+          example: *id157
           $ref: '#/components/schemas/LDAPGroupsRequest'
         sync_plugins:
           default: {}
           description: The LDAP sync plug-ins configuration
-          example: *id156
+          example: *id158
           $ref: '#/components/schemas/LDAPSyncPluginsRequest'
         other:
           default:
@@ -51877,15 +52461,15 @@ components:
               hours: 0
               minutes: 5
           description: Other config options for the LDAP connection.
-          example: *id157
+          example: *id159
           $ref: '#/components/schemas/LDAPOtherRequest'
         general_properties:
           description: General properties of an LDAP connection.
-          example: *id158
+          example: *id160
           $ref: '#/components/schemas/LDAPGeneralPropertiesCreateRequest'
         ldap_connection:
           description: The LDAP connection configuration
-          example: *id159
+          example: *id161
           $ref: '#/components/schemas/LDAPConnectionCreateRequest'
       required:
       - general_properties
@@ -51961,7 +52545,7 @@ components:
           type: string
           description: 'With which mode to perform the license verification: ''online''
             or ''offline''. If ''online'' is chosen, credentials have to be provided'
-          enum: &id160
+          enum: &id162
           - offline
           - online
           example: online
@@ -51988,7 +52572,7 @@ components:
           type: string
           description: 'With which mode to perform the license verification: ''online''
             or ''offline''. If ''online'' is chosen, credentials have to be provided'
-          enum: *id160
+          enum: *id162
           example: online
         credentials:
           description: The credentials to use for online license configuration
@@ -52137,7 +52721,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: &id161
+          example: &id163
             start: '2026-06-16 07:00:00+00:00'
             end: '2026-06-16 07:15:00+00:00'
           $ref: '#/components/schemas/TimeRange'
@@ -52147,7 +52731,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: &id162
+          enum: &id164
           - average
           - max
           - min
@@ -52159,7 +52743,7 @@ components:
             you have to specify a certain set of filters, otherwise Checkmk will refuse
             to return a result, as too many metrics would have to be returned. See
             example for commonly used filters.
-          example: &id163
+          example: &id165
             siteopt:
               site: site_name
             host:
@@ -52193,7 +52777,7 @@ components:
           default: 'off'
           description: A result that contains multiple metrics of the same type can
             be aggregated together. Aggregation is disabled by default.
-          enum: &id164
+          enum: &id166
           - average
           - maximum
           - minimum
@@ -52204,7 +52788,7 @@ components:
           type: string
           description: Specify whether you want to receive a single metric (via metric_id),
             or a predefined graph containing multiple metrics (via graph_id).
-          enum: &id165
+          enum: &id167
           - predefined_graph
           - single_metric
           example: single_metric
@@ -52226,7 +52810,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: *id161
+          example: *id163
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -52234,7 +52818,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: *id162
+          enum: *id164
           example: max
         filter:
           type: object
@@ -52243,20 +52827,20 @@ components:
             you have to specify a certain set of filters, otherwise Checkmk will refuse
             to return a result, as too many metrics would have to be returned. See
             example for commonly used filters.
-          example: *id163
+          example: *id165
           additionalProperties: {}
         aggregation:
           type: string
           default: 'off'
           description: A result that contains multiple metrics of the same type can
             be aggregated together. Aggregation is disabled by default.
-          enum: *id164
+          enum: *id166
           example: maximum
         type:
           type: string
           description: Specify whether you want to receive a single metric (via metric_id),
             or a predefined graph containing multiple metrics (via graph_id).
-          enum: *id165
+          enum: *id167
           example: single_metric
         metric_id:
           type: string
@@ -52353,58 +52937,6 @@ components:
       - step
       - time_range
       additionalProperties: false
-    _CustomMetricBackendConfig:
-      properties:
-        type:
-          const: custom
-          description: Custom metric backend
-          title: Type
-          type: string
-        address:
-          description: The name or IP address of the host running the backend.
-          examples:
-          - my-clickhouse.example.com
-          title: Address
-          type: string
-        tcp_port:
-          description: The port that will be used for TCP traffic.
-          examples:
-          - 6790
-          maximum: 65535
-          minimum: 1
-          title: Tcp Port
-          type: integer
-        http_port:
-          description: The port that will be used for HTTP traffic.
-          examples:
-          - 6791
-          maximum: 65535
-          minimum: 1
-          title: Http Port
-          type: integer
-        username:
-          description: The username to connect to the custom ClickHouse instance.
-          examples:
-          - default
-          minLength: 1
-          title: Username
-          type: string
-        password:
-          description: The password to connect to the custom ClickHouse instance.
-          examples:
-          - secret
-          minLength: 1
-          title: Password
-          type: string
-      required:
-      - type
-      - address
-      - tcp_port
-      - http_port
-      - username
-      - password
-      title: _CustomMetricBackendConfig
-      type: object
     _MetricBackendDisabled:
       properties:
         type:
@@ -52416,11 +52948,11 @@ components:
       - type
       title: _MetricBackendDisabled
       type: object
-    _SiteLocalMetricBackendConfig:
+    _MetricBackendEnabled:
       properties:
         type:
-          const: site_local
-          description: Site-local metric backend
+          const: enabled
+          description: Metric backend is enabled
           title: Type
           type: string
         tls_port:
@@ -52441,7 +52973,7 @@ components:
           type: integer
       required:
       - type
-      title: _SiteLocalMetricBackendConfig
+      title: _MetricBackendEnabled
       type: object
     _MetricBackendConfig:
       additionalProperties: false
@@ -52455,8 +52987,7 @@ components:
         config:
           anyOf:
           - $ref: '#/components/schemas/_MetricBackendDisabled'
-          - $ref: '#/components/schemas/_SiteLocalMetricBackendConfig'
-          - $ref: '#/components/schemas/_CustomMetricBackendConfig'
+          - $ref: '#/components/schemas/_MetricBackendEnabled'
           description: Metric backend configuration.
           examples:
           - type: disabled
@@ -52471,7 +53002,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: *id161
+          example: *id163
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -52479,7 +53010,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: *id162
+          enum: *id164
           example: max
         site:
           type: string
@@ -52499,7 +53030,7 @@ components:
           type: string
           description: Specify whether you want to receive a single metric (via metric_id),
             or a predefined graph containing multiple metrics (via graph_id).
-          enum: *id165
+          enum: *id167
           example: single_metric
         graph_id:
           type: string
@@ -52520,7 +53051,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: *id161
+          example: *id163
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -52528,7 +53059,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: *id162
+          enum: *id164
           example: max
         site:
           type: string
@@ -52548,7 +53079,7 @@ components:
           type: string
           description: Specify whether you want to receive a single metric (via metric_id),
             or a predefined graph containing multiple metrics (via graph_id).
-          enum: *id165
+          enum: *id167
           example: single_metric
         metric_id:
           type: string
@@ -52614,7 +53145,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: &id166
+          enum: &id168
           - disabled
           - enabled
           example: enabled
@@ -52669,7 +53200,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           type: string
@@ -52680,7 +53211,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         time_horizon:
           type: integer
@@ -52697,7 +53228,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: &id167
+            enum: &id169
             - check_type
             - ec_comment
             - ec_contact
@@ -52732,7 +53263,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           $ref: '#/components/schemas/NotificationBulkingCommonAttributes'
@@ -52743,7 +53274,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         time_horizon:
           type: integer
@@ -52760,7 +53291,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: *id167
+            enum: *id169
         notification_bulks_based_on_custom_macros:
           type: array
           description: 'If you enter the names of host/service-custom macros here
@@ -52806,7 +53337,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           $ref: '#/components/schemas/WhenToBulk'
@@ -52825,7 +53356,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           type: array
@@ -52850,7 +53381,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           type: array
@@ -52883,7 +53414,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           type: string
@@ -52923,7 +53454,7 @@ components:
         tag_type:
           type: string
           description: Identifies the type of host tag.
-          enum: &id168
+          enum: &id170
           - aux_tag
           - tag_group
           example: tag_group
@@ -52956,7 +53487,7 @@ components:
         tag_type:
           type: string
           description: Identifies the type of host tag.
-          enum: *id168
+          enum: *id170
           example: tag_group
         tag_group_id:
           type: string
@@ -53010,7 +53541,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           type: array
@@ -53042,7 +53573,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           type: array
@@ -53076,7 +53607,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           description: The service group alias must not match one of the following
@@ -53112,7 +53643,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           description: Host or service must be in the following service level to get
@@ -53171,7 +53702,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           description: 'Select the host event types and transitions this rule should
@@ -53256,7 +53787,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           description: 'Select the service event types and transitions this rule should
@@ -53284,7 +53815,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           $ref: '#/components/schemas/FromToNotificationNumbersOutput'
@@ -53308,7 +53839,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           $ref: '#/components/schemas/ThrottlePeriodicNotificationsOutput'
@@ -53349,7 +53880,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           $ref: '#/components/schemas/SysLogToFromPrioritiesOutput'
@@ -53372,7 +53903,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         match_type:
           type: string
@@ -53390,7 +53921,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id166
+          enum: *id168
           example: enabled
         value:
           $ref: '#/components/schemas/EventConsoleAlertsResponse'
@@ -53763,7 +54294,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: &id169
+          enum: &id171
           - disabled
           - enabled
           example: enabled
@@ -53846,7 +54377,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: The email address and visible name used in the From header
@@ -53875,7 +54406,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: The email address and visible name used in the Reply-To header
@@ -53902,7 +54433,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -53930,7 +54461,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -53958,7 +54489,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -53991,7 +54522,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -54017,7 +54548,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: &id171
+          enum: &id173
           - asciimail
           - cisco_webex_teams
           - ilert
@@ -54072,7 +54603,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -54120,7 +54651,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -54146,7 +54677,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id170
+          enum: &id172
           - automatic
           - manual
           example: automatic
@@ -54165,7 +54696,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id170
+          enum: *id172
           example: automatic
         url:
           type: string
@@ -54192,7 +54723,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: If you use Automatic HTTP/s, the URL prefix for host and service
@@ -54244,7 +54775,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/Authentication'
@@ -54293,7 +54824,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/EnableSynchronousDeliveryViaSMTP'
@@ -54318,7 +54849,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: integer
@@ -54347,7 +54878,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: integer
@@ -54380,7 +54911,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         from_details:
           $ref: '#/components/schemas/FromDetailsOneOf'
@@ -54429,7 +54960,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id172
+          enum: &id174
           - explicit
           - store
           example: store
@@ -54446,7 +54977,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -54473,7 +55004,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id173
+          enum: &id175
           - environment
           - global
           - no_proxy
@@ -54487,7 +55018,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id173
+          enum: *id175
           example: ''
         url:
           type: string
@@ -54501,7 +55032,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id173
+          enum: *id175
           example: ''
         global_proxy_id:
           type: string
@@ -54533,7 +55064,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: Use the proxy settings from the environment variables. The
@@ -54564,7 +55095,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         disable_ssl_cert_verification:
           description: Ignore unverified HTTPS request warnings. Use with caution.
@@ -54590,7 +55121,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -54644,7 +55175,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -54672,7 +55203,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         syslog_facility_to_use:
           $ref: '#/components/schemas/SysLogFacilityOneOf'
@@ -54688,7 +55219,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         key:
           type: string
@@ -54702,7 +55233,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -54730,7 +55261,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         notification_priority:
           type: string
@@ -54775,7 +55306,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id174
+          enum: &id176
           - explicit_password
           - explicit_token
           - password_store_id
@@ -54799,7 +55330,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id176
           example: password_store_id
         username:
           type: string
@@ -54819,7 +55350,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id176
           example: password_store_id
         token:
           type: string
@@ -54834,7 +55365,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id174
+          enum: *id176
           example: password_store_id
         store_id:
           type: string
@@ -54866,7 +55397,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         jira_url:
           type: string
@@ -54958,7 +55489,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         key:
           type: string
@@ -54972,7 +55503,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -55000,7 +55531,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -55034,7 +55565,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -55062,7 +55593,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -55108,7 +55639,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         api_key:
           $ref: '#/components/schemas/OpsGenisStoreOrExplicitKeySelector'
@@ -55205,7 +55736,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         key:
           type: string
@@ -55219,7 +55750,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -55247,7 +55778,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         integration_key:
           $ref: '#/components/schemas/PagerDutyStoreOrIntegrationKeySelector'
@@ -55337,7 +55868,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: The pushover priority level
@@ -55365,7 +55896,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -55419,7 +55950,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         api_key:
           type: string
@@ -55461,7 +55992,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -55492,7 +56023,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -55541,7 +56072,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/ManagementTypeCaseStates'
@@ -55581,7 +56112,7 @@ components:
       properties:
         option:
           type: string
-          enum: &id175
+          enum: &id177
           - case
           - incident
           example: case
@@ -55596,7 +56127,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -55660,7 +56191,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/ManagementTypeIncedentStates'
@@ -55713,7 +56244,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id175
+          enum: *id177
           example: case
         params:
           $ref: '#/components/schemas/IncidentParams'
@@ -55738,7 +56269,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         servicenow_url:
           type: string
@@ -55771,7 +56302,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         secret:
           type: string
@@ -55785,7 +56316,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -55813,7 +56344,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         team_secret:
           $ref: '#/components/schemas/SignL4ExplicitOrStoreSelector'
@@ -55839,7 +56370,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         url:
           type: string
@@ -55856,7 +56387,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -55884,7 +56415,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         webhook_url:
           $ref: '#/components/schemas/SlackStoreOrExplicitURLSelector'
@@ -55910,7 +56441,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         password:
           type: string
@@ -55924,7 +56455,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -55952,7 +56483,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         modem_type:
           type: string
@@ -55999,7 +56530,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         params:
           type: array
@@ -56024,7 +56555,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         destination_ip:
           type: string
@@ -56052,7 +56583,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         url:
           type: string
@@ -56068,7 +56599,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -56096,7 +56627,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         splunk_on_call_rest_endpoint:
           $ref: '#/components/schemas/SplunkRESTEndpointSelector'
@@ -56122,7 +56653,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         url:
           type: string
@@ -56137,7 +56668,7 @@ components:
       properties:
         option:
           type: string
-          enum: *id172
+          enum: *id174
           example: store
         store_id:
           type: string
@@ -56168,7 +56699,7 @@ components:
         plugin_name:
           type: string
           description: The plug-in name.
-          enum: *id171
+          enum: *id173
           example: mail
         affected_host_groups:
           description: Enable/disable if we show affected host groups in the created
@@ -56321,7 +56852,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: &id176
+            enum: &id178
             - check_type
             - ec_comment
             - ec_contact
@@ -56365,7 +56896,7 @@ components:
         when_to_bulk:
           type: string
           description: Bulking can always happen or during a set time period
-          enum: &id177
+          enum: &id179
           - always
           - timeperiod
           example: always
@@ -56381,7 +56912,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/NotificationBulkingAlways'
@@ -56415,7 +56946,7 @@ components:
           uniqueItems: true
           items:
             type: string
-            enum: *id176
+            enum: *id178
         notification_bulks_based_on_custom_macros:
           type: array
           items:
@@ -56453,7 +56984,7 @@ components:
         when_to_bulk:
           type: string
           description: Bulking can always happen or during a set time period
-          enum: *id177
+          enum: *id179
           example: always
         params:
           $ref: '#/components/schemas/NotificationBulkingTimePeriod'
@@ -56479,7 +57010,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/NotificationBulkingWhenToBulkSelector'
@@ -56526,7 +57057,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -56558,7 +57089,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -56610,7 +57141,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -56666,7 +57197,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -56698,7 +57229,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -56759,7 +57290,7 @@ components:
       properties:
         tag_type:
           type: string
-          enum: &id178
+          enum: &id180
           - tag_group
           example: aux_tag
         tag_group_id:
@@ -56792,7 +57323,7 @@ components:
       properties:
         tag_type:
           type: string
-          enum: *id178
+          enum: *id180
           example: aux_tag
         tag_group_id:
           type: string
@@ -56848,7 +57379,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -56898,7 +57429,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -56927,7 +57458,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -56961,7 +57492,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -56996,7 +57527,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -57048,7 +57579,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: The service group alias must not match one of the following
@@ -57096,7 +57627,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -57171,7 +57702,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: Host or service must be in the following service level to get
@@ -57199,7 +57730,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -57289,7 +57820,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: 'Select the host event types and transitions this rule should
@@ -57412,7 +57943,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: 'Select the service event types and transitions this rule should
@@ -57458,7 +57989,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/FromToNotificationNumbers'
@@ -57500,7 +58031,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/ThrottlePeriodicNotifications'
@@ -57526,7 +58057,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: array
@@ -57590,7 +58121,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           $ref: '#/components/schemas/SysLogToFromPriorities'
@@ -57615,7 +58146,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           type: string
@@ -57681,7 +58212,7 @@ components:
         match_type:
           type: string
           description: ''
-          enum: &id179
+          enum: &id181
           - do_not_match_event_console_alerts
           - match_only_event_console_alerts
           example: match_only_event_console_events
@@ -57697,7 +58228,7 @@ components:
         match_type:
           type: string
           description: ''
-          enum: *id179
+          enum: *id181
           example: match_only_event_console_events
       required:
       - match_type
@@ -57720,7 +58251,7 @@ components:
         state:
           type: string
           description: To enable or disable this field
-          enum: *id169
+          enum: *id171
           example: enabled
         value:
           description: The Event Console can have events create notifications in Check_MK.
@@ -58117,7 +58648,7 @@ components:
         option:
           type: string
           description: Creation of gateway hosts option
-          enum: &id180
+          enum: &id182
           - create_in_folder
           - create_in_host_location
           - no_gateway_hosts
@@ -58131,7 +58662,7 @@ components:
         option:
           type: string
           description: Creation of gateway hosts option
-          enum: *id180
+          enum: *id182
           example: no_gateway_hosts
         folder:
           type: string
@@ -58158,7 +58689,7 @@ components:
         option:
           type: string
           description: Creation of gateway hosts option
-          enum: *id180
+          enum: *id182
           example: no_gateway_hosts
         hosts_alias:
           type: string
@@ -58675,14 +59206,14 @@ components:
         actions:
           type: array
           description: A list of all complete actions
-          example: &id181
+          example: &id183
           - id: save
             label: Save configuration
           items:
             $ref: '#/components/schemas/Action'
         prev_button:
           description: Definition of the `go to previous stage` button
-          example: &id182
+          example: &id184
             id: prev
             label: Back
             aria_label: Back
@@ -58754,12 +59285,12 @@ components:
         actions:
           type: array
           description: A list of all complete actions
-          example: *id181
+          example: *id183
           items:
             $ref: '#/components/schemas/Action'
         prev_button:
           description: Definition of the `go to previous stage` button
-          example: *id182
+          example: *id184
           anyOf:
           - $ref: '#/components/schemas/QuickSetupButton'
           - type: 'null'
@@ -58843,7 +59374,7 @@ components:
         background_job_exception:
           description: The exception details if the action was run in the background
             and raised an unexpected exception
-          example: &id183 {}
+          example: &id185 {}
           $ref: '#/components/schemas/BackgroundJobException'
       additionalProperties: false
     QuickSetupStageActionResponse:
@@ -58865,7 +59396,7 @@ components:
         background_job_exception:
           description: The exception details if the action was run in the background
             and raised an unexpected exception
-          example: *id183
+          example: *id185
           $ref: '#/components/schemas/BackgroundJobException'
       additionalProperties: false
     QuickSetupStageRequest:
@@ -59231,7 +59762,7 @@ components:
             you can use regular expressions if you enter a tilde `~` as the first
             character. That regular expression must match the beginning of the host
             names in question.
-          example: &id184
+          example: &id186
             match_on:
             - host1
             - host2
@@ -59241,7 +59772,7 @@ components:
           description: The rule will only be applied to hosts fulfilling all the host
             tag conditions listed here, even if they appear in the list of explicit
             host names.
-          example: &id185
+          example: &id187
           - key: criticality
             operator: is
             value: prod
@@ -59253,7 +59784,7 @@ components:
           description: Further restrict this rule by applying host label conditions.
             Although all items in this list have a default operator value, the operator
             value for the the first item in the list does not have any effect.
-          example: &id186
+          example: &id188
           - label_group:
             - operator: and
               label: db:mssql
@@ -59269,7 +59800,7 @@ components:
             label conditions. Although all items in this list have a default operator
             value, the operator value for the the first item in the list does not
             have any effect.
-          example: &id187
+          example: &id189
           - label_group:
             - operator: and
               label: db:mssql
@@ -59290,7 +59821,7 @@ components:
             \ the rules is only a check item or a full service name. For example the\
             \ check parameters rulesets only use the item, and other service rulesets\
             \ like disabled services ruleset use full servicedescriptions."
-          example: &id188
+          example: &id190
             match_on:
             - foo1
             - bar2
@@ -59424,13 +59955,13 @@ components:
             you can use regular expressions if you enter a tilde `~` as the first
             character. That regular expression must match the beginning of the host
             names in question.
-          example: *id184
+          example: *id186
           $ref: '#/components/schemas/HostOrServiceCondition'
         host_tags:
           description: The rule will only be applied to hosts fulfilling all the host
             tag conditions listed here, even if they appear in the list of explicit
             host names.
-          example: *id185
+          example: *id187
           type: array
           items:
             $ref: '#/components/schemas/TagCondition'
@@ -59439,7 +59970,7 @@ components:
           description: Further restrict this rule by applying host label conditions.
             Although all items in this list have a default operator value, the operator
             value for the the first item in the list does not have any effect.
-          example: *id186
+          example: *id188
           items:
             $ref: '#/components/schemas/LabelGroupCondition1'
         service_label_groups:
@@ -59448,7 +59979,7 @@ components:
             label conditions. Although all items in this list have a default operator
             value, the operator value for the the first item in the list does not
             have any effect.
-          example: *id187
+          example: *id189
           items:
             $ref: '#/components/schemas/LabelGroupCondition1'
         service_description:
@@ -59462,7 +59993,7 @@ components:
             \ the rules is only a check item or a full service name. For example the\
             \ check parameters rulesets only use the item, and other service rulesets\
             \ like disabled services ruleset use full servicedescriptions."
-          example: *id188
+          example: *id190
           $ref: '#/components/schemas/HostOrServiceCondition'
         host_labels:
           deprecated: true
@@ -59492,7 +60023,7 @@ components:
       properties:
         properties:
           description: Configuration values for rules.
-          example: &id189
+          example: &id191
             disabled: false
           $ref: '#/components/schemas/Properties'
         value_raw:
@@ -59503,7 +60034,7 @@ components:
           example: '{''cmk/os_family'': ''linux''}'
         conditions:
           description: Conditions.
-          example: &id190
+          example: &id192
             host_name:
               match_on:
               - host1
@@ -59545,7 +60076,7 @@ components:
       properties:
         properties:
           description: Configuration values for rules.
-          example: *id189
+          example: *id191
           $ref: '#/components/schemas/Properties'
         value_raw:
           type: string
@@ -59555,7 +60086,7 @@ components:
           example: '{''cmk/os_family'': ''linux''}'
         conditions:
           description: Conditions.
-          example: *id190
+          example: *id192
           $ref: '#/components/schemas/InputConditions'
         ruleset:
           type: string
@@ -59795,7 +60326,7 @@ components:
           default: activated
           description: Selecting 'deactivated' will disable the rule, but it will
             remain in the configuration.
-          enum: &id191
+          enum: &id193
           - activated
           - deactivated
         id:
@@ -60219,7 +60750,7 @@ components:
           default: activated
           description: Selecting 'deactivated' will disable the rule, but it will
             remain in the configuration.
-          enum: *id191
+          enum: *id193
         id:
           type: string
           description: A SAML connection ID string.
@@ -60293,7 +60824,7 @@ components:
         range_type:
           type: string
           description: The type of the time range.
-          enum: &id192
+          enum: &id194
           - custom
           - pre_defined
           example: pre_defined
@@ -60320,7 +60851,7 @@ components:
         range_type:
           type: string
           description: The type of the time range.
-          enum: *id192
+          enum: *id194
           example: pre_defined
         start:
           type: string
@@ -60512,7 +61043,7 @@ components:
           description: Whether the SLA agreement was broken or fulfilled during this
             period.The agreement is considered broken if at least one agreement of
             the defined state configurations was broken.
-          enum: &id193
+          enum: &id195
           - broken
           - fulfilled
           example: false
@@ -60613,7 +61144,7 @@ components:
           description: Whether the SLA agreement was broken or fulfilled during this
             period.The agreement is considered broken if at least one agreement of
             the defined state configurations was broken.
-          enum: *id193
+          enum: *id195
           example: false
         state_durations:
           description: The percentage of the duration for which the service was in
@@ -61314,7 +61845,7 @@ components:
           type: array
           default: []
           description: Restrict the query to this particular site.
-          example: *id080
+          example: *id082
           items:
             type: string
         columns:
@@ -61324,14 +61855,14 @@ components:
           - description
           description: The desired columns of the `services` table. If left empty,
             a default set of columns is used.
-          example: *id081
+          example: *id083
           items:
             type: string
         query:
           description: An query expression of the Livestatus 'services' table in nested
             dictionary form. If you want to use multiple expressions, nest them with
             the AND/OR operators.
-          example: &id194
+          example: &id196
             op: '='
             left: host_name
             right: example.com
@@ -61349,7 +61880,7 @@ components:
           type: array
           default: []
           description: Restrict the query to this particular site.
-          example: *id080
+          example: *id082
           items:
             type: string
         columns:
@@ -61359,14 +61890,14 @@ components:
           - description
           description: The desired columns of the `services` table. If left empty,
             a default set of columns is used.
-          example: *id081
+          example: *id083
           items:
             type: string
         query:
           description: An query expression of the Livestatus 'services' table in nested
             dictionary form. If you want to use multiple expressions, nest them with
             the AND/OR operators.
-          example: *id194
+          example: *id196
           $ref: '#/components/schemas/Expr'
       additionalProperties: false
     SidebarElementModel:
@@ -62567,7 +63098,7 @@ components:
           additionalProperties: {}
         extensions:
           description: The time period attributes.
-          example: &id195
+          example: &id197
             alias: holidays
             active_time_ranges:
             - day: monday
@@ -62615,7 +63146,7 @@ components:
             domainType: time_period
             id: time_period
             members: {}
-            extensions: *id195
+            extensions: *id197
           items:
             $ref: '#/components/schemas/TimePeriodResponse'
         extensions:
@@ -63257,7 +63788,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: &id196
+          enum: &id198
           - automation
           - password
           - remove
@@ -63281,7 +63812,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: *id196
+          enum: *id198
           example: password
         secret:
           type: string
@@ -63303,7 +63834,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: *id196
+          enum: *id198
           example: password
       required:
       - auth_type
@@ -63568,7 +64099,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: &id197
+          enum: &id199
           - automation
           - password
           example: password
@@ -63590,7 +64121,7 @@ components:
         auth_type:
           type: string
           description: The authentication type
-          enum: *id197
+          enum: *id199
           example: password
         secret:
           type: string
@@ -65029,7 +65560,7 @@ components:
       properties:
         time_range:
           description: The time range from which to source the metrics.
-          example: *id161
+          example: *id163
           $ref: '#/components/schemas/TimeRange'
         reduce:
           type: string
@@ -65037,7 +65568,7 @@ components:
           description: Specify how to reduce a segment of data points to a single
             data point of the output metric. This can be useful to find spikes in
             your data that would be smoothed out by computing the average.
-          enum: *id162
+          enum: *id164
           example: max
         custom_graph_id:
           type: string

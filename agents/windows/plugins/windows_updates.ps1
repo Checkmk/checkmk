@@ -71,8 +71,10 @@ function ProcessSearchResult {
         }
     }
 
+    $RebootRequiredInt = if ($RebootRequired) { 1 } else { 0 }
+
     Write-Output "<<<windows_updates>>>"
-    Write-Output "$RebootRequired $NumImp $NumOpt"
+    Write-Output "$RebootRequiredInt $NumImp $NumOpt"
     Write-Output ($ImportantUpdates -join "; ")
     Write-Output ($OptionalUpdates -join "; ")
     Write-Output $RebootTime

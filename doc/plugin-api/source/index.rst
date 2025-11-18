@@ -75,6 +75,7 @@ The "internal" APIs are used by plugins maintained by Checkmk, but they are not 
 Their contents may or may not become part of a future regular API.
 
 .. toctree::
+   :maxdepth: 1
    :glob:
 
    **/index

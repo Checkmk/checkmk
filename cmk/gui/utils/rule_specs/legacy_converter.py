@@ -9,7 +9,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
@@ -296,7 +295,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         case ruleset_api_v1.rule_specs.HostAndItemCondition():
             item_spec, item_as_form_spec = _get_item_spec_maker(to_convert.condition, localizer)
 
-            def wrapped_value():
+            def wrapped_value() -> ruleset_api_v1.form_specs.FormSpec:
                 return item_as_form_spec
 
             item_form_spec = wrapped_value

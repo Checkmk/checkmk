@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # ruff: noqa: ARG001,SLF001
 
@@ -131,7 +130,7 @@ class UnitTestDetails(TypedDict):
 
 class UnitTestCrashReport(ABCCrashReport[UnitTestDetails]):
     @classmethod
-    def type(cls):
+    def type(cls) -> str:
         return "test"
 
 
@@ -207,11 +206,11 @@ def test_crash_report_local_crash_report_url(crash: UnitTestCrashReport) -> None
 
 
 @pytest.fixture
-def patch_uuid1(monkeypatch):
+def patch_uuid1(monkeypatch: pytest.MonkeyPatch) -> None:
     """Generate a uuid1 with known values."""
     c = itertools.count()
 
-    def uuid1(node=None, clock_seq=None):
+    def uuid1(node: int | None = None, clock_seq: int | None = None) -> uuid.UUID:
         return uuid.UUID(bytes=struct.pack(b">I", next(c)) + 12 * b"\0")
 
     monkeypatch.setattr("uuid.uuid1", uuid1)

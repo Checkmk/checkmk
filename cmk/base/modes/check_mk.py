@@ -765,6 +765,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             metric_backend_fetcher=get_metric_backend_fetcher(
                 hostname,
                 config_cache.explicit_host_attributes,
+                config_cache.check_mk_check_interval,
                 loaded_config.monitoring_core == "cmc",
             ),
         ):
@@ -2256,6 +2257,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
             loaded_config.monitoring_core == "cmc",
         ),
     )
@@ -2624,6 +2626,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
             loaded_config.monitoring_core == "cmc",
         ),
     )
@@ -2875,6 +2878,7 @@ def run_checking(
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
             loaded_config.monitoring_core == "cmc",
         ),
     )
@@ -3172,6 +3176,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
             loaded_config.monitoring_core == "cmc",
         ),
     )
@@ -3475,6 +3480,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
             loaded_config.monitoring_core == "cmc",
         ),
     )

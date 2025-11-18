@@ -14,6 +14,7 @@ import polyfactory.factories.pydantic_factory
 import pytest
 import requests
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.kube import common, query
 from cmk.plugins.kube.api_server import (
     _verify_version_support,
@@ -32,7 +33,7 @@ class APISessionConfigFactory(polyfactory.factories.pydantic_factory.ModelFactor
 @pytest.fixture(name="core_api")
 def _core_api() -> CoreAPI:
     config = APISessionConfigFactory.build(api_server_endpoint="http://api-unittest")
-    client = query.make_api_client_requests(config, common.LOGGER)
+    client = query.make_api_client_requests(Secret("adminpw"), config, common.LOGGER)
     return CoreAPI(config, client)
 
 

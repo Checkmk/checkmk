@@ -151,7 +151,7 @@ def _table_name(table: type[Table]) -> str:
     return table.__tablename__
 
 
-def get_multiple_edition_description(editions: typing.Iterable[Edition]) -> str:
+def get_multiple_edition_description(editions: typing.Container[Edition]) -> str:
     """Get an *untranslated* description for multiple editions."""
     ordered_editions = tuple(
         edition for edition in Edition.__members__.values() if edition in editions
@@ -194,17 +194,17 @@ def edition_field_description(
 
     Example:
         >>> edition_field_description("This is a test description.", supported_editions={Edition.PRO}, field_required=True)
-        '[Pro edition only] This is a test description. This field is required for the following editions: Pro.'
+        '[Only in editions: Pro] This is a test description. This field is required for the following editions: Pro.'
 
         >>> edition_field_description("This is a test description.", supported_editions={Edition.PRO, Edition.ULTIMATE}, field_required=True)
-        '[Pro, Cloud editions only] This is a test description. This field is required for the following editions: Pro, Cloud.'
+        '[Only in editions: Pro, Ultimate] This is a test description. This field is required for the following editions: Pro, Ultimate.'
 
     """
     if supported_editions and excluded_editions:
         raise ValueError("supported_editions and excluded_editions are mutually exclusive.")
 
     if supported_editions:
-        editions: typing.Iterable[Edition] = supported_editions
+        editions: typing.Container[Edition] = supported_editions
     elif excluded_editions:
         editions = [
             edition for edition in Edition.__members__.values() if edition not in excluded_editions

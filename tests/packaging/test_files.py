@@ -207,6 +207,17 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
         )
         assert is_allowed, f"Found unexpected global file: {path} in {package_path}"
 
+    disallowed_pattern = [
+        ".*/.f12$",
+        ".*/OWNERS$",
+        ".*/BUILD$",
+        r".*/BUILD\..*$",
+    ]
+    disallowed_paths = [
+        path for path in paths if any(re.match(p, path) for p in disallowed_pattern)
+    ]
+    assert not disallowed_paths, f"Found unwanted files in {package_path}: {disallowed_paths}"
+
 
 @cache
 def _get_paths_from_package(path_to_package: str) -> list[str]:
@@ -295,16 +306,22 @@ def test_src_only_contains_relative_version_paths(
 def test_src_does_not_contain_dev_files(
     package_path: str,
 ) -> None:
-    """test that there are no dev files (currently only .f12 files) are packed"""
+    """test that there are no dev files are packed"""
 
     if not package_path.endswith(".tar.gz"):
         pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
-    for line in subprocess.check_output(
-        ["tar", "tvf", package_path], encoding="utf-8"
-    ).splitlines():
-        path = Path(line.split()[5])
-        assert path.name != ".f12"
+    unwanted_files = [
+        path
+        for line in subprocess.check_output(
+            ["tar", "tvf", package_path], encoding="utf-8"
+        ).splitlines()
+        if (path := Path(line.split()[5])).name in {".f12", "OWNERS"}
+    ]
+    assert not unwanted_files, (
+        f"Found files in {package_path} which should not be there:"
+        f" {','.join(map(str, unwanted_files))}"
+    )
 
 
 def test_src_not_contains_enterprise_sources(package_path: str) -> None:

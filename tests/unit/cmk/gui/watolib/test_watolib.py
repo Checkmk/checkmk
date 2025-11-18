@@ -37,18 +37,14 @@ def test_registered_config_domains() -> None:
             "mknotifyd",
         ]
 
-    if cmk_version.edition(paths.omd_root) in [
-        cmk_version.Edition.ULTIMATE,
-        cmk_version.Edition.ULTIMATEMT,
-    ]:
-        expected_config_domains.append("otel_collector")
-
     if cmk_version.edition(paths.omd_root) in {
         cmk_version.Edition.ULTIMATE,
         cmk_version.Edition.ULTIMATEMT,
-        cmk_version.Edition.CLOUD,
     }:
-        expected_config_domains.append("metric_backend")
+        expected_config_domains += [
+            "metric_backend",
+            "otel_collector",
+        ]
 
     registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
@@ -309,10 +305,9 @@ def test_registered_configvars() -> None:
     if cmk_version.edition(paths.omd_root) in {
         cmk_version.Edition.ULTIMATE,
         cmk_version.Edition.ULTIMATEMT,
-        cmk_version.Edition.CLOUD,
     }:
         expected_vars += [
-            "metric_backend_instance",
+            "metric_backend",
             "site_opentelemetry_collector",
             "site_opentelemetry_collector_memory_limit",
         ]

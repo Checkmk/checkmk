@@ -26,7 +26,7 @@ import sys
 import time
 import uuid
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from contextlib import redirect_stderr, redirect_stdout, suppress
+from contextlib import contextmanager, redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
@@ -421,6 +421,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
                 hn,
                 config_cache.explicit_host_attributes,
+                config_cache.check_mk_check_interval,
                 loaded_config.monitoring_core == "cmc",
             ),
         )
@@ -662,6 +663,7 @@ class AutomationDiscoveryPreview(Automation):
             metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
                 hn,
                 config_cache.explicit_host_attributes,
+                config_cache.check_mk_check_interval,
                 loaded_config.monitoring_core == "cmc",
             ),
         )
@@ -1159,6 +1161,7 @@ def _execute_autodiscovery(
         metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
+            config_cache.check_mk_check_interval,
             loaded_config.monitoring_core == "cmc",
         ),
     )
@@ -3092,7 +3095,6 @@ class AutomationDiagSpecialAgent(Automation):
         # store is available on the remote site.
         password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
         try:
-            cmk.utils.password_store.save(diag_special_agent_input.passwords, password_store_file)
             cmds = get_special_agent_commandline(
                 diag_special_agent_input.host_config,
                 diag_special_agent_input.agent_name,
@@ -3107,6 +3109,15 @@ class AutomationDiagSpecialAgent(Automation):
                     password_lookup=make_staged_passwords_lookup(),
                 ),
             )
+        except Exception as exc:
+            # this handles broken plugins.
+            if cmk.ccc.debug.enabled():
+                raise
+            yield 1, str(exc)
+
+        with _temporary_local_password_store(
+            diag_special_agent_input.passwords, password_store_file
+        ):
             for cmd in cmds:
                 fetcher = ProgramFetcher(
                     cmdline=cmd.cmdline,
@@ -3116,8 +3127,8 @@ class AutomationDiagSpecialAgent(Automation):
                 with fetcher:
                     fetched = fetcher.fetch(Mode.DISCOVERY)
 
-                if fetched.is_ok():
-                    yield (
+                yield (
+                    (
                         0,
                         ensure_str_with_fallback(
                             fetched.ok,
@@ -3125,15 +3136,18 @@ class AutomationDiagSpecialAgent(Automation):
                             fallback="latin-1",
                         ),
                     )
-                else:
-                    yield 1, str(fetched.error)
-        except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
-            yield 1, str(e)
-        finally:
-            if password_store_file.exists():
-                password_store_file.unlink()
+                    if fetched.is_ok()
+                    else (1, str(fetched.error))
+                )
+
+
+@contextmanager
+def _temporary_local_password_store(passwords: Mapping[str, str], path: Path) -> Iterator[None]:
+    cmk.utils.password_store.save(passwords, path)
+    try:
+        yield
+    finally:
+        path.unlink(missing_ok=True)
 
 
 automations.register(AutomationDiagSpecialAgent())
@@ -3539,6 +3553,7 @@ class AutomationDiagHost(Automation):
             metric_backend_fetcher=get_metric_backend_fetcher(
                 host_name,
                 config_cache.explicit_host_attributes,
+                config_cache.check_mk_check_interval,
                 loaded_config.monitoring_core == "cmc",
             ),
         ):
@@ -4112,6 +4127,7 @@ class AutomationGetAgentOutput(Automation):
                     metric_backend_fetcher=get_metric_backend_fetcher(
                         hostname,
                         config_cache.explicit_host_attributes,
+                        config_cache.check_mk_check_interval,
                         loaded_config.monitoring_core == "cmc",
                     ),
                 ):

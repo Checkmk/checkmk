@@ -19,7 +19,6 @@ import pydantic
 import requests
 
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable import agent_common
 
 __version__ = "2.5.0b1"
 
@@ -46,11 +45,6 @@ class AgentOutput(pydantic.BaseModel):
     # I do not want to make an explicit type for the incident schema
     # https://status.cloud.google.com/incidents.schema.json
     health_info: pydantic.Json
-
-
-def _health_serializer(section: AgentOutput) -> None:
-    with agent_common.SectionWriter("gcp_status") as w:
-        w.append(section.model_dump_json())
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -98,7 +92,8 @@ def write_section(
         discovery_param=DiscoveryParam.model_validate(vars(args)),
         health_info=response,
     )
-    _health_serializer(section)
+    sys.stdout.write("<<<gcp_status:sep(0)>>>\n")
+    sys.stdout.write(f"{section.model_dump_json()}\n")
     return 0
 
 

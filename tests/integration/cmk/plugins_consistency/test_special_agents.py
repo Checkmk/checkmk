@@ -268,7 +268,14 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "gcp_status": [],
     "pure_storage_fa": ["--apitoken", "API-TOKEN", "SERVER"],
     "bazel_cache": ["--host", "SERVER"],
-    "otel": ["HOSTNAME"],
+    "otel": [
+        "--check-interval",
+        "60.0",
+        "--host-name-resource-attribute-key",
+        "host.name",
+        "--host-name",
+        "HOSTNAME",
+    ],
     "metric_backend_custom_query": [
         json.dumps(
             {

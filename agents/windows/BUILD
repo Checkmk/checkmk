@@ -1,6 +1,12 @@
 filegroup(
     name = "cfg_examples",
-    srcs = glob(["cfg_examples/**"]),
+    srcs = glob(
+        ["cfg_examples/**"],
+        exclude = [
+            "**/OWNERS",
+            "**/.f12",
+        ],
+    ),
     visibility = ["//visibility:public"],
 )
 

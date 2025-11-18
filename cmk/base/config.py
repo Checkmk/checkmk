@@ -21,7 +21,6 @@ import copy
 import dataclasses
 import enum
 import itertools
-import json
 import numbers
 import os
 import pickle
@@ -3877,13 +3876,16 @@ def _parse[T](raw: object, type_: Callable[..., T], /) -> T:
 def get_metric_backend_fetcher(
     host_name: HostAddress,
     explicit_host_attributes: Callable[[HostAddress], ObjectAttributes],
+    check_interval: Callable[[HostAddress], float],
     is_cmc: bool,
 ) -> ProgramFetcher | None:
     if (
         metrics_association := explicit_host_attributes(host_name).get("metrics_association")
     ) is not None:
         return make_metric_backend_fetcher(
-            host_name, make_metric_backend_fetcher_config(metrics_association), is_cmc
+            host_name,
+            make_metric_backend_fetcher_config(metrics_association, check_interval(host_name)),
+            is_cmc,
         )
     return None
 
@@ -3895,16 +3897,21 @@ def make_metric_backend_fetcher(
         agent_otel,
     )
 
-    metrics_association = json.loads(metric_backend_fetcher_config.metrics_association)
-    host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]
-    filter_args = []
-    for filter_ in metrics_association["attribute_filters"]:
-        filter_args += [
+    stdin = [
+        "--check-interval",
+        str(metric_backend_fetcher_config.check_interval),
+        "--host-name-resource-attribute-key",
+        metric_backend_fetcher_config.host_name_resource_attribute_key,
+        "--host-name",
+        host_name,
+    ]
+    for filter_ in metric_backend_fetcher_config.attribute_filters:
+        stdin += [
             "--filter",
-            f"{filter_['attribute_type']}:{filter_['attribute_key']}={filter_['attribute_value']}",
+            f"{filter_.attribute_type.value}:{filter_.attribute_key}={filter_.attribute_value}",
         ]
     return ProgramFetcher(
-        cmdline=f"python3 -m {agent_otel.__spec__.name} {host_name}",
-        stdin=f"--host-name-resource-attribute-key={host_name_resource_attribute_key} {' '.join(filter_args)}",
+        cmdline=f"python3 -m {agent_otel.__spec__.name}",
+        stdin=" ".join(stdin),
         is_cmc=is_cmc,
     )

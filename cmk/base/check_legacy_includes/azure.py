@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="unreachable"
 
 import time
@@ -96,7 +95,7 @@ def discover_azure_by_metrics(
 ) -> Callable[[Mapping[str, Resource]], Iterable[Service]]:
     """Return a discovery function, that will discover if any of the metrics are found"""
 
-    def discovery_function(parsed):
+    def discovery_function(parsed: Mapping[str, Resource]) -> Iterable[Service]:
         for name, resource in parsed.items():
             metr = resource.metrics
             if set(desired_metrics) & set(metr):

@@ -45,7 +45,7 @@ export const usePerformanceGraph = async (
   const currentContent = currentSpec?.content as PerformanceGraphContent
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent.timerange ?? null
+    currentContent?.timerange ?? null
   )
 
   const {

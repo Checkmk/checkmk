@@ -3,14 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 import argparse
+from pathlib import Path
 
 import pytest
 
 from cmk.plugins.gerrit.lib import agent
-from cmk.plugins.gerrit.lib.shared_typing import SectionName, Sections
+from cmk.plugins.gerrit.lib.schema import VersionInfo
+
+
+def test_run_agent(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    ctx = agent.GerritRunContext(
+        ttl=agent.TTLCache(version=60),
+        collectors=agent.Collectors(version=_FakeVersionCollector()),
+        cache_dir=tmp_path,
+    )
+    agent.run(ctx)
+    captured = capsys.readouterr()
+
+    # agent ran without error
+    assert captured.err == ""
+
+    # sections headings were successfully written out.
+    assert "<<<gerrit_version:sep(0)>>>" in captured.out
+
+    # cache was succesfully written out.
+    assert (tmp_path / "gerrit_version.cache").exists()
 
 
 def test_parse_arguments() -> None:
@@ -33,30 +51,9 @@ def test_parse_arguments() -> None:
     assert value == expected
 
 
-def test_fetch_section_data() -> None:
-    class DummySectionCollector:
-        def collect(self) -> Sections:
-            return {SectionName("foobar"): {"foo": "bar"}}
-
-    value = DummySectionCollector().collect()
-    expected = {SectionName("foobar"): {"foo": "bar"}}
-
-    assert value == expected
-
-
-def test_write_sections(capsys: pytest.CaptureFixture) -> None:
-    sections: Sections = {
-        SectionName("version"): {
+class _FakeVersionCollector:
+    def collect(self) -> VersionInfo:
+        return {
             "current": "1.2.3",
-            "latest": {"major": None, "minor": "1.3.4", "patch": "1.2.5"},
+            "latest": {"major": "2.0.0", "minor": "1.3.0", "patch": "1.2.4"},
         }
-    }
-    agent.write_sections(sections)
-
-    value = capsys.readouterr().out
-    expected = """\
-<<<gerrit_version:sep(0)>>>
-{"current": "1.2.3", "latest": {"major": null, "minor": "1.3.4", "patch": "1.2.5"}}
-"""
-
-    assert value == expected

@@ -135,12 +135,6 @@ div.dashlet div.success {
   background-color: $base-color;
 }
 
-div.dashlet_inner div.stats table.hoststats a,
-div.dashlet_inner div.stats table.hoststats body.main .popup_menu span,
-body.main .popup_menu div.dashlet_inner div.stats table.hoststats span {
-  color: $font-color;
-}
-
 div.dashlet_inner div.stats {
   position: relative;
   width: 100%;
@@ -722,7 +716,9 @@ div.dashlet.nodata {
 
 div.site_overview,
 div.alert_overview,
-div.stats_dashlet {
+div.eventstats,
+div.hoststats,
+div.servicestats {
   g.element_box:hover {
     path + path {
       fill-opacity: 0.96;
@@ -840,7 +836,9 @@ div.stats_dashlet {
   }
 }
 
-div.stats_dashlet {
+div.eventstats,
+div.hoststats,
+div.servicestats {
   height: 100%;
 
   path.hexagon.empty {
@@ -919,13 +917,13 @@ div.stats_dashlet {
       background-color: transparent;
     }
   }
+}
 
-  &.hoststats div.stats_table,
-  &.eventstats div.stats_table {
-    top: 44px;
-  }
+div.hoststats div.stats_table,
+div.eventstats div.stats_table {
+  top: 44px;
+}
 
-  &.servicestats div.stats_table {
-    top: 28px;
-  }
+div.servicestats div.stats_table {
+  top: 28px;
 }

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 
@@ -71,7 +70,7 @@ class VisualInfoHost(VisualInfo):
         return _("Host")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Hosts")
 
     @property
@@ -87,7 +86,7 @@ class VisualInfoHost(VisualInfo):
         ]
 
     @property
-    def multiple_site_filters(self):
+    def multiple_site_filters(self) -> list[str]:
         return ["hostgroup"]
 
     @property
@@ -105,7 +104,7 @@ class VisualInfoService(VisualInfo):
         return _("Service")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Services")
 
     @property
@@ -138,7 +137,7 @@ class VisualInfoService(VisualInfo):
         ]
 
     @property
-    def multiple_site_filters(self):
+    def multiple_site_filters(self) -> list[str]:
         return ["servicegroup"]
 
     @property
@@ -156,7 +155,7 @@ class VisualInfoHostgroup(VisualInfo):
         return _("Host group")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Host groups")
 
     @property
@@ -174,7 +173,7 @@ class VisualInfoHostgroup(VisualInfo):
         return [components.TextInput(id="hostgroup", label=_("Host group name"))]
 
     @property
-    def single_site(self):
+    def single_site(self) -> bool:
         return False
 
     @property
@@ -192,7 +191,7 @@ class VisualInfoServicegroup(VisualInfo):
         return _("Service group")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Service groups")
 
     @property
@@ -210,7 +209,7 @@ class VisualInfoServicegroup(VisualInfo):
         return [components.TextInput(id="servicegroup", label=_("Service group name"))]
 
     @property
-    def single_site(self):
+    def single_site(self) -> bool:
         return False
 
     @property
@@ -228,7 +227,7 @@ class VisualInfoLog(VisualInfo):
         return _("Log Entry")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Log Entries")
 
     @property
@@ -249,7 +248,7 @@ class VisualInfoComment(VisualInfo):
         return _("Comment")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Comments")
 
     @property
@@ -277,7 +276,7 @@ class VisualInfoDowntime(VisualInfo):
         return _("Downtime")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Downtimes")
 
     @property
@@ -305,7 +304,7 @@ class VisualInfoContact(VisualInfo):
         return _("Contact")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Contacts")
 
     @property
@@ -333,7 +332,7 @@ class VisualInfoCommand(VisualInfo):
         return _("Command")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Commands")
 
     @property
@@ -361,7 +360,7 @@ class VisualInfoBIAggregation(VisualInfo):
         return _("BI Aggregation")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("BI Aggregations")
 
     @property
@@ -393,7 +392,7 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         return _("BI Aggregation Group")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("BI Aggregation Groups")
 
     @property
@@ -425,7 +424,7 @@ class VisualInfoDiscovery(VisualInfo):
         return _("Discovery Output")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Discovery Outputs")
 
     @property
@@ -446,7 +445,7 @@ class VisualInfoEvent(VisualInfo):
         return _("Event Console Event")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Event Console Events")
 
     @property
@@ -474,7 +473,7 @@ class VisualInfoEventHistory(VisualInfo):
         return _("Historic Event Console Event")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Historic Event Console Events")
 
     @property
@@ -511,7 +510,7 @@ class VisualInfoCrash(VisualInfo):
         return _("Crash report")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Crash reports")
 
     @property
@@ -539,7 +538,7 @@ class VisualInfoKubernetesCluser(VisualInfo):
         return _("Kubernetes Cluster")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Kubernetes Clusters")
 
     @property
@@ -560,7 +559,7 @@ class VisualInfoKubernetesNamespace(VisualInfo):
         return _("Kubernetes Namespace")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Kubernetes Namespaces")
 
     @property
@@ -581,7 +580,7 @@ class VisualInfoKubernetesDaemonset(VisualInfo):
         return _("Kubernetes Daemonset")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Kubernetes Daemonsets")
 
     @property
@@ -602,7 +601,7 @@ class VisualInfoKubernetesDeployment(VisualInfo):
         return _("Kubernetes deployment")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Kubernetes deployments")
 
     @property
@@ -623,7 +622,7 @@ class VisualInfoKubernetesStatefulset(VisualInfo):
         return _("Kubernetes Statefulset")
 
     @property
-    def title_plural(self):
+    def title_plural(self) -> str:
         return _("Kubernetes Statefulsets")
 
     @property

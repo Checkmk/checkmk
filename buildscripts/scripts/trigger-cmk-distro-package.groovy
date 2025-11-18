@@ -101,6 +101,7 @@ def main() {
         if (!params.FAKE_WINDOWS_ARTIFACTS) {
             stages += package_helper.provide_agent_binaries(
                 version: version,
+                cmk_version: cmk_version,
                 edition: edition,
                 disable_cache: disable_cache,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,

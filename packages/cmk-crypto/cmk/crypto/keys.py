@@ -82,6 +82,12 @@ class PrivateKey:
 
     @classmethod
     def generate_rsa(cls, key_size: int) -> PrivateKey:
+        """
+        Generate an RSA private key.
+
+        Where possible, prefer elliptic curve keys over RSA keys.
+        Refer to the Cryptography Policy for acceptable key sizes.
+        """
         return cls(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
 
     @classmethod

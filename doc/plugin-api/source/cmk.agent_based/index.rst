@@ -2,8 +2,8 @@
 Agent based ("Check API")
 =========================
 
-Version 2
-=========
+Version 2: `cmk.agent_based.v2`
+===============================
 
 .. toctree::
 

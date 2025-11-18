@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 
 import socket
 from collections.abc import Mapping
@@ -29,7 +28,7 @@ _PersistedCache: TypeAlias = dict[ip_lookup.IPLookupCacheId, str | None]
 
 
 @pytest.fixture(autouse=True)
-def no_io_ip_lookup_cache(tmp_path, monkeypatch):
+def no_io_ip_lookup_cache(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(ip_lookup.IPLookupCache, "PATH", tmp_path / "cache")
 
 
@@ -667,7 +666,7 @@ def test_lookup_mgmt_board_ip_address_unresolvable(
 def test_lookup_mgmt_board_ip_address_unresolvable_2(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def fake_lookup_ip_address(*_a, **_kw):
+    def fake_lookup_ip_address(*_a: object, **_kw: object) -> None:
         raise MKIPAddressLookupError("Failed to ...")
 
     hostname = HostName("hostname")

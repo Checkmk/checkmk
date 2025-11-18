@@ -5,7 +5,6 @@
 """Modes for managing users and contacts"""
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -464,10 +463,10 @@ class ModeUsers(WatoMode):
             )
         self._show_user_list_footer(users)
 
-    def _job_details_link(self):
+    def _job_details_link(self) -> HTML:
         return HTMLWriter.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
 
-    def _job_details_url(self):
+    def _job_details_url(self) -> str:
         return makeuri_contextless(
             request,
             [
@@ -478,7 +477,7 @@ class ModeUsers(WatoMode):
             filename="wato.py",
         )
 
-    def _show_job_info(self):
+    def _show_job_info(self) -> None:
         if self._job_snapshot.is_active:
             html.h3(_("Current status of synchronization process"))
             html.browser_reload = 0.8
@@ -1001,6 +1000,8 @@ class ModeEditUser(WatoMode):
         if is_ntop_available():
             ntop_connections = get_ntop_connection_by_site()
             for _site_id, ntop_connection in ntop_connections.items():
+                if not ntop_connection:
+                    continue
                 # ntop_username_attribute will be the name of the custom attribute or false
                 # see corresponding Setup rule
                 ntop_username_attribute = ntop_connection.get(
@@ -1325,6 +1326,8 @@ class ModeEditUser(WatoMode):
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding Setup rule
             for site_id, ntop_connection in ntop_connections.items():
+                if not ntop_connection:
+                    continue
                 ntop_username_attribute = ntop_connection.get(
                     "use_custom_attribute_as_ntop_username"
                 )
@@ -1546,7 +1549,7 @@ class ModeEditUser(WatoMode):
         checked when modifying an existing user"""
         return not self._is_new_user and attr in self._locked_attributes
 
-    def _vs_sites(self):
+    def _vs_sites(self) -> Alternative:
         return Alternative(
             title=_("Monitored sites"),
             help=_(

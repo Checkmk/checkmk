@@ -26,7 +26,7 @@ def get_tasks_repository(
 ) -> TasksRepository:
     return TasksRepository(
         ttl_seconds=config.task_ttl,
-        max_tasks_per_relay=config.max_tasks_per_relay,
+        max_pending_tasks_per_relay=config.max_pending_tasks_per_relay,
     )
 
 

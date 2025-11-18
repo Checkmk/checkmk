@@ -13,5 +13,6 @@ def test_verify_registered_endpoints() -> None:
     for endpoint in versioned_endpoints:
         validate_endpoint_definition(endpoint)
         endpoint_key = (endpoint.family.name, endpoint.metadata.link_relation)
+        assert endpoint_key not in seen_endpoints, f"Duplicate endpoint detected: {endpoint_key}"
         seen_endpoints.add(endpoint_key)
     assert len(seen_endpoints) == len(versioned_endpoints)

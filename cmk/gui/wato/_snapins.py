@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 
 from collections.abc import Callable, Iterable
@@ -279,7 +278,7 @@ def compute_foldertree() -> dict[str, FolderEntry]:
     #  -> Munich:  Permitted to see no host
     # In this case, where only a single child with hosts is available, remove the
     # top level
-    def reduce_tree(folders):
+    def reduce_tree(folders: dict[str, FolderEntry]) -> None:
         for folder_path, folder in folders.items():
             if len(folder[".folders"]) == 1 and folder[".num_hosts"] == 0:
                 child_path, child_folder = list(folder[".folders"].items())[0]

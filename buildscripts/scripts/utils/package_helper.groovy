@@ -109,7 +109,7 @@ def provide_agent_binaries(Map args) {
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
             additional_build_params: [],
             install_cmd: """\
-                cp mk-oracle.{aix,solaris} ${checkout_dir}/cmk/plugins/oracle/agents/
+                cp mk-oracle.{aix,solaris} ${checkout_dir}/omd/packages/mk-oracle/
                 """.stripIndent(),
         ],
         "build-mk-oracle-rhel8": [
@@ -141,7 +141,7 @@ def provide_agent_binaries(Map args) {
             install_cmd: """\
                 cp \
                     mk-oracle.exe \
-                    ${checkout_dir}/cmk/plugins/oracle/agents/
+                    ${checkout_dir}/omd/packages/mk-oracle/
                 cp \
                     check_mk_agent-64.exe \
                     check_mk_agent.exe \

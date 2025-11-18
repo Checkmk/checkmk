@@ -13,7 +13,6 @@ roles.  This modes manages the creation of custom roles and the permissions
 configuration of all roles.
 """
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection
@@ -229,7 +228,7 @@ class ModeRoleTwoFactor(WatoMode):
         super().__init__()
         load_dynamic_permissions()
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._role_id = RoleID(request.get_ascii_input_mandatory("edit"))
         self._role: UserRole = userroles.get_role(self._role_id)
 
@@ -309,7 +308,7 @@ class ModeEditRole(WatoMode):
         # views)
         load_dynamic_permissions()
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._role_id = RoleID(request.get_ascii_input_mandatory("edit"))
         self._role: UserRole = userroles.get_role(self._role_id)
 

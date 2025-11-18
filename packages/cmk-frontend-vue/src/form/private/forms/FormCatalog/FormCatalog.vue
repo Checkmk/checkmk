@@ -16,6 +16,7 @@ import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import TopicGrouped from '@/form/private/forms/FormCatalog/TopicGrouped.vue'
 import TopicUngrouped from '@/form/private/forms/FormCatalog/TopicUngrouped.vue'
@@ -29,11 +30,16 @@ const props = defineProps<{
 const data = defineModel<Record<string, Record<string, unknown>>>('data', { required: true })
 
 const elementValidation = ref<Record<string, ValidationMessages>>({})
+const validation = ref<ValidationMessages>([])
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    const [, nestedValidation] = groupNestedValidations(props.spec.elements, newValidation)
+    const [catalogValidation, nestedValidation] = groupNestedValidations(
+      props.spec.elements,
+      newValidation
+    )
     elementValidation.value = nestedValidation
+    validation.value = catalogValidation
   }
 )
 
@@ -47,6 +53,7 @@ function isGroupedTopic(topic: Topic): boolean {
 
 <template>
   <div class="form-catalog__container">
+    <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
     <CmkCatalogPanel
       v-for="topic in props.spec.elements"
       :key="topic.name"

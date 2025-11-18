@@ -18,6 +18,7 @@ import pytest
 from faker import Faker
 from playwright.sync_api import BrowserContext, Page
 
+from cmk.crypto.certificate import CertificateWithPrivateKey
 from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import HostDetails
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
@@ -28,6 +29,7 @@ from tests.gui_e2e.testlib.playwright.pom.setup.fixtures import notification_use
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.testlib.common.repo import repo_path
 from tests.testlib.emails import EmailManager
+from tests.testlib.licensing.nonfree.pro.license_management import generate_license_ca_cert_and_key
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import (
     ADMIN_USER,
@@ -61,6 +63,11 @@ def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory)
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
         yield from site_factory.get_test_site(name="central")
+
+
+@pytest.fixture
+def license_ca_cert_and_key() -> CertificateWithPrivateKey:
+    return generate_license_ca_cert_and_key()
 
 
 def _make_connected_remote_site(

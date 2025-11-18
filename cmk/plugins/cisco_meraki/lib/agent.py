@@ -282,9 +282,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def _get_organisations(config: MerakiConfig, client: MerakiClient) -> Sequence[RawOrganisation]:
-    if not config.organizations_required:
-        return []
-
     orgs = client.get_organizations()
 
     if config.org_ids:

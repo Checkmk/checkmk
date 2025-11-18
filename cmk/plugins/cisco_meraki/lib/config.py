@@ -47,18 +47,6 @@ class MerakiConfig:
         )
 
     @property
-    def organizations_required(self) -> bool:
-        return any(
-            s in self.section_names
-            for s in [
-                constants.SEC_NAME_LICENSES_OVERVIEW,
-                constants.SEC_NAME_DEVICE_STATUSES,
-                constants.SEC_NAME_ORGANISATIONS,
-                constants.SEC_NAME_SENSOR_READINGS,
-            ]
-        )
-
-    @property
     def devices_required(self) -> bool:
         return any(
             s in self.section_names

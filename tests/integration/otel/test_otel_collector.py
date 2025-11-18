@@ -48,9 +48,9 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
 def _installed_agent_ctl_in_unknown_state(
-    site: Site, tmp_path_factory: pytest.TempPathFactory
+    otel_site: Site, tmp_path_factory: pytest.TempPathFactory
 ) -> Path:
-    return download_and_install_agent_package(site, tmp_path_factory.mktemp("agent"))
+    return download_and_install_agent_package(otel_site, tmp_path_factory.mktemp("agent"))
 
 
 @pytest.fixture(name="agent_ctl", scope="function")

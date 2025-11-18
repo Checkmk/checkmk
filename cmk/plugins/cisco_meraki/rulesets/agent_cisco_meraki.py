@@ -53,13 +53,15 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Meraki region"),
                     help_text=Help(
-                        "The Meraki API is available under different URLS for different regions of the world.\n"
-                        'Default (most of the world): "https://api.meraki.com/api/v1"\n'
-                        'Canada	"https://api.meraki.ca/api/v1"\n'
-                        'China	"https://api.meraki.cn/api/v1"\n'
-                        'India	"https://api.meraki.in/api/v1"\n'
-                        'United States FedRAMP	"https://api.gov-meraki.com/api/v1"\n'
-                        'For details see: "https://developer.cisco.com/meraki/api-v1/getting-started/#base-uri"\n'
+                        "<p>The Meraki API is available under different URLS for different regions of the world.</p>"
+                        "<ul>"
+                        '<li>Default (most of the world): "https://api.meraki.com/api/v1"</li>'
+                        '<li>Canada	"https://api.meraki.ca/api/v1"</li>'
+                        '<li>China	"https://api.meraki.cn/api/v1"</li>'
+                        '<li>India	"https://api.meraki.in/api/v1"</li>'
+                        '<li>United States FedRAMP	"https://api.gov-meraki.com/api/v1"</li>'
+                        "</ul>"
+                        '<p>For more details, see the <a href="https://developer.cisco.com/meraki/api-v1/getting-started/#base-uri">API Documentation</a>.</p>'
                     ),
                     elements=[
                         SingleChoiceElement(name="default", title=Title("Default")),

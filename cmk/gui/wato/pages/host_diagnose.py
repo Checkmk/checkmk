@@ -7,7 +7,6 @@
 # mypy: disable-error-code="exhaustive-match"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import base64
@@ -82,7 +81,7 @@ class ModeDiagHost(WatoMode):
         return ModeEditHost
 
     @classmethod
-    def diag_host_tests(cls):
+    def diag_host_tests(cls) -> list[tuple[str, str]]:
         return [
             ("ping", _("Ping")),
             ("agent", _("Agent")),
@@ -169,7 +168,7 @@ class ModeDiagHost(WatoMode):
         if request.var("go_to_properties"):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
-            new: HostSpec = vs_host.from_html_vars("vs_host")
+            new = vs_host.from_html_vars("vs_host")
             vs_host.validate_value(new, "vs_host")
 
             return_message = []
@@ -206,7 +205,7 @@ class ModeDiagHost(WatoMode):
             )
         return None
 
-    def _validate_diag_html_vars(self):
+    def _validate_diag_html_vars(self) -> None:
         vs_host = self._vs_host()
         host_vars = vs_host.from_html_vars("vs_host")
         vs_host.validate_value(host_vars, "vs_host")
@@ -309,7 +308,7 @@ class ModeDiagHost(WatoMode):
 
         self._show_diagnose_output()
 
-    def _show_diagnose_output(self):
+    def _show_diagnose_output(self) -> None:
         if not request.var("_save"):
             html.show_message(
                 _(
@@ -360,7 +359,7 @@ class ModeDiagHost(WatoMode):
                 )
             )
 
-    def _vs_host(self):
+    def _vs_host(self) -> Dictionary:
         return Dictionary(
             required_keys=["hostname"],
             elements=[

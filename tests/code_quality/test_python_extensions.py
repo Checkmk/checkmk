@@ -320,7 +320,7 @@ def test_python_files_have_py_extension(
     if mismatches:
         msg = (
             f"Found {len(mismatches)} Python source file(s) without a '.py' extension:\n"
-            + "See https://wiki.lan.checkmk.net/x/jStSCQ\n"
+            + "See https://wiki.lan.checkmk.net/x/jStSCQ \n"
             + "\n".join(f" -- {rel_path}" for rel_path in sorted(mismatches))
         )
         summary_writer.write_summary(msg)

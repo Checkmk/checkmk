@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
-
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Literal
 
@@ -81,6 +79,8 @@ def fetch_augmented_time_series(
                     rrd_keys.add(key)
                 case QueryDataKey():
                     query_keys.add(key)
+                case _:
+                    pass
 
     rrd_data = fetch_time_series_rrd(
         list(rrd_keys),

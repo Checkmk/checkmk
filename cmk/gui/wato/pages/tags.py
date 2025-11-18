@@ -8,12 +8,12 @@ to hosts and that is the basis of the rules."""
 # mypy: disable-error-code="comparison-overlap"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import abc
 from collections.abc import Collection, Sequence
+from typing import cast
 
 import cmk.gui.watolib.changes as _changes
 import cmk.utils.tags
@@ -57,6 +57,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.watolib.host_attributes import all_host_attributes
@@ -94,7 +95,7 @@ class ABCTagMode(WatoMode, abc.ABC):
         self._tag_config_file = TagConfigFile()
         self._load_effective_config()
 
-    def _load_effective_config(self):
+    def _load_effective_config(self) -> None:
         self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
 
         self._tag_config = cmk.utils.tags.TagConfig.from_config(
@@ -337,7 +338,7 @@ class ModeTags(ABCTagMode):
         self._render_tag_group_list(config.wato_host_attrs)
         self._render_aux_tag_list()
 
-    def _show_customized_builtin_warning(self):
+    def _show_customized_builtin_warning(self) -> None:
         customized = [
             tg.id
             for tg in self._effective_config.tag_groups
@@ -397,7 +398,7 @@ class ModeTags(ABCTagMode):
                     tag_group_attribute = host_attributes["tag_%s" % tag_group.id]
                     tag_group_attribute.render_input("", tag_group_attribute.default_value())
 
-    def _show_tag_icons(self, tag_group, nr):
+    def _show_tag_icons(self, tag_group: cmk.utils.tags.TagGroup, nr: int) -> None:
         # Tag groups were made built-in with ~1.4. Previously users could modify
         # these groups.  These users now have the modified tag groups in their
         # user configuration and should be able to cleanup this using the GUI
@@ -481,13 +482,13 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
         self._new = self._is_new_tag()
 
     @abc.abstractmethod
-    def _get_id(self):
+    def _get_id(self) -> str | None:
         raise NotImplementedError()
 
     def _is_new_tag(self) -> bool:
         return request.var("edit") is None
 
-    def _basic_elements(self, id_title):
+    def _basic_elements(self, id_title: str) -> list[tuple[str, ValueSpec]]:
         if self._new:
             vs_id: TextInput | FixedValue = ID(
                 title=id_title,
@@ -521,7 +522,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
             ),
         ]
 
-    def _get_topic_valuespec(self):
+    def _get_topic_valuespec(self) -> OptionalDropdownChoice:
         return OptionalDropdownChoice(
             title=_("Topic") + "<sup>*</sup>",
             choices=list(self._effective_config.get_topic_choices()),
@@ -703,9 +704,10 @@ class ModeEditAuxtag(ABCEditTagMode):
         if self._new:
             self._aux_tag = cmk.utils.tags.AuxTag(tag_id=TagID(""), title="", topic=None, help=None)
         else:
-            self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(self._id)
+            assert self._id is not None
+            self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(TagID(self._id))
 
-    def _get_id(self):
+    def _get_id(self) -> str | None:
         if not request.has_var("edit"):
             return None
 
@@ -726,9 +728,10 @@ class ModeEditAuxtag(ABCEditTagMode):
             return redirect(mode_url("tags"))
 
         vs = self._valuespec()
-        aux_tag_spec = vs.from_html_vars("aux_tag")
-        vs.validate_value(aux_tag_spec, "aux_tag")
+        aux_tag_spec_dict = vs.from_html_vars("aux_tag")
+        vs.validate_value(aux_tag_spec_dict, "aux_tag")
 
+        aux_tag_spec = cast(cmk.utils.tags.AuxTagSpec, aux_tag_spec_dict)
         self._aux_tag = cmk.utils.tags.AuxTag.from_config(aux_tag_spec)
         self._aux_tag.validate()
 
@@ -739,7 +742,8 @@ class ModeEditAuxtag(ABCEditTagMode):
         if self._new:
             changed_hosttags_config.aux_tag_list.append(self._aux_tag)
         else:
-            changed_hosttags_config.aux_tag_list.update(self._id, self._aux_tag)
+            assert self._id is not None
+            changed_hosttags_config.aux_tag_list.update(TagID(self._id), self._aux_tag)
         try:
             changed_hosttags_config.validate_config()
         except MKGeneralException as e:
@@ -751,13 +755,13 @@ class ModeEditAuxtag(ABCEditTagMode):
 
     def page(self, config: Config) -> None:
         with html.form_context("aux_tag"):
-            self._valuespec().render_input("aux_tag", self._aux_tag.to_config())
+            self._valuespec().render_input("aux_tag", dict(self._aux_tag.to_config()))
 
             forms.end()
             html.show_localization_hint()
             html.hidden_fields()
 
-    def _valuespec(self):
+    def _valuespec(self) -> Dictionary:
         return Dictionary(
             title=_("Basic settings"),
             elements=self._basic_elements(_("Tag ID")),
@@ -779,7 +783,7 @@ class ModeEditTagGroup(ABCEditTagMode):
     def __init__(self) -> None:
         super().__init__()
 
-        tg = self._tag_config.get_tag_group(self._id)
+        tg = self._tag_config.get_tag_group(TagGroupID(self._id) if self._id else TagGroupID(""))
         self._untainted_tag_group = (
             cmk.utils.tags.TagGroup(
                 group_id=TagGroupID(""), title="", topic=None, help=None, tags=[]
@@ -788,7 +792,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             else tg
         )
 
-        tg = self._tag_config.get_tag_group(self._id)
+        tg = self._tag_config.get_tag_group(TagGroupID(self._id) if self._id else TagGroupID(""))
         self._tag_group = (
             cmk.utils.tags.TagGroup(
                 group_id=TagGroupID(""), title="", topic=None, help=None, tags=[]
@@ -797,7 +801,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             else tg
         )
 
-    def _get_id(self):
+    def _get_id(self) -> str | None:
         return request.var("edit", request.var("tag_id"))
 
     def title(self) -> str:
@@ -817,9 +821,10 @@ class ModeEditTagGroup(ABCEditTagMode):
             return redirect(mode_url("tags"))
 
         vs = self._valuespec()
-        tag_group_spec = vs.from_html_vars("tag_group")
-        vs.validate_value(tag_group_spec, "tag_group")
+        tag_group_spec_dict = vs.from_html_vars("tag_group")
+        vs.validate_value(tag_group_spec_dict, "tag_group")
 
+        tag_group_spec = cast(cmk.utils.tags.TagGroupSpec, tag_group_spec_dict)
         # Create new object with existing host tags
         changed_hosttags_config = cmk.utils.tags.TagConfig.from_config(
             self._tag_config_file.load_for_modification()
@@ -884,14 +889,14 @@ class ModeEditTagGroup(ABCEditTagMode):
 
     def page(self, config: Config) -> None:
         with html.form_context("tag_group", method="POST"):
-            self._valuespec().render_input("tag_group", self._tag_group.get_dict_format())
+            self._valuespec().render_input("tag_group", dict(self._tag_group.get_dict_format()))
 
             forms.end()
             html.show_localization_hint()
 
             html.hidden_fields()
 
-    def _valuespec(self):
+    def _valuespec(self) -> Dictionary:
         basic_elements = self._basic_elements(_("Tag group ID"))
         tag_choice_elements = self._tag_choices_elements()
 
@@ -906,12 +911,12 @@ class ModeEditTagGroup(ABCEditTagMode):
             optional_keys=[],
         )
 
-    def _tag_choices_elements(self):
+    def _tag_choices_elements(self) -> list[tuple[str, ValueSpec]]:
         return [
             ("tags", self._tag_choices_valuespec()),
         ]
 
-    def _tag_choices_valuespec(self):
+    def _tag_choices_valuespec(self) -> Transform:
         # We want the compact tuple style visualization which is not
         # supported by the Dictionary valuespec. Transform!
         return Transform(

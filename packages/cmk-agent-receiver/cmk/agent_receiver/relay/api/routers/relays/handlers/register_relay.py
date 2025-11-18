@@ -55,10 +55,16 @@ class RegisterRelayHandler:
         relay_id = RelayID(request.relay_id)
         # Important: First authenticate
         auth = UserAuth(authorization)
-        csr = self.validate_csr(request.csr, relay_id)
-        # Then sign the CSR
-        root_cert = self.get_root_cert()
-        client_cert = self.sign_csr(csr)
+
+        root_cert = ""
+        client_cert = ""
+
+        if request.csr:
+            csr = self.validate_csr(request.csr, relay_id)
+            # Then sign the CSR
+            root_cert = self.get_root_cert()
+            client_cert = self.sign_csr(csr)
+
         # before relay registration
         self.relays_repository.add_relay(auth, relay_id, request.alias)
 

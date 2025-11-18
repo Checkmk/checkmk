@@ -26,6 +26,8 @@ from .constants import (
     API_NAME_DEVICE_NAME,
     API_NAME_DEVICE_SERIAL,
     APIKEY_OPTION_NAME,
+    OPTIONAL_SECTIONS_CHOICES,
+    OPTIONAL_SECTIONS_DEFAULT,
     SEC_NAME_DEVICE_INFO,
     SEC_NAME_DEVICE_STATUSES,
     SEC_NAME_LICENSES_OVERVIEW,
@@ -266,9 +268,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--sections",
         nargs="+",
-        choices=list(SECTION_NAME_MAP),
-        default=list(SECTION_NAME_MAP),
-        help="Explicit sections that are collected.",
+        choices=OPTIONAL_SECTIONS_CHOICES,
+        default=OPTIONAL_SECTIONS_DEFAULT,
+        help="Optional sections to be collected.",
     )
 
     parser.add_argument(

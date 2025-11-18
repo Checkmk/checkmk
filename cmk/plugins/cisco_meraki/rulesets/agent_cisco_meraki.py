@@ -75,18 +75,26 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
             ),
             "sections": DictElement(
                 parameter_form=MultipleChoice(
-                    title=Title("Sections"),
+                    title=Title("Optional sections"),
+                    help_text=Help("Unselect sections which you don't want to include."),
                     elements=[
                         MultipleChoiceElement(
-                            name="licenses_overview", title=Title("Organization licenses overview")
+                            name="device_statuses", title=Title("Device statuses")
                         ),
                         MultipleChoiceElement(
-                            name="device_statuses", title=Title("Organization device statuses")
+                            name="licenses_overview", title=Title("Licenses overview")
                         ),
                         MultipleChoiceElement(
-                            name="sensor_readings", title=Title("Organization sensor readings")
+                            name="sensor_readings", title=Title("Sensor readings")
                         ),
                     ],
+                    prefill=DefaultValue(
+                        [
+                            "device_statuses",
+                            "licenses_overview",
+                            "sensor_readings",
+                        ]
+                    ),
                     migrate=_migrate_to_valid_ident,
                 )
             ),

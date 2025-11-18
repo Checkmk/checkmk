@@ -7398,9 +7398,6 @@ msgstr "Arhiva evenimentelor"
 msgid "Archive events of hosts"
 msgstr "Arhiva evenimentelor de gazde"
 
-msgid "Archive exceeds total size limit"
-msgstr ""
-
 msgid "Archive log"
 msgstr "Jurnal de arhivă"
 
@@ -28934,10 +28931,6 @@ msgstr "Răspunsuri fixe HTTP"
 msgid "HTTP method"
 msgstr "Metoda HTTP"
 
-#, fuzzy
-msgid "HTTP port"
-msgstr "Port TCP"
-
 msgid "HTTP port (useful for accessing web UI)"
 msgstr ""
 
@@ -43120,11 +43113,11 @@ msgid "Metric History"
 msgstr "Istoria metrică"
 
 #, fuzzy
-msgid "Metric backend (Custom query)"
+msgid "Metric backend"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
-msgid "Metric backend instance"
+msgid "Metric backend (Custom query)"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
@@ -59130,9 +59123,6 @@ msgstr "Nivelul de securitate"
 msgid "Security advice"
 msgstr "Denumire de securitate"
 
-msgid "Security checks have failed for the uploaded tar.gz file"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Security message #%d"
 msgstr "Denumire de securitate"
@@ -71741,6 +71731,11 @@ msgstr "Tipul timestamp-ului trebuie să fie int sau float, dar este %s."
 msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 
+#, python-format
+msgid ""
+"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+msgstr ""
+
 #, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "Fișierul nu pare a fi un fișier cheie valid."
@@ -71994,10 +71989,10 @@ msgstr ""
 "Există modificări de la alți utilizatori, iar modificările străine nu sunt "
 "permise în acest apel API."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"There are changes to activate, but no site can be activated (The sites %s "
-"have changes, but may be offline or not logged in)."
+"There are changes to activate, but no site can be activated (The %s changes, "
+"but may be offline or not logged in)."
 msgstr ""
 "Există modificări de activat, dar niciun site nu poate fi activat (Site-"
 "urile %s au modificări, dar este posibil să fie offline sau să nu fie "
@@ -83291,9 +83286,6 @@ msgstr "Folosiți fontul bold"
 msgid "Use credentials"
 msgstr "Utilizați acreditările"
 
-msgid "Use custom ClickHouse instance"
-msgstr ""
-
 msgid "Use custom connection parameters"
 msgstr "Utilizați parametri de conectare personalizați"
 
@@ -83514,9 +83506,6 @@ msgstr "Utilizați ID-ul site-ului"
 
 msgid "Use site ID prefix"
 msgstr "Utilizați prefixul ID al site-ului"
-
-msgid "Use site-local ClickHouse instance"
-msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Utilizați CA-uri la nivel de sistem"
@@ -95229,6 +95218,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "HTTP port"
+#~ msgstr "Port TCP"
 
 #, fuzzy
 #~ msgid "Issuer Name"

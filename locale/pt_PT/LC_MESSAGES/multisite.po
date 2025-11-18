@@ -7398,9 +7398,6 @@ msgstr "Arquivo de eventos"
 msgid "Archive events of hosts"
 msgstr "Arquivo de eventos dos anfitriões"
 
-msgid "Archive exceeds total size limit"
-msgstr ""
-
 #, fuzzy
 msgid "Archive log"
 msgstr "Arquivo"
@@ -28861,10 +28858,6 @@ msgstr "Respostas fixas HTTP"
 msgid "HTTP method"
 msgstr "método HTTP"
 
-#, fuzzy
-msgid "HTTP port"
-msgstr "porta TCP"
-
 msgid "HTTP port (useful for accessing web UI)"
 msgstr ""
 
@@ -43021,11 +43014,11 @@ msgid "Metric History"
 msgstr "História da métrica"
 
 #, fuzzy
-msgid "Metric backend (Custom query)"
+msgid "Metric backend"
 msgstr "instâncias Oracle"
 
 #, fuzzy
-msgid "Metric backend instance"
+msgid "Metric backend (Custom query)"
 msgstr "instâncias Oracle"
 
 #, fuzzy
@@ -59008,9 +59001,6 @@ msgstr "Nível de Segurança"
 msgid "Security advice"
 msgstr "Nome de segurança"
 
-msgid "Security checks have failed for the uploaded tar.gz file"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Security message #%d"
 msgstr "Nome de segurança"
@@ -71482,6 +71472,11 @@ msgstr "O tipo de carimbo da hora deve ser int ou float, mas é %s"
 msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 
+#, python-format
+msgid ""
+"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+msgstr ""
+
 #, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "O arquivo não se parece com um arquivo chave válido."
@@ -71731,10 +71726,10 @@ msgstr ""
 "Há mudanças de outros usuários e mudanças estrangeiras não são permitidas "
 "nesta chamada de API."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"There are changes to activate, but no site can be activated (The sites %s "
-"have changes, but may be offline or not logged in)."
+"There are changes to activate, but no site can be activated (The %s changes, "
+"but may be offline or not logged in)."
 msgstr ""
 "Há mudanças para ativar, mas nenhum site pode ser ativado (Os sites %s têm "
 "mudanças, mas podem estar offline ou não logados)."
@@ -83013,9 +83008,6 @@ msgstr "Use fonte em negrito"
 msgid "Use credentials"
 msgstr "Use as credenciais"
 
-msgid "Use custom ClickHouse instance"
-msgstr ""
-
 msgid "Use custom connection parameters"
 msgstr "Use parâmetros de conexão personalizados"
 
@@ -83230,9 +83222,6 @@ msgstr "Use o ID do site"
 
 msgid "Use site ID prefix"
 msgstr "Use o prefixo de identificação do local"
-
-msgid "Use site-local ClickHouse instance"
-msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Usar CAs de todo o sistema"
@@ -94858,6 +94847,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "HTTP port"
+#~ msgstr "porta TCP"
 
 #, fuzzy
 #~ msgid "Issuer Name"

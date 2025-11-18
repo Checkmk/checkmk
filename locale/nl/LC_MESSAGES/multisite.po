@@ -7391,9 +7391,6 @@ msgstr "Archief gebeurtenissen"
 msgid "Archive events of hosts"
 msgstr "Archief gebeurtenissen van gastheren"
 
-msgid "Archive exceeds total size limit"
-msgstr ""
-
 #, fuzzy
 msgid "Archive log"
 msgstr "Archief evenement"
@@ -28855,10 +28852,6 @@ msgstr "HTTP vaste antwoorden"
 msgid "HTTP method"
 msgstr "HTTP Methode"
 
-#, fuzzy
-msgid "HTTP port"
-msgstr "TCP-poort"
-
 msgid "HTTP port (useful for accessing web UI)"
 msgstr ""
 
@@ -43023,11 +43016,11 @@ msgid "Metric History"
 msgstr "Metrische geschiedenis"
 
 #, fuzzy
-msgid "Metric backend (Custom query)"
+msgid "Metric backend"
 msgstr "Oracle gevallen"
 
 #, fuzzy
-msgid "Metric backend instance"
+msgid "Metric backend (Custom query)"
 msgstr "Oracle gevallen"
 
 #, fuzzy
@@ -59011,9 +59004,6 @@ msgstr "Beveiligingsniveau"
 msgid "Security advice"
 msgstr "Veiligheidsnaam"
 
-msgid "Security checks have failed for the uploaded tar.gz file"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Security message #%d"
 msgstr "Veiligheidsnaam"
@@ -71515,6 +71505,11 @@ msgstr "Het type van de timestamp moet int of float zijn, maar is %s"
 msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 
+#, python-format
+msgid ""
+"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+msgstr ""
+
 #, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
@@ -71774,10 +71769,10 @@ msgstr ""
 "Er zijn wijzigingen van andere gebruikers en vreemde wijzigingen zijn niet "
 "toegestaan in deze API oproep."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"There are changes to activate, but no site can be activated (The sites %s "
-"have changes, but may be offline or not logged in)."
+"There are changes to activate, but no site can be activated (The %s changes, "
+"but may be offline or not logged in)."
 msgstr ""
 "Er zijn wijzigingen om te activeren, maar geen enkele site kan geactiveerd "
 "worden (De sites %s hebben wijzigingen, maar zijn misschien offline of niet "
@@ -83071,9 +83066,6 @@ msgstr "Gebruik vet lettertype"
 msgid "Use credentials"
 msgstr "Gebruik geloofsbrieven"
 
-msgid "Use custom ClickHouse instance"
-msgstr ""
-
 msgid "Use custom connection parameters"
 msgstr "Gebruik aangepaste verbindingsparameters"
 
@@ -83294,9 +83286,6 @@ msgstr "Gebruik site ID"
 
 msgid "Use site ID prefix"
 msgstr "Gebruik site ID prefix"
-
-msgid "Use site-local ClickHouse instance"
-msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Gebruik systeemwijde CA's"
@@ -94963,6 +94952,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "HTTP port"
+#~ msgstr "TCP-poort"
 
 #, fuzzy
 #~ msgid "Issuer Name"

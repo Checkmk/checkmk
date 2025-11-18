@@ -6972,9 +6972,6 @@ msgstr "イベントのアーカイブ"
 msgid "Archive events of hosts"
 msgstr "ホストのイベントをアーカイブする"
 
-msgid "Archive exceeds total size limit"
-msgstr ""
-
 msgid "Archive log"
 msgstr "アーカイブログ"
 
@@ -27279,10 +27276,6 @@ msgstr "HTTP固定応答"
 msgid "HTTP method"
 msgstr "HTTPメソッド"
 
-#, fuzzy
-msgid "HTTP port"
-msgstr "TCPポート"
-
 msgid "HTTP port (useful for accessing web UI)"
 msgstr ""
 
@@ -40476,11 +40469,11 @@ msgid "Metric History"
 msgstr "メトリック履歴"
 
 #, fuzzy
-msgid "Metric backend (Custom query)"
+msgid "Metric backend"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
-msgid "Metric backend instance"
+msgid "Metric backend (Custom query)"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
@@ -55323,9 +55316,6 @@ msgstr "セキュリティレベル"
 msgid "Security advice"
 msgstr "セキュリティに関するアドバイス"
 
-msgid "Security checks have failed for the uploaded tar.gz file"
-msgstr ""
-
 #, python-format
 msgid "Security message #%d"
 msgstr "セキュリティメッセージ #%d"
@@ -67277,6 +67267,12 @@ msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
 "アップロードされたZIPファイルの展開後のサイズが制限を超えています: %s > %s"
 
+#, python-format
+msgid ""
+"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+msgstr ""
+"アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s > %s"
+
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "アップロードされたファイルは有効なZIPファイルではありません。"
 
@@ -67516,10 +67512,10 @@ msgstr ""
 "他のユーザーからの変更があり、このAPI コールでの外部の変更は許可されていませ"
 "ん。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"There are changes to activate, but no site can be activated (The sites %s "
-"have changes, but may be offline or not logged in)."
+"There are changes to activate, but no site can be activated (The %s changes, "
+"but may be offline or not logged in)."
 msgstr ""
 "アクティブ化する変更がありますが、サイトをアクティブ化することはできません(サ"
 "イト%sには変更がありますが、オフラインまたはログインしていない可能性がありま"
@@ -77880,9 +77876,6 @@ msgstr "太字を使用する"
 msgid "Use credentials"
 msgstr "資格情報を使用する"
 
-msgid "Use custom ClickHouse instance"
-msgstr ""
-
 msgid "Use custom connection parameters"
 msgstr "カスタム接続パラメータを使用する"
 
@@ -78086,9 +78079,6 @@ msgstr "サイトIDを使用する"
 
 msgid "Use site ID prefix"
 msgstr "サイトIDプレフィックスを使用する"
-
-msgid "Use site-local ClickHouse instance"
-msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "システム全体のCAを使用する"
@@ -89132,6 +89122,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "HTTP port"
+#~ msgstr "TCPポート"
+
 #~ msgid ""
 #~ "Backup process has started. You can safely navigate away from this page "
 #~ "as the process will continue in the background. Refresh this page to "
@@ -89146,13 +89140,6 @@ msgstr ""
 
 #~ msgid "Subject Name"
 #~ msgstr "主題名"
-
-#, python-format
-#~ msgid ""
-#~ "The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-#~ msgstr ""
-#~ "アップロードされたtar.gzファイルの展開後のサイズが制限を超えています: %s "
-#~ "> %s"
 
 #~ msgid ""
 #~ "This ID uniquely identifies this rule in Checkmk. Use this ID when "

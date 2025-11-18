@@ -7186,9 +7186,6 @@ msgstr "Ereignisse archivieren"
 msgid "Archive events of hosts"
 msgstr "Ereignisse von Hosts archivieren"
 
-msgid "Archive exceeds total size limit"
-msgstr ""
-
 msgid "Archive log"
 msgstr "Archiv-Log"
 
@@ -27786,9 +27783,6 @@ msgstr "Festgelegte HTTP-Antworten"
 msgid "HTTP method"
 msgstr "HTTP Methode"
 
-msgid "HTTP port"
-msgstr "HTTP-Port"
-
 msgid "HTTP port (useful for accessing web UI)"
 msgstr ""
 
@@ -41248,11 +41242,12 @@ msgstr "Metrik-Vorhersage"
 msgid "Metric History"
 msgstr "Metrik-Historie"
 
+#, fuzzy
+msgid "Metric backend"
+msgstr "Instanz des Metrik-Backend"
+
 msgid "Metric backend (Custom query)"
 msgstr "Metrik-Backend (Kundenanfrage)"
-
-msgid "Metric backend instance"
-msgstr "Instanz des Metrik-Backend"
 
 msgid "Metric configuration"
 msgstr "Metrik-Konfiguration"
@@ -56260,9 +56255,6 @@ msgstr "Sicherheitslevel"
 msgid "Security advice"
 msgstr "Sicherheitshinweis"
 
-msgid "Security checks have failed for the uploaded tar.gz file"
-msgstr ""
-
 #, python-format
 msgid "Security message #%d"
 msgstr "Sicherheitsmeldung #%d"
@@ -68737,6 +68729,13 @@ msgstr ""
 "Die entpackte Größe der hochgeladenen ZIP-Datei überschreitet das zulässige "
 "Maximum: %s > %s"
 
+#, python-format
+msgid ""
+"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+msgstr ""
+"Die entpackte Größe der hochgeladenen tar.gz-Datei überschreitet das "
+"zulässige Maximum: %s > %s"
+
 msgid "The uploaded file is not a valid ZIP file."
 msgstr "Die hochgeladene Datei ist keine gültige ZIP-Datei."
 
@@ -68988,10 +68987,10 @@ msgstr ""
 "Es sind Änderungen von anderen Benutzern vorhanden und dieser API-Aufruf "
 "erlaubt das Aktivieren von fremden Änderungen nicht."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"There are changes to activate, but no site can be activated (The sites %s "
-"have changes, but may be offline or not logged in)."
+"There are changes to activate, but no site can be activated (The %s changes, "
+"but may be offline or not logged in)."
 msgstr ""
 "Es sind Änderungen zum Aktivieren vorhanden, aber keine Instanz kann "
 "aktiviert werden (Die Instanzen %s haben Änderungen, aber sind offline oder "
@@ -79704,9 +79703,6 @@ msgstr "Fettschritt verwenden"
 msgid "Use credentials"
 msgstr "Zugangsdaten angeben"
 
-msgid "Use custom ClickHouse instance"
-msgstr ""
-
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungsparameter nutzen"
 
@@ -79923,9 +79919,6 @@ msgstr "Instanz-ID verwenden"
 
 msgid "Use site ID prefix"
 msgstr "Präfix für Instanz-ID verwenden"
-
-msgid "Use site-local ClickHouse instance"
-msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Systemweite CAs nutzen"
@@ -91066,18 +91059,14 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "HTTP port"
+#~ msgstr "HTTP-Port"
+
 #~ msgid "Issuer Name"
 #~ msgstr "Name des Herausgebers"
 
 #~ msgid "Subject Name"
 #~ msgstr "Subjektname"
-
-#, python-format
-#~ msgid ""
-#~ "The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
-#~ msgstr ""
-#~ "Die entpackte Größe der hochgeladenen tar.gz-Datei überschreitet das "
-#~ "zulässige Maximum: %s > %s"
 
 #~ msgid ""
 #~ "This ID uniquely identifies this rule in Checkmk. Use this ID when "

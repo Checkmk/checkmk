@@ -41,7 +41,12 @@ from tests.testlib.common.utils import wait_until
 from tests.testlib.openapi_session import AgentReceiverApiSession, CMKOpenApiSession
 from tests.testlib.package_manager import ABCPackageManager
 from tests.testlib.utils import is_cleanup_enabled
-from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
+from tests.testlib.version import (
+    CMKPackageInfo,
+    CMKPackageInfoOld,
+    edition_from_env,
+    version_from_env,
+)
 
 logger = logging.getLogger()
 
@@ -97,14 +102,14 @@ def send_to_container(c: docker.models.containers.Container, text: str) -> None:
     s.close()
 
 
-def image_name(package_info: CMKPackageInfo) -> str:
+def image_name(package_info: CMKPackageInfo | CMKPackageInfoOld) -> str:
     return (
         "docker-tests/check-mk-"
         f"{package_info.edition.long}-{package_info.version.branch}-{package_info.version.version}"
     )
 
 
-def package_name(package_info: CMKPackageInfo) -> str:
+def package_name(package_info: CMKPackageInfo | CMKPackageInfoOld) -> str:
     """Return full name of a debian-based Checkmk package."""
     return (
         f"check-mk-{package_info.edition.long}-{package_info.version.version}_0"
@@ -116,7 +121,7 @@ def prepare_build() -> None:
     assert subprocess.run(["make", "needed-packages"], cwd=build_path, check=False).returncode == 0
 
 
-def prepare_package(package_info: CMKPackageInfo) -> None:
+def prepare_package(package_info: CMKPackageInfo | CMKPackageInfoOld) -> None:
     """On Jenkins copies a previously built package to the build path."""
     pkg_name = package_name(package_info)
     test_package_path = build_path / pkg_name
@@ -151,15 +156,14 @@ def prepare_package(package_info: CMKPackageInfo) -> None:
 
 
 def pull_checkmk(
-    client: docker.client.DockerClient, package_info: CMKPackageInfo
+    client: docker.client.DockerClient,
+    package_info: CMKPackageInfo | CMKPackageInfoOld,
 ) -> docker.models.containers.Image:
     if not package_info.edition.is_community_edition():
         raise Exception("Can only fetch community edition at the moment")
-
-    logger.info(
-        "Downloading docker image: checkmk/check-mk-community:%s", package_info.version.version
-    )
-    return client.images.pull("checkmk/check-mk-community", tag=package_info.version.version)
+    image_name = f"checkmk/check-mk-{package_info.edition.long}"
+    logger.info("Downloading docker image: %s:%s", image_name, package_info.version.version)
+    return client.images.pull(image_name, tag=package_info.version.version)
 
 
 def resolve_image_alias(alias: str) -> str:
@@ -176,7 +180,7 @@ def resolve_image_alias(alias: str) -> str:
 
 def build_checkmk(
     client: docker.client.DockerClient,
-    package_info: CMKPackageInfo,
+    package_info: CMKPackageInfo | CMKPackageInfoOld,
     prepare_pkg: bool = True,
 ) -> tuple[docker.models.images.Image, Iterator[Mapping[str, Any]]]:
     """Builds (or reuses) and verifies a docker image for a given Checkmk version.
@@ -279,7 +283,7 @@ class CheckmkApp:
     def __init__(
         self,
         client: docker.client.DockerClient,
-        package_info: CMKPackageInfo | None = None,
+        package_info: CMKPackageInfo | CMKPackageInfoOld | None = None,
         is_update: bool = False,
         site_id: str = "cmk",
         name: str | None = None,

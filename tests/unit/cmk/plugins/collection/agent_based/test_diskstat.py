@@ -252,6 +252,7 @@ def test_parse_diskstat_empty_wwn() -> None:
             ["[dmsetup_info]"],
             ["No", "devices", "found"],
             ["[device_wwn]"],
+            [""],
         ]
     ) == {
         "sda": {

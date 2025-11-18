@@ -14,7 +14,6 @@ import json
 import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from enum import auto, Enum
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
@@ -28,12 +27,9 @@ from .constants import (
     APIKEY_OPTION_NAME,
     OPTIONAL_SECTIONS_CHOICES,
     OPTIONAL_SECTIONS_DEFAULT,
-    SEC_NAME_DEVICE_INFO,
     SEC_NAME_DEVICE_STATUSES,
     SEC_NAME_LICENSES_OVERVIEW,
-    SEC_NAME_ORGANISATIONS,
     SEC_NAME_SENSOR_READINGS,
-    SECTION_NAME_MAP,
 )
 from .log import LOGGER
 from .schema import RawOrganisation
@@ -54,19 +50,11 @@ MerakiAPIData = Mapping[str, object]
 #   '----------------------------------------------------------------------'
 
 
-class MerakiAPIDataSource(Enum):
-    org = auto()
-
-
 @dataclass(frozen=True)
 class Section:
-    api_data_source: MerakiAPIDataSource
     name: str
     data: MerakiAPIData
     piggyback: str | None = None
-
-    def get_name(self) -> str:
-        return "_".join(["cisco_meraki", self.api_data_source.name, self.name])
 
 
 # .
@@ -99,8 +87,8 @@ class MerakiOrganisation:
         return not self.organisation["api"]["enabled"]
 
     def query(self) -> Iterator[Section]:
-        yield self._make_section(
-            name=SEC_NAME_ORGANISATIONS,
+        yield Section(
+            name="cisco_meraki_org_organisations",
             data=self.organisation,
         )
 
@@ -110,8 +98,8 @@ class MerakiOrganisation:
 
         if SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
             if licenses_overview := self.client.get_licenses_overview(self.id, self.name):
-                yield self._make_section(
-                    name=SEC_NAME_LICENSES_OVERVIEW,
+                yield Section(
+                    name="cisco_meraki_org_licenses_overview",
                     data=licenses_overview,
                 )
 
@@ -127,8 +115,8 @@ class MerakiOrganisation:
                 LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
                 continue
 
-            yield self._make_section(
-                name=SEC_NAME_DEVICE_INFO,
+            yield Section(
+                name="cisco_meraki_org_device_info",
                 data=device,
                 piggyback=device_piggyback,
             )
@@ -140,8 +128,8 @@ class MerakiOrganisation:
                 if (
                     piggyback := self._get_device_piggyback(device_status, devices_by_serial)
                 ) is not None:
-                    yield self._make_section(
-                        name=SEC_NAME_DEVICE_STATUSES,
+                    yield Section(
+                        name="cisco_meraki_org_device_status",
                         data=device_status,
                         piggyback=piggyback or None,
                     )
@@ -153,8 +141,8 @@ class MerakiOrganisation:
                 if (
                     piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial)
                 ) is not None:
-                    yield self._make_section(
-                        name=SEC_NAME_SENSOR_READINGS,
+                    yield Section(
+                        name="cisco_meraki_org_sensor_readings",
                         data=sensor_reading,
                         piggyback=piggyback or None,
                     )
@@ -169,16 +157,6 @@ class MerakiOrganisation:
             LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
             return None
 
-    def _make_section(
-        self, *, name: str, data: MerakiAPIData, piggyback: str | None = None
-    ) -> Section:
-        return Section(
-            api_data_source=MerakiAPIDataSource.org,
-            name=SECTION_NAME_MAP[name],
-            data=data,
-            piggyback=piggyback,
-        )
-
 
 def _query_meraki_objects(*, organisations: Sequence[MerakiOrganisation]) -> Iterable[Section]:
     for organisation in organisations:
@@ -188,9 +166,9 @@ def _query_meraki_objects(*, organisations: Sequence[MerakiOrganisation]) -> Ite
 def _write_sections(sections: Iterable[Section]) -> None:
     sections_by_piggyback: dict = {}
     for section in sections:
-        sections_by_piggyback.setdefault(section.piggyback, {}).setdefault(
-            section.get_name(), []
-        ).append(section.data)
+        sections_by_piggyback.setdefault(section.piggyback, {}).setdefault(section.name, []).append(
+            section.data
+        )
 
     for piggyback, pb_section in sections_by_piggyback.items():
         sys.stdout.write(f"<<<<{piggyback or ''}>>>>\n")

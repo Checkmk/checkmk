@@ -84,7 +84,7 @@ class MerakiOrganisation:
     organisation: Organisation
 
     @property
-    def organisation_id(self) -> str:
+    def id(self) -> str:
         return self.organisation["id_"]
 
     def query(self) -> Iterator[Section]:
@@ -104,9 +104,7 @@ class MerakiOrganisation:
             try:
                 device_piggyback = str(device[API_NAME_DEVICE_NAME])
             except KeyError as e:
-                LOGGER.debug(
-                    "Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e
-                )
+                LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
                 continue
 
             yield self._make_section(
@@ -116,7 +114,7 @@ class MerakiOrganisation:
             )
 
         if SEC_NAME_DEVICE_STATUSES in self.config.section_names:
-            for device_status in self.client.get_devices_statuses(self.organisation_id):
+            for device_status in self.client.get_devices_statuses(self.id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (
@@ -129,7 +127,7 @@ class MerakiOrganisation:
                     )
 
         if SEC_NAME_SENSOR_READINGS in self.config.section_names:
-            for sensor_reading in self.client.get_sensor_readings(self.organisation_id):
+            for sensor_reading in self.client.get_sensor_readings(self.id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (
@@ -148,7 +146,7 @@ class MerakiOrganisation:
             serial = str(device[API_NAME_DEVICE_SERIAL])
             return str(devices_by_serial[serial][API_NAME_DEVICE_NAME])
         except KeyError as e:
-            LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e)
+            LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
             return None
 
     def _make_section(

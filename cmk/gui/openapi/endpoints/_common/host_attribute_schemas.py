@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, override
 
+from marshmallow.fields import Tuple as TupleField
+
 from cmk import fields
 from cmk.ccc import version
 from cmk.gui import fields as gui_fields
@@ -100,6 +102,87 @@ class BaseHostTagGroup(BaseSchema):
     )
 
 
+class AttributeFilterSchema(BaseSchema):
+    attribute_type = fields.String(
+        required=True,
+        enum=["resource", "scope", "data_point"],
+        description="The type of the attribute (resource, scope, or data_point)",
+        example="resource",
+    )
+    attribute_key = fields.String(
+        required=True, description="The key of the attribute", example="os.type"
+    )
+    attribute_value = fields.String(
+        required=True, description="The value to match", example="linux"
+    )
+
+
+class MetricsAssociationConfig(BaseSchema):
+    attribute_filters = fields.List(
+        fields.Nested(AttributeFilterSchema),
+        required=True,
+        metadata={"description": "List of filters to apply"},
+    )
+    host_name_resource_attribute_key = fields.String(
+        required=True,
+        example="service.name",
+        description="The resource attribute key to use for the host name",
+    )
+
+
+class MetricsAssociationField(TupleField):
+    """
+    A custom field for Metrics Association that handles:
+    1. The Tuple structure [String, Dict|None]
+    2. Edition validation
+    3. OpenAPI description injection
+    """
+
+    default_error_messages = {
+        "edition_not_supported": "Metrics Association is not supported in this edition.",
+    }
+
+    def __init__(self, **kwargs: Any):
+        self._supported_editions = {
+            version.Edition.ULTIMATEMT,
+            version.Edition.ULTIMATE,
+            version.Edition.CLOUD,
+        }
+        updated_desc = edition_field_description(
+            description=kwargs["description"],
+            supported_editions=self._supported_editions,
+        )
+
+        # Ensure metadata dict exists and set the description there
+        kwargs.setdefault("metadata", {})
+        kwargs["metadata"]["description"] = updated_desc
+
+        # Remove direct 'description' arg to avoid the "Multiple values/Deprecated" warning
+        if "description" in kwargs:
+            del kwargs["description"]
+
+        tuple_structure = (
+            fields.String(
+                required=True,
+                enum=["enabled", "disabled"],
+                example="enabled",
+                description="State of the association",
+            ),
+            fields.Nested(
+                MetricsAssociationConfig,
+                allow_none=True,
+                description="Configuration object if enabled, otherwise null",
+            ),
+        )
+        super().__init__(tuple_structure, **kwargs)
+
+    @override
+    def _validate(self, value: Any) -> None:
+        if version.edition(paths.omd_root) not in self._supported_editions:
+            raise self.make_error("edition_not_supported")
+        super()._validate(value)
+
+
 class BaseHostAttribute(BaseSchema):
     """Base class for all host attribute schemas."""
 
@@ -120,11 +203,8 @@ class BaseHostAttribute(BaseSchema):
     bake_agent_package = gui_fields.bake_agent_field()
     cmk_agent_connection = CONNECTION_MODE_FIELD
     snmp_community = HostAttributeSNMPCommunity().openapi_field()
-    # This field is only a placeholder to make the CI happy. It is implemented properly in the new
-    # Rest API framework.
-    # This only covers the case `("disabled", None)` (JSON-serialized as a list).
-    metrics_association = fields.List(
-        fields.String(allow_none=True),
+    metrics_association = MetricsAssociationField(
+        allow_none=True, description="Configuration for metrics association backend"
     )
 
     labels = HostAttributeLabels().openapi_field()

@@ -214,7 +214,6 @@ def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
 
 
 def fetch_time_series_rrd(
-    registered_metrics: Mapping[str, RegisteredMetric],
     keys: Sequence[RRDDataKey],
     consolidation_function: GraphConsolidationFunction | None,
     conversion: Callable[[float], float],

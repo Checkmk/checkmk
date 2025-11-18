@@ -83,7 +83,6 @@ def fetch_augmented_time_series(
                     query_keys.add(key)
 
     rrd_data = fetch_time_series_rrd(
-        registered_metrics,
         list(rrd_keys),
         consolidation_function,
         conversion,

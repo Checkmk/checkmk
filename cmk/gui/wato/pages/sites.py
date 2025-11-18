@@ -5,7 +5,6 @@
 """Mode for managing sites"""
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -401,7 +400,7 @@ class ModeEditSite(WatoMode):
             ),
         ]
 
-    def _validate_site_id(self, value, varprefix):
+    def _validate_site_id(self, value: str, varprefix: str) -> None:
         if value in self._site_mgmt.load_sites():
             raise MKUserError("id", _("This ID is already being used by another connection."))
 
@@ -421,7 +420,7 @@ class ModeEditSite(WatoMode):
                 ),
             )
 
-    def _livestatus_elements(self):
+    def _livestatus_elements(self) -> list[tuple[str, ValueSpec]]:
         proxy_docu_url = "https://checkmk.com/checkmk_multisite_modproxy.html"
         status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
         site_choices = [
@@ -521,11 +520,11 @@ class ModeEditSite(WatoMode):
             ),
         ]
 
-    def _vs_host(self):
+    def _vs_host(self) -> MonitoredHostname:
         return MonitoredHostname(title=_("Host:"))
 
-    def _replication_elements(self):
-        elements = [
+    def _replication_elements(self) -> list[tuple[str, ValueSpec]]:
+        elements: list[tuple[str, ValueSpec]] = [
             (
                 "replication",
                 DropdownChoice(
@@ -1779,7 +1778,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def title(self) -> str:
         return _("Site-specific global configuration for %s") % self._site_id
 
-    def _affected_sites(self):
+    def _affected_sites(self) -> list[SiteId]:
         return [self._site_id]
 
     def _save(self, *, pprint_value: bool, use_git: bool) -> None:

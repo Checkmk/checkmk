@@ -32,30 +32,60 @@ const componentId = useId()
 </script>
 
 <template>
-  <div>
-    <FormLabel v-if="$props.spec.label" :for="componentId"
-      >{{ spec.label }}<CmkSpace size="small"
-    /></FormLabel>
-    <CmkDropdown
-      v-model:selected-option="value"
-      :options="{
-        type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
-        suggestions: props.spec.elements.map((element) => ({
-          name: element.name,
-          title: untranslated(element.title)
-        }))
-      }"
-      :input-hint="
-        props.spec.elements.length === 0
-          ? untranslated(props.spec.no_elements_text || '')
-          : untranslated(props.spec.input_hint || '')
-      "
-      :disabled="spec.frozen"
-      :component-id="componentId"
-      :no-results-hint="untranslated(props.spec.no_elements_text || '')"
-      :label="untranslated(props.spec.label || props.spec.title)"
-      required
-    />
+  <div class="form-single-choice">
+    <div class="form-single-choice__layout">
+      <div class="form-single-choice__label-column">
+        <div class="form-single-choice__label-spacer"></div>
+        <FormLabel v-if="$props.spec.label" :for="componentId"
+          >{{ spec.label }}<CmkSpace size="small"
+        /></FormLabel>
+      </div>
+      <div class="form-single-choice__input-column">
+        <FormValidation :validation="validation"></FormValidation>
+        <CmkDropdown
+          v-model:selected-option="value"
+          :options="{
+            type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
+            suggestions: props.spec.elements.map((element) => ({
+              name: element.name,
+              title: untranslated(element.title)
+            }))
+          }"
+          :input-hint="
+            props.spec.elements.length === 0
+              ? untranslated(props.spec.no_elements_text || '')
+              : untranslated(props.spec.input_hint || '')
+          "
+          :disabled="spec.frozen"
+          :component-id="componentId"
+          :no-results-hint="untranslated(props.spec.no_elements_text || '')"
+          :label="untranslated(props.spec.label || props.spec.title)"
+          :form-validation="validation.length > 0"
+          required
+        />
+      </div>
+    </div>
   </div>
-  <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.form-single-choice__layout {
+  display: flex;
+}
+
+.form-single-choice__label-column {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-single-choice__label-spacer {
+  flex-grow: 1;
+}
+
+.form-single-choice__input-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+</style>

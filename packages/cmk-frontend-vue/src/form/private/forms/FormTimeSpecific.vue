@@ -74,6 +74,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     ><CmkSpace size="small" /><CmkHelpText :help="untranslated(spec.help)" />
     <br />
     <CmkSpace size="small" direction="vertical" />
+    <FormValidation :validation="localValidation"></FormValidation>
     <template v-if="timespecificActive">
       <FormEditDispatcher
         v-model:data="data"
@@ -89,6 +90,5 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       />
     </template>
     <br />
-    <FormValidation :validation="localValidation"></FormValidation>
   </span>
 </template>

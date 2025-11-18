@@ -16,7 +16,7 @@ const props = defineProps<{
     v-if="props.validation !== undefined && props.validation.length > 0"
     class="cmk-inline-validation"
   >
-    <CmkIcon name="alert-crit" variant="inline" size="large" />
+    <CmkIcon name="inline-error" variant="inline" size="large" />
     <div>
       <span v-for="message in props.validation" :key="message">{{ message }}</span>
     </div>
@@ -28,14 +28,11 @@ div.cmk-inline-validation {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-top: var(--spacing);
-  padding: 8px 12px;
-  background-color: var(--error-msg-bg-color);
-  border-radius: var(--border-radius);
+  padding: 4px 12px 4px 0;
+  color: var(--inline-error-text-color);
 
   div {
     display: inline-block;
-    margin-left: 7px;
   }
 
   span {

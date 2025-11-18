@@ -59,27 +59,52 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
 </script>
 
 <template>
+  <FormValidation :validation="validation"></FormValidation>
   <div class="form-tuple" :class="CLASS_LOOKUP[spec.layout]">
     <div v-for="(element, index) in spec.elements" :key="index" class="form-tuple__item">
       <div v-if="spec.show_titles" class="form-tuple__label">
-        <FormLabel v-if="element.title">{{ capitalizeFirstLetter(element.title) }}</FormLabel>
+        <FormLabel v-if="element.title && spec.layout !== 'float'">{{
+          capitalizeFirstLetter(element.title)
+        }}</FormLabel>
+        <CmkSpace size="small" />
+        <CmkHelpText :help="untranslated(element.help)" />
         <CmkSpace
           v-if="spec.show_titles && element.title && spec.layout !== 'horizontal_titles_top'"
           size="small"
         />
         <br v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'" />
       </div>
+      <div
+        v-if="!spec.show_titles && spec.layout !== 'horizontal_titles_top'"
+        class="form-tuple__label"
+      >
+        <CmkHelpText :help="untranslated(element.help)" />
+        <CmkSpace size="small" />
+      </div>
       <div class="form-tuple__content">
+        <div
+          v-if="!spec.show_titles && spec.layout === 'horizontal_titles_top'"
+          class="form-tuple__horizontal-help"
+        >
+          <div class="form-tuple__label">
+            <CmkHelpText :help="untranslated(element.help)" />
+          </div>
+          <CmkSpace size="small" />
+          <FormEditDispatcher
+            v-model:data="data[index]"
+            :spec="element"
+            :backend-validation="elementValidation[index]!"
+          />
+        </div>
         <FormEditDispatcher
+          v-else
           v-model:data="data[index]"
           :spec="element"
           :backend-validation="elementValidation[index]!"
         />
-        <CmkHelpText :help="untranslated(element.help)" />
       </div>
     </div>
   </div>
-  <FormValidation :validation="validation"></FormValidation>
 </template>
 
 <style scoped>
@@ -96,7 +121,7 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
 /* Horizontal layout - titles beside content */
 .form-tuple.form-tuple--horizontal .form-tuple__item {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
 }
 
 .form-tuple.form-tuple--vertical .form-tuple__item {
@@ -104,13 +129,42 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
   margin-bottom: var(--spacing-half);
 }
 
+.form-tuple__horizontal-help .form-tuple__label {
+  flex-shrink: 0;
+  align-content: end;
+  padding-bottom: 3px;
+}
+
+/* Float layout */
+.form-tuple.form-tuple--float {
+  flex-direction: row;
+}
+
+.form-tuple.form-tuple--float .form-tuple__label {
+  flex-shrink: 0;
+  align-content: end;
+  padding-bottom: 3px;
+}
+
+.form-tuple.form-tuple--float .form-tuple__item {
+  display: flex;
+  align-items: flex-end;
+}
+
 .form-tuple.form-tuple--horizontal .form-tuple__item:not(:first-child),
 .form-tuple.form-tuple--horizontal-titles-top .form-tuple__item:not(:first-child) {
   margin-left: var(--spacing);
 }
 
+.form-tuple__horizontal-help {
+  display: flex;
+  align-items: flex-end;
+}
+
 .form-tuple.form-tuple--horizontal .form-tuple__label {
   flex-shrink: 0;
+  align-content: end;
+  padding-bottom: 3px;
 }
 
 /* Vertical layout */
@@ -124,18 +178,11 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
 
 .form-tuple.form-tuple--vertical .form-tuple__label {
   flex-shrink: 0;
+  align-content: end;
+  padding-bottom: 3px;
 }
 
 .form-tuple.form-tuple--vertical .form-tuple__content {
   flex: 1;
-}
-
-/* Float layout */
-.form-tuple.form-tuple--float {
-  flex-direction: row;
-}
-
-.form-tuple.form-tuple--float .form-tuple__label {
-  display: none;
 }
 </style>

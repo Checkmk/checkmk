@@ -40,39 +40,60 @@ const componentId = useId()
 </script>
 
 <template>
-  <template v-if="props.spec.label">
-    <FormLabel :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </FormLabel>
-    <FormRequired :spec="props.spec" :space="'after'" />
-  </template>
-  <template v-if="spec.autocompleter">
-    <div class="form-string--dropdown-container">
-      <FormAutocompleter
-        :id="componentId"
-        v-model="value"
-        class="form-string--dropdown"
-        :autocompleter="spec.autocompleter"
-        :placeholder="untranslated(spec.input_hint ?? '')"
-        :label="spec.label || ''"
-        :start-of-group="true"
-      /><CmkDropdownButton group="end" @click="value = ''">
-        <X class="form-string__button-clear-x" />
-      </CmkDropdownButton>
+  <div class="form-string__validation-wrapper">
+    <div class="form-string__label">
+      <template v-if="props.spec.label">
+        <FormLabel :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </FormLabel>
+        <FormRequired :spec="props.spec" :space="'after'" />
+      </template>
     </div>
-    <FormValidation :validation="validation"></FormValidation>
-  </template>
-  <CmkInput
-    v-else
-    :id="componentId"
-    v-model="value"
-    :type="'text'"
-    :placeholder="untranslated(spec.input_hint || '')"
-    :aria-label="untranslated(spec.label || spec.title || '')"
-    :field-size="props.spec.field_size"
-    :external-errors="validation"
-  />
+    <template v-if="spec.autocompleter">
+      <div class="form-string__autocomplete-wrapper">
+        <FormValidation :validation="validation"></FormValidation>
+        <div class="form-string--dropdown-container">
+          <FormAutocompleter
+            :id="componentId"
+            v-model="value"
+            class="form-string--dropdown"
+            :autocompleter="spec.autocompleter"
+            :placeholder="untranslated(spec.input_hint ?? '')"
+            :label="spec.label || ''"
+            :start-of-group="true"
+          /><CmkDropdownButton group="end" @click="value = ''">
+            <X class="form-string__button-clear-x" />
+          </CmkDropdownButton>
+        </div>
+      </div>
+    </template>
+    <CmkInput
+      v-else
+      :id="componentId"
+      v-model="value"
+      :type="'text'"
+      :placeholder="untranslated(spec.input_hint || '')"
+      :aria-label="untranslated(spec.label || spec.title || '')"
+      :field-size="props.spec.field_size"
+      :external-errors="validation"
+    />
+  </div>
 </template>
 
 <style scoped>
+.form-string__validation-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.form-string__label {
+  display: flex;
+  align-items: flex-end;
+}
+
+.form-string__autocomplete-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
 .form-string__button-clear-x {
   width: 13px;
 }

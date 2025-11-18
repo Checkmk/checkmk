@@ -31,18 +31,33 @@ const componentId = useId()
 </script>
 
 <template>
-  <template v-if="props.spec.label">
-    <FormLabel :for="componentId"
-      >{{ props.spec.label }}
-      <CmkSpace size="small" />
-    </FormLabel>
-    <FormRequired :spec="props.spec" :space="'after'" />
-  </template>
-  <CmkInput
-    :id="componentId"
-    v-model="value"
-    :type="'date'"
-    :aria-label="props.spec.label || props.spec.title"
-    :external-errors="validation"
-  />
+  <div class="form-date-picker__validation-wrapper">
+    <div class="form-date-picker__label">
+      <template v-if="props.spec.label">
+        <FormLabel :for="componentId"
+          >{{ props.spec.label }}
+          <CmkSpace size="small" />
+        </FormLabel>
+        <FormRequired :spec="props.spec" :space="'after'" />
+      </template>
+    </div>
+    <CmkInput
+      :id="componentId"
+      v-model="value"
+      :type="'date'"
+      :aria-label="props.spec.label || props.spec.title"
+      :external-errors="validation"
+    />
+  </div>
 </template>
+<style scoped>
+.form-date-picker__validation-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.form-date-picker__label {
+  display: flex;
+  align-items: flex-end;
+}
+</style>

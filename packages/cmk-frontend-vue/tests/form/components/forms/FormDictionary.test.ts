@@ -131,24 +131,9 @@ test('FormDictionary render backend validation message of children', async () =>
       ]
     }
   })
+  screen.getByText('Backend error message')
 
   await screen.findByDisplayValue('other_value')
-
-  screen.getByText('Backend error message')
-})
-
-test('FormDictionary renders its own backend validation message', async () => {
-  render(FormEdit, {
-    props: {
-      spec,
-      data: { bar: 'some_value' },
-      backendValidation: [
-        { location: [], message: 'Backend error message', replacement_value: null }
-      ]
-    }
-  })
-
-  screen.getByText('Backend error message')
 })
 
 test('FormDictionary renders required only once depending on label presence', async () => {

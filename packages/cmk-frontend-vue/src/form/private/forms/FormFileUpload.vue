@@ -37,6 +37,7 @@ const componentId = useId()
 </script>
 
 <template>
+  <FormValidation :validation="validation"></FormValidation>
   <span>
     <input
       v-if="value.file_name === null"
@@ -49,7 +50,6 @@ const componentId = useId()
       <CmkButton @click="value.file_name = null">{{ spec.i18n.replace_file }}</CmkButton>
       <FormLabel class="form-file-upload__filename"> {{ value.file_name }}</FormLabel>
     </div>
-    <FormValidation :validation="validation"></FormValidation>
   </span>
 </template>
 

@@ -32,6 +32,7 @@ export const simpleIcons = [
   'save-to-services',
   'insertdate',
   'alert-crit',
+  'inline-error',
   'alert-warn',
   'alert-up',
   'about-checkmk',

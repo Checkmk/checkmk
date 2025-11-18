@@ -42,13 +42,20 @@ const componentId = useId()
 </script>
 
 <template>
+  <FormValidation :validation="validation"></FormValidation>
   <input
     :id="componentId"
     v-model="password"
     :aria-label="props.spec.title"
     type="password"
     :placeholder="'******'"
+    :class="{ 'form-simple-password__validation-error': validation.length > 0 }"
   />
   <label :for="componentId" />
-  <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.form-simple-password__validation-error {
+  border: 1px solid var(--inline-error-border-color);
+}
+</style>

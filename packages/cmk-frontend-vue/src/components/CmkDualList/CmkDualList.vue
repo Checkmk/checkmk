@@ -102,6 +102,7 @@ const elementCounter = computed(() => props.elements.length)
 </script>
 
 <template>
+  <FormValidation :validation="validation" />
   <div class="cmk-dual-list__container" role="group" :aria-label="title">
     <div class="cmk-dual-list__body">
       <div class="cmk-dual-list__single-list">
@@ -166,7 +167,6 @@ const elementCounter = computed(() => props.elements.length)
       </div>
     </div>
   </div>
-  <FormValidation :validation="validation" />
 </template>
 
 <style scoped>

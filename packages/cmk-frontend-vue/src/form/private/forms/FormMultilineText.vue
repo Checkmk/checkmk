@@ -38,13 +38,20 @@ const style = computed(() => {
       <FormLabel> {{ spec.label }}</FormLabel
       ><br />
     </div>
+    <FormValidation :validation="validation"></FormValidation>
     <textarea
       v-model="value"
       :style="style"
       :placeholder="spec.input_hint || ''"
       :aria-label="spec.label || spec.title"
+      :class="{ 'form-multiline-text__validation-error': validation.length > 0 }"
       rows="4"
     />
-    <FormValidation :validation="validation"></FormValidation>
   </div>
 </template>
+
+<style scoped>
+.form-multiline-text__validation-error {
+  border: 1px solid var(--inline-error-border-color);
+}
+</style>

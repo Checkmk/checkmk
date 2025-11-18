@@ -86,6 +86,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     role="group"
   >
     <tbody>
+      <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
       <tr v-for="group in groups" :key="`${componentId}.${group.groupKey}`">
         <td class="form-two-column-dictionary__dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
@@ -141,7 +142,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     </tbody>
   </table>
   <span v-else>{{ spec.no_elements_text }}</span>
-  <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
 </template>
 
 <style scoped>

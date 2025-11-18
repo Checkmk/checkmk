@@ -100,6 +100,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
+  <FormValidation :validation="validation" />
   <div role="group" :aria-label="spec.title" :class="`form-list-of-strings--${spec.layout}`">
     <div
       v-for="(_, index) in backendData"
@@ -114,10 +115,15 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       />
     </div>
   </div>
-  <FormValidation :validation="validation" />
 </template>
 
 <style scoped>
+.form-list-of-strings__element {
+  margin-bottom: 6px;
+  display: flex;
+  flex-direction: row;
+}
+
 .form-list-of-strings--horizontal,
 .form-list-of-strings--vertical {
   display: flex;
@@ -127,6 +133,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 .form-list-of-strings--horizontal {
   flex-flow: row wrap;
+  align-items: end;
 }
 
 .form-list-of-strings--vertical {

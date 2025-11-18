@@ -78,6 +78,7 @@ const elementRequired = computed(() => {
 </script>
 
 <template>
+  <FormValidation :validation="validation"></FormValidation>
   <CmkList
     :items-props="{ itemData: data }"
     :try-delete="
@@ -119,5 +120,4 @@ const elementRequired = computed(() => {
     :label="untranslated(spec.i18n.select_condition_group_to_add)"
     @update:selected-option="addElement"
   />
-  <FormValidation :validation="validation"></FormValidation>
 </template>

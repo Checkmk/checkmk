@@ -115,6 +115,7 @@ const deleteItem = (index: number) => {
 </script>
 
 <template>
+  <FormValidation :validation="validation"></FormValidation>
   <CmkList
     :items-props="{ itemData: keyValuePairs }"
     orientation="vertical"
@@ -146,7 +147,6 @@ const deleteItem = (index: number) => {
     />
   </div>
   <div v-else class="form-labels__error">{{ props.spec.i18n.max_labels_reached }}</div>
-  <FormValidation :validation="validation"></FormValidation>
   <div v-if="error" class="form-labels__error">{{ error }}</div>
 </template>
 
@@ -154,7 +154,7 @@ const deleteItem = (index: number) => {
 .form-labels__error {
   margin: 0;
   padding: 5px;
-  background-color: rgb(247 65 65);
+  background-color: var(--error-msg-bg-color);
   color: var(--font-color);
   display: block;
   border-radius: 4px;

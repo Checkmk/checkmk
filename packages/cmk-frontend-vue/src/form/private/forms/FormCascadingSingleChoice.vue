@@ -124,6 +124,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
+  <FormValidation :validation="validation"></FormValidation>
   <div
     class="form-cascading-single-choice"
     :class="{ 'form-cascading-single-choice__horizontal': props.spec.layout === 'horizontal' }"
@@ -174,7 +175,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
             :backend-validation="elementValidation"
           />
         </template>
-        <FormValidation :validation="validation"></FormValidation>
       </FormIndent>
     </div>
   </div>

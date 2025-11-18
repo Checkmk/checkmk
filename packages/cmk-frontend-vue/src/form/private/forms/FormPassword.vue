@@ -95,6 +95,7 @@ const passwordStoreOptions = computed(() => {
 </script>
 
 <template>
+  <FormValidation :validation="validation"></FormValidation>
   <CmkDropdown
     v-model:selected-option="passwordType"
     :options="{ type: 'fixed', suggestions: passwordTypeOptions }"
@@ -107,6 +108,7 @@ const passwordStoreOptions = computed(() => {
       :aria-label="_t('explicit password')"
       type="password"
       :placeholder="'******'"
+      :class="{ 'form-password__validation-error': validation.length > 0 }"
     />
   </template>
   <template v-if="data[0] === 'stored_password'">
@@ -121,5 +123,10 @@ const passwordStoreOptions = computed(() => {
       required
     />
   </template>
-  <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.form-password__validation-error {
+  border: 1px solid var(--inline-error-border-color);
+}
+</style>

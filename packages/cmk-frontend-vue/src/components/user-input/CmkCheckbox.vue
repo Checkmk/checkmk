@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
+import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 import useId from '@/lib/useId'
@@ -27,9 +28,18 @@ interface CmkCheckboxProps {
   dots?: boolean
 }
 
-const { padding = 'both', label, disabled = false } = defineProps<CmkCheckboxProps>()
+const {
+  padding = 'both',
+  label,
+  disabled = false,
+  externalErrors
+} = defineProps<CmkCheckboxProps>()
 
 const id = useId()
+
+const hasValidationErrors = computed(() => {
+  return externalErrors && externalErrors.length > 0
+})
 </script>
 
 <template>
@@ -46,6 +56,7 @@ const id = useId()
         :id="id"
         v-model:checked="value"
         class="cmk-checkbox__button"
+        :class="{ 'cmk-checkbox__button--error': hasValidationErrors }"
         :disabled="disabled"
       >
         <CheckboxIndicator class="cmk-checkbox__indicator">
@@ -61,9 +72,9 @@ const id = useId()
         <CmkLabel :for="id" :help="help" :dots="dots">
           <CmkHtml class="cmk-checkbox__label" :html="label" /> </CmkLabel
       ></template>
+      <CmkInlineValidation :validation="externalErrors"></CmkInlineValidation>
     </div>
   </span>
-  <CmkInlineValidation :validation="externalErrors"></CmkInlineValidation>
 </template>
 
 <style scoped>
@@ -78,6 +89,7 @@ span {
 
 .cmk-checkbox {
   display: flex;
+  align-items: center;
 
   &.cmk-checkbox__pad-top {
     padding-top: 2px;
@@ -89,6 +101,7 @@ span {
 
   .cmk-checkbox__label {
     cursor: pointer;
+    padding-right: 2px;
   }
 
   &.cmk-checkbox__disabled {
@@ -138,6 +151,10 @@ span {
 
   .cmk-checkbox.cmk-checkbox__disabled & > .cmk-checkbox__label {
     cursor: not-allowed;
+  }
+
+  &.cmk-checkbox__button--error {
+    border: 1px solid var(--inline-error-border-color);
   }
 }
 </style>

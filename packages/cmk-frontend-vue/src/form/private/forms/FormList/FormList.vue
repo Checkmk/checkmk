@@ -52,6 +52,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 <template>
   <span>
+    <FormValidation :validation="validation"></FormValidation>
     <CmkList
       :items-props="{ itemData: data, itemElementValidation: elementValidation }"
       :drag-callbacks="props.spec.editable_order ? { onReorder: reorderElements } : null"
@@ -73,6 +74,5 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         />
       </template>
     </CmkList>
-    <FormValidation :validation="validation"></FormValidation>
   </span>
 </template>

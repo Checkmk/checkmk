@@ -91,6 +91,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
+  <FormValidation :validation="validation"></FormValidation>
   <CmkList
     :items-props="{ itemData: data, itemElementValidation: elementValidation }"
     :add="{
@@ -111,5 +112,4 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       />
     </template>
   </CmkList>
-  <FormValidation :validation="validation"></FormValidation>
 </template>

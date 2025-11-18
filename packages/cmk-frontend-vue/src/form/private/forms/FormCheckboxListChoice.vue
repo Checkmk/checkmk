@@ -44,6 +44,7 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
 
 <template>
   <div role="listbox" :aria-label="spec.title">
+    <FormValidation :validation="validation"></FormValidation>
     <div
       v-for="element in props.spec.elements"
       :key="element.name"
@@ -57,8 +58,6 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
       />
     </div>
   </div>
-
-  <FormValidation :validation="validation"></FormValidation>
 </template>
 
 <style scoped>

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { cva } from 'class-variance-authority'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 import useId from '@/lib/useId'
@@ -70,6 +70,16 @@ immediateWatch(
     validation.value = dictionaryValidation
   }
 )
+props.spec.elements.forEach((element) => {
+  watch(
+    () => data.value[element.name],
+    () => {
+      if (elementValidation.value[element.name]?.length) {
+        elementValidation.value[element.name] = []
+      }
+    }
+  )
+})
 
 function indentRequired(
   element: FormSpec.DictionaryElement,
@@ -102,6 +112,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     role="group"
   >
     <tbody>
+      <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
       <tr v-for="group in groups" :key="`${componentId}.${group.groupKey}`">
         <td class="form-dictionary__dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
@@ -156,6 +167,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                 <FormIndent
                   v-if="dict_element.is_active"
                   :indent="indentRequired(dict_element.dict_config, group.layout)"
+                  :error="(elementValidation[dict_element.dict_config.name] || []).length > 0"
                 >
                   <FormEditDispatcher
                     v-model:data="data[dict_element.dict_config.name]"
@@ -171,7 +183,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     </tbody>
   </table>
   <span v-else>{{ spec.no_elements_text }}</span>
-  <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
 </template>
 
 <style scoped>

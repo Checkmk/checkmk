@@ -31,7 +31,8 @@ const {
   startOfGroup = false,
   width,
   options,
-  label
+  label,
+  formValidation = false
 } = defineProps<{
   options: Suggestions
   inputHint?: TranslatedString
@@ -43,6 +44,7 @@ const {
   label: TranslatedString
   startOfGroup?: boolean
   width?: 'max' | 'wide' | 'default'
+  formValidation?: boolean
 }>()
 
 const vClickOutside = useClickOutside()
@@ -161,6 +163,7 @@ const truncatedButtonLabel = computed(() =>
       :value-is-selected="selectedOption !== null"
       :group="startOfGroup ? 'start' : 'no'"
       :width="width"
+      :class="{ 'cmk-dropdown__validation-error': formValidation }"
       @click="showSuggestions"
     >
       <span class="cmk-dropdown--text"
@@ -210,5 +213,9 @@ const truncatedButtonLabel = computed(() =>
       opacity: 0.4;
     }
   }
+}
+
+.cmk-dropdown__validation-error {
+  border: 1px solid var(--inline-error-border-color);
 }
 </style>

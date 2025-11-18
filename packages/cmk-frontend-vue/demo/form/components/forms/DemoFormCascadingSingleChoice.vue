@@ -119,6 +119,11 @@ const validation = computed((): ValidationMessages => {
         location: [],
         message: 'General Inline Error Message',
         replacement_value: ''
+      },
+      {
+        location: ['nestedChoice'],
+        message: 'Element Inline Error Message',
+        replacement_value: ''
       }
     ]
   } else {

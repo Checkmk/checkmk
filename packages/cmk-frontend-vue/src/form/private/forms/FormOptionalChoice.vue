@@ -63,6 +63,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <template>
   <CmkCheckbox v-model="checkboxValue" :label="untranslated(spec.i18n.label)" />
   <CmkHelpText :help="untranslated(spec.help)" />
+  <FormValidation :validation="localValidation"></FormValidation>
   <FormIndent v-if="data !== null">
     <FormEditDispatcher
       v-model:data="data"
@@ -71,7 +72,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     />
   </FormIndent>
   <FormIndent v-if="data === null">{{ spec.i18n.none_label }}</FormIndent>
-  <FormValidation :validation="localValidation"></FormValidation>
 </template>
 
 <style scoped>

@@ -4,15 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-const { indent = true } = defineProps<{
+const { indent = true, error = false } = defineProps<{
   indent?: boolean
+  error?: boolean
 }>()
 
 const LINE_OVERHANG = '5px'
 </script>
 
 <template>
-  <div :class="{ 'cmk-indent': indent }">
+  <div :class="{ 'cmk-indent': indent, 'cmk-indent--error': error && indent }">
     <slot />
   </div>
 </template>
@@ -34,5 +35,9 @@ const LINE_OVERHANG = '5px'
 .cmk-indent:empty {
   margin: 0;
   padding: 0;
+}
+
+.cmk-indent--error {
+  border-left-color: var(--inline-error-border-color);
 }
 </style>

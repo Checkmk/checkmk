@@ -42,23 +42,33 @@ const magnitudeOptions = computed(() => {
 </script>
 
 <template>
-  <FormLabel v-if="props.spec.label" :for="componentId">{{ props.spec.label }}</FormLabel>
-  <CmkSpace size="small" />
-  <input
-    :id="componentId"
-    v-model="value[0]"
-    :placeholder="spec.input_hint || ''"
-    class="form-data-size__number form-data-size__no-spinner"
-    step="any"
-    type="number"
-  />
-  <CmkSpace size="small" />
-  <CmkDropdown
-    v-model:selected-option="value[1]"
-    :options="{ type: 'fixed', suggestions: magnitudeOptions }"
-    :label="untranslated(spec.i18n.choose_unit)"
-  />
-  <FormValidation :validation="validation"></FormValidation>
+  <div class="form-data-size__layout">
+    <div class="form-data-size__label-column">
+      <FormLabel :for="componentId"> {{ props.spec.label }}<CmkSpace size="small" /> </FormLabel>
+    </div>
+    <CmkSpace size="small" />
+    <div class="form-data-size__validation-wrapper">
+      <FormValidation :validation="validation" />
+      <div class="form-single-choice__input-column--inner">
+        <input
+          :id="componentId"
+          v-model="value[0]"
+          :placeholder="spec.input_hint || ''"
+          class="form-data-size__number form-data-size__no-spinner"
+          :class="{ 'form-data-size__error': validation.length > 0 }"
+          step="any"
+          type="number"
+        />
+        <CmkSpace size="small" />
+        <CmkDropdown
+          v-model:selected-option="value[1]"
+          :options="{ type: 'fixed', suggestions: magnitudeOptions }"
+          :label="untranslated(spec.i18n.choose_unit)"
+          :form-validation="validation.length > 0"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -76,5 +86,30 @@ const magnitudeOptions = computed(() => {
 
 .form-data-size__no-spinner[type='number'] {
   appearance: textfield;
+}
+
+.form-data-size__error {
+  border: 1px solid var(--inline-error-border-color);
+}
+
+.form-data-size__layout {
+  display: flex;
+}
+
+.form-data-size__label-column {
+  flex-shrink: 0;
+  display: flex;
+  align-items: end;
+}
+
+.form-data-size__validation-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-data-size__input-column--inner {
+  display: flex;
+  align-items: center;
 }
 </style>

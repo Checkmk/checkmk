@@ -30,6 +30,6 @@ const fixedValue = computed(() => {
 </script>
 
 <template>
-  <FormLabel v-if="fixedValue">{{ fixedValue }}</FormLabel>
   <FormValidation v-if="fixedValue" :validation="validation"></FormValidation>
+  <FormLabel v-if="fixedValue">{{ fixedValue }}</FormLabel>
 </template>

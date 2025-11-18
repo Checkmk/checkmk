@@ -70,12 +70,40 @@ immediateWatch(
 </script>
 
 <template>
-  <input v-model="data" v-bind="$attrs" :class="propsCva({ type })" :type="type" step="any" />
-  <span v-if="unit"><CmkSpace size="small" />{{ unit }}</span>
-  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
+  <div class="cmk-input__wrapper">
+    <CmkInlineValidation :validation="validation"></CmkInlineValidation>
+    <div class="cmk-input__input-unit-container">
+      <input
+        v-model="data"
+        v-bind="$attrs"
+        :class="[propsCva({ type }), { 'cmk-input--error': validation.length > 0 }]"
+        :type="type"
+        step="any"
+      />
+      <div v-if="unit" class="cmk-input__unit"><CmkSpace size="small" />{{ unit }}</div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
+.cmk-input__wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.cmk-input__input-unit-container {
+  display: flex;
+  align-items: flex-end;
+}
+
+.cmk-input__unit {
+  padding-bottom: 3px;
+}
+
+.cmk-input--error {
+  border: 1px solid var(--inline-error-border-color);
+}
+
 input.cmk-input--number::-webkit-outer-spin-button,
 input.cmk-input--number::-webkit-inner-spin-button {
   appearance: none;

@@ -39,7 +39,6 @@ def register(page_registry: PageRegistry, autocompleter_registry_: Autocompleter
     autocompleter_registry_.register_autocompleter(
         "kubernetes_labels", kubernetes_labels_autocompleter
     )
-    autocompleter_registry_.register_autocompleter("azure_labels", azure_labels_autocompleter)
     autocompleter_registry_.register_autocompleter("tag_groups", tag_group_autocompleter)
     autocompleter_registry_.register_autocompleter("tag_groups_opt", tag_group_opt_autocompleter)
     autocompleter_registry_.register_autocompleter("label", label_autocompleter)
@@ -171,34 +170,6 @@ def kubernetes_labels_autocompleter(config: Config, value: str, params: dict) ->
         label_filter = encode_label_for_livestatus(
             column="labels",
             label=Label("cmk/kubernetes/object", object_type, False),
-        )
-        query = f"GET hosts\nColumns: labels\n{label_filter}"
-
-        query_result = sites_live.query_column(query)
-        label_values = set()
-        for element in query_result:
-            for label_key, label_value in element.items():
-                if label_key == label_name:
-                    label_values.add(label_value)
-        return label_values
-
-    return __live_query_to_choices(_query_callback, 200, value, params)
-
-
-def azure_labels_autocompleter(config: Config, value: str, params: dict) -> Choices:
-    filter_id = params["group_type"]
-    object_type = filter_id.removeprefix("azure_")
-    label_name = f"cmk/azure/{object_type}"
-
-    def _query_callback(sites_live: MultiSiteConnection) -> Collection[LivestatusColumn]:
-        """
-        we search for hosts having a certain label
-        ('cmk/azure/entity:{object_type}') and want a list of unique labels
-        values of labels with the key label_name ('cmk/azure/{object_type}')
-        """
-        label_filter = encode_label_for_livestatus(
-            column="labels",
-            label=Label("cmk/azure/entity", object_type, False),
         )
         query = f"GET hosts\nColumns: labels\n{label_filter}"
 

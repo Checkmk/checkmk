@@ -38,9 +38,7 @@ class AjaxDropdownFilter(Filter):
         sort_index: int,
         info: str,
         autocompleter: AutocompleterConfig,
-        query_filter: query_filters.TextQuery
-        | query_filters.KubernetesQuery
-        | query_filters.AzureQuery,
+        query_filter: query_filters.TextQuery | query_filters.KubernetesQuery,
         link_columns: list[ColumnName] | None = None,
         description: None | str | LazyString = None,
         is_show_more: bool = False,

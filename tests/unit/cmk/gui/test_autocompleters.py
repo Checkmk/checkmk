@@ -13,7 +13,6 @@ def test_builtin_autocompleters_registered() -> None:
         "add_to_dashboard_choices",
         "allgroups",
         "available_graph_templates",
-        "azure_labels",
         "check_cmd",
         "check_types",
         "config_hostname",

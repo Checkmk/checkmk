@@ -57,8 +57,9 @@ def _parse_install_date(install_date_str: str) -> float | None:
     # - 20170523
     # - 23-10-2013
     # - 5/23/2017
+    # - 10.16.2025
     # - 01ce83596afd20a7
-    for format_ in ["%Y%m%d", "%m/%d/%Y", "%d-%m-%Y"]:
+    for format_ in ["%Y%m%d", "%m/%d/%Y", "%d-%m-%Y", "%m.%d.%Y"]:
         try:
             return time.mktime(time.strptime(install_date_str, format_))
         except ValueError:

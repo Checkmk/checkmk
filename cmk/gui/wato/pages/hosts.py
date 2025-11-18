@@ -8,7 +8,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -236,10 +235,12 @@ class ABCHostMode(WatoMode, abc.ABC):
         if not self._is_cluster():
             return None
 
-        cluster_nodes = self._vs_cluster_nodes().from_html_vars("nodes")
-        self._vs_cluster_nodes().validate_value(cluster_nodes, "nodes")
-        if len(cluster_nodes) < 1:
+        cluster_nodes_str = self._vs_cluster_nodes().from_html_vars("nodes")
+        self._vs_cluster_nodes().validate_value(cluster_nodes_str, "nodes")
+        if len(cluster_nodes_str) < 1:
             raise MKUserError("nodes_0", _("The cluster must have at least one node"))
+
+        cluster_nodes = [HostName(node) for node in cluster_nodes_str]
 
         # Fake a cluster host in order to get calculated tag groups via effective attributes...
         cluster_computed_datasources = cmk.utils.tags.compute_datasources(
@@ -483,7 +484,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         ):
             quick_setup_locked_warning(locked_by, "host")
 
-    def _vs_cluster_nodes(self):
+    def _vs_cluster_nodes(self) -> ListOfStrings:
         return ListOfStrings(
             title=_("Nodes"),
             valuespec=ConfigHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
@@ -494,7 +495,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
     @abc.abstractmethod
-    def _vs_host_name(self):
+    def _vs_host_name(self) -> ValueSpec:
         raise NotImplementedError()
 
 
@@ -684,7 +685,7 @@ class ModeEditHost(ABCHostMode):
             "use_dns_cache",
         )
 
-    def _vs_host_name(self):
+    def _vs_host_name(self) -> FixedValue:
         return FixedValue(
             value=self._host.name(),
             title=_("Host name"),
@@ -875,12 +876,12 @@ class CreateHostMode(ABCHostMode):
 
     @classmethod
     @abc.abstractmethod
-    def _host_type_name(cls):
+    def _host_type_name(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def _verify_host_type(cls, host):
+    def _verify_host_type(cls, host: Host) -> None:
         raise NotImplementedError()
 
     def _from_vars(self) -> None:
@@ -990,7 +991,7 @@ class CreateHostMode(ABCHostMode):
         ):
             quick_setup_duplication_warning(locked_by, "host")
 
-    def _vs_host_name(self):
+    def _vs_host_name(self) -> ValueSpec:
         return Hostname(
             title=_("Host name"),
         )
@@ -1045,11 +1046,11 @@ class ModeCreateHost(CreateHostMode):
         )
 
     @classmethod
-    def _host_type_name(cls):
+    def _host_type_name(cls) -> str:
         return "host"
 
     @classmethod
-    def _verify_host_type(cls, host):
+    def _verify_host_type(cls, host: Host) -> None:
         if host.is_cluster():
             raise MKGeneralException(_("Can not clone a cluster host as regular host"))
 
@@ -1084,11 +1085,11 @@ class ModeCreateCluster(CreateHostMode):
         )
 
     @classmethod
-    def _host_type_name(cls):
+    def _host_type_name(cls) -> str:
         return "cluster"
 
     @classmethod
-    def _verify_host_type(cls, host):
+    def _verify_host_type(cls, host: Host) -> None:
         if not host.is_cluster():
             raise MKGeneralException(_("Can not clone a regular host as cluster host"))
 

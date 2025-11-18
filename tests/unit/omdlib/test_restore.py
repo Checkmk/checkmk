@@ -143,12 +143,48 @@ def _merge_directories(dirs_one: Iterable[Directory], dirs_two: Iterable[Directo
             frozenset(
                 {
                     Directory(
-                        name="jaeger",
-                        files=frozenset({File("test", content=b"abc")}),
+                        name="etc",
+                        files=frozenset(
+                            {File("environment", content=b"# Custom environment variables\n")}
+                        ),
                     ),
                     Directory(
                         name="var",
                         files=frozenset({File("rand.txt", content=b"abc")}),
+                    ),
+                }
+            ),
+            frozenset(),
+            frozenset(
+                {
+                    Directory(
+                        name="var",
+                        directories=frozenset(
+                            {
+                                Directory(
+                                    name="clickhouse-server",
+                                    files=frozenset({File("data", content=b"abc")}),
+                                )
+                            }
+                        ),
+                    ),
+                    Directory(name=".restore_working_dir"),
+                }
+            ),
+        ),
+        (
+            frozenset(
+                {
+                    Directory(
+                        name="etc",
+                        directories=frozenset(
+                            {
+                                Directory(
+                                    name="jaeger",
+                                    files=frozenset({File("data", content=b"abc")}),
+                                )
+                            }
+                        ),
                     ),
                 }
             ),

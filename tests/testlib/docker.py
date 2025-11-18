@@ -74,10 +74,20 @@ def copy_to_container(
 
 
 def get_container_ip(c: docker.models.containers.Container) -> str:
-    """Return the primary IP address for a given container name."""
-    output = f"{c.attrs['NetworkSettings']['IPAddress']}" or "127.0.0.1"
+    """Return the primary IP address for a given container."""
+    network_settings = c.attrs["NetworkSettings"]
+    container_ip = network_settings.get(
+        "IPAddress",
+        next(
+            (
+                network_settings["Networks"][network].get("IPAddress")
+                for network in network_settings.get("Networks", [])
+            ),
+            "127.0.0.1",
+        ),
+    )
 
-    return output
+    return container_ip
 
 
 def send_to_container(c: docker.models.containers.Container, text: str) -> None:

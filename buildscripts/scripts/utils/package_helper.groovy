@@ -37,7 +37,7 @@ def dependency_paths_mapping() {
             "agents",
             "non-free/packages/cmk-update-agent",
         ],
-        "build-mk-oracle": [
+        "build-mk-oracle-aix-solaris": [
             "packages/mk-oracle",
             "requirements/rust/host"
         ],
@@ -92,7 +92,6 @@ def provide_agent_binaries(Map args) {
             /// no Linux agent updaters for community edition..
             condition: true, // edition != "community",  // FIXME!
             dependency_paths_hash: all_dependency_paths_hashes["build-linux-agent-updater"],
-            additional_build_params: [],
             install_cmd: """\
                 # check-mk-agent-*.{deb,rpm}
                 cp *.deb *.rpm ${checkout_dir}/agents/
@@ -106,23 +105,9 @@ def provide_agent_binaries(Map args) {
         ],
         "build-mk-oracle-aix-solaris": [
             relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
-            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
-            additional_build_params: [],
+            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle-aix-solaris"],
             install_cmd: """\
                 cp mk-oracle.{aix,solaris} ${checkout_dir}/cmk/plugins/oracle/agents/
-                """.stripIndent(),
-        ],
-        "build-mk-oracle-rhel8": [
-            relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package",
-            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
-            additional_build_params: [
-                PACKAGE_PATH: "packages/mk-oracle",
-                DISTRO: "almalinux-8",
-                FILE_ARCHIVING_PATTERN: "mk-oracle*",
-                COMMAND_LINE: "bazel build --cmk_version=${args.cmk_version} mk-oracle; cp \$(bazel info workspace)/\$(bazel cquery --output=files mk-oracle) \$(bazel info workspace)"
-            ],
-            install_cmd: """\
-                cp mk-oracle ${checkout_dir}/omd/packages/mk-oracle/mk-oracle.rhel8
                 """.stripIndent(),
         ],
         "winagt-build": [
@@ -134,7 +119,6 @@ def provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
-            additional_build_params: [],
             install_cmd: """\
                 cp \
                     mk-oracle.exe \
@@ -169,7 +153,6 @@ def provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build-modules"],
-            additional_build_params: [],
             install_cmd: """\
                 cp \
                     ./*.cab \
@@ -206,7 +189,7 @@ def provide_agent_binaries(Map args) {
                             CIPARAM_PATH_HASH: details.dependency_paths_hash,
                             VERSION: args.version,
                             DISABLE_CACHE: args.disable_cache,
-                        ] + details.additional_build_params,
+                        ],
                         build_params_no_check: [
                             CUSTOM_GIT_REF: effective_git_ref,
                             CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
@@ -219,7 +202,7 @@ def provide_agent_binaries(Map args) {
                             CUSTOM_GIT_REF: effective_git_ref,
                             VERSION: args.version,
                             DISABLE_CACHE: args.disable_cache,
-                        ] + details.additional_build_params,
+                        ],
                         build_params_no_check: [
                             CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                             CIPARAM_BISECT_COMMENT: args.bisect_comment,

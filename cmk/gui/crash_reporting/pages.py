@@ -164,6 +164,14 @@ class PageCrash(Page):
         else:
             details = ReportSubmitDetails(name="", mail="")
 
+        html.show_warning(
+            _(
+                "Crash reports might contain sensitive information such as secrets. "
+                "It is advised that you manually review the content of this report and "
+                "ensure any additional sensitive data is removed before sharing the crash report."
+            )
+        )
+
         if report.info["crash_type"] == "gui":
             html.show_error("<b>{}:</b> {}".format(_("Internal error"), report.info["exc_value"]))
             html.p(
@@ -388,12 +396,8 @@ class PageCrash(Page):
             for key in vars_
         ):
             html.show_warning(
-                HTML.with_escaping(
-                    _(
-                        "Checkmk has identified and attempted to redact sensitive information in the crash "
-                        "report. It is advised that you manually review the content of this report and "
-                        "ensure any additional sensitive data is removed before sharing the crash report."
-                    )
+                _(
+                    "Checkmk has identified and attempted to redact sensitive information in the crash report."
                 )
             )
 

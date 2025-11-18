@@ -437,6 +437,7 @@ test-unit-all-coverage:
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not skip_on_code_coverage" \
 		$(BAZEL_COVERAGE_ARGS) ; \
+	    export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path) && \
 		genhtml --title "Checkmk Unit Test Coverage"  \
 			--quiet \
 			--output results/coverage bazel-out/_coverage/_coverage_report.dat

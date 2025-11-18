@@ -86,5 +86,6 @@ bazel_env(
         "osslsigncode": "@osslsigncode",
         "pnpm": "@pnpm",
         "uv": "@multitool//tools/uv",
+        "genhtml": "@lcov//:genhtml",
     },
 )

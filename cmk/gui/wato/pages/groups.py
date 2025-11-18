@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -564,7 +563,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
             self._vs_nagvis_maps().render_input("nagvis_maps", self.group.get("nagvis_maps", []))
 
     def _vs_inventory_paths_and_keys(self) -> CascadingDropdown:
-        def vs_choices(title):
+        def vs_choices(title: str) -> CascadingDropdown:
             return CascadingDropdown(
                 title=title,
                 choices=[

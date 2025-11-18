@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Callable, Sequence
 from typing import Any
@@ -43,7 +42,7 @@ class _GroupSelection(ElementSelection):
         self._choices = choices
         self._no_selection = no_selection
 
-    def get_elements(self):
+    def get_elements(self) -> dict[str, str]:
         elements = list(self._choices())
         if self._no_selection:
             # Beware: ElementSelection currently can only handle string

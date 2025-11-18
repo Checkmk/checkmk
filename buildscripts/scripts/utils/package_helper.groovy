@@ -119,7 +119,10 @@ def provide_agent_binaries(Map args) {
                 PACKAGE_PATH: "packages/mk-oracle",
                 DISTRO: "almalinux-8",
                 FILE_ARCHIVING_PATTERN: "mk-oracle*",
-                COMMAND_LINE: "bazel build --cmk_version=${args.cmk_version} mk-oracle; cp \$(bazel info workspace)/\$(bazel cquery --output=files mk-oracle) \$(bazel info workspace)"
+                COMMAND_LINE: """\
+                    bazel build --cmk_version=${args.cmk_version} mk-oracle;
+                    cp \$(bazel info workspace)/\$(bazel cquery --output=files mk-oracle) \$(bazel info workspace)
+                    """
             ],
             install_cmd: """\
                 cp mk-oracle ${checkout_dir}/omd/packages/mk-oracle/mk-oracle.rhel8

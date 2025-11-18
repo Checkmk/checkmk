@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Handling of the audit logfiles"""
@@ -396,7 +395,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         if self._request_data.is_ok() and self._request_data.ok.selected_filename:
             self._show_audit_log()
 
-    def _fs_file_selection(self):
+    def _fs_file_selection(self) -> SingleChoiceExtended[str]:
         return SingleChoiceExtended(
             title=Title("File selection"),
             elements=self._get_audit_log_files(),
@@ -442,7 +441,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         else:
             self._display_multiple_days_audit_log(audit)
 
-    def _display_daily_audit_log(self, log):
+    def _display_daily_audit_log(self, log: list[AuditLogStore.Entry]) -> None:
         log, times = self._get_next_daily_paged_log(log)
 
         self._display_page_controls(*times)
@@ -454,7 +453,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
         self._display_page_controls(*times)
 
-    def _display_multiple_days_audit_log(self, log):
+    def _display_multiple_days_audit_log(self, log: list[AuditLogStore.Entry]) -> None:
         log = self._get_multiple_days_log_entries(log)
 
         if display_options.enabled(display_options.T):
@@ -465,7 +464,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
         self._display_log(log)
 
-    def _display_log(self, log):
+    def _display_log(self, log: list[AuditLogStore.Entry]) -> None:
         with table_element(
             css="data wato auditlog audit", limit=None, sortable=False, searchable=False
         ) as table:
@@ -503,7 +502,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     )
                     table.cell(_("Details"), diff_text)
 
-    def _get_next_daily_paged_log(self, log):
+    def _get_next_daily_paged_log(
+        self, log: list[AuditLogStore.Entry]
+    ) -> tuple[list[AuditLogStore.Entry], tuple[int, int, int | None, int | None]]:
         start = self._get_start_date()
 
         while True:
@@ -513,7 +514,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             # No entries today, but log not empty -> go back in time
             start -= 24 * 3600
 
-    def _get_start_date(self):
+    def _get_start_date(self) -> int:
         if self._options["start"] == "now":
             st = time.localtime()
             return int(
@@ -521,7 +522,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             )
         return int(self._options["start"][1])
 
-    def _get_multiple_days_log_entries(self, log):
+    def _get_multiple_days_log_entries(
+        self, log: list[AuditLogStore.Entry]
+    ) -> list[AuditLogStore.Entry]:
         start_time = self._get_start_date() + 86399
         end_time = start_time - ((self._options["display"][1] * 86400) + 86399)
 
@@ -533,7 +536,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
         return logs
 
-    def _paged_log_from(self, log, start):
+    def _paged_log_from(
+        self, log: list[AuditLogStore.Entry], start: int
+    ) -> tuple[list[AuditLogStore.Entry], tuple[int, int, int | None, int | None]]:
         start_time, end_time = self._get_timerange(start)
         previous_log_time = None
         next_log_time = None
@@ -569,10 +574,16 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             next_log_time,
         )
 
-    def _display_page_controls(self, start_time, end_time, previous_log_time, next_log_time):
+    def _display_page_controls(
+        self,
+        start_time: int,
+        end_time: int,
+        previous_log_time: int | None,
+        next_log_time: int | None,
+    ) -> None:
         html.open_div(class_="paged_controls")
 
-        def time_url_args(t):
+        def time_url_args(t: int) -> list[tuple[str, int | str | None]]:
             return [
                 ("audit_options_start_1_day", time.strftime("%d", time.localtime(t))),
                 ("audit_options_start_1_month", time.strftime("%m", time.localtime(t))),
@@ -621,7 +632,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
         html.close_div()
 
-    def _get_timerange(self, t):
+    def _get_timerange(self, t: int) -> tuple[int, int]:
         st = time.localtime(int(t))
         start = int(
             time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8])))
@@ -629,7 +640,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         end = start + 86399
         return start, end
 
-    def _display_audit_log_options(self):
+    def _display_audit_log_options(self) -> None:
         if display_options.disabled(display_options.C):
             return
 
@@ -648,7 +659,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             html.close_div()
             html.hidden_fields()
 
-    def _show_audit_log_options_controls(self):
+    def _show_audit_log_options_controls(self) -> None:
         html.open_div(class_="side_popup_controls")
 
         html.open_div(class_="update_buttons")

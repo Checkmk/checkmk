@@ -47,6 +47,7 @@ def main() {
                         PACKAGE_PATH:  p.path,
                         SECRET_VARS: p.sec_vars.join(","),
                         COMMAND_LINE: p.command_line,
+                        DISTRO: "REFERENCE_IMAGE",
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

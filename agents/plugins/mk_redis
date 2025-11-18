@@ -90,7 +90,7 @@ main() {
     if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
         IS_DETECTED=true
         # find instances and remove entries like "*:6879", possible with docker container
-	DETECTED=$(pgrep -xa "(redis|valkey)-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ || /unixsocket:.*/ { print $3 }')
+        DETECTED=$(pgrep -xa "(redis|valkey)-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ || /unixsocket:.*/ { print $3 }')
 
         # add found redis instances
         for REDIS_INSTANCE in $DETECTED; do

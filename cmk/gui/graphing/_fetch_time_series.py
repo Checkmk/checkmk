@@ -23,39 +23,6 @@ from ._rrd import fetch_time_series_rrd
 from ._unit import user_specific_unit
 
 
-def _refine_augmented_time_series(
-    augmented_time_series: Sequence[AugmentedTimeSeries],
-    *,
-    graph_metric_title: str,
-    graph_metric_line_type: LineType | Literal["ref"],
-    graph_metric_color: str,
-    fade_odd_color: bool,
-) -> Iterator[AugmentedTimeSeries]:
-    multi = len(augmented_time_series) > 1
-    for i, ats in enumerate(augmented_time_series):
-        title = graph_metric_title
-        line_type = graph_metric_line_type
-        color = graph_metric_color
-        if ats.meta_data:
-            if multi:
-                title = f"{graph_metric_title} - {ats.meta_data.title}"
-                line_type = ats.meta_data.line_type
-            if ats.meta_data.color:
-                color = ats.meta_data.color
-
-        if i % 2 == 1 and fade_odd_color:
-            color = render_color(fade_color(parse_color(color), 0.3))
-
-        yield AugmentedTimeSeries(
-            time_series=ats.time_series,
-            meta_data=TimeSeriesMetaData(
-                title=title,
-                line_type=line_type,
-                color=color,
-            ),
-        )
-
-
 def fetch_augmented_time_series(
     registered_metrics: Mapping[str, RegisteredMetric],
     graph_recipe: GraphRecipe,
@@ -112,3 +79,36 @@ def fetch_augmented_time_series(
                 graph_metric_color=graph_metric.color,
                 fade_odd_color=graph_metric.operation.fade_odd_color(),
             )
+
+
+def _refine_augmented_time_series(
+    augmented_time_series: Sequence[AugmentedTimeSeries],
+    *,
+    graph_metric_title: str,
+    graph_metric_line_type: LineType | Literal["ref"],
+    graph_metric_color: str,
+    fade_odd_color: bool,
+) -> Iterator[AugmentedTimeSeries]:
+    multi = len(augmented_time_series) > 1
+    for i, ats in enumerate(augmented_time_series):
+        title = graph_metric_title
+        line_type = graph_metric_line_type
+        color = graph_metric_color
+        if ats.meta_data:
+            if multi:
+                title = f"{graph_metric_title} - {ats.meta_data.title}"
+                line_type = ats.meta_data.line_type
+            if ats.meta_data.color:
+                color = ats.meta_data.color
+
+        if i % 2 == 1 and fade_odd_color:
+            color = render_color(fade_color(parse_color(color), 0.3))
+
+        yield AugmentedTimeSeries(
+            time_series=ats.time_series,
+            meta_data=TimeSeriesMetaData(
+                title=title,
+                line_type=line_type,
+                color=color,
+            ),
+        )

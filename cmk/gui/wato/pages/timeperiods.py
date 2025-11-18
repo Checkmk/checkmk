@@ -9,7 +9,6 @@
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 
 """Modes for managing timeperiod definitions for the core"""
@@ -602,17 +601,17 @@ class ModeEditTimeperiod(WatoMode):
             validate=self._validate_id_and_alias,
         )
 
-    def _validate_id_and_alias(self, value, varprefix):
+    def _validate_id_and_alias(self, value: DictionaryModel, varprefix: str) -> None:
         self._validate_id(value["name"], "%s_p_name" % varprefix)
         self._validate_alias(value["name"], value["alias"], "%s_p_alias" % varprefix)
 
-    def _validate_id(self, value, varprefix):
+    def _validate_id(self, value: str, varprefix: str) -> None:
         if self._name is None and value in self._timeperiods:
             raise MKUserError(
                 varprefix, _("This name is already being used by another time period.")
             )
 
-    def _validate_alias(self, name, alias, varprefix):
+    def _validate_alias(self, name: str, alias: str, varprefix: str) -> None:
         unique, message = groups.is_alias_used("timeperiods", name, alias)
         if not unique:
             assert message is not None
@@ -796,7 +795,12 @@ class ModeEditTimeperiod(WatoMode):
         exceptions = []
         for exception_name, time_ranges in tp_spec.items():
             if exception_name not in dateutils.weekday_ids() + ["alias", "exclude"]:
-                exceptions.append((exception_name, self._time_ranges_to_valuespec(time_ranges)))
+                exceptions.append(
+                    (
+                        exception_name,
+                        self._time_ranges_to_valuespec(cast(list[tuple[str, str]], time_ranges)),
+                    )
+                )
 
         vs_spec = {
             "name": self._name
@@ -827,18 +831,24 @@ class ModeEditTimeperiod(WatoMode):
         unified_time_ranges = {tuple(tp_spec.get(day, [])) for day in dateutils.weekday_ids()}
         return len(unified_time_ranges) == 1
 
-    def _time_ranges_to_valuespec(self, time_ranges):
+    def _time_ranges_to_valuespec(
+        self, time_ranges: list[tuple[str, str]]
+    ) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         return [self._time_range_to_valuespec(r) for r in time_ranges]
 
-    def _time_range_to_valuespec(self, time_range):
+    def _time_range_to_valuespec(
+        self, time_range: tuple[str, str]
+    ) -> tuple[tuple[int, int], tuple[int, int]]:
         """Convert a time range specification to valuespec format
         e.g. ("00:30", "10:17") -> ((0,30),(10,17))"""
-        return tuple(map(self._time_to_valuespec, time_range))
+        start, end = time_range
+        return (self._time_to_valuespec(start), self._time_to_valuespec(end))
 
-    def _time_to_valuespec(self, time_str):
+    def _time_to_valuespec(self, time_str: str) -> tuple[int, int]:
         """Convert a time specification to valuespec format
         e.g. "00:30" -> (0, 30)"""
-        return tuple(map(int, time_str.split(":")))
+        hour, minute = time_str.split(":")
+        return (int(hour), int(minute))
 
     def _from_valuespec(self, vs_spec: DictionaryModel) -> TimeperiodSpec:
         tp_spec: dict[str, Any] = {
@@ -878,13 +888,18 @@ class ModeEditTimeperiod(WatoMode):
             if time_ranges
         }
 
-    def _time_ranges_from_valuespec(self, time_ranges):
+    def _time_ranges_from_valuespec(
+        self, time_ranges: list[tuple[tuple[int, int], tuple[int, int]] | None]
+    ) -> list[tuple[str, str]]:
         return [self._time_range_from_valuespec(r) for r in time_ranges if r is not None]
 
-    def _time_range_from_valuespec(self, value):
+    def _time_range_from_valuespec(
+        self, value: tuple[tuple[int, int], tuple[int, int]]
+    ) -> tuple[str, str]:
         """Convert a time range specification from valuespec format"""
-        return tuple(map(self._format_valuespec_time, value))
+        start, end = value
+        return (self._format_valuespec_time(start), self._format_valuespec_time(end))
 
-    def _format_valuespec_time(self, value):
+    def _format_valuespec_time(self, value: tuple[int, int]) -> str:
         """Convert a time specification from valuespec format"""
         return "%02d:%02d" % value

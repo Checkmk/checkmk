@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -113,7 +112,7 @@ class ABCGlobalSettingsMode(WatoMode):
         self._global_settings: GlobalSettings = {}
         self._current_settings: dict[str, Any] = {}
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._search = get_search_expression()
         self._show_only_modified = (
             request.get_integer_input_mandatory("_show_only_modified", 0) == 1
@@ -330,7 +329,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             self.make_global_settings_context(active_config)
         )
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._varname = request.get_ascii_input_mandatory("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]
@@ -345,7 +344,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         self._current_settings = dict(load_configuration_settings())
         self._global_settings: GlobalSettings = {}
 
-    def _may_edit_configvar(self, varname):
+    def _may_edit_configvar(self, varname: str) -> bool:
         if not get_global_config().global_settings.is_activated(varname):
             return False
         if varname in ["actions"]:
@@ -467,13 +466,13 @@ class ABCEditGlobalSettingMode(WatoMode):
         save_global_settings(self._current_settings)
 
     @abc.abstractmethod
-    def _affected_sites(self):
+    def _affected_sites(self) -> Sequence[SiteId] | None:
         raise NotImplementedError()
 
     def _is_configured(self) -> bool:
         return self._varname in self._current_settings
 
-    def _vue_field_id(self):
+    def _vue_field_id(self) -> str:
         # Note: this _underscore is critical because of the hidden vars special behaviour
         # Non _ vars are always added as hidden vars into a form
         return "_vue_global_settings"
@@ -537,7 +536,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             forms.end()
             html.hidden_fields()
 
-    def _show_global_setting(self):
+    def _show_global_setting(self) -> None:
         pass
 
     @abc.abstractmethod
@@ -669,7 +668,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     def title(self) -> str:
         return _("Edit global setting")
 
-    def _affected_sites(self):
+    def _affected_sites(self) -> Sequence[SiteId] | None:
         return None  # All sites
 
     def _back_url(self) -> str:

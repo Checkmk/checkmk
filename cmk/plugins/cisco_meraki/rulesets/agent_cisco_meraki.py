@@ -19,6 +19,8 @@ from cmk.rulesets.v1.form_specs import (
     MultipleChoiceElement,
     Password,
     Proxy,
+    SingleChoice,
+    SingleChoiceElement,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
@@ -47,6 +49,28 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                 required=True,
             ),
             "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
+            "region": DictElement(
+                parameter_form=SingleChoice(
+                    title=Title("Meraki region"),
+                    help_text=Help(
+                        "The Meraki API is available under different URLS for different regions of the world.\n"
+                        'Default (most of the world): "https://api.meraki.com/api/v1"\n'
+                        'Canada	"https://api.meraki.ca/api/v1"\n'
+                        'China	"https://api.meraki.cn/api/v1"\n'
+                        'India	"https://api.meraki.in/api/v1"\n'
+                        'United States FedRAMP	"https://api.gov-meraki.com/api/v1"\n'
+                        'For details see: "https://developer.cisco.com/meraki/api-v1/getting-started/#base-uri"\n'
+                    ),
+                    elements=[
+                        SingleChoiceElement(name="default", title=Title("Default")),
+                        SingleChoiceElement(name="canada", title=Title("Canada")),
+                        SingleChoiceElement(name="china", title=Title("China")),
+                        SingleChoiceElement(name="india", title=Title("India")),
+                        SingleChoiceElement(name="us_gov", title=Title("United States FedRAMP")),
+                    ],
+                    prefill=DefaultValue("default"),
+                )
+            ),
             "sections": DictElement(
                 parameter_form=MultipleChoice(
                     title=Title("Sections"),

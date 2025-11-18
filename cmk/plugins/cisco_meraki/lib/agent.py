@@ -228,6 +228,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--proxy", type=str)
 
     parser.add_argument(
+        "--region",
+        choices=["default", "canada", "china", "india", "us_gov"],
+        default="default",
+    )
+
+    parser.add_argument(
         "--no-cache",
         default=False,
         action="store_const",
@@ -294,7 +300,7 @@ def main() -> int:
     args = parse_arguments(sys.argv[1:])
 
     api_key = resolve_secret_option(args, APIKEY_OPTION_NAME).reveal()
-    dashboard = get_meraki_dashboard(api_key, args.debug, args.proxy)
+    dashboard = get_meraki_dashboard(api_key, args.region, args.debug, args.proxy)
 
     ctx = MerakiRunContext(
         config=(config := MerakiConfig.build(args)),

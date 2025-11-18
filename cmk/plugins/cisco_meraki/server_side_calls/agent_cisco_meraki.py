@@ -33,6 +33,7 @@ class CachePerSection(BaseModel):
 class Params(BaseModel):
     api_key: Secret
     proxy: URLProxy | NoProxy | EnvProxy | None = None
+    region: str | None = None
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None
     no_cache: bool | None = None
@@ -56,6 +57,9 @@ def agent_cisco_meraki_arguments(
             args += ["--proxy", "FROM_ENVIRONMENT"]
         case NoProxy():
             args += ["--proxy", "NO_PROXY"]
+
+    if params.region:
+        args += ["--region", params.region]
 
     if params.sections is not None:
         args.append("--sections")

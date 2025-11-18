@@ -68,9 +68,22 @@ class MerakiConfig:
         )
 
 
-def get_meraki_dashboard(api_key: str, debug: bool, proxy: str | None) -> DashboardAPI:
+def get_meraki_dashboard(api_key: str, region: str, debug: bool, proxy: str | None) -> DashboardAPI:
+    match region:
+        case "canada":
+            base_url = "https://api.meraki.ca/api/v1"
+        case "china":
+            base_url = "https://api.meraki.cn/api/v1"
+        case "india":
+            base_url = "https://api.meraki.in/api/v1"
+        case "us_gov":
+            base_url = "https://api.gov-meraki.com/api/"
+        case _:
+            base_url = "https://api.meraki.com/api/v1"
+
     return DashboardAPI(
         api_key=api_key,
+        base_url=base_url,
         print_console=True,
         output_log=False,
         suppress_logging=not (debug),

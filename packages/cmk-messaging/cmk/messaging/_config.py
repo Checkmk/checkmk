@@ -159,7 +159,13 @@ def _make_ssl_context(omd_root: Path) -> ssl.SSLContext:
     context.check_hostname = True
     context.verify_mode = ssl.CERT_REQUIRED
     context.load_cert_chain(site_cert_file(omd_root), site_key_file(omd_root))
-    context.verify_flags &= ~ssl.VERIFY_X509_STRICT  # remove this with CMK-27031
+
+    # TEMPORARY: AKI missing from 2.4-generated certificates.
+    # Disable strict X.509 verification to allow connections between 2.4/2.5 brokers
+    # until all certificates are rotated to include the AKI (expected in 2.5,
+    # when updating central site).
+    # !!! REMOVE IN VERSION 2.6 !!!
+    context.verify_flags &= ~ssl.VERIFY_X509_STRICT
     return context
 
 

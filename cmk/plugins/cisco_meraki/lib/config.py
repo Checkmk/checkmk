@@ -53,6 +53,7 @@ class MerakiConfig:
             for s in [
                 constants.SEC_NAME_LICENSES_OVERVIEW,
                 constants.SEC_NAME_DEVICE_STATUSES,
+                constants.SEC_NAME_ORGANISATIONS,
                 constants.SEC_NAME_SENSOR_READINGS,
             ]
         )

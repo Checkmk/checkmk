@@ -50,7 +50,7 @@ class MerakiClient:
     get_devices: OrganisationCallable[dict[str, schema.Device]]
     get_devices_statuses: Callable[[str], Sequence[schema.RawDevicesStatus]]
     get_licenses_overview: OrganisationCallable[schema.LicensesOverview | None]
-    get_organizations: Callable[[], Sequence[schema.Organisation]]
+    get_organizations: Callable[[], Sequence[schema.RawOrganisation]]
     get_sensor_readings: Callable[[str], Sequence[schema.RawSensorReadings]]
 
     @classmethod

@@ -9,7 +9,7 @@ from typing import Protocol
 from meraki.exceptions import APIError  # type: ignore[import-not-found]
 
 from cmk.plugins.cisco_meraki.lib.log import LOGGER
-from cmk.plugins.cisco_meraki.lib.schema import Organisation, RawOrganisation
+from cmk.plugins.cisco_meraki.lib.schema import RawOrganisation
 
 
 class OrganizationsSDK(Protocol):
@@ -20,12 +20,9 @@ class Organizations:
     def __init__(self, sdk: OrganizationsSDK) -> None:
         self._sdk = sdk
 
-    def __call__(self) -> Sequence[Organisation]:
+    def __call__(self) -> Sequence[RawOrganisation]:
         try:
-            return [
-                Organisation(id_=organisation["id"], name=organisation["name"])
-                for organisation in self._sdk.getOrganizations()
-            ]
+            return self._sdk.getOrganizations()
         except APIError as e:
             LOGGER.debug("Get organisations: %r", e)
             return []

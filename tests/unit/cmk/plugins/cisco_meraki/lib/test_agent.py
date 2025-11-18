@@ -53,7 +53,7 @@ class TestMerakiAgentOutput:
         agent.run(updated_ctx)
 
         value = re.findall(r"<<<cisco_meraki_org_(\w+):sep\(0\)>>>", capsys.readouterr().out)
-        expected = ["licenses_overview"]
+        expected = ["organisations", "licenses_overview"]
 
         assert value == expected
 

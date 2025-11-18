@@ -29,11 +29,12 @@ from .constants import (
     SEC_NAME_DEVICE_INFO,
     SEC_NAME_DEVICE_STATUSES,
     SEC_NAME_LICENSES_OVERVIEW,
+    SEC_NAME_ORGANISATIONS,
     SEC_NAME_SENSOR_READINGS,
     SECTION_NAME_MAP,
 )
 from .log import LOGGER
-from .schema import Organisation
+from .schema import RawOrganisation
 
 __version__ = "2.5.0b1"
 
@@ -81,22 +82,31 @@ class Section:
 class MerakiOrganisation:
     config: MerakiConfig
     client: MerakiClient
-    organisation: Organisation
+    organisation: RawOrganisation
 
     @property
     def id(self) -> str:
-        return self.organisation["id_"]
+        return self.organisation["id"]
+
+    @property
+    def name(self) -> str:
+        return self.organisation["name"]
 
     def query(self) -> Iterator[Section]:
+        yield self._make_section(
+            name=SEC_NAME_ORGANISATIONS,
+            data=self.organisation,
+        )
+
         if SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
-            if licenses_overview := self.client.get_licenses_overview(**self.organisation):
+            if licenses_overview := self.client.get_licenses_overview(self.id, self.name):
                 yield self._make_section(
                     name=SEC_NAME_LICENSES_OVERVIEW,
                     data=licenses_overview,
                 )
 
         if self.config.devices_required:
-            devices_by_serial = self.client.get_devices(**self.organisation)
+            devices_by_serial = self.client.get_devices(self.id, self.name)
         else:
             devices_by_serial = {}
 
@@ -263,14 +273,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _get_organisations(config: MerakiConfig, client: MerakiClient) -> Sequence[Organisation]:
+def _get_organisations(config: MerakiConfig, client: MerakiClient) -> Sequence[RawOrganisation]:
     if not config.organizations_required:
         return []
 
     orgs = client.get_organizations()
 
     if config.org_ids:
-        return [org for org in orgs if org["id_"] in config.org_ids]
+        return [org for org in orgs if org["id"] in config.org_ids]
 
     return orgs
 

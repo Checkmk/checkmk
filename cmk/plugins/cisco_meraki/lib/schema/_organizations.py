@@ -8,13 +8,6 @@ from __future__ import annotations
 from typing import TypedDict
 
 
-class Organisation(TypedDict):
-    """Subset of the Organization Resource."""
-
-    id_: str
-    name: str
-
-
 class RawOrganisation(TypedDict):
     """
     Organization Resource

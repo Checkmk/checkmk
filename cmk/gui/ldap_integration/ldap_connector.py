@@ -1210,7 +1210,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         fetched_ldap_user = FetchedLDAPUser(
             dn=dn if no_escape else dn.replace("\\", "\\\\"),
             ldap_user_name=LdapUsername(user_id),
-            ldap_user_spec=result[0][1],
+            ldap_user_spec={**result[0][1], "dn": [dn]},
         )
 
         self._user_cache[username] = fetched_ldap_user

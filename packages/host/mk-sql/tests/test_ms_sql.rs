@@ -651,6 +651,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut UniClient) {
     assert!(lines.last().unwrap().is_empty());
 
     let mut found: HashSet<String> = HashSet::new();
+    let mut counter: u32 = 0;
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split(' ').collect::<Vec<&str>>();
         assert_eq!(values.len(), 3);
@@ -659,7 +660,9 @@ async fn validate_connections(instance: &SqlInstance, client: &mut UniClient) {
             found.insert(values[1].to_string());
         }
         assert!(values[2].parse::<u32>().is_ok(), "wrong: {l}");
+        counter += values[2].parse::<u32>().unwrap();
     }
+    assert_ne!(counter, 0);
     assert_eq!(found, expected);
 }
 

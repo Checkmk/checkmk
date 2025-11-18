@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
@@ -181,7 +180,7 @@ def _merge_data(
         lambda a, b: ""
     ]
 
-    def worst_host_state(a, b):
+    def worst_host_state(a: int, b: int) -> int:
         if a == 1 or b == 1:
             return 1
         return max(a, b)

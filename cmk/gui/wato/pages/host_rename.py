@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import socket
@@ -344,7 +343,7 @@ class ModeBulkRenameHost(WatoMode):
             self._vs_renaming_config().render_input("", {})
             html.hidden_fields()
 
-    def _vs_renaming_config(self):
+    def _vs_renaming_config(self) -> Dictionary:
         return Dictionary(
             title=_("Bulk renaming"),
             render="form",
@@ -380,7 +379,7 @@ class ModeBulkRenameHost(WatoMode):
             optional_keys=[],
         )
 
-    def _vs_host_renaming(self):
+    def _vs_host_renaming(self) -> CascadingDropdown:
         return CascadingDropdown(
             orientation="horizontal",
             choices=[
@@ -444,7 +443,7 @@ class ModeBulkRenameHost(WatoMode):
         )
 
 
-def _confirm(html_title, message):
+def _confirm(html_title: str, message: str | HTML) -> bool | None:
     if not request.has_var("_do_confirm") and not request.has_var("_do_actions"):
         # TODO: get the breadcrumb from all call sites
         wato_html_head(title=html_title, breadcrumb=Breadcrumb())

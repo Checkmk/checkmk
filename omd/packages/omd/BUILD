@@ -261,6 +261,7 @@ pkg_tar(
     }),
     empty_dirs = [
         "lib/omd/scripts/post-create",
+        "skel/.restore_working_dir",
         "skel/etc/omd",
         "skel/etc/xinetd.d",
         "skel/local/bin",

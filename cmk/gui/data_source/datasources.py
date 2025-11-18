@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from __future__ import annotations
 
 from collections.abc import Sequence
 
@@ -65,19 +65,19 @@ class DataSourceHosts(DataSourceLivestatus):
         return ["host"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["host_name", "host_downtimes"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "host_name"]
 
     @property
-    def join(self):
+    def join(self) -> tuple[str, str] | None:
         return ("services", "host_name")
 
     @property
-    def link_filters(self):
+    def link_filters(self) -> dict[str, str]:
         # When the single info "hostgroup" is used, use the "opthostgroup" filter
         # to handle the data provided by the single_spec value of the "hostgroup"
         # info, which is in fact the name of the wanted host group
@@ -100,15 +100,15 @@ class DataSourceHostsByGroup(DataSourceLivestatus):
         return ["host", "hostgroup"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["host_name", "host_downtimes"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "hostgroup_name", "host_name"]
 
     @property
-    def join(self):
+    def join(self) -> tuple[str, str] | None:
         return ("services", "host_name")
 
 
@@ -126,19 +126,19 @@ class DataSourceServices(DataSourceLivestatus):
         return ["service", "host"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["host_name", "service_description", "service_downtimes"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "host_name", "service_description"]
 
     @property
-    def join_key(self):
+    def join_key(self) -> str | None:
         return "service_description"
 
     @property
-    def link_filters(self):
+    def link_filters(self) -> dict[str, str]:
         # When the single info "hostgroup" is used, use the "opthostgroup" filter
         # to handle the data provided by the single_spec value of the "hostgroup"
         # info, which is in fact the name of the wanted host group
@@ -162,11 +162,11 @@ class DataSourceServicesByGroup(DataSourceLivestatus):
         return ["service", "host", "servicegroup"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["host_name", "service_description", "service_downtimes"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "servicegroup_name", "host_name", "service_description"]
 
 
@@ -184,11 +184,11 @@ class DataSourceServicesByHostGroup(DataSourceLivestatus):
         return ["service", "host", "hostgroup"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["host_name", "service_description", "service_downtimes"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "hostgroup_name", "host_name", "service_description"]
 
 
@@ -206,11 +206,11 @@ class DataSourceHostGroups(DataSourceLivestatus):
         return ["hostgroup"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["hostgroup_name"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "hostgroup_name"]
 
 
@@ -226,7 +226,7 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
         return _("Host groups, merged")
 
     @property
-    def table(self):
+    def table(self) -> RowTableLivestatus:
         return RowTableLivestatus("hostgroups")
 
     @property
@@ -234,15 +234,15 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
         return ["hostgroup"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["hostgroup_name"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["hostgroup_name"]
 
     @property
-    def merge_by(self):
+    def merge_by(self) -> str | None:
         return "hostgroup_name"
 
 
@@ -260,11 +260,11 @@ class DataSourceServiceGroups(DataSourceLivestatus):
         return ["servicegroup"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["servicegroup_name"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "servicegroup_name"]
 
 
@@ -280,7 +280,7 @@ class DataSourceMergedServiceGroups(ABCDataSource):
         return _("Service groups, merged")
 
     @property
-    def table(self):
+    def table(self) -> RowTableLivestatus:
         return RowTableLivestatus("servicegroups")
 
     @property
@@ -288,15 +288,15 @@ class DataSourceMergedServiceGroups(ABCDataSource):
         return ["servicegroup"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["servicegroup_name"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["servicegroup_name"]
 
     @property
-    def merge_by(self):
+    def merge_by(self) -> str | None:
         return "servicegroup_name"
 
 
@@ -314,11 +314,11 @@ class DataSourceComments(DataSourceLivestatus):
         return ["comment", "host", "service"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["comment_id", "comment_type", "host_name", "service_description"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "comment_id"]
 
 
@@ -336,11 +336,11 @@ class DataSourceDowntimes(DataSourceLivestatus):
         return ["downtime", "host", "service"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return ["downtime_id", "service_description"]
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "downtime_id"]
 
 
@@ -350,7 +350,7 @@ class LogDataSource(DataSourceLivestatus):
         return "log"
 
     @property
-    def table(self):
+    def table(self) -> RowTableLivestatus:
         return RowTableLivestatus("log")
 
     @property
@@ -358,15 +358,15 @@ class LogDataSource(DataSourceLivestatus):
         return ["log", "host", "service", "contact", "command"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["log_lineno"]
 
     @property
-    def time_filters(self):
+    def time_filters(self) -> list[str]:
         return ["logtime"]
 
 
@@ -390,7 +390,7 @@ class DataSourceLogHostAndServiceEvents(LogDataSource):
         return ["log", "host", "service"]
 
     @property
-    def add_headers(self):
+    def add_headers(self) -> str:
         return "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\n"
 
 
@@ -408,7 +408,7 @@ class DataSourceLogHostEvents(LogDataSource):
         return ["log", "host"]
 
     @property
-    def add_headers(self):
+    def add_headers(self) -> str:
         return "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\nFilter: service_description = \n"
 
 
@@ -426,7 +426,7 @@ class DataSourceLogAlertStatistics(LogDataSource):
         return ["log", "host", "service", "contact", "command"]
 
     @property
-    def add_columns(self):
+    def add_columns(self) -> list[ColumnName]:
         return [
             "log_alerts_ok",
             "log_alerts_warn",
@@ -436,15 +436,15 @@ class DataSourceLogAlertStatistics(LogDataSource):
         ]
 
     @property
-    def add_headers(self):
+    def add_headers(self) -> str:
         return "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n"
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["host_name", "service_description"]
 
     @property
-    def ignore_limit(self):
+    def ignore_limit(self) -> bool:
         return True
 
 
@@ -458,7 +458,7 @@ class DataSourceServiceDiscovery(ABCDataSource):
         return _("Service discovery")
 
     @property
-    def table(self):
+    def table(self) -> ServiceDiscoveryRowTable:
         return ServiceDiscoveryRowTable()
 
     @property
@@ -466,15 +466,15 @@ class DataSourceServiceDiscovery(ABCDataSource):
         return ["host", "discovery"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["host_name"]
 
     @property
-    def add_columns(self):
+    def add_columns(self) -> list[ColumnName]:
         return [
             "discovery_state",
             "discovery_check",

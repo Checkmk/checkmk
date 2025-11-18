@@ -9,7 +9,6 @@ remote sites in distributed Setup."""
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import ast
 import enum
@@ -130,7 +129,7 @@ def _extract_from_file(filename: str, elements: dict[str, backup_snapshots.Domai
         backup_snapshots.extract_snapshot(opened_file, elements)
 
 
-def _extract_snapshot(snapshot_file):
+def _extract_snapshot(snapshot_file: str) -> None:
     _extract_from_file(
         backup_snapshots.snapshot_dir + snapshot_file, backup_snapshots.backup_domains
     )
@@ -539,7 +538,7 @@ class ModeActivateChanges(WatoMode):
 
         return True
 
-    def _license_allows_activation(self):
+    def _license_allows_activation(self) -> bool:
         if edition(paths.omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE):
             # TODO: move to CCE handler to avoid is_ultimate_edition check
             license_usage_report_valid = (
@@ -589,7 +588,7 @@ class ModeActivateChanges(WatoMode):
                 _("Pending changes"),
             )
 
-    def _quick_setup_activation_msg(self):
+    def _quick_setup_activation_msg(self) -> None:
         if not (self._quick_setup_origin and self._changes.has_pending_changes()):
             return
 
@@ -615,7 +614,7 @@ class ModeActivateChanges(WatoMode):
             show_cancel_button=False,
         )
 
-    def _activation_msg(self):
+    def _activation_msg(self) -> None:
         html.open_div(id_="async_progress_msg")
         if message := self._get_initial_message():
             html.show_message(message)

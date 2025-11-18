@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import assert_never
 
 from livestatus import LivestatusResponse
@@ -64,7 +63,7 @@ def _table_query(
     return ["site"] + list(columns), rows
 
 
-def create_host_view_url(context):
+def create_host_view_url(context: Mapping[str, str]) -> str:
     return makeuri_contextless(
         request,
         [
@@ -76,7 +75,7 @@ def create_host_view_url(context):
     )
 
 
-def create_service_view_url(context):
+def create_service_view_url(context: Mapping[str, str]) -> str:
     return makeuri_contextless(
         request,
         [

@@ -95,6 +95,7 @@ def fetch_augmented_time_series(
             list(query_keys),
             start_time=start_time,
             end_time=end_time,
+            step=int(step),
         )
         if backend_time_series_fetcher
         else {}

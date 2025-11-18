@@ -21,6 +21,7 @@ class FetchTimeSeries(Protocol):
         *,
         start_time: float,
         end_time: float,
+        step: int,
     ) -> QueryData: ...
 
 

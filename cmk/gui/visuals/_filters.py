@@ -1493,13 +1493,12 @@ def filter_kubernetes_register(
 
 def register_azure_filters(filter_registry: FilterRegistry) -> None:
     _filter_azure_register(filter_registry, _("Azure subscription"), "subscription")
-    _filter_azure_register(filter_registry, _("Azure resource group"), "resource_group")
 
 
 def _filter_azure_register(
     filter_registry: FilterRegistry,
     title: str,
-    object_name: Literal["subscription", "resource_group"],
+    object_name: Literal["subscription"],
 ) -> None:
     filter_registry.register(
         AjaxDropdownFilter(

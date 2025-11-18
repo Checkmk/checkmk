@@ -11,7 +11,6 @@ a) A list mode where all objects are shown. All objects can be deleted here.
 b) A edit mode which can be used to create and edit an object.
 """
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc

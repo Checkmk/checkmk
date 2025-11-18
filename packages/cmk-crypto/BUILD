@@ -37,7 +37,6 @@ py_library(
         "//packages/cmk-ccc:site",
         requirement("bcrypt"),
         requirement("cryptography"),
-        requirement("pyasn1"),
         requirement("python-dateutil"),
     ],
 )

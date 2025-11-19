@@ -469,6 +469,41 @@ ALL_METRICS: dict[str, list[AzureMetric]] = {
             interval="PT1M",
             aggregation="total",
         ),
+        AzureMetric(
+            name="PacketCount",
+            interval="PT1M",
+            aggregation="total",
+            dimension_filters=(
+                DimensionFilter(
+                    name="Direction",
+                    value="In",
+                ),
+            ),
+            explicit_metric_alias="total_PacketCountIn",
+        ),
+        AzureMetric(
+            name="PacketCount",
+            interval="PT1M",
+            aggregation="total",
+            dimension_filters=(
+                DimensionFilter(
+                    name="Direction",
+                    value="Out",
+                ),
+            ),
+            explicit_metric_alias="total_PacketCountOut",
+        ),
+        AzureMetric(
+            name="PacketCount",
+            interval="PT1M",
+            aggregation="total",
+            explicit_metric_alias="total_PacketCount",
+        ),
+        AzureMetric(
+            name="PacketDropCount",
+            interval="PT1M",
+            aggregation="total",
+        ),
     ],
     "Microsoft.DocumentDb/databaseAccounts": cosmos_accounts_metrics,
     "Microsoft.DocumentDB/databaseAccounts": cosmos_accounts_metrics,

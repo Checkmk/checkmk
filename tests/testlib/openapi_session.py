@@ -46,7 +46,7 @@ import requests
 from cmk import trace
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
-from cmk.relay_protocols.relays import RelayRegistrationRequest
+from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
 from cmk.relay_protocols.tasks import (
     FetchAdHocTask,
     TaskCreateRequest,
@@ -1763,8 +1763,11 @@ class RelayAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def get(self, relay_id: str) -> tuple[Relay, str]:
-        response = self.session.get(url=self._object_url(relay_id))
+    def get(self, relay_id: str, cert: str | tuple[str, str]) -> tuple[Relay, str]:
+        response = self.session.get(
+            url=self._object_url(relay_id),
+            cert=cert,
+        )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         response_json = response.json()
@@ -1856,7 +1859,7 @@ class AgentReceiverRelayAPI(ARBaseAPI):
     def base_url(self) -> str:
         return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"
 
-    def register(self, relay_id: str, alias: str, csr: str) -> str:
+    def register(self, relay_id: str, alias: str, csr: str) -> RelayRegistrationResponse:
         body = RelayRegistrationRequest(relay_id=relay_id, alias=alias, csr=csr)
         response = self.session.post(
             url=urllib.parse.urljoin(self.base_url, "relays/"),
@@ -1865,7 +1868,7 @@ class AgentReceiverRelayAPI(ARBaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-        return str(response.json()["relay_id"])
+        return RelayRegistrationResponse.model_validate(response.json())
 
     def unregister(self, relay_id: str) -> None:
         response = self.session.delete(

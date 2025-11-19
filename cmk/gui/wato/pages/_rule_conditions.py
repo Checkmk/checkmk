@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -163,9 +162,12 @@ class DictHostTagCondition(Transform):
             from_valuespec=self._from_valuespec,
         )
 
-    def _to_valuespec(self, host_tag_conditions):
-        valuespec_value = {}
+    def _to_valuespec(
+        self, host_tag_conditions: Mapping[str, Any]
+    ) -> dict[str, tuple[str, TagID] | tuple[str, Sequence[TagID]]]:
+        valuespec_value: dict[str, tuple[str, TagID] | tuple[str, Sequence[TagID]]] = {}
         for tag_group_id, tag_condition in host_tag_conditions.items():
+            value: tuple[str, TagID] | tuple[str, Sequence[TagID]]
             if isinstance(tag_condition, dict) and "$or" in tag_condition:
                 value = self._ored_tags_to_valuespec(tag_condition["$or"])
             elif isinstance(tag_condition, dict) and "$nor" in tag_condition:
@@ -177,20 +179,26 @@ class DictHostTagCondition(Transform):
 
         return valuespec_value
 
-    def _ored_tags_to_valuespec(self, tag_conditions):
+    def _ored_tags_to_valuespec(
+        self, tag_conditions: Sequence[TagID]
+    ) -> tuple[str, Sequence[TagID]]:
         return ("or", tag_conditions)
 
-    def _nored_tags_to_valuespec(self, tag_conditions):
+    def _nored_tags_to_valuespec(
+        self, tag_conditions: Sequence[TagID]
+    ) -> tuple[str, Sequence[TagID]]:
         return ("nor", tag_conditions)
 
-    def _single_tag_to_valuespec(self, tag_condition):
+    def _single_tag_to_valuespec(
+        self, tag_condition: TagID | dict[str, TagID]
+    ) -> tuple[str, TagID]:
         if isinstance(tag_condition, dict):
             if "$ne" in tag_condition:
                 return ("is_not", tag_condition["$ne"])
             raise NotImplementedError()
         return ("is", tag_condition)
 
-    def _from_valuespec(self, valuespec_value):
+    def _from_valuespec(self, valuespec_value: Mapping[str, tuple[str, Any]]) -> dict[str, Any]:
         tag_conditions = {}
         for tag_group_id, (operator, operand) in valuespec_value.items():
             if operator in ["is", "is_not"]:
@@ -205,7 +213,7 @@ class DictHostTagCondition(Transform):
             tag_conditions[tag_group_id] = tag_group_value
         return tag_conditions
 
-    def _single_tag_from_valuespec(self, operator, tag_id):
+    def _single_tag_from_valuespec(self, operator: str, tag_id: TagID) -> TagID | dict[str, TagID]:
         if operator == "is":
             return tag_id
         if operator == "is_not":

@@ -48,7 +48,6 @@ const modeSelection = defineModel<ElementSelection>('modeSelection', {
 
 <template>
   <template v-if="!props.singleOnly">
-    {{ availableFilterTypes }}
     <CmkToggleButtonGroup
       :model-value="modeSelection"
       :options="[

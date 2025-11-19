@@ -20,22 +20,6 @@
     "exceptions.ThrowNullPointerException": "info",
     "exceptions.ThrowRuntimeException": "info",
     "exceptions.ThrowThrowable": "info",
-    "formatting.BracesForClass": "info",
-    "formatting.BracesForForLoop": "info",
-    "formatting.BracesForIfElse": "info",
-    "formatting.BracesForMethod": "info",
-    "formatting.BracesForTryCatchFinally": "info",
-    "formatting.ConsecutiveBlankLines": "warning",
-    "formatting.FileEndsWithoutNewline": "warning",
-    "formatting.Indentation": {
-      "severity": "warning",
-      "spacesPerIndentLevel": 4
-    },
-    "formatting.LineLength": {
-      "length": 140,
-      "severity": "warning"
-    },
-    "formatting.SpaceAroundMapEntryColon": "off",
     "groovyism.ExplicitCallToEqualsMethod": "info",
     "logging.Println": "off",
     "naming.FactoryMethodName": "off",

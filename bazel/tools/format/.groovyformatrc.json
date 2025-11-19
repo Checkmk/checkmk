@@ -1,0 +1,51 @@
+{
+  "rules": {
+    "braces.ElseBlockBraces": {},
+    "braces.ForStatementBraces": {},
+    "braces.IfStatementBraces": {},
+    "braces.WhileStatementBraces": {},
+    "convention.NoTabCharacter": {},
+    "formatting.BlankLineBeforePackage": {},
+    "formatting.BlockEndsWithBlankLine": {},
+    "formatting.BlockStartsWithBlankLine": "off",
+    "formatting.BracesForClass": {},
+    "formatting.BracesForForLoop": {},
+    "formatting.BracesForIfElse": {},
+    "formatting.BracesForMethod": {},
+    "formatting.BracesForTryCatchFinally": {},
+    "formatting.ClassEndsWithBlankLine": {},
+    "formatting.ClassStartsWithBlankLine": {},
+    "formatting.ClosureStatementOnOpeningLineOfMultipleLineClosure": "off",
+    "formatting.ConsecutiveBlankLines": {},
+    "formatting.FileEndsWithoutNewline": {},
+    "formatting.Indentation": {
+      "spacesPerIndentLevel": 4,
+      "severity": "info"
+    },
+    "formatting.LineLength": {
+      "length": 140,
+      "severity": "warning"
+    },
+    "formatting.MissingBlankLineAfterImports": {},
+    "formatting.MissingBlankLineAfterPackage": {},
+    "formatting.SpaceAfterCatch": {},
+    "formatting.SpaceAfterClosingBrace": {},
+    "formatting.SpaceAfterComma": {},
+    "formatting.SpaceAfterFor": {},
+    "formatting.SpaceAfterIf": {},
+    "formatting.SpaceAfterMethodCallName": {},
+    "formatting.SpaceAfterOpeningBrace": {},
+    "formatting.SpaceAfterSemicolon": {},
+    "formatting.SpaceAfterSwitch": {},
+    "formatting.SpaceAfterWhile": {},
+    "formatting.SpaceAroundClosureArrow": {},
+    "formatting.SpaceAroundMapEntryColon": "off",
+    "formatting.SpaceAroundOperator": "off",
+    "formatting.SpaceBeforeClosingBrace": "off",
+    "formatting.SpaceBeforeOpeningBrace": {},
+    "formatting.SpaceInsideParentheses": {},
+    "formatting.TrailingWhitespace": {},
+    "unnecessary.UnnecessaryGString": "off",
+    "unnecessary.UnnecessarySemicolon": "off"
+  }
+}

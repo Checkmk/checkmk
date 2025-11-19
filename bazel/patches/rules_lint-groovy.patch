@@ -1,0 +1,40 @@
+diff --git a/format/private/format.sh b/format/private/format.sh
+index 69fe845..ebf5864 100755
+--- a/format/private/format.sh
++++ b/format/private/format.sh
+@@ -121,6 +121,7 @@ function ls-files {
+       'CSS') patterns=('*.css') ;;
+       'Go') patterns=('*.go') ;;
+       'GraphQL') patterns=('*.graphql' '*.gql' '*.graphqls') ;;
++      'Groovy') patterns=('*.groovy' '*.gvy' '*.gy' '*.gsh' 'Jenkinsfile') ;;
+       'HTML') patterns=('*.html' '*.hta' '*.htm' '*.html.hl' '*.inc' '*.xht' '*.xhtml') ;;
+       'JSON') patterns=('.all-contributorsrc' '.arcconfig' '.auto-changelog' '.c8rc' '.htmlhintrc' '.imgbotconfig' '.nycrc' '.tern-config' '.tern-project' '.watchmanconfig' 'Pipfile.lock' 'composer.lock' 'deno.lock' 'flake.lock' 'mcmod.info' '*.json' '*.4DForm' '*.4DProject' '*.avsc' '*.geojson' '*.gltf' '*.har' '*.ice' '*.JSON-tmLanguage' '*.jsonl' '*.mcmeta' '*.tfstate' '*.tfstate.backup' '*.topojson' '*.webapp' '*.webmanifest' '*.yy' '*.yyp') ;;
+       'JSON with Comments') patterns=( '*.jsonc' '*.code-snippets' '*.code-workspace' '*.sublime-build' '*.sublime-commands' '*.sublime-completions' '*.sublime-keymap' '*.sublime-macro' '*.sublime-menu' '*.sublime-mousemap' '*.sublime-project' '*.sublime-settings' '*.sublime-theme' '*.sublime-workspace' '*.sublime_metrics' '*.sublime_session' '.babelrc' '.devcontainer.json' '.eslintrc.json' '.jscsrc' '.jshintrc' '.jslintrc' '.swcrc' 'api-extractor.json' 'devcontainer.json' 'jsconfig.json' 'language-configuration.json' 'tsconfig.json' 'tslint.json') ;;
+diff --git a/format/private/formatter_binary.bzl b/format/private/formatter_binary.bzl
+index 8563c75..e89c67e 100644
+--- a/format/private/formatter_binary.bzl
++++ b/format/private/formatter_binary.bzl
+@@ -31,6 +31,7 @@ TOOLS = {
+     "Rust": "rustfmt",
+     "XML": "prettier",
+     "Gherkin": "prettier",
++    "Groovy": "groovy-format"
+ }
+
+ # Provided to make install more convenient
+@@ -46,6 +47,7 @@ BUILTIN_TOOL_LABELS = {
+ # Flags to pass each tool's CLI when running in check mode
+ CHECK_FLAGS = {
+     "buildifier": "-mode=check",
++    "groovy-format": "",
+     "swiftformat": "--lint",
+     "prettier": "--check",
+     "ruff": "format --check --force-exclude --diff",
+@@ -68,6 +70,7 @@ CHECK_FLAGS = {
+ FIX_FLAGS = {
+     "buildifier": "-mode=fix",
+     "djlint": "--format-css --format-js --reformat",
++    "groovy-format": "--format",
+     "swiftformat": "",
+     "prettier": "--write",
+     # Force exclusions in the configuration file to be honored even when file paths are supplied

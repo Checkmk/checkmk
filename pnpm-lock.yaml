@@ -77,6 +77,9 @@ importers:
       '@vue/compiler-sfc':
         specifier: ^3.5.22
         version: 3.5.22
+      npm-groovy-lint:
+        specifier: 15.2.1
+        version: 15.2.1
       prettier:
         specifier: 3.6.2
         version: 3.6.2
@@ -4578,7 +4581,7 @@ packages:
     resolution: {integrity: sha512-zmPitbQ8+6zNutpwgcQuLcsEpn/Cj54Kbn7L5pX0Os5kdWplB7xPgEh/g+SWOB/qmows2gpuCaPyduq8ZZRnxA==}
     deprecated: This is a stub types definition. minimatch provides its own type definitions, so you do not need this installed.
     dependencies:
-      minimatch: 10.0.3
+      minimatch: 10.1.1
     dev: true
 
   /@types/node@22.18.6:
@@ -11623,13 +11626,6 @@ packages:
       schema-utils: 4.3.2
       tapable: 2.2.3
       webpack: 5.102.0(webpack-cli@5.1.4)
-    dev: true
-
-  /minimatch@10.0.3:
-    resolution: {integrity: sha512-IPZ167aShDZZUMdRk66cyQAW3qr0WzbHkPdMYa8bzZhlHhO3jALbKdxcaak7W9FfT2rZNpQuUu4Od7ILEpXSaw==}
-    engines: {node: 20 || >=22}
-    dependencies:
-      '@isaacs/brace-expansion': 5.0.0
     dev: true
 
   /minimatch@10.1.1:

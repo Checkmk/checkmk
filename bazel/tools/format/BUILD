@@ -1,4 +1,5 @@
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
+load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
@@ -11,6 +12,15 @@ prettier_bin.prettier_binary(
         "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:prettierrc)",
         "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/.prettierignore\"",
         "--log-level=warn",
+    ],
+)
+
+groovy_bin.npm_groovy_lint_binary(
+    name = "groovy-format",
+    data = ["//bazel/tools/format:.groovyformatrc.json"],
+    env = {"BAZEL_BINDIR": "."},
+    fixed_args = [
+        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools/format:.groovyformatrc.json)",
     ],
 )
 
@@ -58,6 +68,7 @@ format_multirun(
     c = "@clang-linux-x86_64//:bin/clang-format",
     cc = "@clang-linux-x86_64//:bin/clang-format",
     css = ":prettier",
+    groovy = ":groovy-format",
     html = ":prettier",
     html_jinja = ":djlint",
     javascript = ":prettier",

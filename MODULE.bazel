@@ -120,6 +120,7 @@ single_version_override(
         # quickfix non-erroneous return code on linting with ruff
         # https://github.com/aspect-build/rules_lint/issues/495
         "//bazel/patches:rules_lint-ruff_quickfix.patch",
+        "//bazel/patches:rules_lint-groovy.patch",
     ],
 )
 

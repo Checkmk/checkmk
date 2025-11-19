@@ -2406,7 +2406,7 @@ class ABCEditRuleMode(WatoMode):
         match render_mode:
             case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
-                frontend_value = read_data_from_frontend(self._vue_field_id())
+                frontend_value = read_data_from_frontend("_vue_edit_rule_value")
                 self._rule.value = self._get_rule_value_from_catalog_value(frontend_value)
                 if validation_errors := validate_value_from_frontend(
                     create_rule_value_catalog(
@@ -2454,11 +2454,6 @@ class ABCEditRuleMode(WatoMode):
             self._ruleset.title(),
             self._folder.alias_path(),
         )
-
-    def _vue_field_id(self) -> str:
-        # Note: this _underscore is critical because of the hidden vars special behaviour
-        # Non _ vars are always added as hidden vars into a form
-        return "_vue_edit_rule"
 
     def page(self, config: Config) -> None:
         call_hooks("rmk_ruleset_banner", self._ruleset.name)
@@ -2574,7 +2569,7 @@ class ABCEditRuleMode(WatoMode):
         try:
             render_form_spec(
                 create_rule_value_catalog(title=title, value_parameter_form=value_parameter_form),
-                self._vue_field_id(),
+                "_vue_edit_rule_value",
                 self._get_rule_value_from_rule(),
                 self._should_validate_on_render(),
             )
@@ -2591,7 +2586,7 @@ class ABCEditRuleMode(WatoMode):
             )
             render_form_spec(
                 create_rule_value_catalog(title=title, value_parameter_form=value_parameter_form),
-                self._vue_field_id(),
+                "_vue_edit_rule_value",
                 DEFAULT_VALUE,
                 False,
             )

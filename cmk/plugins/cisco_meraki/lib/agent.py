@@ -173,9 +173,8 @@ def _write_sections(sections: Iterable[Section]) -> None:
     for piggyback, pb_section in sections_by_piggyback.items():
         sys.stdout.write(f"<<<<{piggyback or ''}>>>>\n")
         for section_name, section_data in pb_section.items():
-            sys.stdout.write(
-                f"<<<{section_name}:sep(0)>>>\n{json.dumps(section_data, sort_keys=True)}\n"
-            )
+            sys.stdout.write(f"<<<{section_name}:sep(0)>>>\n")
+            sys.stdout.write(f"{json.dumps(section_data, sort_keys=True)}\n")
         sys.stdout.write("<<<<>>>>\n")
 
 

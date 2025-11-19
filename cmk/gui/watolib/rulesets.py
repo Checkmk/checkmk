@@ -2051,9 +2051,9 @@ class RuleSpecItem:
     choices: DropdownChoiceEntries
 
 
-def create_rule_properties_catalog(
+def _create_rule_properties_catalog_topic(
     *, rule_identifier: RuleIdentifier, is_locked: IsLocked | None
-) -> Catalog:
+) -> dict[str, Topic]:
     elements = {
         "description": TopicElement(
             parameter_form=StringAPI(
@@ -2109,29 +2109,45 @@ def create_rule_properties_catalog(
                 )
             }
         )
+    return {
+        "properties": Topic(
+            title=Title("Rule properties"),
+            elements=elements,
+        )
+    }
+
+
+def create_rule_properties_catalog(
+    *, rule_identifier: RuleIdentifier, is_locked: IsLocked | None
+) -> Catalog:
     return Catalog(
-        elements={
-            "properties": Topic(
-                title=Title("Rule properties"),
-                elements=elements,
-            )
-        }
+        elements=_create_rule_properties_catalog_topic(
+            rule_identifier=rule_identifier, is_locked=is_locked
+        )
     )
+
+
+def _create_rule_value_catalog_topic(
+    *, title: str | None, value_parameter_form: FormSpec
+) -> dict[str, Topic]:
+    return {
+        "value": Topic(
+            title=Title("%s") % title if title else Title("Value"),
+            elements={
+                "value": TopicElement(
+                    parameter_form=value_parameter_form,
+                    required=True,
+                )
+            },
+        )
+    }
 
 
 def create_rule_value_catalog(*, title: str | None, value_parameter_form: FormSpec) -> Catalog:
     return Catalog(
-        elements={
-            "value": Topic(
-                title=Title("%s") % title if title else Title("Value"),
-                elements={
-                    "value": TopicElement(
-                        parameter_form=value_parameter_form,
-                        required=True,
-                    )
-                },
-            )
-        }
+        elements=_create_rule_value_catalog_topic(
+            title=title, value_parameter_form=value_parameter_form
+        )
     )
 
 
@@ -2335,44 +2351,52 @@ def _create_explicit_rule_conditions_dict(
     return DictionaryAPI(elements=elements)
 
 
+def _create_rule_conditions_catalog_topic(
+    *, tree: FolderTree, rule_spec_name: str, rule_spec_item: RuleSpecItem | None
+) -> dict[str, Topic]:
+    return {
+        "conditions": Topic(
+            title=Title("Conditions"),
+            elements={
+                "type": TopicElement(
+                    parameter_form=CascadingSingleChoiceAPI(
+                        title=Title("Condition type"),
+                        elements=[
+                            CascadingSingleChoiceElementAPI(
+                                name="explicit",
+                                title=Title("Explicit conditions"),
+                                parameter_form=_create_explicit_rule_conditions_dict(
+                                    tree=tree,
+                                    rule_spec_name=rule_spec_name,
+                                    rule_spec_item=rule_spec_item,
+                                ),
+                            ),
+                            CascadingSingleChoiceElementAPI(
+                                name="predefined",
+                                title=Title("Predefined conditions"),
+                                parameter_form=SingleChoiceAPI(
+                                    title=Title("Predefined condition"),
+                                    elements=[
+                                        SingleChoiceElementAPI(name=n, title=Title("%s") % t)
+                                        for n, t in PredefinedConditionStore().choices()
+                                    ],
+                                ),
+                            ),
+                        ],
+                        prefill=DefaultValueAPI("explicit"),
+                    ),
+                    required=True,
+                ),
+            },
+        )
+    }
+
+
 def create_rule_conditions_catalog(
     *, tree: FolderTree, rule_spec_name: str, rule_spec_item: RuleSpecItem | None
 ) -> Catalog:
     return Catalog(
-        elements={
-            "conditions": Topic(
-                title=Title("Conditions"),
-                elements={
-                    "type": TopicElement(
-                        parameter_form=CascadingSingleChoiceAPI(
-                            title=Title("Condition type"),
-                            elements=[
-                                CascadingSingleChoiceElementAPI(
-                                    name="explicit",
-                                    title=Title("Explicit conditions"),
-                                    parameter_form=_create_explicit_rule_conditions_dict(
-                                        tree=tree,
-                                        rule_spec_name=rule_spec_name,
-                                        rule_spec_item=rule_spec_item,
-                                    ),
-                                ),
-                                CascadingSingleChoiceElementAPI(
-                                    name="predefined",
-                                    title=Title("Predefined conditions"),
-                                    parameter_form=SingleChoiceAPI(
-                                        title=Title("Predefined condition"),
-                                        elements=[
-                                            SingleChoiceElementAPI(name=n, title=Title("%s") % t)
-                                            for n, t in PredefinedConditionStore().choices()
-                                        ],
-                                    ),
-                                ),
-                            ],
-                            prefill=DefaultValueAPI("explicit"),
-                        ),
-                        required=True,
-                    ),
-                },
-            )
-        }
+        elements=_create_rule_conditions_catalog_topic(
+            tree=tree, rule_spec_name=rule_spec_name, rule_spec_item=rule_spec_item
+        )
     )

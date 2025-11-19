@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 
 import re
 from datetime import datetime, UTC
@@ -34,7 +33,7 @@ TYPE_FIELD = String(
 
 
 class GraphIdField(String):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             description=(
                 "The ID of the predefined graph. "
@@ -49,7 +48,7 @@ class GraphIdField(String):
 
 
 class MetricIdField(String):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             description=(
                 "The ID of the single metric."

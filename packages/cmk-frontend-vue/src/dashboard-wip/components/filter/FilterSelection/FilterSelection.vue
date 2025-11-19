@@ -20,6 +20,7 @@ interface Props {
   categoryFilter: FilterType[]
   categoryDefinition: CategoryDefinition
   filters: Filters
+  background?: 'light' | 'dark'
 }
 
 interface ProcessedFilterCategory {
@@ -35,7 +36,9 @@ interface FlatFilter {
 }
 
 const { _t } = usei18n()
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  background: 'dark'
+})
 
 const collapsibleStates = ref<Record<string, boolean>>({})
 const searchTerm = ref('')
@@ -210,7 +213,10 @@ onUnmounted(() => {
     <div class="specify-filter__main-container">
       <div class="select-filter-type__selection-container">
         <div v-if="processedCategory" class="filter-menu">
-          <div class="filter-menu__sticky-header">
+          <div
+            class="filter-menu__sticky-header"
+            :class="`filter-menu__sticky-header--${background}`"
+          >
             <h3 class="filter-menu__main-title">
               {{ `${untranslated(processedCategory.title)} ${_t('filter')}` }}
             </h3>
@@ -437,6 +443,15 @@ onUnmounted(() => {
   padding-bottom: var(--dimension-4);
   margin-bottom: var(--dimension-4);
   border-bottom: 1px solid transparent;
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-menu__sticky-header--light {
+  background-color: var(--ux-theme-3);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.filter-menu__sticky-header--dark {
   background-color: var(--ux-theme-2);
 }
 

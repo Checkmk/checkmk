@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
 import pprint
 from collections.abc import Callable
 
@@ -59,15 +56,15 @@ def register(
 
 class Views(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "views"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Views")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Links to global views and dashboards")
 
     def show(self, config: Config) -> None:

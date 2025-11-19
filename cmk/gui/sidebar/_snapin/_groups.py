@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 import abc
 
 from cmk.gui import sites
@@ -41,7 +39,7 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
         html.close_ul()
 
     @classmethod
-    def refresh_on_restart(cls):
+    def refresh_on_restart(cls) -> bool:
         return True
 
 

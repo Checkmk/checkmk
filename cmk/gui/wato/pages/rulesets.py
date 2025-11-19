@@ -19,6 +19,7 @@ import abc
 import json
 import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from enum import auto, Enum
 from pprint import pformat
 from typing import (
@@ -2177,6 +2178,12 @@ def _parse_explicit_hosts_or_services_for_vue(
     raise TypeError(value)
 
 
+@dataclass(frozen=True)
+class _RulePropertiesAndConditions:
+    options: RuleOptions
+    conditions: RuleConditions
+
+
 class ABCEditRuleMode(WatoMode):
     VAR_RULE_SPEC_NAME: Final = "varname"
     VAR_RULE_ID: Final = "rule_id"
@@ -2340,18 +2347,21 @@ class ABCEditRuleMode(WatoMode):
 
         tree = folder_tree()
         is_locked = is_locked_by_quick_setup(self._rule.locked_by)
-        if not self._rule_is_updated_from_vars(tree=tree, is_locked=is_locked):
+        rule_values = self._set_or_get_rule_values_from_vars(tree=tree, is_locked=is_locked)
+
+        self._rule.rule_options = rule_values.options
+
+        if is_locked and self._rule.conditions != rule_values.conditions:
+            flash(
+                _("Cannot change rule conditions for rules managed by Quick setup."),
+                msg_type="error",
+            )
             return redirect(self._back_url())
 
+        self._rule.update_conditions(rule_values.conditions)
+
         # Check permissions on folders
-        new_rule_folder = tree.folder(
-            self._get_rule_conditions_from_catalog_value(
-                parse_data_from_field_id(
-                    self._create_rule_conditions_catalog(tree),
-                    "_vue_edit_rule_conditions",
-                )
-            ).host_folder
-        )
+        new_rule_folder = tree.folder(rule_values.conditions.host_folder)
         self._check_folder_permissions()
         new_rule_folder.permissions.need_permission("write")
 
@@ -2744,29 +2754,9 @@ class ABCEditRuleMode(WatoMode):
             raw_explicit["service_label_groups"] = self._rule.conditions.service_label_groups
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
-    def _rule_is_updated_from_vars(self, *, tree: FolderTree, is_locked: bool) -> bool:
-        self._rule.rule_options = self._get_rule_options_from_catalog_value(
-            parse_data_from_field_id(
-                self._create_rule_properties_catalog(is_locked=is_locked),
-                "_vue_edit_rule_properties",
-            )
-        )
-
-        rule_conditions = self._get_rule_conditions_from_catalog_value(
-            parse_data_from_field_id(
-                self._create_rule_conditions_catalog(tree),
-                "_vue_edit_rule_conditions",
-            )
-        )
-        if is_locked and self._rule.conditions != rule_conditions:
-            flash(
-                _("Cannot change rule conditions for rules managed by Quick setup."),
-                msg_type="error",
-            )
-            return False
-
-        self._rule.update_conditions(rule_conditions)
-
+    def _set_or_get_rule_values_from_vars(
+        self, *, tree: FolderTree, is_locked: bool
+    ) -> _RulePropertiesAndConditions:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         match render_mode:
             case RenderMode.FRONTEND:
@@ -2785,7 +2775,20 @@ class ABCEditRuleMode(WatoMode):
                 self._ruleset.rulespec.valuespec.validate_value(value, "ve")
                 self._rule.value = value
 
-        return True
+        return _RulePropertiesAndConditions(
+            self._get_rule_options_from_catalog_value(
+                parse_data_from_field_id(
+                    self._create_rule_properties_catalog(is_locked=is_locked),
+                    "_vue_edit_rule_properties",
+                )
+            ),
+            self._get_rule_conditions_from_catalog_value(
+                parse_data_from_field_id(
+                    self._create_rule_conditions_catalog(tree),
+                    "_vue_edit_rule_conditions",
+                )
+            ),
+        )
 
     @abc.abstractmethod
     def _save_rule(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None: ...

@@ -973,12 +973,16 @@ class PackedConfigGenerator:
             clusters_red = {}
             for cluster_entry, cluster_nodes in clusters_orig.items():
                 clustername = HostName(cluster_entry.split("|", 1)[0])
-                # Include offline cluster hosts.
-                # Otherwise services clustered to those hosts will wrongly be checked by the nodes.
+                # Include offline cluster HOSTS.
+                # Otherwise, services clustered to those hosts will wrongly be checked by the NODES.
                 if clustername in hosts_config.clusters and self._config_cache.is_active(
                     clustername
                 ):
-                    clusters_red[cluster_entry] = cluster_nodes
+                    # But exclude offline cluster NODES.
+                    # Otherwise, the check on the cluster HOST will fail.
+                    clusters_red[cluster_entry] = [
+                        node for node in cluster_nodes if node in active_hosts
+                    ]
             return clusters_red
 
         def filter_hostname_in_dict(

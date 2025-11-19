@@ -159,7 +159,7 @@ _CLEAN_PLUGIN_FAMILIES = {
     "jenkins",
     "jira",
     # "jolokia",  # : import hack. resolve by migrating the bakery plugin
-    # "kube",  # :HostAddress, Edition, omd_root,
+    "kube"
     # "metric_backend",  # :cmk.metric_backend, cmk.utils.paths
     "mobileiron",
     "mqtt",

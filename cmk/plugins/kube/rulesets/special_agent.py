@@ -7,10 +7,12 @@
 
 # mypy: disable-error-code="type-arg"
 
-
+import ipaddress
+import re
 from collections.abc import Callable, Iterable, Mapping
+from contextlib import suppress
+from typing import Final
 
-from cmk.ccc.hostaddress import HostAddress
 from cmk.rulesets.internal.form_specs import ListExtended
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -194,16 +196,32 @@ def _api_endpoint() -> Dictionary:
     )
 
 
-def _validate_hostname(hostname: str) -> None:
-    try:
-        HostAddress(hostname)
-    except ValueError as exception:
+_REGEX_HOST_NAME: Final = re.compile(r"^\w[-0-9a-zA-Z_.]*$", re.ASCII)
+
+
+def _validate_hostname(text: str) -> None:
+    if len(text) > 240:
+        # Ext4 and others allow filenames of up to 255 bytes.
+        # As we add prefixes and/or suffixes, the number has to be way lower.
+        # 240 seems to be OK to still be able to delete a host if it causes
+        # trouble elsewhere
         raise validators.ValidationError(
-            Message(
-                "Please enter a valid host name or IPv4 address. "
-                "Only letters, digits, dash, underscore and dot are allowed."
-            )
-        ) from exception
+            Message("Host address too long: %s") % f"{text[:16] + '…'!r}"
+        )
+
+    with suppress(ValueError):
+        ipaddress.ip_address(text)
+        return
+
+    if _REGEX_HOST_NAME.match(text):
+        return
+
+    raise validators.ValidationError(
+        Message(
+            "Please enter a valid host name or IPv4 address. "
+            "Only letters, digits, dash, underscore and dot are allowed."
+        )
+    )
 
 
 def _migrate_form_specs(p: object) -> dict[str, object]:

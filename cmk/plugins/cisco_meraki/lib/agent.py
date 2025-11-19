@@ -33,8 +33,6 @@ from .schema import Device, RawOrganisation
 __version__ = "2.5.0b1"
 
 
-MerakiAPIData = Mapping[str, object]
-
 # .
 #   .--section-------------------------------------------------------------.
 #   |                                 _   _                                |
@@ -49,7 +47,7 @@ MerakiAPIData = Mapping[str, object]
 @dataclass(frozen=True)
 class Section:
     name: str
-    data: MerakiAPIData
+    data: Mapping[str, object]
     piggyback: str | None = None
 
 

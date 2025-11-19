@@ -27,6 +27,7 @@ from cmk.crypto import MKCryptoException
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
+from cmk.gui.dashboard.page_show_shared_dashboard import page_dashboard_token_invalid
 from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
@@ -34,6 +35,7 @@ from cmk.gui.exceptions import (
     MKConfigError,
     MKMethodNotAllowed,
     MKNotFound,
+    MKTokenExpiredOrRevokedException,
     MKUnauthenticatedException,
     MKUserError,
 )
@@ -241,6 +243,13 @@ def _process_request(
 
     except MKUserError as e:
         resp = _render_exception(e, title=_("Invalid user input"))
+
+    except MKTokenExpiredOrRevokedException as e:
+        if e.token_type == "dashboard":
+            resp = page_dashboard_token_invalid(_("Token invalid"))
+        else:
+            resp = _render_exception(e, title=_("Token invalid"))
+        logger.error("MKTokenExpiredOrRevokedException: %s", e)
 
     except MKUnauthenticatedException as e:
         resp = _render_exception(e, title=_("Not authenticated"))

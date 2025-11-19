@@ -8,13 +8,14 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import assert_never, Final, Literal, NewType
+from typing import assert_never, Final, NewType
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel, Field, RootModel
 
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
+from cmk.gui.exceptions import TokenType
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.utils import paths
 
@@ -23,18 +24,28 @@ class InvalidToken(ValueError):
     """Raised if we cannot properly parse something"""
 
 
-class TokenExpired(ValueError):
+class TokenTypeError(ValueError):
+    """Token is expried or revoked but has valid type"""
+
+    token_type: TokenType
+
+    def __init__(self, *args: object, token_type: TokenType) -> None:
+        super().__init__(*args)
+        self.token_type = token_type
+
+
+class TokenExpired(TokenTypeError):
     """Token is expired"""
 
 
-class TokenRevoked(ValueError):
+class TokenRevoked(TokenTypeError):
     """Token was revoked"""
 
 
 class DashboardToken(BaseModel):
     owner: AnnotatedUserId
     dashboard_name: str
-    type_: Literal["dashboard"] = "dashboard"
+    type_: TokenType = "dashboard"
     comment: str = ""
     disabled: bool = False
 
@@ -103,10 +114,16 @@ class TokenStore:
             raise InvalidToken(f"Could not find token {token_id!r}")
 
         if token.valid_until < now:
-            raise TokenExpired(f"Token {token.token_id} expired at {token.valid_until.isoformat()}")
+            raise TokenExpired(
+                f"Token {token.token_id} expired at {token.valid_until.isoformat()}",
+                token_type=token.details.type_,
+            )
 
         if token.revoked:
-            raise TokenRevoked(f"Token {token_id} was revoked")
+            raise TokenRevoked(
+                f"Token {token_id} was revoked",
+                token_type=token.details.type_,
+            )
 
         return token
 

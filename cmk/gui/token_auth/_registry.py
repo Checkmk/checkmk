@@ -12,6 +12,7 @@ import cmk.ccc.plugin_registry
 from cmk.gui.exceptions import (
     MKMethodNotAllowed,
     MKNotFound,
+    MKTokenExpiredOrRevokedException,
     MKUnauthenticatedException,
 )
 from cmk.gui.http import Request, Response
@@ -59,7 +60,7 @@ def handle_token_page(
     token_store = get_token_store()
     try:
         token = token_store.verify(user_provided_token, datetime.datetime.now(tz=datetime.UTC))
-    except (InvalidToken, TokenExpired, TokenRevoked) as e:
+    except InvalidToken as e:
         log_security_event(
             AuthenticationFailureEvent(
                 user_error=str(e),
@@ -69,6 +70,20 @@ def handle_token_page(
             )
         )
         raise MKUnauthenticatedException("Token invalid") from e
+
+    except (TokenExpired, TokenRevoked) as e:
+        log_security_event(
+            AuthenticationFailureEvent(
+                user_error=str(e),
+                auth_method="token",
+                username=None,
+                remote_ip=request.remote_addr,
+            )
+        )
+        raise MKTokenExpiredOrRevokedException(
+            "Token expired or revoked", token_type=e.token_type
+        ) from e
+
     if (endpoint := token_authenticated_page_registry.get(ident)) is None:
         raise MKNotFound(f"Could not find token authenticated page {ident}")
     # I refrain from logging successful authentications here because every Ajax call would result in

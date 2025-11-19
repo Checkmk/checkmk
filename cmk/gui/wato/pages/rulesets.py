@@ -2347,7 +2347,9 @@ class ABCEditRuleMode(WatoMode):
 
         tree = folder_tree()
         is_locked = is_locked_by_quick_setup(self._rule.locked_by)
-        rule_values = self._set_or_get_rule_values_from_vars(tree=tree, is_locked=is_locked)
+        rule_values = self._set_or_get_rule_values_from_vars(
+            tree=tree, rule_spec_name=self._rulespec.name, is_locked=is_locked
+        )
 
         self._rule.rule_options = rule_values.options
 
@@ -2528,7 +2530,9 @@ class ABCEditRuleMode(WatoMode):
             ),
         )
 
-    def _create_explicit_rule_conditions_dict(self, tree: FolderTree) -> DictionaryAPI:
+    def _create_explicit_rule_conditions_dict(
+        self, *, tree: FolderTree, rule_spec_name: str
+    ) -> DictionaryAPI:
         elements: dict[str, DictElementAPI] = {
             "folder_path": DictElementAPI(
                 parameter_form=SingleChoiceExtendedAPI[str](
@@ -2563,7 +2567,7 @@ class ABCEditRuleMode(WatoMode):
                     label=Label("Label"),
                     get_conditions=(
                         lambda: _get_host_label_groups_condition_choices()
-                        if allow_host_label_conditions(self._rulespec.name)
+                        if allow_host_label_conditions(rule_spec_name)
                         else []
                     ),
                     custom_validate=[
@@ -2610,7 +2614,7 @@ class ABCEditRuleMode(WatoMode):
                             get_conditions=(
                                 # TODO si-host-vs-service-labels: Why do we use host labels here?
                                 lambda: _get_host_label_groups_condition_choices()
-                                if allow_service_label_conditions(self._rulespec.name)
+                                if allow_service_label_conditions(rule_spec_name)
                                 else []
                             ),
                             custom_validate=[
@@ -2624,7 +2628,7 @@ class ABCEditRuleMode(WatoMode):
             )
         return DictionaryAPI(elements=elements)
 
-    def _create_rule_conditions_catalog(self, tree: FolderTree) -> Catalog:
+    def _create_rule_conditions_catalog(self, *, tree: FolderTree, rule_spec_name: str) -> Catalog:
         return Catalog(
             elements={
                 "conditions": Topic(
@@ -2638,7 +2642,7 @@ class ABCEditRuleMode(WatoMode):
                                         name="explicit",
                                         title=Title("Explicit conditions"),
                                         parameter_form=self._create_explicit_rule_conditions_dict(
-                                            tree
+                                            tree=tree, rule_spec_name=rule_spec_name
                                         ),
                                     ),
                                     CascadingSingleChoiceElementAPI(
@@ -2755,7 +2759,7 @@ class ABCEditRuleMode(WatoMode):
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
     def _set_or_get_rule_values_from_vars(
-        self, *, tree: FolderTree, is_locked: bool
+        self, *, tree: FolderTree, rule_spec_name: str, is_locked: bool
     ) -> _RulePropertiesAndConditions:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         match render_mode:
@@ -2784,7 +2788,7 @@ class ABCEditRuleMode(WatoMode):
             ),
             self._get_rule_conditions_from_catalog_value(
                 parse_data_from_field_id(
-                    self._create_rule_conditions_catalog(tree),
+                    self._create_rule_conditions_catalog(tree=tree, rule_spec_name=rule_spec_name),
                     "_vue_edit_rule_conditions",
                 )
             ),
@@ -2826,7 +2830,9 @@ class ABCEditRuleMode(WatoMode):
             html.div(help_text, class_="info")
 
         with html.form_context("rule_editor", method="POST"):
-            self._page_form(folder_tree(), debug=config.debug)
+            self._page_form(
+                tree=folder_tree(), rule_spec_name=self._rulespec.name, debug=config.debug
+            )
 
     @property
     def folder(self) -> Folder:
@@ -2853,6 +2859,7 @@ class ABCEditRuleMode(WatoMode):
         title: str | None,
         has_show_more: bool,
         tree: FolderTree,
+        rule_spec_name: str,
         debug: bool,
     ) -> None:
         render_form_spec(
@@ -2891,7 +2898,7 @@ class ABCEditRuleMode(WatoMode):
             return
 
         render_form_spec(
-            self._create_rule_conditions_catalog(tree),
+            self._create_rule_conditions_catalog(tree=tree, rule_spec_name=rule_spec_name),
             "_vue_edit_rule_conditions",
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
@@ -2904,6 +2911,7 @@ class ABCEditRuleMode(WatoMode):
         title: str | None,
         value_parameter_form: FormSpec | None,
         tree: FolderTree,
+        rule_spec_name: str,
         debug: bool,
     ) -> None:
         render_form_spec(
@@ -2950,13 +2958,13 @@ class ABCEditRuleMode(WatoMode):
             return
 
         render_form_spec(
-            self._create_rule_conditions_catalog(tree),
+            self._create_rule_conditions_catalog(tree=tree, rule_spec_name=rule_spec_name),
             "_vue_edit_rule_conditions",
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
         )
 
-    def _page_form(self, tree: FolderTree, *, debug: bool) -> None:
+    def _page_form(self, *, tree: FolderTree, rule_spec_name: str, debug: bool) -> None:
         self._page_form_quick_setup_warning()
 
         html.form_has_submit_button = True
@@ -2982,6 +2990,7 @@ class ABCEditRuleMode(WatoMode):
                     title=title,
                     has_show_more=has_show_more,
                     tree=tree,
+                    rule_spec_name=rule_spec_name,
                     debug=debug,
                 )
             case RenderMode.FRONTEND:
@@ -2990,6 +2999,7 @@ class ABCEditRuleMode(WatoMode):
                     title=title,
                     value_parameter_form=registered_form_spec,
                     tree=tree,
+                    rule_spec_name=rule_spec_name,
                     debug=debug,
                 )
 
@@ -3668,16 +3678,16 @@ class ModeNewRule(ABCEditRuleMode):
         else:
             # Submitting the create dialog
             try:
-                self._folder = tree.folder(self._get_folder_path_from_vars(tree))
+                self._folder = tree.folder(self._get_folder_path_from_vars(tree=tree))
             except MKUserError:
                 # Folder can not be gathered from form if an error occurs
                 folder = mandatory_parameter("rule_folder", request.var("rule_folder"))
                 self._folder = tree.folder(folder)
 
-    def _get_folder_path_from_vars(self, tree: FolderTree) -> str:
+    def _get_folder_path_from_vars(self, *, tree: FolderTree) -> str:
         return self._get_rule_conditions_from_catalog_value(
             parse_data_from_field_id(
-                self._create_rule_conditions_catalog(tree),
+                self._create_rule_conditions_catalog(tree=tree, rule_spec_name=self._rulespec.name),
                 "_vue_edit_rule_conditions",
             )
         ).host_folder

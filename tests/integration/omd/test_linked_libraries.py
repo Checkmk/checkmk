@@ -126,6 +126,10 @@ def test_linked_libraries(site: Site) -> None:
     exclude_entirely = [
         # That is a 32bit binary.
         "share/check_mk/agents/plugins/cmk-update-agent-32",
+        # These are platform specific binaries.
+        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris",
+        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.aix",
+        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe",
     ]
 
     exclude_from_forbidden_links_check = [

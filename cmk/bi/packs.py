@@ -6,7 +6,6 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
@@ -356,7 +355,7 @@ class BIAggregationPacks:
         self._check_rule_cycles()
         return self.serialize()
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {"packs": [pack.serialize() for pack in self.packs.values()]}
 
     def _check_rule_cycles(self) -> None:

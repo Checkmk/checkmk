@@ -418,18 +418,20 @@ class TimeQuery(NumberRangeQuery):
             return None
 
 
-class KubernetesQuery(Query):
+class LabelQuery(Query):
     def __init__(
         self,
         *,
         ident: str,
-        kubernetes_object_type: str,
+        label_base: str,
+        object_type: str,
     ):
         super().__init__(ident=ident, request_vars=[ident])
         self.column = "host_labels"
         self.link_columns: list[str] = []
         self.negateable = False
-        self._kubernetes_object_type = kubernetes_object_type
+        self._label_base = label_base
+        self._object_type = object_type
 
     @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -438,7 +440,7 @@ class KubernetesQuery(Query):
                 column=self.column,
                 labels=[
                     Label(
-                        f"cmk/kubernetes/{self._kubernetes_object_type}",
+                        f"{self._label_base}{self._object_type}",
                         filter_value,
                         False,
                     )

@@ -96,7 +96,7 @@ class RegexAjaxDropdownFilter(AjaxDropdownFilter):
         sort_index: int,
         info: str,
         autocompleter: AutocompleterConfig,
-        query_filter: query_filters.TextQuery | query_filters.KubernetesQuery,
+        query_filter: query_filters.TextQuery | query_filters.LabelQuery,
         link_columns: list[ColumnName] | None = None,
         description: None | str | LazyString = None,
         is_show_more: bool = False,
@@ -1482,8 +1482,10 @@ def filter_kubernetes_register(
                 group_type=object_name,
                 strict=True,
             ),
-            query_filter=query_filters.KubernetesQuery(
-                ident=f"kubernetes_{object_name}", kubernetes_object_type=object_name
+            query_filter=query_filters.LabelQuery(
+                ident=f"kubernetes_{object_name}",
+                label_base="cmk/kubernetes/",
+                object_type=object_name,
             ),
         )
     )

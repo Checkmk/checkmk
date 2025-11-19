@@ -21,14 +21,14 @@ if [ -n "${CI}" ]; then
     "${SCRIPT_DIR}/perftest_plot.py" --update \
         --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
         --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" || exit 2
-    if [ "$(date '+%Y-%m-%d')" -ge "2025-12-01" ]; then
+    if [[ "$(date '+%Y-%m-%d')" > "2025-12-01" ]]; then
         # check monthly baseline
         "${SCRIPT_DIR}/perftest_plot.py" \
             --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \
             --validate-baselines --alert-on-failure --jira-url="https://jira.lan.tribe29.com/" \
             --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 2
     fi
-    if [ "$(date '+%Y-%m-%d')" -ge "2026-11-01" ]; then
+    if [[ "$(date '+%Y-%m-%d')" > "2026-11-01" ]]; then
         # check yearly baseline
         "${SCRIPT_DIR}/perftest_plot.py" \
             --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net \

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 
 import contextlib
@@ -303,7 +302,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         return _render_input, _handle_input
 
     @classmethod
-    def add_url(cls):
+    def add_url(cls) -> str:
         return "create_view_dashlet.py?name={}&mode=create&back={}".format(
             urlencode(request.var("name")),
             urlencode(makeuri(request, [("edit", "1")])),

@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 import contextlib
 from collections.abc import Iterator
 from typing import override
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import DashletConfig, IFrameDashlet
+from cmk.gui.dashboard.type_defs import DashletRefreshInterval, DashletSize
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -19,6 +19,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.valuespec.definitions import DictionaryEntry
 
 from ._snapin import all_snapins, SidebarSnapin
 
@@ -31,15 +32,15 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
     """Dashlet that displays a sidebar snap-in"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "snapin"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Sidebar element")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Allows you to use a sidebar element in the dashboard.")
 
     @classmethod
@@ -47,15 +48,15 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         return 55
 
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (28, 20)
 
     @classmethod
-    def initial_refresh_interval(cls):
+    def initial_refresh_interval(cls) -> DashletRefreshInterval:
         return 30
 
     @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(cls) -> list[DictionaryEntry]:
         return [
             (
                 "snapin",
@@ -68,7 +69,7 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         ]
 
     @classmethod
-    def _snapin_choices(cls):
+    def _snapin_choices(cls) -> list[tuple[str, str]]:
         return sorted(
             [
                 (k, v.title())

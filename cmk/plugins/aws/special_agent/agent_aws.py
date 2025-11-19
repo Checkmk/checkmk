@@ -60,7 +60,6 @@ from cmk.plugins.aws.constants import (
     AWSRegions,
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
-from cmk.utils.paths import tmp_dir
 
 from ._data_cache import DataCache
 
@@ -757,9 +756,6 @@ class AWSRawContent(NamedTuple):
 class AWSComputedContent(NamedTuple):
     content: Any
     cache_timestamp: float
-
-
-AWSCacheFilePath = tmp_dir / "agents" / "agent_aws"
 
 
 class AWSSection(DataCache):

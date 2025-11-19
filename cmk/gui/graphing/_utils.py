@@ -6,8 +6,6 @@
 
 # mypy: disable-error-code="mutable-override"
 
-# mypy: disable-error-code="no-untyped-def"
-
 import http
 from typing import NewType
 

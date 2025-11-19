@@ -2178,6 +2178,12 @@ def _parse_explicit_hosts_or_services_for_vue(
     raise TypeError(value)
 
 
+@dataclass(frozen=True, kw_only=True)
+class _RuleIdentifier:
+    id: str
+    name: str
+
+
 @dataclass(frozen=True)
 class _IsLocked:
     instance_id: str
@@ -2361,7 +2367,10 @@ class ABCEditRuleMode(WatoMode):
         )
         tree = folder_tree()
         rule_values = self._set_or_get_rule_values_from_vars(
-            is_locked=is_locked, tree=tree, rule_spec_name=self._rulespec.name
+            rule_identifier=_RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name),
+            is_locked=is_locked,
+            tree=tree,
+            rule_spec_name=self._rulespec.name,
         )
 
         self._rule.rule_options = rule_values.options
@@ -2424,7 +2433,9 @@ class ABCEditRuleMode(WatoMode):
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _create_rule_properties_catalog(self, *, is_locked: _IsLocked | None) -> Catalog:
+    def _create_rule_properties_catalog(
+        self, *, rule_identifier: _RuleIdentifier, is_locked: _IsLocked | None
+    ) -> Catalog:
         elements = {
             "description": TopicElement(
                 parameter_form=StringAPI(
@@ -2456,20 +2467,19 @@ class ABCEditRuleMode(WatoMode):
             "id": TopicElement(
                 parameter_form=FixedValueAPI(
                     title=Title("Rule ID"),
-                    value=self._rule.id,
+                    value=rule_identifier.id,
                 ),
                 required=True,
             ),
             "_name": TopicElement(
                 parameter_form=FixedValueAPI(
                     title=Title("Ruleset name"),
-                    value=self._rule.ruleset.name,
+                    value=rule_identifier.name,
                 ),
                 required=True,
             ),
         }
         if is_locked:
-            assert self._rule.locked_by is not None
             elements.update(
                 {
                     "source": TopicElement(
@@ -2772,7 +2782,12 @@ class ABCEditRuleMode(WatoMode):
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
     def _set_or_get_rule_values_from_vars(
-        self, *, is_locked: _IsLocked | None, tree: FolderTree, rule_spec_name: str
+        self,
+        *,
+        rule_identifier: _RuleIdentifier,
+        is_locked: _IsLocked | None,
+        tree: FolderTree,
+        rule_spec_name: str,
     ) -> _RulePropertiesAndConditions:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         match render_mode:
@@ -2795,7 +2810,9 @@ class ABCEditRuleMode(WatoMode):
         return _RulePropertiesAndConditions(
             self._get_rule_options_from_catalog_value(
                 parse_data_from_field_id(
-                    self._create_rule_properties_catalog(is_locked=is_locked),
+                    self._create_rule_properties_catalog(
+                        rule_identifier=rule_identifier, is_locked=is_locked
+                    ),
                     "_vue_edit_rule_properties",
                 )
             ),
@@ -2866,6 +2883,7 @@ class ABCEditRuleMode(WatoMode):
     def _page_form_backend(
         self,
         *,
+        rule_identifier: _RuleIdentifier,
         is_locked: _IsLocked | None,
         title: str | None,
         has_show_more: bool,
@@ -2874,7 +2892,9 @@ class ABCEditRuleMode(WatoMode):
         debug: bool,
     ) -> None:
         render_form_spec(
-            self._create_rule_properties_catalog(is_locked=is_locked),
+            self._create_rule_properties_catalog(
+                rule_identifier=rule_identifier, is_locked=is_locked
+            ),
             "_vue_edit_rule_properties",
             self._get_rule_properties_from_rule(),
             self._should_validate_on_render(),
@@ -2918,6 +2938,7 @@ class ABCEditRuleMode(WatoMode):
     def _page_form_frontend(
         self,
         *,
+        rule_identifier: _RuleIdentifier,
         is_locked: _IsLocked | None,
         title: str | None,
         value_parameter_form: FormSpec | None,
@@ -2926,7 +2947,9 @@ class ABCEditRuleMode(WatoMode):
         debug: bool,
     ) -> None:
         render_form_spec(
-            self._create_rule_properties_catalog(is_locked=is_locked),
+            self._create_rule_properties_catalog(
+                rule_identifier=rule_identifier, is_locked=is_locked
+            ),
             "_vue_edit_rule_properties",
             self._get_rule_properties_from_rule(),
             self._should_validate_on_render(),
@@ -2981,6 +3004,7 @@ class ABCEditRuleMode(WatoMode):
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
 
+        rule_identifier = _RuleIdentifier(id=self._rule.id, name=self._rule.ruleset.name)
         is_locked = (
             _IsLocked(
                 self._rule.locked_by["instance_id"],
@@ -3006,6 +3030,7 @@ class ABCEditRuleMode(WatoMode):
         match render_mode:
             case RenderMode.BACKEND:
                 self._page_form_backend(
+                    rule_identifier=rule_identifier,
                     is_locked=is_locked,
                     title=title,
                     has_show_more=has_show_more,
@@ -3015,6 +3040,7 @@ class ABCEditRuleMode(WatoMode):
                 )
             case RenderMode.FRONTEND:
                 self._page_form_frontend(
+                    rule_identifier=rule_identifier,
                     is_locked=is_locked,
                     title=title,
                     value_parameter_form=registered_form_spec,

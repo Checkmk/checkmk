@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Collection, Sequence
@@ -125,7 +124,7 @@ class VirtualHostTree(SidebarSnapin):
         )
         html.close_div()
 
-    def _tree_choices(self):
+    def _tree_choices(self) -> list[tuple[str, str]]:
         return sorted(
             [(tree["id"], tree["title"]) for tree in self._trees.values()], key=lambda x: x[1]
         )

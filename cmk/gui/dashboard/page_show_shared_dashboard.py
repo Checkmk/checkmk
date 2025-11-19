@@ -17,6 +17,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.htmllib.html import html
 from cmk.gui.pages import PageContext
+from cmk.gui.token_auth import AuthToken, TokenAuthenticatedPage, TokenId
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict
 from .api._utils import DashboardConstants
@@ -26,12 +27,18 @@ from .store import (
 from .type_defs import DashboardName
 
 
-def page_shared_dashboard(ctx: PageContext) -> None:
-    # TODO: replace later with proper token handling
-    owner: UserId = UserId("")
-    dashboard_name: DashboardName = "main"
-    token_value = "token"
+class SharedDashboardPage(TokenAuthenticatedPage):
+    def get(self, token: AuthToken, ctx: PageContext) -> None:
+        details = token.details
+        if details.type_ != "dashboard":
+            raise ValueError("Invalid token type for shared dashboard page")
 
+        page_shared_dashboard(details.owner, details.dashboard_name, token.token_id, ctx)
+
+
+def page_shared_dashboard(
+    owner: UserId, dashboard_name: DashboardName, token_id: TokenId, ctx: PageContext
+) -> None:
     all_dashboards = get_all_dashboards()
     board = all_dashboards[(owner, dashboard_name)]
 
@@ -52,6 +59,6 @@ def page_shared_dashboard(ctx: PageContext) -> None:
         "dashboard": dashboard_properties,
         "dashboard_constants": DashboardConstants.dict_output(),
         "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
-        "token_value": token_value,
+        "token_value": token_id,
     }
     html.vue_component("cmk-shared-dashboard", data=page_properties)

@@ -8,7 +8,7 @@ from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
-from cmk.gui.token_auth import TokenAuthenticatedPageRegistry
+from cmk.gui.token_auth import TokenAuthenticatedEndpoint, TokenAuthenticatedPageRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
@@ -41,7 +41,7 @@ from .page_show_dashboard import (
     page_dashboard,
     page_dashboard_app,
 )
-from .page_show_shared_dashboard import page_shared_dashboard
+from .page_show_shared_dashboard import SharedDashboardPage
 from .visual_type import VisualTypeDashboards
 
 
@@ -73,7 +73,9 @@ def register(
     # TODO: old dashboard page should be removed
     page_registry.register(PageEndpoint("dashboard", page_dashboard))
     page_registry.register(PageEndpoint("dashboard_wip", page_dashboard_app))
-    page_registry.register(PageEndpoint("shared_dashboard", page_shared_dashboard))
+    token_authenticated_page_registry.register(
+        TokenAuthenticatedEndpoint("shared_dashboard", SharedDashboardPage())
+    )
     page_registry.register(PageEndpoint("dashboard_dashlet", ajax_dashlet))
     page_registry.register(PageEndpoint(PAGE_EDIT_DASHBOARDS_LINK, page_edit_dashboards))
     page_registry.register(PageEndpoint("create_dashboard", page_create_dashboard))

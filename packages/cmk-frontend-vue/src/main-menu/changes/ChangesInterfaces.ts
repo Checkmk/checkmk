@@ -52,7 +52,7 @@ export interface Site {
   onlineStatus: string
   changes: number
   version: string
-  logged_in: boolean
+  loggedIn: boolean
   lastActivationStatus: StatusPerSiteResponse | undefined
 }
 

@@ -21,7 +21,7 @@ export function useSiteStatus(sites: Ref<Site[]>) {
   }
 
   function siteIsLoggedOut(site: Site): boolean {
-    return site.logged_in === false
+    return site.loggedIn === false
   }
 
   const sitesWithChanges = computed(() => sites.value.filter(siteHasChanges))

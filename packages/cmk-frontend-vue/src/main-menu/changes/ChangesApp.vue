@@ -175,7 +175,7 @@ function setSelectedSites() {
    */
   selectedSites.value = sitesAndChanges.value.sites
     .filter((site: Site) => site.changes > 0 && ['online', 'disabled'].includes(site.onlineStatus))
-    .filter((site: Site) => site.logged_in)
+    .filter((site: Site) => site.loggedIn)
     .map((site: Site) => site.siteId)
 }
 

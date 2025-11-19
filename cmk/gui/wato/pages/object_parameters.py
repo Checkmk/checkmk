@@ -8,7 +8,6 @@
 # mypy: disable-error-code="exhaustive-match"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
@@ -60,6 +59,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecAllowList,
 )
 from cmk.gui.watolib.utils import mk_repr
+from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import Item
 
@@ -89,7 +89,7 @@ class ModeObjectParameters(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
         host = folder_from_request(request.var("folder"), self._hostname).host(self._hostname)
         if host is None:
@@ -506,7 +506,7 @@ class ModeObjectParameters(WatoMode):
 
         return None
 
-    def _show_labels(self, labels, object_type, label_sources):
+    def _show_labels(self, labels: Labels, object_type: str, label_sources: LabelSources) -> None:
         forms.section(_("Effective labels"))
         html.open_table(class_="setting")
         html.open_tr()

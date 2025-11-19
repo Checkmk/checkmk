@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui import site_config, sites, user_sites
 from cmk.gui.config import Config
@@ -41,7 +40,7 @@ class Performance(SidebarSnapin):
     def show(self, config: Config) -> None:
         only_sites = snapin_site_choice("performance", user_sites.get_configured_site_choices())
 
-        def write_line(left, right, show_more):
+        def write_line(left: str, right: str, show_more: bool) -> None:
             html.open_tr(class_="show_more_mode" if show_more else "basic")
             html.td(left, class_="left")
             html.td(HTMLWriter.render_strong(right), class_="right")

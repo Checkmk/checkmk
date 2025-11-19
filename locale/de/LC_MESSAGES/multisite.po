@@ -2779,6 +2779,10 @@ msgstr ""
 msgid "API access token"
 msgstr "API Zugangstoken"
 
+#, fuzzy
+msgid "API cache is disabled."
+msgstr "Graph ist deaktiviert"
+
 msgid "API endpoint from PagerDuty V2"
 msgstr "API-Endpunkt von PagerDuty V2"
 
@@ -6487,6 +6491,9 @@ msgstr "Immer Bulks bilden"
 
 msgid "Always compute the rate"
 msgstr "Die Rate immer berechnen"
+
+msgid "Always fetch data from Meraki API."
+msgstr ""
 
 msgid "Always install Python with agent"
 msgstr "Installiere Python immer mit dem Agenten"
@@ -11286,6 +11293,10 @@ msgstr "Cache Misses"
 msgid "Cache misses per second"
 msgstr "Cache Misses pro Sekunde"
 
+#, fuzzy
+msgid "Cache per section"
+msgstr "Diese Sektion zwischenspeichern"
+
 msgid "Cache read throughput (/sec)"
 msgstr "Lesedurchsatz des Cache (/sek)"
 
@@ -11415,6 +11426,9 @@ msgstr "Die Remote-Instanz kann nicht über '%s' kontaktiert werden"
 #, python-format
 msgid "Can't parse version %r"
 msgstr "Kann die Version %r nicht parsen"
+
+msgid "Canada"
+msgstr ""
 
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -19766,6 +19780,10 @@ msgstr "Gerät online"
 msgid "Device state not available"
 msgstr "Geräte Zustand nicht verfügbar"
 
+#, fuzzy
+msgid "Device statuses"
+msgstr "Service-Status"
+
 msgid "Device type"
 msgstr "Gerätetyp"
 
@@ -19971,6 +19989,10 @@ msgstr "Durchschnittsbildung deaktivieren"
 
 msgid "Disable bulkwalks"
 msgstr "Bulk-Walks deaktivieren"
+
+#, fuzzy
+msgid "Disable cache"
+msgstr "Deaktivierte Checks"
 
 msgid "Disable certificate validation"
 msgstr "Zertifikatsüberprüfung deaktivieren"
@@ -34371,6 +34393,10 @@ msgstr "Zu durchsuchende Indexe, Standardwert ist \"*\", d.h. alle Indexe."
 msgid "Indexspace wasted"
 msgstr "Ungenutzter Indexbereich"
 
+#, fuzzy
+msgid "India"
+msgstr "Indizes"
+
 msgid "Indices"
 msgstr "Indizes"
 
@@ -37650,6 +37676,10 @@ msgstr "Lizenzen (Maximum)"
 
 msgid "Licenses (Total)"
 msgstr "Lizenzen (gesamt)"
+
+#, fuzzy
+msgid "Licenses overview"
+msgstr "Lizenzierte Services"
 
 msgid "Licensing"
 msgstr "Lizenzierung"
@@ -41087,6 +41117,10 @@ msgstr "speicherwarnung ab"
 
 msgid "Memorystore Redis"
 msgstr "Speichersystem Redis"
+
+#, fuzzy
+msgid "Meraki region"
+msgstr "Services pro Region"
 
 msgid "Merge even if there is an acknowledged event"
 msgstr "Verbinde selbst wenn es ein quittiertes Ereignis gibt"
@@ -56944,6 +56978,10 @@ msgstr "Sensorbeschreibung, falls diese gesetzt ist, ansonsten Index"
 msgid "Sensor name"
 msgstr "Sensorname"
 
+#, fuzzy
+msgid "Sensor readings"
+msgstr "Messwerte der Organisationssensoren"
+
 msgid "Sensor state"
 msgstr "Sensorzustand"
 
@@ -64299,6 +64337,18 @@ msgid ""
 msgstr ""
 "Der MSSQL Instanzname, der Tablespace-Name und der Sicherungstyp, jeweils "
 "getrennt durch ein Leerzeichen."
+
+msgid ""
+"The Meraki API is available under different URLS for different regions of "
+"the world.\n"
+"Default (most of the world): \"https://api.meraki.com/api/v1\"\n"
+"Canada\t\"https://api.meraki.ca/api/v1\"\n"
+"China\t\"https://api.meraki.cn/api/v1\"\n"
+"India\t\"https://api.meraki.in/api/v1\"\n"
+"United States FedRAMP\t\"https://api.gov-meraki.com/api/v1\"\n"
+"For details see: \"https://developer.cisco.com/meraki/api-v1/getting-started/"
+"#base-uri\"\n"
+msgstr ""
 
 msgid "The Number of the power Phase."
 msgstr "Nummer der Stromphase."
@@ -78323,6 +78373,9 @@ msgstr "Einheit"
 
 msgid "Unit name"
 msgstr "Name der Einheit"
+
+msgid "United States FedRAMP"
+msgstr ""
 
 msgid "Unitrends backup and replication plug-ins (Linux)"
 msgstr "Unitrends-Sicherung und Replikations-Plugins (Linux)"

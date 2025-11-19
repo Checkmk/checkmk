@@ -2805,6 +2805,10 @@ msgid "API access token"
 msgstr "Token de acces la API"
 
 #, fuzzy
+msgid "API cache is disabled."
+msgstr "Graficul este dezactivat"
+
+#, fuzzy
 msgid "API endpoint from PagerDuty V2"
 msgstr "API Endpoint de la PagerDuty V2"
 
@@ -6667,6 +6671,9 @@ msgstr "Întotdeauna în vrac"
 #, fuzzy
 msgid "Always compute the rate"
 msgstr "Reclasificarea statului complet"
+
+msgid "Always fetch data from Meraki API."
+msgstr ""
 
 msgid "Always install Python with agent"
 msgstr "Instalați întotdeauna Python cu agentul"
@@ -11843,6 +11850,10 @@ msgid "Cache misses per second"
 msgstr "Ratarea memoriei cache pe secundă"
 
 #, fuzzy
+msgid "Cache per section"
+msgstr "dezactivați această secțiune"
+
+#, fuzzy
 msgid "Cache read throughput (/sec)"
 msgstr "Viteză de citire"
 
@@ -11969,6 +11980,9 @@ msgstr "Nu se poate conecta la site-ul la distanță: %s."
 #, python-format
 msgid "Can't parse version %r"
 msgstr "Nu se poate analiza versiunea %r"
+
+msgid "Canada"
+msgstr ""
 
 msgid "Cancel"
 msgstr "Anulează"
@@ -20611,6 +20625,10 @@ msgstr "Dispozitiv online"
 msgid "Device state not available"
 msgstr "Starea dispozitivului nu este disponibilă"
 
+#, fuzzy
+msgid "Device statuses"
+msgstr "Starea serviciului"
+
 msgid "Device type"
 msgstr "Tipul de dispozitiv"
 
@@ -20821,6 +20839,10 @@ msgstr "Media mesajelor"
 #, fuzzy
 msgid "Disable bulkwalks"
 msgstr "Dezactivați toate"
+
+#, fuzzy
+msgid "Disable cache"
+msgstr "Controale pentru persoanele cu handicap"
 
 msgid "Disable certificate validation"
 msgstr "Dezactivați validarea certificatelor"
@@ -35957,6 +35979,10 @@ msgstr ""
 msgid "Indexspace wasted"
 msgstr "Spațiu de indexare irosit"
 
+#, fuzzy
+msgid "India"
+msgstr "Indicii"
+
 msgid "Indices"
 msgstr "Indicii"
 
@@ -39393,6 +39419,10 @@ msgstr "Clienți maxim"
 #, fuzzy
 msgid "Licenses (Total)"
 msgstr "Detalii licență"
+
+#, fuzzy
+msgid "Licenses overview"
+msgstr "Servicii licențiate"
 
 msgid "Licensing"
 msgstr "Licențiere"
@@ -42958,6 +42988,10 @@ msgstr "Avertizare de memorie la"
 #, fuzzy
 msgid "Memorystore Redis"
 msgstr "cereri"
+
+#, fuzzy
+msgid "Meraki region"
+msgstr "Servicii de monitorizat pe regiune"
 
 msgid "Merge even if there is an acknowledged event"
 msgstr "Îmbinare chiar dacă există un eveniment recunoscut"
@@ -59807,6 +59841,10 @@ msgstr "Descrierea senzorului, dacă este prezent, altfel indicele senzorului"
 msgid "Sensor name"
 msgstr "Numele senzorului"
 
+#, fuzzy
+msgid "Sensor readings"
+msgstr "Citiri ale senzorilor de organizare"
+
 msgid "Sensor state"
 msgstr "Starea senzorului"
 
@@ -67478,6 +67516,18 @@ msgid ""
 msgstr ""
 "Numele instanței MSSQL, numele tablespace-ului și tipul de copie de rezervă, "
 "fiecare fiind separat de un spațiu."
+
+msgid ""
+"The Meraki API is available under different URLS for different regions of "
+"the world.\n"
+"Default (most of the world): \"https://api.meraki.com/api/v1\"\n"
+"Canada\t\"https://api.meraki.ca/api/v1\"\n"
+"China\t\"https://api.meraki.cn/api/v1\"\n"
+"India\t\"https://api.meraki.in/api/v1\"\n"
+"United States FedRAMP\t\"https://api.gov-meraki.com/api/v1\"\n"
+"For details see: \"https://developer.cisco.com/meraki/api-v1/getting-started/"
+"#base-uri\"\n"
+msgstr ""
 
 msgid "The Number of the power Phase."
 msgstr "Numărul fazei de putere."
@@ -81840,6 +81890,9 @@ msgstr "Unitatea"
 #, fuzzy
 msgid "Unit name"
 msgstr "Denumirea unității"
+
+msgid "United States FedRAMP"
+msgstr ""
 
 #, fuzzy
 msgid "Unitrends backup and replication plug-ins (Linux)"

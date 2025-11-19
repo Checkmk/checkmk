@@ -2667,6 +2667,10 @@ msgstr ""
 msgid "API access token"
 msgstr "APIアクセストークン"
 
+#, fuzzy
+msgid "API cache is disabled."
+msgstr "グラフが無効になっています"
+
 msgid "API endpoint from PagerDuty V2"
 msgstr "PagerDuty V2のAPIエンドポイント"
 
@@ -6285,6 +6289,9 @@ msgstr "常にバルク"
 
 msgid "Always compute the rate"
 msgstr "常にレートを計算する"
+
+msgid "Always fetch data from Meraki API."
+msgstr ""
 
 msgid "Always install Python with agent"
 msgstr "常にエージェントと一緒にPythonをインストールする"
@@ -11070,6 +11077,10 @@ msgid "Cache misses per second"
 msgstr "1秒あたりのキャッシュミス"
 
 #, fuzzy
+msgid "Cache per section"
+msgstr "このセクションのキャッシュ"
+
+#, fuzzy
 msgid "Cache read throughput (/sec)"
 msgstr "FCP 読み取りスループット"
 
@@ -11196,6 +11207,9 @@ msgstr "%sを使用してリモートサイトに接続できません"
 #, python-format
 msgid "Can't parse version %r"
 msgstr "バージョン%rは使用できません"
+
+msgid "Canada"
+msgstr ""
 
 msgid "Cancel"
 msgstr "キャンセル"
@@ -19399,6 +19413,10 @@ msgstr "オンラインデバイス"
 msgid "Device state not available"
 msgstr "デバイスの状態は利用できません"
 
+#, fuzzy
+msgid "Device statuses"
+msgstr "サービスステータス"
+
 msgid "Device type"
 msgstr "デバイスタイプ"
 
@@ -19599,6 +19617,10 @@ msgstr "メッセージの平均化"
 
 msgid "Disable bulkwalks"
 msgstr "バルクウォークの無効化"
+
+#, fuzzy
+msgid "Disable cache"
+msgstr "無効なチェック"
 
 msgid "Disable certificate validation"
 msgstr "証明書の検証を無効にする"
@@ -33674,6 +33696,10 @@ msgstr ""
 msgid "Indexspace wasted"
 msgstr "インデックススペースが無駄になります"
 
+#, fuzzy
+msgid "India"
+msgstr "インデックス"
+
 msgid "Indices"
 msgstr "インデックス"
 
@@ -36916,6 +36942,10 @@ msgstr "最大クライアント数"
 #, fuzzy
 msgid "Licenses (Total)"
 msgstr "ライセンス詳細"
+
+#, fuzzy
+msgid "Licenses overview"
+msgstr "ライセンス対象サービス"
 
 msgid "Licensing"
 msgstr "ライセンス"
@@ -40320,6 +40350,10 @@ msgstr "メモリに関する警告"
 
 msgid "Memorystore Redis"
 msgstr "メモリストア Redis"
+
+#, fuzzy
+msgid "Meraki region"
+msgstr "リージョン別サービス"
 
 msgid "Merge even if there is an acknowledged event"
 msgstr "承認済みのイベントがある場合でもマージ"
@@ -55978,6 +56012,10 @@ msgstr "存在する場合は、センサーの説明、存在しない場合は
 msgid "Sensor name"
 msgstr "センサー名"
 
+#, fuzzy
+msgid "Sensor readings"
+msgstr "組織センサーの読取"
+
 msgid "Sensor state"
 msgstr "センサーの状態"
 
@@ -63134,6 +63172,18 @@ msgid ""
 msgstr ""
 "MSSQLインスタンス名、テーブルスペース名、およびバックアップタイプ。それぞれス"
 "ペースで区切られます。"
+
+msgid ""
+"The Meraki API is available under different URLS for different regions of "
+"the world.\n"
+"Default (most of the world): \"https://api.meraki.com/api/v1\"\n"
+"Canada\t\"https://api.meraki.ca/api/v1\"\n"
+"China\t\"https://api.meraki.cn/api/v1\"\n"
+"India\t\"https://api.meraki.in/api/v1\"\n"
+"United States FedRAMP\t\"https://api.gov-meraki.com/api/v1\"\n"
+"For details see: \"https://developer.cisco.com/meraki/api-v1/getting-started/"
+"#base-uri\"\n"
+msgstr ""
 
 msgid "The Number of the power Phase."
 msgstr "電力フェーズの数。"
@@ -76510,6 +76560,9 @@ msgstr "単位"
 
 msgid "Unit name"
 msgstr "ユニット名"
+
+msgid "United States FedRAMP"
+msgstr ""
 
 msgid "Unitrends backup and replication plug-ins (Linux)"
 msgstr "Unitrendsバックアップおよびレプリケーションプラグイン（Linux）"

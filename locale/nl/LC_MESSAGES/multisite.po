@@ -2774,6 +2774,10 @@ msgid "API access token"
 msgstr "API Toegangstoken"
 
 #, fuzzy
+msgid "API cache is disabled."
+msgstr "Grafiek is uitgeschakeld"
+
+#, fuzzy
 msgid "API endpoint from PagerDuty V2"
 msgstr "API-eindpunt van PagerDuty V2"
 
@@ -6657,6 +6661,9 @@ msgstr "Altijd bulk"
 #, fuzzy
 msgid "Always compute the rate"
 msgstr "Herindelen volledige staat"
+
+msgid "Always fetch data from Meraki API."
+msgstr ""
 
 msgid "Always install Python with agent"
 msgstr "Installeer Python altijd met agent"
@@ -11794,6 +11801,10 @@ msgid "Cache misses per second"
 msgstr "Cache missers per seconde"
 
 #, fuzzy
+msgid "Cache per section"
+msgstr "dit gedeelte uitschakelen"
+
+#, fuzzy
 msgid "Cache read throughput (/sec)"
 msgstr "Lees doorvoer"
 
@@ -11920,6 +11931,9 @@ msgstr "Kan geen verbinding maken met externe site: %s"
 #, python-format
 msgid "Can't parse version %r"
 msgstr "Kan't parsen versie %r"
+
+msgid "Canada"
+msgstr ""
 
 msgid "Cancel"
 msgstr "Annuleren"
@@ -20565,6 +20579,10 @@ msgstr "Apparaat online"
 msgid "Device state not available"
 msgstr "Toestand apparaat niet beschikbaar"
 
+#, fuzzy
+msgid "Device statuses"
+msgstr "Dienstverleningsstatus"
+
 msgid "Device type"
 msgstr "Type apparaat"
 
@@ -20778,6 +20796,10 @@ msgstr "Bericht gemiddelde"
 #, fuzzy
 msgid "Disable bulkwalks"
 msgstr "Alles uitschakelen"
+
+#, fuzzy
+msgid "Disable cache"
+msgstr "Uitgeschakelde controles"
 
 msgid "Disable certificate validation"
 msgstr "Certificaatvalidatie uitschakelen"
@@ -35830,6 +35852,10 @@ msgstr "Indexen om te doorzoeken, standaard '*', wat betekent alle indexen."
 msgid "Indexspace wasted"
 msgstr "Verspilde indexruimte"
 
+#, fuzzy
+msgid "India"
+msgstr "Indexen"
+
 msgid "Indices"
 msgstr "Indexen"
 
@@ -39286,6 +39312,10 @@ msgstr "Cliënten maximum"
 #, fuzzy
 msgid "Licenses (Total)"
 msgstr "Licentiegegevens"
+
+#, fuzzy
+msgid "Licenses overview"
+msgstr "Vergunde diensten: %s"
 
 msgid "Licensing"
 msgstr "Licentie"
@@ -42863,6 +42893,10 @@ msgstr "Geheugenwaarschuwing bij"
 
 msgid "Memorystore Redis"
 msgstr "Geheugenopslag Redis"
+
+#, fuzzy
+msgid "Meraki region"
+msgstr "Te controleren diensten per regio"
 
 msgid "Merge even if there is an acknowledged event"
 msgstr "Samenvoegen zelfs als er een erkende gebeurtenis is"
@@ -59668,6 +59702,10 @@ msgstr "Beschrijving van de sensor indien aanwezig, anders sensorindex"
 msgid "Sensor name"
 msgstr "Naam sensor"
 
+#, fuzzy
+msgid "Sensor readings"
+msgstr "Organisatie sensor metingen"
+
 msgid "Sensor state"
 msgstr "Toestand van de sensor"
 
@@ -67286,6 +67324,18 @@ msgid ""
 msgstr ""
 "De MSSQL instance naam, de tablespace naam en het backup type, elk "
 "gescheiden door een spatie."
+
+msgid ""
+"The Meraki API is available under different URLS for different regions of "
+"the world.\n"
+"Default (most of the world): \"https://api.meraki.com/api/v1\"\n"
+"Canada\t\"https://api.meraki.ca/api/v1\"\n"
+"China\t\"https://api.meraki.cn/api/v1\"\n"
+"India\t\"https://api.meraki.in/api/v1\"\n"
+"United States FedRAMP\t\"https://api.gov-meraki.com/api/v1\"\n"
+"For details see: \"https://developer.cisco.com/meraki/api-v1/getting-started/"
+"#base-uri\"\n"
+msgstr ""
 
 msgid "The Number of the power Phase."
 msgstr "Het nummer van de machtsfase."
@@ -81614,6 +81664,9 @@ msgstr "Eenheid"
 #, fuzzy
 msgid "Unit name"
 msgstr "Naam eenheid"
+
+msgid "United States FedRAMP"
+msgstr ""
 
 #, fuzzy
 msgid "Unitrends backup and replication plug-ins (Linux)"

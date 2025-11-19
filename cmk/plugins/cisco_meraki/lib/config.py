@@ -27,6 +27,7 @@ class MerakiConfig:
     hostname: str
     org_ids: Sequence[str]
     section_names: Sequence[str]
+    org_id_as_prefix: bool
     no_cache: bool
     cache_ttl: CacheTTL
 
@@ -36,6 +37,7 @@ class MerakiConfig:
             hostname=args.hostname,
             org_ids=args.orgs,
             section_names=args.sections,
+            org_id_as_prefix=args.org_id_as_prefix,
             no_cache=args.no_cache,
             cache_ttl=CacheTTL(
                 devices=args.cache_devices,

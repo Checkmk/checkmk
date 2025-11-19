@@ -21,7 +21,15 @@ from .fakes import FakeMerakiSDK
 class TestMerakiAgentOutput:
     @pytest.fixture
     def ctx(self) -> MerakiRunContext:
-        args = agent.parse_arguments(["heute", "--apikey", "my-api-key", "--no-cache"])
+        args = agent.parse_arguments(
+            [
+                "heute",
+                "--apikey",
+                "my-api-key",
+                "--no-cache",
+                "--org-id-as-prefix",
+            ]
+        )
         config = MerakiConfig.build(args)
         client = MerakiClient.build(FakeMerakiSDK(), config)
         return MerakiRunContext(config=config, client=client)
@@ -48,8 +56,8 @@ class TestMerakiAgentOutput:
     def test_piggyback_headings(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
         agent.run(ctx)
 
-        value = re.findall(r"<<<<(\w+)>>>>", capsys.readouterr().out)
-        expected = ["dev1", "dev2", "dev3"]
+        value = set(re.findall(r"<<<<(\w+-\w+)>>>>", capsys.readouterr().out))
+        expected = {"123-dev1", "123-dev2", "456-dev3"}  # prefixed with org ID
 
         assert value == expected
 

@@ -145,12 +145,19 @@ class MerakiOrganisation:
     def _get_device_piggyback(
         self, device: MerakiAPIData, devices_by_serial: Mapping[str, MerakiAPIData]
     ) -> str | None:
+        prefix = self._get_piggyback_prefix()
         try:
             serial = str(device[API_NAME_DEVICE_SERIAL])
-            return str(devices_by_serial[serial][API_NAME_DEVICE_NAME])
+            return f"{prefix}{devices_by_serial[serial][API_NAME_DEVICE_NAME]}"
         except KeyError as e:
             LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
             return None
+
+    def _get_piggyback_prefix(self) -> str:
+        prefix = ""
+        if self.config.org_id_as_prefix:
+            prefix += self.id + "-"
+        return prefix
 
 
 def _query_meraki_objects(*, organisations: Sequence[MerakiOrganisation]) -> Iterable[Section]:
@@ -221,6 +228,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--region",
         choices=["default", "canada", "china", "india", "us_gov"],
         default="default",
+    )
+
+    parser.add_argument(
+        "--org-id-as-prefix",
+        default=False,
+        action="store_const",
+        const=True,
+        help="Use organisation ID as device piggyback prefix.",
     )
 
     parser.add_argument(

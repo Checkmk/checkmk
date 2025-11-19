@@ -103,6 +103,20 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     element_template=String(macro_support=True), title=Title("Organizations")
                 )
             ),
+            "org_id_as_prefix": DictElement(
+                parameter_form=FixedValue(
+                    value=True,
+                    title=Title("Use Organisation-ID as host prefix"),
+                    label=Label("The Organization-ID will be used as host name prefix"),
+                    help_text=Help(
+                        "The Organisation-ID will be used as prefix for the hostname (separated by a -). Use "
+                        'this option together with a "Hostname translation for piggybacked hosts" to add a '
+                        "organisation prefix to the hosts from the Cisco Meraki cloud to avoid conflicting "
+                        'hostnames. You can also use this option along with the "Dynamic host management" to '
+                        "sort the host in organisation specific folders."
+                    ),
+                )
+            ),
             "no_cache": DictElement(
                 parameter_form=FixedValue(
                     title=Title("Disable cache"),

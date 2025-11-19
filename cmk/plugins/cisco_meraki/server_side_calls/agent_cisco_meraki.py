@@ -36,6 +36,7 @@ class Params(BaseModel):
     region: str | None = None
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None
+    org_id_as_prefix: bool | None = None
     no_cache: bool | None = None
     cache_per_section: CachePerSection | None = None
 
@@ -68,6 +69,9 @@ def agent_cisco_meraki_arguments(
     if params.orgs is not None:
         args.append("--orgs")
         args += [replace_macros(org, host_config.macros) for org in params.orgs]
+
+    if params.org_id_as_prefix:
+        args.append("--org-id-as-prefix")
 
     if params.no_cache:
         args.append("--no-cache")

@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+
+from collections.abc import Sequence
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary, DualListChoice, Transform
+from cmk.gui.valuespec.definitions import ListChoiceChoice
 from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 
 
@@ -44,7 +46,7 @@ class _CheckTypeHostSelection(DualListChoice):
     def __init__(self, title: str) -> None:
         super().__init__(rows=25, title=title)
 
-    def get_elements(self):
+    def get_elements(self) -> Sequence[ListChoiceChoice]:
         checks = get_check_information_cached(debug=active_config.debug)
         return [
             (str(cn), (str(cn) + " - " + c["title"])[:60])
@@ -58,7 +60,7 @@ class _CheckTypeMgmtSelection(DualListChoice):
     def __init__(self, title: str) -> None:
         super().__init__(rows=25, title=title)
 
-    def get_elements(self):
+    def get_elements(self) -> Sequence[ListChoiceChoice]:
         checks = get_check_information_cached(debug=active_config.debug)
         return [
             (str(cn.create_basic_name()), (str(cn) + " - " + c["title"])[:60])

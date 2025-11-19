@@ -127,6 +127,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DropdownChoice,
+    DropdownChoiceEntries,
     DropdownChoices,
     ListChoice,
     ListOfStrings,
@@ -2191,6 +2192,12 @@ class _IsLocked:
 
 
 @dataclass(frozen=True)
+class _RuleSpecItem:
+    name: str
+    choices: DropdownChoiceEntries
+
+
+@dataclass(frozen=True)
 class _RulePropertiesAndConditions:
     options: RuleOptions
     conditions: RuleConditions
@@ -2371,6 +2378,11 @@ class ABCEditRuleMode(WatoMode):
             is_locked=is_locked,
             tree=tree,
             rule_spec_name=self._rulespec.name,
+            rule_spec_item=(
+                _RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
+                if (self._rulespec.item_type and self._rulespec.item_name is not None)
+                else None
+            ),
         )
 
         self._rule.rule_options = rule_values.options
@@ -2517,18 +2529,18 @@ class ABCEditRuleMode(WatoMode):
             }
         )
 
-    def _create_explicit_rule_services_dict(self) -> DictElementAPI:
-        assert self._rulespec.item_name is not None
+    def _create_explicit_rule_services_dict(self, rule_spec_item: _RuleSpecItem) -> DictElementAPI:
         value_parameter_form = (
             MultipleChoiceAPI(
                 elements=[
-                    MultipleChoiceElementAPI(name=n, title=Title("%s") % t) for n, t in item_enum
+                    MultipleChoiceElementAPI(name=n, title=Title("%s") % t)
+                    for n, t in rule_spec_item.choices
                 ],
                 custom_validate=[
                     not_empty(error_msg=Message("Please add at least one service item.")),
                 ],
             )
-            if (item_enum := self._rulespec.item_enum)
+            if rule_spec_item.choices
             else ListOfStringsAPI(
                 string_spec=RegularExpressionAPI(
                     predefined_help_text=MatchingScope.PREFIX,
@@ -2540,7 +2552,7 @@ class ABCEditRuleMode(WatoMode):
         )
         return DictElementAPI(
             parameter_form=DictionaryAPI(
-                title=Title("%s") % self._rulespec.item_name,
+                title=Title("%s") % rule_spec_item.name,
                 elements={
                     "value": DictElementAPI(parameter_form=value_parameter_form, required=True),
                     "negate": DictElementAPI(
@@ -2554,7 +2566,7 @@ class ABCEditRuleMode(WatoMode):
         )
 
     def _create_explicit_rule_conditions_dict(
-        self, *, tree: FolderTree, rule_spec_name: str
+        self, *, tree: FolderTree, rule_spec_name: str, rule_spec_item: _RuleSpecItem | None
     ) -> DictionaryAPI:
         elements: dict[str, DictElementAPI] = {
             "folder_path": DictElementAPI(
@@ -2623,10 +2635,10 @@ class ABCEditRuleMode(WatoMode):
                 ),
             ),
         }
-        if self._rulespec.item_type:
+        if rule_spec_item:
             elements.update(
                 {
-                    "explicit_services": self._create_explicit_rule_services_dict(),
+                    "explicit_services": self._create_explicit_rule_services_dict(rule_spec_item),
                     "service_label_groups": DictElementAPI(
                         parameter_form=BinaryConditionChoices(
                             title=Title("Service labels"),
@@ -2651,7 +2663,9 @@ class ABCEditRuleMode(WatoMode):
             )
         return DictionaryAPI(elements=elements)
 
-    def _create_rule_conditions_catalog(self, *, tree: FolderTree, rule_spec_name: str) -> Catalog:
+    def _create_rule_conditions_catalog(
+        self, *, tree: FolderTree, rule_spec_name: str, rule_spec_item: _RuleSpecItem | None
+    ) -> Catalog:
         return Catalog(
             elements={
                 "conditions": Topic(
@@ -2665,7 +2679,9 @@ class ABCEditRuleMode(WatoMode):
                                         name="explicit",
                                         title=Title("Explicit conditions"),
                                         parameter_form=self._create_explicit_rule_conditions_dict(
-                                            tree=tree, rule_spec_name=rule_spec_name
+                                            tree=tree,
+                                            rule_spec_name=rule_spec_name,
+                                            rule_spec_item=rule_spec_item,
                                         ),
                                     ),
                                     CascadingSingleChoiceElementAPI(
@@ -2788,6 +2804,7 @@ class ABCEditRuleMode(WatoMode):
         is_locked: _IsLocked | None,
         tree: FolderTree,
         rule_spec_name: str,
+        rule_spec_item: _RuleSpecItem | None,
     ) -> _RulePropertiesAndConditions:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         match render_mode:
@@ -2818,7 +2835,9 @@ class ABCEditRuleMode(WatoMode):
             ),
             self._get_rule_conditions_from_catalog_value(
                 parse_data_from_field_id(
-                    self._create_rule_conditions_catalog(tree=tree, rule_spec_name=rule_spec_name),
+                    self._create_rule_conditions_catalog(
+                        tree=tree, rule_spec_name=rule_spec_name, rule_spec_item=rule_spec_item
+                    ),
                     "_vue_edit_rule_conditions",
                 )
             ),
@@ -2889,6 +2908,7 @@ class ABCEditRuleMode(WatoMode):
         has_show_more: bool,
         tree: FolderTree,
         rule_spec_name: str,
+        rule_spec_item: _RuleSpecItem | None,
         debug: bool,
     ) -> None:
         render_form_spec(
@@ -2929,7 +2949,9 @@ class ABCEditRuleMode(WatoMode):
             return
 
         render_form_spec(
-            self._create_rule_conditions_catalog(tree=tree, rule_spec_name=rule_spec_name),
+            self._create_rule_conditions_catalog(
+                tree=tree, rule_spec_name=rule_spec_name, rule_spec_item=rule_spec_item
+            ),
             "_vue_edit_rule_conditions",
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
@@ -2944,6 +2966,7 @@ class ABCEditRuleMode(WatoMode):
         value_parameter_form: FormSpec | None,
         tree: FolderTree,
         rule_spec_name: str,
+        rule_spec_item: _RuleSpecItem | None,
         debug: bool,
     ) -> None:
         render_form_spec(
@@ -2992,7 +3015,11 @@ class ABCEditRuleMode(WatoMode):
             return
 
         render_form_spec(
-            self._create_rule_conditions_catalog(tree=tree, rule_spec_name=rule_spec_name),
+            self._create_rule_conditions_catalog(
+                tree=tree,
+                rule_spec_name=rule_spec_name,
+                rule_spec_item=rule_spec_item,
+            ),
             "_vue_edit_rule_conditions",
             self._get_rule_conditions_from_rule(),
             self._should_validate_on_render(),
@@ -3015,6 +3042,11 @@ class ABCEditRuleMode(WatoMode):
         )
         tree = folder_tree()
         rule_spec_name = self._rulespec.name
+        rule_spec_item = (
+            _RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
+            if (self._rulespec.item_type and self._rulespec.item_name is not None)
+            else None
+        )
 
         try:
             title: str | None = localize_or_none(
@@ -3036,6 +3068,7 @@ class ABCEditRuleMode(WatoMode):
                     has_show_more=has_show_more,
                     tree=tree,
                     rule_spec_name=rule_spec_name,
+                    rule_spec_item=rule_spec_item,
                     debug=debug,
                 )
             case RenderMode.FRONTEND:
@@ -3046,6 +3079,7 @@ class ABCEditRuleMode(WatoMode):
                     value_parameter_form=registered_form_spec,
                     tree=tree,
                     rule_spec_name=rule_spec_name,
+                    rule_spec_item=rule_spec_item,
                     debug=debug,
                 )
 
@@ -3733,7 +3767,15 @@ class ModeNewRule(ABCEditRuleMode):
     def _get_folder_path_from_vars(self, *, tree: FolderTree) -> str:
         return self._get_rule_conditions_from_catalog_value(
             parse_data_from_field_id(
-                self._create_rule_conditions_catalog(tree=tree, rule_spec_name=self._rulespec.name),
+                self._create_rule_conditions_catalog(
+                    tree=tree,
+                    rule_spec_name=self._rulespec.name,
+                    rule_spec_item=(
+                        _RuleSpecItem(self._rulespec.item_name, self._rulespec.item_enum or [])
+                        if (self._rulespec.item_type and self._rulespec.item_name is not None)
+                        else None
+                    ),
+                ),
                 "_vue_edit_rule_conditions",
             )
         ).host_folder

@@ -27,13 +27,6 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 PACKAGES := \
     apache-omd \
 
-ifeq ($(EDITION),ultimatemt)
-PACKAGES += otel-collector
-endif
-ifeq ($(EDITION),ultimate)
-PACKAGES += otel-collector
-endif
-
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 INSTALL_LOG_TARGETS := $(foreach package,$(INSTALL_TARGETS),$(addsuffix -log,$(package)))

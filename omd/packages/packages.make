@@ -175,12 +175,3 @@ debug:
 include \
     packages/apache-omd/apache-omd.make \
     packages/appliance/appliance.make \
-
-ifeq ($(EDITION),ultimatemt)
-include \
-    $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
-endif
-ifeq ($(EDITION),ultimate)
-include \
-    $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
-endif

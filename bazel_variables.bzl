@@ -105,6 +105,7 @@ edition_deps = {
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
+        "//non-free/packages/otel-collector",
     ],
     "ultimatemt": [
         "//cmk:cmk_tar_ultimatemt",
@@ -131,6 +132,7 @@ edition_deps = {
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
+        "//non-free/packages/otel-collector",
     ],
 }
 
@@ -184,6 +186,7 @@ edition_skel_permissions = {
     ],
     "ultimate": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
+        "//non-free/packages/otel-collector:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
         "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",
@@ -204,6 +207,7 @@ edition_skel_permissions = {
     ],
     "ultimatemt": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
+        "//non-free/packages/otel-collector:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
         "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",

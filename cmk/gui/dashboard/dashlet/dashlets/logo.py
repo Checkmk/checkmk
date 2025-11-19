@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.dashboard.type_defs import DashletConfig
@@ -20,15 +18,15 @@ class MKLogoDashlet(Dashlet[MKLogoDashletConfig]):
     """Dashlet that displays the Checkmk logo"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "mk_logo"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Checkmk Logo")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Shows the Checkmk logo.")
 
     @classmethod

@@ -13,7 +13,15 @@ import itertools
 import os
 import pprint
 import re
-from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
+from collections.abc import (
+    Callable,
+    Container,
+    Generator,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final, Literal, override
@@ -25,14 +33,31 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.unstable import (
+    BinaryConditionChoices,
+    CommentTextArea,
+    ConditionChoices,
+    not_empty,
+)
+from cmk.gui.form_specs.unstable import (
+    ListOfStrings as ListOfStringsAPI,
+)
+from cmk.gui.form_specs.unstable import (
+    SingleChoiceElementExtended as SingleChoiceElementExtendedAPI,
+)
+from cmk.gui.form_specs.unstable import SingleChoiceExtended as SingleChoiceExtendedAPI
+from cmk.gui.form_specs.unstable.catalog import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.labels import get_labels_from_core, LabelType
 from cmk.gui.valuespec import DropdownChoiceEntries
 from cmk.gui.watolib.check_mk_automations import (
     analyze_host_rule_effectiveness,
@@ -40,10 +65,58 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice as BooleanChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice as CascadingSingleChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoiceElement as CascadingSingleChoiceElementAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue as DefaultValueAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    DictElement as DictElementAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    Dictionary as DictionaryAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    FieldSize as FieldSizeAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    FixedValue as FixedValueAPI,
+)
+from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope
+from cmk.rulesets.v1.form_specs import MonitoredHost as MonitoredHostAPI
+from cmk.rulesets.v1.form_specs import (
+    MultipleChoice as MultipleChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    MultipleChoiceElement as MultipleChoiceElementAPI,
+)
+from cmk.rulesets.v1.form_specs import RegularExpression as RegularExpressionAPI
+from cmk.rulesets.v1.form_specs import (
+    SingleChoice as SingleChoiceAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    SingleChoiceElement as SingleChoiceElementAPI,
+)
+from cmk.rulesets.v1.form_specs import (
+    String as StringAPI,
+)
 from cmk.server_side_calls_backend.config_processing import (
     GlobalProxiesWithLookup,
     process_configuration_to_parameters,
+)
+from cmk.shared_typing.vue_formspec_components import (
+    BinaryCondition,
+    Condition,
+    ConditionGroup,
 )
 from cmk.utils import paths
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -51,7 +124,12 @@ from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.rulesets import ruleset_matcher
-from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
+from cmk.utils.rulesets.conditions import (
+    allow_host_label_conditions,
+    allow_service_label_conditions,
+    HostOrServiceConditionRegex,
+    HostOrServiceConditions,
+)
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import (
     RuleConditionsSpec,
@@ -61,7 +139,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
 )
-from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.tags import AuxTag, TagGroup, TagGroupID, TagID
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 
 from .changes import add_change
@@ -70,6 +148,7 @@ from .hosts_and_folders import (
     Folder,
     folder_preserving_link,
     folder_tree,
+    FolderTree,
     Host,
     may_use_redis,
 )
@@ -1952,3 +2031,348 @@ def may_edit_ruleset(varname: str) -> bool:
     if varname == RuleGroup.AgentConfig("custom_files"):
         return user.may("wato.rulesets") and user.may("wato.agent_deploy_custom_files")
     return user.may("wato.rulesets")
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class RuleIdentifier:
+    id: str
+    name: str
+
+
+@dataclasses.dataclass(frozen=True)
+class IsLocked:
+    instance_id: str
+    render_link: HTML
+
+
+@dataclasses.dataclass(frozen=True)
+class RuleSpecItem:
+    name: str
+    choices: DropdownChoiceEntries
+
+
+def create_rule_properties_catalog(
+    *, rule_identifier: RuleIdentifier, is_locked: IsLocked | None
+) -> Catalog:
+    elements = {
+        "description": TopicElement(
+            parameter_form=StringAPI(
+                title=Title("Description"),
+                field_size=FieldSizeAPI.LARGE,
+            ),
+            required=True,
+        ),
+        "comment": TopicElement(
+            parameter_form=CommentTextArea(
+                title=Title("Comment"),
+            ),
+            required=True,
+        ),
+        "docu_url": TopicElement(
+            parameter_form=StringAPI(
+                title=Title("Documentation URL"),
+                field_size=FieldSizeAPI.LARGE,
+            ),
+            required=True,
+        ),
+        "disabled": TopicElement(
+            parameter_form=BooleanChoiceAPI(
+                title=Title("Rule activation"),
+                label=Label("Do not apply this rule"),
+            ),
+            required=True,
+        ),
+        "id": TopicElement(
+            parameter_form=FixedValueAPI(
+                title=Title("Rule ID"),
+                value=rule_identifier.id,
+            ),
+            required=True,
+        ),
+        "_name": TopicElement(
+            parameter_form=FixedValueAPI(
+                title=Title("Ruleset name"),
+                value=rule_identifier.name,
+            ),
+            required=True,
+        ),
+    }
+    if is_locked:
+        elements.update(
+            {
+                "source": TopicElement(
+                    parameter_form=FixedValueAPI(
+                        title=Title("Source"),
+                        value=is_locked.instance_id,
+                        label=Label("%s") % str(is_locked.render_link),
+                    )
+                )
+            }
+        )
+    return Catalog(
+        elements={
+            "properties": Topic(
+                title=Title("Rule properties"),
+                elements=elements,
+            )
+        }
+    )
+
+
+def create_rule_value_catalog(*, title: str | None, value_parameter_form: FormSpec) -> Catalog:
+    return Catalog(
+        elements={
+            "value": Topic(
+                title=Title("%s") % title if title else Title("Value"),
+                elements={
+                    "value": TopicElement(
+                        parameter_form=value_parameter_form,
+                        required=True,
+                    )
+                },
+            )
+        }
+    )
+
+
+def _create_explicit_rule_services_dict(rule_spec_item: RuleSpecItem) -> DictElementAPI:
+    value_parameter_form = (
+        MultipleChoiceAPI(
+            elements=[
+                MultipleChoiceElementAPI(name=n, title=Title("%s") % t)
+                for n, t in rule_spec_item.choices
+            ],
+            custom_validate=[
+                not_empty(error_msg=Message("Please add at least one service item.")),
+            ],
+        )
+        if rule_spec_item.choices
+        else ListOfStringsAPI(
+            string_spec=RegularExpressionAPI(
+                predefined_help_text=MatchingScope.PREFIX,
+            ),
+            custom_validate=[
+                not_empty(error_msg=Message("Please add at least one service item.")),
+            ],
+        )
+    )
+    return DictElementAPI(
+        parameter_form=DictionaryAPI(
+            title=Title("%s") % rule_spec_item.name,
+            elements={
+                "value": DictElementAPI(parameter_form=value_parameter_form, required=True),
+                "negate": DictElementAPI(
+                    parameter_form=BooleanChoiceAPI(
+                        label=Label("Negate: make rule apply for all but the above entries")
+                    ),
+                    required=True,
+                ),
+            },
+        ),
+    )
+
+
+@request_memoize()
+def _get_cached_tags() -> Sequence[TagGroup | AuxTag]:
+    choices: list[TagGroup | AuxTag] = []
+    all_topics = active_config.tags.get_topic_choices()
+    tag_groups_by_topic = dict(active_config.tags.get_tag_groups_by_topic())
+    aux_tags_by_topic = dict(active_config.tags.get_aux_tags_by_topic())
+    for topic_id, _topic_title in all_topics:
+        for tag_group in tag_groups_by_topic.get(topic_id, []):
+            choices.append(tag_group)
+
+        for aux_tag in aux_tags_by_topic.get(topic_id, []):
+            choices.append(aux_tag)
+
+    return choices
+
+
+def _get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
+    choices: dict[str, ConditionGroup] = {}
+    for tag in _get_cached_tags():
+        match tag:
+            case TagGroup():
+                choices[tag.id] = ConditionGroup(
+                    title=tag.choice_title,
+                    conditions=[
+                        Condition(name=tag_id, title=tag_title)
+                        for tag_id, tag_title in tag.get_non_empty_tag_choices()
+                    ],
+                )
+            case AuxTag():
+                choices[tag.id] = ConditionGroup(
+                    title=tag.choice_title,
+                    conditions=[Condition(name=tag.id, title=tag.title)],
+                )
+            case other:
+                assert_never(other)
+    return choices
+
+
+def _create_binary_condition(id_: str, value: str) -> BinaryCondition:
+    name = f"{id_}:{value}"
+    return BinaryCondition(name=name, title=name)
+
+
+@request_memoize()
+def _get_cached_host_labels() -> Sequence[tuple[str, str]]:
+    return get_labels_from_core(LabelType.ALL, search_label="")
+
+
+def _get_host_label_groups_condition_choices() -> list[BinaryCondition]:
+    return [_create_binary_condition(id_, value) for id_, value in _get_cached_host_labels()]
+
+
+# TODO si-host-vs-service-labels: Both host_label_groups and service_label_groups used:
+#   LabelGroups > _sub_vs = _SingleLabel(world=Labels.World.CORE)
+#               > label_autocompleter
+#               > Labels.get_labels
+#               > get_labels_from_core(LabelType.ALL, search_label)
+# Why not: hosts    -> get_labels_from_core(LabelType.HOST, ...)
+#          services -> get_labels_from_core(LabelType.SERVICE, ...)
+# @request_memoize()
+# def _get_cached_service_labels() -> Sequence[tuple[str, str]]:
+#     return get_labels_from_config(LabelType.SERVICE, search_label="")
+#
+#
+# def _get_service_label_groups_condition_choices() -> list[BinaryCondition]:
+#     return [_create_binary_condition(id_, value) for id_, value in _get_cached_service_labels()]
+
+
+def _create_explicit_rule_conditions_dict(
+    *, tree: FolderTree, rule_spec_name: str, rule_spec_item: RuleSpecItem | None
+) -> DictionaryAPI:
+    elements: dict[str, DictElementAPI] = {
+        "folder_path": DictElementAPI(
+            parameter_form=SingleChoiceExtendedAPI[str](
+                title=Title("Folder"),
+                help_text=Help("Create the rule in the configured folder"),
+                elements=[
+                    SingleChoiceElementExtendedAPI(name=n, title=Title("%s") % t)
+                    for n, t in tree.folder_choices()
+                ],
+                prefill=DefaultValueAPI(""),
+            ),
+            required=True,
+        ),
+        "host_tags": DictElementAPI(
+            parameter_form=ConditionChoices(
+                title=Title("Host tags"),
+                add_condition_group_label=Label("Add tag condition"),
+                select_condition_group_to_add=Label("Select tag to add"),
+                no_more_condition_groups_to_add=Label("No more tags to add"),
+                get_conditions=_get_host_tags_condition_choices,
+                custom_validate=[
+                    not_empty(error_msg=Message("Please add at least one tag condition."))
+                ],
+            ),
+        ),
+        "host_label_groups": DictElementAPI(
+            parameter_form=BinaryConditionChoices(
+                title=Title("Host labels"),
+                help_text=Help(
+                    "Use this condition to select hosts based on the configured host labels."
+                ),
+                label=Label("Label"),
+                get_conditions=(
+                    lambda: _get_host_label_groups_condition_choices()
+                    if allow_host_label_conditions(rule_spec_name)
+                    else []
+                ),
+                custom_validate=[
+                    not_empty(error_msg=Message("Please add at least one host label."))
+                ],
+            )
+        ),
+        "explicit_hosts": DictElementAPI(
+            parameter_form=DictionaryAPI(
+                title=Title("Explicit hosts"),
+                elements={
+                    "value": DictElementAPI(
+                        parameter_form=ListOfStringsAPI(
+                            string_spec=MonitoredHostAPI(),
+                            custom_validate=[
+                                not_empty(error_msg=Message("Please add at least one host.")),
+                            ],
+                        ),
+                        required=True,
+                    ),
+                    "negate": DictElementAPI(
+                        parameter_form=BooleanChoiceAPI(
+                            label=Label("Negate: make rule apply for all but the above entries"),
+                        ),
+                        required=True,
+                    ),
+                },
+            ),
+        ),
+    }
+    if rule_spec_item:
+        elements.update(
+            {
+                "explicit_services": _create_explicit_rule_services_dict(rule_spec_item),
+                "service_label_groups": DictElementAPI(
+                    parameter_form=BinaryConditionChoices(
+                        title=Title("Service labels"),
+                        help_text=Help(
+                            "Use this condition to select services based on the configured service labels."
+                        ),
+                        label=Label("Label"),
+                        get_conditions=(
+                            # TODO si-host-vs-service-labels: Why do we use host labels here?
+                            lambda: _get_host_label_groups_condition_choices()
+                            if allow_service_label_conditions(rule_spec_name)
+                            else []
+                        ),
+                        custom_validate=[
+                            not_empty(error_msg=Message("Please add at least one service label."))
+                        ],
+                    )
+                ),
+            }
+        )
+    return DictionaryAPI(elements=elements)
+
+
+def create_rule_conditions_catalog(
+    *, tree: FolderTree, rule_spec_name: str, rule_spec_item: RuleSpecItem | None
+) -> Catalog:
+    return Catalog(
+        elements={
+            "conditions": Topic(
+                title=Title("Conditions"),
+                elements={
+                    "type": TopicElement(
+                        parameter_form=CascadingSingleChoiceAPI(
+                            title=Title("Condition type"),
+                            elements=[
+                                CascadingSingleChoiceElementAPI(
+                                    name="explicit",
+                                    title=Title("Explicit conditions"),
+                                    parameter_form=_create_explicit_rule_conditions_dict(
+                                        tree=tree,
+                                        rule_spec_name=rule_spec_name,
+                                        rule_spec_item=rule_spec_item,
+                                    ),
+                                ),
+                                CascadingSingleChoiceElementAPI(
+                                    name="predefined",
+                                    title=Title("Predefined conditions"),
+                                    parameter_form=SingleChoiceAPI(
+                                        title=Title("Predefined condition"),
+                                        elements=[
+                                            SingleChoiceElementAPI(name=n, title=Title("%s") % t)
+                                            for n, t in PredefinedConditionStore().choices()
+                                        ],
+                                    ),
+                                ),
+                            ],
+                            prefill=DefaultValueAPI("explicit"),
+                        ),
+                        required=True,
+                    ),
+                },
+            )
+        }
+    )

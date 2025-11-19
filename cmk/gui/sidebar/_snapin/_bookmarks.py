@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -116,12 +114,14 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
     def parameters(
         cls, mode: pagetypes.PageMode, user_permissions: UserPermissions
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
-        def bookmark_config_to_vs(v):
+        def bookmark_config_to_vs(
+            v: BookmarkSpec | None,
+        ) -> tuple[str, str, str | None, str | None] | None:
             if v:
                 return (v["title"], v["url"], v["icon"], v["topic"])
             return v
 
-        def bookmark_vs_to_config(v):
+        def bookmark_vs_to_config(v: tuple[str, str, str | None, str | None]) -> BookmarkSpec:
             return {
                 "title": v[0],
                 "url": v[1],

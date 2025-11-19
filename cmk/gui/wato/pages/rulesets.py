@@ -2348,7 +2348,7 @@ class ABCEditRuleMode(WatoMode):
         tree = folder_tree()
         is_locked = is_locked_by_quick_setup(self._rule.locked_by)
         rule_values = self._set_or_get_rule_values_from_vars(
-            tree=tree, rule_spec_name=self._rulespec.name, is_locked=is_locked
+            is_locked=is_locked, tree=tree, rule_spec_name=self._rulespec.name
         )
 
         self._rule.rule_options = rule_values.options
@@ -2759,7 +2759,7 @@ class ABCEditRuleMode(WatoMode):
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
     def _set_or_get_rule_values_from_vars(
-        self, *, tree: FolderTree, rule_spec_name: str, is_locked: bool
+        self, *, is_locked: bool, tree: FolderTree, rule_spec_name: str
     ) -> _RulePropertiesAndConditions:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         match render_mode:
@@ -2830,9 +2830,7 @@ class ABCEditRuleMode(WatoMode):
             html.div(help_text, class_="info")
 
         with html.form_context("rule_editor", method="POST"):
-            self._page_form(
-                tree=folder_tree(), rule_spec_name=self._rulespec.name, debug=config.debug
-            )
+            self._page_form(debug=config.debug)
 
     @property
     def folder(self) -> Folder:
@@ -2964,13 +2962,15 @@ class ABCEditRuleMode(WatoMode):
             self._should_validate_on_render(),
         )
 
-    def _page_form(self, *, tree: FolderTree, rule_spec_name: str, debug: bool) -> None:
+    def _page_form(self, *, debug: bool) -> None:
         self._page_form_quick_setup_warning()
 
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
 
         is_locked = is_locked_by_quick_setup(self._rule.locked_by)
+        tree = folder_tree()
+        rule_spec_name = self._rulespec.name
 
         try:
             title: str | None = localize_or_none(

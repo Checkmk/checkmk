@@ -31,6 +31,7 @@ def directory_sha256sum(directories) {
     });
 }
 
+// groovylint-disable MethodSize
 def provide_agent_binaries(Map args) {
     // always download and move artifacts unless specified differently
     def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();

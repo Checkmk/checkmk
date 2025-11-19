@@ -85,6 +85,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="", ADDIT
     }
 }
 
+// groovylint-disable ParameterCount
 def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port, exclude_pattern="") {
     println("""
         ||== upload_via_rsync() ================================================

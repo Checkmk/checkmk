@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import subprocess
 import traceback
+from collections.abc import Callable
 from pathlib import Path
-from typing import override
+from typing import override, TypeVar
 
 import cmk.utils.paths
 from cmk.ccc import store
@@ -51,6 +51,8 @@ from cmk.gui.watolib.config_sync import (
 )
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 from cmk.utils.config_warnings import ConfigurationWarnings
+
+T = TypeVar("T")
 
 
 def register(
@@ -386,7 +388,7 @@ class ConfigDomainApache(ABCConfigDomain):
             logger.exception("error reloading apache")
             return ["Failed to activate apache configuration: %s" % (traceback.format_exc())]
 
-    def _write_config_file(self):
+    def _write_config_file(self) -> None:
         config = self.get_effective_config()
 
         output = wato_fileheader()
@@ -398,7 +400,7 @@ class ConfigDomainApache(ABCConfigDomain):
         config_file_path = cmk.utils.paths.omd_root / "etc/apache/conf.d/zzz_check_mk.conf"
         store.save_text_to_file(config_file_path, output)
 
-    def get_effective_config(self):
+    def get_effective_config(self) -> GlobalSettings:
         return {
             **self.load(site_specific=False),
             **self.load(site_specific=True),
@@ -412,7 +414,9 @@ class ConfigDomainApache(ABCConfigDomain):
             }
         }
 
-    def _get_value_from_config(self, varname, conv_func, default_value):
+    def _get_value_from_config(
+        self, varname: str, conv_func: Callable[[str], T], default_value: T
+    ) -> T:
         config_files = [cmk.utils.paths.omd_root / "etc/apache/apache.conf"]
         config_files += sorted((cmk.utils.paths.omd_root / "etc/apache/conf.d").glob("*.conf"))
 
@@ -504,7 +508,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
             logger.exception("error restarting rrdcached")
             return ["Failed to activate rrdcached configuration: %s" % (traceback.format_exc())]
 
-    def _write_config_file(self):
+    def _write_config_file(self) -> None:
         config = self._get_effective_config()
 
         output = wato_fileheader()
@@ -514,7 +518,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         config_file_path = cmk.utils.paths.omd_root / "etc/rrdcached.d/zzz_check_mk.conf"
         store.save_text_to_file(config_file_path, output)
 
-    def _get_effective_config(self):
+    def _get_effective_config(self) -> GlobalSettings:
         return {
             **self.load(site_specific=False),
             **self.load(site_specific=True),
@@ -531,7 +535,9 @@ class ConfigDomainRRDCached(ABCConfigDomain):
             }
         }
 
-    def _get_value_from_config(self, varname, conv_func, default_value):
+    def _get_value_from_config(
+        self, varname: str, conv_func: Callable[[str], T], default_value: T
+    ) -> T:
         config_files = [cmk.utils.paths.omd_root / "etc/rrdcached.conf"]
         config_files += sorted((cmk.utils.paths.omd_root / "etc/rrdcached.d").glob("*.conf"))
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 
 import re
@@ -1510,10 +1509,10 @@ class CustomAttributeFilter(Filter):
         )
         self._custom_attribute_choices = choice_func
 
-    def name_varname(self, ident):
+    def name_varname(self, ident: str) -> str:
         return "%s_name" % ident
 
-    def value_varname(self, ident):
+    def value_varname(self, ident: str) -> str:
         return "%s_value" % ident
 
     def components(self) -> Iterable[FilterComponent]:

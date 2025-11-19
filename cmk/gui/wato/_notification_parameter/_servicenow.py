@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -639,7 +638,10 @@ def _migrate_state_of(o: object) -> tuple[str, object]:
             raise TypeError(f"Invalid state: {o}")
 
 
-def _migrate_auth_section(params):
+def _migrate_auth_section(params: object) -> dict[str, object]:
+    if not isinstance(params, dict):
+        raise TypeError(f"Expected dict, got {type(params)}")
+
     if "auth" in params:
         return params
     username = params.pop("username")

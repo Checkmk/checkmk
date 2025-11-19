@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 import socket
 from typing import Any
 
@@ -62,29 +60,6 @@ def notification_macro_help_fs() -> Help:
 
 def local_site_url() -> str:
     return "http://" + socket.gethostname() + url_prefix() + "check_mk/"
-
-
-# We have to transform because 'add_to_event_context'
-# in modules/events.py can't handle complex data structures
-def _transform_from_valuespec_html_mail_url_prefix(p):
-    if isinstance(p, tuple):
-        return {p[0]: p[1]}
-    if p == "automatic_http":
-        return {"automatic": "http"}
-    if p == "automatic_https":
-        return {"automatic": "https"}
-    return {"manual": p}
-
-
-def _transform_to_valuespec_html_mail_url_prefix(p):
-    if not isinstance(p, dict):
-        return ("manual", p)
-
-    k, v = list(p.items())[0]
-    if k == "automatic":
-        return f"{k}_{v}"
-
-    return ("manual", v)
 
 
 def _get_url_prefix_setting(

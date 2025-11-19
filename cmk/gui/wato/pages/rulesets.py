@@ -2179,6 +2179,12 @@ def _parse_explicit_hosts_or_services_for_vue(
 
 
 @dataclass(frozen=True)
+class _IsLocked:
+    instance_id: str
+    render_link: HTML
+
+
+@dataclass(frozen=True)
 class _RulePropertiesAndConditions:
     options: RuleOptions
     conditions: RuleConditions
@@ -2345,8 +2351,15 @@ class ABCEditRuleMode(WatoMode):
 
         self._do_validate_on_render = True
 
+        is_locked = (
+            _IsLocked(
+                self._rule.locked_by["instance_id"],
+                quick_setup_render_link(self._rule.locked_by),
+            )
+            if is_locked_by_quick_setup(self._rule.locked_by)
+            else None
+        )
         tree = folder_tree()
-        is_locked = is_locked_by_quick_setup(self._rule.locked_by)
         rule_values = self._set_or_get_rule_values_from_vars(
             is_locked=is_locked, tree=tree, rule_spec_name=self._rulespec.name
         )
@@ -2411,7 +2424,7 @@ class ABCEditRuleMode(WatoMode):
         flash(self._success_message())
         return redirect(self._back_url())
 
-    def _create_rule_properties_catalog(self, *, is_locked: bool) -> Catalog:
+    def _create_rule_properties_catalog(self, *, is_locked: _IsLocked | None) -> Catalog:
         elements = {
             "description": TopicElement(
                 parameter_form=StringAPI(
@@ -2462,8 +2475,8 @@ class ABCEditRuleMode(WatoMode):
                     "source": TopicElement(
                         parameter_form=FixedValueAPI(
                             title=Title("Source"),
-                            value=self._rule.locked_by["instance_id"],
-                            label=Label("%s") % str(quick_setup_render_link(self._rule.locked_by)),
+                            value=is_locked.instance_id,
+                            label=Label("%s") % str(is_locked.render_link),
                         )
                     )
                 }
@@ -2759,7 +2772,7 @@ class ABCEditRuleMode(WatoMode):
         return RawDiskData({"conditions": {"type": ("explicit", raw_explicit)}})
 
     def _set_or_get_rule_values_from_vars(
-        self, *, is_locked: bool, tree: FolderTree, rule_spec_name: str
+        self, *, is_locked: _IsLocked | None, tree: FolderTree, rule_spec_name: str
     ) -> _RulePropertiesAndConditions:
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         match render_mode:
@@ -2853,7 +2866,7 @@ class ABCEditRuleMode(WatoMode):
     def _page_form_backend(
         self,
         *,
-        is_locked: bool,
+        is_locked: _IsLocked | None,
         title: str | None,
         has_show_more: bool,
         tree: FolderTree,
@@ -2905,7 +2918,7 @@ class ABCEditRuleMode(WatoMode):
     def _page_form_frontend(
         self,
         *,
-        is_locked: bool,
+        is_locked: _IsLocked | None,
         title: str | None,
         value_parameter_form: FormSpec | None,
         tree: FolderTree,
@@ -2968,7 +2981,14 @@ class ABCEditRuleMode(WatoMode):
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
 
-        is_locked = is_locked_by_quick_setup(self._rule.locked_by)
+        is_locked = (
+            _IsLocked(
+                self._rule.locked_by["instance_id"],
+                quick_setup_render_link(self._rule.locked_by),
+            )
+            if is_locked_by_quick_setup(self._rule.locked_by)
+            else None
+        )
         tree = folder_tree()
         rule_spec_name = self._rulespec.name
 

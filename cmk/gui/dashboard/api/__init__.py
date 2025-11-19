@@ -7,6 +7,7 @@ from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
 from ._utils import (
     convert_internal_relative_dashboard_to_api_model_dict,
+    DashboardConstants,
     get_permitted_user_id,
     PERMISSIONS_DASHBOARD,
     PERMISSIONS_DASHBOARD_EDIT,
@@ -17,6 +18,7 @@ from .model.widget_content.graph import ApiCustomGraphValidation
 __all__ = [
     "ApiCustomGraphValidation",
     "DASHBOARD_FAMILY",
+    "DashboardConstants",
     "PERMISSIONS_DASHBOARD",
     "PERMISSIONS_DASHBOARD_EDIT",
     "get_permitted_user_id",

@@ -1,0 +1,31 @@
+diff --git a/pkg/private/deb/deb.bzl b/pkg/private/deb/deb.bzl
+index c4b090a..a4f338c 100644
+--- a/pkg/private/deb/deb.bzl
++++ b/pkg/private/deb/deb.bzl
+@@ -14,7 +14,7 @@
+ """Rule for creating Debian packages."""
+ 
+ load("//pkg:providers.bzl", "PackageVariablesInfo")
+-load("//pkg/private:util.bzl", "setup_output_files")
++load("//pkg/private:util.bzl", "setup_output_files", "substitute_package_variables")
+ 
+ _tar_filetype = [".tar", ".tar.gz", ".tgz", ".tar.bz2", "tar.xz", "tar.zst"]
+ 
+@@ -34,6 +34,8 @@ def _pkg_deb_impl(ctx):
+         package_file_name = package_file_name,
+     )
+ 
++    package = substitute_package_variables(ctx, ctx.attr.package)
++
+     changes_file = ctx.actions.declare_file(output_name.rsplit(".", 1)[0] + ".changes")
+     outputs.append(changes_file)
+ 
+@@ -42,7 +44,7 @@ def _pkg_deb_impl(ctx):
+         "--output=" + output_file.path,
+         "--changes=" + changes_file.path,
+         "--data=" + ctx.file.data.path,
+-        "--package=" + ctx.attr.package,
++        "--package=" + package,
+         "--maintainer=" + ctx.attr.maintainer,
+     ]
+ 

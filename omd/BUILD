@@ -421,8 +421,7 @@ pkg_tar(
     homepage = "https://checkmk.com",
     maintainer = "Checkmk team <feedback@checkmk.com>",
     md5sums = ":md5sums_" + edition,
-    # check-mk-pro-2.5.0-2025.06.26_0.noble_amd64.deb
-    package = "check-mk-" + edition + "{version}",
+    package = "{package}-{cmk_version}",
     package_file_name = "{package}-{cmk_version}_{version}_{architecture}.deb",
     package_variables = ":cmk_pkg_variables_" + edition,
     postinst = "//omd/debian:postinst",

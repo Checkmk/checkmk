@@ -6,14 +6,13 @@
 # mypy: disable-error-code="comparison-overlap"
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 
 
 import json
 import sys
 import traceback
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import ItemsView, Iterator, KeysView, Mapping, Sequence
 from itertools import chain
 from typing import override
 
@@ -51,7 +50,7 @@ from cmk.gui.visuals.info import visual_info_registry
 def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:
     """Select names of filters for the given infos"""
 
-    def _info_filter_choices(infos):
+    def _info_filter_choices(infos: SingleInfos) -> Iterator[tuple[str, str]]:
         for info in infos:
             info_title = visual_info_registry[info]().title
             for key, filter_ in VisualFilterList.get_choices(info):
@@ -211,10 +210,10 @@ class VisualFilterList(ListOfMultiple):
                 assert isinstance(name, str) and isinstance(value, str)
         return context
 
-    def filter_names(self):
+    def filter_names(self) -> KeysView[str]:
         return self._filters.keys()
 
-    def filter_items(self):
+    def filter_items(self) -> ItemsView[str, Filter]:
         return self._filters.items()
 
     def has_show_more(self) -> bool:

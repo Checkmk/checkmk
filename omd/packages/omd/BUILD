@@ -48,6 +48,8 @@ pkg_files(
     "pdftoppm",
     "curl",
     "zypper",
+    "rpmbuild",
+    "nslookup",
 ]]
 
 genrule(
@@ -253,9 +255,13 @@ pkg_tar(
         "@cmk//distro:debian-13": [
             ":wrapper_curl",
         ],
-        "@cmk//distro:almalinux-10": [
+        # Almalinux-9.7 upgraded to Openssl 3.5, and almalinux-10 includes 3.5 by default.
+        # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/9.7_release_notes/new-features
+        "@cmk//distro:almalinux-9+": [
             ":wrapper_curl",
+            ":wrapper_nslookup",
             ":wrapper_pdftoppm",
+            ":wrapper_rpmbuild",
         ],
         "//conditions:default": [],
     }),

@@ -44,6 +44,14 @@ selects.config_setting_group(
     ],
 )
 
+selects.config_setting_group(
+    name = "almalinux-9+",
+    match_any = [
+        ":almalinux-9",
+        ":almalinux-10",
+    ],
+)
+
 config_setting(
     name = "debian-12",
     flag_values = {":distro": "debian-12"},

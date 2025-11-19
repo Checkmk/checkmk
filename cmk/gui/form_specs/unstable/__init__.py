@@ -2,6 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.rulesets.internal.form_specs import ListExtended
+
 from .cascading_single_choice_extended import CascadingSingleChoiceExtended
 from .catalog import Catalog, Topic, TopicElement, TopicGroup
 from .comment_text_area import CommentTextArea
@@ -10,7 +12,6 @@ from .date_picker import DatePicker
 from .dictionary_extended import DictionaryExtended
 from .labels import Labels, Source, World
 from .legacy_valuespec import LegacyValueSpec
-from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
 from .list_unique_selection import ListUniqueSelection
 from .metric import MetricExtended

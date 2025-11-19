@@ -89,6 +89,7 @@ py_library(
         "cmk/rulesets/__init__.py",
         "cmk/rulesets/internal/__init__.py",
         "cmk/rulesets/internal/form_specs/__init__.py",
+        "cmk/rulesets/internal/form_specs/_extended.py",
         "cmk/rulesets/internal/form_specs/_migrations.py",
         "cmk/rulesets/internal/form_specs/_preconfigured.py",
         "cmk/rulesets/v1/__init__.py",

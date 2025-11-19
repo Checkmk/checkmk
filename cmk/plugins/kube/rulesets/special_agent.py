@@ -11,7 +11,7 @@
 from collections.abc import Callable, Iterable, Mapping
 
 from cmk.ccc.hostaddress import HostAddress
-from cmk.gui.form_specs.unstable import ListExtended
+from cmk.rulesets.internal.form_specs import ListExtended
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,

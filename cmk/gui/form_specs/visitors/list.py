@@ -6,8 +6,8 @@
 from collections.abc import Sequence
 from typing import Generic, override, TypeVar
 
-from cmk.gui.form_specs.unstable.list_extended import ListExtended
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.rulesets.internal.form_specs import ListExtended
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor

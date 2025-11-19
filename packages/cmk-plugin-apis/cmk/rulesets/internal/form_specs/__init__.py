@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from ._extended import ListExtended
 from ._migrations import migrate_to_internal_proxy
 from ._preconfigured import InternalProxy, InternalProxySchema
 
 __all__ = [
     "InternalProxy",
     "InternalProxySchema",
+    "ListExtended",
     "migrate_to_internal_proxy",
 ]

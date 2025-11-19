@@ -10,12 +10,12 @@
 from collections.abc import Callable, Mapping
 
 from cmk.ccc.version import Edition, edition
-from cmk.gui.form_specs.unstable import ListExtended
 from cmk.gui.mkeventd import (
     service_levels,
     syslog_facilities,
     syslog_priorities,
 )
+from cmk.rulesets.internal.form_specs import ListExtended
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

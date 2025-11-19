@@ -10,13 +10,13 @@ from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended, LegacyVal
 from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
 )
-from cmk.gui.form_specs.unstable.list_extended import ListExtended
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     all_host_attributes,
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
 )
+from cmk.rulesets.internal.form_specs import ListExtended
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

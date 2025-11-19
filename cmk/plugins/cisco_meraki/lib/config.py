@@ -4,22 +4,51 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from argparse import Namespace
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Self
 
 from meraki import DashboardAPI  # type: ignore[import-not-found]
 
-from . import constants
+from cmk.server_side_programs.v1_unstable import Storage
+
+from . import cache, constants, schema
+
+type CacheDecorator[**P, R] = Callable[[Callable[P, R]], Callable[P, R]]
 
 
 @dataclass(frozen=True)
-class CacheTTL:
-    devices: float
-    device_statuses: float
-    licenses_overview: float
-    organizations: float
-    sensor_readings: float
+class CacheConfig:
+    devices: CacheDecorator[[str, str], dict[str, schema.Device]]
+    device_statuses: CacheDecorator[[str], Sequence[schema.RawDevicesStatus]]
+    licenses_overview: CacheDecorator[[str, str], schema.LicensesOverview | None]
+    organizations: CacheDecorator[[], Sequence[schema.RawOrganisation]]
+    sensor_readings: CacheDecorator[[str], Sequence[schema.RawSensorReadings]]
+
+    @classmethod
+    def build(cls, args: Namespace) -> Self:
+        return cls(
+            devices=cache.cache_ttl(
+                Storage("cisco_meraki_devices", host=args.hostname),
+                ttl=args.cache_devices,
+            ),
+            device_statuses=cache.cache_ttl(
+                Storage("cisco_meraki_devices_statuses", host=args.hostname),
+                ttl=args.cache_device_statuses,
+            ),
+            licenses_overview=cache.cache_ttl(
+                Storage("cisco_meraki_licenses_overview", host=args.hostname),
+                ttl=args.cache_licenses_overview,
+            ),
+            organizations=cache.cache_ttl(
+                Storage("cisco_meraki_organizations", host=args.hostname),
+                ttl=args.cache_organizations,
+            ),
+            sensor_readings=cache.cache_ttl(
+                Storage("cisco_meraki_sensor_readings", host=args.hostname),
+                ttl=args.cache_sensor_readings,
+            ),
+        )
 
 
 @dataclass(frozen=True)
@@ -29,7 +58,7 @@ class MerakiConfig:
     section_names: Sequence[str]
     org_id_as_prefix: bool
     no_cache: bool
-    cache_ttl: CacheTTL
+    cache: CacheConfig
 
     @classmethod
     def build(cls, args: Namespace) -> Self:
@@ -39,13 +68,7 @@ class MerakiConfig:
             section_names=args.sections,
             org_id_as_prefix=args.org_id_as_prefix,
             no_cache=args.no_cache,
-            cache_ttl=CacheTTL(
-                devices=args.cache_devices,
-                device_statuses=args.cache_device_statuses,
-                licenses_overview=args.cache_licenses_overview,
-                organizations=args.cache_organizations,
-                sensor_readings=args.cache_sensor_readings,
-            ),
+            cache=CacheConfig.build(args),
         )
 
     @property

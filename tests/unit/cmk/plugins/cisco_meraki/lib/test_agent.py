@@ -31,7 +31,7 @@ class TestMerakiAgentOutput:
     def ctx(self) -> MerakiRunContext:
         args = agent.parse_arguments([*_DEFAULT_ARGS, "--no-cache", "--org-id-as-prefix"])
         config = MerakiConfig.build(args)
-        client = MerakiClient.build(FakeMerakiSDK(), config)
+        client = MerakiClient(FakeMerakiSDK(), config)
         return MerakiRunContext(config=config, client=client)
 
     def test_no_errors(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
@@ -102,7 +102,7 @@ class TestMerakiAgentOutput:
         # override resources that aren't cached by default.
         args = agent.parse_arguments([*_DEFAULT_ARGS, "--cache-sensor-readings", "60.0"])
         config = MerakiConfig.build(args)
-        client = MerakiClient.build(FakeMerakiSDK(), config)
+        client = MerakiClient(FakeMerakiSDK(), config)
         ctx = MerakiRunContext(config=config, client=client)
 
         agent.run(ctx)

@@ -306,7 +306,7 @@ def main() -> int:
 
     ctx = MerakiRunContext(
         config=(config := MerakiConfig.build(args)),
-        client=MerakiClient.build(dashboard, config),
+        client=MerakiClient(dashboard, config),
     )
 
     return run(ctx)

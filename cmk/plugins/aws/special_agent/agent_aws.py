@@ -60,8 +60,9 @@ from cmk.plugins.aws.constants import (
     AWSRegions,
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
-from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.paths import tmp_dir
+
+from ._data_cache import DataCache
 
 if TYPE_CHECKING:
     from mypy_boto3_logs.client import CloudWatchLogsClient

@@ -63,8 +63,9 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     OPTIONAL_METRICS,
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
-from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+
+from ._data_cache import DataCache
 
 T = TypeVar("T")
 type ResourceId = str

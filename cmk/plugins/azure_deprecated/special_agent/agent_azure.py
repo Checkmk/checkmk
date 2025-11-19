@@ -37,8 +37,9 @@ import requests
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
-from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
+
+from ._data_cache import DataCache
 
 T = TypeVar("T")
 Args = argparse.Namespace

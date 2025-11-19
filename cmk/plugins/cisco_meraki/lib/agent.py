@@ -92,11 +92,19 @@ class MerakiOrganisation:
     def name(self) -> str:
         return self.organisation["name"]
 
+    @property
+    def api_disabled(self) -> bool:
+        return not self.organisation["api"]["enabled"]
+
     def query(self) -> Iterator[Section]:
         yield self._make_section(
             name=SEC_NAME_ORGANISATIONS,
             data=self.organisation,
         )
+
+        # If API is disabled for organization, it doesn't make sense to continue.
+        if self.api_disabled:
+            return
 
         if SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
             if licenses_overview := self.client.get_licenses_overview(self.id, self.name):

@@ -14,8 +14,8 @@ from . import factories
 class _FakeOrganisationsSDK:
     def getOrganizations(self) -> Sequence[schema.RawOrganisation]:
         return [
-            factories.RawOrganizationFactory.build(id="123"),
-            factories.RawOrganizationFactory.build(id="456"),
+            factories.RawOrganizationFactory.build(id="123", api={"enabled": True}),
+            factories.RawOrganizationFactory.build(id="456", api={"enabled": True}),
         ]
 
     def getOrganizationLicensesOverview(self, organizationId: str) -> schema.RawLicensesOverview:

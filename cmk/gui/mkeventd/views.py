@@ -70,13 +70,16 @@ from cmk.gui.views.sorter import (
 )
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
 from cmk.gui.visuals.filter import Filter
-from cmk.livestatus_client.commands import Command as LivestatusCommand
-from cmk.livestatus_client.commands import (
+from cmk.livestatus_client import (
+    Command as LivestatusCommand,
+)
+from cmk.livestatus_client import (
     ECAction,
     ECChangeState,
     ECDelete,
     ECDeleteEventsOfHost,
     ECUpdate,
+    LivestatusClient,
 )
 from cmk.utils.statename import short_service_state_name
 
@@ -1306,7 +1309,7 @@ class ECCommand(Command):
 
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         assert isinstance(command, LivestatusCommand)
-        sites.live().command_obj(command, site)
+        LivestatusClient(sites.live()).command(command, site)
 
 
 def command_update_event_render(what: str) -> None:

@@ -13,11 +13,12 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.gui.logged_in import user as _user
-from cmk.livestatus_client.commands import (
+from cmk.livestatus_client import (
     AcknowledgeHostProblem,
     Acknowledgement,
     AcknowledgeServiceProblem,
     Command,
+    LivestatusClient,
     RemoveHostAcknowledgement,
     RemoveServiceAcknowledgement,
 )
@@ -79,7 +80,7 @@ def _acknowledge_problem(
             expire_on=expire_on,
         )
 
-    connection.command_obj(
+    LivestatusClient(connection).command(
         command,
         site_id,
     )
@@ -108,7 +109,7 @@ def remove_acknowledgement(
     else:
         command = RemoveHostAcknowledgement(host_name=host_name)
 
-    connection.command_obj(
+    LivestatusClient(connection).command(
         command,
         site_id,
     )

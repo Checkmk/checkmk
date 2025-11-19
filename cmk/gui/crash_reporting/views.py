@@ -50,9 +50,7 @@ from cmk.gui.views.sorter import (
 from cmk.gui.visuals import SiteFilter
 from cmk.gui.visuals._site_filters import default_site_filter_heading_info
 from cmk.gui.visuals.filter import Filter, FilterOption, FilterTime, InputTextFilter
-from cmk.livestatus_client.commands import (
-    DeleteCrashReport,
-)
+from cmk.livestatus_client import DeleteCrashReport
 
 from .helpers import local_files_involved_in_crash
 

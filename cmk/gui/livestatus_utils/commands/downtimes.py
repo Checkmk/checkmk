@@ -16,10 +16,11 @@ from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 from cmk.gui.logged_in import user as _user
-from cmk.livestatus_client.commands import (
+from cmk.livestatus_client import (
     Command,
     DeleteHostDowntime,
     DeleteServiceDowntime,
+    LivestatusClient,
     ModifyHostDowntime,
     ModifyServiceDowntime,
     ScheduleHostDowntime,
@@ -80,7 +81,7 @@ def _del_host_downtime(
 
     """
 
-    connection.command_obj(
+    LivestatusClient(connection).command(
         DeleteHostDowntime(downtime_id=downtime_id),
         site_id if site_id else omd_site(),
     )
@@ -105,7 +106,7 @@ def _del_service_downtime(
 
 
     """
-    connection.command_obj(
+    LivestatusClient(connection).command(
         DeleteServiceDowntime(downtime_id=downtime_id),
         site_id if site_id else omd_site(),
     )
@@ -798,7 +799,7 @@ def _schedule_downtime(
         )
     else:
         raise ValueError(f"Unsupported command: {command}")
-    sites.command_obj(
+    LivestatusClient(sites).command(
         cmd,
         site_id if site_id else omd_site(),
     )
@@ -889,7 +890,7 @@ def _modify_downtime(
 ) -> None:
     _user.need_permission("action.downtimes")
 
-    sites.command_obj(
+    LivestatusClient(sites).command(
         ModifyHostDowntime(
             downtime_id=downtime_id,
             end_time=end_time,

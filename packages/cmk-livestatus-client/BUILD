@@ -11,20 +11,44 @@ exports_files([
 ])
 
 py_library(
+    name = "livestatus-connection",
+    srcs = [
+        "cmk/livestatus_client/_connection.py",
+    ],
+    imports = ["."],
+    deps = [
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-trace",
+        requirement("opentelemetry-api"),
+    ],
+)
+
+py_library(
+    name = "livestatus-api",
+    srcs = [
+        "cmk/livestatus_client/_api/__init__.py",
+        "cmk/livestatus_client/_api/client.py",
+        "cmk/livestatus_client/_api/commands.py",
+    ],
+    imports = ["."],
+    deps = [
+        ":livestatus-connection",
+        "//packages/cmk-ccc:hostaddress",
+    ],
+)
+
+py_library(
     name = "cmk-livestatus-client",
     srcs = [
         "cmk/livestatus_client/__init__.py",
-        "cmk/livestatus_client/commands.py",
     ],
     data = ["cmk/livestatus_client/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:user",
-        "//packages/cmk-trace",
-        requirement("opentelemetry-api"),
+        ":livestatus-api",
+        ":livestatus-connection",
     ],
 )
 
@@ -87,7 +111,7 @@ py_wheel(
     # TODO: VERSION is duplicated in pyproject.toml
     version = "1.0.0",
     deps = [
-        "livestatus_py_typed",
+        ":livestatus_py_typed",
         ":py_livestatus",
     ],
 )

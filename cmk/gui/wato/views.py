@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -14,7 +12,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0 import Cell, Painter
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName, Row, SorterName
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter
@@ -29,10 +27,10 @@ class PainterHostFilename(Painter):
     def ident(self) -> str:
         return "host_filename"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Checkmk config filename")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Filename")
 
     @property
@@ -88,10 +86,10 @@ class PainterWatoFolderAbs(Painter):
     def ident(self) -> str:
         return "wato_folder_abs"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Folder - complete path")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Folder")
 
     @property
@@ -99,7 +97,7 @@ class PainterWatoFolderAbs(Painter):
         return ["host_filename"]
 
     @property
-    def sorter(self):
+    def sorter(self) -> SorterName:
         return "wato_folder_abs"
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -111,10 +109,10 @@ class PainterWatoFolderRel(Painter):
     def ident(self) -> str:
         return "wato_folder_rel"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Folder - relative path")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Folder")
 
     @property
@@ -122,7 +120,7 @@ class PainterWatoFolderRel(Painter):
         return ["host_filename"]
 
     @property
-    def sorter(self):
+    def sorter(self) -> SorterName:
         return "wato_folder_rel"
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -134,10 +132,10 @@ class PainterWatoFolderPlain(Painter):
     def ident(self) -> str:
         return "wato_folder_plain"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Folder - just folder name")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Folder")
 
     @property
@@ -145,7 +143,7 @@ class PainterWatoFolderPlain(Painter):
         return ["host_filename"]
 
     @property
-    def sorter(self):
+    def sorter(self) -> SorterName:
         return "wato_folder_plain"
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:

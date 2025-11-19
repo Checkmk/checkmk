@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.ceph_mgrs import ceph_epoch_element
 from cmk.gui.plugins.wato.utils import (
@@ -16,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
 
-def _parameter_valuespec_ceph_osds():
+def _parameter_valuespec_ceph_osds() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -39,8 +36,8 @@ def _parameter_valuespec_ceph_osds():
                     ],
                 ),
             ),
+            *ceph_epoch_element(_("OSDs epoch levels and average")),
         ]
-        + ceph_epoch_element(_("OSDs epoch levels and average")),
     )
 
 

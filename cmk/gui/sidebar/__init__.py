@@ -5,7 +5,6 @@
 """Status sidebar rendering"""
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -192,33 +191,33 @@ def transform_old_dict_based_snapins() -> None:
             _spec = snapin
 
             @classmethod
-            def type_name(cls):
+            def type_name(cls) -> str:
                 return cls._type_name
 
             @classmethod
-            def title(cls):
+            def title(cls) -> str:
                 return cls._spec["title"]
 
             @classmethod
-            def description(cls):
+            def description(cls) -> str:
                 return cls._spec.get("description", "")
 
             def show(self, config: Config) -> None:
                 return self._spec["render"]()
 
             @classmethod
-            def refresh_regularly(cls):
+            def refresh_regularly(cls) -> bool:
                 return cls._spec.get("refresh", False)
 
             @classmethod
-            def refresh_on_restart(cls):
+            def refresh_on_restart(cls) -> bool:
                 return cls._spec.get("restart", False)
 
             @classmethod
-            def allowed_roles(cls):
+            def allowed_roles(cls) -> list[str]:
                 return cls._spec["allowed"]
 
-            def styles(self):
+            def styles(self) -> str | None:
                 return self._spec.get("styles")
 
         snapin_registry.register(LegacySnapin)

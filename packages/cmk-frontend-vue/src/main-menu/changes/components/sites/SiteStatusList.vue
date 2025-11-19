@@ -29,7 +29,9 @@ const props = defineProps<{
 
 const selectedSites = defineModel<string[]>({ required: true })
 const activeTab = ref<string | number>('sites-with-changes')
-const { sitesWithChanges, sitesWithErrors, siteHasErrors } = useSiteStatus(toRef(props, 'sites'))
+const { sitesWithChanges, sitesWithErrors, siteHasErrors, loggedOutSites } = useSiteStatus(
+  toRef(props, 'sites')
+)
 
 function toggleSelectedSite(siteId: string, value: boolean) {
   if (value) {
@@ -77,6 +79,9 @@ immediateWatch(
         <CmkTab id="sites-with-errors" :disabled="sitesWithErrors.length === 0">{{
           _t('Sites with errors: %{n}', { n: sitesWithErrors.length })
         }}</CmkTab>
+        <CmkTab id="logged-out-sites" :disabled="loggedOutSites.length === 0">{{
+          _t('Sites logged out: %{n}', { n: loggedOutSites.length })
+        }}</CmkTab>
       </template>
       <template #tab-contents>
         <CmkTabContent id="sites-with-changes" spacing="none">
@@ -98,6 +103,22 @@ immediateWatch(
           <CmkScrollContainer height="auto" class="cmk-scroll-container">
             <SiteStatusItem
               v-for="(site, idx) in sitesWithErrors"
+              :key="idx"
+              :idx="idx"
+              :site="site"
+              :activating="activating"
+              :checked="selectedSites.includes(site.siteId) && site.onlineStatus === 'online'"
+              :is-recently-activated="recentlyActivatedSites.includes(site.siteId)"
+              :hide-checkbox="true"
+              @update-checked="toggleSelectedSite"
+            ></SiteStatusItem>
+          </CmkScrollContainer>
+        </CmkTabContent>
+
+        <CmkTabContent id="logged-out-sites" spacing="none">
+          <CmkScrollContainer height="auto" class="cmk-scroll-container">
+            <SiteStatusItem
+              v-for="(site, idx) in loggedOutSites"
               :key="idx"
               :idx="idx"
               :site="site"

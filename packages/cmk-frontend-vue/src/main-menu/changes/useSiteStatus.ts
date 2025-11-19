@@ -20,13 +20,21 @@ export function useSiteStatus(sites: Ref<Site[]>) {
     )
   }
 
+  function siteIsLoggedOut(site: Site): boolean {
+    return site.logged_in === false
+  }
+
   const sitesWithChanges = computed(() => sites.value.filter(siteHasChanges))
 
   const sitesWithErrors = computed(() => sites.value.filter(siteHasErrors))
 
+  const loggedOutSites = computed(() => sites.value.filter(siteIsLoggedOut))
+
   const hasSitesWithChanges = computed(() => sitesWithChanges.value.length > 0)
 
   const hasSitesWithErrors = computed(() => sitesWithErrors.value.length > 0)
+
+  const hasLoggedOutSites = computed(() => loggedOutSites.value.length > 0)
 
   const hasSitesWithChangesOrErrors = computed(
     () => hasSitesWithChanges.value || hasSitesWithErrors.value
@@ -35,12 +43,15 @@ export function useSiteStatus(sites: Ref<Site[]>) {
   return {
     siteHasChanges,
     siteHasErrors,
+    siteIsLoggedOut,
 
     sitesWithChanges,
     sitesWithErrors,
+    loggedOutSites,
 
     hasSitesWithChanges,
     hasSitesWithErrors,
-    hasSitesWithChangesOrErrors
+    hasSitesWithChangesOrErrors,
+    hasLoggedOutSites
   }
 }

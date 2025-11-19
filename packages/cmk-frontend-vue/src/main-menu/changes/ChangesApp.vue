@@ -171,9 +171,11 @@ function setSelectedSites() {
    * selectedSites determines whether or not the site checkbox is checked.
    * If the site has changes after the ajax call, it will be added to the
    * selectedSites array.
+   * Only sites that are logged in and online/disabled should have their checkboxes selected.
    */
   selectedSites.value = sitesAndChanges.value.sites
     .filter((site: Site) => site.changes > 0 && ['online', 'disabled'].includes(site.onlineStatus))
+    .filter((site: Site) => site.logged_in)
     .map((site: Site) => site.siteId)
 }
 

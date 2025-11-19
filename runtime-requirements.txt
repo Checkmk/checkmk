@@ -660,6 +660,7 @@ cryptography==46.0.3 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crypto/requirements.in
     #   azure-identity

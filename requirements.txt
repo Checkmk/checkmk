@@ -915,6 +915,7 @@ cryptography==46.0.3 \
     --hash=sha256:f260d0d41e9b4da1ed1e0f1ce571f97fe370b152ab18778e9e8f67d6af432018
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crypto/requirements.in
     #   azure-identity

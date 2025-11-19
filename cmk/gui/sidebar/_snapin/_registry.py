@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -259,19 +258,19 @@ def custom_snapin_classes(
                 return True
 
             @classmethod
-            def type_name(cls):
+            def type_name(cls) -> str:
                 return cls._custom_snapin.name()
 
             @classmethod
-            def title(cls):
+            def title(cls) -> str:
                 return cls._custom_snapin.title()
 
             @classmethod
-            def description(cls):
+            def description(cls) -> str:
                 return cls._custom_snapin.description()
 
             @classmethod
-            def parameters(cls):
+            def parameters(cls) -> CustomSnapinParamsConfig:
                 return cls._custom_snapin.config.custom_snapin[1]
 
             @classmethod

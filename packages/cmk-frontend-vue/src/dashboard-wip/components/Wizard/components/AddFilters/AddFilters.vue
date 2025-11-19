@@ -47,7 +47,6 @@ const filterCategory = computed(() => {
     :category-filter="filterCategory || []"
     :category-definition="CATEGORY_DEFINITIONS.host!"
     :filters="filters"
-    background="light"
     class="filter-selection__item"
   />
 </template>

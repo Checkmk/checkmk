@@ -20,7 +20,6 @@ interface Props {
   categoryFilter: FilterType[]
   categoryDefinition: CategoryDefinition
   filters: Filters
-  background?: 'light' | 'dark'
 }
 
 interface ProcessedFilterCategory {
@@ -36,9 +35,7 @@ interface FlatFilter {
 }
 
 const { _t } = usei18n()
-const props = withDefaults(defineProps<Props>(), {
-  background: 'dark'
-})
+const props = defineProps<Props>()
 
 const collapsibleStates = ref<Record<string, boolean>>({})
 const searchTerm = ref('')
@@ -213,10 +210,7 @@ onUnmounted(() => {
     <div class="specify-filter__main-container">
       <div class="select-filter-type__selection-container">
         <div v-if="processedCategory" class="filter-menu">
-          <div
-            class="filter-menu__sticky-header"
-            :class="`filter-menu__sticky-header--${background}`"
-          >
+          <div class="filter-menu__sticky-header">
             <h3 class="filter-menu__main-title">
               {{ `${untranslated(processedCategory.title)} ${_t('filter')}` }}
             </h3>
@@ -443,16 +437,7 @@ onUnmounted(() => {
   padding-bottom: var(--dimension-4);
   margin-bottom: var(--dimension-4);
   border-bottom: 1px solid transparent;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu__sticky-header--light {
-  background-color: var(--ux-theme-3);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.filter-menu__sticky-header--dark {
-  background-color: var(--ux-theme-2);
+  background-color: var(--slide-in-left-part);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -484,7 +469,7 @@ onUnmounted(() => {
   border: 1px solid var(--ux-theme-10);
   border-radius: var(--dimension-1);
   font-size: var(--font-size-large);
-  background: var(--ux-theme-2);
+  background-color: var(--slide-in-left-part);
   color: var(--font-color);
   box-sizing: border-box;
   min-width: 0;

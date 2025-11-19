@@ -368,6 +368,7 @@ watch(
 .filter-configuration__selection-container {
   flex: 1.3;
   height: 100%;
+  background-color: var(--slide-in-left-part);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

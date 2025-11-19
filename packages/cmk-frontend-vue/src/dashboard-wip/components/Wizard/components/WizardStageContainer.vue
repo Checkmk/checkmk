@@ -17,6 +17,7 @@ conditions defined in the file COPYING, which is part of this source code packag
   flex: 2;
   height: 100vh;
   padding: var(--spacing-double);
+  background-color: var(--ux-theme-1);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

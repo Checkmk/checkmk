@@ -4,16 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <template>
-  <div class="create-edit-widget__steps-container">
+  <div class="db-wizard-steps-container">
     <slot />
   </div>
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.create-edit-widget__steps-container {
+.db-wizard-steps-container {
   flex: 1;
-  background-color: var(--ux-theme-3);
+  background-color: var(--slide-in-left-part);
   padding-top: var(--spacing);
   padding-bottom: var(--spacing);
   padding-left: var(--spacing);

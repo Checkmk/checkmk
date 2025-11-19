@@ -14,6 +14,7 @@ import json
 import sys
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from typing import TypedDict
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
@@ -22,14 +23,12 @@ from .clients import MerakiClient
 from .config import get_meraki_dashboard, MerakiConfig
 from .constants import (
     AGENT,
-    API_NAME_DEVICE_NAME,
-    API_NAME_DEVICE_SERIAL,
     APIKEY_OPTION_NAME,
     OPTIONAL_SECTIONS_CHOICES,
     OPTIONAL_SECTIONS_DEFAULT,
 )
 from .log import LOGGER
-from .schema import RawOrganisation
+from .schema import Device, RawOrganisation
 
 __version__ = "2.5.0b1"
 
@@ -63,6 +62,10 @@ class Section:
 #   |                  \__, |\__,_|\___|_|  |_|\___||___/                  |
 #   |                     |_|                                              |
 #   '----------------------------------------------------------------------'
+
+
+class SupportsDeviceSerial(TypedDict):
+    serial: str
 
 
 @dataclass(frozen=True)
@@ -143,12 +146,11 @@ class MerakiOrganisation:
                     )
 
     def _get_device_piggyback(
-        self, device: MerakiAPIData, devices_by_serial: Mapping[str, MerakiAPIData]
+        self, device: SupportsDeviceSerial, devices_by_serial: Mapping[str, Device]
     ) -> str | None:
         prefix = self._get_piggyback_prefix()
         try:
-            serial = str(device[API_NAME_DEVICE_SERIAL])
-            return f"{prefix}{devices_by_serial[serial][API_NAME_DEVICE_NAME]}"
+            return f"{prefix}{devices_by_serial[device['serial']]['name']}"
         except KeyError as e:
             LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
             return None

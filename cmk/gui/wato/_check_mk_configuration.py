@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -39,6 +36,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     DropdownChoiceEntries,
     DualListChoice,
+    ElementSelection,
     FixedValue,
     Float,
     HostAddress,
@@ -361,7 +359,7 @@ ConfigVariableBulkDiscoveryDefaultSettings = ConfigVariable(
 )
 
 
-def _slow_view_logging_help():
+def _slow_view_logging_help() -> str:
     return _(
         "Some built-in or own views may take longer time than expected. In order to"
         " detect slow views you have to set"
@@ -406,7 +404,7 @@ ConfigVariableLogLevels = ConfigVariable(
 )
 
 
-def _web_log_level_elements():
+def _web_log_level_elements() -> list[tuple[str, DropdownChoice]]:
     loggers = [
         (
             "cmk.web",
@@ -846,7 +844,7 @@ ConfigVariableBIDefaultLayout = ConfigVariable(
 )
 
 
-def _get_layout_style_choices():
+def _get_layout_style_choices() -> list[tuple[str, str]]:
     return [
         ("builtin_force", _("Force layout")),
         ("builtin_hierarchy", _("Hierarchical layout")),
@@ -854,7 +852,7 @@ def _get_layout_style_choices():
     ]
 
 
-def _get_line_style_choices():
+def _get_line_style_choices() -> list[tuple[str, str]]:
     return [("round", _("Round")), ("straight", _("Straight")), ("elbow", _("Elbow"))]
 
 
@@ -969,7 +967,7 @@ ConfigVariableVirtualHostTrees = ConfigVariable(
 )
 
 
-def _virtual_host_tree_choices():
+def _virtual_host_tree_choices() -> list[tuple[str, str]]:
     return (
         _wato_host_tag_group_choices()
         + [("foldertree:", _("Folder tree"))]
@@ -977,7 +975,7 @@ def _virtual_host_tree_choices():
     )
 
 
-def _wato_host_tag_group_choices():
+def _wato_host_tag_group_choices() -> list[tuple[TagGroupID, str]]:
     # We add to the choices:
     # 1. All host tag groups with their id
     # 2. All *topics* that:
@@ -1006,7 +1004,7 @@ def _wato_host_tag_group_choices():
     return choices
 
 
-def _validate_virtual_host_trees(value, varprefix):
+def _validate_virtual_host_trees(value: Any, varprefix: str) -> None:
     tree_ids = set()
     for tree in value:
         if tree["id"] in tree_ids:
@@ -1482,7 +1480,7 @@ ConfigVariableCustomServiceAttributes = ConfigVariable(
 )
 
 
-def _validate_id(value, varprefix):
+def _validate_id(value: str, varprefix: str) -> None:
     internal_ids = [
         "ESCAPE_PLUGIN_OUTPUT",
         "EC_SL",
@@ -1494,7 +1492,7 @@ def _validate_id(value, varprefix):
         raise MKUserError(varprefix, _("This ID can not be used as custom attribute"))
 
 
-def _validate_unique_entries(value, varprefix):
+def _validate_unique_entries(value: Sequence[Mapping[str, object]], varprefix: str) -> None:
     seen_titles = []
     for entry in value:
         if entry["title"] in seen_titles:
@@ -1504,7 +1502,9 @@ def _validate_unique_entries(value, varprefix):
         seen_titles.append(entry["title"])
 
 
-def _custom_service_attributes_validate_unique_entries(value, varprefix):
+def _custom_service_attributes_validate_unique_entries(
+    value: Sequence[tuple[str, Mapping[str, Any]]], varprefix: str
+) -> None:
     seen_ids = []
     for entry in value:
         if entry[0] in seen_ids:
@@ -1512,7 +1512,9 @@ def _custom_service_attributes_validate_unique_entries(value, varprefix):
         seen_ids.append(entry[0])
 
 
-def _custom_service_attributes_custom_service_attribute_choices():
+def _custom_service_attributes_custom_service_attribute_choices() -> list[
+    tuple[str, str, TextInput]
+]:
     choices = []
     for ident, attr_spec in active_config.custom_service_attributes.items():
         if attr_spec["type"] == "TextAscii":
@@ -1523,7 +1525,9 @@ def _custom_service_attributes_custom_service_attribute_choices():
     return sorted(choices, key=lambda x: x[1])
 
 
-def _service_tag_rules_validate_unique_entries(value, varprefix):
+def _service_tag_rules_validate_unique_entries(
+    value: Sequence[tuple[TagGroupID, str, DropdownChoice[TagID]]], varprefix: str
+) -> None:
     seen_ids = []
     for entry in value:
         if entry[0] in seen_ids:
@@ -1531,7 +1535,7 @@ def _service_tag_rules_validate_unique_entries(value, varprefix):
         seen_ids.append(entry[0])
 
 
-def _service_tag_rules_tag_group_choices():
+def _service_tag_rules_tag_group_choices() -> list[tuple[TagGroupID, str, DropdownChoice[TagID]]]:
     choices = []
     for tag_group in active_config.tags.tag_groups:
         choices.append(
@@ -2320,7 +2324,7 @@ ConfigVariableUserSecurityNotifications = ConfigVariable(
 )
 
 
-def _validate_min(value, varprefix):
+def _validate_min(value: int, varprefix: str) -> None:
     if value < 900:
         raise MKUserError(varprefix, _("The minimum duration may not be less than 15 minutes"))
 
@@ -2370,12 +2374,12 @@ ConfigVariableDefaultUserProfile = ConfigVariable(
 )
 
 
-def _list_roles():
+def _list_roles() -> list[tuple[str, str]]:
     roles = load_roles()
     return [(i, r["alias"]) for i, r in roles.items()]
 
 
-def _list_contactgroups():
+def _list_contactgroups() -> list[tuple[GroupName, str]]:
     contact_groups = load_contact_group_information()
     entries = [(c, g["alias"]) for c, g in contact_groups.items()]
     return sorted(entries)
@@ -2807,7 +2811,7 @@ ConfigVariableHTTPProxies = ConfigVariable(
 )
 
 
-def _validate_proxies(value, varprefix):
+def _validate_proxies(value: Sequence[Mapping[str, object]], varprefix: str) -> None:
     seen_idents, seen_titles = [], []
     for http_proxy in value:
         if http_proxy["ident"] in seen_idents:
@@ -2905,7 +2909,7 @@ ConfigVariableInventoryCheckAutotrigger = ConfigVariable(
 #   '----------------------------------------------------------------------'
 
 
-def _valuespec_host_groups():
+def _valuespec_host_groups() -> ElementSelection:
     return HostGroupSelection(
         title=_("Assignment of hosts to host groups"),
         help=_(
@@ -2924,7 +2928,7 @@ HostGroupsRulespec = HostRulespec(
 )
 
 
-def _valuespec_service_groups():
+def _valuespec_service_groups() -> ElementSelection:
     return ServiceGroupSelection(
         title=_("Assignment of services to service groups"),
     )
@@ -2939,7 +2943,7 @@ ServiceGroupsRulespec = ServiceRulespec(
 )
 
 
-def _valuespec_host_contactgroups():
+def _valuespec_host_contactgroups() -> ElementSelection:
     return ContactGroupSelection(
         title=_("Assignment of hosts to contact groups"),
     )
@@ -2953,7 +2957,7 @@ HostContactGroupsRulespec = HostRulespec(
 )
 
 
-def _valuespec_service_contactgroups():
+def _valuespec_service_contactgroups() -> ElementSelection:
     return ContactGroupSelection(
         title=_("Assignment of services to contact groups"),
     )
@@ -2968,7 +2972,7 @@ ServiceContactgroups = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_max_check_attempts():
+def _valuespec_extra_service_conf_max_check_attempts() -> Integer:
     return Integer(
         title=_("Maximum number of check attempts for service"),
         help=_(
@@ -2987,7 +2991,7 @@ ExtraServiceConfMaxCheckAttempts = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_check_interval():
+def _valuespec_extra_service_conf_check_interval() -> Transform:
     return Transform(
         valuespec=Age(minvalue=1, default_value=60),
         to_valuespec=lambda v: int(v * 60),
@@ -3012,7 +3016,7 @@ ExtraServiceConfCheckInterval = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_retry_interval():
+def _valuespec_extra_service_conf_retry_interval() -> Transform:
     return Transform(
         valuespec=Age(minvalue=1, default_value=60),
         to_valuespec=lambda v: int(v * 60),
@@ -3037,7 +3041,7 @@ ExtraServiceConfRetryInterval = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_check_period():
+def _valuespec_extra_service_conf_check_period() -> TimeperiodSelection:
     return TimeperiodSelection(
         title=_("Check period for active services"),
         help=_(
@@ -3057,7 +3061,7 @@ ExtraServiceConfCheckPeriod = ServiceRulespec(
 )
 
 
-def _valuespec_check_periods():
+def _valuespec_check_periods() -> TimeperiodSelection:
     return TimeperiodSelection(
         title=_("Check period for passive Checkmk services"),
         help=_(
@@ -3075,7 +3079,7 @@ CheckPeriods = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_process_perf_data():
+def _valuespec_extra_service_conf_process_perf_data() -> DropdownChoice:
     return DropdownChoice(
         title=_("Enable/disable processing of perfdata for services"),
         help=_(
@@ -3097,7 +3101,7 @@ ExtraServiceConfProcessPerfData = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_passive_checks_enabled():
+def _valuespec_extra_service_conf_passive_checks_enabled() -> DropdownChoice:
     return DropdownChoice(
         title=_("Enable/disable passive checks for services"),
         help=_(
@@ -3119,7 +3123,7 @@ ExtraServiceConfPassiveChecksEnabled = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_active_checks_enabled():
+def _valuespec_extra_service_conf_active_checks_enabled() -> DropdownChoice:
     return DropdownChoice(
         title=_("Enable/disable active checks for services"),
         help=_("This setting allows you to disable or enable active checks for a service."),
@@ -3135,7 +3139,7 @@ ExtraServiceConfActiveChecksEnabled = ServiceRulespec(
 )
 
 
-def _valuespec_extra_host_conf_max_check_attempts():
+def _valuespec_extra_host_conf_max_check_attempts() -> Integer:
     return Integer(
         title=_("Maximum number of check attempts for host"),
         help=_(
@@ -3153,11 +3157,11 @@ ExtraHostConfMaxCheckAttempts = HostRulespec(
 )
 
 
-def _default_check_interval():
-    return 6.0 if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else 60.0
+def _default_check_interval() -> int:
+    return 6 if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else 60
 
 
-def _valuespec_extra_host_conf_check_interval():
+def _valuespec_extra_host_conf_check_interval() -> Transform:
     return Transform(
         valuespec=Age(minvalue=1, default_value=_default_check_interval()),
         to_valuespec=lambda v: int(v * 60),
@@ -3179,7 +3183,7 @@ ExtraHostConfCheckInterval = HostRulespec(
 )
 
 
-def _valuespec_extra_host_conf_retry_interval():
+def _valuespec_extra_host_conf_retry_interval() -> Transform:
     return Transform(
         valuespec=Age(minvalue=1, default_value=_default_check_interval()),
         to_valuespec=lambda v: int(v * 60),
@@ -3202,7 +3206,7 @@ ExtraHostConfRetryInterval = HostRulespec(
 )
 
 
-def _valuespec_extra_host_conf_check_period():
+def _valuespec_extra_host_conf_check_period() -> TimeperiodSelection:
     return TimeperiodSelection(
         title=_("Check period for hosts"),
         help=_(
@@ -3258,7 +3262,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
 
 
 def PluginCommandLine(read_only: bool = False) -> ValueSpec:
-    def _validate_custom_check_command_line(value, varprefix):
+    def _validate_custom_check_command_line(value: str, varprefix: str) -> None:
         if read_only:
             raise MKUserError(
                 varprefix,
@@ -3302,7 +3306,7 @@ def monitoring_macro_help() -> str:
     )
 
 
-def _valuespec_host_check_commands():
+def _valuespec_host_check_commands() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Host check command"),
         help=_(
@@ -3329,7 +3333,7 @@ HostCheckCommands = HostRulespec(
 )
 
 
-def _valuespec_extra_host_conf_notifications_enabled():
+def _valuespec_extra_host_conf_notifications_enabled() -> DropdownChoice:
     return DropdownChoice(
         title=_("Enable/disable notifications for hosts"),
         help=_(
@@ -3353,7 +3357,7 @@ ExtraHostConfNotificationsEnabled = HostRulespec(
 )
 
 
-def _valuespec_extra_service_conf_notifications_enabled():
+def _valuespec_extra_service_conf_notifications_enabled() -> DropdownChoice:
     return DropdownChoice(
         title=_("Enable/disable notifications for services"),
         help=_(
@@ -3375,7 +3379,7 @@ ExtraServiceConfNotificationsEnabled = ServiceRulespec(
 )
 
 
-def _valuespec_extra_host_conf_notification_options():
+def _valuespec_extra_host_conf_notification_options() -> Transform:
     return Transform(
         valuespec=ListChoice(
             choices=[
@@ -3412,7 +3416,7 @@ ExtraHostConfNotificationOptions = HostRulespec(
 )
 
 
-def _valuespec_extra_service_conf_notification_options():
+def _valuespec_extra_service_conf_notification_options() -> Transform:
     return Transform(
         valuespec=ListChoice(
             choices=[
@@ -3445,7 +3449,7 @@ ExtraServiceConfNotificationOptions = ServiceRulespec(
 )
 
 
-def _valuespec_extra_host_conf_notification_period():
+def _valuespec_extra_host_conf_notification_period() -> TimeperiodSelection:
     return TimeperiodSelection(
         title=_("Notification period for hosts"),
         help=_(
@@ -3466,7 +3470,7 @@ ExtraHostConfNotificationPeriod = HostRulespec(
 )
 
 
-def _valuespec_extra_service_conf_notification_period():
+def _valuespec_extra_service_conf_notification_period() -> TimeperiodSelection:
     return TimeperiodSelection(
         title=_("Notification period for services"),
         help=_(
@@ -3488,15 +3492,15 @@ ExtraServiceConfNotificationPeriod = ServiceRulespec(
 )
 
 
-def transform_float_minutes_to_age(float_minutes):
+def transform_float_minutes_to_age(float_minutes: float) -> int:
     return int(float_minutes * 60)
 
 
-def transform_age_to_float_minutes(age):
+def transform_age_to_float_minutes(age: int) -> float:
     return float(age) / 60.0
 
 
-def _valuespec_extra_host_conf_first_notification_delay():
+def _valuespec_extra_host_conf_first_notification_delay() -> Transform:
     return Transform(
         valuespec=Age(
             minvalue=0,
@@ -3522,7 +3526,7 @@ ExtraHostConfFirstNotificationDelay = HostRulespec(
 )
 
 
-def _valuespec_extra_service_conf_first_notification_delay():
+def _valuespec_extra_service_conf_first_notification_delay() -> Transform:
     return Transform(
         valuespec=Age(
             minvalue=0,
@@ -3549,7 +3553,7 @@ ExtraServiceConfFirstNotificationDelay = ServiceRulespec(
 )
 
 
-def _valuespec_extra_host_conf_notification_interval():
+def _valuespec_extra_host_conf_notification_interval() -> Migrate:
     return Migrate(
         Optional(
             valuespec=Float(
@@ -3580,7 +3584,7 @@ ExtraHostConfNotificationInterval = HostRulespec(
 )
 
 
-def _valuespec_extra_service_conf_notification_interval():
+def _valuespec_extra_service_conf_notification_interval() -> Migrate:
     return Migrate(
         Optional(
             valuespec=Float(
@@ -3612,7 +3616,7 @@ ExtraServiceConfNotificationInterval = ServiceRulespec(
 )
 
 
-def _valuespec_extra_host_conf_flap_detection_enabled():
+def _valuespec_extra_host_conf_flap_detection_enabled() -> DropdownChoice:
     return DropdownChoice(
         title=_("Enable/disable flapping detection for hosts"),
         help=_("This setting allows you to disable the flapping detection for a host completely."),
@@ -3630,7 +3634,7 @@ ExtraHostConfFlapDetectionEnabled = HostRulespec(
 )
 
 
-def _valuespec_extra_service_conf_flap_detection_enabled():
+def _valuespec_extra_service_conf_flap_detection_enabled() -> DropdownChoice:
     return DropdownChoice(
         title=_("Enable/disable flapping detection for services"),
         help=_(
@@ -3665,7 +3669,7 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
         return _("Discovery and Checkmk settings")
 
 
-def _help_only_hosts():
+def _help_only_hosts() -> str:
     return _(
         "By adding rules to this ruleset you can define a subset of your hosts "
         "to be actually monitored. As long as the rule set is empty "
@@ -3683,7 +3687,7 @@ OnlyHosts = BinaryHostRulespec(
 )
 
 
-def _help_ignored_services():
+def _help_ignored_services() -> str:
     return _(
         "Services that are declared as <u>disabled</u> by this rule set will not be added "
         "to a host during discovery (automatic service detection). Services that already "
@@ -3701,7 +3705,7 @@ IgnoredServices = BinaryServiceRulespec(
 )
 
 
-def _valuespec_ignored_checks():
+def _valuespec_ignored_checks() -> Transform:
     return CheckPluginSelection(
         title=_("Disabled checks"),
         help_=_(
@@ -3735,7 +3739,7 @@ def _from_periodic_service_discovery_config(values: dict | None) -> dict | None:
     return values
 
 
-def _valuespec_periodic_discovery():
+def _valuespec_periodic_discovery() -> Transform:
     return Transform(
         valuespec=Alternative(
             title=_("Periodic service discovery"),
@@ -4258,7 +4262,7 @@ PeriodicDiscovery = HostRulespec(
 )
 
 
-def _valuespec_custom_service_attributes():
+def _valuespec_custom_service_attributes() -> ListOf:
     return ListOf(
         valuespec=CascadingDropdown(
             choices=_custom_service_attributes_custom_service_attribute_choices(),
@@ -4284,7 +4288,7 @@ CustomServiceAttributes = ServiceRulespec(
 )
 
 
-def _help_clustered_services():
+def _help_clustered_services() -> str:
     return _(
         "When you define HA clusters in Setup then you also have to specify which services "
         "of a node should be assigned to the cluster and which services to the physical "
@@ -4323,7 +4327,7 @@ def _valuespec_metrics_node() -> tuple[str, ConfigHostname]:
     )
 
 
-def _valuespec_clustered_services_config():
+def _valuespec_clustered_services_config() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Aggregation options for clustered services"),
         help="%s <ul><li>%s</li></ul>"
@@ -4420,7 +4424,7 @@ ClusteredServicesConfiguration = ServiceRulespec(
 )
 
 
-def _valuespec_clustered_services_mapping():
+def _valuespec_clustered_services_mapping() -> TextInput:
     return TextInput(
         title=_("Clustered services for overlapping clusters"),
         label=_("Assign services to the following cluster:"),
@@ -4443,7 +4447,7 @@ ClusteredServicesMapping = ServiceRulespec(
 )
 
 
-def _valuespec_service_label_rules():
+def _valuespec_service_label_rules() -> Labels:
     return Labels(
         world=Labels.World.CONFIG,
         label_source=Labels.Source.RULESET,
@@ -4461,7 +4465,7 @@ ServiceLabelRules = ServiceRulespec(
 )
 
 
-def _valuespec_service_tag_rules():
+def _valuespec_service_tag_rules() -> ListOf:
     return ListOf(
         valuespec=CascadingDropdown(
             choices=_service_tag_rules_tag_group_choices(),
@@ -4484,7 +4488,7 @@ ServiceTagRules = ServiceRulespec(
 )
 
 
-def _valuespec_extra_host_conf_service_period():
+def _valuespec_extra_host_conf_service_period() -> TimeperiodSelection:
     return TimeperiodSelection(
         title=_("Service period for hosts"),
         help=_(
@@ -4508,7 +4512,7 @@ ExtraHostConfServicePeriod = HostRulespec(
 )
 
 
-def _valuespec_host_label_rules():
+def _valuespec_host_label_rules() -> Labels:
     return Labels(
         world=Labels.World.CONFIG,
         label_source=Labels.Source.RULESET,
@@ -4525,7 +4529,7 @@ HostLabelRules = HostRulespec(
 )
 
 
-def _valuespec_extra_service_conf_service_period():
+def _valuespec_extra_service_conf_service_period() -> TimeperiodSelection:
     return TimeperiodSelection(
         title=_("Service period for services"),
         help=_(
@@ -4542,7 +4546,7 @@ def _valuespec_extra_service_conf_service_period():
     )
 
 
-def _valuespec_extra_host_conf_notes_url():
+def _valuespec_extra_host_conf_notes_url() -> TextInput:
     return TextInput(
         label=_("URL:"),
         title=_("Notes (URL) for Hosts"),
@@ -4576,7 +4580,7 @@ ExtraServiceConfServicePeriod = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_display_name():
+def _valuespec_extra_service_conf_display_name() -> TextInput:
     return TextInput(
         title=_("Alternative display name for Services"),
         help=_(
@@ -4602,7 +4606,7 @@ ExtraServiceConfDisplayName = ServiceRulespec(
 )
 
 
-def _valuespec_extra_service_conf_notes_url():
+def _valuespec_extra_service_conf_notes_url() -> TextInput:
     return TextInput(
         label=_("URL:"),
         title=_("Notes (URL) for Services"),
@@ -4775,7 +4779,7 @@ def _list_user_icons_and_actions() -> DropdownChoiceEntries:
     return sorted(choices, key=lambda x: x[1])
 
 
-def _valuespec_host_icons_and_actions():
+def _valuespec_host_icons_and_actions() -> DropdownChoice:
     return UserIconOrAction(
         title=_("Custom icons or actions for hosts in status GUI"),
         help=_("You can assign icons or actions to hosts for the status GUI."),
@@ -4790,7 +4794,7 @@ HostIconsAndActions = HostRulespec(
 )
 
 
-def _valuespec_service_icons_and_actions():
+def _valuespec_service_icons_and_actions() -> DropdownChoice:
     return UserIconOrAction(
         title=_("Custom icons or actions for services in status GUI"),
         help=_("You can assign icons or actions to services for the status GUI."),
@@ -4806,7 +4810,7 @@ ServiceIconsAndActions = ServiceRulespec(
 )
 
 
-def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
+def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT() -> DropdownChoice:
     return DropdownChoice(
         title=_("Escape HTML in host output (Dangerous to deactivate - read help)"),
         help=_(
@@ -4835,7 +4839,7 @@ ExtraHostConfEscapePluginOutput = HostRulespec(
 )
 
 
-def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT():
+def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT() -> DropdownChoice:
     return DropdownChoice(
         title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
         help=_(
@@ -4879,7 +4883,7 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
         return _("General Settings")
 
 
-def _help_dyndns_hosts():
+def _help_dyndns_hosts() -> str:
     return _(
         "This ruleset selects host for dynamic DNS lookup during monitoring. Normally the "
         "IP addresses of hosts are statically configured or looked up when you activate "
@@ -4896,7 +4900,7 @@ DyndnsHosts = BinaryHostRulespec(
 )
 
 
-def _valuespec_primary_address_family():
+def _valuespec_primary_address_family() -> DropdownChoice:
     return DropdownChoice(
         choices=[
             ("ipv4", _("IPv4")),
@@ -4919,7 +4923,7 @@ PrimaryAddressFamily = HostRulespec(
 )
 
 
-def _valuespec_snmp_communities():
+def _valuespec_snmp_communities() -> Alternative:
     return SNMPCredentials(
         title=_("SNMP credentials of monitored hosts"),
         help=_(
@@ -4936,7 +4940,7 @@ SnmpCommunities = HostRulespec(
 )
 
 
-def _valuespec_management_board_config():
+def _valuespec_management_board_config() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Management board config"),
         choices=[
@@ -4953,7 +4957,7 @@ ManagementBoardConfig = HostRulespec(
 )
 
 
-def _valuespec_snmp_character_encodings():
+def _valuespec_snmp_character_encodings() -> DropdownChoice:
     return DropdownChoice(
         title=_("Output text encoding settings for SNMP devices"),
         help=_(
@@ -4976,7 +4980,7 @@ SnmpCharacterEncodings = HostRulespec(
 )
 
 
-def _help_enable_snmpv2c():
+def _help_enable_snmpv2c() -> str:
     return _(
         "Use this rule to enable the use of SNMP verison 2c instead of the default SNMP version 1."
         " Checkmk defaults to SNMPv1 in order to support as many devices as possible."
@@ -5004,7 +5008,7 @@ ManagementBulkwalkHosts = BinaryHostRulespec(
 )
 
 
-def _valuespec_snmp_bulk_size():
+def _valuespec_snmp_bulk_size() -> Integer:
     return Integer(
         title=_("Bulk walk: Number of OIDs per bulk"),
         label=_("Number of OIDs to request per bulk: "),
@@ -5029,7 +5033,7 @@ SnmpBulkSize = HostRulespec(
 )
 
 
-def _help_snmp_without_sys_descr():
+def _help_snmp_without_sys_descr() -> str:
     return _(
         "Devices which do not publish the system description OID .1.3.6.1.2.1.1.1.0 are "
         "normally ignored by the SNMP inventory. Use this ruleset to select hosts which "
@@ -5045,7 +5049,7 @@ SnmpWithoutSysDescr = BinaryHostRulespec(
 )
 
 
-def _help_snmpv2c_without_bulkwalk():
+def _help_snmpv2c_without_bulkwalk() -> str:
     return _(
         'Some SNMPv2c/v3 capable devices do not properly support "bulkwalk" queries.'
         ' For those you can disable "bulkwalk" queries with this ruleset.'
@@ -5062,7 +5066,7 @@ Snmpv2CHosts = BinaryHostRulespec(
 )
 
 
-def _valuespec_snmp_timing():
+def _valuespec_snmp_timing() -> Dictionary:
     return Dictionary(
         title=_("Timing settings for SNMP access"),
         help=_(
@@ -5114,7 +5118,7 @@ SnmpTiming = HostRulespec(
 )
 
 
-def _help_non_inline_snmp_hosts():
+def _help_non_inline_snmp_hosts() -> str:
     return _(
         "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
         "the load produced by SNMP monitoring on the monitoring host significantly. This "
@@ -5134,7 +5138,7 @@ NonInlineSnmpHosts = BinaryHostRulespec(
 )
 
 
-def _help_snmp_backend():
+def _help_snmp_backend() -> str:
     return _(
         "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
         "the load produced by SNMP monitoring on the monitoring host significantly. Inline SNMP "
@@ -5144,7 +5148,7 @@ def _help_snmp_backend():
     )
 
 
-def _transform_snmp_backend_hosts_to_valuespec(backend):
+def _transform_snmp_backend_hosts_to_valuespec(backend: object) -> SNMPBackendEnum:
     # During 2.0.0 Beta you could configure inline_legacy backend that's why
     # we need to accept this as value as well.
     if backend in [False, "inline", "inline_legacy"]:
@@ -5156,7 +5160,7 @@ def _transform_snmp_backend_hosts_to_valuespec(backend):
     raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
-def _valuespec_snmp_backend():
+def _valuespec_snmp_backend() -> Transform:
     return Transform(
         valuespec=DropdownChoice(
             title=_("Choose SNMP backend"),
@@ -5179,7 +5183,7 @@ SnmpBackendHosts = HostRulespec(
 )
 
 
-def _help_usewalk_hosts():
+def _help_usewalk_hosts() -> str:
     return _(
         "This ruleset helps in test and development. You can create stored SNMP walks on "
         "the command line with cmk --snmpwalk HOSTNAME. A host that is configured with "
@@ -5196,7 +5200,7 @@ UsewalkHosts = BinaryHostRulespec(
 )
 
 
-def _valuespec_snmp_ports():
+def _valuespec_snmp_ports() -> Integer:
     return NetworkPort(
         minvalue=1,
         maxvalue=65535,
@@ -5230,7 +5234,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
         return _("Checkmk agent")
 
 
-def _valuespec_agent_ports():
+def _valuespec_agent_ports() -> Integer:
     return NetworkPort(
         minvalue=1,
         maxvalue=65535,
@@ -5250,7 +5254,7 @@ AgentPorts = HostRulespec(
 )
 
 
-def _valuespec_tcp_connect_timeouts():
+def _valuespec_tcp_connect_timeouts() -> Float:
     return Float(
         minvalue=1.0,
         default_value=5.0,
@@ -5361,7 +5365,7 @@ AgentEncryption = HostRulespec(
 )
 
 
-def _common_check_mk_exit_status_elements():
+def _common_check_mk_exit_status_elements() -> list[tuple[str, DropdownChoice[int]]]:
     return [
         (
             "connection",
@@ -5378,7 +5382,7 @@ def _common_check_mk_exit_status_elements():
     ]
 
 
-def _factory_default_check_mk_exit_status():
+def _factory_default_check_mk_exit_status() -> dict[str, int]:
     return {
         "connection": 2,
         "wrong_version": 1,
@@ -5554,7 +5558,7 @@ CheckMkAgentTargetVersions = HostRulespec(
 )
 
 
-def _valuespec_agent_config_only_from():
+def _valuespec_agent_config_only_from() -> ListOfStrings:
     return ListOfStrings(
         valuespec=IPNetwork(),
         title=_("Allowed agent access via IP address (Linux, Windows)"),
@@ -5590,7 +5594,7 @@ AgentConfigOnlyFrom = HostRulespec(
 )
 
 
-def _valuespec_piggyback_translation():
+def _valuespec_piggyback_translation() -> Dictionary:
     return HostnameTranslation(
         title=_("Host name translation for piggybacked hosts"),
         help_txt=_(
@@ -5613,7 +5617,7 @@ PiggybackTranslation = HostRulespec(
 )
 
 
-def _valuespec_service_description_translation():
+def _valuespec_service_description_translation() -> Dictionary:
     return ServiceDescriptionTranslation(
         title=_("Translation of service names"),
         help_txt=_(
@@ -5738,7 +5742,7 @@ def _valuespec_snmp_config_agent_sections() -> Dictionary:
     )
 
 
-def _validate_snmp_config_agent_sections(value, varprefix):
+def _validate_snmp_config_agent_sections(value: Mapping[str, Any], varprefix: str) -> None:
     enabled_set = set(value.get("sections_enabled", ()))
     conflicts = enabled_set.intersection(value.get("sections_disabled", ()))
     if not conflicts:
@@ -5777,7 +5781,7 @@ def add_error_handling_option(values: prev_snmpv3_values | new_snmpv3_values) ->
     return values + ("stop_on_timeout",) if len(values) == 2 else values
 
 
-def _valuespec_snmpv3_contexts():
+def _valuespec_snmpv3_contexts() -> Migrate:
     return Migrate(
         migrate=add_error_handling_option,
         valuespec=Tuple(
@@ -5818,7 +5822,9 @@ Snmpv3Contexts = HostRulespec(
 )
 
 
-def _validate_max_cache_ages_and_validity_periods(params, varprefix):
+def _validate_max_cache_ages_and_validity_periods(
+    params: Mapping[str, Any], varprefix: str
+) -> None:
     global_max_cache_age = params.get("global_max_cache_age")
     global_period = params.get("global_validity", {}).get("period")
     _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
@@ -5832,12 +5838,14 @@ def _validate_max_cache_ages_and_validity_periods(params, varprefix):
             _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
 
 
-def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
+def _validate_max_cache_age_and_validity_period(
+    max_cache_age: object, period: object, varprefix: str
+) -> None:
     if isinstance(max_cache_age, int) and isinstance(period, int) and max_cache_age < period:
         raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
 
 
-def _valuespec_piggybacked_host_files():
+def _valuespec_piggybacked_host_files() -> Migrate:
     global_max_cache_age_uri = makeuri_contextless(
         request,
         [("mode", "edit_configvar"), ("varname", "piggyback_max_cachefile_age")],
@@ -5923,7 +5931,7 @@ def _valuespec_piggybacked_host_files():
     )
 
 
-def _vs_max_cache_age(max_cache_age_title):
+def _vs_max_cache_age(max_cache_age_title: str) -> Alternative:
     return Alternative(
         title=_("Keep hosts while piggyback source sends piggyback data only for other hosts for"),
         elements=[
@@ -5940,7 +5948,7 @@ def _vs_max_cache_age(max_cache_age_title):
     )
 
 
-def _vs_validity():
+def _vs_validity() -> Dictionary:
     return Dictionary(
         title=_("Set period how long outdated piggyback data is treated as valid"),
         elements=[

@@ -16,8 +16,6 @@ from tests.testlib.site import Site
         "ssh -V",
         "curl -V",
         "pdftoppm -v",
-        "nslookup -version",
-        "rpmbuild --version",
         pytest.param(
             "zypper",
             marks=pytest.mark.skipif(

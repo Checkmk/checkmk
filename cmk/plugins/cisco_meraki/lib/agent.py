@@ -105,6 +105,10 @@ class MerakiOrganisation:
         else:
             devices_by_serial = {}
 
+        # If no devices are available for organization, it doesn't make sense to continue.
+        if not devices_by_serial:
+            return
+
         for device in devices_by_serial.values():
             yield Section(
                 name="cisco_meraki_org_device_info",

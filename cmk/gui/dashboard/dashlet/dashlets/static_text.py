@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
-from cmk.gui.dashboard.type_defs import DashletConfig
+from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextInput
+from cmk.gui.valuespec import DictionaryEntry, TextInput
 
 
 class StaticTextDashletConfig(DashletConfig):
@@ -21,15 +19,15 @@ class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
     """Dashlet that displays a static text"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "nodata"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Static text")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Displays a static text to the user.")
 
     @classmethod
@@ -37,11 +35,11 @@ class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
         return 100
 
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (30, 18)
 
     @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(cls) -> list[DictionaryEntry]:
         return [
             (
                 "text",

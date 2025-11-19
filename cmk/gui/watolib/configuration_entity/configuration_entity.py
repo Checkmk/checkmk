@@ -11,7 +11,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, NamedTuple, NewType
 
-from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawFrontendData, VisitorOptions
+from cmk.gui.form_specs import (
+    DEFAULT_VALUE,
+    get_visitor,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.watolib.configuration_entity._folder import (
@@ -22,6 +27,12 @@ from cmk.gui.watolib.configuration_entity._password import (
     get_password_slidein_schema,
     list_passwords,
     save_password_from_slidein_schema,
+)
+from cmk.gui.watolib.configuration_entity._rule_form_spec import (
+    get_rule_form_spec_slidein_schema,
+    list_rule_form_spec_descriptions,
+    rule_form_spec_title,
+    save_rule_form_spec_from_slidein_schema,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
 from cmk.gui.watolib.notification_parameter import (
@@ -86,6 +97,14 @@ def save_configuration_entity(
             return ConfigurationEntityDescription(
                 ident=EntityId(password.id), description=password.title
             )
+        case ConfigEntityType.rule_form_spec:
+            rule_form_spec_descr = save_rule_form_spec_from_slidein_schema(
+                entity_type_specifier, RawFrontendData(data), tree, user
+            )
+            return ConfigurationEntityDescription(
+                ident=EntityId(rule_form_spec_descr.ident),
+                description=rule_form_spec_descr.description,
+            )
         case other:
             assert_never(other)
 
@@ -120,6 +139,10 @@ def update_configuration_entity(
             raise NotImplementedError("Editing folders via config entity API is not supported.")
         case ConfigEntityType.passwordstore_password:
             raise NotImplementedError("Editing passwords via config entity API is not supported.")
+        case ConfigEntityType.rule_form_spec:
+            raise NotImplementedError(
+                "Editing/updating rules via config entity API is not supported."
+            )
         case other:
             assert_never(other)
 
@@ -137,6 +160,8 @@ def _get_configuration_fs(
             return get_folder_slidein_schema(tree)
         case ConfigEntityType.passwordstore_password:
             return get_password_slidein_schema(user)
+        case ConfigEntityType.rule_form_spec:
+            return get_rule_form_spec_slidein_schema(entity_type_specifier, tree, user)
         case other:
             assert_never(other)
 
@@ -166,6 +191,8 @@ def get_readable_entity_selection(entity_type: ConfigEntityType, entity_type_spe
             return _("folder")
         case ConfigEntityType.passwordstore_password:
             return _("password")
+        case ConfigEntityType.rule_form_spec:
+            return _("rule %s") % rule_form_spec_title(entity_type_specifier)
         case other:
             assert_never(other)
 
@@ -199,6 +226,8 @@ def get_configuration_entity(
             raise NotImplementedError(
                 "Editing passwords via config entity API is not yet supported."
             )
+        case ConfigEntityType.rule_form_spec:
+            raise NotImplementedError("Editing rules via config entity API is not yet supported.")
         case other:
             assert_never(other)
 
@@ -229,6 +258,16 @@ def get_list_of_configuration_entities(
             return [
                 ConfigurationEntityDescription(ident=EntityId(obj.id), description=obj.title)
                 for obj in list_passwords(user)
+            ]
+        case ConfigEntityType.rule_form_spec:
+            return [
+                ConfigurationEntityDescription(
+                    ident=EntityId(rule_form_spec_descr.ident),
+                    description=rule_form_spec_descr.description,
+                )
+                for rule_form_spec_descr in list_rule_form_spec_descriptions(
+                    entity_type_specifier, user
+                )
             ]
         case other:
             assert_never(other)

@@ -66,6 +66,7 @@ DomainType = Literal[
     "parent_scan",
     "relay",
     "rule",
+    "rule_form_spec",
     "ruleset",
     "saml_connection",
     "service",

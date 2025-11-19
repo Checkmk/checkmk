@@ -155,6 +155,8 @@ from cmk.gui.watolib.rulesets import (
     create_rule_properties_catalog,
     FolderPath,
     FolderRulesets,
+    get_rule_conditions_from_catalog_value,
+    get_rule_options_from_catalog_value,
     IsLocked,
     may_edit_ruleset,
     Rule,
@@ -2346,11 +2348,11 @@ class ABCEditRuleMode(WatoMode):
         value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
         self._ruleset.rulespec.valuespec.validate_value(value, "ve")
         return _RuleValuesFromVars(
-            self._get_rule_options_from_catalog_value(
+            get_rule_options_from_catalog_value(
                 parse_data_from_field_id(properties_catalog, "_vue_edit_rule_properties")
             ),
             value,
-            self._get_rule_conditions_from_catalog_value(
+            get_rule_conditions_from_catalog_value(
                 parse_data_from_field_id(conditions_catalog, "_vue_edit_rule_conditions")
             ),
         )
@@ -2372,9 +2374,9 @@ class ABCEditRuleMode(WatoMode):
             catalog, VisitorOptions(migrate_values=False, mask_values=False)
         ).to_disk(catalog_value)
         return _RuleValuesFromVars(
-            self._get_rule_options_from_catalog_value(disk_value),
+            get_rule_options_from_catalog_value(disk_value),
             self._get_rule_value_from_catalog_value(disk_value),
-            self._get_rule_conditions_from_catalog_value(disk_value),
+            get_rule_conditions_from_catalog_value(disk_value),
         )
 
     def action(self, config: Config) -> ActionResult:
@@ -3347,7 +3349,7 @@ class ModeNewRule(ABCEditRuleMode):
         )
         match render_mode:
             case RenderMode.BACKEND:
-                return self._get_rule_conditions_from_catalog_value(
+                return get_rule_conditions_from_catalog_value(
                     parse_data_from_field_id(
                         create_rule_conditions_catalog(
                             # 'is_locked' does not matter here because we only want to get the folder.
@@ -3362,7 +3364,7 @@ class ModeNewRule(ABCEditRuleMode):
 
             case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
-                return self._get_rule_conditions_from_catalog_value(
+                return get_rule_conditions_from_catalog_value(
                     parse_data_from_field_id(
                         create_rule_catalog(
                             # 'rule_identifier', 'is_locked' and 'title' do not matter here

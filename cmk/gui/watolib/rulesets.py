@@ -24,7 +24,7 @@ from collections.abc import (
 )
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, assert_never, cast, Final, Literal, override
+from typing import Any, assert_never, cast, Final, Literal, override, TypedDict
 
 from cmk import trace
 from cmk.ccc import store
@@ -129,6 +129,7 @@ from cmk.utils.rulesets.conditions import (
     allow_service_label_conditions,
     HostOrServiceConditionRegex,
     HostOrServiceConditions,
+    HostOrServiceConditionsSimple,
 )
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -2425,3 +2426,77 @@ def create_rule_catalog(
             ),
         }
     )
+
+
+def get_rule_options_from_catalog_value(raw_value: object) -> RuleOptions:
+    if not isinstance(raw_value, dict):
+        raise TypeError(raw_value)
+
+    raw_properties = raw_value["properties"]
+    return RuleOptions(
+        description=raw_properties["description"],
+        comment=raw_properties["comment"],
+        docu_url=raw_properties["docu_url"],
+        disabled=raw_properties["disabled"],
+    )
+
+
+def _parse_explicit_hosts_or_services_for_conditions(
+    raw_value: object,
+) -> HostOrServiceConditions | None:
+    if raw_value is None:
+        return None
+    if not isinstance(raw_value, dict):
+        raise TypeError(raw_value)
+    values: HostOrServiceConditionsSimple = [
+        {"$regex": e[1:]} if e.startswith("~") else e for e in raw_value["value"]
+    ]
+    return {"$nor": values} if raw_value["negate"] else values
+
+
+class _ExplicitHostsOrServices(TypedDict):
+    value: Sequence[str]
+    negate: bool
+
+
+def _parse_explicit_hosts_or_services_for_vue(
+    value: HostOrServiceConditions,
+) -> _ExplicitHostsOrServices:
+    if isinstance(value, list):
+        return _ExplicitHostsOrServices(
+            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value],
+            negate=False,
+        )
+    if isinstance(value, dict):
+        return _ExplicitHostsOrServices(
+            value=[f"~{e['$regex']}" if isinstance(e, dict) else e for e in value["$nor"]],
+            negate=True,
+        )
+    raise TypeError(value)
+
+
+def get_rule_conditions_from_catalog_value(raw_value: object) -> RuleConditions:
+    if not isinstance(raw_value, dict):
+        raise TypeError(raw_value)
+
+    cond_type, raw_conditions = raw_value["conditions"]["type"]
+    match cond_type:
+        case "predefined":
+            pre_store = PredefinedConditionStore()
+            store_entries = pre_store.filter_usable_entries(pre_store.load_for_reading())
+            return RuleConditions(**store_entries[raw_conditions]["conditions"])
+        case "explicit":
+            return RuleConditions(
+                host_folder=raw_conditions["folder_path"],
+                host_tags=raw_conditions.get("host_tags"),
+                host_label_groups=raw_conditions.get("host_label_groups"),
+                host_name=_parse_explicit_hosts_or_services_for_conditions(
+                    raw_conditions.get("explicit_hosts")
+                ),
+                service_description=_parse_explicit_hosts_or_services_for_conditions(
+                    raw_conditions.get("explicit_services")
+                ),
+                service_label_groups=raw_conditions.get("service_label_groups"),
+            )
+        case _:
+            raise ValueError(cond_type)

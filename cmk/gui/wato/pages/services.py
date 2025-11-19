@@ -140,6 +140,12 @@ class TableGroupEntry(NamedTuple):
     help_text: str
 
 
+class ChangedEntry(NamedTuple):
+    initial_table: str
+    intended_table: UpdateType
+    current_table: str
+
+
 def register(
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
@@ -408,9 +414,33 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             host,
             api_request.discovery_options,
         )
+        if (
+            len(api_request.update_services) == 1
+            and api_request.update_source is not None
+            and api_request.update_target is not None
+            and (
+                target_check := next(
+                    (
+                        check
+                        for check in discovery_result.check_table
+                        if checkbox_id(check.check_plugin_name, check.item)
+                        == api_request.update_services[0]
+                    ),
+                    None,
+                )
+            )
+        ):
+            changed_entry = ChangedEntry(
+                initial_table=api_request.update_source,
+                intended_table=api_request.update_target,
+                current_table=target_check.check_source,
+            )
+        else:
+            changed_entry = None
         page_code = renderer.render(
             discovery_result,
             api_request.update_services,
+            changed_entry,
             debug=ctx.config.debug,
             escape_plugin_output=ctx.config.escape_plugin_output,
         )
@@ -689,6 +719,7 @@ class DiscoveryPageRenderer:
         self,
         discovery_result: DiscoveryResult,
         update_services: list[str],
+        changed_entry: ChangedEntry | None,
         *,
         debug: bool,
         escape_plugin_output: bool,
@@ -700,6 +731,7 @@ class DiscoveryPageRenderer:
             self._show_discovery_details(
                 discovery_result,
                 update_services,
+                changed_entry,
                 debug=debug,
                 escape_plugin_output=escape_plugin_output,
             )
@@ -909,10 +941,40 @@ class DiscoveryPageRenderer:
         table.cell(_("Check plug-in"), plugin_names, css=["plugins"])
         return
 
+    @staticmethod
+    def _get_action_success_message(
+        changed_entry: ChangedEntry | None, table_group: str
+    ) -> tuple[str | None, Literal["success", "warning"]]:
+        message_type: Literal["success", "warning"] = "success"
+        if changed_entry is None or changed_entry.initial_table != table_group:
+            return None, message_type
+
+        if changed_entry.current_table != changed_entry.intended_table.value:
+            message_type = "warning"
+
+        message = None
+        match changed_entry.current_table:
+            case DiscoveryState.UNDECIDED:
+                message = _("Service moved to undecided services table. Monitoring is disabled.")
+            case DiscoveryState.MONITORED:
+                message = _("Service moved to monitored services table. Monitoring is enabled.")
+            case DiscoveryState.VANISHED:
+                message = _(
+                    "Service moved to vanished services table. "
+                    "Monitoring is enabled, but service is unknown."
+                )
+            case DiscoveryState.IGNORED:
+                message = _("Service moved to disabled services table. Monitoring is disabled.")
+            case DiscoveryState.REMOVED:
+                message = _("Service removed. Monitoring is disabled.")
+
+        return message, message_type
+
     def _show_discovery_details(
         self,
         discovery_result: DiscoveryResult,
         update_services: list[str],
+        changed_entry: ChangedEntry | None,
         *,
         debug: bool,
         escape_plugin_output: bool,
@@ -930,7 +992,10 @@ class DiscoveryPageRenderer:
         by_group = self._group_check_table_by_state(discovery_result.check_table)
         for entry in self._ordered_table_groups():
             checks = by_group.get(entry.table_group, [])
-            if not checks:
+            action_message, action_message_type = self._get_action_success_message(
+                changed_entry, entry.table_group
+            )
+            if not checks and not action_message:
                 continue
 
             with html.form_context(
@@ -946,12 +1011,16 @@ class DiscoveryPageRenderer:
                     foldable=Foldable.FOLDABLE_STATELESS,
                     omit_update_header=False,
                     help=entry.help_text,
-                    isopen=entry.table_group
-                    not in (
-                        DiscoveryState.CLUSTERED_NEW,
-                        DiscoveryState.CLUSTERED_OLD,
-                        DiscoveryState.CLUSTERED_VANISHED,
+                    isopen=(
+                        entry.table_group
+                        not in (
+                            DiscoveryState.CLUSTERED_NEW,
+                            DiscoveryState.CLUSTERED_OLD,
+                            DiscoveryState.CLUSTERED_VANISHED,
+                        )
                     ),
+                    action_message=action_message,
+                    action_message_type=action_message_type,
                 ) as table:
                     for check in sorted(checks, key=lambda e: e.description.lower()):
                         self._show_check_row(

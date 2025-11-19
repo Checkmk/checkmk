@@ -9,8 +9,8 @@
 import re
 from typing import Literal
 
+import bs4
 import pytest
-from bs4 import BeautifulSoup as bs
 from pytest import MonkeyPatch
 
 from cmk.gui.htmllib.html import html
@@ -27,7 +27,7 @@ def read_out_simple_table(text):
     # Get the contents of the table as a list of lists
     data = []
     # TODO: Typing chaos ahead! Clarify PageElement/Tag/NavigableString
-    for row in bs(text, "lxml").find_all("tr"):
+    for row in bs4.BeautifulSoup(text, "lxml").find_all("tr"):
         columns = row.find_all("th")
         if not columns:
             columns = row.find_all("td")
@@ -141,6 +141,50 @@ def test_context() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
+def test_action_message() -> None:
+    table_id = 0
+    message = "TEST MESSAGE"
+
+    with output_funnel.plugged():
+        with table_element(
+            "%d" % table_id, searchable=False, sortable=False, action_message=message
+        ) as table1:
+            table1.row()
+            table1.cell("A", "1")
+            table1.cell("B", "2")
+
+        written_text = "".join(output_funnel.drain())
+
+    soup = bs4.BeautifulSoup(written_text, "lxml")
+    thead = soup.find("thead")
+    assert thead is not None, "No <thead> found in table output"
+
+    thead_children = thead.find_all(recursive=False)
+    assert len(thead_children) == 3, f"Expected only 3 children in <thead>: {thead_children!r}"
+
+    action_row = thead_children[0]
+    assert action_row.name == "tr"
+
+    action_row_id = action_row.get("id")
+    assert isinstance(action_row_id, str) and action_row_id.startswith(
+        f"{table_id}_action_message_"
+    ), f"Unexpected id: {action_row_id!r}"
+
+    th = action_row.find("th")
+    assert th is not None, "No <th> found in action message row"
+
+    colspan = th.get("colspan")
+    assert colspan == "2", f"Unexpected colspan: {colspan!r}"
+
+    div = action_row.find("div", class_="action_message_success")
+    assert div is not None, "No action_message_success div found"
+    assert div.get_text(strip=True) == message
+
+    assert thead_children[1].name == "script"  # script to remove action message
+    assert thead_children[2].name == "tr"  # normal header row
+
+
+@pytest.mark.usefixtures("request_context")
 def test_nesting() -> None:
     table_id = 0
     title = " TEST "
@@ -163,12 +207,16 @@ def test_nesting() -> None:
         """<h3 class="table">  TEST </h3>
                             <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
+                            <thead>
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
+                            </thead>
                             <tr class="data even0">  <td>   1  </td>  <td>
                                 <h3 class="table"> TEST 2</h3>
                                 <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
+                                <thead>
                                 <tr><th>_</th><th>|</th></tr>
+                                </thead>
                                 <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
@@ -201,12 +249,16 @@ def test_nesting_context() -> None:
         """<h3 class="table">  TEST </h3>
                             <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
+                            <thead>
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
+                            </thead>
                             <tr class="data even0">  <td>   1  </td>  <td>
                                 <h3 class="table"> TEST 2</h3>
                                 <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
+                                <thead>
                                 <tr><th>_</th><th>|</th></tr>
+                                </thead>
                                 <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>

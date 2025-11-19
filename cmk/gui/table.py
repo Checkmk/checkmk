@@ -14,6 +14,7 @@ from __future__ import annotations
 import contextlib
 import json
 import re
+import uuid
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import auto, Enum
@@ -95,6 +96,9 @@ def table_element(
     help: str | None = None,
     css: str | None = None,
     isopen: bool = True,
+    *,
+    action_message: str | HTML | None = None,
+    action_message_type: Literal["success", "warning"] = "success",
 ) -> Iterator[Table]:
     with output_funnel.plugged():
         table = Table(
@@ -113,6 +117,8 @@ def table_element(
             help=help,
             css=css,
             isopen=isopen,
+            action_message=action_message,
+            action_message_type=action_message_type,
         )
         try:
             yield table
@@ -158,6 +164,9 @@ class Table:
         help: str | None = None,
         css: str | None = None,
         isopen: bool = True,
+        *,
+        action_message: str | HTML | None = None,
+        action_message_type: Literal["success", "warning"],
     ):
         super().__init__()
         self.next_func: Callable[[], None] = lambda: None
@@ -197,6 +206,8 @@ class Table:
         self.css = [] if css is None else [css]
         self.mode = "row"
         self.isopen: Final = isopen
+        self.action_message = action_message
+        self.action_message_type = action_message_type
 
     def row(
         self,
@@ -315,7 +326,7 @@ class Table:
         self.next_header = title
 
     def _end(self) -> None:
-        if not self.rows and self.options["omit_if_empty"]:
+        if not self.rows and not self.action_message and self.options["omit_if_empty"]:
             return
 
         if self.options["output_format"] == "csv":
@@ -344,7 +355,7 @@ class Table:
             if self.help:
                 html.help(self.help)
 
-            if not self.rows:
+            if not self.rows and not self.action_message:
                 html.div(self.empty_text, class_="info")
                 return
 
@@ -471,6 +482,8 @@ class Table:
             num_cols -= len([v for v in empty_columns if v])
 
         html.open_table(class_=["data", "oddeven"] + self.css)
+        html.open_thead()
+        self._render_action_message(num_cols)
 
         # If we have no group headers then paint the headers now
         if self.rows and not isinstance(self.rows[0], GroupHeader):
@@ -479,6 +492,7 @@ class Table:
                 actions_visible,
                 empty_columns,
             )
+        html.close_thead()
 
         if actions_enabled and actions_visible:
             html.open_tr(class_=["data", "even0", "actions"])
@@ -592,6 +606,35 @@ class Table:
             resp.append("\n")
 
         response.set_data("".join(resp))
+
+    def _render_action_message(self, num_cols: int) -> None:
+        if not self.action_message:
+            return
+
+        message_id = f"{self.id}_action_message_{uuid.uuid4()}"
+        html.open_tr(id_=message_id, class_=["data", "even0"])
+        html.open_th(colspan=str(num_cols))
+        html.div(
+            html.render_div(None, class_="icon") + HTML.with_escaping(self.action_message),
+            class_=f"action_message action_message_{self.action_message_type}",
+        )
+        html.close_th()
+        html.close_tr()
+        html.javascript(
+            f"""
+            setTimeout(function() {{
+                const msgRow = document.getElementById({json.dumps(message_id)});
+                if (msgRow) {{
+                    const msgDiv = msgRow.querySelector('.action_message');
+                    if (msgDiv) {{
+                        msgDiv.style.transition = "opacity 1s ease-in";
+                        msgDiv.style.opacity = "0";
+                    }}
+                    setTimeout(function() {{ msgRow?.remove(); }}, 1000);
+                }}
+            }}, 5000);
+            """
+        )
 
     def _render_headers(
         self, actions_enabled: bool, actions_visible: bool, empty_columns: list[bool]

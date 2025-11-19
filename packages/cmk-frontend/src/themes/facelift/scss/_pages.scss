@@ -323,6 +323,50 @@ table.data {
     background-image: url('../facelift/images/checkbox_hover_bg.png');
   }
 
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: $sticky-table-header-z-index;
+
+    th {
+      position: unset;
+
+      div.action_message {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 8px 0 4px;
+        padding: 8px;
+        border-radius: $theme-border-radius;
+        color: $font-color-table-action;
+
+        div.icon {
+          height: 16px;
+          width: 16px;
+          background-repeat: no-repeat;
+          background-position: center;
+          background-size: contain;
+        }
+
+        &.action_message_success {
+          background-color: color-mix(in srgb, $color-corporate-green-50 10%, transparent);
+
+          div.icon {
+            background-image: url('../facelift/images/icon_checkmark.svg');
+          }
+        }
+
+        &.action_message_warning {
+          background-color: color-mix(in srgb, $color-yellow-50 10%, transparent);
+
+          div.icon {
+            background-image: url('../facelift/images/icon_warning.png');
+          }
+        }
+      }
+    }
+  }
+
   th {
     height: 24px;
     padding: 0 8px;
@@ -500,6 +544,7 @@ div.foldable_wrapper {
   --foldable-header-height: #{$spacing-double + $spacing-half};
 
   table.data {
+    thead,
     th {
       top: var(--foldable-header-height);
     }

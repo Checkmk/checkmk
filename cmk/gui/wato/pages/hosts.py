@@ -609,9 +609,7 @@ class ModeEditHost(ABCHostMode):
                 if len(failed_hosts) <= display_limit:
                     hosts_display = ", ".join(["<code>%s</code>" % h for h in failed_hosts])
                 else:
-                    hosts_display = ", ".join(
-                        ["<code>%s</code>" % h for h in failed_hosts[:display_limit]]
-                    )
+                    hosts_display = ", ".join([str(h) for h in failed_hosts[:display_limit]])
                     remaining = len(failed_hosts) - display_limit
                     hosts_display += _(", +%d more") % remaining
 

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import abc
 import multiprocessing
@@ -54,7 +53,8 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.rulesets import AllRulesets, SingleRulesetRecursively
+from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.rulesets import AllRulesets, Rule, SingleRulesetRecursively
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.utils.paths import (
     local_agent_based_plugins_dir,
@@ -322,7 +322,7 @@ class ACTestTmpfs(ACTest):
                 site_id=site_id,
             )
 
-    def _tmpfs_mounted(self, site_id):
+    def _tmpfs_mounted(self, site_id: SiteId) -> bool:
         # Borrowed from omd binary
         #
         # Problem here: if /omd is a symbolic link somewhere else,
@@ -639,7 +639,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
 class ABCACApacheTest(ACTest, abc.ABC):
     """Abstract base class for apache related tests"""
 
-    def _get_number_of_idle_processes(self):
+    def _get_number_of_idle_processes(self) -> int:
         apache_status = self._get_apache_status()
 
         for line in apache_status.split("\n"):
@@ -649,7 +649,7 @@ class ABCACApacheTest(ACTest, abc.ABC):
 
         raise MKGeneralException("Failed to parse the score board")
 
-    def _get_maximum_number_of_processes(self):
+    def _get_maximum_number_of_processes(self) -> int:
         apache_status = self._get_apache_status()
 
         for line in apache_status.split("\n"):
@@ -659,7 +659,7 @@ class ABCACApacheTest(ACTest, abc.ABC):
 
         raise MKGeneralException("Failed to parse the score board")
 
-    def _get_apache_status(self):
+    def _get_apache_status(self) -> str:
         cfg = ConfigDomainOMD().default_globals()
         url = "http://127.0.0.1:%s/server-status?auto" % cfg["site_apache_tcp_port"]
 
@@ -717,7 +717,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             site_id=site_id,
         )
 
-    def _get_average_process_size(self):
+    def _get_average_process_size(self) -> float:
         try:
             pid_file = cmk.utils.paths.omd_root / "tmp/apache/run/apache.pid"
             with pid_file.open(encoding="utf-8") as f:
@@ -743,7 +743,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
 
         return sum(sizes) / float(len(sizes))
 
-    def _get_process_size(self, pid):
+    def _get_process_size(self, pid: bytes) -> float:
         # Summary line seems to be different on the supported distros
         # Ubuntu 17.10 (pmap from procps-ng 3.3.12):
         # mapped: 25036K    writeable/private: 2704K    shared: 28K
@@ -1124,7 +1124,7 @@ class ACTestSizeOfExtensions(ACTest):
             site_id=site_id,
         )
 
-    def _size_of_extensions(self):
+    def _size_of_extensions(self) -> int:
         return int(
             subprocess.check_output(["du", "-sb", "%s/local" % cmk.utils.paths.omd_root]).split()[0]
         )
@@ -1180,7 +1180,7 @@ class ACTestESXDatasources(ACTest):
             "instead."
         )
 
-    def _get_rules(self):
+    def _get_rules(self) -> list[tuple[Folder, int, Rule]]:
         collection = SingleRulesetRecursively.load_single_ruleset_recursively(
             RuleGroup.SpecialAgents("vsphere")
         )
@@ -1189,7 +1189,7 @@ class ACTestESXDatasources(ACTest):
         return ruleset.get_rules()
 
     def is_relevant(self) -> bool:
-        return self._get_rules()
+        return bool(self._get_rules())
 
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         all_rules_ok = True
@@ -1668,7 +1668,7 @@ class ACTestDeprecatedPNPTemplates(ACTest):
         )
 
 
-def _site_is_using_livestatus_proxy(site_id):
+def _site_is_using_livestatus_proxy(site_id: SiteId) -> bool:
     site_configs = site_management_registry["site_management"].load_sites()
     return site_configs[site_id].get("proxy") is not None
 
@@ -1718,7 +1718,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
                 site_id=site_id,
             )
 
-    def _get_rules(self):
+    def _get_rules(self) -> list[tuple[str, str]]:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
             RuleGroup.CheckgroupParameters("agent_update")
         ).get(RuleGroup.CheckgroupParameters("agent_update"))

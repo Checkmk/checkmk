@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 
 import time
 from typing import Any
@@ -37,7 +36,7 @@ from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
 class DashboardStore:
     @classmethod
     @request_memoize()
-    def get_instance(cls):
+    def get_instance(cls) -> "DashboardStore":
         """Load dashboards only once for each request"""
         return cls()
 

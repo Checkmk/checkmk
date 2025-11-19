@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from cmk.gui import notifications
 from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
-from cmk.gui.dashboard.type_defs import DashletConfig
+from cmk.gui.dashboard.type_defs import DashletConfig, DashletRefreshInterval
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -22,15 +20,15 @@ class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
     """Dashlet notifying users in case of failure to send notifications"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "notify_failed_notifications"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Failed Notifications")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Display GUI notifications in case notification mechanism fails")
 
     @classmethod
@@ -38,7 +36,7 @@ class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
         return 0
 
     @classmethod
-    def initial_refresh_interval(cls):
+    def initial_refresh_interval(cls) -> DashletRefreshInterval:
         return 60
 
     @classmethod
@@ -46,7 +44,7 @@ class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
         return False
 
     @classmethod
-    def styles(cls):
+    def styles(cls) -> str:
         return """
 .has_failed_notifications {
     width: 100%;

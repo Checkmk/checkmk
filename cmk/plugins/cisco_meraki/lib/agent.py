@@ -106,16 +106,10 @@ class MerakiOrganisation:
             devices_by_serial = {}
 
         for device in devices_by_serial.values():
-            try:
-                device_piggyback = str(device[API_NAME_DEVICE_NAME])
-            except KeyError as e:
-                LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
-                continue
-
             yield Section(
                 name="cisco_meraki_org_device_info",
                 data=device,
-                piggyback=device_piggyback,
+                piggyback=self._get_device_piggyback(device, devices_by_serial),
             )
 
         if self.config.device_statuses_required:

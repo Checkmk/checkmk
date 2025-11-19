@@ -272,7 +272,6 @@ pub struct Registry {
 }
 
 impl Registry {
-    #[cfg(test)]
     pub fn path(&self) -> &Path {
         &self.path
     }

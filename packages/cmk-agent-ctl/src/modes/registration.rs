@@ -10,6 +10,8 @@ use crate::{
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 use log::{error, info};
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
 
 trait TrustEstablishing {
@@ -354,13 +356,16 @@ pub fn register_existing(
             &config.connection_config.site_id,
             &config.connection_config.client_config,
         )?;
-        register_updater_subprocess(&UpdaterRegistrationInput {
-            site_id: config.connection_config.site_id.clone(),
-            username: config.connection_config.username.clone(),
-            password: registration_input.credentials.password.clone(),
-            hostname: config.host_name.clone(),
-            protocol,
-        })?;
+        register_updater_subprocess(
+            &UpdaterRegistrationInput {
+                site_id: config.connection_config.site_id.clone(),
+                username: config.connection_config.username.clone(),
+                password: registration_input.credentials.password.clone(),
+                hostname: config.host_name.clone(),
+                protocol,
+            },
+            registry,
+        )?;
     }
     Ok(())
 }
@@ -548,13 +553,16 @@ fn process_pre_configured_connection(
             }
         };
 
-        register_updater_subprocess(&UpdaterRegistrationInput {
-            site_id: site_id.clone(),
-            username: pre_configured.credentials.username.clone(),
-            password: pre_configured.credentials.password.clone(),
-            hostname,
-            protocol,
-        })?;
+        register_updater_subprocess(
+            &UpdaterRegistrationInput {
+                site_id: site_id.clone(),
+                username: pre_configured.credentials.username.clone(),
+                password: pre_configured.credentials.password.clone(),
+                hostname,
+                protocol,
+            },
+            registry,
+        )?;
     }
 
     Ok(())
@@ -590,6 +598,7 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
 fn _prepare_register_updater_cmd(
     updater_registration_config: &UpdaterRegistrationInput,
     cmk_update_agent_path: &str,
+    password_file_path: &std::path::Path,
 ) -> AnyhowResult<Command> {
     let mut cmd = Command::new(cmk_update_agent_path);
     #[cfg(windows)]
@@ -608,8 +617,8 @@ fn _prepare_register_updater_cmd(
         .arg("-p")
         .arg(updater_registration_config.protocol.as_str())
         // this is a temporary solution, will be replaced with a more secure one in the future
-        .arg("-P")
-        .arg(&updater_registration_config.password);
+        .arg("--password-file")
+        .arg(password_file_path);
     cmd.stdin(std::process::Stdio::null());
     Ok(cmd)
 }
@@ -659,6 +668,7 @@ fn _get_cmk_update_agent_path(cmk_update_agent_cmd: &str) -> AnyhowResult<String
 
 pub fn register_updater_subprocess(
     updater_registration_config: &UpdaterRegistrationInput,
+    registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
     let cmk_update_agent_path = match _get_cmk_update_agent_path(CMK_UPDATE_AGENT_CMD) {
         Ok(path) => path,
@@ -668,8 +678,24 @@ pub fn register_updater_subprocess(
         }
     };
 
-    let mut cmd =
-        match _prepare_register_updater_cmd(updater_registration_config, &cmk_update_agent_path) {
+    let runtime_dir = registry
+        .path()
+        .parent()
+        .expect("Failed to get runtime directory");
+    let password_file_path = runtime_dir.join(".pwd");
+
+    std::fs::write(&password_file_path, &updater_registration_config.password)
+        .context("Failed to write password to temporary file")?;
+
+    #[cfg(unix)]
+    std::fs::set_permissions(&password_file_path, std::fs::Permissions::from_mode(0o600))?;
+
+    let result = (|| {
+        let mut cmd = match _prepare_register_updater_cmd(
+            updater_registration_config,
+            &cmk_update_agent_path,
+            &password_file_path,
+        ) {
             Ok(cmd) => cmd,
             Err(e) => {
                 error!(
@@ -680,24 +706,29 @@ pub fn register_updater_subprocess(
             }
         };
 
-    info!(
-        "Registering updater for site {}",
-        updater_registration_config.site_id
-    );
-    let output = cmd.output().context(format!(
-        "Failed to execute {CMK_UPDATE_AGENT_CMD} register command"
-    ))?;
+        info!(
+            "Registering updater for site {}",
+            updater_registration_config.site_id
+        );
+        let output = cmd.output().context(format!(
+            "Failed to execute {CMK_UPDATE_AGENT_CMD} register command"
+        ))?;
 
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("Updater registration failed: {}", stderr);
-    }
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            bail!("Updater registration failed: {}", stderr);
+        }
 
-    info!(
-        "Successfully registered updater for site {}",
-        updater_registration_config.site_id
-    );
-    Ok(())
+        info!(
+            "Successfully registered updater for site {}",
+            updater_registration_config.site_id
+        );
+        Ok(())
+    })();
+
+    let _ = std::fs::remove_file(&password_file_path);
+
+    result
 }
 
 #[cfg(test)]
@@ -1342,6 +1373,7 @@ mod tests {
                 site: "test-site".to_string(),
             };
             let protocol = site_spec::Protocol::Http;
+            let test_password_file = std::path::Path::new("/tmp/test-password-file");
 
             let cmd = _prepare_register_updater_cmd(
                 &UpdaterRegistrationInput {
@@ -1352,6 +1384,7 @@ mod tests {
                     protocol,
                 },
                 CMK_UPDATE_AGENT_CMD,
+                test_password_file,
             )
             .unwrap();
 
@@ -1371,8 +1404,8 @@ mod tests {
                 "test-user",
                 "-p",
                 "http",
-                "-P",
-                "test-password",
+                "--password-file",
+                test_password_file.to_str().unwrap(),
             ];
             #[cfg(unix)]
             let expected_args = [
@@ -1387,8 +1420,8 @@ mod tests {
                 "test-user",
                 "-p",
                 "http",
-                "-P",
-                "test-password",
+                "--password-file",
+                test_password_file.to_str().unwrap(),
             ];
 
             assert_eq!(cmd.get_program(), CMK_UPDATE_AGENT_CMD);

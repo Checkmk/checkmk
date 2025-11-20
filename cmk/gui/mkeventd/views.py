@@ -59,6 +59,7 @@ from cmk.gui.views.command import (
 )
 from cmk.gui.views.sorter import (
     cmp_custom_variable,
+    cmp_ec_sl_simple_number,
     cmp_num_split,
     cmp_simple_number,
     cmp_simple_string,
@@ -137,8 +138,8 @@ def register(
 
     sorter_registry.register(SorterServicelevel)
 
-    declare_1to1_sorter("svc_servicelevel", cmp_simple_number)
-    declare_1to1_sorter("host_servicelevel", cmp_simple_number)
+    declare_1to1_sorter("svc_servicelevel", cmp_ec_sl_simple_number)
+    declare_1to1_sorter("host_servicelevel", cmp_ec_sl_simple_number)
     declare_1to1_sorter("event_id", cmp_simple_number)
     declare_1to1_sorter("event_count", cmp_simple_number)
     declare_1to1_sorter("event_text", cmp_simple_string)

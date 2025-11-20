@@ -7,6 +7,7 @@
 from .base import ParameterizedSorter, Sorter, SorterEntry
 from .helpers import (
     cmp_custom_variable,
+    cmp_ec_sl_simple_number,
     cmp_insensitive_string,
     cmp_ip_address,
     cmp_num_split,
@@ -30,6 +31,7 @@ __all__ = [
     "SorterEntry",
     "SorterRegistry",
     "cmp_custom_variable",
+    "cmp_ec_sl_simple_number",
     "cmp_insensitive_string",
     "cmp_ip_address",
     "cmp_num_split",

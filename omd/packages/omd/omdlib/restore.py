@@ -107,12 +107,12 @@ def _restore_working_dir(site_home: Path) -> Path:
 
 
 def _clickhouse_dir(site_home: Path) -> Path:
-    return site_home / "var" / "clickhouse-server"
+    return site_home / "var" / "lib" / "clickhouse-server"
 
 
 def _clear_site_home(site_home: Path) -> None:
     restore_working_dir = _restore_working_dir(site_home)
-    clickhouse_dir = site_home / "var" / "clickhouse-server"
+    clickhouse_dir = _clickhouse_dir(site_home)
     restore_clickhouse_dir = restore_working_dir / "clickhouse-server"
     if clickhouse_dir.exists():
         clickhouse_dir.rename(restore_clickhouse_dir)

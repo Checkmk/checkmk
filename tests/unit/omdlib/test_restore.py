@@ -136,6 +136,26 @@ def _merge_directories(dirs_one: Iterable[Directory], dirs_two: Iterable[Directo
     return frozenset(result)
 
 
+_CLICKHOUSE_EXAMPLE_DIR = Directory(
+    name="var",
+    directories=frozenset(
+        {
+            Directory(
+                name="lib",
+                directories=frozenset(
+                    {
+                        Directory(
+                            name="clickhouse-server",
+                            files=frozenset({File("data", content=b"abc")}),
+                        )
+                    }
+                ),
+            ),
+        }
+    ),
+)
+
+
 @pytest.mark.parametrize(
     "directories, files, untouched",
     [
@@ -157,17 +177,7 @@ def _merge_directories(dirs_one: Iterable[Directory], dirs_two: Iterable[Directo
             frozenset(),
             frozenset(
                 {
-                    Directory(
-                        name="var",
-                        directories=frozenset(
-                            {
-                                Directory(
-                                    name="clickhouse-server",
-                                    files=frozenset({File("data", content=b"abc")}),
-                                )
-                            }
-                        ),
-                    ),
+                    _CLICKHOUSE_EXAMPLE_DIR,
                     Directory(name=".restore_working_dir"),
                 }
             ),
@@ -191,17 +201,7 @@ def _merge_directories(dirs_one: Iterable[Directory], dirs_two: Iterable[Directo
             frozenset(),
             frozenset(
                 {
-                    Directory(
-                        name="var",
-                        directories=frozenset(
-                            {
-                                Directory(
-                                    name="clickhouse-server",
-                                    files=frozenset({File("data", content=b"abc")}),
-                                )
-                            }
-                        ),
-                    ),
+                    _CLICKHOUSE_EXAMPLE_DIR,
                     Directory(name=".restore_working_dir"),
                 }
             ),

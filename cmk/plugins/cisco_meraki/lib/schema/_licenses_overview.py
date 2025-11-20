@@ -16,7 +16,7 @@ class RawLicensesOverview(TypedDict):
 
     status: str
     expirationDate: str
-    licensedDeviceCounts: _LicensedDeviceCounts
+    licensedDeviceCounts: dict[str, int]
     licenseCount: int
     states: _States
     licenseTypes: list[_LicenseType]
@@ -28,10 +28,6 @@ class LicensesOverview(RawLicensesOverview):
 
     organisation_id: str
     organisation_name: str
-
-
-class _LicensedDeviceCounts(TypedDict):
-    MS: int
 
 
 class _States(TypedDict):

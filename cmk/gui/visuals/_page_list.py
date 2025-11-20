@@ -80,26 +80,39 @@ def page_list(
 
     visual_type = visual_type_registry[what]()
     visual_plural_title = visual_type.plural_title.title()
-    topic_entries = [
-        PageMenuEntry(
-            title=_("Add %s") % visual_type.title,
-            icon_name="new",
-            item=make_simple_link("create_%s.py" % what_s),
-            is_shortcut=True,
-            is_suggested=True,
-        )
-    ]
-    # TODO: should later be removed
+    topic_entries = []
+
     if what == "dashboards":
+        topic_entries.extend(
+            [
+                PageMenuEntry(
+                    title=_("Add dashboard"),
+                    icon_name="new",
+                    item=make_simple_link("dashboard.py?create=1"),
+                    is_shortcut=True,
+                    is_suggested=True,
+                ),
+                # TODO: should later be removed
+                PageMenuEntry(
+                    title=_("Add %s (deprecated)") % visual_type.title,
+                    icon_name="new",
+                    item=make_simple_link("create_%s.py" % what_s),
+                    is_shortcut=False,
+                    is_suggested=False,
+                ),
+            ]
+        )
+    else:
         topic_entries.append(
             PageMenuEntry(
-                title=_("Add dashboard (prototype)"),
+                title=_("Add %s") % visual_type.title,
                 icon_name="new",
-                item=make_simple_link("dashboard_wip.py?create=1"),
-                is_shortcut=False,
-                is_suggested=False,
+                item=make_simple_link("create_%s.py" % what_s),
+                is_shortcut=True,
+                is_suggested=True,
             )
         )
+
     current_type_dropdown = PageMenuDropdown(
         name=what,
         title=visual_plural_title,

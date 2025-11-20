@@ -53,7 +53,6 @@ COPY \
     buildscripts/infrastructure/build-nodes/scripts/build_lib.sh \
     buildscripts/infrastructure/build-nodes/scripts/install-bazel.sh \
     buildscripts/infrastructure/build-nodes/scripts/install-docker.sh \
-    buildscripts/infrastructure/build-nodes/scripts/install-nodejs.sh \
     /opt/
 
 # hack to use existing installation scripts, see CMK-20698
@@ -64,9 +63,6 @@ ENV \
 
 # no doubt this is needed
 RUN /opt/install-bazel.sh
-
-# nodejs, npm is required to run cmk-[frontend-vue, shared-typing, frontend], default npm version is not compatible, requires +184MB
-RUN /opt/install-nodejs.sh
 
 # docker is required to run test-agent-plugin, requires +480MB
 RUN DISTRO="ubuntu-24.04" /opt/install-docker.sh

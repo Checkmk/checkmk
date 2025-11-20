@@ -16,7 +16,6 @@ TARGET_DIR="$(realpath "${1:-.}")"
         Check_MK-pubkey.gpg \
         install-iwyu.sh install-clang.sh \
         install-docker.sh \
-        install-nodejs.sh \
         install-packer.sh \
         install-make-dist-deps.sh \
         install-aws-cli.sh \

@@ -58,7 +58,7 @@ install_basic_tools() {
         "gawk"           # TBC
         "git"            # git is used by install-[bazel, cmake, iwyu, patchelf, protobuf-cpp].sh
         "gnupg"          # "apt-key" used by install-docker
-        "lsb-release"    # lsb is used by install-[clang, docker, packer, nodejs].sh
+        "lsb-release"    # lsb is used by install-[clang, docker, packer].sh
         "make"           # don't forget your towel when you're taveling :)
         "sudo"           # some make calls require sudo
         "wget"           # wget is used by install-[clang, packer, protobuf-cpp].sh
@@ -339,14 +339,6 @@ install_cmk_package_dependencies() {
     print_green "Installation for CMK development done"
 }
 
-install_for_frontend_dev() {
-    print_green "Installing everything for Frontend development ..."
-
-    "${SCRIPT_DIR}"/install-nodejs.sh
-
-    print_green "Installation for Frontend development done"
-}
-
 install_for_localize_dev() {
     print_green "Installing everything for Localization development ..."
 
@@ -425,7 +417,6 @@ print_debug "PROFILE_ARGS    = ${PROFILE_ARGS[*]}"
 REQUIRES_NEXUS=0
 INSTALL_FOR_PYTHON=0
 INSTALL_FOR_CPP=0
-INSTALL_FOR_FRONTEND=0
 INSTALL_FOR_LOCALIZE=0
 INSTALL_FOR_BAZEL=0
 INSTALLED_BY_PYENV=0
@@ -437,7 +428,6 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             ((REQUIRES_NEXUS += 1))
             INSTALL_FOR_PYTHON=1
             INSTALL_FOR_CPP=1
-            INSTALL_FOR_FRONTEND=1
             INSTALL_FOR_LOCALIZE=1
             INSTALL_FOR_BAZEL=1
             ((STRIP_LATER += 5))
@@ -452,9 +442,6 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             INSTALL_FOR_CPP=1
             ((STRIP_LATER += 1))
             ;;
-        frontend)
-            INSTALL_FOR_FRONTEND=1
-            ;;
         localize)
             INSTALL_FOR_LOCALIZE=1
             ;;
@@ -464,14 +451,13 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             ;;
         *)
             print_red "Unknown installation profile $INSTALL_PROFILE"
-            print_debug "Choose from 'all', 'python', 'cpp', 'frontend', 'localize', 'bazel'"
+            print_debug "Choose from 'all', 'python', 'cpp', 'localize', 'bazel'"
             exit 1
             ;;
     esac
 done
 print_debug "INSTALL_FOR_PYTHON   = ${INSTALL_FOR_PYTHON}"
 print_debug "INSTALL_FOR_CPP      = ${INSTALL_FOR_CPP}"
-print_debug "INSTALL_FOR_FRONTEND = ${INSTALL_FOR_FRONTEND}"
 print_debug "INSTALL_FOR_LOCALIZE = ${INSTALL_FOR_LOCALIZE}"
 print_debug "INSTALL_FOR_BAZEL    = ${INSTALL_FOR_BAZEL}"
 print_debug "REQUIRES_NEXUS       = ${REQUIRES_NEXUS}"
@@ -504,9 +490,6 @@ if [[ $INSTALL_FOR_CPP -eq 1 ]]; then
 fi
 if [[ $INSTALL_FOR_PYTHON -eq 1 ]]; then
     install_for_python_dev
-fi
-if [[ $INSTALL_FOR_FRONTEND -eq 1 ]]; then
-    install_for_frontend_dev
 fi
 if [[ $INSTALL_FOR_LOCALIZE -eq 1 ]]; then
     install_for_localize_dev

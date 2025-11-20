@@ -53,12 +53,6 @@ COPY \
     /opt/
 RUN /opt/install-docker.sh
 
-# timing: real 0m13.629s user 0m9.842s sys 0m1.944s
-COPY \
-    install-nodejs.sh \
-    /opt/
-RUN /opt/install-nodejs.sh
-
 # timing: real 0m9.257s user 0m5.424s sys 0m1.103s
 COPY \
     install-packer.sh \

@@ -22,7 +22,6 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.cisco_meraki.lib.type_defs import MerakiAPIData
 from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
 from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
@@ -80,7 +79,7 @@ class SensorReadings:
     temperature: Temperature | None = None
 
     @classmethod
-    def parse(cls, row: MerakiAPIData) -> "SensorReadings":
+    def parse(cls, row: Mapping[str, object]) -> "SensorReadings":
         if not isinstance(raw_readings := row.get("readings"), list):
             return cls()
 

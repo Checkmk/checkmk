@@ -159,6 +159,7 @@ class Site:
         )
 
         self.result_dir.mkdir(parents=True, exist_ok=True)
+        self._known_crashes: set[Path] = set()
 
     @property
     def alias(self) -> str:
@@ -1669,7 +1670,11 @@ class Site:
         ]
 
     def report_crashes(self) -> None:
+        logger.info(f"Checking crash reports for site {self.id}")
         for crash_dir in self.crash_reports_dirs():
+            if crash_dir in self._known_crashes:
+                continue
+            self._known_crashes.add(crash_dir)
             crash_file = crash_dir / "crash.info"
             try:
                 crash = json.loads(self.read_file(crash_file))

@@ -22,6 +22,8 @@ import pytest_check
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
+from tests.testlib.site import Site
+
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules
 pytest.register_assert_rewrite(
@@ -407,3 +409,20 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
 
     if item.config.getoption("--dry-run"):
         pytest.xfail("*** DRY-RUN ***")
+
+
+def _iter_site_objects(pytest_item: pytest.Item) -> Iterator[Site]:
+    """Yield all Site objects found in the function arguments of the given test."""
+    funcargs = getattr(pytest_item, "funcargs", None)
+    if not funcargs:
+        return
+    for obj in funcargs.values():
+        if isinstance(obj, Site):
+            yield obj
+
+
+@pytest.hookimpl
+def pytest_runtest_teardown(item: pytest.Item) -> None:
+    """Teardown hook to report crashes after each test."""
+    for site_obj in _iter_site_objects(item):
+        site_obj.report_crashes()

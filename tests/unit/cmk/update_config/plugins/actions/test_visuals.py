@@ -137,5 +137,6 @@ from cmk.update_config.plugins.actions.visuals import _migrate_visual
     ],
 )
 def test__migrate_visual(visual: TVisual, result: TVisual) -> None:
-    assert _migrate_visual(visual, find_non_canonical_filters(inventory_displayhints)) == result
-    assert _migrate_visual(result, find_non_canonical_filters(inventory_displayhints)) == result
+    non_canonical_filters = find_non_canonical_filters(inventory_displayhints)
+    assert _migrate_visual(visual, non_canonical_filters) == result
+    assert _migrate_visual(result, non_canonical_filters) == result

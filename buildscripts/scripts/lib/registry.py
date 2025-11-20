@@ -314,6 +314,8 @@ class Registry:
         kwargs = {"timeout": self.timeout} if self.timeout else {}
         self.client = docker.client.from_env(**kwargs)
         self.credentials = get_credentials()
+
+        # Since self.editions is a list, we have to match the complete list contents
         match self.editions:
             case ["community", "ultimate", "ultimatemt", "pro"]:
                 self.url = "https://hub.docker.com/"
@@ -341,11 +343,7 @@ def get_credentials() -> Credentials:
 def get_default_registries() -> list[Registry]:
     return [
         Registry(
-            editions=["enterprise"],
-            timeout=300,  # Our enterprise registry is a bit _slow_, let's give it some more time
-        ),
-        Registry(
-            editions=["community", "ultimate", "ultimatemt"],
+            editions=["community", "ultimate", "ultimatemt", "pro"],
         ),
         Registry(
             editions=["cloud"],

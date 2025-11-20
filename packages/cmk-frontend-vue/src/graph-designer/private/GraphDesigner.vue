@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import {
   type GraphLine,
   type GraphLines,
@@ -22,10 +23,18 @@ import useDragging from '@/lib/useDragging'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import CmkDropdown from '@/components/CmkDropdown'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
+import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkSwitch from '@/components/CmkSwitch.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
+
+import FormSingleChoiceEditableEditAsync from '@/form/FormEditAsync.vue'
+import {
+  type Payload,
+  configEntityAPI
+} from '@/form/private/forms/FormSingleChoiceEditable/configuration_entity'
 
 import FormMetricBackendCustomQuery, {
   type Query
@@ -49,6 +58,9 @@ import {
 import { type GraphRenderer } from '@/graph-designer/private/graph'
 
 import type { Topic } from './type_defs'
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const { _t } = usei18n()
 
@@ -728,14 +740,6 @@ function dragElement(event: DragEvent) {
   graphLines.value.splice(dragReturn.targetIndex, 0, movedEntry)
 }
 
-// Create services
-
-function createServices(graphLine: GraphLine) {
-  if (graphLine.type !== 'query') {
-    return
-  }
-}
-
 // Graph update
 
 function computeGraphOptions(): GraphOptions {
@@ -781,6 +785,65 @@ watch(
   },
   { deep: true }
 )
+
+// SlideIn/Out
+
+type ObjectId = string
+
+const configEntityType = 'rule_form_spec'
+const configEntityTypeSpecifier = 'special_agents:metric_backend_custom_query'
+const configEntityTypeData = ref<ObjectId | null>(null)
+
+const slideInObjectId = ref<ObjectId | null>(null)
+const slideInOpen = ref<boolean>(false)
+
+function openSlideIn(graphLine: GraphLine) {
+  if (graphLine.type !== 'query') {
+    return
+  }
+  slideInOpen.value = true
+}
+
+function closeSlideIn() {
+  slideInOpen.value = false
+}
+
+const slideInAPI = {
+  getSchema: async () => {
+    return (
+      await configEntityAPI.getSchema(
+        configEntityType as ConfigEntityType,
+        configEntityTypeSpecifier
+      )
+    ).schema
+  },
+  getData: async (objectId: ObjectId | null) => {
+    if (objectId === null) {
+      return (
+        await configEntityAPI.getSchema(
+          configEntityType as ConfigEntityType,
+          configEntityTypeSpecifier
+        )
+      ).defaultValues
+    }
+    throw new Error('Editing is not supported')
+  },
+  setData: async (objectId: ObjectId | null, data: Payload) => {
+    if (objectId === null) {
+      return await configEntityAPI.createEntity(
+        configEntityType as ConfigEntityType,
+        configEntityTypeSpecifier,
+        data
+      )
+    }
+    throw new Error('Editing is not supported')
+  }
+}
+
+function slideInSubmitted(event: { ident: string; description: string }) {
+  configEntityTypeData.value = event.ident
+  closeSlideIn()
+}
 
 // Form
 
@@ -866,7 +929,7 @@ const graphDesignerContentAsJson = computed(() => {
             :title="_t('Create services')"
             src="themes/facelift/images/icon_checkmk.svg"
             class="icon iconbutton"
-            @click="createServices(graphLine)"
+            @click="openSlideIn(graphLine)"
           />
         </td>
         <td class="narrow"><CmkColorPicker v-model:data="graphLine.color" /></td>
@@ -1110,6 +1173,37 @@ const graphDesignerContentAsJson = computed(() => {
       />
     </template>
   </TopicsRenderer>
+
+  <CmkSlideInDialog
+    :open="slideInOpen"
+    :header="{
+      title:
+        slideInObjectId === null
+          ? _t('Add rule: Metric backend (Custom query)')
+          : _t('Edit rule: Metric backend (Custom query)'),
+      closeButton: true
+    }"
+    @close="closeSlideIn"
+  >
+    <CmkErrorBoundary>
+      <FormSingleChoiceEditableEditAsync
+        :object-id="slideInObjectId"
+        :api="slideInAPI"
+        :i18n="{
+          save_button: _t('Save'),
+          cancel_button: _t('Cancel'),
+          create_button: _t('Create'),
+          loading: _t('Loading'),
+          validation_error: _t('Validation error'),
+          fatal_error: _t('Fatal error'),
+          permanent_choice_warning: _t('When you save this rule a new rule will be created.'),
+          permanent_choice_warning_dismissal: _t('Dismiss')
+        }"
+        @cancel="closeSlideIn"
+        @submitted="slideInSubmitted"
+      />
+    </CmkErrorBoundary>
+  </CmkSlideInDialog>
 
   <!-- This input field contains the computed json value which is sent when the form is submitted -->
   <input v-model="graphDesignerContentAsJson" name="graph_designer_content" type="hidden" />

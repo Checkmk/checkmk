@@ -12,7 +12,7 @@ from cmk.plugins.gerrit.lib import agent
 from cmk.plugins.gerrit.lib.schema import VersionInfo
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def patch_storage_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
 

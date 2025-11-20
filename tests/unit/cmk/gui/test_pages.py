@@ -90,7 +90,6 @@ def test_registered_pages() -> None:
         "pagetype_topics",
         "edit_pagetype_topic",
         "dashboard",
-        "dashboard_wip",
         "dashboard_dashlet",
         "delete_dashlet",
         "download_agent_output",

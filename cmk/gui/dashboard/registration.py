@@ -38,7 +38,6 @@ from .page_graph_widget import GraphWidgetPage
 from .page_show_dashboard import (
     ajax_dashlet,
     AjaxInitialDashboardFilters,
-    page_dashboard,
     page_dashboard_app,
 )
 from .page_show_shared_dashboard import SharedDashboardPage
@@ -70,9 +69,7 @@ def register(
     )
     page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage()))
     page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
-    # TODO: old dashboard page should be removed
-    page_registry.register(PageEndpoint("dashboard", page_dashboard))
-    page_registry.register(PageEndpoint("dashboard_wip", page_dashboard_app))
+    page_registry.register(PageEndpoint("dashboard", page_dashboard_app))
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("shared_dashboard", SharedDashboardPage())
     )

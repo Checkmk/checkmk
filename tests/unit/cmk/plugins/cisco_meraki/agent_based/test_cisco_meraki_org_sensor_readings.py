@@ -4,59 +4,47 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from collections.abc import Sequence
+import json
 from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
+from polyfactory.factories import TypedDictFactory
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.cisco_meraki.agent_based import cisco_meraki_org_sensor_readings
-
-_STRING_TABLE = [
-    [
-        (
-            '[{"serial": "Q234-ABCD-5678", "network": {"id": "N_24329156", "name": "Main Office"},'
-            ' "readings": [{"ts": "2000-01-14T12:00:00Z", "metric": "temperature",'
-            ' "temperature": {"fahrenheit": 77.81, "celsius": 23.45},'
-            ' "humidity": {"relativePercentage": 34}, "water": {"present": true},'
-            ' "door": {"open": true}, "tvoc": {"concentration": 100},'
-            ' "pm25": {"concentration": 100}, "noise": {"ambient": {"level": 45}},'
-            ' "indoorAirQuality": {"score": 89}, "button": {"pressType": "short"},'
-            ' "battery": {"percentage": 90}},'
-            ' {"ts": "2000-01-15T12:00:00Z", "metric": "temperature",'
-            ' "temperature": {"fahrenheit": 77.81, "celsius": 25.45},'
-            ' "humidity": {"relativePercentage": 34}, "water": {"present": true},'
-            ' "door": {"open": true}, "tvoc": {"concentration": 100},'
-            ' "pm25": {"concentration": 100}, "noise": {"ambient": {"level": 45}},'
-            ' "indoorAirQuality": {"score": 89}, "button": {"pressType": "short"},'
-            ' "battery": {"percentage": 91}}]}]'
-        ),
-    ]
-]
-
-
-@pytest.mark.parametrize(
-    "string_table, expected_services",
-    [
-        ([], []),
-        ([[]], []),
-        ([[""]], []),
-        (
-            _STRING_TABLE,
-            [
-                Service(item="Sensor"),
-            ],
-        ),
-    ],
+from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_sensor_readings import (
+    check_sensor_temperature,
+    discover_sensor_temperature,
+    parse_sensor_readings,
 )
-def test_discover_sensor_temperature(
-    string_table: StringTable, expected_services: Sequence[Service]
-) -> None:
-    section = cisco_meraki_org_sensor_readings.parse_sensor_readings(string_table)
-    assert sorted(expected_services) == sorted(
-        cisco_meraki_org_sensor_readings.discover_sensor_temperature(section)
-    )
+from cmk.plugins.cisco_meraki.lib.schema import RawSensorReadings
+
+
+class _RawSensorReadingsFactory(TypedDictFactory[RawSensorReadings]):
+    __check_model__ = False
+
+
+@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
+def test_discover_sensor_temperature_no_payload(string_table: StringTable) -> None:
+    section = parse_sensor_readings(string_table)
+    assert not list(discover_sensor_temperature(section))
+
+
+def test_discover_sensor_temperature() -> None:
+    sensor_reading = _RawSensorReadingsFactory.build(readings=[{"metric": "temperature"}])
+    string_table = [[f"[{json.dumps(sensor_reading)}]"]]
+    section = parse_sensor_readings(string_table)
+
+    value = list(discover_sensor_temperature(section))
+    expected = [Service(item="Sensor")]
+
+    assert value == expected
+
+
+@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
+def test_check_sensor_temperature_no_payload(string_table: StringTable) -> None:
+    section = parse_sensor_readings(string_table)
+    assert not list(check_sensor_temperature("Sensor", {}, section))
 
 
 @pytest.fixture
@@ -67,32 +55,35 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_results",
-    [
-        ([], []),
-        ([[]], []),
-        ([[""]], []),
-        (
-            _STRING_TABLE,
-            [
-                Metric("temp", 25.45),
-                Result(state=State.OK, summary="Temperature: 25.4 °C"),
-                Result(
-                    state=State.OK,
-                    notice="Configuration: prefer user levels over device levels (no levels found)",
-                ),
-                Result(state=State.OK, summary="Time since last report: 15 days 0 hours"),
-            ],
+@pytest.mark.usefixtures("empty_value_store")
+@time_machine.travel(datetime.datetime(2000, 1, 30, 12, tzinfo=ZoneInfo("UTC")))
+def test_check_sensor_temperature() -> None:
+    sensor_reading = _RawSensorReadingsFactory.build(
+        readings=[
+            {
+                "ts": "2000-01-14T12:00:00Z",
+                "metric": "temperature",
+                "temperature": {"fahrenheit": 77.81, "celsius": 23.45},
+            },
+            {
+                "ts": "2000-01-15T12:00:00Z",
+                "metric": "temperature",
+                "temperature": {"fahrenheit": 77.81, "celsius": 25.45},
+            },
+        ]
+    )
+    string_table = [[f"[{json.dumps(sensor_reading)}]"]]
+    section = parse_sensor_readings(string_table)
+
+    value = list(check_sensor_temperature("Sensor", {}, section))
+    expected = [
+        Metric("temp", 25.45),
+        Result(state=State.OK, summary="Temperature: 25.4 °C"),
+        Result(
+            state=State.OK,
+            notice="Configuration: prefer user levels over device levels (no levels found)",
         ),
-    ],
-)
-def test_check_sensor_temperature(
-    string_table: StringTable, expected_results: Sequence[Result], empty_value_store: None
-) -> None:
-    section = cisco_meraki_org_sensor_readings.parse_sensor_readings(string_table)
-    with time_machine.travel(datetime.datetime(2000, 1, 30, 12, tzinfo=ZoneInfo("UTC"))):
-        assert (
-            list(cisco_meraki_org_sensor_readings.check_sensor_temperature("Sensor", {}, section))
-            == expected_results
-        )
+        Result(state=State.OK, summary="Time since last report: 15 days 0 hours"),
+    ]
+
+    assert value == expected

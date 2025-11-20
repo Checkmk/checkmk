@@ -4,142 +4,128 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from collections.abc import Sequence
+import json
 from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
+from polyfactory.factories import TypedDictFactory
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable, TableRow
-from cmk.plugins.cisco_meraki.agent_based import cisco_meraki_org_device_status
-
-# Note: the power supply data used here is the example body from https://developer.cisco.com/meraki/api-v1/get-organization-devices-statuses/
-_STRING_TABLE = [
-    [
-        (
-            '[{"name": "My AP", "serial": "Q234-ABCD-5678", "mac": "00:11:22:33:44:55",'
-            '"publicIp": "123.123.123.1", "networkId": "N_24329156", "status": "online",'
-            '"lastReportedAt": "2000-01-14T00:00:00.090210Z", "lanIp": "1.2.3.4",'
-            '"gateway": "1.2.3.5", "ipType": "dhcp", "primaryDns": "8.8.8.8",'
-            '"secondaryDns": "8.8.4.4", "productType": "wireless", "components": {"powerSupplies":'
-            '[{"slot": 1, "serial": "QABC-1234-5678", "model": "PWR-MS320-1025WAC",'
-            '"status": "powering", "poe": {"unit": "watts", "maximum": 740}}]}, "model": "MR34",'
-            '"tags": ["tag1", "tag2"]}]'
-        ),
-    ]
-]
+from cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_device_status import (
+    check_device_status,
+    check_device_status_ps,
+    DeviceStatus,
+    discover_device_status,
+    discover_device_status_ps,
+    inventory_power_supplies,
+    Parameters,
+    parse_device_status,
+)
+from cmk.plugins.cisco_meraki.lib.schema._devices_statuses import RawDevicesStatus
 
 
-_STRING_TABLE_OFFLINE = [
-    [
-        (
-            '[{"name": "My AP", "serial": "Q234-ABCD-5678", "mac": "00:11:22:33:44:55",'
-            '"publicIp": "123.123.123.1", "networkId": "N_24329156", "status": "offline",'
-            '"lastReportedAt": "2000-01-14T00:00:00.090210Z", "lanIp": "1.2.3.4",'
-            '"gateway": "1.2.3.5", "ipType": "dhcp", "primaryDns": "8.8.8.8",'
-            '"secondaryDns": "8.8.4.4", "productType": "wireless",'
-            '"components": {"powerSupplies": []}, "model": "MR34",'
-            '"tags": ["tag1", "tag2"]}]'
-        ),
-    ]
-]
+class _RawDevicesStatusFactory(TypedDictFactory[RawDevicesStatus]):
+    __check_model__ = False
+
+    @classmethod
+    def lastReportedAt(cls) -> str:
+        return datetime.datetime.now().strftime("%Y-%m-%d")
+
+
+@pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
+def test_parse_device_status_no_payload(string_table: StringTable) -> None:
+    assert not parse_device_status(string_table)
 
 
 @pytest.mark.parametrize(
-    "empty_string_table",
+    "device_status",
     [
-        [],
-        [[]],
-        [[""]],
+        _RawDevicesStatusFactory.build(status="powering"),
+        _RawDevicesStatusFactory.build(status="offline"),
     ],
 )
-def test_parse_device_status_can_handle_empty_data(empty_string_table: StringTable) -> None:
-    assert not cisco_meraki_org_device_status.parse_device_status(empty_string_table)
-
-
-@pytest.mark.parametrize(
-    "string_table, expected_services",
-    [
-        (
-            _STRING_TABLE,
-            [
-                Service(),
-            ],
-        ),
-        (
-            _STRING_TABLE_OFFLINE,
-            [Service()],
-        ),
-    ],
-)
-def test_discover_device_status(
-    string_table: StringTable, expected_services: Sequence[Service]
-) -> None:
+def test_discover_device_status(device_status: RawDevicesStatus) -> None:
+    string_table = _get_string_table_from_device_status(device_status)
     section = _parse_and_assert_not_none(string_table)
-    assert sorted(expected_services) == sorted(
-        cisco_meraki_org_device_status.discover_device_status(section)
-    )
+
+    value = sorted(discover_device_status(section))
+    expected = [Service()]
+
+    assert value == expected
 
 
+@time_machine.travel(datetime.datetime(2000, 1, 15, tzinfo=ZoneInfo("UTC")))
 def test_check_device_status() -> None:
-    with time_machine.travel(datetime.datetime(2000, 1, 15, tzinfo=ZoneInfo("UTC"))):
-        assert list(
-            cisco_meraki_org_device_status.check_device_status(
-                cisco_meraki_org_device_status.Parameters(),
-                section=_parse_and_assert_not_none(_STRING_TABLE),
-            )
-        ) == [
-            Result(state=State.OK, summary="Status: online"),
-            Result(state=State.OK, summary="Time since last report: 23 hours 59 minutes"),
-            Metric("last_reported", 86399.90979003906),
-        ]
+    device_status = _RawDevicesStatusFactory.build(status="online", lastReportedAt="2000-01-14")
+    string_table = _get_string_table_from_device_status(device_status)
+    section = _parse_and_assert_not_none(string_table)
+    params = Parameters()
+
+    value = list(check_device_status(params, section=section))
+    expected = [
+        Result(state=State.OK, summary="Status: online"),
+        Result(state=State.OK, summary="Time since last report: 1 day 0 hours"),
+        Metric("last_reported", 86400.0),
+    ]
+
+    assert value == expected
 
 
 @pytest.mark.parametrize(
-    ("string_table", "expected_services"),
+    ("device_status", "expected"),
     [
-        (
-            _STRING_TABLE,
-            [Service(item="1")],
-        ),
-        (
-            _STRING_TABLE_OFFLINE,
-            [],
-        ),
+        (_RawDevicesStatusFactory.build(), 1),
+        (_RawDevicesStatusFactory.build(components={"powerSupplies": []}), 0),
     ],
 )
-def test_discover_device_status_ps(
-    string_table: StringTable, expected_services: Sequence[Service]
-) -> None:
-    assert (
-        list(
-            cisco_meraki_org_device_status.discover_device_status_ps(
-                _parse_and_assert_not_none(string_table)
-            )
-        )
-        == expected_services
-    )
+def test_discover_device_status_ps(device_status: RawDevicesStatus, expected: int) -> None:
+    string_table = _get_string_table_from_device_status(device_status)
+    section = _parse_and_assert_not_none(string_table)
+    value = list(discover_device_status_ps(section))
+    assert len(value) == expected
 
 
 def test_check_device_status_ps() -> None:
-    assert list(
-        cisco_meraki_org_device_status.check_device_status_ps(
-            "1",
-            {},
-            _parse_and_assert_not_none(_STRING_TABLE),
-        )
-    ) == [
+    device_status = _RawDevicesStatusFactory.build()
+    device_status["components"]["powerSupplies"][0].update(
+        {
+            "slot": 1,
+            "status": "powering",
+            "poe": {"unit": "watts", "maximum": 740},
+        }
+    )
+    string_table = _get_string_table_from_device_status(device_status)
+    section = _parse_and_assert_not_none(string_table)
+
+    value = list(check_device_status_ps("1", {}, section))
+    expected = [
         Result(state=State.OK, summary="Status: powering"),
         Result(state=State.OK, notice="PoE: 740 watts maximum"),
     ]
 
+    assert value == expected
+
 
 def test_inventory_power_supplies() -> None:
-    assert list(
-        cisco_meraki_org_device_status.inventory_power_supplies(
-            _parse_and_assert_not_none(_STRING_TABLE),
-        )
-    ) == [
+    device_status = _RawDevicesStatusFactory.build(
+        components={
+            "powerSupplies": [
+                {
+                    "slot": 1,
+                    "serial": "QABC-1234-5678",
+                    "model": "PWR-MS320-1025WAC",
+                    "status": "powering",
+                    "poe": {"unit": "watts", "maximum": 740},
+                },
+            ]
+        },
+    )
+    string_table = _get_string_table_from_device_status(device_status)
+    section = _parse_and_assert_not_none(string_table)
+
+    value = list(inventory_power_supplies(section))
+    expected = [
         TableRow(
             path=["hardware", "components", "psus"],
             key_columns={"serial": "QABC-1234-5678"},
@@ -152,10 +138,16 @@ def test_inventory_power_supplies() -> None:
         )
     ]
 
+    assert value == expected
+
+
+def _get_string_table_from_device_status(device_status: RawDevicesStatus) -> StringTable:
+    return [[f"[{json.dumps(device_status)}]"]]
+
 
 def _parse_and_assert_not_none(
     string_table: StringTable,
-) -> cisco_meraki_org_device_status.DeviceStatus:
-    section = cisco_meraki_org_device_status.parse_device_status(string_table)
+) -> DeviceStatus:
+    section = parse_device_status(string_table)
     assert section
     return section

@@ -149,20 +149,10 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
     for _index, msg in sorted(mails.items()):
         if isinstance(msg, EWSMessage):
             subject = str(msg.subject)
-            log_line = (
-                subject
-                + " | "
-                + (
-                    msg.text_body[: args.body_limit]  # type: ignore[index]
-                    if msg.text_body  # type: ignore[truthy-bool]
-                    else "No mail body found."
-                )
-            )
-
+            log_line = f"{subject} | {(str(msg.text_body)[: args.body_limit] if str(msg.text_body) else 'No mail body found.')}"
         elif isinstance(msg, POPIMAPMessage):
             subject = msg.get("Subject", "None")
             log_line = _get_imap_or_pop_log_line(msg, args.body_limit)
-
         elif isinstance(msg, GraphApiMessage):
             subject = msg.subject
             log_line = f"{subject} | {(msg.body['content'][: args.body_limit] if msg.body else 'No mail body found.')}"

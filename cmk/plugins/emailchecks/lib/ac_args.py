@@ -25,7 +25,13 @@ class OAuth2:
     tenant_id: str
 
 
-MailboxAuth = BasicAuth | OAuth2 | None
+@dataclass
+class OAuth2WithTokens(OAuth2):
+    initial_access_token: str
+    initial_refresh_token: str
+
+
+MailboxAuth = BasicAuth | OAuth2 | OAuth2WithTokens | None
 
 
 class Scope(StrEnum):
@@ -33,8 +39,8 @@ class Scope(StrEnum):
     SEND = "send"
 
 
-FETCH_PROTOCOLS = {"IMAP", "POP3", "EWS"}
-SEND_PROTOCOLS = {"SMTP", "EWS"}
+FETCH_PROTOCOLS = {"IMAP", "POP3", "EWS", "GRAPHAPI"}
+SEND_PROTOCOLS = {"SMTP", "EWS", "GRAPHAPI"}
 
 
 @dataclass(frozen=True)
@@ -42,7 +48,8 @@ class TRXConfig:
     server: str
     address: str
     auth: MailboxAuth
-    protocol: Literal["IMAP", "POP3", "EWS", "SMTP"]
+    authority: Literal["global", "china"]
+    protocol: Literal["IMAP", "POP3", "EWS", "SMTP", "GRAPHAPI"]
     port: int
     tls: bool
     disable_cert_validation: bool
@@ -137,38 +144,81 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
         action="store_true",
         help="Don't enforce SSL/TLS certificate validation",
     )
+    parser.add_argument(
+        f"--{scope}-authority",
+        type=str.lower,
+        choices=["global", "china"],
+        default="global",
+        help="Authority to use for OAuth2 authentication (default: global)",
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        f"--{scope}-initial-access-token",
+        required=False,
+        metavar="INITIAL_ACCESS_TOKEN",
+        help="Initial access token for GraphApi authentication",
+    )
+    group.add_argument(
+        f"--{scope}-initial-access-token-reference",
+        required=False,
+        metavar="INITIAL_ACCESS_TOKEN_ID",
+        help="Password store reference for initial access token for GraphApi authentication",
+    )
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        f"--{scope}-initial-refresh-token",
+        required=False,
+        metavar="INITIAL_REFRESH_TOKEN",
+        help="Initial refresh token for GraphApi authentication",
+    )
+    group.add_argument(
+        f"--{scope}-initial-refresh-token-reference",
+        required=False,
+        metavar="INITIAL_REFRESH_TOKEN_ID",
+        help="Password store reference for initial refresh token for GraphApi authentication",
+    )
 
 
 def _parse_auth(raw: Mapping[str, object]) -> MailboxAuth:
     match raw:
         case {
-            "username": None,
-            "password": None,
-            "password_reference": None,
             "client_id": str(client_id),
             "client_secret": str() | None as client_secret,
-            "client_secret_reference": str() | None as client_secret_refernce,
+            "client_secret_reference": str() | None as client_secret_reference,
+            "tenant_id": str(tenant_id),
+            "initial_access_token": str() | None as initial_access_token,
+            "initial_access_token_reference": str() | None as initial_access_token_reference,
+            "initial_refresh_token": str() | None as initial_refresh_token,
+            "initial_refresh_token_reference": str() | None as initial_refresh_token_reference,
+        }:
+            return OAuth2WithTokens(
+                client_id=client_id,
+                client_secret=_parse_secret(client_secret, client_secret_reference),
+                tenant_id=tenant_id,
+                initial_access_token=_parse_secret(
+                    initial_access_token, initial_access_token_reference
+                ),
+                initial_refresh_token=_parse_secret(
+                    initial_refresh_token, initial_refresh_token_reference
+                ),
+            )
+        case {
+            "client_id": str(client_id),
+            "client_secret": str() | None as client_secret,
+            "client_secret_reference": str() | None as client_secret_reference,
             "tenant_id": str(tenant_id),
         }:
             return OAuth2(
-                client_id, _parse_secret(client_secret, client_secret_refernce), tenant_id
+                client_id, _parse_secret(client_secret, client_secret_reference), tenant_id
             )
         case {
             "username": str(username),
             "password": str() | None as password,
             "password_reference": str() | None as password_reference,
-            "client_id": None,
-            "client_secret": None,
-            "client_secret_reference": None,
-            "tenant_id": None,
         }:
             return BasicAuth(username, _parse_secret(password, password_reference))
-        case {
-            "username": None,
-            "password": None,
-            "password_reference": None,
-            "protocol": "SMTP",
-        }:
+        case {"protocol": "SMTP"}:
             return None
         case _:
             raise RuntimeError(
@@ -212,6 +262,7 @@ def parse_trx_arguments(args: argparse.Namespace, scope: Scope) -> TRXConfig:
         # not sure how clever this is, what if we have neither?
         address=str(raw.get("email_address") or raw.get("username")),
         auth=_parse_auth(raw),
+        authority=raw["authority"],
         protocol=raw["protocol"],
         port=_parse_port(raw),
         tls=raw["tls"],

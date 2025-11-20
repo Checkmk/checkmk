@@ -28,6 +28,7 @@ from exchangelib import Message as EWSMessage
 from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, parse_trx_arguments, Scope
 from cmk.plugins.emailchecks.lib.connections import (
     EWS,
+    GraphApiMessage,
     MailID,
     make_fetch_connection,
     make_send_connection,
@@ -131,7 +132,7 @@ def save_expected_mails(expected_mails: MailDict, status_path: str) -> None:
 
 
 def subject_and_received_timestamp_from_msg(
-    msg: POPIMAPMessage | EWSMessage,
+    msg: POPIMAPMessage | EWSMessage | GraphApiMessage,
 ) -> tuple[str, None | int]:
     # using pattern matching here results in an mypy error that I don't understand
     if isinstance(msg, POPIMAPMessage):
@@ -146,6 +147,9 @@ def subject_and_received_timestamp_from_msg(
             return msg.subject, int(msg.datetime_received.timestamp())  # type: ignore[attr-defined,return-value]
         except Exception:
             return msg.subject, None  # type: ignore[return-value]
+
+    if isinstance(msg, GraphApiMessage):
+        return msg.subject, int(msg.received_at) if msg.received_at else None
 
     return assert_never(msg)
 

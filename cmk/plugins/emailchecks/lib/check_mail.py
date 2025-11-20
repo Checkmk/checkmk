@@ -22,6 +22,8 @@ from cmk.plugins.emailchecks.lib.connections import (
     CleanupMailboxError,
     ConnectError,
     EWS,
+    GraphApi,
+    GraphApiMessage,
     IMAP,
     MailMessages,
     make_fetch_connection,
@@ -142,13 +144,14 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
     messages: list[str] = []
     cur_time = syslog_time()
     priority = 5  # OK
+    subject: str
 
     for _index, msg in sorted(mails.items()):
         if isinstance(msg, EWSMessage):
-            subject = msg.subject
+            subject = str(msg.subject)
             log_line = (
                 subject
-                + " | "  # type: ignore[operator]
+                + " | "
                 + (
                     msg.text_body[: args.body_limit]  # type: ignore[index]
                     if msg.text_body  # type: ignore[truthy-bool]
@@ -157,9 +160,12 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
             )
 
         elif isinstance(msg, POPIMAPMessage):
-            subject = msg.get("Subject", "None")  # type: ignore[arg-type]
+            subject = msg.get("Subject", "None")
             log_line = _get_imap_or_pop_log_line(msg, args.body_limit)
 
+        elif isinstance(msg, GraphApiMessage):
+            subject = msg.subject
+            log_line = f"{subject} | {(msg.body['content'][: args.body_limit] if msg.body else 'No mail body found.')}"
         else:
             assert_never(msg)  # type: ignore[arg-type]
 
@@ -170,11 +176,11 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
         if args.forward_app:
             application = args.forward_app
             if args.match_subject:
-                matches = re.match(args.match_subject, subject)  # type: ignore[call-overload]
+                matches = re.match(args.match_subject, subject)
                 for num, match in enumerate(matches.groups() if matches else []):
                     application = application.replace("\\%d" % (num + 1,), match)
         else:
-            application = subject.replace("\n", "")  # type: ignore[attr-defined]
+            application = subject.replace("\n", "")
 
         # Construct the final syslog message
         messages.append(
@@ -276,7 +282,7 @@ def check_mail(args: Args) -> CheckResult:
             # (Copy and) Delete the forwarded mails if configured
             if args.cleanup:
                 if args.cleanup != "delete":
-                    if not isinstance(connection, IMAP | EWS):
+                    if not isinstance(connection, IMAP | EWS | GraphApi):
                         raise CleanupMailboxError(
                             f"Copying mails is not implemented for {type(connection)!r}"
                         )

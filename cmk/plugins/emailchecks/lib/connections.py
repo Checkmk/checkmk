@@ -25,7 +25,24 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from email.message import Message as POPIMAPMessage
-from typing import assert_never, final, Literal, Self
+from typing import assert_never, final, Literal, Self, TypedDict
+
+from pydantic import BaseModel, Field
+
+from cmk.password_store.v1_unstable import (
+    PasswordStore,
+    PasswordStoreError,
+)
+from cmk.password_store.v1_unstable._impl import _read_store_secret
+from cmk.plugins.emailchecks.lib.ac_args import (
+    BasicAuth,
+    MailboxAuth,
+    OAuth2,
+    OAuth2WithTokens,
+    TRXConfig,
+)
+from cmk.plugins.emailchecks.lib.graph_api_client import AuthorityURLs, GraphApiClient
+from cmk.server_side_programs.v1_unstable import Storage
 
 # Isort messes with the type annotation and creates a unused-ignore for the
 # OAUTH2 and OAuth2Credentials imports.
@@ -45,14 +62,41 @@ from exchangelib import Message as EWSMessage
 from exchangelib import OAUTH2, OAuth2Credentials
 from exchangelib import protocol as ews_protocol
 
+
 # isort: on
 
 
-from cmk.plugins.emailchecks.lib.ac_args import BasicAuth, MailboxAuth, OAuth2, TRXConfig
+class EmailAddress(TypedDict):
+    address: str
+
+
+class Recipient(TypedDict):
+    emailAddress: EmailAddress
+
+
+class GraphApiMessage(BaseModel):
+    id: str
+    subject: str
+    from_: Recipient = Field(alias="from")
+    body: Mapping[str, str] = Field(default_factory=dict)
+    toRecipients: list[Recipient] = Field(default_factory=list)
+    receivedDateTime: str | None = None
+
+    class Config:
+        populate_by_name = True
+        extra = "ignore"
+
+    @property
+    def received_at(self) -> float | None:
+        if self.receivedDateTime is None:
+            return None
+        return datetime.fromisoformat(self.receivedDateTime).timestamp()
+
 
 POPIMAPMailMessages = Mapping[int, POPIMAPMessage]
 EWSMailMessages = Mapping[int, EWSMessage]
-MailMessages = POPIMAPMailMessages | EWSMailMessages
+GraphApiMailMessages = Mapping[int, GraphApiMessage]
+MailMessages = POPIMAPMailMessages | EWSMailMessages | GraphApiMailMessages
 
 MailID = tuple[int, int]
 
@@ -222,6 +266,148 @@ class EWS(_Connection):
     def copy(self, mails: MailMessages, folder: str) -> None:
         folder_obj = self.add_folder(folder)
         self._account.bulk_copy(mails.values(), folder_obj)
+
+
+def get_graph_authority_urls(authority: Literal["global", "china"]) -> AuthorityURLs:
+    if authority == "global":
+        return AuthorityURLs(
+            "https://login.microsoftonline.com",
+            "https://graph.microsoft.com",
+            "https://graph.microsoft.com/v1.0/",
+        )
+    if authority == "china":
+        return AuthorityURLs(
+            "https://login.partner.microsoftonline.cn",
+            "https://microsoftgraph.chinacloudapi.cn",
+            "https://microsoftgraph.chinacloudapi.cn/v1.0/",
+        )
+    raise ValueError("Unknown authority %r" % authority)
+
+
+class GraphApi(_Connection):
+    def __init__(
+        self,
+        authority_urls: AuthorityURLs,
+        auth: OAuth2WithTokens,
+        user_id: str,
+    ) -> None:
+        self.authority_urls = authority_urls
+        self._resource_url = authority_urls.resource
+        self._login_url = authority_urls.login
+        self.auth = auth
+        self.user_id = user_id
+
+    def _build_api_client(self) -> GraphApiClient:
+        if (store_secret := _read_store_secret()) is None:
+            raise PasswordStoreError("Password store key file not found.")
+        storage = Storage(program_ident="graph_api_emailchecks", host=self.user_id)
+        return GraphApiClient(
+            tenant=self.auth.tenant_id,
+            client=self.auth.client_id,
+            secret=self.auth.client_secret,
+            authority_urls=self.authority_urls,
+            pw_store=PasswordStore(store_secret),
+            pw_store_file=storage._full_dir / "stored_tokens",
+            storage=storage,
+            initial_access_token=self.auth.initial_access_token,
+            initial_refresh_token=self.auth.initial_refresh_token,
+        )
+
+    def _connect(self) -> None:
+        pass
+
+    def _disconnect(self) -> None:
+        pass
+
+    def folders(self) -> Iterable[str]:
+        with self._build_api_client() as client:
+            response = client.get("me/mailFolders")
+        assert isinstance(response, dict)
+        return [folder["id"] for folder in response.get("value", [])]
+
+    def select_folder(self, folder_name: str) -> int:
+        with self._build_api_client() as client:
+            response = client.get(f"me/mailFolders/{folder_name}/messages")
+        assert isinstance(response, dict)
+        return len(response.get("value", []))
+
+    def mails_by_date(
+        self,
+        *,
+        before: float | None = None,
+        after: float | None = None,
+    ) -> Iterable[float]:
+        with self._build_api_client() as client:
+            response = client.get(
+                "me/messages?$filter=receivedDateTime ge "
+                f"{datetime.fromtimestamp(after).isoformat() if after else datetime.fromtimestamp(0).isoformat()}Z"
+                " and receivedDateTime le "
+                f"{datetime.fromtimestamp(before).isoformat() if before else datetime.now().isoformat()}Z"
+            )
+        assert isinstance(response, dict)
+        return [
+            datetime.fromisoformat(msg["receivedDateTime"]).timestamp()
+            for msg in response.get("value", [])
+            if "receivedDateTime" in msg
+        ]
+
+    def send_mail(
+        self, subject: str, mail_from: str, mail_to: str, now: int, key: int
+    ) -> tuple[str, MailID]:
+        subject = f"{subject} {now} {key}"
+        message = GraphApiMessage(
+            id=str(key),
+            subject=subject,
+            body={"contentType": "Text", "content": subject},
+            from_={"emailAddress": {"address": mail_from}},
+            toRecipients=[{"emailAddress": {"address": mail_to}}],
+        )
+        try:
+            with self._build_api_client() as client:
+                client.request(
+                    "POST",
+                    "me/sendMail",
+                    json={"message": message.model_dump(by_alias=True)},
+                )
+        except Exception as exc:
+            raise SendMailError(f"Could not send email ({exc!r}).") from exc
+        return f"{now}-{key}", (now, key)
+
+    def fetch_mails(self, subject_filter: Callable[[str | None], bool]) -> GraphApiMailMessages:
+        with self._build_api_client() as client:
+            response = client.get("me/messages")
+        assert isinstance(response, dict)
+        return {
+            num: GraphApiMessage.model_validate(msg)
+            for num, msg in enumerate(response.get("value", []))
+            if subject_filter(msg.get("subject"))
+        }
+
+    def delete(self, mails: MailMessages) -> None:
+        try:
+            for mail in mails.values():
+                assert isinstance(mail, GraphApiMessage)
+                with self._build_api_client() as client:
+                    client.request(
+                        "POST",
+                        f"/me/messages/{mail.id}/move",
+                        json={"destinationId": "deleteditems"},
+                    )
+        except Exception as exc:
+            raise CleanupMailboxError("Failed to soft delete mail: %r" % exc) from exc
+
+    def copy(self, mails: MailMessages, folder: str) -> None:
+        try:
+            for mail in mails.values():
+                assert isinstance(mail, GraphApiMessage)
+                with self._build_api_client() as client:
+                    client.request(
+                        "POST",
+                        f"me/messages/{mail.id}/move",
+                        json={"destinationId": folder},
+                    )
+        except Exception as exc:
+            raise CleanupMailboxError("Failed to copy mail to %s: %r" % (folder, exc)) from exc
 
 
 def _make_account(
@@ -604,23 +790,23 @@ def verified_result(data: object) -> Sequence[bytes | tuple[bytes, bytes]] | Seq
     raise TypeError(f"can not handle {data}")
 
 
-def make_send_connection(config: TRXConfig, timeout: int) -> SMTP | EWS:
+def make_send_connection(config: TRXConfig, timeout: int) -> SMTP | EWS | GraphApi:
     match _make_connection(config, timeout):
-        case SMTP() | EWS() as connection:
+        case SMTP() | EWS() | GraphApi() as connection:
             return connection
         case other:
             raise ConnectError(f"Can't use {other.__class__.__name__} for sending.")
 
 
-def make_fetch_connection(config: TRXConfig, timeout: int) -> EWS | POP3 | IMAP:
+def make_fetch_connection(config: TRXConfig, timeout: int) -> EWS | POP3 | IMAP | GraphApi:
     match _make_connection(config, timeout):
-        case EWS() | POP3() | IMAP() as connection:
+        case EWS() | POP3() | IMAP() | GraphApi() as connection:
             return connection
         case other:
             raise ConnectError(f"Can't use {other.__class__.__name__} for sending.")
 
 
-def _make_connection(config: TRXConfig, timeout: int) -> EWS | IMAP | POP3 | SMTP:
+def _make_connection(config: TRXConfig, timeout: int) -> POP3 | IMAP | EWS | GraphApi | SMTP:
     logging.debug(
         "connecting to: %r %r %r %r",
         config.protocol,
@@ -656,6 +842,13 @@ def _make_connection(config: TRXConfig, timeout: int) -> EWS | IMAP | POP3 | SMT
                     auth=config.auth,
                     no_cert_check=config.disable_cert_validation,
                     timeout=timeout,
+                )
+            case "GRAPHAPI":
+                assert isinstance(config.auth, OAuth2WithTokens)
+                return GraphApi(
+                    authority_urls=get_graph_authority_urls(config.authority),
+                    auth=config.auth,
+                    user_id=config.address,
                 )
 
             case "SMTP":

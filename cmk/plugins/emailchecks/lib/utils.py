@@ -44,7 +44,7 @@ class ForwardToECError(Exception):
 
 
 def fetch_mails(
-    connection: connections.POP3 | connections.IMAP | connections.EWS,
+    connection: connections.POP3 | connections.IMAP | connections.EWS | connections.GraphApi,
     subject_pattern: str = "",
 ) -> connections.MailMessages:
     """Return mails contained in the currently selected folder matching @subject_pattern"""

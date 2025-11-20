@@ -176,8 +176,6 @@ def test_registered_painters() -> None:
         "host_addresses",
         "host_addresses_additional",
         "host_attempt",
-        "host_azure_resource_group",
-        "host_azure_subscription",
         "host_black",
         "host_check_age",
         "host_check_command",
@@ -905,6 +903,8 @@ def test_registered_painters() -> None:
             "deployment_last_error",
             "deployment_target_hash",
             "downtime_recurring",
+            "host_azure_resource_group",
+            "host_azure_subscription",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:

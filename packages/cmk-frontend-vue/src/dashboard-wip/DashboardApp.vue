@@ -106,6 +106,9 @@ const dashboardWidgets = useDashboardWidgets(
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   await dashboardsManager.loadDashboard(dashboard.name, dashboard.layout_type as DashboardLayout)
   selectedDashboardBreadcrumb.value = dashboard.display?.topic?.breadcrumb ?? null
+
+  const updatedDashboardUrl = urlHandler.setDashboardName(window.location.href, dashboard.name)
+  urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
 }
 
 const selectedDashboard = computed(() => {

@@ -36,13 +36,9 @@ pkg_files(
 )
 
 # SUP-10161: our openssl is incompatible with some system executables on various sles15sp*
-[pkg_files(
-    name = "wrapper_" + executable,
-    srcs = ["use_system_openssl"],
-    attributes = pkg_attributes(mode = "0755"),
-    prefix = "bin",
-    renames = {"use_system_openssl": executable},
-) for executable in [
+# SUP-26565: Getting an exception error when baking agent almalinux-9+
+# etc.
+WRAPPED_EXECUTABLES = [
     "ssh",
     "scp",
     "pdftoppm",
@@ -50,7 +46,20 @@ pkg_files(
     "zypper",
     "rpmbuild",
     "nslookup",
-]]
+]
+
+[pkg_files(
+    name = "wrapper_" + executable,
+    srcs = ["use_system_openssl"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
+    renames = {"use_system_openssl": executable},
+) for executable in WRAPPED_EXECUTABLES]
+
+pkg_files(
+    name = "wrapped_executables",
+    srcs = ["wrapper_" + executable for executable in WRAPPED_EXECUTABLES],
+)
 
 genrule(
     name = "omd_man_gz",
@@ -245,24 +254,7 @@ pkg_tar(
         ":skel",
         ":xinetd_link",
     ] + select({
-        "@cmk//distro:sles": [
-            ":wrapper_curl",
-            ":wrapper_pdftoppm",
-            ":wrapper_scp",
-            ":wrapper_ssh",
-            ":wrapper_zypper",
-        ],
-        "@cmk//distro:debian-13": [
-            ":wrapper_curl",
-        ],
-        # Almalinux-9.7 upgraded to Openssl 3.5, and almalinux-10 includes 3.5 by default.
-        # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/9.7_release_notes/new-features
-        "@cmk//distro:almalinux-9+": [
-            ":wrapper_curl",
-            ":wrapper_nslookup",
-            ":wrapper_pdftoppm",
-            ":wrapper_rpmbuild",
-        ],
+        "@cmk//distro:incompatible-openssl": [":wrapped_executables"],
         "//conditions:default": [],
     }),
     empty_dirs = [

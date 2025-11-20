@@ -44,14 +44,6 @@ selects.config_setting_group(
     ],
 )
 
-selects.config_setting_group(
-    name = "almalinux-9+",
-    match_any = [
-        ":almalinux-9",
-        ":almalinux-10",
-    ],
-)
-
 config_setting(
     name = "debian-12",
     flag_values = {":distro": "debian-12"},
@@ -109,5 +101,19 @@ selects.config_setting_group(
     match_any = [
         ":ubuntu-22.04",
         ":ubuntu-24.04",
+    ],
+)
+
+# These distros either ship too old or too new of a OpenSSL than us.
+#
+# See omd/packages/omd/BUILD
+# See MODULE.bazel for the current version.
+selects.config_setting_group(
+    name = "incompatible-openssl",
+    match_any = [
+        ":sles",
+        ":debian-13",
+        ":almalinux-9",
+        ":almalinux-10",
     ],
 )

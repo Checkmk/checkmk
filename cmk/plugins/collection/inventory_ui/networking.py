@@ -89,10 +89,16 @@ node_networking_addresses = Node(
     path=["networking", "addresses"],
     title=Title("IP addresses"),
     table=Table(
+        view=View(name="invipaddresses", title=Title("IP addresses")),
         columns={
             "address": TextField(Title("Address")),
             "device": TextField(Title("Device")),
             "type": TextField(Title("Address type"), render=_render_ip_address_type),
+            "network": TextField(Title("Network")),
+            "netmask": TextField(Title("Netmask")),
+            "cidr": TextField(Title("Prefix length")),
+            "broadcast": TextField(Title("Broadcast")),
+            "scope_id": TextField(Title("Scope ID")),
         },
     ),
 )

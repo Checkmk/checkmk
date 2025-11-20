@@ -2118,6 +2118,7 @@ class SiteFactory:
         logfile_path: str = "/tmp/sep.out",  # nosec
         timeout: int = 60,
         abort: bool = False,
+        failed_precheck: bool = False,
         disable_extensions: bool = False,
         n_extensions: int = 0,
         skip_if_version_not_supported: bool = True,
@@ -2136,6 +2137,8 @@ class SiteFactory:
             timeout:            The timeout for the expected dialog to appear during the update
                                 process.
             abort:              If True, the abort dialog is expected to appear and the update
+                                process will be aborted.
+            failed_precheck:    If True, the precheck steps are expected to fail and the update
                                 process will be aborted.
             disable_extensions: If True, installed cmk extensions (MKPs) will be disabled if the
                                 corresponding dialog appears during the update process.
@@ -2262,6 +2265,13 @@ class SiteFactory:
             )
 
             site.start()
+            return site
+        if failed_precheck:
+            assert rc == 256, (
+                f"Update process with failed precheck scenario did not fail as expected.\n"
+                "Logfile content:\n"
+                f"{pprint.pformat(Path(logfile_path).read_text(), indent=4)}\n\n"
+            )
             return site
         if version_supported:
             assert rc == 0, (

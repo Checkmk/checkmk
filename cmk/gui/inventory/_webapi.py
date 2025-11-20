@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
@@ -50,16 +49,16 @@ class _HostInvAPIResponse(TypedDict):
     result: str | Mapping[str, SDRawTree]
 
 
-def _write_json(resp):
+def _write_json(resp: _HostInvAPIResponse) -> None:
     response.set_data(json.dumps(resp, sort_keys=True, indent=4, separators=(",", ": ")))
 
 
-def _write_xml(resp):
+def _write_xml(resp: _HostInvAPIResponse) -> None:
     dom = _xml.dict_to_document(resp)
     response.set_data(dom.toprettyxml())
 
 
-def _write_python(resp):
+def _write_python(resp: _HostInvAPIResponse) -> None:
     response.set_data(repr(resp))
 
 

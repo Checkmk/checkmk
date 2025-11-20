@@ -62,6 +62,7 @@ __all__ = [
     "TransformAttrs",
     "find_non_canonical_filters",
     "inv_display_hints",
+    "load_inventory_ui_plugins",
 ]
 
 

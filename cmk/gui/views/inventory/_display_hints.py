@@ -35,6 +35,7 @@ from cmk.gui.inventory.filters import (
     FilterInvChoice,
     FilterInvFloat,
     FilterInvtableAdminStatus,
+    FilterInvtableAgeRange,
     FilterInvtableAvailable,
     FilterInvtableChoice,
     FilterInvtableDualChoice,
@@ -488,6 +489,7 @@ def _make_column_filter(
 ) -> (
     FilterInvtableText
     | FilterInvtableIntegerRange
+    | FilterInvtableAgeRange
     | FilterInvtableChoice
     | FilterInvtableDualChoice
     | FilterInvtableTextWithSortKey
@@ -505,6 +507,15 @@ def _make_column_filter(
                 ],
             )
         case NumberFieldFromAPI():
+            if isinstance(field_from_api.render, UnitFromAPI) and isinstance(
+                field_from_api.render.notation, AgeNotationFromAPI
+            ):
+                return FilterInvtableAgeRange(
+                    inv_info=table_view_name,
+                    ident=name,
+                    title=long_title,
+                    unit=_get_unit_from_number_field(field_from_api),
+                )
             return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
                 ident=name,
@@ -548,12 +559,13 @@ def _parse_col_field_of_view_from_api(
     node_title: str,
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    non_canonical_filters: Mapping[str, TransformAttrs],
 ) -> ColumnDisplayHintOfView:
-    name = _make_col_name(table_view_name, key)
+    names = _make_col_names(table_view_name, key, non_canonical_filters)
     title = _make_str(field_from_api.title)
     long_title = _make_long_title(node_title, title)
     return ColumnDisplayHintOfView(
-        name=name,
+        name=names.for_object,
         title=title,
         short_title=title,
         long_title=long_title,
@@ -563,7 +575,7 @@ def _parse_col_field_of_view_from_api(
             key,
             field_from_api,
             table_view_name=table_view_name,
-            name=name,
+            name=names.for_filter,
             long_title=long_title,
         ),
     )
@@ -588,7 +600,9 @@ def _parse_node_from_api(
         table_view_name = _parse_view_name(node.table.view.name)
         table = TableWithView(
             columns={
-                SDKey(k): _parse_col_field_of_view_from_api(table_view_name, title, k, v)
+                SDKey(k): _parse_col_field_of_view_from_api(
+                    table_view_name, title, k, v, non_canonical_filters
+                )
                 for k, v in node.table.columns.items()
             },
             name=table_view_name,
@@ -721,8 +735,20 @@ def _make_attr_names(
     )
 
 
-def _make_col_name(table_view_name: str, key: SDKey | str) -> str:
-    return f"{table_view_name}_{key}" if table_view_name else ""
+def _make_col_names(
+    table_view_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, TransformAttrs]
+) -> _Names:
+    if not table_view_name:
+        return _Names(for_object="", for_filter="")
+    name = f"{table_view_name}_{key}"
+    return _Names(
+        for_object=name,
+        for_filter=(
+            transform_attrs.filter_name()
+            if (transform_attrs := non_canonical_filters.get(name))
+            else name
+        ),
+    )
 
 
 def _make_attribute_filter_from_legacy_hint(
@@ -944,16 +970,17 @@ class ColumnDisplayHintOfView:
     sort_function: SortFunction
     filter: (
         FilterInvtableAdminStatus
+        | FilterInvtableAgeRange
         | FilterInvtableAvailable
+        | FilterInvtableChoice
+        | FilterInvtableDualChoice
         | FilterInvtableIntegerRange
         | FilterInvtableInterfaceType
         | FilterInvtableOperStatus
         | FilterInvtableText
+        | FilterInvtableTextWithSortKey
         | FilterInvtableTimestampAsAge
         | FilterInvtableVersion
-        | FilterInvtableChoice
-        | FilterInvtableDualChoice
-        | FilterInvtableTextWithSortKey
     )
 
     @property
@@ -962,14 +989,19 @@ class ColumnDisplayHintOfView:
 
 
 def _parse_col_field_from_legacy_of_view(
-    *, table_view_name: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
+    *,
+    table_view_name: str,
+    node_title: str,
+    key: str,
+    legacy_hint: InventoryHintSpec,
+    non_canonical_filters: Mapping[str, TransformAttrs],
 ) -> ColumnDisplayHintOfView:
     _data_type, paint_function = _get_paint_function(legacy_hint)
-    name = _make_col_name(table_view_name, key)
+    names = _make_col_names(table_view_name, key, non_canonical_filters)
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return ColumnDisplayHintOfView(
-        name=name,
+        name=names.for_object,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -978,7 +1010,7 @@ def _parse_col_field_from_legacy_of_view(
         paint_function=_wrap_paint_function(paint_function),
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
         filter=_parse_col_filter_from_legacy(
-            table_view_name, name, long_title, legacy_hint.get("filter")
+            table_view_name, names.for_filter, long_title, legacy_hint.get("filter")
         ),
     )
 
@@ -1146,6 +1178,7 @@ def _parse_legacy_display_hints(
                         node_title=title,
                         key=key,
                         legacy_hint=related_legacy_hints.by_column.get(key, {}),
+                        non_canonical_filters=non_canonical_filters,
                     )
                     for key in _complete_key_order(
                         related_legacy_hints.for_table.get("keyorder", []),
@@ -1260,9 +1293,10 @@ inv_display_hints = DisplayHints()
 class TransformAttrs:
     name: str
     scale: int
+    legacy_suffix: str = ""
 
     def legacy_name(self, direction: Literal["from", "until"]) -> str:
-        return f"{self.name}_{direction}"
+        return f"{self.name}_{direction}{self.legacy_suffix}"
 
     def new_name(self, direction: Literal["from", "until"]) -> str:
         return f"{self.name}_canonical_{direction}"
@@ -1272,7 +1306,7 @@ class TransformAttrs:
 
 
 def find_non_canonical_filters(
-    legacy_hints: Mapping[str, InventoryHintSpec],
+    plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
 ) -> Mapping[str, TransformAttrs]:
     filters = {
         # "bytes"
@@ -1303,6 +1337,22 @@ def find_non_canonical_filters(
             scale=1000 * 1000,
         ),
     }
+
+    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
+        if node.table.view is None:
+            continue
+        for key, field_from_api in node.table.columns.items():
+            if (
+                isinstance(field_from_api, NumberFieldFromAPI)
+                and isinstance(field_from_api.render, UnitFromAPI)
+                and isinstance(field_from_api.render.notation, AgeNotationFromAPI)
+            ):
+                name = f"{node.table.view.name}_{key}"
+                filters.setdefault(
+                    name,
+                    TransformAttrs(name=name, scale=24 * 60 * 60, legacy_suffix="_days"),
+                )
+
     for raw_path, legacy_hint in legacy_hints.items():
         inv_path = inventory.parse_internal_raw_path(raw_path)
         if inv_path.source != inventory.TreeSource.attributes or not inv_path.key:
@@ -1319,7 +1369,7 @@ def find_non_canonical_filters(
 def register_display_hints(
     plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
 ) -> None:
-    non_canonical_filters = find_non_canonical_filters(legacy_hints)
+    non_canonical_filters = find_non_canonical_filters(plugins, legacy_hints)
 
     for hint in _parse_legacy_display_hints(legacy_hints, non_canonical_filters):
         inv_display_hints.add(hint)

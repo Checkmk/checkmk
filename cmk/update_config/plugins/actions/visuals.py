@@ -10,7 +10,11 @@ from typing import Final, override
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard.store import get_all_dashboards
 from cmk.gui.type_defs import Visual, VisualName
-from cmk.gui.views.inventory import find_non_canonical_filters, TransformAttrs
+from cmk.gui.views.inventory import (
+    find_non_canonical_filters,
+    load_inventory_ui_plugins,
+    TransformAttrs,
+)
 from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.store import get_all_views
 from cmk.gui.visuals import save, TVisual
@@ -85,7 +89,9 @@ def migrate_visuals(
 class MigrateVisualsInvAttrFilter(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        non_canonical_filters = find_non_canonical_filters(inventory_displayhints)
+        non_canonical_filters = find_non_canonical_filters(
+            load_inventory_ui_plugins(), inventory_displayhints
+        )
 
         if (
             migrated_dashboards := migrate_visuals(get_all_dashboards(), non_canonical_filters)

@@ -325,6 +325,33 @@ class FilterInvtableIntegerRange(FilterNumberRange):
         )
 
 
+class FilterInvtableAgeRange(FilterNumberRange):
+    """Filter for choosing a range in which a certain integer lies"""
+
+    def __init__(
+        self,
+        *,
+        inv_info: str,
+        ident: str,
+        title: str,
+        unit: str | LazyString,
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            query_filter=query_filters.NumberRangeQuery(
+                ident=ident,
+                filter_livestatus=False,
+                filter_row=query_filters.column_age_in_range,
+                request_var_suffix="",
+                bound_rescaling=1.0,
+            ),
+            unit=unit,
+            is_show_more=True,
+        )
+
+
 class FilterInvtableText(InputTextFilter):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(

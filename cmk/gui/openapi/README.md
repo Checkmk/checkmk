@@ -1,5 +1,9 @@
 # Checkmk OpenAPI
 
+DEPRECATED! (the framework detailed here is deprecated and will be removed in
+the future. Please refer to `cmk/gui/openapi/api_endpoints/README.md` if you
+intend to introduce new endpoints)
+
 Implementer. THIS IS IMPORTANT! PLEASE READ!
 
 When writing a new API endpoint please make sure to adhere to these standards:

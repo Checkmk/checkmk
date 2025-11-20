@@ -26,7 +26,7 @@ def main(job_definition_file) {
         withCredentialFileAtLocation(credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc") {
             load("${checkout_dir}/${job_definition_file}").main();
         }
-    } catch(Exception exc) {
+    } catch (Exception exc) {
         dir("${checkout_dir}") {
             notify.notify_error(exc);
         }

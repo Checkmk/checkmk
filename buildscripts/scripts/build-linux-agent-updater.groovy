@@ -96,7 +96,7 @@ def main() {
                 """);
             }
         }
-    }
+        }
 
     stage("Archive artifacts") {
         dir("${WORKSPACE}/build") {
@@ -108,6 +108,6 @@ def main() {
             }
         }
     }
-}
+    }
 
 return this;

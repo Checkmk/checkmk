@@ -52,7 +52,6 @@ def main() {
         |===================================================
         """.stripMargin());
 
-
     if (build_node == "fips") {
         // Do not start builds on FIPS node
         println("Detected build node 'fips', switching this to 'fra'.");

@@ -65,7 +65,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 regex: '(.*)\\s#\\s(reformat)$', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).setMessage(matcher.group(2)).buildOptional()', // Mapping script
                 example: "omd/packages/freetds/freetds_http.bzl # reformat",  // example log message
-                //       |               1                     |  |   2   |
+            //       |               1                     |  |   2   |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -82,7 +82,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 regex: '(.*):(\\d+):(\\d+):(.*)', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).setMessage(matcher.group(4)).setLineStart(Integer.parseInt(matcher.group(2))).setColumnStart(Integer.parseInt(matcher.group(3))).buildOptional()', // Mapping script
                 example: "omd/packages/freetds/freetds_http.bzl:8:19: syntax error near build_file",  // example log message
-                //       |               1                     |2|3 |             4               |
+            //       |               1                     |2|3 |             4               |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -113,7 +113,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 regex: '^\\[warn\\]\\s(.*\\.(?:scss|css|ts|js))$', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).buildOptional()', // Mapping script
                 example: "[warn] web/htdocs/themes/facelift/scss/_bi.scss",  // example log message
-                //       |      |          1                             |
+            //       |      |          1                             |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -146,8 +146,8 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 example: """/home/jonasscharpf/git/check_mk/buildscripts/scripts/utils/upload_artifacts.groovy
                   39    error    The variable [versioning] in class None is not used  UnusedVariable
                   71    warning  Map [credentialsId:Release_Key, variable:RELEASE_KEY] is duplicated.  DuplicateMapLiteral""",  // example log message
-                // |                                                    1                                                    |
-                // |2|3|4| 5   |6|                                7                                 |8|          9           |
+            // |                                                    1                                                    |
+            // |2|3|4| 5   |6|                                7                                 |8|          9           |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -187,9 +187,9 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 example: """In ./enterprise/skel/etc/init.d/dcd line 14:
                 . \"\$OMD_ROOT/.profile\"
                   ^------------------^ SC1091 (info): Not following: ./.profile: openBinaryFile: does not exist (No such file or directory)""",  // example log message
-                // |1 |             2                 | 3  | 4 |
-                // |         5        |
-                // | 6 |      7       |  8   |  9   |  10                   |
+            // |1 |             2                 | 3  | 4 |
+            // |         5        |
+            // | 6 |      7       |  8   |  9   |  10                   |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -208,9 +208,9 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 example: """tests/unit-shell/agents/test_set_up_path.shshunit2:ERROR test_set_up_path_already_in_path() returned non-zero return code.
                 test_set_up_path_already_in_path
                 ASSERT:expected:</foo:/usr/local/bin:/bar2> but was:</foo:/usr/local/bin:/bar>""",  // example log message
-                // |                     1                             |  2   |  3  |             4                    |
-                // |            5               |
-                // |                          6                                               |
+            // |                     1                             |  2   |  3  |             4                    |
+            // |            5               |
+            // |                          6                                               |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -227,7 +227,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 regex: '(.*):\\s(.*):\\s(.*)\\s\\((\\d+):(\\d+)\\)', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(2)).setCategory(matcher.group(1)).setMessage(matcher.group(3)).setLineStart(Integer.parseInt(matcher.group(4))).setColumnStart(Integer.parseInt(matcher.group(5))).buildOptional()', // Mapping script
                 example: "SyntaxError: web/htdocs/js/modules/dashboard.ts: Missing semicolon. (65:30)",  // example log message
-                //       |     1     |                    2              |         3        | 4  |5 |
+            //       |     1     |                    2              |         3        | 4  |5 |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -244,7 +244,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 regex: '(.*\\..*(?:ts|js))\\((\\d+),(\\d+)\\):\\s(.*):\\s(.*)', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).setCategory(matcher.group(4)).setMessage(matcher.group(5)).setLineStart(Integer.parseInt(matcher.group(2))).setColumnStart(Integer.parseInt(matcher.group(3))).buildOptional()', // Mapping script
                 example: "web/htdocs/js/modules/dashboard.js(65,37): error TS1005: ',' expected.s",  // example log message
-                //       |      1                           |2 | 3 |      4      |      5        |
+            //       |      1                           |2 | 3 |      4      |      5        |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(
@@ -342,7 +342,7 @@ def update_custom_parser(Map config = [:]) {
 
 // Get registry credentials for a specific edition
 def registry_credentials_id(edition) {
-    switch(edition) {
+    switch (edition) {
         case "ultimate":
         case "ultimatemt":
         case "community":

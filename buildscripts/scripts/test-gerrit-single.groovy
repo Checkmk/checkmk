@@ -30,17 +30,22 @@ def main() {
     def bazel_locks_amount = params.CIPARAM_BAZEL_LOCKS_AMOUNT ? params.CIPARAM_BAZEL_LOCKS_AMOUNT.toInteger() : -1;
 
     if (params.CIPARAM_ENV_VAR_LIST_STR) {
-        env_var_list = params.CIPARAM_ENV_VAR_LIST_STR.split("#").collect { "${it}".replace("JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}") };
+        env_var_list = params.CIPARAM_ENV_VAR_LIST_STR.split("#").collect {
+            "${it}".replace("JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}")
+        };
     }
     if (params.CIPARAM_SEC_VAR_LIST_STR) {
         sec_var_list = params.CIPARAM_SEC_VAR_LIST_STR.split("#");
-        credentials = sec_var_list.collect{string(credentialsId: it, variable: it)}
+        credentials = sec_var_list.collect { string(credentialsId: it, variable: it)}
     }
     def result_dir = "${params.CIPARAM_RESULT_CHECK_FILE_PATTERN.split('/')[0]}";
-    def extended_cmd = "set -x; ${params.CIPARAM_COMMAND}".replace("JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}");
+    def extended_cmd = "set -x; ${params.CIPARAM_COMMAND}".replace(
+        "JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}"
+    );
     def cmd_status = 1; // be sure to fail, in case of other failures
 
-    def do_use_node = currentBuild.fullProjectName.endsWith("/test-gerrit-single") || (kubernetes_inherit_from == "UNSET" && env.USE_K8S_GERRIT == "0");
+    def do_use_node = currentBuild.fullProjectName.endsWith("/test-gerrit-single") ||
+        (kubernetes_inherit_from == "UNSET" && env.USE_K8S_GERRIT == "0");
     def do_use_k8s = (kubernetes_inherit_from != "UNSET" && env.USE_K8S_GERRIT == "1");
     def ensure_integrity = !(do_use_node ^ do_use_k8s);
 
@@ -68,10 +73,14 @@ def main() {
         name: "Ensure k8s integrity",
         condition: ensure_integrity,
     ) {
-        println("The job config has to be disabled by the Jenkins env flag 'USE_K8S_GERRIT' and by not setting 'kubernetes_inherit_from' in checkmk_ci");
+        println("The job config has to be disabled by the Jenkins env flag 'USE_K8S_GERRIT' and by not setting " +
+            "'kubernetes_inherit_from' in checkmk_ci"
+        );
         println("kubernetes_inherit_from: ${kubernetes_inherit_from}");
         println("env.USE_K8S_GERRIT: ${env.USE_K8S_GERRIT}");
-        raise("k8s for CV has to be turned off via Jenkins env flag 'USE_K8S_GERRIT' AND checkmk_ci 'kubernetes_inherit_from'");
+        raise("k8s for CV has to be turned off via Jenkins env flag 'USE_K8S_GERRIT' AND " +
+            "checkmk_ci 'kubernetes_inherit_from'"
+        );
     }
 
     smart_stage(

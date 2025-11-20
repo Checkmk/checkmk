@@ -37,7 +37,7 @@ def try_plot_cache_hits(bazel_log_prefix, distros) {
         plot(
             csvFileName: 'bazel_cache_hits.csv',
             csvSeries:
-                distros.collect {[file: cache_hits_file_name(it, bazel_log_prefix)]},
+                distros.collect { [file: cache_hits_file_name(it, bazel_log_prefix)]},
             description: 'Bazel Remote Cache Analysis',
             group: 'Bazel Cache',
             numBuilds: '30',

@@ -46,11 +46,10 @@ def main() {
         }
 
         stage("detach") {
-            dir("agents\\wnx"){
+            dir("agents\\wnx") {
                 bat("run.cmd --detach");
             }
         }
-
     }
 }
 

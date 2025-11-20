@@ -274,7 +274,7 @@ def sign_package(source_dir, package_path) {
         variable: "GPG_KEY",)]) {
         /// --batch is needed to awoid ioctl error
         sh("gpg --batch --import ${GPG_KEY}");
-    }
+        }
     withCredentials([
         usernamePassword(
             credentialsId: "9d7aca31-0043-4cd0-abeb-26a249d68261",

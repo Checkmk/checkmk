@@ -40,7 +40,11 @@ def main() {
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     def relative_job_name = "${branch_base_folder}/builders/trigger-cmk-distro-package";
-    def setup_values = single_tests.common_prepare(version: VERSION, make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
+    def setup_values = single_tests.common_prepare(
+        version: VERSION,
+        make_target: make_target,
+        docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD
+    );
 
     stage("Prepare workspace") {
         cleanup_directory("${package_dir}");
@@ -131,7 +135,13 @@ def main() {
     // TODO: don't run make-test-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
         dir("${checkout_dir}/tests") {
-            sh("make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$branch_name' EDITION='$EDITION' VERSION='$cmk_version_rc_aware'");
+            sh("""
+                make test-docker-docker \
+                    WORKSPACE='${checkout_dir}' \
+                    BRANCH='$branch_name' \
+                    EDITION='$EDITION' \
+                    VERSION='$cmk_version_rc_aware'
+            """);
         }
     }
 }

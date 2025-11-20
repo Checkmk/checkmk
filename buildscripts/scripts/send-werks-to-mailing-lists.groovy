@@ -38,7 +38,7 @@ def was_timer_triggered() {
 
 def main() {
     if (params.CUSTOM_GIT_REF != "") {
-       raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
+        raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
     }
 
     check_job_parameters([
@@ -107,7 +107,7 @@ def main() {
             ]) {
                 withEnv(["GIT_SSH_COMMAND=ssh -o \"StrictHostKeyChecking no\" -i ${keyfile} -l ${user}"]) {
                     dir("${checkout_dir}") {
-                        send_werk_mails_of_branches.each{branch ->
+                        send_werk_mails_of_branches.each { branch ->
                             sh("""
                                 git config --add user.name ${user};
                                 git config --add user.email ${JENKINS_MAIL};

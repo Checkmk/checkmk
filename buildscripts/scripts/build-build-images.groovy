@@ -97,7 +97,7 @@ def main() {
                 def image = false;
 
                 /// this makes sure the whole parallel thread is marked as skipped
-                if (! run_condition){
+                if (! run_condition) {
                     Utils.markStageSkippedForConditional("${distro}");
                 }
 

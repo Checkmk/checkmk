@@ -7,7 +7,7 @@ def main() {
         ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
-        // "DISABLE_CACHE",    // forwarded to package build job (todo)
+    // "DISABLE_CACHE",    // forwarded to package build job (todo)
     ]);
 
     check_environment_variables([
@@ -24,7 +24,11 @@ def main() {
     def edition = params.EDITION;
 
     def make_target = "test-plugins-siteless-docker";
-    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
+    def setup_values = single_tests.common_prepare(
+        version: "daily",
+        make_target: make_target,
+        docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD
+    );
 
     currentBuild.description += (
         """

@@ -101,7 +101,7 @@ def get_distros(Map args) {
     def use_case = override_distros == "all" ? "all" : args.use_case.trim() ?: "daily";
 
     /// return requested list if provided
-    if(override_distros && override_distros != "all") {
+    if (override_distros && override_distros != "all") {
         return override_distros.replaceAll(',', ' ').split(' ').grep();
     }
 
@@ -180,11 +180,11 @@ def print_image_tag() {
 }
 
 def patch_folders(edition) {
-    REPO_PATCH_RULES[edition]["paths_to_be_removed"].each{FOLDER ->
+    REPO_PATCH_RULES[edition]["paths_to_be_removed"].each { FOLDER ->
         sh("find -name ${FOLDER} -exec rm -rf {} ';' || true");
     }
 
-    REPO_PATCH_RULES[edition]["folders_to_be_created"].each{FOLDER ->
+    REPO_PATCH_RULES[edition]["folders_to_be_created"].each { FOLDER ->
         sh("mkdir -p ${FOLDER}");
     }
 }
@@ -209,7 +209,7 @@ def delete_non_cre_files() {
         "ultimate",
         "cloud",
     ]
-    find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ");
+    find_pattern = non_cre_paths.collect({ p -> "-name ${p}"}).join(" -or ");
     // Do not remove files in .git, .venv, .mypy_cache directories
     sh("""
         bash -c \"find . \\

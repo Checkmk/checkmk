@@ -4,7 +4,7 @@
 
 def main() {
     if (params.CUSTOM_GIT_REF != "") {
-       raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
+        raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
     }
 
     def target_path = "/home/mkde/werks/all_werks_v2.json";
@@ -80,7 +80,7 @@ def main() {
                             > validate-werks.error.txt
                     """);
                     /* groovylint-enable LineLength */
-                } catch(Exception e) {
+                } catch (Exception e) {
                     archiveArtifacts(
                         artifacts: "validate-werks.*, all_werks.json",
                         fingerprint: true,
@@ -95,7 +95,7 @@ def main() {
         }
     }
 
-    targets_credentials.each{target_credential ->
+    targets_credentials.each { target_credential ->
         def target = target_credential[0];
         def credentials_id = target_credential[1];
 

@@ -58,7 +58,6 @@ def main() {
         |Building the Cloud images
         |""".stripMargin());
 
-
     stage('Cleanup') {
         dir("${checkout_dir}") {
             sh("git clean -xdf");
@@ -74,7 +73,7 @@ def main() {
         ) {
             dir("${checkout_dir}/packer") {
                 // https://developer.hashicorp.com/packer/docs/configure#environment-variables-usable-for-packer
-                withEnv(packer_envvars){
+                withEnv(packer_envvars) {
                     // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
                     sh("packer init .");
                 }
@@ -153,11 +152,11 @@ def create_build_stages(cloud_targets, env_secret_map, build_images, packer_envv
                             sh("""
                                packer build -only="checkmk-ansible.${target}.builder" .;
                             """);
-                            }
                         }
                     }
                 }
             }
+        }
         ]
     }
 }
@@ -200,10 +199,10 @@ def create_publish_stages(targets_names, version, publish) {
                             --azure-subscription-id '${SUBSCRIPTION_ID}' \
                             --azure-resource-group '${AZURE_RESOURCE_GROUP}';
                         """);
-                        }
                     }
                 }
             }
+        }
         ]
     }
 }

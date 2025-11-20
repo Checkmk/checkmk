@@ -9,7 +9,6 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-
 /// Builds all artifacts used for a given Checkmk edition
 def main() {
     check_job_parameters([
@@ -122,7 +121,7 @@ def main() {
                 download: true,
                 dest: deliverables_dir,
             );
-        }
+            }
     }
 
     /// In order to ensure a fixed order for stages executed in parallel,
@@ -172,7 +171,7 @@ def main() {
             def build_instance = null;
 
             /// this makes sure the whole parallel thread is marked as skipped
-            if (! run_condition){
+            if (! run_condition) {
                 Utils.markStageSkippedForConditional("${distro}");
             }
 

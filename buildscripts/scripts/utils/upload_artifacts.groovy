@@ -1,7 +1,5 @@
 #!groovy
-
 /// file: upload_artifacts.groovy
-
 // library for uploading packages
 package lib
 
@@ -61,7 +59,7 @@ def download_version_dir(DOWNLOAD_SOURCE,
                     ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
                     ${DOWNLOAD_DEST}/
             """);
-        }
+            }
     }
 }
 /* groovylint-enable ParameterCount */
@@ -190,14 +188,13 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
             }
         }
     }
-
 }
 
 def cleanup_rc_candidates_of_version(CMK_VERS) {
     def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
     execute_cmd_on_archive_server("rm -rf ${downloads_path}${TARGET_VERSION}-rc*;");
-    // cleanup of tst server would come to early as "build-cmk-container" needs the rc candiates available
-    // that cleanup is and will be done by bw-release
+// cleanup of tst server would come to early as "build-cmk-container" needs the rc candiates available
+// that cleanup is and will be done by bw-release
 }
 
 return this;

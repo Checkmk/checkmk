@@ -56,7 +56,7 @@ def main() {
 
     def causes = currentBuild.getBuildCauses();
     def triggerd_by = "";
-    for(cause in causes) {
+    for (cause in causes) {
         if (cause.upstreamProject != null) {
             triggerd_by += cause.upstreamProject + "/" + cause.upstreamBuild + "\n";
         }
@@ -93,7 +93,7 @@ def main() {
                     make buildclean
                     find . -name *.pth -delete
                 """);
-                if(disable_cache) {
+                if (disable_cache) {
                     if (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) != 1) {
                         error("Package builds without cache can not be done on other days than Sunday");
                     }

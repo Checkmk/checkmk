@@ -58,14 +58,14 @@ def main() {
                     cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
                     output_file: output_file,
                 ]);
-            }
-            sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
         }
+            sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
+    }
         archiveArtifacts(
             artifacts: "${output_file}, ${FILE_ARCHIVING_PATTERN}",
             fingerprint: true,
         );
-    }
+}
 }
 
 return this;

@@ -36,7 +36,7 @@ def main() {
                 passwordVariable: 'DOCKER_PASSPHRASE',
                 usernameVariable: 'DOCKER_USERNAME')]) {
             sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin');
-        }
+                }
     }
 
     def current_description = currentBuild.description;
@@ -84,7 +84,7 @@ def main() {
             def build_instance = null;
 
             /// this makes sure the whole parallel thread is marked as skipped
-            if (! run_condition){
+            if (! run_condition) {
                 Utils.markStageSkippedForConditional(stepName);
                 return true;
             } else {
@@ -110,7 +110,7 @@ def main() {
                 ) {
                     def build_params = [:];
 
-                    switch("${item.NAME}") {
+                    switch ("${item.NAME}") {
                         case "Enforced package build":
                             relative_job_name = "${branch_base_folder}/builders/trigger-cmk-distro-package";
                             build_params << [
@@ -138,7 +138,7 @@ def main() {
 
                     // use another switch statement to apply k8s specific settings
                     // to be removed with CMK-25972
-                    switch("${item.NAME}") {
+                    switch ("${item.NAME}") {
                         case "Agent Plugin Unit Tests":     // docker in docker
                         case "Groovy Lint":                 // npm not shipped with "klausi-standard-weak"
                         case "Package cmk-frontend":        // npm not shipped with "klausi-standard-weak"
@@ -152,7 +152,8 @@ def main() {
                         case "Package cmk-update-agent":    // Failing tests in k8s, detailed analysis outstanding
                         case "Package mk-oracle":           // Runs integration tests in CV, wants to install libaio
                         case "Python Werks Test":           // Get's OOM killed, see CMK-26379
-                        case "Software Documentation Generation": // exception: The 'enchant' C library was not found and maybe needs to be installed.
+                        // exception: The 'enchant' C library was not found and maybe needs to be installed.
+                        case "Software Documentation Generation":
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             break;
                         default:
@@ -179,8 +180,11 @@ def main() {
                             download: "${item.RESULT_CHECK_FILE_PATTERN}" != "" ? true : false,
                             dest: "${artifacts_base_dir}",
                             no_raise: true,     // do not raise an exception
-                            print_html: false,  // do not update Jenkins Job page with infos like upstream build URLs or similar
-                            ignore_build_queue: true, // do not look into Jenkins build queue for a matching job: there is no workflow which would justify this lookup
+                            // do not update Jenkins Job page with infos like upstream build URLs or similar
+                            print_html: false,
+                            // do not look into Jenkins build queue for a matching job:
+                            // there is no workflow which would justify this lookup
+                            ignore_build_queue: true,
                         );
                     } finally {
                         analyse_mapping["${item.NAME}"] = [
@@ -226,6 +230,7 @@ def main() {
                     dir("${checkout_dir}") {
                         // as issue analysis can not be run in parallel, do it sequential, old school
                         // https://groups.google.com/g/jenkinsci-dev/c/vEHMw4kp6iQ
+                        // groovylint-disable-next-line LineLength
                         // https://stackoverflow.com/questions/61428125/how-to-use-the-three-steps-of-jenkins-warnings-next-generation-plugin-properly
                         def issues = test_jenkins_helper.analyse_issues(
                             item.RESULT_CHECK_TYPE,
@@ -272,7 +277,7 @@ def main() {
             }
         }]
     /// add a dummy step which populates the result table before the first real step has finished
-    } + ["CV internal: initial result table population": {sleep(2); update_result_table(current_description, analyse_mapping);}]
+    } + ["CV internal: initial result table population": { sleep(2); update_result_table(current_description, analyse_mapping);}]
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         def results_of_parallel = parallel(stepsForParallel);
@@ -286,7 +291,7 @@ def main() {
             }
         }
     }
-}
+    }
 
 def update_result_table(static_description, table_data) {
     currentBuild.description = ("""
@@ -333,7 +338,9 @@ def job_result_row(Map args) {
 
     def totalSeconds = args.duration.days * 86400 + args.duration.hours * 3600 + args.duration.minutes * 60 + args.duration.seconds;
     def dur_dot_count = 1 + ((totalSeconds > 120) ? (3 + Math.log(totalSeconds-120) * 0.7).toInteger() : totalSeconds.intdiv(30));
+    // groovylint-disable-next-line LineLength
     def dur_str = "${String.format('%02d', totalSeconds.intdiv(60))}m:${String.format('%02d', totalSeconds % 60)}s ${"•" * Math.min(10, dur_dot_count)}${" " * (10 - Math.min(10, dur_dot_count))}";
+    // groovylint-disable LineLength
     return """<tr>
     <td>${triggered_build}</td>
     <td style='font-family: monospace; white-space: pre; text-align: right;'>${dur_str}</td>

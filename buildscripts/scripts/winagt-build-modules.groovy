@@ -32,7 +32,7 @@ def main() {
                     CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/',
                     DISABLE_CACHE: params.DISABLE_CACHE
                 );
-            }
+                    }
         }
     }
 }

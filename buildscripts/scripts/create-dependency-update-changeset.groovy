@@ -17,8 +17,8 @@ def main() {
             }
         }
 
-        stage("Create commit"){
-            if(sh(returnStdout: true, script: "git status --porcelain --untracked-files=no") == "") {
+        stage("Create commit") {
+            if (sh(returnStdout: true, script: "git status --porcelain --untracked-files=no") == "") {
                 echo "No changes, no commit ;-)"
                 return
             }
@@ -27,7 +27,8 @@ def main() {
                 git status
                 git add -u
 
-                # Set the author, setting it via `git commit --author ...` was not sufficient, see `git show --format=fuller`...
+                # Set the author, setting it via `git commit --author ...` was not sufficient,
+                # see `git show --format=fuller`...
                 git config user.name svc-dev-sec-codebot
                 git config user.email security+svc-dev-sec-codebot@checkmk.com
 
@@ -40,10 +41,17 @@ def main() {
                 # it was checked out with jenkins@...
                 git remote add update_remote ssh://svc-dev-sec-codebot@review.lan.tribe29.com/${repo_name}
             """)
-            // when not setting the port in the GIT_SSH_COMMAND I got an error that setting the port in the URL does not work with ssh simple...
-            withCredentials([sshUserPrivateKey(credentialsId: 'svc-dev-sec-codebot-ssh', keyFileVariable: 'SSH_KEY', usernameVariable: "USER")]) {
+            // when not setting the port in the GIT_SSH_COMMAND
+            // I got an error that setting the port in the URL does not work with ssh simple...
+            withCredentials([sshUserPrivateKey(
+                credentialsId: 'svc-dev-sec-codebot-ssh',
+                keyFileVariable: 'SSH_KEY',
+                usernameVariable: "USER"
+            )]) {
                 withEnv(['GIT_SSH_COMMAND=ssh -i ${SSH_KEY} -p 29418']) {
-                    sh("git push update_remote HEAD:refs/for/${safe_branch_name}%hashtag=dependency_update,${url_reviewers}")
+                    sh("""
+                        git push update_remote HEAD:refs/for/${safe_branch_name}%hashtag=dependency_update,${url_reviewers}
+                    """)
                 }
             }
         }

@@ -16,7 +16,7 @@ def main() {
                     CREDS: NEXUS_USERNAME+':'+NEXUS_PASSWORD,
                     CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
                 );
-            }
+                    }
         }
     }
 }

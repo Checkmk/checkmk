@@ -14,10 +14,9 @@ def main() {
 
         targets = cmd_output(
             "grep target: .github/workflows/pr.yaml | cut -f2 -d':'"
-        ).split("\n").collect({target -> target.trim()});
+        ).split("\n").collect({ target -> target.trim()});
 
-
-        targets.each({target ->
+        targets.each({ target ->
             test_jenkins_helper.execute_test([
                 name: target,
                 cmd: "EDITION=community make -C tests ${target}",

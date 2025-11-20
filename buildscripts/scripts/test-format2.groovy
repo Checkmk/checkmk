@@ -9,7 +9,7 @@ def main() {
         sh("mkdir -p ${checkout_dir}/../repo_cache; mv ${checkout_dir}/../repo_cache ${checkout_dir}/repo_cache")
         inside_container() {
             sh("mv ${checkout_dir}/repo_cache ${checkout_dir}/../repo_cache")
-		    sh('echo "--repository_cache=${checkout_dir}/../repo_cache/" >> .bazelrc')
+            sh('echo "--repository_cache=${checkout_dir}/../repo_cache/" >> .bazelrc')
             test_jenkins_helper.execute_test([
                 name: "Check format",
                 cmd: "bazel run //:format.check",

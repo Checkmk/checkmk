@@ -46,7 +46,7 @@ image_distro = { image ->
 /// This function is the CI-equivalent to scripts/run-in-docker.sh. It should do
 /// the same as closely as possible. So if you're editing one of us please also
 /// update the other one, too!
-inside_container = {Map arg1=[:], Closure arg2 ->
+inside_container = { Map arg1=[:], Closure arg2 ->
     // strangely providing a default value for @args does not work as expected.
     // If no value got provided the provided body is taken as @args.
     // In _script console_ however @arg1 will be [:] (the expected default arg)
@@ -150,7 +150,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         if (tmp_given_image == "") {
             // "ubuntu-2404-master-latest" is part of "klausi-package-builder-base" pod template
             tmp_given_image = "ubuntu-2404-${safe_branch_name}-latest";
-            // tmp_given_image = docker_reference_image();
+        // tmp_given_image = docker_reference_image();
         } else {
             // docker.image() object is given
             // pod template has been extended with that docker image
@@ -165,7 +165,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     }
 }
 
-inside_container_minimal = {Map arg1=[:], Closure arg2 ->
+inside_container_minimal = { Map arg1=[:], Closure arg2 ->
     // strangely providing a default value for @args does not work as expected.
     // If no value got provided the provided body is taken as @args.
     // In _script console_ however @arg1 will be [:] (the expected default arg)

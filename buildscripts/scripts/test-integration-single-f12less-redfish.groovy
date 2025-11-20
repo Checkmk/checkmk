@@ -23,7 +23,11 @@ def main() {
     def make_target = "test-integration-redfish-docker";
     def download_dir = "package_download";
 
-    def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
+    def setup_values = single_tests.common_prepare(
+        version: "daily",
+        make_target: make_target,
+        docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD
+    );
 
     // todo: add upstream project to description
     // todo: add error to description

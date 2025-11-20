@@ -3,10 +3,10 @@
 /// file: test-update-single-f12less.groovy
 
 def build_make_target(edition, cross_edition_target="") {
-    switch(edition) {
+    switch (edition) {
         // The make targets are written without the -docker suffix in tests/Makefile.
         case 'community':
-            switch(cross_edition_target) {
+            switch (cross_edition_target) {
                 case 'ultimate':
                     return "test-update-cross-edition-community-to-ultimate-docker";
                 case 'pro':
@@ -15,7 +15,7 @@ def build_make_target(edition, cross_edition_target="") {
                     return "test-update-community-docker";
             }
         case 'pro':
-            switch(cross_edition_target) {
+            switch (cross_edition_target) {
                 case 'ultimate':
                     return "test-update-cross-edition-pro-to-ultimate-docker";
                 case 'ultimatemt':
@@ -66,7 +66,11 @@ def main() {
     def make_target = build_make_target(edition, cross_edition_target);
     def download_dir = "package_download";
 
-    def setup_values = single_tests.common_prepare(version: params.VERSION, make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
+    def setup_values = single_tests.common_prepare(
+        version: params.VERSION,
+        make_target: make_target,
+        docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD
+    );
 
     // todo: add upstream project to description
     // todo: add error to description

@@ -141,8 +141,6 @@ def main() {
                     // to be removed with CMK-25972
                     switch ("${item.NAME}") {
                         case "Agent Plugin Unit Tests":     // docker in docker
-                        case "Groovy Lint":                 // npm not shipped with "klausi-standard-weak"
-                        case "Package cmk-frontend":        // npm not shipped with "klausi-standard-weak"
                         case "Package cmk-agent-receiver":  // Tries to start docker containers
                         case "Package cmk-relay-engine":    // Tries to start docker containers
                         case "Package cmk-ccc":             // Seems to require non-root permissions, see CMK-24586

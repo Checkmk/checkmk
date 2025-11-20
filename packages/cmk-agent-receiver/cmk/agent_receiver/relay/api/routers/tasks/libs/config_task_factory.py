@@ -5,7 +5,6 @@
 import dataclasses
 import io
 import tarfile
-from collections.abc import Mapping
 from datetime import datetime, UTC
 from pathlib import Path
 
@@ -76,9 +75,7 @@ class ConfigTaskFactory:
                     logger.info("Skipping config task creation, pending")
                     return None  # Skip creating duplicate pending tasks
                 parent = helper_config_dir / f"{serial}/relays/{relay_id}"
-                relay_config_spec = RelayConfigSpec(
-                    serial=serial, tar_data=create_tar({parent: CONFIG_ARCHIVE_ROOT_FOLDER_NAME})
-                )
+                relay_config_spec = RelayConfigSpec(serial=serial, tar_data=create_tar(parent))
                 task = RelayTask(
                     spec=relay_config_spec, creation_timestamp=timestamp, update_timestamp=timestamp
                 )
@@ -103,7 +100,7 @@ class ConfigTaskFactory:
         )
 
 
-def create_tar(contents: Mapping[Path, str]) -> bytes:
+def create_tar(parent: Path) -> bytes:
     """Create an uncompressed tar archive in memory preserving structure from common parent.
 
     This function creates an uncompressed tar archive containing the specified folder
@@ -124,7 +121,7 @@ def create_tar(contents: Mapping[Path, str]) -> bytes:
         ...     '/home/user/project/src/utils.py',
         ...     '/home/user/project/tests/test_main.py'
         ... ]
-        >>> base64_tar = create_tar({'/home/user/project': CONFIG_ARCHIVE_ROOT_FOLDER_NAME})  # doctest: +SKIP
+        >>> base64_tar = create_tar('/home/user/project')  # doctest: +SKIP
         >>> # Archive will contain:
         >>> # config/src/main.py
         >>> # config/src/utils.py
@@ -136,8 +133,7 @@ def create_tar(contents: Mapping[Path, str]) -> bytes:
 
     # Create tar archive in memory
     with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
-        for parent, arcname in contents.items():
-            tar.add(parent, arcname=arcname)
+        tar.add(parent, arcname=CONFIG_ARCHIVE_ROOT_FOLDER_NAME)
 
     # Get the binary content of the tar archive
     return tar_buffer.getvalue()

@@ -298,7 +298,14 @@ fn test_remote_mini_connection() {
 async fn test_remote_custom_instance_connection() {
     add_runtime_to_path();
     let endpoint = remote_reference_endpoint();
-    let config = make_mini_config_custom_instance(&endpoint, "FREE", None);
+    let config = make_mini_config_custom_instance(
+        &endpoint,
+        endpoint
+            .service_name
+            .as_deref()
+            .unwrap_or(&endpoint.instance),
+        None,
+    );
     let env = Env::default();
     let r = generate_data(&config, &env).await;
 

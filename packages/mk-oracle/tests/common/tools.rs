@@ -77,7 +77,12 @@ pub mod platform {
     }
 }
 
-fn _make_mini_config(credentials: &Credentials, auth_type: AuthType, address: &str) -> Config {
+fn _make_mini_config(
+    credentials: &Credentials,
+    auth_type: AuthType,
+    address: &str,
+    service_name: &Option<String>,
+) -> Config {
     let config_str = format!(
         r#"
 ---
@@ -91,12 +96,18 @@ oracle:
     connection:
        hostname: {}
        timeout: 10
+       {}
 "#,
         credentials.user,
         credentials.password,
         auth_type,
         if address == "localhost" { "sysdba" } else { "" },
         address,
+        service_name
+            .as_ref()
+            .map(|s| format!("service_name: {}", s))
+            .as_deref()
+            .unwrap_or(""),
     );
     Config::from_string(config_str).unwrap().unwrap()
 }
@@ -136,7 +147,7 @@ oracle:
       include: [{5}] # optional
       exclude: [] # optional
     instances: # optional
-      - sid: FREE
+      - sid: {5}
         {6}
         connection: # mandatory
           hostname: {4}
@@ -182,5 +193,6 @@ pub fn make_mini_config(endpoint: &SqlDbEndpoint) -> Config {
         },
         AuthType::Standard,
         &endpoint.host,
+        &endpoint.service_name,
     )
 }

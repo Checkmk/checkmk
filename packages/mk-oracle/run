@@ -226,15 +226,19 @@ run_test_component() {
 
 run_test_component_remote_host() {
     TEST_NAME="test_ora_sql_test"
+    SSH_ARGS=
+    [ -n "$SSH_KEYFILE" ] && SSH_ARGS="$SSH_ARGS -i $SSH_KEYFILE -o StrictHostKeyChecking=no"
 
     # copy Oracle DB plug-in test-binary to the remote-host and run the tests
-    scp "${TEST_BINARY_LOCAL_PATH}" "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}"
-    # shellcheck disable=SC2087
-    ssh "${HOST_ADDRESS}" <<EOF
+    # shellcheck disable=SC2086
+    scp $SSH_ARGS "${TEST_BINARY_LOCAL_PATH}" "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}"
+    # shellcheck disable=SC2086,SC2087,SC2029
+    ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
         cd "${TEST_BINARY_REMOTE_PATH}"
         export ORACLE_HOME="${ORACLE_HOME}"
         export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}"
+        chmod +x ./"${TEST_NAME}"
         ./"${TEST_NAME}"
 EOF
 }

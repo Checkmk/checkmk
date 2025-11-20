@@ -67,7 +67,7 @@ function onClickGoTo() {
     flex: 0 0 var(--wizard-step-number-badge-width);
     height: var(--wizard-step-number-badge-width);
     border-radius: 50%;
-    color: var(--wizard-progress-bar-background-color);
+    color: var(--wizard-progress-bar-background-badge-color);
     border: var(--wizard-progress-bar-width) solid var(--wizard-progress-bar-background-color);
     background-color: transparent;
     box-sizing: border-box;

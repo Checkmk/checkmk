@@ -5,7 +5,11 @@
 
 import pytest
 
-from cmk.plugins.cisco_meraki.rulesets.agent_cisco_meraki import _migrate_to_valid_ident
+from cmk.plugins.cisco_meraki.rulesets.agent_cisco_meraki import (
+    _check_for_duplicates,
+    _migrate_to_valid_ident,
+)
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
 class TestMigrateToValidIdent:
@@ -23,3 +27,15 @@ class TestMigrateToValidIdent:
     def test_bad_input_raises(self) -> None:
         with pytest.raises(ValueError):
             _migrate_to_valid_ident("licenses-overview")
+
+
+class TestCheckForDuplicates:
+    def test_good_input(self) -> None:
+        _check_for_duplicates(["abc", "dfe"])
+
+    def test_no_input(self) -> None:
+        _check_for_duplicates([])
+
+    def test_bad_input_raises(self) -> None:
+        with pytest.raises(ValidationError):
+            _check_for_duplicates(["abc", "abc"])

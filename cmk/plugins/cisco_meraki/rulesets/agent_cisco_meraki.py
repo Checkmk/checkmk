@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import Counter
 from collections.abc import Sequence
 
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -24,7 +25,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeMagnitude,
     TimeSpan,
 )
-from cmk.rulesets.v1.form_specs.validators import NumberInRange
+from cmk.rulesets.v1.form_specs.validators import NumberInRange, ValidationError
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
@@ -32,6 +33,11 @@ def _migrate_to_valid_ident(value: object) -> Sequence[str]:
     if not isinstance(value, list):
         raise ValueError(f"Expected a list of strings, got {value}")
     return [name.replace("-", "_") for name in value if isinstance(name, str)]
+
+
+def _check_for_duplicates(value: Sequence[str]) -> None:
+    if any(item for item, count in Counter(value).items() if count > 1):
+        raise ValidationError(message=Message("Duplicated elements provided."))
 
 
 def _form_special_agent_cisco_meraki() -> Dictionary:
@@ -94,7 +100,9 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
             ),
             "orgs": DictElement(
                 parameter_form=List(
-                    element_template=String(macro_support=True), title=Title("Organizations")
+                    element_template=String(macro_support=True),
+                    title=Title("Organizations"),
+                    custom_validate=[_check_for_duplicates],
                 )
             ),
             "org_id_as_prefix": DictElement(

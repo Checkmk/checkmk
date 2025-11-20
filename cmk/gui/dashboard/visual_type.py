@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -54,22 +53,22 @@ class VisualTypeDashboards(VisualType):
 
     @property
     @override
-    def plural_title(self):
+    def plural_title(self) -> str:
         return _("dashboards")
 
     @property
     @override
-    def ident_attr(self):
+    def ident_attr(self) -> str:
         return "name"
 
     @property
     @override
-    def multicontext_links(self):
+    def multicontext_links(self) -> bool:
         return False
 
     @property
     @override
-    def show_url(self):
+    def show_url(self) -> str:
         return "dashboard.py"
 
     @override

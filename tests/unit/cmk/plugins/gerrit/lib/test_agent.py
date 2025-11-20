@@ -7,6 +7,7 @@ import argparse
 from pathlib import Path
 
 import pytest
+from polyfactory.factories import TypedDictFactory
 
 from cmk.plugins.gerrit.lib import agent
 from cmk.plugins.gerrit.lib.schema import VersionInfo
@@ -18,7 +19,7 @@ def patch_storage_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 
 @pytest.mark.usefixtures("patch_storage_env")
-def test_run_agent(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+def test_run_agent(capsys: pytest.CaptureFixture[str]) -> None:
     ctx = agent.GerritRunContext(
         hostname="heute",
         ttl=agent.TTLCache(version=60),
@@ -33,8 +34,25 @@ def test_run_agent(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
     # sections headings were successfully written out.
     assert "<<<gerrit_version:sep(0)>>>" in captured.out
 
-    # cache was succesfully written out.
-    assert any((tmp_path / "heute/gerrit_version").iterdir())
+    # cache is being used on second run.
+    agent.run(ctx)
+    assert captured.out == capsys.readouterr().out
+
+
+@pytest.mark.usefixtures("patch_storage_env")
+def test_run_agent_with_no_cache(capsys: pytest.CaptureFixture[str]) -> None:
+    ctx = agent.GerritRunContext(
+        hostname="heute",
+        ttl=agent.TTLCache(version=0),
+        collectors=agent.Collectors(version=_FakeVersionCollector()),
+    )
+
+    agent.run(ctx)
+    first_run_output = capsys.readouterr().out
+    agent.run(ctx)
+    second_run_output = capsys.readouterr().out
+
+    assert first_run_output != second_run_output
 
 
 def test_parse_arguments() -> None:
@@ -57,9 +75,10 @@ def test_parse_arguments() -> None:
     assert value == expected
 
 
+class _VersionInfoFactory(TypedDictFactory[VersionInfo]):
+    __check_model__ = False
+
+
 class _FakeVersionCollector:
     def collect(self) -> VersionInfo:
-        return {
-            "current": "1.2.3",
-            "latest": {"major": "2.0.0", "minor": "1.3.0", "patch": "1.2.4"},
-        }
+        return _VersionInfoFactory.build()

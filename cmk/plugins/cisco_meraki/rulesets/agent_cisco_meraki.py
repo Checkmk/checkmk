@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -29,16 +29,9 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
 def _migrate_to_valid_ident(value: object) -> Sequence[str]:
-    if not isinstance(value, Iterable):
-        raise ValueError("Invalid value {value} for sections")
-
-    name_mapping = {
-        "licenses-overview": "licenses_overview",
-        "device-statuses": "device_statuses",
-        "sensor-readings": "sensor_readings",
-    }
-
-    return [name_mapping.get(s, s) for s in value if isinstance(s, str)]
+    if not isinstance(value, list):
+        raise ValueError(f"Expected a list of strings, got {value}")
+    return [name.replace("-", "_") for name in value if isinstance(name, str)]
 
 
 def _form_special_agent_cisco_meraki() -> Dictionary:

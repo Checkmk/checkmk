@@ -287,6 +287,85 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
             for user_id, visuals_by_type in visuals_by_user.items():
                 for what, visuals in visuals_by_type.items():
                     if visuals:
-                        save_user_file(f"user_{what}", visuals, user_id)
+                        file_name = f"user_{what}"
+                        if what != "dashboards":
+                            save_user_file(file_name, visuals, user_id)
+                            continue
+
+                        dashboards = {}
+                        for dashboard_name, dashboard in visuals.items():
+                            # <2.5 dashboard config uses view dashlet instead of embedded_view dashlet
+                            if "embedded_views" not in dashboard:
+                                dashlets, embedded_views = _migrate_dashlets(dashboard)
+                                dashboard["dashlets"] = dashlets
+                                dashboard["embedded_views"] = embedded_views
+                            dashboards[dashboard_name] = dashboard
+                        save_user_file(file_name, dashboards, user_id)
 
         return True
+
+
+def _migrate_dashlets(
+    dashboard: dict[str, Any],
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, object]]]:
+    """Duplicate idea of the function of the dashboards update action migration function
+    (to avoid cyclic dependencies). The user_profile should be likely cleaned up but the migration
+    function will be removed at some point in the future anyway.
+
+    """
+    embedded_views = dashboard.get("embedded_views", dict())
+    dashlets = []
+    for dashlet in dashboard["dashlets"]:
+        if dashlet["type"] != "view":
+            dashlets.append(dashlet)
+            continue
+
+        view_name = dashlet["name"]
+        dashlet_embedded_view = {
+            "name": view_name,
+            "type": "embedded_view",
+        }
+        # dashboards.type_defs.EmbeddedViewDashletConfig
+        dashlet_embedded_view_attributes = [
+            "datasource",
+            "single_infos",
+            # we include the relative size and pos layout attributes only since
+            # a responsive layout will already have the new format and doesn't need to run
+            # through this migration
+            "position",
+            "size",
+            "background",
+            "context",
+            "title",
+            "title_url",
+            "show_title",
+        ]
+        dashlet_embedded_view.update(
+            {key: dashlet[key] for key in dashlet_embedded_view_attributes if key in dashlet}
+        )
+
+        # cmk.gui.type_defs.DashboardEmbeddedViewSpec
+        embedded_view_attributes = [
+            "single_infos",
+            "datasource",
+            "layout",
+            "group_painters",
+            "painters",
+            "browser_reload",
+            "num_columns",
+            "column_headers",
+            "sorters",
+            "add_headers",
+            "mobile",
+            "mustsearch",
+            "force_checkboxes",
+            "play_sounds",
+            "user_sortable",
+            "inventory_join_macros",
+        ]
+        embedded_view = {key: dashlet[key] for key in embedded_view_attributes if key in dashlet}
+
+        embedded_views[view_name] = embedded_view
+        dashlets.append(dashlet_embedded_view)
+
+    return dashlets, embedded_views

@@ -51,13 +51,9 @@ from cmk.server_side_calls_backend import load_special_agents
 from cmk.utils import password_store
 
 agent_metric_backend_custom_query: ModuleType | None = None
-agent_otel: ModuleType | None = None
 try:
     from cmk.plugins.metric_backend.special_agents.nonfree.ultimate import (  # type: ignore[import-untyped,no-redef,unused-ignore]
         agent_metric_backend_custom_query,
-    )
-    from cmk.plugins.otel.special_agents.nonfree.ultimate import (  # type: ignore[import-untyped,no-redef,unused-ignore]
-        agent_otel,
     )
 except ImportError:
     pass
@@ -105,7 +101,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
         if agent_metric_backend_custom_query is None
         else {"metric_backend_custom_query": agent_metric_backend_custom_query}
     ),
-    **({} if agent_otel is None else {"otel": agent_otel}),
     "prism": None,
     "proxmox_ve": agent_proxmox_ve,
     "pure_storage_fa": agent_pure_storage_fa,

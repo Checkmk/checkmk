@@ -69,6 +69,7 @@ from cmk.automations.results import (
     NotificationGetBulksResult,
     NotificationReplayResult,
     NotificationTestResult,
+    NotifyResult,
     PingHostCmd,
     PingHostInput,
     PingHostResult,
@@ -217,9 +218,10 @@ from cmk.utils.caching import cache_manager
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.http_proxy_config import make_http_proxy_getter
 from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager, Labels
-from cmk.utils.log import console
+from cmk.utils.log import console, setup_console_logging
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.password_store import make_staged_passwords_lookup
 from cmk.utils.paths import (
@@ -248,7 +250,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
 )
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.timeperiod import get_all_timeperiods
+from cmk.utils.timeperiod import get_all_timeperiods, TimeperiodActiveCoreLookup
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -4216,6 +4218,64 @@ class AutomationGetAgentOutput(Automation):
 
 
 automations.register(AutomationGetAgentOutput())
+
+
+class AutomationNotify(Automation):
+    cmd = "notify"
+
+    def execute(
+        self,
+        args: list[str],
+        plugins: AgentBasedPlugins | None,
+        loading_result: config.LoadingResult | None,
+    ) -> NotifyResult:
+        options = {}
+        if "--log-to-stdout" in args:
+            options["log-to-stdout"] = True
+            args = args[1:]
+
+        if not loading_result:
+            loading_result = load_config(discovery_rulesets=())
+
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            setup_console_logging()
+            result = notify.do_notify(
+                options,
+                args,
+                define_servicegroups=config.define_servicegroups,
+                host_parameters_cb=lambda hostname,
+                plugin: loading_result.config_cache.notification_plugin_parameters(
+                    hostname, plugin
+                ),
+                rules=config.notification_rules,
+                parameters=config.notification_parameter,
+                get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
+                ensure_nagios=notify.make_ensure_nagios(
+                    loading_result.loaded_config.monitoring_core
+                ),
+                bulk_interval=config.notification_bulk_interval,
+                plugin_timeout=config.notification_plugin_timeout,
+                config_contacts=config.contacts,
+                fallback_email=config.notification_fallback_email,
+                fallback_format=config.notification_fallback_format,
+                spooling=ConfigCache.notification_spooling(),
+                backlog_size=config.notification_backlog,
+                logging_level=ConfigCache.notification_logging_level(),
+                keepalive=False,
+                all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
+                timeperiods_active=TimeperiodActiveCoreLookup(
+                    livestatus.get_optional_timeperiods_active_map, notify.logger.warning
+                ),
+            )
+
+            return NotifyResult(
+                exit_code=result,
+                output=buf.getvalue(),
+            )
+
+
+automations.register(AutomationNotify())
 
 
 class AutomationNotificationReplay(Automation):

@@ -1,5 +1,4 @@
 {
-  "extends": "recommended",
   "rules": {
     "basic.DeadCode": "error",
     "convention.CompileStatic": "off",
@@ -12,10 +11,8 @@
     "design.Instanceof": "off",
     "dry.DuplicateListLiteral": "info",
     "dry.DuplicateMapLiteral": "warning",
-    "dry.DuplicateStringLiteral": {
-      "ignoreStrings": "nexus",
-      "severity": "info"
-    },
+    "dry.DuplicateStringLiteral": "off",
+    "dry.DuplicateNumberLiteral": "off",
     "exceptions.ThrowException": "warning",
     "exceptions.ThrowNullPointerException": "info",
     "exceptions.ThrowRuntimeException": "info",

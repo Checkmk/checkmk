@@ -177,6 +177,13 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 )
             ));
             break;
+        case "SARIF":
+            issues.add(scanForIssues(
+                tool: sarif(
+                    pattern: "${result_check_file_pattern}"
+                )
+            ));
+            break;
         case "SHELLCHECK":
             parserId = "shellcheck";
             update_custom_parser([

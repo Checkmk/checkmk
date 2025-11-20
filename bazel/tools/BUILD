@@ -4,6 +4,7 @@ load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
 
@@ -15,6 +16,15 @@ js_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":node_modules/@trivago/prettier-plugin-sort-imports",
+    ],
+)
+
+groovy_bin.npm_groovy_lint_binary(
+    name = "groovy-lint",
+    data = ["//bazel/tools:.groovylintrc.json"],
+    env = {"BAZEL_BINDIR": "."},
+    fixed_args = [
+        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:.groovylintrc.json)",
     ],
 )
 

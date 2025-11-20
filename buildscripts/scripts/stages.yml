@@ -467,12 +467,12 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_GROOVY_FILE
       DIR: "tests"
       ENV_VARS:
-          GROOVYLINT_OUTPUT_ARGS: "-o ${RESULTS}/groovy-lint.xml"
+          GROOVYLINT_OUTPUT_ARGS: "-o ${RESULTS}/groovy-lint.sarif"
       COMMAND: "make --quiet test-lint-groovy"
       TEXT_ON_SKIP: "No Groovy files changed"
       BAZEL_LOCKS_AMOUNT: 1
-      RESULT_CHECK_TYPE: "GROOVY"
-      RESULT_CHECK_FILE_PATTERN: "results/groovy-lint.xml"
+      RESULT_CHECK_TYPE: "SARIF"
+      RESULT_CHECK_FILE_PATTERN: "results/groovy-lint.sarif"
 
     - NAME: "Agent Plugin Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS,CHANGED_TESTS_MAKEFILE

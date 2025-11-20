@@ -35,6 +35,7 @@ from ._display_hints import (
     PAINT_FUNCTION_NAME_PREFIX,
     register_display_hints,
     TableWithView,
+    TransformAttrs,
 )
 from ._painters import (
     attribute_painter_from_hint,
@@ -58,8 +59,9 @@ __all__ = [
     "NodeDisplayHint",
     "OrderedColumnDisplayHintsOfView",
     "TableWithView",
-    "inv_display_hints",
+    "TransformAttrs",
     "find_non_canonical_filters",
+    "inv_display_hints",
 ]
 
 

@@ -104,15 +104,15 @@ from cmk.update_config.plugins.actions.visuals import _migrate_visual
                 owner=UserId("user"),
                 name="",
                 context={
-                    "inv_hardware_cpu_bus_speed": {
+                    "inv_hardware_cpu_bus_speed_canonical": {
                         "inv_hardware_cpu_bus_speed_canonical_from": "1000000",
                         "inv_hardware_cpu_bus_speed_canonical_until": "2000000",
                     },
-                    "inv_hardware_memory_total_ram_usable": {
+                    "inv_hardware_memory_total_ram_usable_canonical": {
                         "inv_hardware_memory_total_ram_usable_canonical_from": "3145728",
                         "inv_hardware_memory_total_ram_usable_canonical_until": "4194304",
                     },
-                    "inv_hardware_cpu_cache_size": {
+                    "inv_hardware_cpu_cache_size_canonical": {
                         "inv_hardware_cpu_cache_size_canonical_from": "5242880",
                         "inv_hardware_cpu_cache_size_canonical_until": "6291456",
                     },

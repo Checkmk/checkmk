@@ -10,7 +10,7 @@ from typing import override
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard.store import get_all_dashboards
 from cmk.gui.type_defs import Visual
-from cmk.gui.views.inventory import find_non_canonical_filters
+from cmk.gui.views.inventory import find_non_canonical_filters, TransformAttrs
 from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.store import get_all_views
 from cmk.gui.visuals import save, TVisual
@@ -18,24 +18,29 @@ from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
-def _migrate_context_value(key: str, value: Mapping[str, str], scale: int) -> Mapping[str, str]:
+def _migrate_context_value(
+    key: str, value: Mapping[str, str], transform_attrs: TransformAttrs
+) -> Mapping[str, str]:
     migrated = {}
     for direction in ("from", "until"):
-        if filter_value := value.get(f"{key}_{direction}"):
-            migrated[f"{key}_canonical_{direction}"] = str(int(filter_value) * scale)
+        if filter_value := value.get(transform_attrs.legacy_name(direction)):
+            migrated[transform_attrs.new_name(direction)] = str(
+                int(filter_value) * transform_attrs.scale
+            )
     return migrated
 
 
-def _migrate_visual(visual: TVisual, non_canonical_filters: Mapping[str, int]) -> TVisual:
+def _migrate_visual(
+    visual: TVisual, non_canonical_filters: Mapping[str, TransformAttrs]
+) -> TVisual:
     if not (context := visual.get("context")):
         return visual
     assert isinstance(context, dict)
     migrated = {}
     for key, value in context.items():
-        if key in non_canonical_filters and (
-            value_ := _migrate_context_value(key, value, non_canonical_filters[key])
-        ):
-            migrated[key] = value_
+        transform_attrs = non_canonical_filters.get(key)
+        if transform_attrs and (value_ := _migrate_context_value(key, value, transform_attrs)):
+            migrated[transform_attrs.filter_name()] = value_
         else:
             migrated[key] = value
     visual["context"] = migrated
@@ -43,7 +48,8 @@ def _migrate_visual(visual: TVisual, non_canonical_filters: Mapping[str, int]) -
 
 
 def migrate_visuals(
-    visuals: Mapping[tuple[UserId, str], Visual], non_canonical_filters: Mapping[str, int]
+    visuals: Mapping[tuple[UserId, str], Visual],
+    non_canonical_filters: Mapping[str, TransformAttrs],
 ) -> Mapping[tuple[UserId, str], Visual]:
     return {
         name: _migrate_visual(visual, non_canonical_filters) for name, visual in visuals.items()

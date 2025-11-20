@@ -439,13 +439,13 @@ def _parse_attr_field_from_api(
     node_title: str,
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
-    non_canonical_filters: Mapping[str, int],
+    non_canonical_filters: Mapping[str, TransformAttrs],
 ) -> AttributeDisplayHint:
-    name = _make_attr_name(node_ident, key, non_canonical_filters)
+    names = _make_attr_names(node_ident, key, non_canonical_filters)
     title = _make_str(field_from_api.title)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
-        name=name,
+        name=names.for_object,
         title=title,
         short_title=title,
         long_title=long_title,
@@ -453,7 +453,7 @@ def _parse_attr_field_from_api(
         sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
         filter=_make_attribute_filter(
             field_from_api,
-            name=name,
+            name=names.for_filter,
             long_title=long_title,
             inventory_path=inventory.InventoryPath(
                 path=path,
@@ -570,7 +570,7 @@ def _parse_col_field_of_view_from_api(
 
 
 def _parse_node_from_api(
-    node: NodeFromAPI, non_canonical_filters: Mapping[str, int]
+    node: NodeFromAPI, non_canonical_filters: Mapping[str, TransformAttrs]
 ) -> NodeDisplayHint:
     path = tuple(SDNodeName(e) for e in node.path)
     parent_title = inv_display_hints.get_node_hint(path[:-1]).title if path[:-1] else ""
@@ -701,10 +701,24 @@ def _make_node_name(path: SDPath) -> str:
     return "_".join(["inv"] + list(path))
 
 
-def _make_attr_name(
-    node_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, int]
-) -> str:
-    return f"{name}_canonical" if (name := f"{node_name}_{key}") in non_canonical_filters else name
+@dataclass(frozen=True, kw_only=True)
+class _Names:
+    for_object: str
+    for_filter: str
+
+
+def _make_attr_names(
+    node_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, TransformAttrs]
+) -> _Names:
+    name = f"{node_name}_{key}"
+    return _Names(
+        for_object=name,
+        for_filter=(
+            transform_attrs.filter_name()
+            if (transform_attrs := non_canonical_filters.get(name))
+            else name
+        ),
+    )
 
 
 def _make_col_name(table_view_name: str, key: SDKey | str) -> str:
@@ -779,14 +793,14 @@ def _parse_attr_field_from_legacy(
     node_title: str,
     key: str,
     legacy_hint: InventoryHintSpec,
-    non_canonical_filters: Mapping[str, int],
+    non_canonical_filters: Mapping[str, TransformAttrs],
 ) -> AttributeDisplayHint:
     data_type, paint_function = _get_paint_function(legacy_hint)
-    name = _make_attr_name(node_name, key, non_canonical_filters)
+    names = _make_attr_names(node_name, key, non_canonical_filters)
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
-        name=name,
+        name=names.for_object,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -798,7 +812,7 @@ def _parse_attr_field_from_legacy(
             path=path,
             key=key,
             data_type=data_type,
-            name=name,
+            name=names.for_filter,
             long_title=long_title,
             is_show_more=legacy_hint.get("is_show_more", True),
         ),
@@ -1053,11 +1067,11 @@ class NodeDisplayHint:
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         def _default() -> AttributeDisplayHint:
-            name = _make_attr_name(self.name, key, {})
+            names = _make_attr_names(self.name, key, {})
             title = key.replace("_", " ").title()
             long_title = _make_long_title(self.title if self.path else "", title)
             return AttributeDisplayHint(
-                name=name,
+                name=names.for_object,
                 title=title,
                 short_title=title,
                 long_title=long_title,
@@ -1069,7 +1083,7 @@ class NodeDisplayHint:
                     path=self.path,
                     key=key,
                     data_type="str",
-                    name=name,
+                    name=names.for_filter,
                     long_title=long_title,
                     is_show_more=True,
                 ),
@@ -1094,7 +1108,7 @@ class NodeDisplayHint:
 
 def _parse_legacy_display_hints(
     legacy_hints: Mapping[str, InventoryHintSpec],
-    non_canonical_filters: Mapping[str, int],
+    non_canonical_filters: Mapping[str, TransformAttrs],
 ) -> Iterator[NodeDisplayHint]:
     for path, related_legacy_hints in sorted(
         _get_related_legacy_hints(legacy_hints).items(), key=lambda t: len(t[0])
@@ -1242,17 +1256,52 @@ class DisplayHints:
 inv_display_hints = DisplayHints()
 
 
-def find_non_canonical_filters(legacy_hints: Mapping[str, InventoryHintSpec]) -> Mapping[str, int]:
+@dataclass(frozen=True, kw_only=True)
+class TransformAttrs:
+    name: str
+    scale: int
+
+    def legacy_name(self, direction: Literal["from", "until"]) -> str:
+        return f"{self.name}_{direction}"
+
+    def new_name(self, direction: Literal["from", "until"]) -> str:
+        return f"{self.name}_canonical_{direction}"
+
+    def filter_name(self) -> str:
+        return f"{self.name}_canonical"
+
+
+def find_non_canonical_filters(
+    legacy_hints: Mapping[str, InventoryHintSpec],
+) -> Mapping[str, TransformAttrs]:
     filters = {
         # "bytes"
-        "inv_hardware_cpu_cache_size": 1024 * 1024,
+        "inv_hardware_cpu_cache_size": TransformAttrs(
+            name="inv_hardware_cpu_cache_size",
+            scale=1024 * 1024,
+        ),
         # "bytes_rounded"
-        "inv_hardware_memory_total_ram_usable": 1024 * 1024,
-        "inv_hardware_memory_total_swap": 1024 * 1024,
-        "inv_hardware_memory_total_vmalloc": 1024 * 1024,
+        "inv_hardware_memory_total_ram_usable": TransformAttrs(
+            name="inv_hardware_memory_total_ram_usable",
+            scale=1024 * 1024,
+        ),
+        "inv_hardware_memory_total_swap": TransformAttrs(
+            name="inv_hardware_memory_total_swap",
+            scale=1024 * 1024,
+        ),
+        "inv_hardware_memory_total_vmalloc": TransformAttrs(
+            name="inv_hardware_memory_total_vmalloc",
+            scale=1024 * 1024,
+        ),
         # "hz"
-        "inv_hardware_cpu_bus_speed": 1000 * 1000,
-        "inv_hardware_cpu_max_speed": 1000 * 1000,
+        "inv_hardware_cpu_bus_speed": TransformAttrs(
+            name="inv_hardware_cpu_bus_speed",
+            scale=1000 * 1000,
+        ),
+        "inv_hardware_cpu_max_speed": TransformAttrs(
+            name="inv_hardware_cpu_max_speed",
+            scale=1000 * 1000,
+        ),
     }
     for raw_path, legacy_hint in legacy_hints.items():
         inv_path = inventory.parse_internal_raw_path(raw_path)
@@ -1261,9 +1310,9 @@ def find_non_canonical_filters(legacy_hints: Mapping[str, InventoryHintSpec]) ->
         name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
         match legacy_hint.get("paint"):
             case "bytes" | "bytes_rounded":
-                filters[name] = 1024 * 1024
+                filters[name] = TransformAttrs(name=name, scale=1024 * 1024)
             case "hz":
-                filters[name] = 1000 * 1000
+                filters[name] = TransformAttrs(name=name, scale=1000 * 1000)
     return filters
 
 

@@ -21,6 +21,16 @@ class MerakiSDK(Protocol):
 
 
 class MerakiClient:
+    """
+    A thin wrapper around the Meraki SDK.
+
+    The goal of this client wrapper is to provide resource wrappers to the underlying SDK.
+
+    Each method handles whether the resource should be fetched from cache based on the config,
+    returning a strong type based on the resource's underlying schema. That way the consumers
+    of this client can make use strongly typed data and caching.
+    """
+
     def __init__(self, sdk: MerakiSDK, config: MerakiConfig) -> None:
         self._no_cache = config.no_cache
         self._cache = config.cache

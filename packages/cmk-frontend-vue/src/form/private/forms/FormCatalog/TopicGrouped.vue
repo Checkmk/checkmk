@@ -9,8 +9,10 @@ import type {
   DictionaryElement,
   TopicGroup
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { ref } from 'vue'
 
 import useId from '@/lib/useId'
+import { immediateWatch } from '@/lib/watch'
 
 import CmkLabel from '@/components/CmkLabel.vue'
 
@@ -24,6 +26,27 @@ const props = defineProps<{
 
 const data = defineModel<Record<string, unknown>>('data', { required: true })
 const componentId = useId()
+const topicGroupValidation = ref<Record<string, ValidationMessages>>({})
+
+function updateTopicGroupValidation(
+  elements: TopicGroup[],
+  backendValidation: ValidationMessages
+): Record<string, ValidationMessages> {
+  const updatedValidation: Record<string, ValidationMessages> = {}
+  for (const group of elements) {
+    updatedValidation[group.title] = backendValidation.filter((msg) =>
+      group.elements.some((element) => element.name === msg.location[0])
+    )
+  }
+  return updatedValidation
+}
+
+immediateWatch(
+  () => [props.elements, props.backendValidation],
+  () => {
+    topicGroupValidation.value = updateTopicGroupValidation(props.elements, props.backendValidation)
+  }
+)
 
 function convertToDictionarySpec(topicGroup: TopicGroup): Dictionary {
   return {
@@ -67,7 +90,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       <FormEditDispatcher
         :spec="convertToDictionarySpec(topic_group)"
         :data="data"
-        :backend-validation="[]"
+        :backend-validation="topicGroupValidation[topic_group.title]"
       />
     </td>
   </tr>

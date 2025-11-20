@@ -5,12 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type {
-  BooleanChoice,
   Catalog,
   String as FormString,
   Integer,
-  MultilineText,
-  SingleChoice
+  SimplePassword
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
 
@@ -27,103 +25,130 @@ const spec = ref<Catalog>({
   validators: [],
   elements: [
     {
-      name: 'basic_inputs',
-      title: 'Basic Inputs',
+      name: 'ungrouped_basic_inputs',
+      title: 'Basic Inputs (Ungrouped)',
       elements: [
         {
           type: 'topic_element',
-          name: 'text_input',
-          required: false,
+          name: 'simple_text',
+          required: true,
           parameter_form: {
             type: 'string',
-            title: 'Text Input',
-            help: 'A simple text input field',
-            label: 'Enter some text',
-            input_hint: 'Type here...',
+            title: 'Required Text Field',
+            help: 'This is an ungrouped text input field for basic testing - it is required',
+            label: 'Enter your name',
+            input_hint: 'John Doe',
             field_size: 'MEDIUM',
             autocompleter: null,
-            validators: []
+            validators: [
+              {
+                type: 'length_in_range',
+                min_value: 3,
+                max_value: 50,
+                error_message: 'Name must be between 3 and 50 characters'
+              }
+            ]
           } as FormString,
           default_value: ''
         },
         {
           type: 'topic_element',
-          name: 'number_input',
+          name: 'integer_field',
           required: true,
           parameter_form: {
             type: 'integer',
-            title: 'Number Input',
-            help: 'An integer input with validation',
-            label: 'Enter a number',
+            title: 'Required Integer Field',
+            help: 'A required integer field for testing validation on ungrouped numeric inputs',
+            label: 'Port Number',
             unit: null,
-            input_hint: '42',
-            validators: []
+            input_hint: '8080',
+            validators: [
+              {
+                type: 'number_in_range',
+                min_value: 1,
+                max_value: 65535,
+                error_message: 'Port must be between 1 and 65535'
+              }
+            ]
           } as Integer,
           default_value: 0
         }
       ]
     },
     {
-      name: 'advanced_inputs',
-      title: 'Advanced Inputs',
+      name: 'user_authentication',
+      title: 'User Authentication (Grouped)',
       elements: [
         {
-          type: 'topic_element',
-          name: 'choice_input',
-          required: false,
-          parameter_form: {
-            type: 'single_choice',
-            title: 'Single Choice',
-            help: 'Choose one option from the list',
-            label: 'Select an option',
-            input_hint: null,
-            frozen: false,
-            no_elements_text: 'No options available',
-            elements: [
-              { name: 'option1', title: 'Option 1' },
-              { name: 'option2', title: 'Option 2' },
-              { name: 'option3', title: 'Option 3' }
-            ],
-            validators: []
-          } as SingleChoice,
-          default_value: 'option1'
+          type: 'topic_group',
+          title: 'Basic Credentials',
+          elements: [
+            {
+              type: 'topic_element',
+              name: 'username',
+              required: true,
+              parameter_form: {
+                type: 'string',
+                title: 'Username',
+                help: 'Enter the username for authentication',
+                label: 'Username',
+                input_hint: 'admin',
+                field_size: 'MEDIUM',
+                autocompleter: null,
+                validators: []
+              } as FormString,
+              default_value: ''
+            },
+            {
+              type: 'topic_element',
+              name: 'simple_password',
+              required: true,
+              parameter_form: {
+                type: 'simple_password',
+                title: 'Password',
+                help: 'Enter your password',
+                label: 'Password',
+                input_hint: 'Enter password...',
+                validators: [
+                  {
+                    type: 'length_in_range',
+                    min_value: 8,
+                    max_value: 128,
+                    error_message: 'Password must be between 8 and 128 characters'
+                  }
+                ]
+              } as SimplePassword,
+              default_value: ''
+            }
+          ]
         },
         {
-          type: 'topic_element',
-          name: 'boolean_input',
-          required: false,
-          parameter_form: {
-            type: 'boolean_choice',
-            title: 'Boolean Choice',
-            help: 'A simple on/off toggle',
-            label: 'Enable feature',
-            text_on: 'Enabled',
-            text_off: 'Disabled',
-            validators: []
-          } as BooleanChoice,
-          default_value: false
-        }
-      ]
-    },
-    {
-      name: 'text_areas',
-      title: 'Text Areas',
-      elements: [
-        {
-          type: 'topic_element',
-          name: 'multiline_text',
-          required: false,
-          parameter_form: {
-            type: 'multiline_text',
-            title: 'Multiline Text',
-            help: 'A larger text area for longer content',
-            label: 'Description',
-            input_hint: 'Enter detailed description...',
-            macro_support: false,
-            monospaced: false,
-            validators: []
-          } as MultilineText,
-          default_value: ''
+          type: 'topic_group',
+          title: 'Advanced Settings',
+          elements: [
+            {
+              type: 'topic_element',
+              name: 'session_timeout',
+              required: false,
+              parameter_form: {
+                type: 'integer',
+                title: 'Session Timeout',
+                help: 'Session timeout in minutes',
+                label: 'Timeout (minutes)',
+                unit: 'min',
+                input_hint: '30',
+                validators: [
+                  {
+                    type: 'number_in_range',
+                    min_value: 5,
+                    max_value: 240,
+                    error_message: 'Session timeout must be between 5 and 240 minutes'
+                  }
+                ]
+              } as Integer,
+              default_value: 30
+            }
+          ]
         }
       ]
     }
@@ -131,16 +156,14 @@ const spec = ref<Catalog>({
 })
 
 const data = ref<Record<string, Record<string, unknown>>>({
-  basic_inputs: {
-    text_input: 'Hello World',
-    number_input: 42
+  ungrouped_basic_inputs: {
+    simple_text: 'Jo',
+    integer_field: 99999
   },
-  advanced_inputs: {
-    choice_input: 'option2',
-    boolean_input: true
-  },
-  text_areas: {
-    multiline_text: 'This is a sample multiline text\nwith multiple lines\nfor demonstration.'
+  user_authentication: {
+    username: 'admin user',
+    simple_password: 'short',
+    session_timeout: 300
   }
 })
 
@@ -152,26 +175,33 @@ const validation = computed(() => {
         message: 'General catalog validation: Please review all fields',
         replacement_value: null
       },
+      // UNGROUPED VALIDATIONS
       {
-        location: ['basic_inputs', 'text_input'],
-        message: 'Text must be at least 5 characters long',
-        replacement_value: 'Valid text input'
+        location: ['ungrouped_basic_inputs', 'simple_text'],
+        message: 'Name must be at least 3 characters long and cannot contain numbers',
+        replacement_value: 'John Doe'
       },
       {
-        location: ['basic_inputs', 'number_input'],
-        message: 'Number must be between 1 and 100',
-        replacement_value: 50
+        location: ['ungrouped_basic_inputs', 'integer_field'],
+        message: 'Port number must be between 1 and 65535',
+        replacement_value: 8080
+      },
+      // GROUPED VALIDATIONS
+      {
+        location: ['user_authentication', 'username'],
+        message: 'Username must not contain spaces or special characters',
+        replacement_value: 'admin_user'
       },
       {
-        location: ['advanced_inputs', 'choice_input'],
-        message: 'Please select option1 or option3',
-        replacement_value: 'option1'
+        location: ['user_authentication', 'simple_password'],
+        message: 'Password must be at least 8 characters with numbers and letters',
+        replacement_value: 'strongPassword123'
       },
+
       {
-        location: ['text_areas', 'multiline_text'],
-        message: 'Description should include at least two sentences',
-        replacement_value:
-          'This is a proper description. It contains multiple sentences for better documentation.'
+        location: ['user_authentication', 'session_timeout'],
+        message: 'Session timeout must be between 5 and 240 minutes',
+        replacement_value: 30
       }
     ]
   } else {

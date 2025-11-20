@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -18,10 +17,19 @@ from cmk.gui.plugins.wato.utils import (
     TextInput,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Migrate, Percentage, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    DropdownChoice,
+    Integer,
+    Migrate,
+    Percentage,
+    Tuple,
+    ValueSpec,
+)
 
 
-def cpu_util_elements():
+def cpu_util_elements() -> list[tuple[str, ValueSpec]]:
     return [
         (
             "core_util_time_total",
@@ -179,7 +187,7 @@ def cpu_util_elements():
     ]
 
 
-def _cpu_util_unix_elements():
+def _cpu_util_unix_elements() -> list[tuple[str, ValueSpec]]:
     return [
         (
             "iowait",
@@ -211,7 +219,7 @@ def _cpu_util_unix_elements():
     ]
 
 
-def _cpu_util_common_elements():
+def _cpu_util_common_elements() -> Dictionary:
     return Dictionary(
         help=_(
             "This rule configures levels for the CPU utilization (not load) for "
@@ -299,7 +307,7 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_cpu_utilization_simple():
+def _parameter_valuespec_cpu_utilization_simple() -> Dictionary:
     return Dictionary(
         title=_("Levels CPU"),
         elements=[

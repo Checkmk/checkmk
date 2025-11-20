@@ -1,11 +1,10 @@
-# Component Database Monitoring
-#
-# Please don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+# mk-oracle
 #
 # Find information about code-owners (+ find-owners syntax) here:
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-set noparent  # don't inherit owners information from parent folders
+sergey.kipnis@checkmk.com  # component lead
 
-file:/component_owners/mk-oracle/OWNERS_DEFINITION
+andreas.umbreit@checkmk.com
+anvar.umuraliev@checkmk.com

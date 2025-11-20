@@ -152,9 +152,9 @@ apispec-oneofschema==3.0.1 \
     --hash=sha256:56aeab968abf22b01b3fbcf2d3dc95be09585581f08c62c09bd94f5aa7192fab \
     --hash=sha256:a88b54c99ffc175f39217b38c5850706a78aadc4cf5cea31fe7c20e25c2491ee
     # via -r _requirements_runtime.txt
-asgiref==3.10.0 \
-    --hash=sha256:aef8a81283a34d0ab31630c9b7dfe70c812c95eba78171367ca8745e88124734 \
-    --hash=sha256:d89f2d8cd8b56dada7d52fa7dc8075baa08fb836560710d38c292a7a3f78c04e
+asgiref==3.11.0 \
+    --hash=sha256:13acff32519542a1736223fb79a715acdebe24286d98e8b164a73085f40da2c4 \
+    --hash=sha256:1db9021efadb0d9512ce8ffaf72fcef601c7b73a8807a1bb2ef143dc6b14846d
     # via opentelemetry-instrumentation-asgi
 attrs==25.4.0 \
     --hash=sha256:16d5969b87f0859ef33a48b35d55ac1be6e42ae49d5e853b597db70c35c57e11 \

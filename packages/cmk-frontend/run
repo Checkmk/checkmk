@@ -97,32 +97,7 @@ parse_options() {
     readonly RUN_BUILD RUN_TESTS RUN_CHECK_FORMAT RUN_TSC RUN_ESLINT RUN_FORMAT
 }
 
-# >>> kept here for groovy-lint, see CMK-23740
-npm_install_dependencies() {
-    npm \
-        ci \
-        --yes \
-        --unsafe-perm \
-        --audit=false
-}
-
-npm_dependencies_installed() {
-    npm ls --all &>/dev/null
-}
-
-setup_npm() {
-    test "${SETUP_NPM_RAN}" = "yes" && return
-    npm_dependencies_installed || npm_install_dependencies
-    echo "npm version $(npm --version)"
-    echo "node version $(node --version)"
-    SETUP_NPM_RAN=yes
-}
-# <<< kept here for groovy-lint
-
 run_build() {
-    # kept here for groovy-lint, see CMK-23740
-    setup_npm
-
     bazel build :dist
 }
 

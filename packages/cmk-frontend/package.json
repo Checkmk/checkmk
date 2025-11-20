@@ -81,7 +81,6 @@
     "jest-environment-jsdom": "^29.7.0",
     "mini-css-extract-plugin": "^2.9.2",
     "mutation-observer": "^1.0.3",
-    "npm-groovy-lint": "^15.2.1",
     "pkg-dir": "^8.0.0",
     "postcss": "^8.4.49",
     "postcss-loader": "^8.1.1",

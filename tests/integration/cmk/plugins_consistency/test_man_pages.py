@@ -266,6 +266,7 @@ _ALLOWED_AGENTS = [
     "kubernetes",
     "linux",
     "macosx",
+    "metric_backend",
     "mobileiron",
     "mqtt",
     "netapp",

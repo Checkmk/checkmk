@@ -3,10 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Pydantic requires the property to be under computed_field to work.
+# mypy: disable-error-code="prop-decorator"
+
+import json
 from collections.abc import Mapping
-from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TypedDict
+
+from pydantic import BaseModel, computed_field, Field
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -21,74 +26,43 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.cisco_meraki.lib.type_defs import MerakiAPIData
-from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts, load_json
+from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
 
 
-class RawPowerOverEthernet(TypedDict):
-    maximum: str
+class PowerOverEthernet(BaseModel, frozen=True):
+    maximum: int
     unit: str
 
 
-@dataclass(frozen=True)
-class PowerOverEthernet:
-    maximum: str
-    unit: str
-
-    @classmethod
-    def parse(cls, row: RawPowerOverEthernet) -> "PowerOverEthernet":
-        return cls(row["maximum"], row["unit"])
-
-
-@dataclass(frozen=True)
-class PowerSupply:
+class PowerSupply(BaseModel, frozen=True):
+    slot: int
     model: str
     serial: str
     status: str
-    power_over_ethernet: PowerOverEthernet | None
+    poe: PowerOverEthernet
 
 
-@dataclass(frozen=True)
-class DeviceStatus:
+class Components(BaseModel, frozen=True):
+    power_supplies: list[PowerSupply] = Field(alias="powerSupplies")
+
+
+class DeviceStatus(BaseModel, frozen=True):
     status: str
-    last_reported: datetime | None = None
-    power_supplies: Mapping[str, PowerSupply] = field(default_factory=dict)
+    last_reported: datetime = Field(alias="lastReportedAt")
+    components: Components
 
-    @classmethod
-    def parse(cls, row: MerakiAPIData) -> "DeviceStatus":
-        raw_power_supplies = (
-            raw_components.get("powerSupplies", [])
-            if isinstance(raw_components := row.get("components"), dict)
-            else []
-        )
-        return cls(
-            status=str(row["status"]),
-            last_reported=cls._parse_last_reported(str(row["lastReportedAt"])),
-            power_supplies={
-                str(raw_power_supply["slot"]): PowerSupply(
-                    raw_power_supply["model"],
-                    raw_power_supply["serial"],
-                    raw_power_supply["status"],
-                    (
-                        PowerOverEthernet.parse(raw_power_over_ethernet)
-                        if (raw_power_over_ethernet := raw_power_supply.get("poe"))
-                        else None
-                    ),
-                )
-                for raw_power_supply in raw_power_supplies
-            },
-        )
-
-    @staticmethod
-    def _parse_last_reported(raw_last_reported: str) -> datetime | None:
-        try:
-            return datetime.strptime(raw_last_reported, "%Y-%m-%dT%H:%M:%S.%fZ")
-        except ValueError:
-            return None
+    @computed_field
+    @property
+    def power_supplies(self) -> dict[str, PowerSupply]:
+        return {str(ps.slot): ps for ps in self.components.power_supplies}
 
 
 def parse_device_status(string_table: StringTable) -> DeviceStatus | None:
-    return DeviceStatus.parse(loaded_json[0]) if (loaded_json := load_json(string_table)) else None
+    match string_table:
+        case [[payload]] if payload:
+            return DeviceStatus.model_validate(json.loads(payload)[0])
+        case _:
+            return None
 
 
 agent_section_cisco_meraki_org_device_status = AgentSection(
@@ -121,16 +95,15 @@ def check_device_status(params: Parameters, section: DeviceStatus) -> CheckResul
         state = State(raw_state)
     yield Result(state=state, summary=f"Status: {section.status}")
 
-    if section.last_reported is not None:
-        if levels_upper := params.get("last_reported_upper_levels"):
-            warn, crit = levels_upper
-            levels_upper = (warn * 3600, crit * 3600)  # change from hours to seconds
+    if levels_upper := params.get("last_reported_upper_levels"):
+        warn, crit = levels_upper
+        levels_upper = (warn * 3600, crit * 3600)  # change from hours to seconds
 
-        yield from check_last_reported_ts(
-            last_reported_ts=section.last_reported.timestamp(),
-            levels_upper=levels_upper,
-            as_metric=True,
-        )
+    yield from check_last_reported_ts(
+        last_reported_ts=section.last_reported.timestamp(),
+        levels_upper=levels_upper,
+        as_metric=True,
+    )
 
 
 check_plugin_cisco_meraki_org_device_status = CheckPlugin(
@@ -160,14 +133,10 @@ def check_device_status_ps(
         state = State(params.get("state_not_powering", State.WARN.value))
     yield Result(state=state, summary=f"Status: {power_supply.status}")
 
-    if power_supply.power_over_ethernet:
-        yield Result(
-            state=State.OK,
-            notice=(
-                f"PoE: {power_supply.power_over_ethernet.maximum}"
-                f" {power_supply.power_over_ethernet.unit} maximum"
-            ),
-        )
+    yield Result(
+        state=State.OK,
+        notice=(f"PoE: {power_supply.poe.maximum} {power_supply.poe.unit} maximum"),
+    )
 
 
 check_plugin_cisco_meraki_org_device_status_ps = CheckPlugin(

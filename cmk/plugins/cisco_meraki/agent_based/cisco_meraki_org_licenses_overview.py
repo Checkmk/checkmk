@@ -3,10 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Pydantic requires the property to be under computed_field to work.
+# mypy: disable-error-code="prop-decorator"
+
+import json
 import time
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import datetime
+
+from pydantic import BaseModel, computed_field, Field
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -20,43 +25,43 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.cisco_meraki.lib.type_defs import MerakiAPIData
-from cmk.plugins.cisco_meraki.lib.utils import load_json
 
 
-@dataclass(frozen=True)
-class LicensesOverview:
+class LicensesOverview(BaseModel, frozen=True):
+    organisation_id: str
+    organisation_name: str
     status: str
-    expiration_date: datetime | None
-    licensed_device_counts: Mapping[str, int]
+    raw_expiration_date: str | None = Field(alias="expirationDate")
+    licensed_device_counts: dict[str, int] = Field(alias="licensedDeviceCounts")
 
-    @classmethod
-    def parse(cls, row: MerakiAPIData) -> "LicensesOverview":
-        return cls(
-            status=str(row["status"]),
-            expiration_date=cls._parse_expiration_date(str(row["expirationDate"])),
-            licensed_device_counts=(
-                counts if isinstance(counts := row["licensedDeviceCounts"], dict) else {}
-            ),
-        )
+    @computed_field
+    @property
+    def identifier(self) -> str:
+        return f"{self.organisation_name}/{self.organisation_id}"
 
-    @staticmethod
-    def _parse_expiration_date(raw_expiration_date: str) -> datetime | None:
-        try:
-            return datetime.strptime(raw_expiration_date, "%b %d, %Y %Z")
-        except ValueError:
+    @computed_field
+    @property
+    def expiration_date(self) -> datetime | None:
+        if not self.raw_expiration_date:
             return None
+        return datetime.strptime(self.raw_expiration_date, "%b %d, %Y %Z")
+
+    @computed_field
+    @property
+    def license_total(self) -> int:
+        return sum(self.licensed_device_counts.values())
 
 
 Section = Mapping[str, LicensesOverview]
 
 
 def parse_licenses_overview(string_table: StringTable) -> Section:
-    # Not sure if 'organisation_name' is unique: Add 'organisation_id'
-    return {
-        f"{row['organisation_name']}/{row['organisation_id']}": LicensesOverview.parse(row)
-        for row in load_json(string_table)
-    }
+    match string_table:
+        case [[payload]] if payload:
+            overviews = (LicensesOverview.model_validate(item) for item in json.loads(payload))
+            return {overview.identifier: overview for overview in overviews}
+        case _:
+            return {}
 
 
 agent_section_cisco_meraki_org_licenses_overview = AgentSection(
@@ -66,8 +71,8 @@ agent_section_cisco_meraki_org_licenses_overview = AgentSection(
 
 
 def discover_licenses_overview(section: Section) -> DiscoveryResult:
-    for organisation_name_id in section:
-        yield Service(item=organisation_name_id)
+    for identifier in section:
+        yield Service(item=identifier)
 
 
 def check_licenses_overview(
@@ -89,7 +94,7 @@ def check_licenses_overview(
     if item_data.licensed_device_counts:
         yield Result(
             state=State.OK,
-            summary=f"Number of licensed devices: {sum(item_data.licensed_device_counts.values())}",
+            summary=f"Number of licensed devices: {item_data.license_total}",
         )
 
     for device_type, device_count in sorted(item_data.licensed_device_counts.items()):

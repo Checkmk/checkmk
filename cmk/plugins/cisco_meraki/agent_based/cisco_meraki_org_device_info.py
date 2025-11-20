@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
+import json
+
+from pydantic import BaseModel, Field
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -14,38 +16,19 @@ from cmk.agent_based.v2 import (
     InventoryResult,
     StringTable,
 )
-from cmk.plugins.cisco_meraki.lib.type_defs import MerakiAPIData
-from cmk.plugins.cisco_meraki.lib.utils import load_json
 
 
-@dataclass(frozen=True)
-class DeviceInfo:
-    product: str
+class DeviceInfo(BaseModel, frozen=True):
     serial: str
     model: str
-    description: str
-    mac_address: str
     firmware: str
     organisation_id: str
     organisation_name: str
-    network_id: str
     address: str
-
-    @classmethod
-    def parse(cls, row: MerakiAPIData) -> "DeviceInfo":
-        return cls(
-            # Some entries may missing in older API versions
-            product=str(row.get("productType", "")),
-            serial=str(row["serial"]),
-            model=str(row["model"]),
-            description=str(row["name"]),
-            network_id=str(row["networkId"]),
-            mac_address=str(row["mac"]),
-            firmware=str(row["firmware"]),
-            address=str(row["address"]),
-            organisation_id=str(row["organisation_id"]),
-            organisation_name=str(row["organisation_name"]),
-        )
+    description: str = Field(alias="name")
+    mac_address: str = Field(alias="mac")
+    network_id: str = Field(alias="networkId")
+    product: str = Field(default="")
 
 
 def host_label_meraki_device_info(section: DeviceInfo) -> HostLabelGenerator:
@@ -75,7 +58,11 @@ def host_label_meraki_device_info(section: DeviceInfo) -> HostLabelGenerator:
 
 
 def parse_device_info(string_table: StringTable) -> DeviceInfo | None:
-    return DeviceInfo.parse(loaded_json[0]) if (loaded_json := load_json(string_table)) else None
+    match string_table:
+        case [[payload]] if payload:
+            return DeviceInfo.model_validate(json.loads(payload)[0])
+        case _:
+            return None
 
 
 agent_section_cisco_meraki_org_device_info = AgentSection(

@@ -419,7 +419,7 @@ def _make_account(
 ) -> Account:
     # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
     match auth:
-        case OAuth2(client_id, client_secret, tenant_id):
+        case OAuth2(client_id=client_id, client_secret=client_secret, tenant_id=tenant_id):
             account = Account(
                 primary_smtp_address=primary_smtp_address,
                 autodiscover=False,
@@ -436,7 +436,7 @@ def _make_account(
                 ),
                 default_timezone=EWSTimeZone("Europe/Berlin"),
             )
-        case BasicAuth(username, password):
+        case BasicAuth(username=username, password=password):
             account = Account(
                 primary_smtp_address=primary_smtp_address,
                 autodiscover=False,

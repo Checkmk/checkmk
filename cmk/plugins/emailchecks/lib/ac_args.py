@@ -12,20 +12,20 @@ from typing import assert_never, Literal
 from cmk.password_store.v1_unstable import dereference_secret
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BasicAuth:
     username: str
     password: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class OAuth2:
     client_id: str
     client_secret: str
     tenant_id: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class OAuth2WithTokens(OAuth2):
     initial_access_token: str
     initial_refresh_token: str
@@ -210,14 +210,18 @@ def _parse_auth(raw: Mapping[str, object]) -> MailboxAuth:
             "tenant_id": str(tenant_id),
         }:
             return OAuth2(
-                client_id, _parse_secret(client_secret, client_secret_reference), tenant_id
+                client_id=client_id,
+                client_secret=_parse_secret(client_secret, client_secret_reference),
+                tenant_id=tenant_id,
             )
         case {
             "username": str(username),
             "password": str() | None as password,
             "password_reference": str() | None as password_reference,
         }:
-            return BasicAuth(username, _parse_secret(password, password_reference))
+            return BasicAuth(
+                username=username, password=_parse_secret(password, password_reference)
+            )
         case {"protocol": "SMTP"}:
             return None
         case _:

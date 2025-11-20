@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import cmk.utils.paths
@@ -55,7 +54,7 @@ class RulespecGroupInventory(RulespecGroup):
         return _("HW/SW Inventory")
 
     @property
-    def help(self):
+    def help(self) -> str:
         return _("Configuration of the Checkmk hardware- and software inventory system")
 
 
@@ -212,7 +211,7 @@ InvExportSoftwareCSV = HostRulespec(
 )
 
 
-def _valuespec_inv_parameters_inv_if():
+def _valuespec_inv_parameters_inv_if() -> Dictionary:
     return Dictionary(
         title=_("Parameters for switch port inventory"),
         elements=[
@@ -261,7 +260,7 @@ InvParameterInvIf = HostRulespec(
 )
 
 
-def _valuespec_inv_parameters_lnx_sysctl():
+def _valuespec_inv_parameters_lnx_sysctl() -> Dictionary:
     return Dictionary(
         title=_("Inventory of Linux kernel configuration (sysctl)"),
         help=_(
@@ -308,7 +307,7 @@ InvParameterLnxSysctl = HostRulespec(
 
 
 def _valuespec_inv_retention_intervals() -> ValueSpec:
-    def vs_choices(title):
+    def vs_choices(title: str) -> CascadingDropdown:
         return CascadingDropdown(
             title=title,
             choices=[

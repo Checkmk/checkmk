@@ -31,7 +31,7 @@ def test_create_tar_with_single_file(common_parent: Path) -> None:
     test_file.write_text(test_content)
 
     # Create tar archive
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     assert isinstance(result, bytes)
     assert len(result) > 0
@@ -62,7 +62,7 @@ def test_create_tar_with_multiple_files(common_parent: Path) -> None:
     file2.write_text("Content 2")
 
     # Create tar archive
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     # Verify tar content
     tar_buffer = io.BytesIO(result)
@@ -92,7 +92,7 @@ def test_create_tar_with_directory_structure(common_parent: Path) -> None:
     file3.write_text("Root content")
 
     # Create tar archive
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     # Verify tar contents preserve structure
     tar_buffer = io.BytesIO(result)
@@ -118,7 +118,7 @@ def test_create_tar_with_nested_common_parent(common_parent: Path) -> None:
     file2.write_text("File 2")
 
     # Create tar with parent as common parent
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     # Verify relative paths from parent
     tar_buffer = io.BytesIO(result)
@@ -144,7 +144,7 @@ def test_create_tar_with_binary_file(common_parent: Path) -> None:
     binary_file.write_bytes(binary_content)
 
     # Create tar archive
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     # Verify binary content is preserved
     tar_buffer = io.BytesIO(result)
@@ -164,7 +164,7 @@ def test_create_tar_with_unicode_content(common_parent: Path) -> None:
     unicode_file.write_text(unicode_content, encoding="utf-8")
 
     # Create tar archive
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     # Verify unicode content is preserved
     tar_buffer = io.BytesIO(result)
@@ -182,7 +182,7 @@ def test_create_tar_is_uncompressed(common_parent: Path) -> None:
     test_file.write_text("test content")
 
     # Create tar archive
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     # Verify tar is uncompressed (mode 'r' should work, not 'r:gz' or 'r:bz2')
     tar_buffer = io.BytesIO(result)
@@ -202,7 +202,7 @@ def test_create_tar_with_deeply_nested_structure(common_parent: Path) -> None:
     deep_file.write_text("deeply nested content")
 
     # Create tar archive
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     # Verify structure is preserved
     tar_buffer = io.BytesIO(result)
@@ -234,7 +234,7 @@ def test_create_tar_with_mixed_file_types(common_parent: Path) -> None:
     empty_file.touch()
 
     # Create tar archive with all files
-    result = create_tar(common_parent)
+    result = create_tar({common_parent: ROOT})
 
     # Verify all files are included
     tar_buffer = io.BytesIO(result)

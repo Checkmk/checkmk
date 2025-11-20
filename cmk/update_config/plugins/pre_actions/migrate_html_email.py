@@ -28,7 +28,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
-type LegacyParameter = dict[str, str]
+type LegacyParameter = dict[str, str] | None
 
 
 class PreMigrateHtmlEmail(PreUpdateAction):
@@ -56,7 +56,12 @@ class PreMigrateHtmlEmail(PreUpdateAction):
                 updated_notification_rules.append(rule)
                 continue
 
-            if "from" not in (parameter := cast(LegacyParameter, rule["notify_plugin"][1])):
+            parameter = cast(LegacyParameter, rule["notify_plugin"][1])
+            if parameter is None:
+                updated_notification_rules.append(rule)
+                continue
+
+            if "from" not in parameter:
                 updated_notification_rules.append(rule)
                 continue
 

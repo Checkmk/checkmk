@@ -134,6 +134,36 @@ from cmk.update_config.plugins.pre_actions.utils import ConflictMode
             "invalid email address",
             id="Single rule with HTML email in invalid format",
         ),
+        pytest.param(
+            [
+                {
+                    "comment": "",
+                    "allow_disable": True,
+                    "description": "Notify all contacts of a host/service via HTML email",
+                    "disabled": False,
+                    "notify_plugin": ("mail", None),
+                    "contact_all_with_email": False,
+                    "docu_url": "",
+                    "contact_all": False,
+                    "contact_object": True,
+                }
+            ],
+            [
+                {
+                    "comment": "",
+                    "allow_disable": True,
+                    "description": "Notify all contacts of a host/service via HTML email",
+                    "disabled": False,
+                    "notify_plugin": ("mail", None),
+                    "contact_all_with_email": False,
+                    "docu_url": "",
+                    "contact_all": False,
+                    "contact_object": True,
+                }
+            ],
+            None,
+            id="Single rule with no parameters",
+        ),
     ],
 )
 def test_migrate_html_email(

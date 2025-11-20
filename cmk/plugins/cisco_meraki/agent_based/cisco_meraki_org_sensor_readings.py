@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -22,7 +23,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.cisco_meraki.lib.type_defs import MerakiAPIData
-from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts, load_json
+from cmk.plugins.cisco_meraki.lib.utils import check_last_reported_ts
 from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
@@ -96,9 +97,11 @@ class SensorReadings:
 
 
 def parse_sensor_readings(string_table: StringTable) -> SensorReadings | None:
-    return (
-        SensorReadings.parse(loaded_json[0]) if (loaded_json := load_json(string_table)) else None
-    )
+    match string_table:
+        case [[payload]] if payload:
+            return SensorReadings.parse(json.loads(payload)[0])
+        case _:
+            return None
 
 
 agent_section_cisco_meraki_org_sensor_readings = AgentSection(

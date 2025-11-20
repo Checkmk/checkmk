@@ -3,23 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
-import json
 import time
-from collections.abc import Sequence
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
-
-from .type_defs import MerakiAPIData
-
-
-def load_json(string_table: StringTable) -> Sequence[MerakiAPIData]:
-    try:
-        return json.loads(string_table[0][0])
-    except (IndexError, json.decoder.JSONDecodeError):
-        return []
+from cmk.agent_based.v2 import CheckResult, render, Result, State
 
 
 def check_last_reported_ts(

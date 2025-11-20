@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
@@ -73,7 +72,7 @@ class AutochecksStore:
             sorted(entries, key=lambda e: (str(e.check_plugin_name), str(e.item)))
         )
 
-    def clear(self):
+    def clear(self) -> None:
         try:
             self._store.path.unlink()
         except OSError:

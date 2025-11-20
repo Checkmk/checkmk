@@ -10,24 +10,23 @@ from typing import Protocol
 
 from meraki.exceptions import APIError  # type: ignore[import-not-found]
 
-from cmk.plugins.cisco_meraki.lib.log import LOGGER
-from cmk.plugins.cisco_meraki.lib.schema import RawDevicesStatus
+from cmk.plugins.cisco_meraki.lib import log, schema
 from cmk.plugins.cisco_meraki.lib.type_defs import TotalPages
 
 
-class DevicesStatusesSDK(Protocol):
-    def getOrganizationDevicesStatuses(
+class SensorSDK(Protocol):
+    def getOrganizationSensorReadingsLatest(
         self, organizationId: str, total_pages: TotalPages
-    ) -> Sequence[RawDevicesStatus]: ...
+    ) -> Sequence[schema.RawSensorReadings]: ...
 
 
-class DevicesStatuses:
-    def __init__(self, sdk: DevicesStatusesSDK) -> None:
+class SensorClient:
+    def __init__(self, sdk: SensorSDK) -> None:
         self._sdk = sdk
 
-    def __call__(self, org_id: str, /) -> Sequence[RawDevicesStatus]:
+    def get_sensor_readings(self, id: str, /) -> Sequence[schema.RawSensorReadings]:
         try:
-            return self._sdk.getOrganizationDevicesStatuses(org_id, total_pages="all")
+            return self._sdk.getOrganizationSensorReadingsLatest(id, total_pages="all")
         except APIError as e:
-            LOGGER.debug("Organisation ID: %r: Get device statuses: %r", org_id, e)
+            log.LOGGER.debug("Organisation ID: %r: Get sensor readings: %r", id, e)
             return []

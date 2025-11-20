@@ -8,21 +8,56 @@ from typing import Protocol
 
 from meraki.exceptions import APIError  # type: ignore[import-not-found]
 
-from cmk.plugins.cisco_meraki.lib.log import LOGGER
-from cmk.plugins.cisco_meraki.lib.schema import RawOrganisation
+from cmk.plugins.cisco_meraki.lib import log, schema
+from cmk.plugins.cisco_meraki.lib.type_defs import TotalPages
 
 
 class OrganizationsSDK(Protocol):
-    def getOrganizations(self) -> Sequence[RawOrganisation]: ...
+    def getOrganizations(self) -> Sequence[schema.RawOrganisation]: ...
+    def getOrganizationDevices(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawDevice]: ...
+    def getOrganizationDevicesStatuses(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawDevicesStatus]: ...
+    def getOrganizationLicensesOverview(
+        self, organizationId: str
+    ) -> schema.RawLicensesOverview: ...
 
 
-class Organizations:
+class OrganizationsClient:
     def __init__(self, sdk: OrganizationsSDK) -> None:
         self._sdk = sdk
 
-    def __call__(self) -> Sequence[RawOrganisation]:
+    def get_organizations(self) -> Sequence[schema.RawOrganisation]:
         try:
             return self._sdk.getOrganizations()
         except APIError as e:
-            LOGGER.debug("Get organisations: %r", e)
+            log.LOGGER.debug("Get organisations: %r", e)
             return []
+
+    def get_devices(self, id: str, name: str, /) -> dict[str, schema.Device]:
+        return {
+            raw_device["serial"]: schema.Device(
+                organisation_id=id,
+                organisation_name=name,
+                **raw_device,
+            )
+            for raw_device in self._sdk.getOrganizationDevices(id, total_pages="all")
+        }
+
+    def get_device_statuses(self, id: str, /) -> Sequence[schema.RawDevicesStatus]:
+        try:
+            return self._sdk.getOrganizationDevicesStatuses(id, total_pages="all")
+        except APIError as e:
+            log.LOGGER.debug("Organisation ID: %r: Get device statuses: %r", id, e)
+            return []
+
+    def get_licenses_overview(self, id: str, name: str, /) -> schema.LicensesOverview | None:
+        try:
+            raw_overview = self._sdk.getOrganizationLicensesOverview(id)
+        except APIError as e:
+            log.LOGGER.debug("Organisation ID: %r: Get license overview: %r", id, e)
+            return None
+
+        return schema.LicensesOverview(organisation_id=id, organisation_name=name, **raw_overview)

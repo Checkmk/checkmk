@@ -9,69 +9,48 @@ from typing import Protocol
 from cmk.plugins.cisco_meraki.lib import schema
 from cmk.plugins.cisco_meraki.lib.config import MerakiConfig
 
-from ._devices import Devices, DevicesSDK
-from ._devices_statuses import DevicesStatuses, DevicesStatusesSDK
-from ._licenses_overview import LicensesOverview, LicensesOverviewSDK
-from ._organizations import Organizations, OrganizationsSDK
-from ._sensor_readings import SensorReadings, SensorReadingsSDK
-
-
-class OrganizationSDK(
-    DevicesSDK,
-    DevicesStatusesSDK,
-    LicensesOverviewSDK,
-    OrganizationsSDK,
-    Protocol,
-): ...
-
-
-class SensorSDK(
-    SensorReadingsSDK,
-    Protocol,
-): ...
+from ._organizations import OrganizationsClient, OrganizationsSDK
+from ._sensor import SensorClient, SensorSDK
 
 
 class MerakiSDK(Protocol):
     @property
-    def organizations(self) -> OrganizationSDK: ...
+    def organizations(self) -> OrganizationsSDK: ...
     @property
     def sensor(self) -> SensorSDK: ...
 
 
 class MerakiClient:
     def __init__(self, sdk: MerakiSDK, config: MerakiConfig) -> None:
-        self._sdk = sdk
-        self._config = config
+        self._no_cache = config.no_cache
+        self._cache = config.cache
+        self._org_client = OrganizationsClient(sdk.organizations)
+        self._sensor_client = SensorClient(sdk.sensor)
 
     def get_devices(self, id: str, name: str) -> dict[str, schema.Device]:
-        get_resource = Devices(self._sdk.organizations)
-        if self._config.no_cache:
-            return get_resource(id, name)
-        return self._config.cache.devices(get_resource)(id, name)
+        fn = self._org_client.get_devices
+        fetch = fn if self._no_cache else self._cache.devices(fn)
+        return fetch(id, name)
 
     def get_devices_statuses(self, id: str) -> Sequence[schema.RawDevicesStatus]:
-        get_resource = DevicesStatuses(self._sdk.organizations)
-        if self._config.no_cache:
-            return get_resource(id)
-        return self._config.cache.device_statuses(get_resource)(id)
+        fn = self._org_client.get_device_statuses
+        fetch = fn if self._no_cache else self._cache.device_statuses(fn)
+        return fetch(id)
 
     def get_licenses_overview(self, id: str, name: str) -> schema.LicensesOverview | None:
-        get_resource = LicensesOverview(self._sdk.organizations)
-        if self._config.no_cache:
-            return get_resource(id, name)
-        return self._config.cache.licenses_overview(get_resource)(id, name)
+        fn = self._org_client.get_licenses_overview
+        fetch = fn if self._no_cache else self._cache.licenses_overview(fn)
+        return fetch(id, name)
 
     def get_organizations(self) -> Sequence[schema.RawOrganisation]:
-        get_resource = Organizations(self._sdk.organizations)
-        if self._config.no_cache:
-            return get_resource()
-        return self._config.cache.organizations(get_resource)()
+        fn = self._org_client.get_organizations
+        fetch = fn if self._no_cache else self._cache.organizations(fn)
+        return fetch()
 
     def get_sensor_readings(self, id: str) -> Sequence[schema.RawSensorReadings]:
-        get_resource = SensorReadings(self._sdk.sensor)
-        if self._config.no_cache:
-            return get_resource(id)
-        return self._config.cache.sensor_readings(get_resource)(id)
+        fn = self._sensor_client.get_sensor_readings
+        fetch = fn if self._no_cache else self._cache.sensor_readings(fn)
+        return fetch(id)
 
 
 __all__ = ["MerakiClient"]

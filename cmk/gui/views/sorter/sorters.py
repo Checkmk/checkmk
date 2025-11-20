@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import time
 from collections.abc import Mapping, Sequence
@@ -261,7 +260,7 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_simple_sorter("crash_time", _("Crash time"), "crash_time", cmp_simple_number)
 
 
-def cmp_state_equiv(r):
+def cmp_state_equiv(r: Row) -> int:
     if r["service_has_been_checked"] == 0:
         return -1
     s = r["service_state"]
@@ -270,7 +269,7 @@ def cmp_state_equiv(r):
     return 5 - s  # swap crit and unknown
 
 
-def cmp_host_state_equiv(r):
+def cmp_host_state_equiv(r: Row) -> int:
     if r["host_has_been_checked"] == 0:
         return -1
     s = r["host_state"]
@@ -439,7 +438,7 @@ SorterServiceLabels = Sorter(
 )
 
 
-def cmp_service_name(column, r1, r2):
+def cmp_service_name(column: str, r1: Row, r2: Row) -> int:
     return (utils.cmp_service_name_equiv(r1[column]) > utils.cmp_service_name_equiv(r2[column])) - (
         utils.cmp_service_name_equiv(r1[column]) < utils.cmp_service_name_equiv(r2[column])
     ) or cmp_num_split(column, r1, r2)
@@ -656,11 +655,11 @@ SorterNumProblems = Sorter(
 )
 
 
-def cmp_log_what(col, a, b):
+def cmp_log_what(col: str, a: Row, b: Row) -> int:
     return (log_what(a[col]) > log_what(b[col])) - (log_what(a[col]) < log_what(b[col]))
 
 
-def log_what(t):
+def log_what(t: str) -> int:
     if "HOST" in t:
         return 1
     if "SERVICE" in t or "SVC" in t:
@@ -668,14 +667,14 @@ def log_what(t):
     return 0
 
 
-def get_day_start_timestamp(t):
+def get_day_start_timestamp(t: float) -> tuple[int, int]:
     st = time.localtime(int(t))
     start = int(time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8]))))
     end = start + 86399
     return start, end
 
 
-def cmp_date(column, r1, r2):
+def cmp_date(column: str, r1: Row, r2: Row) -> int:
     # need to calculate with the timestamp of the day. Using 00:00:00 at the given day.
     # simply calculating with 86400 does not work because of timezone problems
     r1_date = get_day_start_timestamp(r1[column])
@@ -697,7 +696,7 @@ def _get_docker_nodes(row: Row) -> str:
     return output.split()[-1]
 
 
-def cmp_docker_nodes(column, r1, r2):
+def cmp_docker_nodes(column: str, r1: Row, r2: Row) -> int:
     return _sort_docker_nodes_(r1, r2, parameters=None, config=None, request=None)
 
 

@@ -62,7 +62,7 @@ def main() {
                     if (send_notification_mail) {
                         notify.notify_maintainer_of_package(p.maintainers, stepName, "${build_instance.absoluteUrl}" + "console");
                     }
-                    throw new Exception("Job ${stepName} failed");
+                    fail("Job ${stepName} failed");
                 }
             }
         }]

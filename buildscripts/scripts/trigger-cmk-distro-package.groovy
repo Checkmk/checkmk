@@ -8,6 +8,7 @@
 /// and finally triggers the signing job. If any of these steps fail no onwards
 /// jobs are started to save resources
 
+// groovylint-disable MethodSize
 def main() {
     check_job_parameters([
         ["EDITION", true],

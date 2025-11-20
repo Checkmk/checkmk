@@ -18,7 +18,6 @@ def main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def version = params.VERSION;
-    def disable_cache = params.DISABLE_CACHE;
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");

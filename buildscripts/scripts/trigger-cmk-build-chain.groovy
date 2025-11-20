@@ -4,6 +4,7 @@
 
 import java.time.LocalDate
 
+// groovylint-disable MethodSize
 def main() {
     /// make sure the listed parameters are set
     check_job_parameters([
@@ -57,9 +58,10 @@ def main() {
     ];
 
     job_parameters = job_parameters_common + job_parameters_use_case;
+    def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud"]
 
     // TODO we should take this list from a single source of truth
-    assert edition in ["ultimate", "pro", "ultimatemt", "community", "cloud"] : (
+    assert edition in all_editions : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = true;
@@ -67,7 +69,7 @@ def main() {
     def run_fips_tests = edition == "pro";
     def run_comp_tests = !(edition in ["cloud"]);
     def run_image_tests = !(edition in ["cloud", "ultimatemt"]);
-    def run_update_tests = (edition in ["ultimate", "pro", "ultimatemt", "community", "cloud"]);
+    def run_update_tests = (edition in all_editions);
 
     print(
         """

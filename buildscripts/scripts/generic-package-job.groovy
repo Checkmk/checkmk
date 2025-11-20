@@ -18,7 +18,7 @@ def main() {
         "SECRET_VARS",
         "COMMAND_LINE",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
-        "DISTRO"
+        "DISTRO",
     ]);
 
     validate_parameters();
@@ -41,7 +41,7 @@ def main() {
         init: true,
         privileged: true,
         pull: true,
-        set_docker_group_id: true
+        set_docker_group_id: true,
     ]
 
     if (distro != "REFERENCE_IMAGE") {

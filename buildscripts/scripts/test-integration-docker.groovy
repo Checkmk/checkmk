@@ -17,6 +17,7 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    // groovylint-disable-next-line UnusedVariable
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
@@ -35,9 +36,7 @@ def main() {
     def package_dir = "${checkout_dir}/downloaded_packages_for_docker_tests";
     def source_dir = package_dir + "/" + cmk_version_rc_aware;
 
-    def edition = params.EDITION;
     def distro = "ubuntu-22.04";
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     def relative_job_name = "${branch_base_folder}/builders/trigger-cmk-distro-package";
     def setup_values = single_tests.common_prepare(
@@ -98,6 +97,7 @@ def main() {
         },
         "Build Package": {
             sleep(0.1 * timeOffsetForOrder++);
+            // groovylint-disable-next-line UnusedVariable
             def build_instance = null;
             smart_stage(
                 name: "Build Package",
@@ -126,7 +126,7 @@ def main() {
                     dest: "${source_dir}",
                 );
             }
-        }
+        },
     ];
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";

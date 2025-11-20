@@ -65,7 +65,7 @@ def main() {
 
             smart_stage(
                 name: "Upload to download server",
-                condition: push_to_registry && !is_release_candidate
+                condition: push_to_registry && !is_release_candidate,
             ) {
                 artifacts_helper.upload_via_rsync(
                     "${artifact_directory}",
@@ -78,7 +78,7 @@ def main() {
 
             smart_stage(
                 name: "Push image to docker hub",
-                condition: push_to_registry && !is_release_candidate
+                condition: push_to_registry && !is_release_candidate,
             ) {
                 withCredentials([
                     usernamePassword(

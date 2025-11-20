@@ -5,6 +5,7 @@
 /// Builds a distribution package (.rpm, .dep, etc.) for a given edition/distribution
 /// at a given git hash
 
+// groovylint-disable MethodSize
 def main() {
     check_job_parameters([
         ["EDITION", true],
@@ -62,6 +63,7 @@ def main() {
         }
     }
     def package_type = distro_package_type(distro);
+    // groovylint-disable-next-line UnusedVariable
     def package_name = "";
 
     print(

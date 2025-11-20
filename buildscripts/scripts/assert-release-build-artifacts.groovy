@@ -2,10 +2,11 @@
 
 // file: assert-release-build-artifacts.groovy
 
+// groovylint-disable MethodSize
 def main() {
     check_job_parameters([
         "VERSION",
-        "USE_CASE"
+        "USE_CASE",
     ])
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

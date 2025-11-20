@@ -12,6 +12,7 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+// groovylint-disable MethodSize
 def main() {
     check_job_parameters([
         "SYNC_WITH_IMAGES_WITH_UPSTREAM",

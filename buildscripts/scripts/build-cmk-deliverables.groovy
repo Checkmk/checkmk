@@ -10,6 +10,7 @@
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 /// Builds all artifacts used for a given Checkmk edition
+// groovylint-disable MethodSize
 def main() {
     check_job_parameters([
         ["EDITION", true],
@@ -100,6 +101,7 @@ def main() {
                 name: "Build BOM",
                 raiseOnError: false,
             ) {
+            // groovylint-disable-next-line UnusedVariable
             def build_instance = null;
 
             build_instance = smart_build(
@@ -133,6 +135,7 @@ def main() {
     def stages = [
         "Build source package": {
             sleep(0.1 * timeOffsetForOrder++);
+            // groovylint-disable-next-line UnusedVariable
             def build_instance = null;
 
             smart_stage(
@@ -168,6 +171,7 @@ def main() {
         [("${distro}") : {
             sleep(0.1 * timeOffsetForOrder++);
             def run_condition = distro in selected_distros;
+            // groovylint-disable-next-line UnusedVariable
             def build_instance = null;
 
             /// this makes sure the whole parallel thread is marked as skipped

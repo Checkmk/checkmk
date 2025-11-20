@@ -64,15 +64,15 @@ def main() {
             ]) {
                 withCredentialFileAtLocation(
                     credentialsId: "QA_POSTGRES_KEY_FILE",
-                    location: "${checkout_dir}/QA_POSTGRES_KEY"
+                    location: "${checkout_dir}/QA_POSTGRES_KEY",
                 ) {
                     withCredentialFileAtLocation(
                         credentialsId: "QA_POSTGRES_CERT_FILE",
-                        location: "${checkout_dir}/QA_POSTGRES_CERT"
+                        location: "${checkout_dir}/QA_POSTGRES_CERT",
                     ) {
                         withCredentialFileAtLocation(
                             credentialsId: "QA_ROOT_CERT_FILE",
-                            location: "${checkout_dir}/QA_ROOT_CERT"
+                            location: "${checkout_dir}/QA_ROOT_CERT",
                         ) {
                             test_jenkins_helper.execute_test([
                                 name: make_target,

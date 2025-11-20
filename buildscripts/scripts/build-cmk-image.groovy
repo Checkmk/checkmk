@@ -48,7 +48,6 @@ def main() {
 
     def push_to_registry = PUSH_TO_REGISTRY=='true';
     def build_image = PUSH_TO_REGISTRY_ONLY!='true';
-    def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
     print(
         """
@@ -125,6 +124,7 @@ def main() {
         },
         "Build Package": {
             sleep(0.1 * timeOffsetForOrder++);
+            // groovylint-disable UnusedVariable
             def build_instance = null;
 
             smart_stage(
@@ -154,7 +154,7 @@ def main() {
                     dest: "${source_dir}",
                 );
             }
-        }
+        },
     ];
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
@@ -261,7 +261,7 @@ def main() {
 
                     smart_stage(
                         name: "Upload to public registry",
-                        condition: perform_public_upload
+                        condition: perform_public_upload,
                     ) {
                         artifacts_helper.upload_via_rsync(
                             "${package_dir}",

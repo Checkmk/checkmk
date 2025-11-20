@@ -4,8 +4,6 @@
 
 def main() {
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def safe_branch_name = versioning.safe_branch_name();
 
     dir("${checkout_dir}") {
         test_jenkins_helper.execute_test([

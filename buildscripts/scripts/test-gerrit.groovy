@@ -4,6 +4,7 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+// groovylint-disable MethodSize
 def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");

@@ -13,6 +13,7 @@ def main() {
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    // groovylint-disable-next-line UnusedVariable
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
@@ -33,7 +34,6 @@ def main() {
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
-    def download_dir = "package_download";
     def setup_values = single_tests.common_prepare(version: "daily", docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
     def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud", params.EDITION].unique();
 

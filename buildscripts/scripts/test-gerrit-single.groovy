@@ -2,6 +2,7 @@
 
 /// file: test-gerrit-single.groovy
 
+// groovylint-disable MethodSize
 def main() {
     check_job_parameters([
         "CIPARAM_NAME",
@@ -20,6 +21,7 @@ def main() {
         "CIPARAM_CLEANUP_WORKSPACE",
     ]);
 
+    // groovylint-disable-next-line UnusedVariable
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def safe_branch_name = versioning.safe_branch_name();
@@ -121,6 +123,7 @@ def main() {
     ) {
         dir("${checkout_dir}") {
             withCredentials([
+                // groovylint-disable DuplicateMapLiteral
                 sshUserPrivateKey(
                     credentialsId: "jenkins-gerrit-fips-compliant-ssh-key",
                     keyFileVariable: 'KEYFILE'
@@ -144,6 +147,7 @@ def main() {
         }
     }
 
+    // groovylint-disable NestedBlockDepth
     smart_stage(
         name: params.CIPARAM_NAME,
         condition: do_use_node,
@@ -159,7 +163,7 @@ def main() {
                                     lock(
                                         label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1],
                                         quantity: bazel_locks_amount,
-                                        resource : null
+                                        resource : null,
                                     ) {
                                         cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
                                     }
@@ -181,6 +185,7 @@ def main() {
             }
         }
     }
+    // groovylint-enable NestedBlockDepth
 
     smart_stage(
         name: "${params.CIPARAM_NAME} k8s",

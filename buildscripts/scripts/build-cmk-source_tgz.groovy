@@ -104,6 +104,7 @@ def main() {
 
     package_helper.cleanup_provided_agent_binaries("tmp_artifacts");
 
+    // groovylint-disable-next-line DuplicateMapLiteral
     inside_container(ulimit_nofile: 2048) {
         def source_package_name = {
             dir("${checkout_dir}") {

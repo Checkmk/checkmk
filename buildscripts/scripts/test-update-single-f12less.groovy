@@ -53,7 +53,6 @@ def main() {
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
 
-    def version = params.VERSION;
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;

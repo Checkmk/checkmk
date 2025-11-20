@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """HTML page handler for generating the (a) dashboard. The name
@@ -1248,20 +1247,20 @@ def _dashboard_add_other_dashlet_entries(
 
 
 # Render dashlet custom scripts
-def dashlet_javascripts(board):
+def dashlet_javascripts(board: DashboardConfig) -> None:
     scripts = "\n".join([ty.script() for ty in used_dashlet_types(board) if ty.script()])
     if scripts:
         html.javascript(scripts)
 
 
 # Render dashlet custom styles
-def dashlet_styles(board):
+def dashlet_styles(board: DashboardConfig) -> None:
     styles = "\n".join([ty.styles() for ty in used_dashlet_types(board) if ty.styles()])
     if styles:
         html.style(styles)
 
 
-def used_dashlet_types(board):
+def used_dashlet_types(board: DashboardConfig) -> list[type[Dashlet]]:
     type_names = list({d["type"] for d in board["dashlets"]})
     return [dashlet_registry[ty] for ty in type_names if ty in dashlet_registry]
 

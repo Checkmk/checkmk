@@ -123,18 +123,19 @@ const char *const kWinPerfFork = "fork";              // bool
 
 // group "logwatch"
 // root
-const char *const kLogWatchEventSendall = "sendall";                // bool
-const char *const kLogWatchEventVistaApi = "vista_api";             // bool
-const char *const kLogWatchEventSkip = "skip_duplicated";           // bool
-const char *const kLogWatchEventMaxSize = "max_size";               // int
-const char *const kLogWatchEventMaxEntries = "max_entries";         // int
-const char *const kLogWatchEventTimeout = "timeout";                // int
-const char *const kLogWatchEventMaxLineLength = "max_line_length";  // int
-const char *const kLogWatchEventLogFile = "logfile";                // string
-const char *const kLogWatchEventFilterIds = "filter_ids";           // string
-const char *const kLogWatchEventFilterSources = "filter_sources";   // string
-const char *const kLogWatchClusters = "clusters";                   // string
-const char *const kLogWatchEventFilterUsers = "filter_users";       // string
+const char *const kLogWatchEventSendall = "sendall";                 // bool
+const char *const kLogWatchEventVistaApi = "vista_api";              // bool
+const char *const kLogWatchEventSkip = "skip_duplicated";            // bool
+const char *const kLogWatchEventMaxSize = "max_size";                // int
+const char *const kLogWatchEventMaxEntries = "max_entries";          // int
+const char *const kLogWatchEventTimeout = "timeout";                 // int
+const char *const kLogWatchEventMaxLineLength = "max_line_length";   // int
+const char *const kLogWatchEventLogFile = "logfile";                 // string
+const char *const kLogWatchEventFilterIds = "filter_ids";            // string
+const char *const kLogWatchEventFilterSources = "filter_sources";    // string
+const char *const kLogWatchClusters = "clusters";                    // string
+const char *const kLogWatchEventFilterUsers = "filter_users";        // string
+const char *const kLogWatchEventFilterTextPattern = "text_pattern";  // string
 
 constexpr uint32_t kExtensionDefaultCheckPeriod = 60;  // seconds
 

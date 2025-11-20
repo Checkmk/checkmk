@@ -8,6 +8,7 @@
 #define LOGWATCH_EVENT_H
 
 #include <filesystem>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -260,6 +261,27 @@ private:
     TagDualCollection tag_dual_collection_;
 };
 
+class PatternFilter {
+public:
+    explicit PatternFilter(std::string_view line);
+
+    [[nodiscard]] bool checkTag(std::wstring_view tag) const noexcept {
+        return checkTag(wtools::ToUtf8(tag));
+    }
+    [[nodiscard]] bool checkTag(std::string_view tag) const noexcept {
+        if (name_.empty()) {
+            return true;
+        }
+
+        return std::regex_match(std::string{tag}, pattern_);
+    }
+    [[nodiscard]] std::string name() const noexcept { return name_; }
+
+private:
+    std::string name_;
+    std::regex pattern_;
+};
+
 enum class EvlType { classic, vista };
 
 using LogWatchEntries = std::vector<LogWatchEntry>;
@@ -267,6 +289,7 @@ struct EventFilters {
     std::unordered_map<std::string, IdsFilter> id;
     std::unordered_map<std::string, TagsFilter> source;
     std::unordered_map<std::string, TagsFilter> user;
+    std::unordered_map<std::string, PatternFilter> pattern;
 };
 using LogwatchClusterMap =
     std::unordered_map<std::string,

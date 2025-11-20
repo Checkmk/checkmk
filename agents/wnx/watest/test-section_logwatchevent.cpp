@@ -982,6 +982,47 @@ logwatch:
     EXPECT_TRUE(is_found_stamp(WriteStampReadEventLog(stamp)));
 }
 
+TEST(LogWatchEventTest, Pattern) {
+    auto malformed = PatternFilter("\"*:a.*");
+    EXPECT_EQ(malformed.name(), "");
+
+    auto x = PatternFilter("*:a.*");
+    EXPECT_EQ(x.name(), "*");
+    EXPECT_TRUE(x.checkTag("a1111111"));
+    EXPECT_FALSE(x.checkTag("b"));
+
+    auto empty = PatternFilter("*:(abc");
+    EXPECT_TRUE(empty.name().empty());
+}
+
+TEST(LogWatchEventTest, TestFilterPattern) {
+    constexpr const char config[] = R"(
+global:
+    enabled: yes
+    sections: logwatch
+logwatch:
+    enabled: yes
+    sendall: no
+    vista_api: yes
+    logfile: #
+        - 'Application': warn context # allowed <crit|warn|all|off> + [context|nocontext]
+        - '*': off nocontext # allowed crit, warn, all, off, do not remove this
+    text_pattern:
+)";
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    const auto cfg = std::string(config);
+
+    ASSERT_TRUE(temp_fs->loadContent(config));
+    EXPECT_TRUE(is_found_stamp(WriteStampReadEventLog(stamp)));
+
+    ASSERT_TRUE(temp_fs->loadContent(cfg + "        - '*:NOT-GTEST'"));
+    EXPECT_FALSE(is_found_stamp(WriteStampReadEventLog(stamp)));
+
+    ASSERT_TRUE(
+        temp_fs->loadContent(cfg + "        - 'Application:.*GT.*ST.*'"));
+    EXPECT_TRUE(is_found_stamp(WriteStampReadEventLog(stamp)));
+}
+
 TEST(LogWatchEventTest, TestFilterSources) {
     constexpr const char config[] = R"(
 global:

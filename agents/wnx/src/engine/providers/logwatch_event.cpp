@@ -93,8 +93,56 @@ std::pair<std::string, std::string> ParseLine(std::string_view line) {
     return {name, body};
 }
 
+/// Trim leading & trailing double quotes from a std::string_view.
+/// Return none if malformed string
+/// Motivation: ymal is parsed a string with quotes, we need to remove them
+std::optional<std::string_view> TrimSurroundingQuotes(std::string_view s) {
+    if (s.empty() || s.front() != '"') {
+        return s;
+    }
+    if (s.back() != '"') {
+        return std::nullopt;  // something is wrong
+    }
+    s.remove_prefix(1);
+    s.remove_suffix(1);
+    return s;
+}
+
+std::pair<std::string, std::string> ParseRegexLine(std::string_view inp) {
+    const auto line = TrimSurroundingQuotes(inp);
+    if (!line.has_value()) {
+        XLOG::l("String is malformed '{}'", inp);
+        return {};
+    }
+
+    auto name_body = tools::SplitString(std::string(*line), ":");
+    if (name_body.empty()) {
+        XLOG::l("Bad entry '{}' in logwatch section ", line);
+        return {};
+    }
+
+    auto name = name_body[0];
+    tools::AllTrim(name);
+    if (name.empty()) {
+        return {};
+    }
+
+    if (name.empty()) {
+        return {};
+    }
+
+    if (name.empty()) {
+        XLOG::d("Skipping empty entry '{}'", line);
+        return {};
+    }
+
+    auto body = name_body.size() > 1 ? name_body[1] : "";
+    tools::AllTrim(body);
+    return {name, body};
+}
+
 std::optional<std::string> ObtainString(const YAML::Node &node) {
-    if (node.IsNull() || !node.IsDefined() || !node.IsMap()) {
+    if (node.IsNull() || !node.IsDefined()) {
         return std::nullopt;
     }
 
@@ -201,6 +249,30 @@ TagsFilter::TagsFilter(std::string_view line) {
     }
 }
 
+PatternFilter::PatternFilter(std::string_view line) {
+    if (line.data() == nullptr || line.empty()) {
+        XLOG::t("Skipping logwatch filter with empty name");
+        return;
+    }
+
+    try {
+        const auto [name, body] = ParseRegexLine(line);
+
+        name_ = name;
+        tools::StringLower(name_);
+        pattern_ = std::regex(
+            body, std::regex_constants::optimize | std::regex_constants::icase);
+
+    } catch (const std::exception &e) {
+        XLOG::l(
+            "Failed to load logwatch tags entry '{}' exception: '{}' in file '{}'",
+            std::string(line), e.what(),
+            wtools::ToUtf8(cfg::GetPathOfLoadedConfig()));
+        name_.clear();
+        pattern_ = std::regex();
+    }
+}
+
 // For one-line encoding, example:
 // - 'Application' : crit context
 std::optional<LogWatchEntry> LoadFromString(std::string_view line) {
@@ -244,7 +316,7 @@ std::optional<LogWatchEntry> LoadFromString(std::string_view line) {
     }
 }
 namespace {
-std::vector<IdsFilter> ProcessEventIds(
+std::vector<IdsFilter> ProcessIdsLines(
     const std::optional<YAML::Node> &log_ids) {
     if (!log_ids.has_value()) {
         return {};
@@ -260,7 +332,7 @@ std::vector<IdsFilter> ProcessEventIds(
     return filters;
 }
 
-std::vector<TagsFilter> ProcessEventTags(
+std::vector<TagsFilter> ProcessTagsLines(
     const std::optional<YAML::Node> &log_tags) {
     if (!log_tags.has_value()) {
         return {};
@@ -275,6 +347,32 @@ std::vector<TagsFilter> ProcessEventTags(
     }
     return filters;
 }
+
+std::vector<PatternFilter> ProcessPatternLines(
+    const std::optional<YAML::Node> &log_patterns) {
+    if (!log_patterns.has_value()) {
+        return {};
+    }
+    std::vector<PatternFilter> patterns;
+    for (const auto &l : *log_patterns) {
+        const auto line = ObtainString(l);
+        if (line.has_value()) {
+            auto tag = PatternFilter(*line);
+            patterns.emplace_back(std::move(tag));
+        }
+    }
+    return patterns;
+}
+
+auto obtainTags(const std::optional<YAML::Node> &tags_lines) {
+    std::unordered_map<std::string, TagsFilter> tags;
+    const auto lines = ProcessTagsLines(tags_lines);
+    for (const auto &line : lines) {
+        tags.insert_or_assign(line.name(), line);
+    }
+    return tags;
+}
+
 }  // namespace
 
 void LogWatchEvent::loadConfig() {
@@ -290,28 +388,31 @@ void LogWatchEvent::loadConfig() {
         setupDefaultEntry();
         XLOG::d.t("Loaded [{}] entries in LogWatch", count);
         event_filters_.id.clear();
-        auto filter_ids = readLogEntryArray(cfg::vars::kLogWatchEventFilterIds);
-        auto ids = ProcessEventIds(filter_ids);
-        for (const auto &i : ids) {
-            event_filters_.id.insert_or_assign(i.name(), i);
+        {
+            auto filter_ids =
+                readLogEntryArray(cfg::vars::kLogWatchEventFilterIds);
+            auto ids = ProcessIdsLines(filter_ids);
+            for (const auto &i : ids) {
+                event_filters_.id.insert_or_assign(i.name(), i);
+            }
         }
 
-        event_filters_.source.clear();
-        auto filter_sources =
-            readLogEntryArray(cfg::vars::kLogWatchEventFilterSources);
-        auto sources = ProcessEventTags(filter_sources);
-        for (const auto &s : sources) {
-            event_filters_.source.insert_or_assign(s.name(), s);
-        }
+        event_filters_.source = obtainTags(
+            readLogEntryArray(cfg::vars::kLogWatchEventFilterSources));
+        event_filters_.user =
+            obtainTags(readLogEntryArray(cfg::vars::kLogWatchEventFilterUsers));
 
-        event_filters_.user.clear();
-        auto filter_users =
-            readLogEntryArray(cfg::vars::kLogWatchEventFilterUsers);
-        auto users = ProcessEventTags(filter_users);
-        for (const auto &s : users) {
-            event_filters_.user.insert_or_assign(s.name(), s);
-        }
+        event_filters_.pattern.clear();
+        auto pattern_lines =
+            readLogEntryArray(cfg::vars::kLogWatchEventFilterTextPattern);
 
+        if (pattern_lines.has_value()) {
+            XLOG::d("{}", YAML::Dump(*pattern_lines));
+        }
+        auto patterns = ProcessPatternLines(pattern_lines);
+        for (const auto &p : patterns) {
+            event_filters_.pattern.insert_or_assign(p.name(), p);
+        }
     } catch (const std::exception &e) {
         XLOG::l(
             "CONFIG for '{}.{}' is seriously not valid, skipping. Exception {}. Loaded {} entries",
@@ -371,8 +472,10 @@ std::optional<YAML::Node> LogWatchEvent::readLogEntryArray(
     }
 
     if (!log_array.IsSequence()) {
-        XLOG::t("'{}' section has no '{}' member", cfg::groups::kLogWatchEvent,
-                name);
+        XLOG::t("'{}' section has no '{}' member {}",
+                cfg::groups::kLogWatchEvent, name,
+                YAML::Dump(logwatch_section));
+
         return {};
     }
     return log_array;
@@ -742,6 +845,10 @@ bool RecordAllowed(const std::string_view log_file_name,
         return ret->checkTag(rec_user);
     }
 
+    if (auto ret = findWithDefault(filters.pattern, name); ret.has_value()) {
+        return ret->checkTag(record->makeMessage());
+    }
+
     return true;
 }
 }  // namespace
@@ -917,6 +1024,9 @@ std::string GenerateOutputFromStates(EvlType type, StateVector &states,
                                      const EventFilters &filters) {
     std::string out;
     for (auto &state : states) {
+        if (state.name_ == "*") {
+            continue;
+        }
         switch (state.level_) {
             case cfg::EventLevels::kOff:
                 // updates position in state file for disabled log too

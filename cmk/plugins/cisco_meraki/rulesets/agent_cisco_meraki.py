@@ -102,6 +102,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                 parameter_form=List(
                     element_template=String(macro_support=True),
                     title=Title("Organizations"),
+                    help_text=Help("Specify which organizations to fetch data from."),
                     custom_validate=[_check_for_duplicates],
                 )
             ),

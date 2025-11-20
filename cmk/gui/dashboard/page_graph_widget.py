@@ -123,6 +123,7 @@ class GraphWidgetPage(cmk.gui.pages.Page):
             dashlets=[graph_config],
             show_title=True,
             mandatory_context_filters=[],
+            embedded_views={},
         )
 
         graph_dashlet = dashlet_type(

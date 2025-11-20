@@ -330,4 +330,5 @@ def default_dashboard(widget_config: DashletConfig) -> DashboardConfig:
         dashlets=[widget_config],
         show_title=True,
         mandatory_context_filters=[],
+        embedded_views={},
     )

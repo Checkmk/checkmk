@@ -426,6 +426,7 @@ CheckmkOverviewDashboard = DashboardConfig(
                 }
             ),
         ],
+        "embedded_views": {},
         "single_infos": [],
         "icon": "dashboard_system",
         "owner": UserId.builtin(),

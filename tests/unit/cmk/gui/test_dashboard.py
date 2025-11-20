@@ -165,6 +165,7 @@ TEST_DASHBOARD = DashboardConfig(
         "is_show_more": False,
         "packaged": False,
         "main_menu_search_terms": [],
+        "embedded_views": {},
     }
 )
 

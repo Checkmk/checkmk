@@ -266,7 +266,7 @@ class DashboardConfig(Visual):
     layout: NotRequired[
         DashboardRelativeGridLayoutSpec | DashboardResponsiveGridLayoutSpec
     ]  # default: relative_grid
-    embedded_views: NotRequired[
-        dict[str, DashboardEmbeddedViewSpec]
-    ]  # view definitions for embedded view widgets
+    # embedded_views only present for 2.5+ dashboard config format
+    # view definitions for embedded view widgets
+    embedded_views: dict[str, DashboardEmbeddedViewSpec]
     public_token_id: NotRequired[str | None]

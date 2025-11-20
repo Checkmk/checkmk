@@ -24,7 +24,6 @@ from cmk.crypto.certificate import (
     CertificateWithPrivateKey,
     PersistedCertificateWithPrivateKey,
 )
-from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 from cmk.utils.log.security_event import SecurityEvent
@@ -346,7 +345,7 @@ class CertManagementEvent(SecurityEvent):
                 "subject": str(cert.subject.common_name or "none"),
                 "not_valid_before": str(cert.not_valid_before.isoformat()),
                 "not_valid_after": str(cert.not_valid_after.isoformat()),
-                "fingerprint": cert.fingerprint(HashAlgorithm.Sha256).hex(sep=":").upper(),
+                "fingerprint": cert.show_fingerprint(),
             }
         super().__init__(
             event,

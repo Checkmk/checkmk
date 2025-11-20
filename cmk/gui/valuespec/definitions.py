@@ -79,7 +79,6 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Version
 from cmk.crypto import certificate, keys
-from cmk.crypto.hash import HashAlgorithm
 from cmk.gui import forms, site_config, user_sites, utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -8459,7 +8458,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
             "subject": cert.subject.rfc4514_string(),
             "creation": cert.not_valid_before.date().isoformat(),
             "expiration": cert.not_valid_after.date().isoformat(),
-            "fingerprint": cert.fingerprint(HashAlgorithm.Sha256).hex(sep=":").upper(),
+            "fingerprint": cert.show_fingerprint(),
         }
 
     def _validate_value(self, value: Any, varprefix: str) -> None:

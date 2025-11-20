@@ -1970,7 +1970,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 table.cell(_("Issued to"), cert_detail.issued_to)
                 table.cell(_("Issued by"), cert_detail.issued_by)
                 table.cell(_("Is CA"), _("Yes") if cert_detail.is_ca else _("No"))
-                table.cell(_("Fingerprint"), cert_detail.digest_sha256)
+                table.cell(_("Fingerprint (SHA256)"), cert_detail.digest_sha256)
                 table.cell(_("Valid till"), cert_detail.valid_till)
                 table.cell(
                     _("Trusted"),

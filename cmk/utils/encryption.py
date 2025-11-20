@@ -20,7 +20,6 @@ from OpenSSL import crypto, SSL
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.crypto.certificate import Certificate, CertificatePEM
-from cmk.crypto.hash import HashAlgorithm
 
 _PEM_RE = re.compile(
     "-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?", re.DOTALL
@@ -86,7 +85,7 @@ def fetch_certificate_details(
             signature_algorithm=algo.name
             if (algo := cmk_cert._cert.signature_hash_algorithm)
             else "Unknown signature algorithm",
-            digest_sha256=cmk_cert.fingerprint(HashAlgorithm.Sha256).hex(),
+            digest_sha256=cmk_cert.show_fingerprint(),
             serial_number=cmk_cert.serial_number,
             is_ca=cmk_cert.may_sign_certificates(),
             verify_result=result,

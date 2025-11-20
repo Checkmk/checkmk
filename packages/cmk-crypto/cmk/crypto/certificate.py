@@ -582,8 +582,18 @@ class Certificate:
         """
         return (self.not_valid_after - datetime.now(tz=UTC)).days
 
+    def show_fingerprint(self) -> str:
+        """
+        Return the fingerprint in the preferred format for display purposes,
+        i.e. as a ':' separated hex string using SHA256.
+        """
+        return self.fingerprint(HashAlgorithm.Sha256).hex(":").upper()
+
     def fingerprint(self, algorithm: HashAlgorithm) -> bytes:
-        """return the fingerprint
+        """
+        Return the fingerprint as bytes.
+
+        Prefer `show_fingerprint()` for display purposes.
 
         >>> Certificate.load_pem(
         ...     CertificatePEM("\\n".join([

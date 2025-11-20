@@ -22,7 +22,7 @@ import AiConversationElement from './AiConversationElement.vue'
 
 const { _t } = usei18n()
 const aiTemplate = getInjectedAiTemplate()
-const systemPromp = ref<TAiConversationElementContent[] | null>(null)
+const systemPrompt = ref<TAiConversationElementContent[] | null>(null)
 const doNotAskAgain = ref<boolean>(false)
 const consentTriggered = ref<boolean>(false)
 
@@ -31,7 +31,7 @@ onMounted(async () => {
     if (typeof aiTemplate.value?.config.dataToProvideToLlm === 'function') {
       const res = await aiTemplate.value.config.dataToProvideToLlm()
       if (res) {
-        systemPromp.value = res
+        systemPrompt.value = res
       }
     }
   }
@@ -50,27 +50,28 @@ function onConsent() {
 
 <template>
   <div
-    v-if="systemPromp"
+    v-if="systemPrompt"
     class="ai-conversation-consent"
     :class="{ 'ai-conversation-consent--triggered': consentTriggered }"
   >
     <CmkHeading type="h1" class="ai-conversation-consent__header">
-      {{ _t('Continue with AI?') }}
+      {{ _t('Checkmk AI feature documentation & privacy policy') }}
     </CmkHeading>
     <AiConversationElement
       :role="AiRole.system"
-      :content="systemPromp"
+      :content="systemPrompt"
       :no-animation="true"
       :hide-controls="true"
+      class="ai-conversation-consent__element"
     />
 
     <div v-if="!consentTriggered" class="ai-conversation-consent__ctrls">
-      <CmkCheckbox v-model="doNotAskAgain" :label="_t('Do not ask again')" />
+      <CmkCheckbox v-model="doNotAskAgain" :label="_t('Do not show again')" />
       <div>
         <CmkButton variant="primary" @click="onConsent">
-          {{ _t('Confirm & proceed') }}
+          {{ _t('Start AI feature') }}
         </CmkButton>
-        <CmkButton @click="emit('decline')">{{ _t('Decline') }}</CmkButton>
+        <CmkButton @click="emit('decline')">{{ _t('Cancel and go back') }}</CmkButton>
       </div>
     </div>
   </div>
@@ -98,6 +99,10 @@ function onConsent() {
     align-items: start;
     padding-left: var(--dimension-4);
     gap: var(--dimension-5);
+  }
+
+  .ai-conversation-consent__element {
+    margin: var(--dimension-10) 0 0 -28px;
   }
 
   .ai-conversation-consent__ctrls {

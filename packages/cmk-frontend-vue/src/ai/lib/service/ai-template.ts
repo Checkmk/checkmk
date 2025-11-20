@@ -13,7 +13,7 @@ import usePersistentRef from '@/lib/usePersistentRef'
 
 import { type ButtonProps } from '@/components/CmkButton.vue'
 
-import { AiApiClient, type AiServiceAction } from '@/ai/lib/ai-api-client'
+import { AiApiClient, type AiServiceAction, type InfoResponse } from '@/ai/lib/ai-api-client'
 import { AiRole } from '@/ai/lib/utils'
 
 const { _t } = usei18n()
@@ -108,6 +108,7 @@ export class AiTemplateService extends ServiceBase {
   public elements: IAiConversationElement[] = []
   public config: IAiConversationConfig<unknown>
   public activeRole: AiRole = AiRole.user
+  public info: InfoResponse | null = null
   protected api: AiApiClient
 
   constructor(
@@ -127,6 +128,8 @@ export class AiTemplateService extends ServiceBase {
     if (!this.getPersistentRef().value) {
       this.config.dataToProvideToLlm = this.getDataToBeProvidedToAi.bind(this)
     }
+
+    void this.loadInfo()
   }
 
   public isConsented(): boolean {
@@ -158,7 +161,29 @@ export class AiTemplateService extends ServiceBase {
   }
 
   public async getDataToBeProvidedToAi(): Promise<TAiConversationElementContent[]> {
-    return []
+    if (!this.info) {
+      await this.loadInfo()
+    }
+
+    return [
+      {
+        content_type: 'text',
+        text: _t(
+          'The following feature uses a Large Language Model (LLM).' +
+            'Remember that the output is based on patterns and training data, ' +
+            'and should always be checked critical for factual correctness before implementation'
+        )
+      },
+      {
+        content_type: 'markdown',
+        content: _t(
+          'For a full understanding please visit our ' +
+            '<a href="https://docs.checkmk.com/latest" target="_blank">Documentation</a> and ' +
+            '<a href="https://checkmk.com/privacy-policy" target="_blank">Privacy Policy</a>.<br/>' +
+            `This feature utilizes ${this.info?.models.join(', ')} of ${this.info?.provider} to generate its output.`
+        )
+      }
+    ]
   }
 
   public async getUserActionButtons(): Promise<AiActionButton[] | undefined | Error> {
@@ -195,6 +220,15 @@ export class AiTemplateService extends ServiceBase {
     }
 
     this.addElement(this.execAiAction(userAction))
+  }
+
+  public onInfoLoaded(cb: () => void) {
+    this.pushCallBack('info-loaded', cb)
+  }
+
+  protected async loadInfo() {
+    this.info = await this.api.getInfo()
+    this.dispatchCallback('info-loaded')
   }
 
   protected execAiAction(action: AiActionButton): IAiConversationElement {

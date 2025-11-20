@@ -22,6 +22,12 @@ export interface AiBaseLlmResponse extends AiBaseRequestResponse {
   provider: string
 }
 
+export interface InfoResponse {
+  service_name: string
+  version: string
+  models: string[]
+  provider: string
+}
 export interface DataToBeProvidedToLlmResponse extends AiBaseRequestResponse {
   list_host_cols: string[]
   list_service_cols: string[]
@@ -69,6 +75,10 @@ export class AiApiClient extends Api {
       ['Content-Type', 'application/json'],
       ['Accept', 'application/json']
     ])
+  }
+
+  public async getInfo(): Promise<InfoResponse> {
+    return this.get(`info?request_id=${randomId()}`) as Promise<InfoResponse>
   }
 
   public async getDataToBeProvidedToLlm(): Promise<DataToBeProvidedToLlmResponse> {

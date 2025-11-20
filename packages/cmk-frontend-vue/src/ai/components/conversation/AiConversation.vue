@@ -14,6 +14,7 @@ import { AiRole } from '@/ai/lib/utils'
 
 import AiConversationConsent from './AiConversationConsent.vue'
 import AiConversationElement from './AiConversationElement.vue'
+import AiConversationFooter from './AiConversationFooter.vue'
 
 const aiTemplate = getInjectedAiTemplate()
 
@@ -82,12 +83,14 @@ onBeforeUnmount(() => {
     </template>
   </div>
   <div ref="automatic-scroll-to" class="ai-conversation__auto-scroll-el"></div>
+  <AiConversationFooter />
 </template>
 
 <style scoped>
 .ai-conversation {
   width: 100%;
   position: relative;
+  margin-bottom: calc(var(--dimension-10) + var(--dimension-8));
 
   .ai-conversation__auto-scroll-el {
     position: relative;

@@ -92,10 +92,7 @@ def check_licenses_overview(
             summary=f"Number of licensed devices: {sum(item_data.licensed_device_counts.values())}",
         )
 
-    for device_type, device_count in sorted(
-        item_data.licensed_device_counts.items(),
-        key=lambda t: t[0],
-    ):
+    for device_type, device_count in sorted(item_data.licensed_device_counts.items()):
         yield Result(state=State.OK, notice=f"{device_type}: {device_count} licensed devices")
 
 

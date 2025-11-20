@@ -11,7 +11,6 @@
 from __future__ import annotations
 
 import functools
-import itertools
 import logging
 import socket
 import time
@@ -142,6 +141,7 @@ class CheckerConfig:
     timeperiods_active: Mapping[str, bool]
 
 
+# TODO: inline.
 def _fetch_all(
     trigger: FetcherTrigger,
     sources: Iterable[Source],
@@ -157,7 +157,6 @@ def _fetch_all(
         Snapshot,
     ]
 ]:
-    console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA")
     return [
         _do_fetch(
             trigger,
@@ -418,6 +417,7 @@ class CMKFetcher:
                             host_name, self.default_address_family(host_name)
                         )
                     ),
+                    self.get_relay_id(host_name),
                 )
             ]
         else:
@@ -431,6 +431,7 @@ class CMKFetcher:
                         if ip_stack_config is IPStackConfig.NO_IP
                         else self.ip_address_of_mandatory(node, self.default_address_family(node))
                     ),
+                    self.get_relay_id(node),
                 )
                 for node in self.config_cache.nodes(host_name)
             ]
@@ -440,10 +441,12 @@ class CMKFetcher:
             ca_store=Path(cmk.utils.paths.agent_cert_store),
             site_crt=Path(cmk.utils.paths.site_cert_file),
         )
-        relay_id = self.get_relay_id(host_name)
-        return _fetch_all(
-            self.make_trigger(relay_id),
-            itertools.chain.from_iterable(
+        console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA")
+        return [
+            fetched
+            for current_host_name, current_ip_family, current_ip_stack_config, current_ip_address, current_relay_id in hosts
+            for fetched in _fetch_all(
+                self.make_trigger(current_relay_id),
                 make_sources(
                     self.plugins,
                     current_host_name,
@@ -476,15 +479,19 @@ class CMKFetcher:
                         current_ip_family,
                         current_ip_address,
                         self.secrets,
-                        self.secrets_file_option_site
-                        if relay_id is None
-                        else self.secrets_file_option_relay,
+                        (
+                            self.secrets_file_option_site
+                            if current_relay_id is None
+                            else self.secrets_file_option_relay
+                        ),
                         ip_address_of=self.ip_address_of,
                         executable_finder=ExecutableFinder(
                             # NOTE: we can't ignore these, they're an API promise.
                             cmk.utils.paths.local_special_agents_dir,
                             cmk.utils.paths.special_agents_dir,
-                            strip_prefix=None if relay_id is None else cmk.utils.paths.omd_root,
+                            strip_prefix=None
+                            if current_relay_id is None
+                            else cmk.utils.paths.omd_root,
                         ),
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(
@@ -494,13 +501,12 @@ class CMKFetcher:
                         current_host_name
                     ),
                     metric_backend_fetcher=self.metric_backend_fetcher_factory(current_host_name),
-                )
-                for current_host_name, current_ip_family, current_ip_stack_config, current_ip_address in hosts
-            ),
-            simulation=self.simulation_mode,
-            file_cache_options=self.file_cache_options,
-            mode=self.mode,
-        )
+                ),
+                simulation=self.simulation_mode,
+                file_cache_options=self.file_cache_options,
+                mode=self.mode,
+            )
+        ]
 
 
 class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):

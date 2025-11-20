@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for interface check parameter module internals"""
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -44,7 +43,7 @@ def _upper_lower_dropwdown(levels_vs: ValueSpec) -> CascadingDropdown:
     )
 
 
-def vs_interface_traffic():
+def vs_interface_traffic() -> Migrate:
     return Migrate(
         CascadingDropdown(
             orientation="horizontal",

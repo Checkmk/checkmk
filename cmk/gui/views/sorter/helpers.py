@@ -18,6 +18,19 @@ def cmp_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:
     return (v1 > v2) - (v1 < v2)
 
 
+def cmp_ec_sl_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:
+    host_or_svc = column.split("_")[0]
+
+    def _get_value(row: Row) -> str:
+        try:
+            index = row[column].index("EC_SL")
+        except ValueError:
+            return ""
+        return row[f"{host_or_svc}_custom_variable_values"][index]
+
+    return (_get_value(r1) > _get_value(r2)) - (_get_value(r1) < _get_value(r2))
+
+
 def cmp_num_split(column: ColumnName, r1: Row, r2: Row) -> int:
     return _cmp_num_split(r1[column].lower(), r2[column].lower())
 

@@ -17,7 +17,7 @@ _HASH_NAMESPACE: Final = uuid.UUID("be8bc5b5-a401-4acc-b8db-a875cca98c79")
 _KWARG_MARK: Final = object()
 
 
-def cache_ttl[**P, R](store: Storage, *, ttl: int) -> Callable[[Callable[P, R]], Callable[P, R]]:
+def cache_ttl[**P, R](store: Storage, *, ttl: float) -> Callable[[Callable[P, R]], Callable[P, R]]:
     if ttl < 0:
         raise ValueError("Time to live value must be a positive integer.")
 

@@ -6,6 +6,7 @@
 import dataclasses
 import re
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 from pytest import CaptureFixture
@@ -17,19 +18,18 @@ from cmk.plugins.cisco_meraki.lib.config import MerakiConfig
 
 from .fakes import FakeMerakiSDK
 
+_DEFAULT_ARGS = ["heute", "--apikey", "my-api-key"]
+
+
+@pytest.fixture(autouse=True)
+def patch_storage_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+
 
 class TestMerakiAgentOutput:
     @pytest.fixture
     def ctx(self) -> MerakiRunContext:
-        args = agent.parse_arguments(
-            [
-                "heute",
-                "--apikey",
-                "my-api-key",
-                "--no-cache",
-                "--org-id-as-prefix",
-            ]
-        )
+        args = agent.parse_arguments([*_DEFAULT_ARGS, "--no-cache", "--org-id-as-prefix"])
         config = MerakiConfig.build(args)
         client = MerakiClient.build(FakeMerakiSDK(), config)
         return MerakiRunContext(config=config, client=client)
@@ -96,6 +96,21 @@ class TestMerakiAgentOutput:
         agent_output_with_org = capsys.readouterr().out
 
         assert len(agent_output_all_orgs) > len(agent_output_with_org)
+
+    @pytest.mark.usefixtures("patch_storage_env")
+    def test_cache_is_being_used(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
+        # override resources that aren't cached by default.
+        args = agent.parse_arguments([*_DEFAULT_ARGS, "--cache-sensor-readings", "60.0"])
+        config = MerakiConfig.build(args)
+        client = MerakiClient.build(FakeMerakiSDK(), config)
+        ctx = MerakiRunContext(config=config, client=client)
+
+        agent.run(ctx)
+        first_run = capsys.readouterr().out
+        agent.run(ctx)
+        second_run = capsys.readouterr().out
+
+        assert first_run == second_run
 
 
 def _update_org_ids(ctx: MerakiRunContext, org_ids: Sequence[str]) -> MerakiRunContext:

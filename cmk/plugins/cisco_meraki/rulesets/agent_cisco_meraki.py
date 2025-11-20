@@ -11,7 +11,6 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
-    Integer,
     List,
     migrate_to_password,
     migrate_to_proxy,
@@ -22,6 +21,8 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoice,
     SingleChoiceElement,
     String,
+    TimeMagnitude,
+    TimeSpan,
 )
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
@@ -128,45 +129,65 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
             "cache_per_section": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Cache per section"),
+                    help_text=Help(
+                        "By setting a higher value for a given resource, you reduce the amount of "
+                        "requests sent to the Meraki API instance. If not changed, the predefined "
+                        "default time to live (TTL) cache interval will be used."
+                    ),
                     elements={
                         "devices": DictElement(
-                            parameter_form=Integer(
+                            parameter_form=TimeSpan(
                                 title=Title("Devices"),
-                                prefill=DefaultValue(60),
-                                unit_symbol="minutes",
-                                custom_validate=(NumberInRange(min_value=0),),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(3600.0),  # 1 hour
+                                custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
                         "device_statuses": DictElement(
-                            parameter_form=Integer(
+                            parameter_form=TimeSpan(
                                 title=Title("Device statuses"),
-                                prefill=DefaultValue(60),
-                                unit_symbol="minutes",
-                                custom_validate=(NumberInRange(min_value=0),),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(3600.0),  # 1 hour
+                                custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
                         "licenses_overview": DictElement(
-                            parameter_form=Integer(
+                            parameter_form=TimeSpan(
                                 title=Title("Licenses overview"),
-                                prefill=DefaultValue(600),
-                                unit_symbol="minutes",
-                                custom_validate=(NumberInRange(min_value=0),),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(36000.0),  # 10 hours
+                                custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
                         "organizations": DictElement(
-                            parameter_form=Integer(
+                            parameter_form=TimeSpan(
                                 title=Title("Organizations"),
-                                prefill=DefaultValue(600),
-                                unit_symbol="minutes",
-                                custom_validate=(NumberInRange(min_value=0),),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(36000.0),  # 10 hours
+                                custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
                         "sensor_readings": DictElement(
-                            parameter_form=Integer(
+                            parameter_form=TimeSpan(
                                 title=Title("Sensor readings"),
-                                prefill=DefaultValue(0),
-                                unit_symbol="minutes",
-                                custom_validate=(NumberInRange(min_value=0),),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(0.0),  # 0 minutes
+                                custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
                     },

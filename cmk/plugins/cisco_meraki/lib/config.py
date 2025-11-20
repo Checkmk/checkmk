@@ -15,11 +15,11 @@ from . import constants
 
 @dataclass(frozen=True)
 class CacheTTL:
-    devices: int
-    device_statuses: int
-    licenses_overview: int
-    organizations: int
-    sensor_readings: int
+    devices: float
+    device_statuses: float
+    licenses_overview: float
+    organizations: float
+    sensor_readings: float
 
 
 @dataclass(frozen=True)

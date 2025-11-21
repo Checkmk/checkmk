@@ -2315,11 +2315,11 @@ async def _test_connection(args: argparse.Namespace) -> int:
             ...
     except (ApiLoginFailed, ValueError) as exc:
         error_msg = f"Connection failed with: {exc}\n"
-        sys.stdout.write(error_msg)
+        sys.stderr.write(error_msg)
         return 2
     except requests.exceptions.ProxyError as exc:
         error_msg = f"Connection failed due to a proxy error: {exc}\n"
-        sys.stdout.write(error_msg)
+        sys.stderr.write(error_msg)
         return 2
     return 0
 
@@ -2684,4 +2684,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

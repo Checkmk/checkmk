@@ -13,9 +13,22 @@
 from dataclasses import dataclass
 from typing import Annotated, NotRequired, TypedDict
 
-from pydantic import BaseModel, Json, ValidationError
+from pydantic import BaseModel, Discriminator, Json, ValidationError
 
-from cmk.gui.dashboard.page_figure_widget import FigureContent, FigureDashletConfig
+from cmk.gui.dashboard.dashlet.dashlets.stats import StatsDashletConfig
+from cmk.gui.dashboard.type_defs import (
+    AlertOverviewDashletConfig,
+    AverageScatterplotDashletConfig,
+    BarplotDashletConfig,
+    EventBarChartDashletConfig,
+    GaugeDashletConfig,
+    HostStateSummaryDashletConfig,
+    InventoryDashletConfig,
+    ServiceStateSummaryDashletConfig,
+    SingleMetricDashletConfig,
+    SiteOverviewDashletConfig,
+    StateDashletConfig,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework.model import ApiOmitted
@@ -23,6 +36,53 @@ from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import SingleInfos, VisualContext
 
 from .model.widget import WidgetGeneralSettings
+from .model.widget_content.inventory import InventoryContent
+from .model.widget_content.metric import (
+    AverageScatterplotContent,
+    BarplotContent,
+    GaugeContent,
+    SingleMetricContent,
+)
+from .model.widget_content.overview import AlertOverviewContent, SiteOverviewContent
+from .model.widget_content.state import HostStateContent, ServiceStateContent
+from .model.widget_content.state_summary import HostStateSummaryContent, ServiceStateSummaryContent
+from .model.widget_content.stats import EventStatsContent, HostStatsContent, ServiceStatsContent
+from .model.widget_content.timeline import AlertTimelineContent, NotificationTimelineContent
+
+type FigureContent = Annotated[
+    AlertOverviewContent
+    | AlertTimelineContent
+    | AverageScatterplotContent
+    | BarplotContent
+    | EventStatsContent
+    | GaugeContent
+    | HostStateContent
+    | HostStateSummaryContent
+    | HostStatsContent
+    | InventoryContent
+    | NotificationTimelineContent
+    | ServiceStateContent
+    | ServiceStateSummaryContent
+    | ServiceStatsContent
+    | SingleMetricContent
+    | SiteOverviewContent,
+    Discriminator("type"),
+]
+
+type FigureDashletConfig = (
+    AlertOverviewDashletConfig
+    | AverageScatterplotDashletConfig
+    | BarplotDashletConfig
+    | EventBarChartDashletConfig
+    | GaugeDashletConfig
+    | StateDashletConfig
+    | HostStateSummaryDashletConfig
+    | InventoryDashletConfig
+    | ServiceStateSummaryDashletConfig
+    | SingleMetricDashletConfig
+    | SiteOverviewDashletConfig
+    | StatsDashletConfig
+)
 
 
 class _WidgetTitleInternal(TypedDict, total=True):

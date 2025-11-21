@@ -33,7 +33,7 @@ from .page_edit_dashboard_actions import (
 )
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_edit_dashlet import EditDashletPage
-from .page_figure_widget import FigureWidgetPage
+from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
 from .page_graph_widget import GraphWidgetPage
 from .page_show_dashboard import (
     ajax_dashlet,
@@ -85,6 +85,10 @@ def register(
     page_registry.register(PageEndpoint("clone_dashlet", page_clone_dashlet))
     page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
     page_registry.register(PageEndpoint("ajax_dashlet_pos", ajax_dashlet_pos))
+
+    token_authenticated_page_registry.register(
+        TokenAuthenticatedEndpoint(FigureWidgetTokenAuthPage.ident(), FigureWidgetTokenAuthPage())
+    )
 
     register_dashlets(dashlet_registry_, autocompleter_registry)
     register_builtin_dashboards(builtin_dashboards)

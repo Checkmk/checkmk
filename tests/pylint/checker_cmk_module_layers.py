@@ -495,6 +495,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.piggyback",
         "cmk.product_telemetry",
         "cmk.relay_fetcher_trigger",
+        "cmk.relay_protocols",
         "cmk.rrd",
         "cmk.server_side_calls_backend",
         "cmk.snmplib",

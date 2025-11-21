@@ -13,13 +13,14 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import PluginLocation
 from cmk.password_store.v1_unstable import Secret as StoreSecret
 from cmk.server_side_calls import internal, v1
-from cmk.utils import password_store
+from cmk.utils import config_warnings, password_store
 
 from ._commons import ExecutableFinderProtocol, replace_passwords
 from .config_processing import (
     GlobalProxiesWithLookup,
     process_configuration_to_parameters,
 )
+from .relay_support import RELAY_SUPPORTED_MODULES
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,7 @@ class SpecialAgent:
         stored_passwords: Mapping[str, StoreSecret[str]],
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
+        for_relay: bool = False,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -51,6 +53,7 @@ class SpecialAgent:
         self.stored_passwords = stored_passwords
         self.password_store_file = password_store_file
         self._finder = finder
+        self._for_relay = for_relay
 
     def _make_source_path(self, agent_name: str) -> str:
         return self._finder(f"agent_{agent_name}", self._modules.get(agent_name))
@@ -87,5 +90,18 @@ class SpecialAgent:
     def iter_special_agent_commands(
         self, agent_name: str, params: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-        if (special_agent := self._plugins.get(agent_name.removeprefix("agent_"))) is not None:
-            yield from self._iter_commands(special_agent, params)
+        name = agent_name.removeprefix("agent_")
+        if (special_agent := self._plugins.get(name)) is None:
+            return
+
+        if self._for_relay:
+            if _cut_module(self._modules[name]) not in RELAY_SUPPORTED_MODULES:
+                msg = f"Config creation for special agent {agent_name} failed on {self.host_name}: Agent is not supported on relays."
+                config_warnings.warn(msg)
+                # Continue anyway. The datasource will fail on the relay side, and the Checkmk service will go CRIT.
+
+        yield from self._iter_commands(special_agent, params)
+
+
+def _cut_module(mod_name: str) -> str:
+    return ".".join(mod_name.split(".")[:3])

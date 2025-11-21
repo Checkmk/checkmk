@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import abc
 from collections.abc import (
     Callable,
     Iterable,
@@ -440,7 +441,7 @@ def _parse_attr_field_from_api(
     node_title: str,
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
-    non_canonical_filters: Mapping[str, TransformAttrs],
+    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> AttributeDisplayHint:
     names = _make_attr_names(node_ident, key, non_canonical_filters)
     title = _make_str(field_from_api.title)
@@ -559,7 +560,7 @@ def _parse_col_field_of_view_from_api(
     node_title: str,
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
-    non_canonical_filters: Mapping[str, TransformAttrs],
+    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> ColumnDisplayHintOfView:
     names = _make_col_names(table_view_name, key, non_canonical_filters)
     title = _make_str(field_from_api.title)
@@ -582,7 +583,7 @@ def _parse_col_field_of_view_from_api(
 
 
 def _parse_node_from_api(
-    node: NodeFromAPI, non_canonical_filters: Mapping[str, TransformAttrs]
+    node: NodeFromAPI, non_canonical_filters: Mapping[str, FilterMigration]
 ) -> NodeDisplayHint:
     path = tuple(SDNodeName(e) for e in node.path)
     parent_title = inv_display_hints.get_node_hint(path[:-1]).title if path[:-1] else ""
@@ -722,13 +723,13 @@ class _Names:
 
 
 def _make_attr_names(
-    node_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, TransformAttrs]
+    node_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, FilterMigration]
 ) -> _Names:
     name = f"{node_name}_{key}"
     return _Names(
         for_object=name,
         for_filter=(
-            transform_attrs.filter_name()
+            transform_attrs.filter_name
             if (transform_attrs := non_canonical_filters.get(name))
             else name
         ),
@@ -736,7 +737,7 @@ def _make_attr_names(
 
 
 def _make_col_names(
-    table_view_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, TransformAttrs]
+    table_view_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, FilterMigration]
 ) -> _Names:
     if not table_view_name:
         return _Names(for_object="", for_filter="")
@@ -744,7 +745,7 @@ def _make_col_names(
     return _Names(
         for_object=name,
         for_filter=(
-            transform_attrs.filter_name()
+            transform_attrs.filter_name
             if (transform_attrs := non_canonical_filters.get(name))
             else name
         ),
@@ -819,7 +820,7 @@ def _parse_attr_field_from_legacy(
     node_title: str,
     key: str,
     legacy_hint: InventoryHintSpec,
-    non_canonical_filters: Mapping[str, TransformAttrs],
+    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> AttributeDisplayHint:
     data_type, paint_function = _get_paint_function(legacy_hint)
     names = _make_attr_names(node_name, key, non_canonical_filters)
@@ -994,7 +995,7 @@ def _parse_col_field_from_legacy_of_view(
     node_title: str,
     key: str,
     legacy_hint: InventoryHintSpec,
-    non_canonical_filters: Mapping[str, TransformAttrs],
+    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> ColumnDisplayHintOfView:
     _data_type, paint_function = _get_paint_function(legacy_hint)
     names = _make_col_names(table_view_name, key, non_canonical_filters)
@@ -1140,7 +1141,7 @@ class NodeDisplayHint:
 
 def _parse_legacy_display_hints(
     legacy_hints: Mapping[str, InventoryHintSpec],
-    non_canonical_filters: Mapping[str, TransformAttrs],
+    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> Iterator[NodeDisplayHint]:
     for path, related_legacy_hints in sorted(
         _get_related_legacy_hints(legacy_hints).items(), key=lambda t: len(t[0])
@@ -1290,50 +1291,65 @@ inv_display_hints = DisplayHints()
 
 
 @dataclass(frozen=True, kw_only=True)
-class TransformAttrs:
+class FilterMigration(abc.ABC):
     name: str
-    scale: int
-    legacy_suffix: str = ""
 
-    def legacy_name(self, direction: Literal["from", "until"]) -> str:
-        return f"{self.name}_{direction}{self.legacy_suffix}"
+    @abc.abstractmethod
+    def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]: ...
 
-    def new_name(self, direction: Literal["from", "until"]) -> str:
-        return f"{self.name}_canonical_{direction}"
-
+    @property
     def filter_name(self) -> str:
         return f"{self.name}_canonical"
 
 
+@dataclass(frozen=True, kw_only=True)
+class FilterMigrationScale(FilterMigration):
+    legacy_suffix: str
+    scale: int
+
+    def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]:
+        migrated = {}
+        for direction in ("from", "until"):
+            if filter_value := value.get(f"{self.name}_{direction}{self.legacy_suffix}"):
+                migrated[f"{self.name}_canonical_{direction}"] = str(int(filter_value) * self.scale)
+        return migrated
+
+
 def find_non_canonical_filters(
     plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
-) -> Mapping[str, TransformAttrs]:
+) -> Mapping[str, FilterMigration]:
     filters = {
         # "bytes"
-        "inv_hardware_cpu_cache_size": TransformAttrs(
+        "inv_hardware_cpu_cache_size": FilterMigrationScale(
             name="inv_hardware_cpu_cache_size",
+            legacy_suffix="",
             scale=1024 * 1024,
         ),
         # "bytes_rounded"
-        "inv_hardware_memory_total_ram_usable": TransformAttrs(
+        "inv_hardware_memory_total_ram_usable": FilterMigrationScale(
             name="inv_hardware_memory_total_ram_usable",
+            legacy_suffix="",
             scale=1024 * 1024,
         ),
-        "inv_hardware_memory_total_swap": TransformAttrs(
+        "inv_hardware_memory_total_swap": FilterMigrationScale(
             name="inv_hardware_memory_total_swap",
+            legacy_suffix="",
             scale=1024 * 1024,
         ),
-        "inv_hardware_memory_total_vmalloc": TransformAttrs(
+        "inv_hardware_memory_total_vmalloc": FilterMigrationScale(
             name="inv_hardware_memory_total_vmalloc",
+            legacy_suffix="",
             scale=1024 * 1024,
         ),
         # "hz"
-        "inv_hardware_cpu_bus_speed": TransformAttrs(
+        "inv_hardware_cpu_bus_speed": FilterMigrationScale(
             name="inv_hardware_cpu_bus_speed",
+            legacy_suffix="",
             scale=1000 * 1000,
         ),
-        "inv_hardware_cpu_max_speed": TransformAttrs(
+        "inv_hardware_cpu_max_speed": FilterMigrationScale(
             name="inv_hardware_cpu_max_speed",
+            legacy_suffix="",
             scale=1000 * 1000,
         ),
     }
@@ -1350,7 +1366,11 @@ def find_non_canonical_filters(
                 name = f"{node.table.view.name}_{key}"
                 filters.setdefault(
                     name,
-                    TransformAttrs(name=name, scale=24 * 60 * 60, legacy_suffix="_days"),
+                    FilterMigrationScale(
+                        name=name,
+                        legacy_suffix="_days",
+                        scale=24 * 60 * 60,
+                    ),
                 )
 
     for raw_path, legacy_hint in legacy_hints.items():
@@ -1360,9 +1380,17 @@ def find_non_canonical_filters(
         name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
         match legacy_hint.get("paint"):
             case "bytes" | "bytes_rounded":
-                filters[name] = TransformAttrs(name=name, scale=1024 * 1024)
+                filters[name] = FilterMigrationScale(
+                    name=name,
+                    legacy_suffix="",
+                    scale=1024 * 1024,
+                )
             case "hz":
-                filters[name] = TransformAttrs(name=name, scale=1000 * 1000)
+                filters[name] = FilterMigrationScale(
+                    name=name,
+                    legacy_suffix="",
+                    scale=1000 * 1000,
+                )
     return filters
 
 

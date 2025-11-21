@@ -11,27 +11,15 @@ from cmk.ccc.user import UserId
 from cmk.gui.dashboard.store import get_all_dashboards
 from cmk.gui.type_defs import Visual, VisualName
 from cmk.gui.views.inventory import (
+    FilterMigration,
     find_non_canonical_filters,
     load_inventory_ui_plugins,
-    TransformAttrs,
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.store import get_all_views
 from cmk.gui.visuals import save, TVisual
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
-
-
-def _migrate_context_value(
-    key: str, value: Mapping[str, str], transform_attrs: TransformAttrs
-) -> Mapping[str, str]:
-    migrated = {}
-    for direction in ("from", "until"):
-        if filter_value := value.get(transform_attrs.legacy_name(direction)):
-            migrated[transform_attrs.new_name(direction)] = str(
-                int(filter_value) * transform_attrs.scale
-            )
-    return migrated
 
 
 class Migration:
@@ -41,7 +29,7 @@ class Migration:
         self._has_changed = False
 
     def _migrate_visual(
-        self, visual: TVisual, non_canonical_filters: Mapping[str, TransformAttrs]
+        self, visual: TVisual, non_canonical_filters: Mapping[str, FilterMigration]
     ) -> TVisual:
         if not (context := visual.get("context")):
             return visual
@@ -49,9 +37,10 @@ class Migration:
         assert isinstance(context, dict)
         migrated = {}
         for key, value in context.items():
-            transform_attrs = non_canonical_filters.get(key)
-            if transform_attrs and (value_ := _migrate_context_value(key, value, transform_attrs)):
-                migrated[transform_attrs.filter_name()] = value_
+            if (filter_migration := non_canonical_filters.get(key)) and (
+                migrated_value := filter_migration.migrate(value)
+            ):
+                migrated[filter_migration.filter_name] = migrated_value
                 self._has_changed = True
             else:
                 migrated[key] = value
@@ -59,7 +48,7 @@ class Migration:
         visual["context"] = migrated
         return visual
 
-    def migrate(self, non_canonical_filters: Mapping[str, TransformAttrs]) -> None:
+    def migrate(self, non_canonical_filters: Mapping[str, FilterMigration]) -> None:
         self._migrated = {
             key: self._migrate_visual(visual, non_canonical_filters)
             for key, visual in self._visuals.items()
@@ -79,7 +68,7 @@ class Migration:
 
 def migrate_visuals(
     visuals: Mapping[tuple[UserId, VisualName], Visual],
-    non_canonical_filters: Mapping[str, TransformAttrs],
+    non_canonical_filters: Mapping[str, FilterMigration],
 ) -> Migration:
     migration = Migration(visuals)
     migration.migrate(non_canonical_filters)

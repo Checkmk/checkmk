@@ -27,6 +27,7 @@ from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
+    FilterMigration,
     find_non_canonical_filters,
     inv_display_hints,
     load_inventory_ui_plugins,
@@ -35,7 +36,6 @@ from ._display_hints import (
     PAINT_FUNCTION_NAME_PREFIX,
     register_display_hints,
     TableWithView,
-    TransformAttrs,
 )
 from ._painters import (
     attribute_painter_from_hint,
@@ -55,11 +55,11 @@ from .registry import (
 )
 
 __all__ = [
+    "FilterMigration",
     "InventoryHintSpec",
     "NodeDisplayHint",
     "OrderedColumnDisplayHintsOfView",
     "TableWithView",
-    "TransformAttrs",
     "find_non_canonical_filters",
     "inv_display_hints",
     "load_inventory_ui_plugins",

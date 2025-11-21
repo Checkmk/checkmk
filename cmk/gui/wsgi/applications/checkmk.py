@@ -214,8 +214,8 @@ def _process_request(
             page_handler = ensure_authentication(_handler)
         elif _handler := pages.get_page_handler(f"noauth:{file_name}"):
             page_handler = _noauth(_handler)
-        elif "cmk-token" in request.args:
-            page_handler = handle_token_page(file_name, request, response)
+        elif request.has_var("cmk-token"):
+            page_handler = handle_token_page(file_name, request)
         else:
             page_handler = _page_not_found
 

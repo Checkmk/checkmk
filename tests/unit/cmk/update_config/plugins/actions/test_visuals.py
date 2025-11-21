@@ -9,6 +9,12 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
+from cmk.gui.inventory.filters import (
+    FilterInvtableAdminStatus,
+    FilterInvtableAvailable,
+    FilterInvtableInterfaceType,
+    FilterInvtableOperStatus,
+)
 from cmk.gui.type_defs import Visual
 from cmk.gui.views.inventory import (
     find_non_canonical_filters,
@@ -792,3 +798,280 @@ def test__migrate_visual(
     )
     assert not migration.has_changed
     assert migration.migrated == {"userid": {("userid", "name"): expected_visual}}
+
+
+@pytest.mark.parametrize(
+    "visual",
+    [
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_oper_status": {
+                        "invinterface_oper_status_1": "",
+                        "invinterface_oper_status_2": "on",
+                        "invinterface_oper_status_3": "",
+                        "invinterface_oper_status_4": "",
+                        "invinterface_oper_status_5": "",
+                        "invinterface_oper_status_6": "on",
+                        "invinterface_oper_status_7": "",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-oper-status",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_admin_status": {
+                        "invinterface_admin_status": "1",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-admin-status-up",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_admin_status": {
+                        "invinterface_admin_status": "2",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-admin-status-down",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_admin_status": {
+                        "invinterface_admin_status": "-1",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-admin-status-ignore",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_port_type": {
+                        "invinterface_port_type": "7|8|9",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-port-type",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_available": {
+                        "invinterface_available": "",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-available-",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_available": {
+                        "invinterface_available": "no",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-available-used",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_available": {
+                        "invinterface_available": "yes",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-available-free",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "invinterface_available": {
+                        "invinterface_available": "",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="non-canonical-inv-table-filters-legacy-available-ignore",
+        ),
+    ],
+)
+def test__do_not_migrate_visual_legacy(visual: TVisual) -> None:
+    non_canonical_filters = find_non_canonical_filters(
+        DiscoveredPlugins([], {}),
+        {
+            ".networking.interfaces:*.oper_status": {
+                "title": "Operational status",
+                "paint": "if_oper_status",
+                "filter": FilterInvtableOperStatus,
+            },
+            ".networking.interfaces:*.admin_status": {
+                "title": "Administrative status",
+                "paint": "if_admin_status",
+                "filter": FilterInvtableAdminStatus,
+            },
+            ".networking.interfaces:*.port_type": {
+                "title": "Type",
+                "paint": "if_port_type",
+                "filter": FilterInvtableInterfaceType,
+            },
+            ".networking.interfaces:*.available": {
+                "title": "Port usage",
+                "paint": "if_available",
+                "filter": FilterInvtableAvailable,
+            },
+        },
+    )
+
+    migration = migrate_visuals({(UserId("userid"), "name"): visual}, non_canonical_filters)
+    assert not migration.has_changed
+    assert migration.migrated == {"userid": {("userid", "name"): visual}}

@@ -277,6 +277,9 @@ class HTMLWriter:
             case "error":
                 cls = "error"
                 prefix = _("ERROR")
+            case "info":
+                cls = "info_msg"
+                prefix = _("INFO")
             case other:
                 assert_never(other)
 

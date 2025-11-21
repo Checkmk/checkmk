@@ -21,12 +21,12 @@ from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
-MsgType = Literal["message", "waiting", "warning", "error"]
+MsgType = Literal["message", "waiting", "warning", "error", "info"]
 
 
 def _parse_valid_msg_type(val: str) -> MsgType:
     match val:
-        case "message" | "waiting" | "warning" | "error":
+        case "message" | "waiting" | "warning" | "error" | "info":
             return val
     return "message"
 

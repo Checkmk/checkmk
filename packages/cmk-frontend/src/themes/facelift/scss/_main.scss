@@ -447,7 +447,8 @@ div.success,
 div.error,
 div.message,
 div.warning,
-div.waiting {
+div.waiting,
+div.info_msg {
   padding: 16px;
   margin: $spacing 0;
   border-radius: $theme-border-radius;
@@ -514,7 +515,8 @@ div.really {
 }
 
 div.success,
-div.waiting {
+div.waiting,
+div.info_msg {
   background-color: $headline-color;
 }
 
@@ -534,6 +536,10 @@ div.error {
   tt {
     color: inherit;
   }
+}
+
+.info_msg.flashed {
+  @include flashed-mixin($help-icon-bg-color, url('../facelift/images/icon_info.svg'));
 }
 
 .success.flashed {

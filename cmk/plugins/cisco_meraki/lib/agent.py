@@ -94,14 +94,14 @@ class MerakiOrganisation:
         if self.api_disabled:
             return
 
-        if self.config.licenses_overview_required:
+        if self.config.required.licenses_overview:
             if licenses_overview := self.client.get_licenses_overview(self.id, self.name):
                 yield Section(
                     name="cisco_meraki_org_licenses_overview",
                     data=licenses_overview,
                 )
 
-        if self.config.devices_required:
+        if self.config.required.devices:
             devices_by_serial = self.client.get_devices(self.id, self.name)
         else:
             devices_by_serial = {}
@@ -117,7 +117,7 @@ class MerakiOrganisation:
                 piggyback=self._get_device_piggyback(device, devices_by_serial),
             )
 
-        if self.config.device_statuses_required:
+        if self.config.required.device_statuses:
             for device_status in self.client.get_devices_statuses(self.id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
@@ -130,7 +130,7 @@ class MerakiOrganisation:
                         piggyback=piggyback or None,
                     )
 
-        if self.config.sensor_readings_required:
+        if self.config.required.sensor_readings:
             for sensor_reading in self.client.get_sensor_readings(self.id):
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.

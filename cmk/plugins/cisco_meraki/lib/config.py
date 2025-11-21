@@ -21,37 +21,21 @@ from . import cache, constants, schema
 class MerakiConfig:
     hostname: str
     org_ids: Sequence[str]
-    section_names: Sequence[str]
     org_id_as_prefix: bool
     no_cache: bool
     cache: _CacheConfig
+    required: _RequiredSections
 
     @classmethod
     def build(cls, args: Namespace) -> Self:
         return cls(
             hostname=args.hostname,
             org_ids=args.orgs,
-            section_names=args.sections,
             org_id_as_prefix=args.org_id_as_prefix,
             no_cache=args.no_cache,
             cache=_CacheConfig.build(args),
+            required=_RequiredSections.build(set(args.sections)),
         )
-
-    @property
-    def device_statuses_required(self) -> bool:
-        return constants.SEC_NAME_DEVICE_STATUSES in self.section_names
-
-    @property
-    def licenses_overview_required(self) -> bool:
-        return constants.SEC_NAME_LICENSES_OVERVIEW in self.section_names
-
-    @property
-    def sensor_readings_required(self) -> bool:
-        return constants.SEC_NAME_SENSOR_READINGS in self.section_names
-
-    @property
-    def devices_required(self) -> bool:
-        return self.device_statuses_required or self.sensor_readings_required
 
 
 def get_meraki_dashboard(api_key: str, region: str, debug: bool, proxy: str | None) -> DashboardAPI:
@@ -113,3 +97,22 @@ class _CacheConfig:
                 ttl=args.cache_sensor_readings,
             ),
         )
+
+
+@dataclass(frozen=True)
+class _RequiredSections:
+    device_statuses: bool
+    licenses_overview: bool
+    sensor_readings: bool
+
+    @classmethod
+    def build(cls, sections: set[str]) -> Self:
+        return cls(
+            device_statuses=constants.SEC_NAME_DEVICE_STATUSES in sections,
+            licenses_overview=constants.SEC_NAME_LICENSES_OVERVIEW in sections,
+            sensor_readings=constants.SEC_NAME_SENSOR_READINGS in sections,
+        )
+
+    @property
+    def devices(self) -> bool:
+        return self.device_statuses or self.sensor_readings

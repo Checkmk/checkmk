@@ -14,7 +14,7 @@ from pytest import CaptureFixture
 from cmk.plugins.cisco_meraki.lib import agent
 from cmk.plugins.cisco_meraki.lib.agent import MerakiRunContext
 from cmk.plugins.cisco_meraki.lib.clients import MerakiClient
-from cmk.plugins.cisco_meraki.lib.config import MerakiConfig
+from cmk.plugins.cisco_meraki.lib.config import _RequiredSections, MerakiConfig
 
 from .fakes import FakeMerakiSDK
 
@@ -62,7 +62,7 @@ class TestMerakiAgentOutput:
         assert value == expected
 
     def test_section_specified(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
-        updated_ctx = _update_section_names(ctx, section_names=["licenses-overview"])
+        updated_ctx = _update_section_names(ctx, sections={"licenses-overview"})
         agent.run(updated_ctx)
 
         value = re.findall(r"<<<cisco_meraki_org_(\w+):sep\(0\)>>>", capsys.readouterr().out)
@@ -76,7 +76,7 @@ class TestMerakiAgentOutput:
         agent.run(ctx)
         agent_output_all_orgs = capsys.readouterr().out
 
-        updated_ctx = _update_section_names(ctx, section_names=["licenses-overview"])
+        updated_ctx = _update_section_names(ctx, sections={"licenses-overview"})
         agent.run(updated_ctx)
         agent_output_with_org = capsys.readouterr().out
 
@@ -118,6 +118,7 @@ def _update_org_ids(ctx: MerakiRunContext, org_ids: Sequence[str]) -> MerakiRunC
     return dataclasses.replace(ctx, config=patched_config)
 
 
-def _update_section_names(ctx: MerakiRunContext, section_names: Sequence[str]) -> MerakiRunContext:
-    patched_config = dataclasses.replace(ctx.config, section_names=section_names)
+def _update_section_names(ctx: MerakiRunContext, sections: set[str]) -> MerakiRunContext:
+    patched_required = _RequiredSections.build(sections=sections)
+    patched_config = dataclasses.replace(ctx.config, required=patched_required)
     return dataclasses.replace(ctx, config=patched_config)

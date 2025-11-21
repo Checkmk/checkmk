@@ -133,6 +133,9 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
             "checkbox", name="Send log messages to event"
         )
 
+    def resource_attribute_for_hostname_computation_textfield(self, receiver_type: str) -> Locator:
+        return self._receiver(receiver_type).get_by_role("textbox", name="Resource attribute for")
+
     @staticmethod
     def click_on_last_locator(locator: Locator) -> None:
         target_index = locator.count() - 1
@@ -193,5 +196,8 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
                     )
                 else:
                     raise ValueError(f"Unknown host name field type: {host_name_field['type']}")
-        if properties["endpoint"].get("export_to_syslog"):
+        if properties["endpoint"].get("event_console"):
             self.send_logs_to_event_console_checkbox(receiver_type).check()
+            self.resource_attribute_for_hostname_computation_textfield(receiver_type).fill(
+                properties["endpoint"]["event_console"]["host_name_resource_attribute_key"]
+            )

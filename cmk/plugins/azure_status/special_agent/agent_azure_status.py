@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="redundant-expr"
 
 import argparse
 import json
@@ -14,7 +13,7 @@ from collections.abc import Iterable, Iterator, Sequence
 import feedparser
 import requests
 from feedparser.util import FeedParserDict
-from lxml.html import fromstring, HtmlElement
+from lxml.html import fromstring
 from pydantic import BaseModel
 
 from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
@@ -104,10 +103,7 @@ def get_azure_issues(
 
     for entry in entries:
         affected_regions = get_affected_regions(all_regions, entry)
-        parsed_html = fromstring(entry.summary)
-        summary = (
-            parsed_html.text_content() if isinstance(parsed_html, HtmlElement) else entry.summary
-        )
+        summary = fromstring(entry.summary).text_content()
 
         if not affected_regions:
             yield AzureIssue(region="Global", title=entry.title, description=summary)

@@ -20,6 +20,43 @@ FAMILIES = [
 ]
 
 py_library(
+    name = "kube",
+    srcs = glob([
+        "cmk/plugins/kube/**/*.py",
+    ]),
+    data = ["cmk/plugins/kube/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lib",
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("kubernetes"),
+        requirement("requests"),
+    ],
+)
+
+py_test(
+    name = "kube-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/kube/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":kube",
+        requirement("kubernetes"),
+        requirement("polyfactory"),
+        requirement("pytest"),
+        requirement("pytest-mock"),
+        requirement("requests"),
+    ],
+)
+
+py_library(
     name = "lib",
     srcs = glob([
         "cmk/plugins/lib/**/*.py",

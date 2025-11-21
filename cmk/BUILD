@@ -46,7 +46,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "icalendar",
     "jinja2",
     "jira",
-    "kubernetes",
     "lxml",
     "markdown",
     "marshmallow",

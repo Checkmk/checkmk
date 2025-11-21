@@ -23,7 +23,6 @@ google-cloud-monitoring
 icalendar
 jinja2
 jira
-kubernetes
 lxml
 marshmallow
 marshmallow-oneofschema

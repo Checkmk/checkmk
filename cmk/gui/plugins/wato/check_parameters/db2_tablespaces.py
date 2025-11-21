@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import math
@@ -28,6 +27,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 
 _IEC_UNITS = Literal["B", "KiB", "MiB", "GiB", "TiB"]
@@ -86,7 +86,7 @@ def _absolute_level_common(title: str, default_value: int) -> Transform:
     )
 
 
-def db_levels_common():
+def db_levels_common() -> list[tuple[str, ValueSpec]]:
     return [
         (
             "levels",
@@ -198,7 +198,7 @@ def db_levels_common():
     ]
 
 
-def _item_spec_db2_tablespaces():
+def _item_spec_db2_tablespaces() -> TextInput:
     return TextInput(
         title=_("Instance"),
         help=_(
@@ -208,7 +208,7 @@ def _item_spec_db2_tablespaces():
     )
 
 
-def _parameter_valuespec_db2_tablespaces():
+def _parameter_valuespec_db2_tablespaces() -> Dictionary:
     return Dictionary(
         help=_(
             "A tablespace is a container for segments (tables, indexes, etc). A "

@@ -1315,7 +1315,7 @@ class FilterMigrationScale(FilterMigration):
         migrated = {}
         for direction in ("from", "until"):
             if filter_value := value.get(f"{self.name}_{direction}{self.legacy_suffix}"):
-                migrated[f"{self.name}_canonical_{direction}"] = str(int(filter_value) * self.scale)
+                migrated[f"{self.filter_name}_{direction}"] = str(int(filter_value) * self.scale)
         return migrated
 
 
@@ -1324,25 +1324,41 @@ class FilterMigrationChoice(FilterMigration):
     choices: Sequence[int, float, str]
 
     def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]:
-        migrated = {n: value.get(n, "") for c in self.choices for n in (f"{self.name}_{c}",)}
-        if (filter_value := value.get(self.name)) != "-1":
-            # FilterInvtableAdminStatus
-            migrated[f"{self.name}_{filter_value}"] = "on"
-        return migrated if value != migrated else {}
+        # FilterInvtableAdminStatus
+        migrated = {f"{self.filter_name}_{c}": "" for c in self.choices}
+        match value.get(self.name):
+            case "1":
+                migrated[f"{self.filter_name}_1"] = "on"
+                return migrated
+            case "2":
+                migrated[f"{self.filter_name}_2"] = "on"
+                return migrated
+            case "-1":
+                return migrated
+            case _:
+                # FilterInvtableOperStatus
+                return {
+                    f"{self.filter_name}_{c}": value.get(f"{self.name}_{c}", "")
+                    for c in self.choices
+                }
 
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationBool(FilterMigration):
     def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]:
-        migrated = {n: value.get(n, "") for c in (True, False, None) for n in (f"{self.name}_{c}",)}
-        if filter_value := value.get(self.name):
-            # FilterInvtableAvailable
-            match filter_value:
-                case "yes":
-                    migrated[f"{self.name}_True"] = "on"
-                case "no":
-                    migrated[f"{self.name}_False"] = "on"
-        return migrated if value != migrated else {}
+        # FilterInvtableAvailable
+        migrated = {f"{self.filter_name}_{c}": "" for c in (True, False, None)}
+        match value.get(self.name):
+            case "yes":
+                migrated[f"{self.filter_name}_True"] = "on"
+                return migrated
+            case "no":
+                migrated[f"{self.filter_name}_False"] = "on"
+                return migrated
+            case "":
+                return migrated
+            case _:
+                return migrated
 
 
 def find_non_canonical_filters(

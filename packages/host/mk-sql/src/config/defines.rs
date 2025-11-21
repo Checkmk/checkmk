@@ -17,6 +17,7 @@ pub mod keys {
 
     pub const CONNECTION: &str = "connection";
     pub const HOSTNAME: &str = "hostname";
+    pub const ALWAYS_LOCALHOST: &str = "always_local_host";
     pub const FAIL_OVER_PARTNER: &str = "failoverpartner";
     pub const TLS: &str = "tls";
     pub const PORT: &str = "port";

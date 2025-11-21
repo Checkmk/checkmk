@@ -456,18 +456,21 @@ impl Connection {
         }
         Ok(Some(
             Self {
-                hostname: conn
-                    .get_string(keys::HOSTNAME)
-                    .map(|s| {
-                        if s.is_empty() {
-                            defaults::CONNECTION_HOST_NAME.to_string()
-                        } else {
-                            s
-                        }
-                    })
-                    .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
-                    .to_lowercase()
-                    .into(),
+                hostname: if conn.get_bool(keys::ALWAYS_LOCALHOST, false) {
+                    HostName::from("localhost".to_string())
+                } else {
+                    conn.get_string(keys::HOSTNAME)
+                        .map(|s| {
+                            if s.is_empty() {
+                                defaults::CONNECTION_HOST_NAME.to_string()
+                            } else {
+                                s
+                            }
+                        })
+                        .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
+                        .to_lowercase()
+                        .into()
+                },
                 fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
                 port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
                     log::debug!("no port specified, using default");
@@ -1214,6 +1217,34 @@ authentication:
         );
         assert_eq!(c.backend(), &Backend::default());
         assert!(c.exclude_databases().is_empty());
+    }
+
+    fn connection_always_local_host(param: Option<bool>) -> String {
+        format!(
+            r#"
+connection:
+  hostname: "alice"
+  {}
+"#,
+            match param {
+                Some(v) => format!("always_local_host: {}", if v { "yes" } else { "no" }),
+                None => "".to_string(),
+            }
+        )
+    }
+
+    #[test]
+    fn test_connection_always_local_host_from_yaml() {
+        for (inp, expected) in [
+            (connection_always_local_host(Some(true)), "localhost"),
+            (connection_always_local_host(Some(false)), "alice"),
+            (connection_always_local_host(None), "alice"),
+        ] {
+            let c = Connection::from_yaml(&create_yaml(&inp), None)
+                .unwrap()
+                .unwrap();
+            assert_eq!(c.hostname(), expected.to_string().into());
+        }
     }
 
     #[test]

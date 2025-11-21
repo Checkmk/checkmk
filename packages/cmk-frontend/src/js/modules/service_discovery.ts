@@ -37,7 +37,6 @@ interface Check {
 // code for further actions. It contains the check_table which actions of
 // the user are based on.
 let g_service_discovery_result: string | null = null
-let g_show_updating_timer: number | null = null
 
 type DiscoveryAction =
   | ''
@@ -96,10 +95,7 @@ export function start(
   transid: string,
   request_vars: Record<string, any> | null
 ) {
-  // When we receive no response for 2 seconds, then show the updating message
-  g_show_updating_timer = window.setTimeout(function () {
-    show_message_by_type('waiting', 'Updating...')
-  }, 2000)
+  show_message_by_type('waiting', 'Updating...')
 
   lock_controls(true, get_state_independent_controls().concat(get_page_menu_controls()))
   monitor({
@@ -169,17 +165,10 @@ function finish(response: AjaxServiceDiscovery) {
 }
 
 function error(response: string) {
-  if (g_show_updating_timer) {
-    clearTimeout(g_show_updating_timer)
-  }
   show_error(response)
 }
 
 function update(handler_data: ServiceDiscoveryHandlerData, response: AjaxServiceDiscovery) {
-  if (g_show_updating_timer) {
-    clearTimeout(g_show_updating_timer)
-  }
-
   if (response.message) {
     show_message_by_type(response.message_type, response.message)
   } else {

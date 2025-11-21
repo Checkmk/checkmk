@@ -485,11 +485,11 @@ def _is_choice(len_mapping: int) -> bool:
 
 
 def _make_column_filter(
-    key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
     *,
     table_view_name: str,
-    name: str,
+    ident: str,
+    row_name: str,
     long_title: str,
 ) -> (
     FilterInvtableText
@@ -503,7 +503,8 @@ def _make_column_filter(
         case BoolFieldFromAPI():
             return FilterInvtableChoice(
                 inv_info=table_view_name,
-                ident=name,
+                ident=ident,
+                row_name=row_name,
                 title=long_title,
                 options=[
                     ("True", _make_str(field_from_api.render_true)),
@@ -517,13 +518,14 @@ def _make_column_filter(
             ):
                 return FilterInvtableAgeRange(
                     inv_info=table_view_name,
-                    ident=name,
+                    ident=ident,
+                    row_name=row_name,
                     title=long_title,
                     unit=_get_unit_from_number_field(field_from_api),
                 )
             return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
-                ident=name,
+                ident=ident,
                 title=long_title,
                 unit=_get_unit_from_number_field(field_from_api),
                 scale=1,
@@ -532,26 +534,27 @@ def _make_column_filter(
             if field_from_api.sort_key:
                 return FilterInvtableTextWithSortKey(
                     inv_info=table_view_name,
-                    ident=name,
+                    ident=ident,
                     title=long_title,
                     sort_key=field_from_api.sort_key,
                 )
             return FilterInvtableText(
                 inv_info=table_view_name,
-                ident=name,
+                ident=ident,
                 title=long_title,
             )
         case ChoiceFieldFromAPI():
             if _is_choice(len(field_from_api.mapping)):
                 return FilterInvtableChoice(
                     inv_info=table_view_name,
-                    ident=name,
+                    ident=ident,
+                    row_name=row_name,
                     title=long_title,
                     options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
                 )
             return FilterInvtableDualChoice(
                 inv_info=table_view_name,
-                ident=name,
+                ident=ident,
                 title=long_title,
                 options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
             )
@@ -577,10 +580,10 @@ def _parse_col_field_of_view_from_api(
         paint_function=_make_paint_function(field_from_api),
         sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
         filter=_make_column_filter(
-            key,
             field_from_api,
             table_view_name=table_view_name,
-            name=names.for_filter,
+            ident=names.for_filter,
+            row_name=names.for_object,
             long_title=long_title,
         ),
     )

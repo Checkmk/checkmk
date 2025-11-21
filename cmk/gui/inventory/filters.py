@@ -268,12 +268,12 @@ class FilterInvChoice(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-def _filter_table_choices(ident: str, context: VisualContext, rows: Rows) -> Rows:
+def _filter_table_choices(ident: str, row_name: str, context: VisualContext, rows: Rows) -> Rows:
     values = context.get(ident, {})
 
     def _add_row(row: Row) -> bool:
         # Apply filter if and only if a filter value is set
-        value = row.get(ident)
+        value = row.get(row_name)
         if (filter_key := f"{ident}_{value}") in values:
             return values[filter_key] == "on"
         return True
@@ -283,7 +283,13 @@ def _filter_table_choices(ident: str, context: VisualContext, rows: Rows) -> Row
 
 class FilterInvtableChoice(CheckboxRowFilter):
     def __init__(
-        self, *, inv_info: str, ident: str, title: str, options: Sequence[tuple[str, str]]
+        self,
+        *,
+        inv_info: str,
+        ident: str,
+        row_name: str,
+        title: str,
+        options: Sequence[tuple[str, str]],
     ) -> None:
         super().__init__(
             title=title,
@@ -292,7 +298,7 @@ class FilterInvtableChoice(CheckboxRowFilter):
             query_filter=query_filters.MultipleOptionsQuery(
                 ident=ident,
                 options=[(f"{ident}_{k}", v) for k, v in options],
-                rows_filter=partial(_filter_table_choices, ident),
+                rows_filter=partial(_filter_table_choices, ident, row_name),
             ),
         )
 
@@ -333,6 +339,7 @@ class FilterInvtableAgeRange(FilterNumberRange):
         *,
         inv_info: str,
         ident: str,
+        row_name: str,
         title: str,
         unit: str | LazyString,
     ) -> None:
@@ -343,7 +350,7 @@ class FilterInvtableAgeRange(FilterNumberRange):
             query_filter=query_filters.NumberRangeQuery(
                 ident=ident,
                 filter_livestatus=False,
-                filter_row=query_filters.column_age_in_range,
+                filter_row=lambda r, c, b: query_filters.column_age_in_range(r, row_name, b),
                 request_var_suffix="",
                 bound_rescaling=1.0,
             ),
@@ -441,6 +448,15 @@ class FilterInvtableDualChoice(DualListFilter):
             query_filter=query_filters.MultipleQuery(ident=ident, op="="),
             options=lambda i: list(options),
         )
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return ""
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        value = context.get(self.query_filter.ident, {})
+        if not (selection := self.query_filter.selection(value)):
+            return rows  # No types selected, filter is unused
+        return [row for row in rows if str(row[self.query_filter.column]) in selection]
 
 
 def _filter_by_host_inventory(

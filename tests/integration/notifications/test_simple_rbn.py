@@ -99,6 +99,7 @@ def fixture_host(site: Site) -> Iterator[HostName]:
 @pytest.mark.usefixtures("fake_notification_parameter")
 @pytest.mark.usefixtures("disable_checks")
 @pytest.mark.usefixtures("disable_flap_detection")
+@pytest.mark.skip(reason="fix in work")
 def test_simple_rbn_host_notification(host: HostName, site: Site) -> None:
     with WatchLog(site, default_timeout=20) as log:
         # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.

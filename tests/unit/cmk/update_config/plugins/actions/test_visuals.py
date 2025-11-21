@@ -3,14 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import Visual
-from cmk.gui.views.inventory import find_non_canonical_filters
-from cmk.gui.views.inventory.registry import inventory_displayhints
+from cmk.gui.views.inventory import find_non_canonical_filters, InventoryHintSpec
 from cmk.gui.visuals import TVisual
 from cmk.update_config.plugins.actions.visuals import migrate_visuals
+
+_LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
+    ".hardware.cpu.max_speed": {"title": "Maximum speed", "paint": "hz"},
+    ".hardware.memory.total_ram_usable": {"title": "Total usable RAM", "paint": "bytes_rounded"},
+    ".hardware.cpu.cache_size": {"title": "Cache size", "paint": "bytes"},
+}
 
 
 @pytest.mark.parametrize(
@@ -141,7 +148,7 @@ from cmk.update_config.plugins.actions.visuals import migrate_visuals
 def test__migrate_visual(
     visual: TVisual, expected_has_changed: bool, expected_visual: TVisual
 ) -> None:
-    non_canonical_filters = find_non_canonical_filters(inventory_displayhints)
+    non_canonical_filters = find_non_canonical_filters(_LEGACY_HINTS)
 
     migration = migrate_visuals({(UserId("userid"), "name"): visual}, non_canonical_filters)
     assert migration.has_changed is expected_has_changed

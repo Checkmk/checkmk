@@ -5,8 +5,6 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
-
 import { type GraphTimerange } from '@/dashboard-wip/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRange } from '@/dashboard-wip/components/TimeRange/useTimeRange'
 import {
@@ -27,8 +25,6 @@ import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
-
-const { _t } = usei18n()
 
 type TimeRangeType = 'current' | 'window'
 
@@ -56,10 +52,7 @@ export const usePercentageOfServiceProblems = async (
     titleUrlValidationErrors,
     validate: validateTitle,
     widgetGeneralSettings
-  } = useWidgetVisualizationProps(
-    _t('Percentage of total service problems'),
-    currentSpec?.general_settings
-  )
+  } = useWidgetVisualizationProps('', currentSpec?.general_settings)
 
   const currentContent = currentSpec?.content as ProblemGraphContent
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(currentContent?.timerange)

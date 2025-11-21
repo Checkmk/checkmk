@@ -56,7 +56,6 @@ export const useTopList = async (
 ): Promise<UseTopList> => {
   const currentContent = currentSpec?.content as TopListContent
 
-  //Todo: Fill values if they exist in serializedData
   const {
     type: dataRangeType,
     symbol: dataRangeSymbol,

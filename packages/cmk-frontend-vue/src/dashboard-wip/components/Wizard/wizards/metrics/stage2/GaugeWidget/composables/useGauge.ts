@@ -132,7 +132,8 @@ export const useGauge = async (
       fixedDataRangeProps,
       showServiceStatus,
       showServiceStatusSelection,
-      showWidgetBackground
+      showWidgetBackground,
+      widgetGeneralSettings
     ],
     useDebounceFn(() => {
       void _updateWidgetProps()

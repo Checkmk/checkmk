@@ -59,7 +59,7 @@ export const useInventory = async (
     validate: validateTitle,
 
     widgetGeneralSettings
-  } = useWidgetVisualizationProps('Inventory', editWidget?.general_settings)
+  } = useWidgetVisualizationProps('', editWidget?.general_settings)
 
   const inventoryPath = ref<string | null>(content?.path ?? null)
 

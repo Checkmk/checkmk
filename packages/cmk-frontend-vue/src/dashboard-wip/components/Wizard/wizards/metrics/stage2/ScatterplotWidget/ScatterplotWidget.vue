@@ -43,7 +43,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
 <template>
   <DashboardPreviewContent
-    widget_id="gauge-preview"
+    widget_id="average_scatterplot-preview"
     :dashboard-name="dashboardName"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"

@@ -294,11 +294,11 @@ test-schemathesis-openapi:
 
 test-plugins:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	--ignore=plugins_integration/test_plugin_piggyback.py --session-timeout 7200
+	--ignore=plugins_integration/nonfree/pro/test_plugin_piggyback.py --session-timeout 7200
 
 test-plugins-piggyback:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \
-	$(realpath plugins_integration)/test_plugin_piggyback.py --session-timeout 3600
+	$(realpath plugins_integration)/nonfree/pro/test_plugin_piggyback.py --session-timeout 3600
 
 test-plugins-siteless:
 	$(PYTEST) --log-cli-level=INFO $(realpath plugins_siteless) \

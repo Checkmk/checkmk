@@ -13,6 +13,7 @@ import SharedDashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuH
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
+import { cmkTokenKey, urlParamsKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type { SharedDashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import { createDashboardModel } from '@/dashboard-wip/utils.ts'
 
@@ -23,8 +24,10 @@ const props = defineProps<SharedDashboardPageProperties>()
 
 const sharedDashboard = createDashboardModel(props.dashboard.spec, DashboardLayout.RELATIVE_GRID)
 
-// So far, this is only needed and used by the DashboardContentNtop component
-provide('urlParams', props.url_params)
+// So far, urlParams is only needed and used by the DashboardContentNtop component (ntop.ts)
+//         cmkToken only by the DashboardContentFigure component
+provide(urlParamsKey, props.url_params)
+provide(cmkTokenKey, props.token_value)
 
 const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filter_context))
 const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.content.widgets))

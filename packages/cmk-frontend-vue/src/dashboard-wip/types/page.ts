@@ -10,7 +10,8 @@ import type {
   DashboardMetadata,
   RelativeGridDashboardResponse,
   ResponsiveGridDashboardResponse
-} from '@/dashboard-wip/types/dashboard.ts'
+} from './dashboard.ts'
+import type { FilterHTTPVars } from './widget.ts'
 
 export interface BreadcrumbItem {
   title: string
@@ -37,7 +38,7 @@ export interface DashboardPageProperties {
   dashboard: LoadedDashboardProperties | null
   mode: 'display' | 'create'
   can_edit_dashboards: boolean
-  url_params: Record<string, string>
+  url_params: FilterHTTPVars
   links: {
     list_dashboards: string
     user_guide: string
@@ -54,6 +55,6 @@ export interface SharedDashboardPageProperties {
     title: string
   }
   dashboard_constants: DashboardConstants
-  url_params: string
+  url_params: FilterHTTPVars
   token_value: string
 }

@@ -14,12 +14,13 @@
 import axios from 'axios'
 import { inject } from 'vue'
 
+import { urlParamsKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
 
 import type { NtopType } from './types.ts'
 
 export const getIfid = async (): Promise<string> => {
-  const urlParams = inject('urlParams') as FilterHTTPVars
+  const urlParams = inject(urlParamsKey) as FilterHTTPVars
   if ('ifid' in urlParams && urlParams.ifid) {
     return urlParams.ifid
   } else {

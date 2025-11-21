@@ -23,7 +23,7 @@ export class FigureBase {
   constructor(
     legacyFigureType: string,
     divSelector: string,
-    ajaxPage: string,
+    dataEndpointUrl: string,
     postBody: string,
     dashletSpec: DashletSpec,
     updateInterval: number
@@ -39,7 +39,7 @@ export class FigureBase {
 
     const figureCtor = registry.get_figure(legacyFigureType)
     this.instance = new figureCtor(divSelector)
-    this.instance.set_post_url_and_body(ajaxPage, postBody)
+    this.instance.set_post_url_and_body(dataEndpointUrl, postBody)
     this.instance.set_dashlet_spec(dashletSpec)
     this.instance.initialize()
     this.forceUpdate(updateInterval)
@@ -59,8 +59,8 @@ export class FigureBase {
     }
   }
 
-  public update(ajaxPage: string, postBody: string, dashletSpec: DashletSpec) {
-    this.instance.set_post_url_and_body(ajaxPage, postBody)
+  public update(dataEndpointUrl: string, postBody: string, dashletSpec: DashletSpec) {
+    this.instance.set_post_url_and_body(dataEndpointUrl, postBody)
     this.forceUpdate() // running the scheduler and fetching data
     this.instance.set_dashlet_spec(dashletSpec)
     this.instance.update_gui()

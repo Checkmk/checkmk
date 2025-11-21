@@ -39,6 +39,7 @@ import {
   type DashboardModel
 } from '@/dashboard-wip/types/dashboard.ts'
 import { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
+import { urlParamsKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type { BreadcrumbItem } from '@/dashboard-wip/types/page'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import type {
@@ -76,7 +77,7 @@ provide('filterCollection', filterCollection)
 useProvideVisualInfos()
 
 // So far, this is only needed and used by the DashboardContentNtop component
-provide('urlParams', props.url_params)
+provide(urlParamsKey, props.url_params)
 
 const dashboardsManager = useDashboardsManager()
 

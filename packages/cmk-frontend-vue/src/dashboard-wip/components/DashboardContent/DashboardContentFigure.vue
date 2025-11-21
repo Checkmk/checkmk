@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type Ref,
   computed,
+  inject,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -15,12 +16,17 @@ import {
   watch
 } from 'vue'
 
+import { cmkTokenKey } from '@/dashboard-wip/types/injectionKeys.ts'
 import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
 
 import { type DashletSpec, FigureBase } from './cmk_figures.ts'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
+const cmkToken = inject(cmkTokenKey) as string | undefined
+const dataEndpointUrl: Ref<string> = computed(() => {
+  return cmkToken ? 'widget_figure_token_auth.py' : 'widget_figure.py'
+})
 const emit = defineEmits(['vue:mounted', 'vue:updated'])
 
 const contentDiv = useTemplateRef<HTMLDivElement>('contentDiv')
@@ -80,12 +86,16 @@ function handleResize(newWidth: number, newHeight: number) {
 }
 
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
-  return {
+  const vars: FilterHTTPVars = {
     content: JSON.stringify(props.content),
     context: JSON.stringify(props.effective_filter_context.filters),
     general_settings: JSON.stringify(props.general_settings),
     single_infos: JSON.stringify(props.effective_filter_context.uses_infos)
   }
+  if (cmkToken !== undefined) {
+    vars['cmk-token'] = cmkToken
+  }
+  return vars
 })
 
 // Resolve figure type for special cases where figure and content type are not the same
@@ -121,7 +131,6 @@ const sizeSvg = computed(() =>
   ['event_stats', 'host_stats', 'service_stats'].includes(figureType.value)
 )
 
-const ajaxPage: string = 'widget_figure.py'
 const updateInterval = 60
 
 // This is needed by the old cmk_figures.ts code, hence the old naming "dashlet"
@@ -135,7 +144,7 @@ const initializeFigure = () => {
   figure = new FigureBase(
     legacyFigureType.value,
     `#db-content-figure-${props.widget_id}`,
-    ajaxPage,
+    dataEndpointUrl.value,
     new URLSearchParams(httpVars.value).toString(),
     dashletSpec.value,
     updateInterval
@@ -150,7 +159,11 @@ onMounted(async () => {
 
 watch(httpVars, (newHttpVars) => {
   if (figure) {
-    figure.update(ajaxPage, new URLSearchParams(newHttpVars).toString(), dashletSpec.value)
+    figure.update(
+      dataEndpointUrl.value,
+      new URLSearchParams(newHttpVars).toString(),
+      dashletSpec.value
+    )
   }
 })
 

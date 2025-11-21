@@ -8,8 +8,6 @@ This agent retrieves the service status from https://status.cloud.google.com/inc
 Since this feed is public, no authentication is required.
 """
 
-# mypy: disable-error-code="type-arg"
-
 import argparse
 import sys
 import typing
@@ -44,7 +42,7 @@ class AgentOutput(pydantic.BaseModel):
     discovery_param: DiscoveryParam
     # I do not want to make an explicit type for the incident schema
     # https://status.cloud.google.com/incidents.schema.json
-    health_info: pydantic.Json
+    health_info: pydantic.Json[object]
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:

@@ -117,7 +117,7 @@ class SiteManagement:
         )
 
     @classmethod
-    def livestatus_proxy_valuespec(cls) -> FixedValue:
+    def livestatus_proxy_valuespec(cls) -> ValueSpec:
         return FixedValue(
             value=None,
             title=_("Use Livestatus proxy daemon"),

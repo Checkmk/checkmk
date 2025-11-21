@@ -2105,17 +2105,26 @@ modes.register(
 
 
 def mode_notify(options: dict, args: list[str]) -> int | None:
-    keepalive = "keepalive" in options and (
-        cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY
+    community_edition = (
+        cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.COMMUNITY
     )
+    if not community_edition and "spoolfile" in args:
+        return _do_notify_via_automation(
+            options=options,
+            args=args,
+        )
+
+    return _do_notify(
+        options=options,
+        args=args,
+        keepalive=not community_edition and "keepalive" in options,
+    )
+
+
+def _do_notify(options: dict, args: list[str], keepalive: bool) -> int | None:
     if keepalive:
-        return _do_notify_keepalive(options, args)
+        register_sigint_handler()
 
-    return _do_notify_via_automation(options, args)
-
-
-def _do_notify_keepalive(options: dict, args: list[str]) -> int | None:
-    register_sigint_handler()
     with lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
         loading_result = config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
 
@@ -2139,7 +2148,7 @@ def _do_notify_keepalive(options: dict, args: list[str]) -> int | None:
         spooling=ConfigCache.notification_spooling(),
         backlog_size=config.notification_backlog,
         logging_level=ConfigCache.notification_logging_level(),
-        keepalive=True,
+        keepalive=keepalive,
         all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, notify.logger.warning

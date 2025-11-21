@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+from __future__ import annotations
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -12,11 +11,18 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, DropdownChoice, TextInput, Tuple
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    TextInput,
+    Tuple,
+)
 
 
 # Also used in ibm_mq_managers
-def ibm_mq_version():
+def ibm_mq_version() -> list[DictionaryEntry]:
     return [
         (
             "version",
@@ -52,7 +58,7 @@ def ibm_mq_version():
     ]
 
 
-def _parameter_valuespec_ibm_mq_plugin():
+def _parameter_valuespec_ibm_mq_plugin() -> Dictionary:
     return Dictionary(
         elements=ibm_mq_version(),
     )

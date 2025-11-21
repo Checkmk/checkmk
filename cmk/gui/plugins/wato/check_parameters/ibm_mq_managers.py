@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.ibm_mq_plugin import ibm_mq_version
@@ -13,10 +11,17 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    ListOf,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
-def _parameter_valuespec_ibm_mq_managers():
+def _parameter_valuespec_ibm_mq_managers() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -71,8 +76,8 @@ def _parameter_valuespec_ibm_mq_managers():
                 "mapped_states_default",
                 MonitoringState(title=_("Service state if no map rule matches"), default_value=2),
             ),
+            *ibm_mq_version(),
         ]
-        + ibm_mq_version(),
     )
 
 

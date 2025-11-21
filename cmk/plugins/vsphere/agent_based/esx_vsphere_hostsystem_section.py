@@ -14,8 +14,8 @@ type HostSystemSection = Mapping[str, Sequence[str]]
 
 def parse_esx_vsphere_hostsystem(string_table: StringTable) -> HostSystemSection:
     """
-    >>> from pprint import pprint
-    >>> pprint(parse_esx_vsphere_hostsystem([
+    >>> from pprint import pp
+    >>> pp(parse_esx_vsphere_hostsystem([
     ...     ['hardware.cpuInfo.numCpuCores', '12'],
     ...     ['hardware.cpuInfo.numCpuPackages', '2'],
     ...     ['hardware.cpuInfo.numCpuThreads', '24'],

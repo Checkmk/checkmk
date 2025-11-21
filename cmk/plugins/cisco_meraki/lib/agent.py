@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypedDict
@@ -130,18 +131,23 @@ class MerakiOrganisation:
                         piggyback=piggyback or None,
                     )
 
-        if self.config.required.sensor_readings:
-            for sensor_reading in self.client.get_sensor_readings(self.id):
-                # Empty device names are possible when reading from the meraki API, let's set the
-                # piggyback to None so that the output is written to the main section.
-                if (
-                    piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial)
-                ) is not None:
-                    yield Section(
-                        name="cisco_meraki_org_sensor_readings",
-                        data=sensor_reading,
-                        piggyback=piggyback or None,
-                    )
+        devices_by_type = defaultdict(list)
+        for device in devices_by_serial.values():
+            devices_by_type[device["productType"]].append(device)
+
+        if devices_by_type.get("sensor"):
+            if self.config.required.sensor_readings:
+                for sensor_reading in self.client.get_sensor_readings(self.id):
+                    # Empty device names are possible when reading from the meraki API, let's set the
+                    # piggyback to None so that the output is written to the main section.
+                    if (
+                        piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial)
+                    ) is not None:
+                        yield Section(
+                            name="cisco_meraki_org_sensor_readings",
+                            data=sensor_reading,
+                            piggyback=piggyback or None,
+                        )
 
     def _get_device_piggyback(
         self, device: SupportsDeviceSerial, devices_by_serial: Mapping[str, Device]

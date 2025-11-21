@@ -34,7 +34,7 @@ class _FakeOrganisationsSDK:
                 factories.RawDeviceFactory.build(serial="S123-2", name="dev2"),
             ],
             "456": [
-                factories.RawDeviceFactory.build(serial="S456", name="dev3"),
+                factories.RawDeviceFactory.build(serial="S456", name="dev3", productType="sensor"),
             ],
         }
         return devices.get(organizationId, [])

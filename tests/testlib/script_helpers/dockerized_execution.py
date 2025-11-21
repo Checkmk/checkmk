@@ -22,12 +22,15 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, Unpack
 
-import docker  # type: ignore[import-untyped]
+import docker
+import docker.models
+import docker.models.containers
+import docker.models.images
+import docker.types
 import dockerpty  # type: ignore[import-untyped]
 import requests
-from docker.models.images import Image  # type: ignore[import-untyped]
 
 from tests.testlib.common.repo import git_commit_id, git_essential_directories, repo_path
 from tests.testlib.package_manager import DISTRO_CODES
@@ -66,7 +69,7 @@ def execute_tests_in_container(
     )
 
     # Start the container
-    container: docker.Container
+    container: docker.models.containers.Container
     with _start(
         client,
         image=image_name_with_tag,
@@ -166,7 +169,9 @@ def _docker_client() -> docker.DockerClient:
     return docker.from_env(timeout=1200)
 
 
-def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) -> Image | None:
+def _get_or_load_image(
+    client: docker.DockerClient, image_name_with_tag: str
+) -> docker.models.images.Image | None:
     try:
         image = client.images.get(image_name_with_tag)
         logger.info("  Available locally (%s)", image.short_id)
@@ -200,7 +205,9 @@ def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) ->
     return None
 
 
-def _get_registry_data(client: docker.DockerClient, image_name_with_tag: str) -> Image | None:
+def _get_registry_data(
+    client: docker.DockerClient, image_name_with_tag: str
+) -> docker.models.images.Image | None:
     try:
         registry_data = client.images.get_registry_data(image_name_with_tag)
         logger.info("  pull '%s'", image_name_with_tag)
@@ -280,7 +287,7 @@ def _create_cmk_image(
     distro_name: str,
     docker_tag: str,
     package_info: CMKPackageInfo,
-    container_env: Mapping[str, str],
+    container_env: dict[str, str],
 ) -> str:
     base_image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}:{docker_tag}"
     logger.info("Prepare distro-specific base image [%s]", base_image_name_with_tag)
@@ -418,7 +425,9 @@ def _create_cmk_image(
     return image_name_with_tag
 
 
-def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> bool:
+def _is_based_on_current_base_image(
+    image: docker.models.images.Image, base_image: docker.models.images.Image | None
+) -> bool:
     logger.info("  Check whether or not image is based on the current base image")
     if base_image is None:
         logger.info("  Base image not available, assuming it's up-to-date")
@@ -437,7 +446,7 @@ def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> b
     return True
 
 
-def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
+def _is_using_current_cmk_package(image: docker.models.images.Image, version: CMKVersion) -> bool:
     logger.info("  Check whether or not image is using the current Checkmk package")
 
     cmk_hash_entry = image.labels.get("com.checkmk.cmk_hash")
@@ -528,7 +537,7 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
     }
 
 
-def _container_env(package_info: CMKPackageInfo) -> Mapping[str, str]:
+def _container_env(package_info: CMKPackageInfo) -> dict[str, str]:
     # In addition to the ones defined here, some environment vars, like "DISTRO" are added through
     # the docker image
     env = {
@@ -553,9 +562,38 @@ def _container_env(package_info: CMKPackageInfo) -> Mapping[str, str]:
     return env
 
 
-# pep-0692 is not yet finished in mypy...
+class CreateContainerKwargs(TypedDict, total=False):
+    image: str
+    command: str | list[str]
+    hostname: str
+    user: str | int
+    detach: bool
+    stdin_open: bool
+    tty: bool
+    ports: list[int]
+    environment: dict[str, str] | list[str]
+    volumes: str | list[str]
+    network_disabled: bool
+    name: str
+    entrypoint: str | list[str]
+    working_dir: str
+    domainname: str
+    host_config: dict[str, object]
+    mac_address: str
+    labels: dict[str, str] | list[str]
+    stop_signal: str
+    networking_config: dict[str, object]
+    healthcheck: dict[str, object]
+    stop_timeout: int
+    runtime: str
+    use_config_proxy: bool
+    platform: str
+
+
 @contextmanager
-def _start(client: docker.DockerClient, **kwargs: Any) -> Iterator[docker.Container]:  # type: ignore[misc]
+def _start(
+    client: docker.DockerClient, **kwargs: Unpack[CreateContainerKwargs]
+) -> Iterator[docker.models.containers.Container]:
     logger.info("Start new container from [%s] (Args: %s)", kwargs["image"], kwargs)
 
     try:
@@ -567,7 +605,7 @@ def _start(client: docker.DockerClient, **kwargs: Any) -> Iterator[docker.Contai
     # after initialization
     container_id = client.api.create_container(**kwargs)["Id"]
     client.api.start(container_id)
-    c: docker.Container = client.containers.get(container_id)
+    c = client.containers.get(container_id)
 
     logger.info("Container ID: %s", c.short_id)
 
@@ -582,13 +620,23 @@ def _start(client: docker.DockerClient, **kwargs: Any) -> Iterator[docker.Contai
             c.remove(v=True, force=True)
 
 
-# pep-0692 is not yet finished in mypy...
-def _exec_run(  # type: ignore[no-untyped-def]
-    c: docker.Container,
+class ContainerExecKwargs(TypedDict, total=False):
+    stdout: bool
+    stderr: bool
+    stdin: bool
+    tty: bool
+    privileged: bool
+    environment: dict[str, str] | list[str]
+    workdir: str
+    stream: bool
+
+
+def _exec_run(
+    c: docker.models.containers.Container,
     cmd: str | Sequence[str],
     check: bool = True,
     user: str = "",
-    **kwargs,
+    **kwargs: Unpack[ContainerExecKwargs],
 ) -> int:
     cmd_list = shlex.split(cmd) if isinstance(cmd, str) else cmd
     cmd_str = subprocess.list2cmdline(cmd_list)
@@ -610,19 +658,17 @@ def _exec_run(  # type: ignore[no-untyped-def]
 
 
 def container_exec(
-    container: docker.Container,
+    container: docker.models.containers.Container,
     cmd: str | Sequence[str],
+    user: str = "",
     stdout: bool = True,
     stderr: bool = True,
     stdin: bool = False,
     tty: bool = False,
     privileged: bool = False,
-    user: str = "",
-    detach: bool = False,
-    stream: bool = False,
-    socket: bool = False,
-    environment: Mapping[str, str] | Sequence[str] | None = None,
+    environment: dict[str, str] | list[str] | None = None,
     workdir: str | None = None,
+    stream: Literal[True, False] = False,
 ) -> ContainerExec:
     """
     An enhanced version of #docker.Container.exec_run() which returns an object
@@ -630,6 +676,8 @@ def container_exec(
 
     Taken from https://github.com/docker/docker-py/issues/1989. Thanks!
     """
+
+    assert container.client is not None, "Container has no associated client"
 
     exec_id: str = container.client.api.exec_create(
         container.id,
@@ -644,8 +692,8 @@ def container_exec(
         workdir=workdir,
     )["Id"]
 
-    output: Iterable[bytes] = container.client.api.exec_start(
-        exec_id, detach=detach, tty=tty, stream=stream, socket=socket
+    output = container.client.api.exec_start(
+        exec_id, tty=tty, stream=stream, detach=False, socket=False, demux=False
     )
 
     return ContainerExec(container.client, exec_id, output)
@@ -653,19 +701,21 @@ def container_exec(
 
 class ContainerExec:
     def __init__(
-        self, client: docker.DockerClient, container_id: str, output: Iterable[bytes]
+        self, client: docker.DockerClient, container_id: str, output: Iterable[bytes] | bytes
     ) -> None:
         self.client = client
         self.id = container_id
         self.output = output
 
     def inspect(self) -> Mapping[str, Any]:
-        return self.client.api.exec_inspect(self.id)  # type: ignore[no-any-return]
+        return self.client.api.exec_inspect(self.id)
 
     def poll(self) -> int:
         return int(self.inspect()["ExitCode"])
 
     def communicate(self, line_prefix: bytes = b"") -> int:
+        assert not isinstance(self.output, bytes), "Output is not iterable"
+
         for data in self.output:
             if not data:
                 continue
@@ -687,7 +737,7 @@ class ContainerExec:
 
 
 def _copy_directory(
-    container: docker.types.containers.Container, src_path: Path, dest_path: Path
+    container: docker.models.containers.Container, src_path: Path, dest_path: Path
 ) -> None:
     logger.info("Copying %s from container to %s", src_path, dest_path)
 
@@ -702,7 +752,7 @@ def _copy_directory(
 
 
 def _prepare_git_overlay(
-    container: docker.Container,
+    container: docker.models.containers.Container,
     lower_path: str,
     target_path: str,
     username: str | None = None,
@@ -762,7 +812,7 @@ def _prepare_git_overlay(
         _exec_run(container, ["chown", f"{username}:{username}", target_path])
 
 
-def _prepare_testuser(container: docker.Container, username: str) -> None:
+def _prepare_testuser(container: docker.models.containers.Container, username: str) -> None:
     """Setup the environment for use with the testuser
 
     Make sure all relevant files are owned by testuser and allow passwordless sudo, which is
@@ -789,8 +839,8 @@ def _prepare_testuser(container: docker.Container, username: str) -> None:
 
 
 def _prepare_virtual_environment(
-    container: docker.Container,
-    container_env: Mapping[str, str],
+    container: docker.models.containers.Container,
+    container_env: dict[str, str],
     username: str = "",
 ) -> None:
     """Ensure the virtual environment is ready for use
@@ -804,7 +854,7 @@ def _prepare_virtual_environment(
 
 
 def _setup_virtual_environment(
-    container: docker.Container, container_env: Mapping[str, str], user: str = ""
+    container: docker.models.containers.Container, container_env: dict[str, str], user: str = ""
 ) -> None:
     logger.info("Prepare virtual environment")
     _exec_run(
@@ -820,7 +870,7 @@ def _setup_virtual_environment(
 
 
 def _cleanup_previous_virtual_environment(
-    container: docker.Container, container_env: Mapping[str, str]
+    container: docker.models.containers.Container, container_env: dict[str, str]
 ) -> None:
     """Delete existing .venv
 
@@ -843,7 +893,7 @@ def _cleanup_previous_virtual_environment(
 
 
 def _persist_virtual_environment(
-    container: docker.Container, container_env: Mapping[str, str]
+    container: docker.models.containers.Container, container_env: dict[str, str]
 ) -> None:
     """Persist the used venv in container image
 
@@ -863,7 +913,7 @@ def _persist_virtual_environment(
 
 
 def _reuse_persisted_virtual_environment(
-    container: docker.Container, container_env: Mapping[str, str], test_user: str
+    container: docker.models.containers.Container, container_env: dict[str, str], test_user: str
 ) -> None:
     """Copy /.venv to /git/.venv to reuse previous venv during testing"""
     if (

@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from random import randint, sample
 
-import docker  # type: ignore[import-untyped]
+import docker
 import pytest
 import requests
 from pytest import LogCaptureFixture
@@ -118,7 +118,7 @@ def test_start_with_custom_command(client: docker.DockerClient) -> None:
         client, CMKPackageInfo(version_from_env(), edition_from_env())
     )
     output = client.containers.run(
-        image=image.id, detach=False, command=["bash", "-c", "echo 1"]
+        image=image, detach=False, command=["bash", "-c", "echo 1"]
     ).decode("utf-8")
 
     assert "Created new site" in output

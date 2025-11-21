@@ -17,11 +17,11 @@ from pathlib import Path
 from random import randint
 from typing import Final, Literal
 
-import docker.client  # type: ignore[import-untyped]
-import docker.errors  # type: ignore[import-untyped]
-import docker.models  # type: ignore[import-untyped]
-import docker.models.containers  # type: ignore[import-untyped]
-import docker.models.images  # type: ignore[import-untyped]
+import docker.client
+import docker.errors
+import docker.models
+import docker.models.containers
+import docker.models.images
 import pytest
 
 from tests.testlib.common.repo import repo_path

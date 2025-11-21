@@ -12,10 +12,7 @@ from contextlib import nullcontext
 from pathlib import Path
 from random import randint
 
-import docker  # type: ignore[import-untyped]
-import docker.models  # type: ignore[import-untyped]
-import docker.models.containers  # type: ignore[import-untyped]
-import docker.models.images  # type: ignore[import-untyped]
+import docker
 import pytest
 
 from tests.testlib.docker import CheckmkApp

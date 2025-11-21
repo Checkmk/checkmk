@@ -5329,6 +5329,10 @@ types-awscrt==0.29.1 \
     --hash=sha256:545f100e17d7633aa1791f92a8a4716f8ee1fc7cc9ee98dd31676d6c5e07e733 \
     --hash=sha256:f583bef3d42a307b3f3c02ef8d5d49fbec04e02bf3aacd3ada3953213c9150a7
     # via botocore-stubs
+types-docker==7.1.0.20251202 \
+    --hash=sha256:eeaead73e4b1de072f812a1fa70bfbe0cce23004e660b764d1a57cf22f6e1d00 \
+    --hash=sha256:f8295e284b31319afe0457b768b5c26508c61ddedab4adcb754dfbb1d23433a1
+    # via -r tests/dev-requirements.in
 types-docutils==0.22.3.20251115 \
     --hash=sha256:0f79ea6a7bd4d12d56c9f824a0090ffae0ea4204203eb0006392906850913e16 \
     --hash=sha256:c6e53715b65395d00a75a3a8a74e352c669bc63959e65a207dffaa22f4a2ad6e
@@ -5364,7 +5368,9 @@ types-paho-mqtt==1.6.0.20240321 \
 types-paramiko==4.0.0.20250822 \
     --hash=sha256:1b56b0cbd3eec3d2fd123c9eb2704e612b777e15a17705a804279ea6525e0c53 \
     --hash=sha256:55bdb14db75ca89039725ec64ae3fa26b8d57b6991cfb476212fa8f83a59753c
-    # via -r tests/dev-requirements.in
+    # via
+    #   -r tests/dev-requirements.in
+    #   types-docker
 types-pika-ts==1.3.0.20250914 \
     --hash=sha256:3e1bac6f1b3b17a9b51f88b529c718bf40f964905029aa10fc17a49f9eada1e6 \
     --hash=sha256:c4b9dfc25350a6135de5714518e4b831b37c3fb3625e4ebb4c61181a916b6f02
@@ -5408,7 +5414,9 @@ types-reportlab==4.4.5.20251121 \
 types-requests==2.32.4.20250913 \
     --hash=sha256:78c9c1fffebbe0fa487a418e0fa5252017e9c60d1a2da394077f1780f655d7e1 \
     --hash=sha256:abd6d4f9ce3a9383f269775a9835a4c24e5cd6b9f647d64f88aa4613c33def5d
-    # via -r tests/dev-requirements.in
+    # via
+    #   -r tests/dev-requirements.in
+    #   types-docker
 types-s3transfer==0.15.0 \
     --hash=sha256:1e617b14a9d3ce5be565f4b187fafa1d96075546b52072121f8fda8e0a444aed \
     --hash=sha256:43a523e0c43a88e447dfda5f4f6b63bf3da85316fdd2625f650817f2b170b5f7
@@ -5579,6 +5587,7 @@ urllib3==2.5.0 \
     #   requests
     #   responses
     #   twine
+    #   types-docker
     #   types-requests
     #   vcrpy
 uvicorn==0.38.0 \

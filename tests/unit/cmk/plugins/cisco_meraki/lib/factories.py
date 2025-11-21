@@ -24,5 +24,17 @@ class RawDevicesStatusFactory(TypedDictFactory[schema.RawDevicesStatus]):
     __check_model__ = False
 
 
+class RawNetworkFactory(TypedDictFactory[schema.RawNetwork]):
+    __check_model__ = False
+
+
 class RawSensorReadingsFactory(TypedDictFactory[schema.RawSensorReadings]):
+    __check_model__ = False
+
+
+class RawUplinkStatusesFactory(TypedDictFactory[schema.RawUplinkStatuses]):
+    __check_model__ = False
+
+
+class RawUplinkUsageFactory(TypedDictFactory[schema.RawUplinkUsage]):
     __check_model__ = False

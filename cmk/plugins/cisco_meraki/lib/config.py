@@ -67,15 +67,21 @@ type _CacheDecorator[**P, R] = Callable[[Callable[P, R]], Callable[P, R]]
 
 @dataclass(frozen=True)
 class _CacheConfig:
+    appliance_uplinks: _CacheDecorator[[str], Sequence[schema.RawUplinkStatuses]]
     devices: _CacheDecorator[[str, str], dict[str, schema.Device]]
     device_statuses: _CacheDecorator[[str], Sequence[schema.RawDevicesStatus]]
     licenses_overview: _CacheDecorator[[str, str], schema.LicensesOverview | None]
+    networks: _CacheDecorator[[str, str], Sequence[schema.Network]]
     organizations: _CacheDecorator[[], Sequence[schema.RawOrganisation]]
     sensor_readings: _CacheDecorator[[str], Sequence[schema.RawSensorReadings]]
 
     @classmethod
     def build(cls, args: Namespace) -> Self:
         return cls(
+            appliance_uplinks=cache.cache_ttl(
+                Storage("cisco_meraki_appliance_uplinks", host=args.hostname),
+                ttl=args.cache_appliance_uplinks,
+            ),
             devices=cache.cache_ttl(
                 Storage("cisco_meraki_devices", host=args.hostname),
                 ttl=args.cache_devices,
@@ -87,6 +93,10 @@ class _CacheConfig:
             licenses_overview=cache.cache_ttl(
                 Storage("cisco_meraki_licenses_overview", host=args.hostname),
                 ttl=args.cache_licenses_overview,
+            ),
+            networks=cache.cache_ttl(
+                Storage("cisco_meraki_networks", host=args.hostname),
+                ttl=args.cache_networks,
             ),
             organizations=cache.cache_ttl(
                 Storage("cisco_meraki_organizations", host=args.hostname),
@@ -101,6 +111,7 @@ class _CacheConfig:
 
 @dataclass(frozen=True)
 class _RequiredSections:
+    appliance_uplinks: bool
     device_statuses: bool
     licenses_overview: bool
     sensor_readings: bool
@@ -108,6 +119,7 @@ class _RequiredSections:
     @classmethod
     def build(cls, sections: set[str]) -> Self:
         return cls(
+            appliance_uplinks=constants.SEC_NAME_APPLIANCE_UPLINKS in sections,
             device_statuses=constants.SEC_NAME_DEVICE_STATUSES in sections,
             licenses_overview=constants.SEC_NAME_LICENSES_OVERVIEW in sections,
             sensor_readings=constants.SEC_NAME_SENSOR_READINGS in sections,
@@ -115,4 +127,4 @@ class _RequiredSections:
 
     @property
     def devices(self) -> bool:
-        return self.device_statuses or self.sensor_readings
+        return self.device_statuses or self.sensor_readings or self.appliance_uplinks

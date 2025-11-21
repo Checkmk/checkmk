@@ -85,6 +85,9 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     ),
                     elements=[
                         MultipleChoiceElement(
+                            name="appliance_uplinks", title=Title("Appliance uplink statuses")
+                        ),
+                        MultipleChoiceElement(
                             name="device_statuses",
                             title=Title("Device statuses <b>[deprecated]</b>"),
                         ),
@@ -97,6 +100,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     ],
                     prefill=DefaultValue(
                         [
+                            "appliance_uplinks",
                             "device_statuses",
                             "licenses_overview",
                             "sensor_readings",
@@ -144,6 +148,17 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                         "default time to live (TTL) cache interval will be used."
                     ),
                     elements={
+                        "appliance_uplinks": DictElement(
+                            parameter_form=TimeSpan(
+                                title=Title("Appliance uplink statuses"),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(3600.0),  # 1 hour
+                                custom_validate=[NumberInRange(min_value=0.0)],
+                            )
+                        ),
                         "devices": DictElement(
                             parameter_form=TimeSpan(
                                 title=Title("Devices"),
@@ -169,6 +184,17 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                         "licenses_overview": DictElement(
                             parameter_form=TimeSpan(
                                 title=Title("Licenses overview"),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(36000.0),  # 10 hours
+                                custom_validate=[NumberInRange(min_value=0.0)],
+                            )
+                        ),
+                        "networks": DictElement(
+                            parameter_form=TimeSpan(
+                                title=Title("Networks"),
                                 displayed_magnitudes=(
                                     TimeMagnitude.HOUR,
                                     TimeMagnitude.MINUTE,

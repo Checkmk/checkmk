@@ -11,12 +11,61 @@ from cmk.plugins.cisco_meraki.lib.type_defs import TotalPages
 from . import factories
 
 
+class _FakeApplianceSDK:
+    def getOrganizationApplianceUplinkStatuses(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawUplinkStatuses]:
+        uplink_statuses = {
+            "123": [
+                factories.RawUplinkStatusesFactory.build(networkId="1", serial="S123-1"),
+                factories.RawUplinkStatusesFactory.build(networkId="1", serial="S123-2"),
+            ],
+            "456": [
+                factories.RawUplinkStatusesFactory.build(networkId="2", serial="S456"),
+            ],
+        }
+        return uplink_statuses.get(organizationId, [])
+
+    def getOrganizationApplianceUplinksUsageByNetwork(
+        self, organizationId: str, total_pages: TotalPages, timespan: int
+    ) -> Sequence[schema.RawUplinkUsage]:
+        example_bandwith = {"sent": 100, "received": 200}
+        uplink_usage = {
+            "123": [
+                factories.RawUplinkUsageFactory.build(
+                    networkId="1",
+                    byUplink=[{"serial": "S123-1", "interface": "wan1", **example_bandwith}],
+                ),
+                factories.RawUplinkUsageFactory.build(
+                    networkId="1",
+                    byUplink=[{"serial": "S123-1", "interface": "wan2", **example_bandwith}],
+                ),
+            ],
+            "456": [
+                factories.RawUplinkUsageFactory.build(
+                    networkId="2",
+                    byUplink=[{"serial": "S456", "interface": "wan3", **example_bandwith}],
+                ),
+            ],
+        }
+        return uplink_usage.get(organizationId, [])
+
+
 class _FakeOrganisationsSDK:
     def getOrganizations(self) -> Sequence[schema.RawOrganisation]:
         return [
             factories.RawOrganizationFactory.build(id="123", api={"enabled": True}),
             factories.RawOrganizationFactory.build(id="456", api={"enabled": True}),
         ]
+
+    def getOrganizationNetworks(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawNetwork]:
+        networks = {
+            "123": [factories.RawNetworkFactory.build(id="1", name="one", organizationId="123")],
+            "456": [factories.RawNetworkFactory.build(id="2", name="two", organizationId="456")],
+        }
+        return networks.get(organizationId, [])
 
     def getOrganizationLicensesOverview(self, organizationId: str) -> schema.RawLicensesOverview:
         licenses_overviews = {
@@ -30,8 +79,12 @@ class _FakeOrganisationsSDK:
     ) -> Sequence[schema.RawDevice]:
         devices = {
             "123": [
-                factories.RawDeviceFactory.build(serial="S123-1", name="dev1"),
-                factories.RawDeviceFactory.build(serial="S123-2", name="dev2"),
+                factories.RawDeviceFactory.build(
+                    serial="S124-1", name="dev1", productType="appliance"
+                ),
+                factories.RawDeviceFactory.build(
+                    serial="S123-2", name="dev2", productType="appliance"
+                ),
             ],
             "456": [
                 factories.RawDeviceFactory.build(serial="S456", name="dev3", productType="sensor"),
@@ -72,8 +125,13 @@ class _FakeSensorSDK:
 
 class FakeMerakiSDK:
     def __init__(self) -> None:
+        self._appliance = _FakeApplianceSDK()
         self._organizations = _FakeOrganisationsSDK()
         self._sensor = _FakeSensorSDK()
+
+    @property
+    def appliance(self) -> _FakeApplianceSDK:
+        return self._appliance
 
     @property
     def organizations(self) -> _FakeOrganisationsSDK:

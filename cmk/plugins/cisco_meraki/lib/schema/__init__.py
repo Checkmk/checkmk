@@ -6,15 +6,24 @@
 from ._devices import Device, RawDevice
 from ._devices_statuses import RawDevicesStatus
 from ._licenses_overview import LicensesOverview, RawLicensesOverview
+from ._networks import Network, RawNetwork
 from ._organizations import RawOrganisation
 from ._sensor_readings import RawSensorReadings
+from ._uplink_statuses import RawUplinkStatuses, UplinkStatuses, UplinkUsageByInterface
+from ._uplink_usage import RawUplinkUsage
 
 __all__ = [
     "Device",
     "LicensesOverview",
+    "Network",
     "RawDevice",
     "RawDevicesStatus",
     "RawLicensesOverview",
+    "RawNetwork",
     "RawOrganisation",
     "RawSensorReadings",
+    "RawUplinkStatuses",
+    "RawUplinkUsage",
+    "UplinkStatuses",
+    "UplinkUsageByInterface",
 ]

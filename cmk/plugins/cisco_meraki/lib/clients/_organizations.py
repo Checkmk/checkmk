@@ -23,6 +23,9 @@ class OrganizationsSDK(Protocol):
     def getOrganizationLicensesOverview(
         self, organizationId: str
     ) -> schema.RawLicensesOverview: ...
+    def getOrganizationNetworks(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawNetwork]: ...
 
 
 class OrganizationsClient:
@@ -61,3 +64,13 @@ class OrganizationsClient:
             return None
 
         return schema.LicensesOverview(organisation_id=id, organisation_name=name, **raw_overview)
+
+    def get_networks(self, id: str, name: str, /) -> Sequence[schema.Network]:
+        try:
+            return [
+                schema.Network(organizationName=name, **raw_network)
+                for raw_network in self._sdk.getOrganizationNetworks(id, total_pages="all")
+            ]
+        except APIError as e:
+            log.LOGGER.debug("Organisation ID: %r: Get networks: %r", id, e)
+            return []

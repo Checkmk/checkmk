@@ -9,11 +9,14 @@ from typing import Protocol
 from cmk.plugins.cisco_meraki.lib import schema
 from cmk.plugins.cisco_meraki.lib.config import MerakiConfig
 
+from ._appliance import ApplianceClient, ApplianceSDK
 from ._organizations import OrganizationsClient, OrganizationsSDK
 from ._sensor import SensorClient, SensorSDK
 
 
 class MerakiSDK(Protocol):
+    @property
+    def appliance(self) -> ApplianceSDK: ...
     @property
     def organizations(self) -> OrganizationsSDK: ...
     @property
@@ -34,6 +37,7 @@ class MerakiClient:
     def __init__(self, sdk: MerakiSDK, config: MerakiConfig) -> None:
         self._no_cache = config.no_cache
         self._cache = config.cache
+        self._appliance_client = ApplianceClient(sdk.appliance)
         self._org_client = OrganizationsClient(sdk.organizations)
         self._sensor_client = SensorClient(sdk.sensor)
 
@@ -52,6 +56,11 @@ class MerakiClient:
         fetch = fn if self._no_cache else self._cache.licenses_overview(fn)
         return fetch(id, name)
 
+    def get_networks(self, id: str, name: str) -> Sequence[schema.Network]:
+        fn = self._org_client.get_networks
+        fetch = fn if self._no_cache else self._cache.networks(fn)
+        return fetch(id, name)
+
     def get_organizations(self) -> Sequence[schema.RawOrganisation]:
         fn = self._org_client.get_organizations
         fetch = fn if self._no_cache else self._cache.organizations(fn)
@@ -61,6 +70,14 @@ class MerakiClient:
         fn = self._sensor_client.get_sensor_readings
         fetch = fn if self._no_cache else self._cache.sensor_readings(fn)
         return fetch(id)
+
+    def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:
+        fn = self._appliance_client.get_uplink_statuses
+        fetch = fn if self._no_cache else self._cache.appliance_uplinks(fn)
+        return fetch(id)
+
+    def get_uplink_usage(self, id: str) -> Sequence[schema.RawUplinkUsage]:
+        return self._appliance_client.get_uplink_usage(id)
 
 
 __all__ = ["MerakiClient"]

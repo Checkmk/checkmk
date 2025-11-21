@@ -29,7 +29,7 @@ from .constants import (
     OPTIONAL_SECTIONS_DEFAULT,
 )
 from .log import LOGGER
-from .schema import Device, RawOrganisation
+from .schema import Device, RawOrganisation, UplinkStatuses, UplinkUsageByInterface
 
 __version__ = "2.5.0b1"
 
@@ -149,6 +149,24 @@ class MerakiOrganisation:
                             piggyback=piggyback or None,
                         )
 
+        if networks := {net["id"]: net for net in self.client.get_networks(self.id, self.name)}:
+            yield Section(name="cisco_meraki_org_networks", data=networks)
+
+        if devices_by_type.get("appliance"):
+            if self.config.required.appliance_uplinks:
+                for raw_data in self.client.get_uplink_statuses(self.id):
+                    if piggyback := self._get_device_piggyback(raw_data, devices_by_serial):
+                        uplink_statuses = UplinkStatuses(
+                            networkName=networks[raw_data["networkId"]]["organizationName"],
+                            usageByInterface=self._get_usage_by_serial(),
+                            **raw_data,
+                        )
+                        yield Section(
+                            name="cisco_meraki_org_appliance_uplinks",
+                            data=uplink_statuses,
+                            piggyback=piggyback,
+                        )
+
     def _get_device_piggyback(
         self, device: SupportsDeviceSerial, devices_by_serial: Mapping[str, Device]
     ) -> str | None:
@@ -164,6 +182,16 @@ class MerakiOrganisation:
         if self.config.org_id_as_prefix:
             prefix += self.id + "-"
         return prefix
+
+    def _get_usage_by_serial(self) -> UplinkUsageByInterface:
+        return {
+            uplink["interface"]: {
+                "sent": uplink["sent"],
+                "received": uplink["received"],
+            }
+            for network in self.client.get_uplink_usage(self.id)
+            for uplink in network["byUplink"]
+        }
 
 
 def _query_meraki_objects(*, organisations: Sequence[MerakiOrganisation]) -> Iterable[Section]:
@@ -252,9 +280,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Always fetch data from Meraki API.",
     )
 
+    parser.add_argument("--cache-appliance-uplinks", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-devices", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-device-statuses", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-licenses-overview", type=float, default=36000.0)  # 10 hours
+    parser.add_argument("--cache-networks", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-organizations", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-sensor-readings", type=float, default=0.0)  # 0 minutes
 

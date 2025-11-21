@@ -252,10 +252,10 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Always fetch data from Meraki API.",
     )
 
-    parser.add_argument("--cache-devices", type=float, default=600.0)  # 1 hour
-    parser.add_argument("--cache-device-statuses", type=float, default=600.0)  # 1 hour
-    parser.add_argument("--cache-licenses-overview", type=float, default=6000.0)  # 10 hours
-    parser.add_argument("--cache-organizations", type=float, default=600.0)  # 10 hours
+    parser.add_argument("--cache-devices", type=float, default=3600.0)  # 1 hour
+    parser.add_argument("--cache-device-statuses", type=float, default=3600.0)  # 1 hour
+    parser.add_argument("--cache-licenses-overview", type=float, default=36000.0)  # 10 hours
+    parser.add_argument("--cache-organizations", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-sensor-readings", type=float, default=0.0)  # 0 minutes
 
     parser.add_argument(

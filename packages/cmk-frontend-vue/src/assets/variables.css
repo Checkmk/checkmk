@@ -272,6 +272,29 @@
     --inline-help-icon-bg: rgb(12 129 238);
     --slide-in-left-part: var(--color-daylight-grey-30);
 
+    /* Cmk Button Variants */
+    --default-button-primary-color: var(--color-corporate-green-50);
+    --button-primary-border-color: var(--color-corporate-green-70);
+    --button-primary-text-color: var(--black);
+    --default-button-secondary-color: var(--color-daylight-grey-60);
+    --button-secondary-border-color: var(--color-corporate-green-70);
+    --button-secondary-text-color: var(--black);
+    --default-button-optional-color: var(--color-daylight-grey-60);
+    --button-optional-border-color: var(--color-mid-grey-50);
+    --button-optional-text-color: var(--black);
+    --default-button-warning-color: var(--color-yellow-50);
+    --button-warning-border-color: var(--color-yellow-70);
+    --button-warning-text-color: var(--black);
+    --default-button-danger-color: var(--color-dark-red-50);
+    --button-danger-border-color: var(--color-dark-red-50);
+    --button-danger-text-color: var(--white);
+    --default-button-info-color: var(--color-dark-blue-50);
+    --button-info-border-color: var(--color-dark-blue-50);
+    --button-info-text-color: var(--white);
+    --default-button-form-color: var(--color-daylight-grey-60);
+    --button-form-border-color: var(--color-mid-grey-50);
+    --button-form-text-color: var(--black);
+
     /* breadcrumb colors */
     --font-color-breadcrumb-inactive: var(--color-conference-grey-70);
     --font-color-breadcrumb-interactive: var(--color-conference-grey-100);
@@ -364,6 +387,29 @@
     --inline-help-text-bg: rgb(17 24 29);
     --inline-help-icon-bg: rgb(6 103 193);
     --slide-in-left-part: var(--color-midnight-grey-80);
+
+    /* Cmk Button Variants */
+    --default-button-primary-color: var(--color-corporate-green-50);
+    --button-primary-border-color: var(--color-corporate-green-50);
+    --button-primary-text-color: var(--black);
+    --default-button-secondary-color: var(--color-midnight-grey-100);
+    --button-secondary-border-color: var(--color-corporate-green-50);
+    --button-secondary-text-color: var(--white);
+    --default-button-optional-color: var(--color-midnight-grey-100);
+    --button-optional-border-color: var(--color-mid-grey-60);
+    --button-optional-text-color: var(--white);
+    --default-button-warning-color: var(--color-yellow-50);
+    --button-warning-border-color: var(--color-yellow-50);
+    --button-warning-text-color: var(--black);
+    --default-button-danger-color: var(--color-dark-red-50);
+    --button-danger-border-color: var(--color-dark-red-40);
+    --button-danger-text-color: var(--white);
+    --default-button-info-color: var(--color-dark-blue-50);
+    --button-info-border-color: var(--color-dark-blue-40);
+    --button-info-text-color: var(--white);
+    --default-button-form-color: var(--color-midnight-grey-100);
+    --button-form-border-color: var(--color-mid-grey-60);
+    --button-form-text-color: var(--white);
 
     /* breadcrumb colors */
     --font-color-breadcrumb-inactive: var(--color-white-70);

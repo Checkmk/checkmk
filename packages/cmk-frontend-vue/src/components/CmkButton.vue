@@ -83,41 +83,119 @@ defineEmits(['click'])
 }
 
 .cmk-button--variant-primary,
-.cmk-button--variant-secondary {
-  border: 1px solid var(--default-submit-button-border-color);
-}
-
-.cmk-button--variant-primary,
 button.cmk-button--variant-success {
-  color: var(--black);
-  background-color: var(--color-corporate-green-50, #15d1a0);
+  color: var(--button-primary-text-color);
+  background-color: var(--default-button-primary-color);
+  border: 1px solid var(--button-primary-border-color);
 
   &:hover:not(.cmk-button--disabled) {
-    background:
-      linear-gradient(
-        0deg,
-        var(--color-white-30, rgb(255 255 255 / 30%)) 0%,
-        var(--color-white-30, rgb(255 255 255 / 30%)) 100%
-      ),
-      var(--color-corporate-green-50, #15d1a0);
+    background-color: color-mix(in srgb, var(--default-button-primary-color) 70%, var(--white) 30%);
+  }
+
+  &:active:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-primary-color) 90%,
+      var(--color-conference-grey-10) 10%
+    );
   }
 }
 
-.cmk-button--variant-warning {
-  background-color: var(--color-warning);
+button.cmk-button--variant-secondary {
+  background-color: var(--default-button-secondary-color);
+  border: 1px solid var(--button-secondary-border-color);
+  color: var(--button-secondary-text-color);
+
+  &:hover:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-secondary-color) 90%,
+      var(--white) 10%
+    );
+  }
+
+  &:active:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-secondary-color) 90%,
+      var(--color-conference-grey-10) 10%
+    );
+  }
 }
 
-.cmk-button--variant-danger {
-  background-color: var(--color-danger);
-  color: var(--white);
+button.cmk-button--variant-optional {
+  background-color: var(--default-button-optional-color);
+  border: 1px solid var(--button-optional-border-color);
+  color: var(--button-optional-text-color);
+
+  &:hover:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-optional-color) 90%,
+      var(--white) 10%
+    );
+  }
+
+  &:active:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-optional-color) 90%,
+      var(--color-conference-grey-10) 10%
+    );
+  }
 }
 
 button.cmk-button--variant-info {
-  background-color: var(--default-help-icon-bg-color);
-  color: var(--white);
+  background-color: var(--default-button-info-color);
+  border: 1px solid var(--button-info-border-color);
+  color: var(--button-info-text-color);
 
   &:hover:not(.cmk-button--disabled) {
-    background-color: var(--default-help-icon-bg-color-hover);
+    background-color: color-mix(in srgb, var(--default-button-info-color) 90%, var(--white) 10%);
+  }
+
+  &:active:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-info-color) 90%,
+      var(--color-conference-grey-10) 10%
+    );
+  }
+}
+
+button.cmk-button--variant-danger {
+  background-color: var(--default-button-danger-color);
+  border: 1px solid var(--button-danger-border-color);
+  color: var(--button-danger-text-color);
+
+  &:hover:not(.cmk-button--disabled) {
+    background-color: color-mix(in srgb, var(--default-button-danger-color) 90%, var(--white) 10%);
+  }
+
+  &:active:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-danger-color) 90%,
+      var(--color-conference-grey-10) 10%
+    );
+  }
+}
+
+button.cmk-button--variant-warning {
+  background-color: var(--default-button-warning-color);
+  border: 1px solid var(--button-warning-border-color);
+  color: var(--button-warning-text-color);
+
+  &:hover:not(.cmk-button--disabled) {
+    background-color: color-mix(in srgb, var(--default-button-warning-color) 70%, var(--white) 30%);
+  }
+
+  &:active:not(.cmk-button--disabled) {
+    background-color: color-mix(
+      in srgb,
+      var(--default-button-warning-color) 90%,
+      var(--color-conference-grey-10) 10%
+    );
   }
 }
 

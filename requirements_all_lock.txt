@@ -4395,9 +4395,9 @@ starlette-testclient==0.4.1 \
     --hash=sha256:9e993ffe12fab45606116257813986612262fe15c1bb6dc9e39cc68693ac1fc5 \
     --hash=sha256:dcf0eb237dc47f062ef5925f98330af46f67e547cb587119c9ae78c17ae6c1d1
     # via schemathesis
-stevedore==5.5.0 \
-    --hash=sha256:18363d4d268181e8e8452e71a38cd77630f345b2ef6b4a8d5614dac5ee0d18cf \
-    --hash=sha256:d31496a4f4df9825e1a1e4f1f74d19abb0154aff311c3b376fcc89dae8fccd73
+stevedore==5.6.0 \
+    --hash=sha256:4a36dccefd7aeea0c70135526cecb7766c4c84c473b1af68db23d541b6dc1820 \
+    --hash=sha256:f22d15c6ead40c5bbfa9ca54aa7e7b4a07d59b36ae03ed12ced1a54cf0b51945
     # via bandit
 svglib==1.5.1 \
     --hash=sha256:3ae765d3a9409ee60c0fb4d24c2deb6a80617aa927054f5bcd7fc98f0695e587

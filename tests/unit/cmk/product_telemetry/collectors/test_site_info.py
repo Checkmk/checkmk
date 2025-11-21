@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from pytest_mock import MockType
 
 import cmk.product_telemetry.collectors.site_info as site_info_collector
 from cmk.product_telemetry.exceptions import SiteInfoInvalidError, SiteInfoItemsInvalidError
-from cmk.utils.paths import check_mk_config_dir
+from cmk.utils.paths import check_mk_config_dir, var_dir
 
 
 @pytest.fixture()
@@ -29,7 +30,7 @@ def test_collect_and_number_of_folders(local_connection: MockType, wato_path: Pa
     (wato_path / "folder1" / "subfolder2").mkdir(parents=True, exist_ok=True)
     (wato_path / "folder2" / "subfolder3").mkdir(parents=True, exist_ok=True)
 
-    data = site_info_collector.collect(check_mk_config_dir)
+    data = site_info_collector.collect(check_mk_config_dir, var_dir)
 
     assert data.count_hosts == 10
     assert data.count_services == 20
@@ -42,18 +43,31 @@ def test_collect_and_number_of_folders(local_connection: MockType, wato_path: Pa
 def test_collect_too_many_columns(local_connection: MockType) -> None:
     local_connection.query.return_value = [[0, 0, "test", "1", "unexpected"]]
     with pytest.raises(SiteInfoItemsInvalidError):
-        site_info_collector.collect(check_mk_config_dir)
+        site_info_collector.collect(check_mk_config_dir, var_dir)
 
 
 @pytest.mark.usefixtures("mock_instance_id")
 def test_collect_too_few_columns(local_connection: MockType) -> None:
     local_connection.query.return_value = [[0, 0, "test"]]
     with pytest.raises(SiteInfoItemsInvalidError):
-        site_info_collector.collect(check_mk_config_dir)
+        site_info_collector.collect(check_mk_config_dir, var_dir)
 
 
 @pytest.mark.usefixtures("mock_instance_id")
 def test_collect_no_site_info(local_connection: MockType) -> None:
     local_connection.query.return_value = []
     with pytest.raises(SiteInfoInvalidError):
-        site_info_collector.collect(check_mk_config_dir)
+        site_info_collector.collect(check_mk_config_dir, var_dir)
+
+
+def test_get_or_create_telemetry_id(local_connection: MockType) -> None:
+    telemetry_id_fp = site_info_collector.telemetry_id_file_path(var_dir)
+
+    assert site_info_collector.get_telemetry_id(telemetry_id_fp) is None
+
+    telemetry_id = site_info_collector.get_or_create_telemetry_id(telemetry_id_fp)
+
+    assert isinstance(telemetry_id, UUID)
+
+    # We get the ID again to verify it was stored correctly
+    assert site_info_collector.get_telemetry_id(telemetry_id_fp) == telemetry_id

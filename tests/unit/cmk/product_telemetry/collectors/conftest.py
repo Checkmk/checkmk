@@ -8,13 +8,13 @@ import uuid
 import pytest
 from pytest_mock import MockerFixture, MockType
 
-from cmk.utils.paths import omd_root
+from cmk.utils.paths import var_dir
 
 
 @pytest.fixture()
 def mock_instance_id() -> None:
     # omd_root is already patched in tests/unit/conftest.py
-    instance_id_fp = omd_root / "etc/omd/instance_id"
+    instance_id_fp = var_dir / "telemetry" / "telemetry_id"
     instance_id_fp.parent.mkdir(parents=True, exist_ok=True)
     instance_id_fp.write_text(uuid.uuid4().__str__())
 

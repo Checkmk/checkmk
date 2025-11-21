@@ -13,7 +13,7 @@ from cmk.product_telemetry.schema import ProductTelemetryPayload
 
 
 def collect_telemetry_data(var_dir: Path, cmk_config_dir: Path) -> ProductTelemetryPayload:
-    site_info = site_info_collector.collect(cmk_config_dir)
+    site_info = site_info_collector.collect(cmk_config_dir, var_dir)
 
     telemetry_data = ProductTelemetryPayload(
         timestamp=int(time.time()),

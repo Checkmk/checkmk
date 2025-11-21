@@ -6,23 +6,21 @@
 
 import os
 from pathlib import Path
+from uuid import UUID, uuid4
 
 from cmk.livestatus_client import LocalConnection
 from cmk.product_telemetry.exceptions import (
     SiteInfoInvalidError,
     SiteInfoItemsInvalidError,
 )
-from cmk.product_telemetry.schema import SiteInfo
-from cmk.utils.licensing.helper import get_instance_id_file_path, load_instance_id
+from cmk.product_telemetry.schema import SiteInfo, TelemetrySiteId
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Status
-from cmk.utils.paths import omd_root
 
 
-def collect(cmk_config_dir: Path) -> SiteInfo:
-    # TODO: don't use licensing site ID otherwise telemetry data won't be anonymous anymore. Use a
-    # site ID dedicated to product telemetry.
-    site_id = load_instance_id(get_instance_id_file_path(omd_root))
+def collect(cmk_config_dir: Path, var_dir: Path) -> SiteInfo:
+    telemetry_id_fp = telemetry_id_file_path(var_dir)
+    site_id = get_or_create_telemetry_id(telemetry_id_fp)
 
     query = Query(
         [Status.num_hosts, Status.num_services, Status.edition, Status.program_version]
@@ -59,3 +57,28 @@ def get_number_of_folders(path: str) -> int:
                 count += 1
                 count += get_number_of_folders(entry.path)
     return count
+
+
+def telemetry_id_file_path(var_dir: Path) -> Path:
+    return var_dir / "telemetry" / "telemetry_id"
+
+
+def get_telemetry_id(file_path: Path) -> TelemetrySiteId | None:
+    try:
+        with file_path.open("r", encoding="utf-8") as fp:
+            return TelemetrySiteId(UUID(fp.read()))
+    except (FileNotFoundError, ValueError):
+        return None
+
+
+def store_telemetry_id(file_path: Path, telemetry_id: TelemetrySiteId) -> None:
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_text(str(telemetry_id))
+
+
+def get_or_create_telemetry_id(file_path: Path) -> TelemetrySiteId:
+    telemetry_id = get_telemetry_id(file_path)
+    if telemetry_id is None:
+        telemetry_id = TelemetrySiteId(uuid4())
+        store_telemetry_id(file_path, telemetry_id)
+    return telemetry_id

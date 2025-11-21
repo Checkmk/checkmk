@@ -5,11 +5,14 @@
 
 
 import typing
+from uuid import UUID
 
 import pydantic
 import pydantic_core
 
 type Checks = dict[str, CheckData]
+
+TelemetrySiteId = typing.NewType("TelemetrySiteId", UUID)
 
 
 class CheckData(typing.TypedDict):

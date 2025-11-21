@@ -480,6 +480,10 @@ def _parse_col_field_from_api(
     )
 
 
+def _is_choice(len_mapping: int) -> bool:
+    return len_mapping <= 10
+
+
 def _make_column_filter(
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
@@ -538,7 +542,7 @@ def _make_column_filter(
                 title=long_title,
             )
         case ChoiceFieldFromAPI():
-            if len(field_from_api.mapping) <= 10:
+            if _is_choice(len(field_from_api.mapping)):
                 return FilterInvtableChoice(
                     inv_info=table_view_name,
                     ident=name,
@@ -1315,10 +1319,22 @@ class FilterMigrationScale(FilterMigration):
         return migrated
 
 
+@dataclass(frozen=True, kw_only=True)
+class FilterMigrationChoice(FilterMigration):
+    choices: Sequence[int, float, str]
+
+    def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]:
+        migrated = {n: value.get(n, "") for c in self.choices for n in (f"{self.name}_{c}",)}
+        if (filter_value := value.get(self.name)) != "-1":
+            # FilterInvtableAdminStatus
+            migrated[f"{self.name}_{filter_value}"] = "on"
+        return migrated if value != migrated else {}
+
+
 def find_non_canonical_filters(
     plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
 ) -> Mapping[str, FilterMigration]:
-    filters = {
+    filters: dict[str, FilterMigration] = {
         # "bytes"
         "inv_hardware_cpu_cache_size": FilterMigrationScale(
             name="inv_hardware_cpu_cache_size",
@@ -1358,18 +1374,29 @@ def find_non_canonical_filters(
         if node.table.view is None:
             continue
         for key, field_from_api in node.table.columns.items():
+            name = f"{node.table.view.name}_{key}"
             if (
                 isinstance(field_from_api, NumberFieldFromAPI)
                 and isinstance(field_from_api.render, UnitFromAPI)
                 and isinstance(field_from_api.render.notation, AgeNotationFromAPI)
             ):
-                name = f"{node.table.view.name}_{key}"
                 filters.setdefault(
                     name,
                     FilterMigrationScale(
                         name=name,
                         legacy_suffix="_days",
                         scale=24 * 60 * 60,
+                    ),
+                )
+
+            elif isinstance(field_from_api, ChoiceFieldFromAPI) and _is_choice(
+                len(field_from_api.mapping)
+            ):
+                filters.setdefault(
+                    name,
+                    FilterMigrationChoice(
+                        name=name,
+                        choices=list(field_from_api.mapping),
                     ),
                 )
 

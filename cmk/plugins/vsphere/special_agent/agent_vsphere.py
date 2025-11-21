@@ -19,10 +19,7 @@ import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any
-from xml.dom import minidom
-
-# TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11
-from xml.dom.minicompat import NodeList
+from xml.dom import minicompat, minidom
 
 import dateutil.parser
 import requests
@@ -1854,14 +1851,14 @@ def get_section_datastores(datastores: Mapping[str, Mapping[str, str]]) -> list[
     return section_lines
 
 
-def _get_text(node: NodeList[minidom.Element]) -> str:
+def _get_text(node: minicompat.NodeList[minidom.Element]) -> str:
     first = node.item(0)
     if first is None:
         raise ValueError("Node has no item")
     child = first.firstChild
     if child is None or not isinstance(child, minidom.Text):
         raise ValueError("Node has no text")
-    return child.data
+    return str(child.data)
 
 
 def get_section_licenses(connection: ESXConnection) -> list[str]:

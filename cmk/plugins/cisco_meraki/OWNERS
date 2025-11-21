@@ -1,7 +1,7 @@
-# Component C&A - Netapp
+# Component C&A - Cisco Meraki
 #
 # TODO: establish naming / jira support for plugin family based "subcomponents" of
 # "Checks and Agents" and clean this up.
 
 set noparent
-david.gervasoni@checkmk.com
+logan.connolly@checkmk.com

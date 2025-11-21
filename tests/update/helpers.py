@@ -11,7 +11,6 @@ from pathlib import Path
 
 import pytest
 
-from cmk.crypto.certificate import Certificate
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     get_services_with_status,
@@ -108,25 +107,7 @@ def get_target_package(target_edition: TypeCMKEdition) -> CMKPackageInfo:
     return CMKPackageInfo(CMKVersion(version_spec_from_env(CMKVersion.DAILY)), target_edition)
 
 
-def update_site(
-    base_site: Site,
-    target_package: CMKPackageInfo,
-    interactive: bool,
-    license_ca_certificate: Certificate | None = None,
-) -> Site:
-    """
-    Update the given site to the target package, either in interactive or non-interactive mode.
-
-    Returns the updated site.
-
-    Args:
-        base_site:              The site to be updated.
-        target_package:         The target package info.
-        interactive:            Whether to run the update in interactive mode.
-        license_ca_certificate: The CA certificate to use for licensing: it will be replaced in the
-                                target package during the update process so that the site can use
-                                the mocked CA certificate for license validation.
-    """
+def update_site(base_site: Site, target_package: CMKPackageInfo, interactive: bool) -> Site:
     site_factory = _get_site_factory(target_package)
     min_version = get_min_version()
     logger.info("Updating test-site (interactive-mode=%s) ...", interactive)
@@ -136,14 +117,10 @@ def update_site(
             target_package,
             min_version=min_version,
             timeout=60,
-            license_ca_certificate=license_ca_certificate,
         )
     else:
         target_site = site_factory.update_as_site_user(
-            base_site,
-            target_package,
-            min_version=min_version,
-            license_ca_certificate=license_ca_certificate,
+            base_site, target_package, min_version=min_version
         )
 
     # get the service status codes and check them

@@ -1102,7 +1102,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_MKP_TOOL,
         *PACKAGE_PLUGIN_APIS,
-        *PACKAGE_CRYPTO,
         "cmk.base.config",
         "cmk.checkengine",
         "cmk.discover_plugins",
@@ -1112,9 +1111,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("tests.integration_redfish"): _allow(
         *PACKAGE_CCC,
-    ),
-    Component("tests.plugins_integration"): _allow(
-        *PACKAGE_CRYPTO,
     ),
     Component("tests.pylint"): _allow("cmk.utils.escaping"),
     # Tests are allowed to import everything for now. Should be cleaned up soon (TM)
@@ -1192,7 +1188,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("tests.update"): _allow(
         *PACKAGE_CCC,
-        *PACKAGE_CRYPTO,
         "cmk.utils.licensing",
     ),
     Component("tests.unit"): _allow(

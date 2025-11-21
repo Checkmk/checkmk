@@ -10,7 +10,6 @@ import logging
 
 import pytest
 
-from cmk.crypto.certificate import CertificateWithPrivateKey
 from tests.plugins_integration.checks import (
     config,
     setup_host,
@@ -65,7 +64,6 @@ def test_plugin_update(
     test_site_update: Site,
     site_factory_update: SiteFactory,
     create_periodic_service_discovery_rule: None,
-    license_ca_cert_and_key: CertificateWithPrivateKey,
 ) -> None:
     """Test performing the following steps:
 
@@ -92,9 +90,7 @@ def test_plugin_update(
 
             base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
     test_site_update = site_factory_update.update_as_site_user(
-        test_site_update,
-        skip_if_version_not_supported=False,
-        license_ca_certificate=license_ca_cert_and_key.certificate,
+        test_site_update, skip_if_version_not_supported=False
     )
     test_site_update.openapi.changes.activate_and_wait_for_completion()
 

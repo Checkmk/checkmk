@@ -15,12 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.crypto.certificate import CertificateWithPrivateKey
 from tests.plugins_integration import checks
-from tests.testlib.licensing.nonfree.pro.license_management import (
-    generate_license_ca_cert_and_key,
-    license_site,
-)
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.utils import is_cleanup_enabled, run
@@ -196,16 +191,9 @@ def _get_sf_update():
     return get_site_factory(prefix="update_", package=base_package)
 
 
-@pytest.fixture(scope="session")
-def license_ca_cert_and_key() -> CertificateWithPrivateKey:
-    return generate_license_ca_cert_and_key()
-
-
 @pytest.fixture(name="test_site_update", scope="session")
 def _get_site_update(
-    site_factory_update: SiteFactory,
-    request: pytest.FixtureRequest,
-    license_ca_cert_and_key: CertificateWithPrivateKey,
+    site_factory_update: SiteFactory, request: pytest.FixtureRequest
 ) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
     with exit_pytest_on_exceptions(
@@ -221,9 +209,8 @@ def _get_site_update(
                     checks.config.dump_dir_siteless,
                 ],
             )
-            # A licensed site is required to update Checkmk Pro from 2.4 to 2.5
-            with license_site(site, license_ca_cert_and_key):
-                yield site
+
+            yield site
 
             if not checks.config.skip_cleanup:
                 # cleanup existing agent-output folder in the test site

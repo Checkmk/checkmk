@@ -48,7 +48,6 @@ import pytest_check
 import livestatus
 
 from cmk import trace
-from cmk.crypto.certificate import Certificate
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
 from tests.testlib.common.repo import current_branch_name, repo_path
@@ -2118,7 +2117,6 @@ class SiteFactory:
         disable_extensions: bool = False,
         n_extensions: int = 0,
         skip_if_version_not_supported: bool = True,
-        license_ca_certificate: Certificate | None = None,
     ) -> Site:
         """Update the test-site with the given target-package, if supported.
 
@@ -2141,10 +2139,7 @@ class SiteFactory:
             skip_if_version_not_supported:
                                 If True, the test will be skipped if the base version is not
                                 supported for the update to the target version.
-            license_ca_certificate:
-                                The CA certificate to use for licensing: it will be replaced in the
-                                target package during the update process so that the site can use
-                                the mocked CA certificate for license validation.
+
 
         Returns:
             Site:              The updated site object.
@@ -2228,28 +2223,20 @@ class SiteFactory:
                 ]
             )
 
-        with (
-            replace_package_ca_certificate(
-                package_root=Path(target_package.version_path()),
-                ca_cert=license_ca_certificate,
-            )
-            if license_ca_certificate is not None
-            else nullcontext()
-        ):
-            rc = spawn_expect_process(
-                [
-                    "/usr/bin/sudo",
-                    "omd",
-                    "-V",
-                    target_package.version_directory(),
-                    "update",
-                    f"--conflict={conflict_mode}",
-                    site.id,
-                ],
-                dialogs=pexpect_dialogs,
-                logfile_path=logfile_path,
-                timeout=timeout,
-            )
+        rc = spawn_expect_process(
+            [
+                "/usr/bin/sudo",
+                "omd",
+                "-V",
+                target_package.version_directory(),
+                "update",
+                f"--conflict={conflict_mode}",
+                site.id,
+            ],
+            dialogs=pexpect_dialogs,
+            logfile_path=logfile_path,
+            timeout=timeout,
+        )
 
         if abort:
             assert rc == 0, (
@@ -2312,18 +2299,7 @@ class SiteFactory:
         conflict_mode: str = "keepold",
         start_site_after_update: bool = True,
         skip_if_version_not_supported: bool = True,
-        license_ca_certificate: Certificate | None = None,
     ) -> Site:
-        """
-        Update the test-site with the given target-package.
-        Such update process is performed as the site user.
-
-        Args:
-            license_ca_certificate:
-                                The CA certificate to use for licensing: it will be replaced in the
-                                target package during the update process so that the site can use
-                                the mocked CA certificate for license validation.
-        """
         base_package = test_site.package
         self._package = target_package
 
@@ -2363,15 +2339,7 @@ class SiteFactory:
             f"--conflict={conflict_mode}",
         ]
 
-        with (
-            replace_package_ca_certificate(
-                package_root=Path(target_package.version_path()),
-                ca_cert=license_ca_certificate,
-            )
-            if license_ca_certificate is not None
-            else nullcontext()
-        ):
-            _ = site.run(cmd)
+        _ = site.run(cmd)
 
         # refresh the site object after creating the site
         site = self.get_existing_site(site.id)
@@ -2783,17 +2751,3 @@ def connection(
                 # this seems to be necessary to avoid sporadic CI failures
                 force_foreign_changes=True,
             )
-
-
-@contextmanager
-def replace_package_ca_certificate(package_root: Path, ca_cert: Certificate) -> Iterator[None]:
-    """Replace the license CA certificate in the given package."""
-    ca_cert_file = package_root / "share" / "check_mk" / "licensing" / "ca-certificate.pem"
-    ca_cert_backup = ca_cert_file.parent / f"{ca_cert_file.name}.bak"
-    run(["cp", ca_cert_file.as_posix(), ca_cert_backup.as_posix()], check=False, sudo=True)
-    try:
-        write_file(ca_cert_file, ca_cert.dump_pem().bytes, sudo=True)
-        yield
-    finally:
-        run(["cp", ca_cert_backup.as_posix(), ca_cert_file.as_posix()], sudo=True)
-        run(["rm", ca_cert_backup.as_posix()], sudo=True)

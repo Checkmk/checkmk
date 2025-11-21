@@ -66,10 +66,8 @@ def build_docker_image_name_and_registry(
     def build_folder(ed: str) -> str:
         # TODO: Merge with build-cmk-container.py
         match ed:
-            case "community" | "ultimate" | "ultimatemt":
+            case "community" | "ultimate" | "ultimatemt" | "pro":
                 return "checkmk/"
-            case "pro":
-                return f"{ed}/"
             case "cloud":
                 return ""
             case _:

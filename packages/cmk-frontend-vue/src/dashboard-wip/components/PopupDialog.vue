@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, useSlots, watch } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -46,6 +46,8 @@ watch(
 const messageParagraphs = computed(() =>
   Array.isArray(props.message) ? props.message : [props.message]
 )
+
+const slots = useSlots()
 </script>
 
 <template>
@@ -77,6 +79,10 @@ const messageParagraphs = computed(() =>
 
         <ContentSpacer />
 
+        <slot name="preContent" />
+
+        <ContentSpacer v-if="slots?.preContent" />
+
         <CmkParagraph
           v-for="(paragraph, index) in messageParagraphs"
           :key="index"
@@ -86,6 +92,10 @@ const messageParagraphs = computed(() =>
         </CmkParagraph>
 
         <ContentSpacer />
+
+        <slot name="postContent" />
+
+        <ContentSpacer v-if="slots?.postContent" />
 
         <div class="db-popup-dialog__button-bar">
           <div v-for="(button, index) in buttons" :key="index">

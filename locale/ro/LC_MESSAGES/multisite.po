@@ -1960,6 +1960,17 @@ msgstr ""
 "mode=edit_configvar&varname=cmc_check_helpers\">numărul de helper de "
 "verificare</a></li></ul></p>"
 
+msgid ""
+"<p>The Meraki API is available under different URLS for different regions of "
+"the world.</p><ul><li>Default (most of the world): \"https://api.meraki.com/"
+"api/v1\"</li><li>Canada\t\"https://api.meraki.ca/api/v1\"</"
+"li><li>China\t\"https://api.meraki.cn/api/v1\"</li><li>India\t\"https://"
+"api.meraki.in/api/v1\"</li><li>United States FedRAMP\t\"https://api.gov-"
+"meraki.com/api/v1\"</li></ul><p>For more details, see the <a href=\"https://"
+"developer.cisco.com/meraki/api-v1/getting-started/#base-uri\">API "
+"Documentation</a>.</p>"
+msgstr ""
+
 #, python-format
 msgid ""
 "<p>The control group information is currently only specified by the linux "
@@ -4025,6 +4036,10 @@ msgstr "Adăugați conexiunea LDAP"
 
 msgid "Add MIBs"
 msgstr "Adăugați MIB-uri"
+
+#, fuzzy
+msgid "Add Message Pattern filter rule"
+msgstr "Adaugă filtre"
 
 msgid "Add NGINX instance"
 msgstr "Adăugați instanța NGINX"
@@ -9342,6 +9357,10 @@ msgid "Azure database connections (deprecated)"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
+msgid "Azure resource group"
+msgstr "Adăugați un grup de resurse"
+
+#, fuzzy
 msgid "Azure services found!"
 msgstr "Nu s-au găsit gazde/servicii."
 
@@ -9350,6 +9369,14 @@ msgstr "Servicii Azure de monitorizat"
 
 msgid "Azure storage accounts"
 msgstr "Conturi de stocare Azure"
+
+#, fuzzy
+msgid "Azure subscription"
+msgstr "Abonamente curente"
+
+#, fuzzy
+msgid "Azure subscription name"
+msgstr "Abonament"
 
 #, fuzzy
 msgid "Azure virtual machines"
@@ -11122,6 +11149,12 @@ msgstr "Ieșirea plugin-ului"
 #, fuzzy
 msgid "By service group"
 msgstr "Pe grupe de servicii"
+
+msgid ""
+"By setting a higher value for a given resource, you reduce the amount of "
+"requests sent to the Meraki API instance. If not changed, the predefined "
+"default time to live (TTL) cache interval will be used."
+msgstr ""
 
 msgid ""
 "By setting a higher value, you reduce the amount of requests sent toyour own "
@@ -25521,6 +25554,10 @@ msgstr "Timp de expirare"
 msgid "Expired"
 msgstr "Expiră"
 
+#, fuzzy, python-format
+msgid "Expired %s"
+msgstr "Expiră"
+
 #, fuzzy
 msgid "Expired keys"
 msgstr "Obiecte expirate"
@@ -25529,6 +25566,10 @@ msgid "Expired objects"
 msgstr "Obiecte expirate"
 
 msgid "Expires"
+msgstr "Expiră"
+
+#, fuzzy, python-format
+msgid "Expires %s"
 msgstr "Expiră"
 
 #, fuzzy
@@ -26826,6 +26867,10 @@ msgstr "Filtrați selecția %s în funcție de serviciu: "
 
 #, fuzzy
 msgid "Filtering by Event User"
+msgstr "Șirul final de trimis"
+
+#, fuzzy
+msgid "Filtering by Message Pattern"
 msgstr "Șirul final de trimis"
 
 #, fuzzy
@@ -29457,6 +29502,12 @@ msgstr "Aici puteți configura setările de temporizare."
 msgid "Here you can configure messages filtering parameters using Event User"
 msgstr "Aici puteți configura setările de temporizare."
 
+#, fuzzy
+msgid ""
+"Here you can configure messages filtering parameters using regular "
+"expression, the rule is case insensitive"
+msgstr "Aici puteți configura setările de temporizare."
+
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr ""
@@ -31538,6 +31589,10 @@ msgstr "Familia de adrese gazdă (primară)"
 msgid "Host address or name"
 msgstr "Adresa sau numele gazdei"
 
+#, fuzzy, python-format
+msgid "Host address too long: %s"
+msgstr "Adresa sau numele gazdei"
+
 msgid "Host addresses"
 msgstr "Adrese gazdă"
 
@@ -31937,6 +31992,10 @@ msgstr "Numele gazdei: %s"
 #, fuzzy
 msgid "Host name template"
 msgstr "Șablon de nume de gazdă"
+
+#, fuzzy, python-format
+msgid "Host name too long: %s"
+msgstr "Numele gazdei: %s"
 
 #, fuzzy
 msgid "Host name translation for incoming messages"
@@ -36403,6 +36462,9 @@ msgstr ""
 "evenimente Checkmk pentru a fi procesate. Consola de evenimente țintă poate "
 "fi configurată pentru fiecare gazdă într-o regulă separată."
 
+msgid "Insufficient permissions to view exception details."
+msgstr ""
+
 #, fuzzy
 msgid "Integer field can not be empty"
 msgstr "Cheia secretă"
@@ -36508,6 +36570,12 @@ msgstr "Bătăi intermitente ale inimii"
 
 msgid "Internal ID"
 msgstr "ID intern"
+
+#, fuzzy
+msgid "Internal access"
+msgstr ""
+"Eroare internă: %s\n"
+"%s"
 
 #, python-format
 msgid ""
@@ -39665,6 +39733,10 @@ msgstr "Link State: PREGĂTIT"
 
 msgid "Link State: XXX"
 msgstr "Link State: XXX"
+
+#, fuzzy
+msgid "Link created"
+msgstr "Fișier creat"
 
 msgid "Link existing view"
 msgstr "Legătura cu vizualizarea existentă"
@@ -42988,6 +43060,10 @@ msgstr "Avertizare de memorie la"
 #, fuzzy
 msgid "Memorystore Redis"
 msgstr "cereri"
+
+#, fuzzy
+msgid "Menu placement"
+msgstr "Înlocuire"
 
 #, fuzzy
 msgid "Meraki region"
@@ -48644,6 +48720,10 @@ msgstr ""
 "Numai interfețele cu tipul de port dat sunt incluse în acest grup. De "
 "exemplu, 53 (propVirtual)."
 
+#, fuzzy
+msgid "Only me"
+msgstr "Doar timpul"
+
 #, python-format
 msgid ""
 "Only members of the contact groups listed here have Setup permission for the "
@@ -49084,6 +49164,10 @@ msgstr "Autentificare opțională (dacă este necesar)"
 
 msgid "Optional parameters"
 msgstr "Parametrii opționali"
+
+#, fuzzy
+msgid "Optional sections"
+msgstr "Selectarea opțională a unui site"
 
 msgid "Optional selection of a site"
 msgstr "Selectarea opțională a unui site"
@@ -50095,18 +50179,6 @@ msgstr "Organizația"
 
 msgid "Organization (O)"
 msgstr "Organizație (O)"
-
-#, fuzzy
-msgid "Organization device statuses"
-msgstr "Starea dispozitivelor de organizare"
-
-#, fuzzy
-msgid "Organization licenses overview"
-msgstr "Prezentare generală a licențelor de organizare"
-
-#, fuzzy
-msgid "Organization sensor readings"
-msgstr "Citiri ale senzorilor de organizare"
 
 msgid "Organizational unit (OU)"
 msgstr "Unitate organizațională (OU)"
@@ -51201,6 +51273,7 @@ msgstr "Set de reguli de parametri"
 msgid "Parameters"
 msgstr "Parametrii"
 
+#, fuzzy
 msgid ""
 "Parameters are used in order to make rules more flexible. They must be named "
 "like variables in programming languages. For example you can make your rule "
@@ -51209,6 +51282,10 @@ msgid ""
 "arbitrary values for these parameters. In the title of the rule as well as "
 "the host and service names, you can insert the actual value of the "
 "parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> (enclosed in dollar signs)."
+"<p><b>Note</b>: a parameter with a colon (:) inside its value is a valid "
+"parameter, e.g. <tt>LABEL_KEY:LABEL_VALUE</tt>. This is quite handy when you "
+"want to pass a parameter to a label filter since labels require a colon to "
+"be present to be considered valid.</p>"
 msgstr ""
 "Parametrii sunt utilizați pentru a face regulile mai flexibile. Aceștia "
 "trebuie să fie numiți ca și variabilele din limbajele de programare. De "
@@ -54274,6 +54351,10 @@ msgstr "Algoritm cu cheie publică"
 msgid "Public key size"
 msgstr "Dimensiunea cheii publice"
 
+#, fuzzy
+msgid "Public link"
+msgstr "Public"
+
 #, python-format
 msgid "Publish %s"
 msgstr "Publicare %s"
@@ -55722,6 +55803,10 @@ msgstr "Expresie regulată de așteptat"
 
 msgid "Regular expression to expect in content"
 msgstr "Expresie regulată de așteptat în conținut"
+
+#, fuzzy
+msgid "Regular expression used to filter messages."
+msgstr "Expresie regulată pentru filtrarea fișierelor jurnal"
 
 msgid ""
 "Regular expression which is used to narrow down the selected files further. "
@@ -59126,9 +59211,6 @@ msgstr ""
 "Secțiunea (secțiunile) nu poate (pot) fi dezactivată(e) și activată(e) în "
 "același timp:"
 
-msgid "Sections"
-msgstr "Secțiuni"
-
 msgid "Sections - data to collect"
 msgstr "Secțiuni - date de colectat"
 
@@ -61938,6 +62020,10 @@ msgstr "Afișați numele volumului în ieșirea serviciului"
 msgid "Show/hide password"
 msgstr "Afișați / Ascundeți parola"
 
+#, fuzzy
+msgid "Shown"
+msgstr "Arată"
+
 msgid "Shows a single aggregation."
 msgstr "Afișează o singură agregare."
 
@@ -62388,6 +62474,10 @@ msgstr "Starea sitului"
 
 msgid "Site to register with"
 msgstr "Site pentru a vă înregistra cu"
+
+#, fuzzy
+msgid "Site users"
+msgstr "Migrarea utilizatorilor"
 
 #, python-format
 msgid "Site-specific global configuration for %s"
@@ -67517,18 +67607,6 @@ msgstr ""
 "Numele instanței MSSQL, numele tablespace-ului și tipul de copie de rezervă, "
 "fiecare fiind separat de un spațiu."
 
-msgid ""
-"The Meraki API is available under different URLS for different regions of "
-"the world.\n"
-"Default (most of the world): \"https://api.meraki.com/api/v1\"\n"
-"Canada\t\"https://api.meraki.ca/api/v1\"\n"
-"China\t\"https://api.meraki.cn/api/v1\"\n"
-"India\t\"https://api.meraki.in/api/v1\"\n"
-"United States FedRAMP\t\"https://api.gov-meraki.com/api/v1\"\n"
-"For details see: \"https://developer.cisco.com/meraki/api-v1/getting-started/"
-"#base-uri\"\n"
-msgstr ""
-
 msgid "The Number of the power Phase."
 msgstr "Numărul fazei de putere."
 
@@ -67536,6 +67614,19 @@ msgid ""
 "The OpenTelemetry collector is an experimental beta feature, and not "
 "supported yet. "
 msgstr ""
+
+msgid ""
+"The Organisation-ID will be used as prefix for the hostname (separated by a "
+"-). Use this option together with a \"Hostname translation for piggybacked "
+"hosts\" to add a organisation prefix to the hosts from the Cisco Meraki "
+"cloud to avoid conflicting hostnames. You can also use this option along "
+"with the \"Dynamic host management\" to sort the host in organisation "
+"specific folders."
+msgstr ""
+
+#, fuzzy
+msgid "The Organization-ID will be used as host name prefix"
+msgstr "Numele va fi folosit în descrierea serviciului"
 
 #, no-python-format
 msgid ""
@@ -75377,10 +75468,6 @@ msgstr ""
 "încărcare) pentru sistemele gazdă VMware ESX. Procentul de utilizare este "
 "calculat în raport cu numărul total de unități centrale de procesare. "
 
-#, fuzzy
-msgid "This rule configures the OpenTelemetry special agent."
-msgstr "Această regulă configurează notificările în masă."
-
 msgid ""
 "This rule configures the Redfish integration to query PDUs via the Redfish "
 "REST API"
@@ -82073,6 +82160,9 @@ msgstr "Execuții simultane fără rezerve"
 msgid "Unreserved concurrent executions in percent"
 msgstr "Execuții concomitente nerezervate în procente"
 
+msgid "Unselect sections which you don't want to include."
+msgstr ""
+
 msgid "Unset user attributes on migration"
 msgstr "Anulare atribute de utilizator la migrare"
 
@@ -83222,6 +83312,9 @@ msgid "Use Livestatus proxy daemon"
 msgstr "Utilizați Livestatus Proxy Daemon"
 
 msgid "Use Odbc backend if plugin deployed on Windows"
+msgstr ""
+
+msgid "Use Organisation-ID as host prefix"
 msgstr ""
 
 msgid "Use Piggyback"
@@ -93296,6 +93389,10 @@ msgid "Unnamed Dashboard"
 msgstr "Tabloul de bord"
 
 #, fuzzy
+msgid "Show date and time"
+msgstr "Data și ora"
+
+#, fuzzy
 msgid "No items selected"
 msgstr "Nu este selectat"
 
@@ -94453,6 +94550,10 @@ msgstr "A început să activeze modificările: %s"
 msgid "Sites with errors: %{n}"
 msgstr "%d site-uri cu erori: %s"
 
+#, fuzzy
+msgid "Sites logged out: %{n}"
+msgstr "%d site-uri cu erori: %s"
+
 msgid "Key hints"
 msgstr ""
 
@@ -95271,6 +95372,25 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Organization device statuses"
+#~ msgstr "Starea dispozitivelor de organizare"
+
+#, fuzzy
+#~ msgid "Organization licenses overview"
+#~ msgstr "Prezentare generală a licențelor de organizare"
+
+#, fuzzy
+#~ msgid "Organization sensor readings"
+#~ msgstr "Citiri ale senzorilor de organizare"
+
+#~ msgid "Sections"
+#~ msgstr "Secțiuni"
+
+#, fuzzy
+#~ msgid "This rule configures the OpenTelemetry special agent."
+#~ msgstr "Această regulă configurează notificările în masă."
 
 #, fuzzy
 #~ msgid "HTTP port"

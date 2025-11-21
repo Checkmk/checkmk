@@ -1879,6 +1879,17 @@ msgstr ""
 "mode=edit_configvar&varname=cmc_check_helpers \">数を増やします</a></li></"
 "ul></p>"
 
+msgid ""
+"<p>The Meraki API is available under different URLS for different regions of "
+"the world.</p><ul><li>Default (most of the world): \"https://api.meraki.com/"
+"api/v1\"</li><li>Canada\t\"https://api.meraki.ca/api/v1\"</"
+"li><li>China\t\"https://api.meraki.cn/api/v1\"</li><li>India\t\"https://"
+"api.meraki.in/api/v1\"</li><li>United States FedRAMP\t\"https://api.gov-"
+"meraki.com/api/v1\"</li></ul><p>For more details, see the <a href=\"https://"
+"developer.cisco.com/meraki/api-v1/getting-started/#base-uri\">API "
+"Documentation</a>.</p>"
+msgstr ""
+
 #, python-format
 msgid ""
 "<p>The control group information is currently only specified by the linux "
@@ -3814,6 +3825,10 @@ msgstr "LDAP接続を追加します"
 
 msgid "Add MIBs"
 msgstr "MIBを追加する"
+
+#, fuzzy
+msgid "Add Message Pattern filter rule"
+msgstr "フィルタを追加"
 
 msgid "Add NGINX instance"
 msgstr "NGINXインスタンスを追加します"
@@ -8733,6 +8748,10 @@ msgstr "Azure データベース接続"
 msgid "Azure database connections (deprecated)"
 msgstr "Azure データベース接続"
 
+#, fuzzy
+msgid "Azure resource group"
+msgstr "リソースグループを追加する"
+
 msgid "Azure services found!"
 msgstr "Azureサービスを発見しました！"
 
@@ -8741,6 +8760,14 @@ msgstr "監視するAzureサービス"
 
 msgid "Azure storage accounts"
 msgstr "Azureストレージアカウント"
+
+#, fuzzy
+msgid "Azure subscription"
+msgstr "現在のサブスクリプション状況"
+
+#, fuzzy
+msgid "Azure subscription name"
+msgstr "サブスクリプション"
 
 #, fuzzy
 msgid "Azure virtual machines"
@@ -10397,6 +10424,12 @@ msgstr "プラグイン出力による"
 
 msgid "By service group"
 msgstr "サービスグループによる"
+
+msgid ""
+"By setting a higher value for a given resource, you reduce the amount of "
+"requests sent to the Meraki API instance. If not changed, the predefined "
+"default time to live (TTL) cache interval will be used."
+msgstr ""
 
 msgid ""
 "By setting a higher value, you reduce the amount of requests sent toyour own "
@@ -24029,6 +24062,10 @@ msgstr "有効期限"
 msgid "Expired"
 msgstr "有効期限が切れます"
 
+#, fuzzy, python-format
+msgid "Expired %s"
+msgstr "有効期限が切れます"
+
 #, fuzzy
 msgid "Expired keys"
 msgstr "期限切れのオブジェクト"
@@ -24037,6 +24074,10 @@ msgid "Expired objects"
 msgstr "期限切れのオブジェクト"
 
 msgid "Expires"
+msgstr "有効期限が切れます"
+
+#, fuzzy, python-format
+msgid "Expires %s"
 msgstr "有効期限が切れます"
 
 msgid "Expires on"
@@ -25256,6 +25297,10 @@ msgstr "サービスによるフィルター選択:"
 
 #, fuzzy
 msgid "Filtering by Event User"
+msgstr "送信する最後の文字列"
+
+#, fuzzy
+msgid "Filtering by Message Pattern"
 msgstr "送信する最後の文字列"
 
 msgid "Filtering tags enabled but no tags defined."
@@ -27776,6 +27821,12 @@ msgstr "ここで、メッセージフィルタリングのパラメーターを
 msgid "Here you can configure messages filtering parameters using Event User"
 msgstr "ここで、メッセージフィルタリングのパラメーターを設定できます"
 
+#, fuzzy
+msgid ""
+"Here you can configure messages filtering parameters using regular "
+"expression, the rule is case insensitive"
+msgstr "ここで、メッセージフィルタリングのパラメーターを設定できます"
+
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr "ここでは、各シャーシの3.3Vおよび12Vの電圧レベルを構成できます。"
@@ -29524,6 +29575,10 @@ msgstr "ホストアドレスファミリ(プライマリ)"
 msgid "Host address or name"
 msgstr "ホストアドレスまたは名前"
 
+#, fuzzy, python-format
+msgid "Host address too long: %s"
+msgstr "ホストアドレスまたは名前"
+
 msgid "Host addresses"
 msgstr "ホストアドレス"
 
@@ -29897,6 +29952,10 @@ msgstr "ホスト名ルール"
 
 msgid "Host name template"
 msgstr "ホスト名のテンプレート"
+
+#, fuzzy, python-format
+msgid "Host name too long: %s"
+msgstr "ホスト名: %s"
 
 msgid "Host name translation for incoming messages"
 msgstr "受信メッセージのホスト名変換"
@@ -34105,6 +34164,9 @@ msgstr ""
 "Checkmkイベントコンソールデーモンに転送して処理することができる。ターゲットの"
 "イベントコンソールは、各ホストごとに個別のルールで設定できます。"
 
+msgid "Insufficient permissions to view exception details."
+msgstr ""
+
 #, fuzzy
 msgid "Integer field can not be empty"
 msgstr "入力を空にすることはできません"
@@ -34201,6 +34263,10 @@ msgstr "断続的なハートビート"
 
 msgid "Internal ID"
 msgstr "内部ID"
+
+#, fuzzy
+msgid "Internal access"
+msgstr "内部エラー: %s"
 
 #, python-format
 msgid ""
@@ -37178,6 +37244,10 @@ msgstr "リンク状態: READY"
 
 msgid "Link State: XXX"
 msgstr "リンク状態: XXX"
+
+#, fuzzy
+msgid "Link created"
+msgstr "作成されたファイル"
 
 msgid "Link existing view"
 msgstr "既存のビューをリンクする"
@@ -40350,6 +40420,10 @@ msgstr "メモリに関する警告"
 
 msgid "Memorystore Redis"
 msgstr "メモリストア Redis"
+
+#, fuzzy
+msgid "Menu placement"
+msgstr "置換"
 
 #, fuzzy
 msgid "Meraki region"
@@ -45636,6 +45710,10 @@ msgstr ""
 "指定されたポートタイプを持つインターフェイスのみがこのグループに入れられま"
 "す。例えば、53 (propVirtual)です。"
 
+#, fuzzy
+msgid "Only me"
+msgstr "唯一の時間"
+
 #, python-format
 msgid ""
 "Only members of the contact groups listed here have Setup permission for the "
@@ -46043,6 +46121,10 @@ msgstr "オプションのログイン(必要な場合)"
 
 msgid "Optional parameters"
 msgstr "オプションのパラメータ"
+
+#, fuzzy
+msgid "Optional sections"
+msgstr "サイトオプション選択"
 
 msgid "Optional selection of a site"
 msgstr "サイトオプション選択"
@@ -46862,15 +46944,6 @@ msgstr "組織"
 
 msgid "Organization (O)"
 msgstr "組織 (O)"
-
-msgid "Organization device statuses"
-msgstr "組織のデバイス状態"
-
-msgid "Organization licenses overview"
-msgstr "組織ライセンスの概要"
-
-msgid "Organization sensor readings"
-msgstr "組織センサーの読取"
 
 msgid "Organizational unit (OU)"
 msgstr "組織単位（OU）"
@@ -47903,6 +47976,7 @@ msgstr "パラメータルールセット"
 msgid "Parameters"
 msgstr "パラメーター"
 
+#, fuzzy
 msgid ""
 "Parameters are used in order to make rules more flexible. They must be named "
 "like variables in programming languages. For example you can make your rule "
@@ -47911,6 +47985,10 @@ msgid ""
 "arbitrary values for these parameters. In the title of the rule as well as "
 "the host and service names, you can insert the actual value of the "
 "parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> (enclosed in dollar signs)."
+"<p><b>Note</b>: a parameter with a colon (:) inside its value is a valid "
+"parameter, e.g. <tt>LABEL_KEY:LABEL_VALUE</tt>. This is quite handy when you "
+"want to pass a parameter to a label filter since labels require a colon to "
+"be present to be considered valid.</p>"
 msgstr ""
 "パラメータは、ルールをより柔軟にするために使用されます。それらはプログラミン"
 "グ言語の変数のように名前を付ける必要があります。たとえば、ルールに2つのパラ"
@@ -50751,6 +50829,10 @@ msgstr "公開鍵アルゴリズム"
 msgid "Public key size"
 msgstr "公開鍵のサイズ"
 
+#, fuzzy
+msgid "Public link"
+msgstr "公衆"
+
 #, python-format
 msgid "Publish %s"
 msgstr "%sを公開する"
@@ -52104,6 +52186,10 @@ msgstr "コンテンツに期待する正規表現"
 
 msgid "Regular expression to expect in content"
 msgstr "コンテンツに期待される正規表現"
+
+#, fuzzy
+msgid "Regular expression used to filter messages."
+msgstr "ログファイルのフィルタリングのための正規表現"
 
 msgid ""
 "Regular expression which is used to narrow down the selected files further. "
@@ -55320,9 +55406,6 @@ msgstr "監視するファイルのセクション"
 msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr "セクションの無効化と有効化を同時に行うことはできません。"
 
-msgid "Sections"
-msgstr "セクション"
-
 msgid "Sections - data to collect"
 msgstr "セクション - 収集するデータ"
 
@@ -57940,6 +58023,10 @@ msgstr "サービス出力にボリューム名を表示する"
 msgid "Show/hide password"
 msgstr "パスワードの表示/非表示"
 
+#, fuzzy
+msgid "Shown"
+msgstr "見せる"
+
 msgid "Shows a single aggregation."
 msgstr "単一の集計を表示します。"
 
@@ -58380,6 +58467,10 @@ msgstr "サイトステータス"
 
 msgid "Site to register with"
 msgstr "登録するサイト"
+
+#, fuzzy
+msgid "Site users"
+msgstr "ユーザーを移行する"
 
 #, python-format
 msgid "Site-specific global configuration for %s"
@@ -63173,18 +63264,6 @@ msgstr ""
 "MSSQLインスタンス名、テーブルスペース名、およびバックアップタイプ。それぞれス"
 "ペースで区切られます。"
 
-msgid ""
-"The Meraki API is available under different URLS for different regions of "
-"the world.\n"
-"Default (most of the world): \"https://api.meraki.com/api/v1\"\n"
-"Canada\t\"https://api.meraki.ca/api/v1\"\n"
-"China\t\"https://api.meraki.cn/api/v1\"\n"
-"India\t\"https://api.meraki.in/api/v1\"\n"
-"United States FedRAMP\t\"https://api.gov-meraki.com/api/v1\"\n"
-"For details see: \"https://developer.cisco.com/meraki/api-v1/getting-started/"
-"#base-uri\"\n"
-msgstr ""
-
 msgid "The Number of the power Phase."
 msgstr "電力フェーズの数。"
 
@@ -63194,6 +63273,19 @@ msgid ""
 msgstr ""
 "OpenTelemetryコレクターは実験的なベータ機能であり、まだサポートされていませ"
 "ん。 "
+
+msgid ""
+"The Organisation-ID will be used as prefix for the hostname (separated by a "
+"-). Use this option together with a \"Hostname translation for piggybacked "
+"hosts\" to add a organisation prefix to the hosts from the Cisco Meraki "
+"cloud to avoid conflicting hostnames. You can also use this option along "
+"with the \"Dynamic host management\" to sort the host in organisation "
+"specific folders."
+msgstr ""
+
+#, fuzzy
+msgid "The Organization-ID will be used as host name prefix"
+msgstr "この名前はサービス名で使用されます"
 
 #, no-python-format
 msgid ""
@@ -70690,9 +70782,6 @@ msgstr ""
 "このルールは、VMware ESXホストシステムのCPU使用率（負荷ではない）のレベルを設"
 "定します。使用率の割合は、CPUの総数を基準にして計算されます "
 
-msgid "This rule configures the OpenTelemetry special agent."
-msgstr "このルールは、OpenTelemetry スペシャルエージェントを設定します。"
-
 msgid ""
 "This rule configures the Redfish integration to query PDUs via the Redfish "
 "REST API"
@@ -76734,6 +76823,9 @@ msgstr "予約なしの同時執行"
 msgid "Unreserved concurrent executions in percent"
 msgstr "未消化の同時死刑執行率(%)"
 
+msgid "Unselect sections which you don't want to include."
+msgstr ""
+
 msgid "Unset user attributes on migration"
 msgstr "移行時のユーザー属性設定解除"
 
@@ -77815,6 +77907,9 @@ msgstr "Livestatusプロキシデーモンを使用する"
 msgid "Use Odbc backend if plugin deployed on Windows"
 msgstr ""
 "Windowsにプラグインをデプロイする場合、ODBCバックエンドを使用してください"
+
+msgid "Use Organisation-ID as host prefix"
+msgstr ""
 
 msgid "Use Piggyback"
 msgstr "ピギーバックを使用する"
@@ -87269,6 +87364,10 @@ msgid "Unnamed Dashboard"
 msgstr "ダッシュボード"
 
 #, fuzzy
+msgid "Show date and time"
+msgstr "日付と時間"
+
+#, fuzzy
 msgid "No items selected"
 msgstr "選択されていない"
 
@@ -88380,6 +88479,10 @@ msgstr "変更の有効化を開始しました: %s"
 msgid "Sites with errors: %{n}"
 msgstr "%d サイトでエラーが発生しました: %s"
 
+#, fuzzy
+msgid "Sites logged out: %{n}"
+msgstr "%d サイトでエラーが発生しました: %s"
+
 msgid "Key hints"
 msgstr ""
 
@@ -89174,6 +89277,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Organization device statuses"
+#~ msgstr "組織のデバイス状態"
+
+#~ msgid "Organization licenses overview"
+#~ msgstr "組織ライセンスの概要"
+
+#~ msgid "Organization sensor readings"
+#~ msgstr "組織センサーの読取"
+
+#~ msgid "Sections"
+#~ msgstr "セクション"
+
+#~ msgid "This rule configures the OpenTelemetry special agent."
+#~ msgstr "このルールは、OpenTelemetry スペシャルエージェントを設定します。"
 
 #, fuzzy
 #~ msgid "HTTP port"

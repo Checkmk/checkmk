@@ -1927,6 +1927,17 @@ msgstr ""
 "mode=edit_configvar&varname=cmc_check_helpers\">numero di check helpers</a></"
 "li></ul></p>"
 
+msgid ""
+"<p>The Meraki API is available under different URLS for different regions of "
+"the world.</p><ul><li>Default (most of the world): \"https://api.meraki.com/"
+"api/v1\"</li><li>Canada\t\"https://api.meraki.ca/api/v1\"</"
+"li><li>China\t\"https://api.meraki.cn/api/v1\"</li><li>India\t\"https://"
+"api.meraki.in/api/v1\"</li><li>United States FedRAMP\t\"https://api.gov-"
+"meraki.com/api/v1\"</li></ul><p>For more details, see the <a href=\"https://"
+"developer.cisco.com/meraki/api-v1/getting-started/#base-uri\">API "
+"Documentation</a>.</p>"
+msgstr ""
+
 #, python-format
 msgid ""
 "<p>The control group information is currently only specified by the linux "
@@ -3981,6 +3992,10 @@ msgstr "Aggiungere la connessione LDAP"
 
 msgid "Add MIBs"
 msgstr "Aggiungere MIB"
+
+#, fuzzy
+msgid "Add Message Pattern filter rule"
+msgstr "Aggiungere il filtro"
 
 msgid "Add NGINX instance"
 msgstr "Aggiungere l'istanza NGINX"
@@ -9276,6 +9291,10 @@ msgid "Azure database connections (deprecated)"
 msgstr "Connessioni al database"
 
 #, fuzzy
+msgid "Azure resource group"
+msgstr "Aggiungi gruppo di risorse"
+
+#, fuzzy
 msgid "Azure services found!"
 msgstr "Nessun host/servizio trovato."
 
@@ -9284,6 +9303,14 @@ msgstr "Servizi Azure da monitorare"
 
 msgid "Azure storage accounts"
 msgstr "Account di archiviazione Azure"
+
+#, fuzzy
+msgid "Azure subscription"
+msgstr "Iscrizioni agli eventi"
+
+#, fuzzy
+msgid "Azure subscription name"
+msgstr "Abbonamento"
 
 #, fuzzy
 msgid "Azure virtual machines"
@@ -10995,6 +11022,12 @@ msgstr "Uscita del plugin"
 #, fuzzy
 msgid "By service group"
 msgstr "Per gruppo di servizio"
+
+msgid ""
+"By setting a higher value for a given resource, you reduce the amount of "
+"requests sent to the Meraki API instance. If not changed, the predefined "
+"default time to live (TTL) cache interval will be used."
+msgstr ""
 
 msgid ""
 "By setting a higher value, you reduce the amount of requests sent toyour own "
@@ -25234,6 +25267,10 @@ msgstr "Scadenza"
 msgid "Expired"
 msgstr "Scade"
 
+#, fuzzy, python-format
+msgid "Expired %s"
+msgstr "Scade"
+
 #, fuzzy
 msgid "Expired keys"
 msgstr "Oggetti scaduti"
@@ -25242,6 +25279,10 @@ msgid "Expired objects"
 msgstr "Oggetti scaduti"
 
 msgid "Expires"
+msgstr "Scade"
+
+#, fuzzy, python-format
+msgid "Expires %s"
 msgstr "Scade"
 
 #, fuzzy
@@ -26533,6 +26574,10 @@ msgstr "Filtrare la selezione %s per servizio: "
 
 #, fuzzy
 msgid "Filtering by Event User"
+msgstr "Stringa finale da inviare"
+
+#, fuzzy
+msgid "Filtering by Message Pattern"
 msgstr "Stringa finale da inviare"
 
 #, fuzzy
@@ -29152,6 +29197,12 @@ msgstr "Qui è possibile configurare le impostazioni di timeout."
 msgid "Here you can configure messages filtering parameters using Event User"
 msgstr "Qui è possibile configurare le impostazioni di timeout."
 
+#, fuzzy
+msgid ""
+"Here you can configure messages filtering parameters using regular "
+"expression, the rule is case insensitive"
+msgstr "Qui è possibile configurare le impostazioni di timeout."
+
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr ""
@@ -31227,6 +31278,10 @@ msgstr "Famiglia dell'indirizzo host (primario)"
 msgid "Host address or name"
 msgstr "Indirizzo o nome dell'host"
 
+#, fuzzy, python-format
+msgid "Host address too long: %s"
+msgstr "Indirizzo o nome dell'host"
+
 msgid "Host addresses"
 msgstr "Indirizzi degli host"
 
@@ -31626,6 +31681,10 @@ msgstr "Nome host: %s"
 #, fuzzy
 msgid "Host name template"
 msgstr "Modello di hostname"
+
+#, fuzzy, python-format
+msgid "Host name too long: %s"
+msgstr "Nome host: %s"
 
 #, fuzzy
 msgid "Host name translation for incoming messages"
@@ -36008,6 +36067,9 @@ msgstr ""
 "Checkmk per essere elaborate. La console eventi di destinazione può essere "
 "configurata per ogni host in una regola separata."
 
+msgid "Insufficient permissions to view exception details."
+msgstr ""
+
 #, fuzzy
 msgid "Integer field can not be empty"
 msgstr "Chiave segreta"
@@ -36111,6 +36173,12 @@ msgstr "Battito cardiaco intermittente"
 
 msgid "Internal ID"
 msgstr "ID interno"
+
+#, fuzzy
+msgid "Internal access"
+msgstr ""
+"Errore interno: %s\n"
+"%s"
 
 #, python-format
 msgid ""
@@ -39253,6 +39321,10 @@ msgstr "Stato del collegamento: PRONTO"
 
 msgid "Link State: XXX"
 msgstr "Stato del collegamento: XXX"
+
+#, fuzzy
+msgid "Link created"
+msgstr "File creato"
 
 msgid "Link existing view"
 msgstr "Collegare la vista esistente"
@@ -42556,6 +42628,10 @@ msgstr "Avviso di memoria a"
 #, fuzzy
 msgid "Memorystore Redis"
 msgstr "Risorse di memoria"
+
+#, fuzzy
+msgid "Menu placement"
+msgstr "Sostituzione"
 
 #, fuzzy
 msgid "Meraki region"
@@ -48147,6 +48223,10 @@ msgstr ""
 "Solo le interfacce con il tipo di porta dato sono messe in questo gruppo. "
 "Per esempio 53 (propVirtual)."
 
+#, fuzzy
+msgid "Only me"
+msgstr "Solo il tempo"
+
 #, python-format
 msgid ""
 "Only members of the contact groups listed here have Setup permission for the "
@@ -48580,6 +48660,10 @@ msgstr "Accesso opzionale (se richiesto)"
 
 msgid "Optional parameters"
 msgstr "Parametri opzionali"
+
+#, fuzzy
+msgid "Optional sections"
+msgstr "Selezione facoltativa di un sito"
 
 msgid "Optional selection of a site"
 msgstr "Selezione facoltativa di un sito"
@@ -49591,18 +49675,6 @@ msgstr "Organizzazione"
 
 msgid "Organization (O)"
 msgstr "Organizzazione (O)"
-
-#, fuzzy
-msgid "Organization device statuses"
-msgstr "Stati dell'organizzazione del dispositivo"
-
-#, fuzzy
-msgid "Organization licenses overview"
-msgstr "Panoramica delle licenze dell'organizzazione"
-
-#, fuzzy
-msgid "Organization sensor readings"
-msgstr "Letture del sensore di organizzazione"
 
 msgid "Organizational unit (OU)"
 msgstr "Unità organizzativa (UO)"
@@ -50692,6 +50764,7 @@ msgstr "Set di regole per i parametri"
 msgid "Parameters"
 msgstr "Parametri"
 
+#, fuzzy
 msgid ""
 "Parameters are used in order to make rules more flexible. They must be named "
 "like variables in programming languages. For example you can make your rule "
@@ -50700,6 +50773,10 @@ msgid ""
 "arbitrary values for these parameters. In the title of the rule as well as "
 "the host and service names, you can insert the actual value of the "
 "parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> (enclosed in dollar signs)."
+"<p><b>Note</b>: a parameter with a colon (:) inside its value is a valid "
+"parameter, e.g. <tt>LABEL_KEY:LABEL_VALUE</tt>. This is quite handy when you "
+"want to pass a parameter to a label filter since labels require a colon to "
+"be present to be considered valid.</p>"
 msgstr ""
 "I parametri sono usati per rendere le regole più flessibili. Devono essere "
 "nominati come le variabili nei linguaggi di programmazione. Per esempio, "
@@ -53748,6 +53825,10 @@ msgstr "Algoritmo a chiave pubblica"
 msgid "Public key size"
 msgstr "Dimensione della chiave pubblica"
 
+#, fuzzy
+msgid "Public link"
+msgstr "Pubblico"
+
 #, python-format
 msgid "Publish %s"
 msgstr "Pubblica %s"
@@ -55176,6 +55257,10 @@ msgstr "Espressione regolare da aspettarsi"
 
 msgid "Regular expression to expect in content"
 msgstr "Espressione regolare da aspettarsi nel contenuto"
+
+#, fuzzy
+msgid "Regular expression used to filter messages."
+msgstr "Espressione regolare per il filtraggio dei file di log"
 
 msgid ""
 "Regular expression which is used to narrow down the selected files further. "
@@ -58565,9 +58650,6 @@ msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 "Le sezioni non possono essere disabilitate e abilitate allo stesso tempo:"
 
-msgid "Sections"
-msgstr "Sezioni"
-
 msgid "Sections - data to collect"
 msgstr "Sezioni - dati da raccogliere"
 
@@ -61290,6 +61372,10 @@ msgstr "Mostra il nome del volume nell'output del servizio"
 msgid "Show/hide password"
 msgstr "Mostra/Nascondi la password"
 
+#, fuzzy
+msgid "Shown"
+msgstr "Mostra"
+
 msgid "Shows a single aggregation."
 msgstr "Mostra una singola aggregazione."
 
@@ -61742,6 +61828,10 @@ msgstr "Stato del sito"
 
 msgid "Site to register with"
 msgstr "Sito a cui registrarsi"
+
+#, fuzzy
+msgid "Site users"
+msgstr "Migrare gli utenti"
 
 #, python-format
 msgid "Site-specific global configuration for %s"
@@ -66808,18 +66898,6 @@ msgstr ""
 "Il nome dell'istanza MSSQL, il nome del tablespace e il tipo di backup, "
 "ognuno separato da uno spazio."
 
-msgid ""
-"The Meraki API is available under different URLS for different regions of "
-"the world.\n"
-"Default (most of the world): \"https://api.meraki.com/api/v1\"\n"
-"Canada\t\"https://api.meraki.ca/api/v1\"\n"
-"China\t\"https://api.meraki.cn/api/v1\"\n"
-"India\t\"https://api.meraki.in/api/v1\"\n"
-"United States FedRAMP\t\"https://api.gov-meraki.com/api/v1\"\n"
-"For details see: \"https://developer.cisco.com/meraki/api-v1/getting-started/"
-"#base-uri\"\n"
-msgstr ""
-
 msgid "The Number of the power Phase."
 msgstr "Il numero della fase di potenza."
 
@@ -66827,6 +66905,19 @@ msgid ""
 "The OpenTelemetry collector is an experimental beta feature, and not "
 "supported yet. "
 msgstr ""
+
+msgid ""
+"The Organisation-ID will be used as prefix for the hostname (separated by a "
+"-). Use this option together with a \"Hostname translation for piggybacked "
+"hosts\" to add a organisation prefix to the hosts from the Cisco Meraki "
+"cloud to avoid conflicting hostnames. You can also use this option along "
+"with the \"Dynamic host management\" to sort the host in organisation "
+"specific folders."
+msgstr ""
+
+#, fuzzy
+msgid "The Organization-ID will be used as host name prefix"
+msgstr "Il nome sarà usato nella descrizione del servizio"
 
 #, no-python-format
 msgid ""
@@ -74547,10 +74638,6 @@ msgstr ""
 "i sistemi host VMware ESX. La percentuale di utilizzo viene calcolata "
 "rispetto al numero totale di CPU. "
 
-#, fuzzy
-msgid "This rule configures the OpenTelemetry special agent."
-msgstr "Questa regola configura le notifiche di massa."
-
 msgid ""
 "This rule configures the Redfish integration to query PDUs via the Redfish "
 "REST API"
@@ -81206,6 +81293,9 @@ msgstr "Esecuzioni concorrenti non riservate"
 msgid "Unreserved concurrent executions in percent"
 msgstr "Esecuzioni concorrenti non riservate in percentuale"
 
+msgid "Unselect sections which you don't want to include."
+msgstr ""
+
 msgid "Unset user attributes on migration"
 msgstr "Attributi utente non impostati durante la migrazione"
 
@@ -82338,6 +82428,9 @@ msgid "Use Livestatus proxy daemon"
 msgstr "Utilizzare il demone proxy Livestatus"
 
 msgid "Use Odbc backend if plugin deployed on Windows"
+msgstr ""
+
+msgid "Use Organisation-ID as host prefix"
 msgstr ""
 
 msgid "Use Piggyback"
@@ -92297,6 +92390,10 @@ msgid "Unnamed Dashboard"
 msgstr "Dashboard"
 
 #, fuzzy
+msgid "Show date and time"
+msgstr "Data e ora"
+
+#, fuzzy
 msgid "No items selected"
 msgstr "Non selezionato"
 
@@ -93446,6 +93543,10 @@ msgstr "Partire attivare le modifiche: %s"
 msgid "Sites with errors: %{n}"
 msgstr "%d siti con errori: %s"
 
+#, fuzzy
+msgid "Sites logged out: %{n}"
+msgstr "%d siti con errori: %s"
+
 msgid "Key hints"
 msgstr ""
 
@@ -94260,6 +94361,25 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Organization device statuses"
+#~ msgstr "Stati dell'organizzazione del dispositivo"
+
+#, fuzzy
+#~ msgid "Organization licenses overview"
+#~ msgstr "Panoramica delle licenze dell'organizzazione"
+
+#, fuzzy
+#~ msgid "Organization sensor readings"
+#~ msgstr "Letture del sensore di organizzazione"
+
+#~ msgid "Sections"
+#~ msgstr "Sezioni"
+
+#, fuzzy
+#~ msgid "This rule configures the OpenTelemetry special agent."
+#~ msgstr "Questa regola configura le notifiche di massa."
 
 #, fuzzy
 #~ msgid "HTTP port"

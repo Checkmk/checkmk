@@ -259,6 +259,12 @@ div#notification_analysis_container {
 div#datasources_container {
   @include message-container-mixin;
 
+  background-color: $ux-theme-4; // same as the .flashed messages
+
+  div.state_bar {
+    width: 22px; // same width as the .flashed messages
+  }
+
   div.message_container {
     &:first-child h2 {
       margin: 0;
@@ -297,29 +303,25 @@ div#activation_state_message_container {
 }
 
 div#fixall_container {
-  background-color: $headline-color;
-  border-radius: 2px;
-  overflow: hidden;
-
-  img {
-    margin-left: $spacing;
-  }
-
   ul {
     display: inline-block;
     list-style: none;
-    margin: 15px 0 15px 0;
-    padding-left: $spacing;
+    margin: 0;
+    padding: 0;
   }
 
   li {
     display: inline-block;
     padding: 0 $spacing;
     border-right: 1px solid $font-color;
-  }
 
-  li:last-child {
-    border-right: none;
+    &:first-child {
+      padding-left: 0;
+    }
+
+    &:last-child {
+      border-right: none;
+    }
   }
 
   a {

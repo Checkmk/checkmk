@@ -6,7 +6,7 @@
 import { init_callable_ts_functions } from '@/modules/callable_functions'
 
 import { call_ajax } from './ajax'
-import { hide_msg, monitor, show_error, show_info } from './async_progress'
+import { hide_msg, monitor, show_error, show_message_by_type } from './async_progress'
 import {
   add_class,
   add_event_handler,
@@ -62,6 +62,7 @@ interface AjaxServiceDiscovery {
   is_finished: boolean
   job_state: any
   message: string | null
+  message_type: 'success' | 'warning' | 'error' | 'waiting' | 'info'
   body: string
   datasources: string
   fixall: string
@@ -97,7 +98,7 @@ export function start(
 ) {
   // When we receive no response for 2 seconds, then show the updating message
   g_show_updating_timer = window.setTimeout(function () {
-    show_info('Updating...')
+    show_message_by_type('waiting', 'Updating...')
   }, 2000)
 
   lock_controls(true, get_state_independent_controls().concat(get_page_menu_controls()))
@@ -180,7 +181,7 @@ function update(handler_data: ServiceDiscoveryHandlerData, response: AjaxService
   }
 
   if (response.message) {
-    show_info(response.message)
+    show_message_by_type(response.message_type, response.message)
   } else {
     hide_msg()
   }

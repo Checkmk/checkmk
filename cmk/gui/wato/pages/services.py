@@ -243,7 +243,9 @@ class ModeDiscovery(WatoMode):
 
     def _async_progress_msg_container(self) -> None:
         html.open_div(id_="async_progress_msg")
-        html.show_message(_("Loading. This may take a few seconds."))
+        html.show_message_by_msg_type(
+            _("Loading. This may take a few seconds."), "waiting", flashed=True
+        )
         html.close_div()
 
 
@@ -449,16 +451,17 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # Clean the requested action after performing it
         performed_action = api_request.discovery_options.action
         discovery_options = api_request.discovery_options._replace(action=DiscoveryAction.NONE)
-        message = (
+        message, message_type = (
             self._get_status_message(previous_discovery_result, discovery_result, performed_action)
             if discovery_result.sources
-            else None
+            else (None, None)
         )
 
         return {
             "is_finished": not discovery_result.is_active(),
             "job_state": discovery_result.job_status["state"],
             "message": message,
+            "message_type": message_type,
             "body": page_code,
             "datasources": datasources_code,
             "fixall": fix_all_code,
@@ -628,9 +631,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         previous_discovery_result: DiscoveryResult | None,
         discovery_result: DiscoveryResult,
         performed_action: DiscoveryAction,
-    ) -> str:
+    ) -> tuple[str, Literal["success", "warning", "error", "waiting", "info"]]:
         if performed_action is DiscoveryAction.UPDATE_HOST_LABELS:
-            return _("The discovered host labels have been updated.")
+            return _("The discovered host labels have been updated."), "success"
 
         cmk_check_entries = [
             e for e in discovery_result.check_table if DiscoveryState.is_discovered(e.check_source)
@@ -638,13 +641,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         if discovery_result.job_status["state"] == JobStatusStates.INITIALIZED:
             if discovery_result.is_active():
-                return _("Initializing discovery...")
+                return _("Initializing discovery..."), "waiting"
             if not cmk_check_entries:
-                return _("No discovery information available. Please perform a rescan.")
+                return _("No discovery information available. Please perform a rescan."), "info"
             return _(
                 "No fresh discovery information available. Using latest cached information. "
                 "Please perform a rescan in case you want to discover the current state."
-            )
+            ), "info"
 
         job_title = discovery_result.job_status.get("title", _("Service discovery"))
         duration_txt = cmk.utils.render.approx_age(discovery_result.job_status["duration"])
@@ -654,7 +657,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         finished_txt = cmk.utils.render.date_and_time(finished_time)
 
         if discovery_result.job_status["state"] == JobStatusStates.RUNNING:
-            return _("%s running for %s") % (job_title, duration_txt)
+            return _("%s running for %s") % (job_title, duration_txt), "waiting"
 
         if discovery_result.job_status["state"] == JobStatusStates.EXCEPTION:
             return _(
@@ -663,7 +666,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 job_title,
                 duration_txt,
                 "\n".join(discovery_result.job_status["loginfo"]["JobException"]),
-            )
+            ), "error"
 
         messages = []
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
@@ -680,7 +683,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
 
         if discovery_result.job_status["state"] == JobStatusStates.FINISHED and not warnings:
-            return " ".join(messages)
+            return " ".join(messages), "info"
 
         messages.extend(warnings)
 
@@ -697,7 +700,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 html.close_div()
             messages.append(output_funnel.drain())
 
-        return " ".join(messages)
+        return " ".join(messages), "warning"
 
     @staticmethod
     def _sources_failed_on_first_attempt(
@@ -1105,40 +1108,40 @@ class DiscoveryPageRenderer:
         ):
             return
 
-        html.icon("fixall", _("Service discovery details"))
+        with output_funnel.plugged():
+            self._render_fix_all_element(
+                ungettext("Changed service: ", "Changed services: ", changed_services),
+                changed_services,
+                "#form_checks_changed",
+            )
+            self._render_fix_all_element(
+                ungettext("Undecided service: ", "Undecided services: ", undecided_services),
+                undecided_services,
+                "#form_checks_new",
+            )
+            self._render_fix_all_element(
+                ungettext("Vanished service: ", "Vanished services: ", vanished_services),
+                vanished_services,
+                "#form_checks_vanished",
+            )
+            self._render_fix_all_element(
+                ungettext("New host label: ", "New host labels: ", new_host_labels),
+                new_host_labels,
+                "#tree.table.host_labels",
+            )
+            self._render_fix_all_element(
+                ungettext("Vanished host label: ", "Vanished host labels: ", new_host_labels),
+                vanished_host_labels,
+                "#tree.table.host_labels",
+            )
+            self._render_fix_all_element(
+                ungettext("Changed host label: ", "Changed host labels: ", new_host_labels),
+                changed_host_labels,
+                "#tree.table.host_labels",
+            )
+            fix_all_elements = HTML.without_escaping(output_funnel.drain())
 
-        html.open_ul()
-        self._render_fix_all_element(
-            ungettext("Changed service: ", "Changed services: ", changed_services),
-            changed_services,
-            "#form_checks_changed",
-        )
-        self._render_fix_all_element(
-            ungettext("Undecided service: ", "Undecided services: ", undecided_services),
-            undecided_services,
-            "#form_checks_new",
-        )
-        self._render_fix_all_element(
-            ungettext("Vanished service: ", "Vanished services: ", vanished_services),
-            vanished_services,
-            "#form_checks_vanished",
-        )
-        self._render_fix_all_element(
-            ungettext("New host label: ", "New host labels: ", new_host_labels),
-            new_host_labels,
-            "#tree.table.host_labels",
-        )
-        self._render_fix_all_element(
-            ungettext("Vanished host label: ", "Vanished host labels: ", new_host_labels),
-            vanished_host_labels,
-            "#tree.table.host_labels",
-        )
-        self._render_fix_all_element(
-            ungettext("Changed host label: ", "Changed host labels: ", new_host_labels),
-            changed_host_labels,
-            "#tree.table.host_labels",
-        )
-        html.close_ul()
+        html.show_message_by_msg_type(html.render_ul(fix_all_elements), "info", flashed=True)
 
         if any(
             [

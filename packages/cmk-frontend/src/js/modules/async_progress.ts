@@ -96,19 +96,19 @@ function handle_error(
   }, 1000)
 }
 
-export function show_error(text: string) {
-  const container = document.getElementById('async_progress_msg')!
-  container.style.display = 'block'
-  const msg = container.childNodes[0] as HTMLElement
-
-  add_class(msg, 'error')
-  remove_class(msg, 'success')
-
-  /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-  msg.innerHTML = text
+function _toggle_class(element: HTMLElement, className: string, add: boolean) {
+  if (add) {
+    add_class(element, className)
+  } else {
+    remove_class(element, className)
+  }
 }
 
-export function show_info(text: string) {
+function _show_message(
+  type: 'success' | 'error' | 'warning' | 'waiting' | 'info',
+  text: string,
+  newDesign: boolean
+) {
   const container = document.getElementById('async_progress_msg')!
   container.style.display = 'block'
 
@@ -118,11 +118,33 @@ export function show_info(text: string) {
     container.appendChild(msg)
   }
 
-  add_class(msg, 'success')
-  remove_class(msg, 'error')
+  _toggle_class(msg, 'success', type === 'success')
+  _toggle_class(msg, 'error', type === 'error')
+  _toggle_class(msg, 'warning', type === 'warning')
+  _toggle_class(msg, 'waiting', type === 'waiting')
+  _toggle_class(msg, 'info_msg', type === 'info')
+  _toggle_class(msg, 'flashed', newDesign)
 
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   msg.innerHTML = text
+}
+
+export function show_message_by_type(
+  type: 'success' | 'error' | 'warning' | 'waiting' | 'info',
+  text: string
+) {
+  _show_message(type, text, true)
+}
+
+export function show_error(text: string) {
+  _show_message('error', text, false)
+}
+
+export function show_info(text: string) {
+  // NOTE: the `show_info` function is used for displaying non-error messages,
+  // without any special styling (old design). The name is misleading, as it's
+  // not actually showing an "info" message type.
+  _show_message('success', text, false)
 }
 
 export function hide_msg() {

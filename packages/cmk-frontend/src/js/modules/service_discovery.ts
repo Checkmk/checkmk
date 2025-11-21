@@ -38,6 +38,10 @@ interface Check {
 // the user are based on.
 let g_service_discovery_result: string | null = null
 
+// Keep track of the currently executing action - this is only used to display
+// better progress/result messages.
+let g_current_action: DiscoveryAction | null = null
+
 type DiscoveryAction =
   | ''
   | 'stop'
@@ -93,9 +97,15 @@ export function start(
   folder_path: string,
   discovery_options: DiscoveryOptions,
   transid: string,
-  request_vars: Record<string, any> | null
+  request_vars: Record<string, any> | null,
+  waiting_message: string | null = null
 ) {
-  show_message_by_type('waiting', 'Updating...')
+  g_current_action = discovery_options.action
+  if (waiting_message === '') {
+    hide_msg()
+  } else {
+    show_message_by_type('waiting', waiting_message || 'Updating...')
+  }
 
   lock_controls(true, get_state_independent_controls().concat(get_page_menu_controls()))
   monitor({
@@ -153,6 +163,7 @@ function get_post_data(
 }
 
 function finish(response: AjaxServiceDiscovery) {
+  g_current_action = null
   if (response.job_state == 'exception' || response.job_state == 'stopped') {
     show_error(response.message!)
   } else {
@@ -165,6 +176,7 @@ function finish(response: AjaxServiceDiscovery) {
 }
 
 function error(response: string) {
+  g_current_action = null
   show_error(response)
 }
 
@@ -181,7 +193,8 @@ function update(handler_data: ServiceDiscoveryHandlerData, response: AjaxService
     handler_data.folder_path,
     response.discovery_options,
     handler_data.transid,
-    null
+    // original vars don't matter anymore, the discovery options action should also be NONE
+    { requesting_status_for_initial_action: g_current_action }
   )
 
   // Save values not meant for update

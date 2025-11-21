@@ -130,6 +130,7 @@ class AjaxDiscoveryRequest(BaseModel):
     update_target: UpdateType | None = None
     update_services: list[str] = Field(default_factory=list)
     discovery_result: str | None = None
+    requesting_status_for_initial_action: DiscoveryAction | None = None
 
 
 class TableGroupEntry(NamedTuple):
@@ -452,7 +453,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         performed_action = api_request.discovery_options.action
         discovery_options = api_request.discovery_options._replace(action=DiscoveryAction.NONE)
         message, message_type = (
-            self._get_status_message(previous_discovery_result, discovery_result, performed_action)
+            self._get_status_message(
+                previous_discovery_result,
+                discovery_result,
+                performed_action,
+                api_request.requesting_status_for_initial_action,
+                api_request.host_name,
+            )
             if discovery_result.sources
             else (None, None)
         )
@@ -631,7 +638,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         previous_discovery_result: DiscoveryResult | None,
         discovery_result: DiscoveryResult,
         performed_action: DiscoveryAction,
+        initial_action: DiscoveryAction | None,
+        host_name: HostName,
     ) -> tuple[str, Literal["success", "warning", "error", "waiting", "info"]]:
+        if initial_action and performed_action != DiscoveryAction.NONE:
+            initial_action = None
+        if not initial_action:
+            initial_action = performed_action
+
         if performed_action is DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated."), "success"
 
@@ -657,6 +671,11 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         finished_txt = cmk.utils.render.date_and_time(finished_time)
 
         if discovery_result.job_status["state"] == JobStatusStates.RUNNING:
+            if initial_action == DiscoveryAction.FIX_ALL:
+                return (_waiting_message_fix_all(host_name)), "waiting"
+            if initial_action == DiscoveryAction.REFRESH:
+                return (_waiting_message_refresh(host_name)), "waiting"
+
             return _("%s running for %s") % (job_title, duration_txt), "waiting"
 
         if discovery_result.job_status["state"] == JobStatusStates.EXCEPTION:
@@ -683,6 +702,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
 
         if discovery_result.job_status["state"] == JobStatusStates.FINISHED and not warnings:
+            if not messages:
+                if initial_action == DiscoveryAction.FIX_ALL:
+                    return _(
+                        "All undecided services and new labels accepted. Monitoring is enabled."
+                    ), "success"
+                if initial_action == DiscoveryAction.REFRESH:
+                    return _("Services rescanned."), "success"
+
             return " ".join(messages), "info"
 
         messages.extend(warnings)
@@ -2267,6 +2294,7 @@ def _page_menu_service_configuration_entries(
             _start_js_call(
                 host,
                 options._replace(action=DiscoveryAction.FIX_ALL),
+                waiting_message=_waiting_message_fix_all(host.name()),
             ),
         ),
         name="fixall",
@@ -2290,7 +2318,11 @@ def _page_menu_service_configuration_entries(
         title=_("Rescan"),
         icon_name="services_refresh",
         item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.REFRESH))
+            _start_js_call(
+                host,
+                options._replace(action=DiscoveryAction.REFRESH),
+                waiting_message=_waiting_message_refresh(host.name()),
+            )
         ),
         name="refresh",
         is_enabled=False,
@@ -2308,6 +2340,14 @@ def _page_menu_service_configuration_entries(
         is_enabled=False,
         css_classes=["action"],
     )
+
+
+def _waiting_message_refresh(host_name: HostName) -> str:
+    return _("Rescanning services of host %s.") % host_name
+
+
+def _waiting_message_fix_all(host_name: HostName) -> str:
+    return _("Accepting all services of host %s.") % host_name
 
 
 class BulkEntry(NamedTuple):
@@ -2474,8 +2514,24 @@ def _page_menu_host_labels_entries(
     )
 
 
-def _start_js_call(host: Host, options: DiscoveryOptions, request_vars: dict | None = None) -> str:
-    return f"cmk.service_discovery.start({json.dumps(host.name())}, {json.dumps(host.folder().path())}, {json.dumps(options._asdict())}, {json.dumps(transactions.get())}, {json.dumps(request_vars)})"
+def _start_js_call(
+    host: Host,
+    options: DiscoveryOptions,
+    request_vars: dict | None = None,
+    waiting_message: str | None = None,
+) -> str:
+    params = ", ".join(
+        json.dumps(param)
+        for param in [
+            host.name(),
+            host.folder().path(),
+            options._asdict(),
+            transactions.get(),
+            request_vars,
+            waiting_message,
+        ]
+    )
+    return f"cmk.service_discovery.start({params})"
 
 
 def ajax_popup_service_action_menu(ctx: PageContext) -> None:

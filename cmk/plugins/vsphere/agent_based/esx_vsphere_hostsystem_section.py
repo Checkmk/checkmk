@@ -23,10 +23,10 @@ def parse_esx_vsphere_hostsystem(string_table: StringTable) -> HostSystemSection
     ...     ['summary.quickStats.overallCpuUsage', '7539'],  # --> In MHz
     ... ]))
     {'hardware.cpuInfo.numCpuCores': ['12'],
-    'hardware.cpuInfo.numCpuPackages': ['2'],
-    'hardware.cpuInfo.numCpuThreads': ['24'],
-    'hardware.cpuInfo.hz': ['2933436846'],
-    'summary.quickStats.overallCpuUsage': ['7539']}
+     'hardware.cpuInfo.numCpuPackages': ['2'],
+     'hardware.cpuInfo.numCpuThreads': ['24'],
+     'hardware.cpuInfo.hz': ['2933436846'],
+     'summary.quickStats.overallCpuUsage': ['7539']}
 
     """
     section = dict[str, list[str]]()

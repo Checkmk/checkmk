@@ -51,6 +51,62 @@ class _CNTemplate:
 CN_TEMPLATE = _CNTemplate("Site '%s' local CA")
 
 
+def initialize_site_ca(
+    omd_root: Path,
+    site_id: SiteId,
+    expiry: int | None = None,
+    key_size: int | None = None,
+) -> SiteCA:
+    """Initial creation of the site CA certificate.
+
+    This is intended to be used by omd upon site creation.
+    """
+    return SiteCA.create(
+        cert_dir=cert_dir(omd_root),
+        site_id=site_id,
+        expiry=relativedelta(days=expiry) if expiry is not None else relativedelta(years=10),
+        key_size=key_size or 4096,
+    )
+
+
+def initialize_agent_ca(
+    omd_root: Path,
+    site_id: SiteId,
+    expiry: int | None = None,
+    key_size: int | None = None,
+) -> RootCA:
+    """Initial creation of the agent signing CA certificate.
+
+    This is intended to be used by omd upon site creation.
+    """
+    return RootCA.create(
+        path=agent_root_ca_path(site_root_dir=omd_root),
+        name=f"Site '{site_id}' agent signing CA",
+        validity=relativedelta(days=expiry) if expiry is not None else relativedelta(years=10),
+        key_size=key_size or 4096,
+    )
+
+
+def initialize_site_certificate(
+    omd_root: Path,
+    site_id: SiteId,
+    expiry: int | None = None,
+    key_size: int | None = None,
+) -> None:
+    """Initial creation of the site certificate.
+
+    This is intended to be used by omd upon site creation.
+    """
+    certificate_directory = cert_dir(omd_root)
+    site_ca = SiteCA.load(certificate_directory=certificate_directory)
+    site_ca.create_site_certificate(
+        site_id=site_id,
+        additional_sans=[],
+        expiry=relativedelta(days=expiry) if expiry is not None else relativedelta(years=2),
+        key_size=key_size or 4096,
+    )
+
+
 class RootCA(CertificateWithPrivateKey):
     """A generic certificate authority for all our CA needs.
 

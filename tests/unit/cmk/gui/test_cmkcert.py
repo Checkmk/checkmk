@@ -8,23 +8,27 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_mock import MockerFixture
 
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
 from cmk.gui.cmkcert import (
-    _run_cmkcert,
+    _certificate_path,
+    _run_init,
+    _run_rotate,
     CertificateType,
 )
 from cmk.gui.config import Config
+from cmk.utils.certs import cert_dir, SiteCA
 
 
-@pytest.fixture(name="certificate_directory")
-def fixture_certificate_directory(tmp_path: Path) -> Path:
-    return tmp_path
+@pytest.fixture(name="omd_root")
+def fixture_omd_root(tmp_path: Path) -> Path:
+    return tmp_path / "test_root"
 
 
 def _site_id():
@@ -68,15 +72,127 @@ VXzJSdPU5tH3gi42
 -----END PRIVATE KEY-----"""
 
 
-@pytest.fixture(name="dummy_site_ca")
-def fixture_dummy_site_ca() -> str:
+def _dummy_cert_with_key() -> str:
     return f"{_dummy_key()}\n{_dummy_certificate()}"
 
 
-def test_site_ca_doesnt_exist(tmp_path: Path) -> None:
+def _create_dummy(omd_root: Path, target_certificate: CertificateType) -> Path:
+    cert_path = _certificate_path(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate=target_certificate,
+    )
+    cert_path.parent.mkdir(parents=True, exist_ok=True)
+    cert_path.write_text(_dummy_cert_with_key())
+    return cert_path
+
+
+@pytest.fixture(name="site_ca")
+def fixture_site_ca(omd_root: Path) -> Path:
+    site_ca_path = SiteCA.root_ca_path(cert_dir(omd_root))
+    site_ca_path.parent.mkdir(parents=True, exist_ok=True)
+    site_ca_path.write_text(_dummy_cert_with_key())
+    return site_ca_path
+
+
+@pytest.fixture(name="agent_ca")
+def fixture_agent_ca(omd_root: Path) -> Path:
+    agent_ca_path = _certificate_path(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate="agent-ca",
+    )
+    agent_ca_path.parent.mkdir(parents=True, exist_ok=True)
+    agent_ca_path.write_text(_dummy_cert_with_key())
+    return agent_ca_path
+
+
+def _test_init(omd_root: Path, target_cert: CertificateType) -> None:
+    site_id = _site_id()
+    cert_path = _certificate_path(
+        omd_root=omd_root,
+        site_id=site_id,
+        target_certificate=target_cert,
+    )
+
+    assert not cert_path.exists()
+
+    _run_init(
+        omd_root=omd_root,
+        site_id=site_id,
+        target_certificate=target_cert,
+        key_size=1024,
+    )
+
+    assert cert_path.exists()
+
+
+@pytest.mark.parametrize(
+    "target_cert",
+    [
+        "site-ca",
+        "agent-ca",
+    ],
+)
+def test_init_cas(omd_root: Path, target_cert: CertificateType) -> None:
+    _test_init(omd_root, target_cert)
+
+
+def test_init_site(site_ca: Path, omd_root: Path) -> None:
+    _create_dummy(omd_root, "site-ca")
+    _test_init(omd_root, "site")
+
+
+@pytest.mark.parametrize(
+    "target_certificate",
+    [
+        "site-ca",
+        "agent-ca",
+        "site",
+    ],
+)
+def test_init_cert_does_not_replace_existing(
+    omd_root: Path, target_certificate: CertificateType
+) -> None:
+    _create_dummy(omd_root, target_certificate)
+
+    with pytest.raises(ValueError):
+        _run_init(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate=target_certificate,
+            key_size=1024,
+        )
+
+
+def test_rotate_site(omd_root: Path, site_ca: Path) -> None:
+    _create_dummy(omd_root, "site-ca")
+    _create_dummy(omd_root, "site")
+
+    _run_rotate(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate="site",
+        expiry=90,
+        finalize=False,
+    )
+
+    assert (
+        "BEGIN CERTIFICATE"
+        in _certificate_path(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="site",
+        ).read_text()
+    )
+
+
+def test_rotate_site_wo_site_ca(omd_root: Path) -> None:
+    _create_dummy(omd_root, "site")
+
     with pytest.raises(FileNotFoundError):
-        _run_cmkcert(
-            omd_root=tmp_path,
+        _run_rotate(
+            omd_root=omd_root,
             site_id=_site_id(),
             target_certificate="site",
             expiry=90,
@@ -84,84 +200,96 @@ def test_site_ca_doesnt_exist(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "target_certificate, target_cert_path",
-    [
-        ("site-ca", Path("etc/ssl/ca.pem")),
-        ("site", Path(f"etc/ssl/sites/{_site_id()}.pem")),
-        ("agent-ca", Path("etc/ssl/agents/ca.pem")),
-    ],
-)
-@patch("cmk.gui.cmkcert.load_config")
-@patch("cmk.gui.cmkcert.load_configuration_settings")
-@patch("cmk.gui.cmkcert.save_global_settings")
-@patch("cmk.gui.cmkcert._changes")
-def test_replace(  # type: ignore[misc]
-    mock__changes: Mock,
-    mock_save_global_settings: Mock,
-    mock_load_configuration_settings: Mock,
-    mock_load_config: Mock,
-    tmp_path: Path,
-    target_certificate: CertificateType,
-    target_cert_path: str,
-    dummy_site_ca: str,
-) -> None:
-    mock_load_configuration_settings.return_value = {
-        "trusted_certificate_authorities": {"trusted_cas": [], "use_system_wide_cas": False}
-    }
-    mock_load_config.return_value = Config(
-        sites=SiteConfigurations(
-            {
-                SiteId("test_site"): {
-                    "alias": "Local site test_site",
-                    "disable_wato": True,
-                    "disabled": False,
-                    "id": SiteId("test_site"),
-                    "insecure": False,
-                    "message_broker_port": 5672,
-                    "multisiteurl": "",
-                    "persist": False,
-                    "proxy": None,
-                    "replicate_ec": False,
-                    "replicate_mkps": False,
-                    "replication": None,
-                    "socket": ("local", None),
-                    "status_host": None,
-                    "timeout": 5,
-                    "url_prefix": "/test_site/",
-                    "user_login": True,
-                    "user_sync": "all",
-                    "is_trusted": True,
-                }
-            }
-        )
-    )
+def test_rotate_agent_ca(omd_root: Path, agent_ca: Path) -> None:
+    _create_dummy(omd_root, "agent-ca")
 
-    if target_certificate in ["site", "site-ca"]:
-        site_ca_path = tmp_path / Path("etc/ssl/ca.pem")
-        site_ca_path.parent.mkdir(parents=True, exist_ok=True)
-        site_ca_path.write_text(dummy_site_ca)
-
-    _run_cmkcert(
-        omd_root=tmp_path,
+    _run_rotate(
+        omd_root=omd_root,
         site_id=_site_id(),
-        target_certificate=target_certificate,
+        target_certificate="agent-ca",
         expiry=90,
         finalize=False,
     )
 
-    if target_certificate == "site-ca":
-        mock_save_global_settings.assert_called_once()
-        mock__changes.add_change.assert_called_once()
+    assert (
+        "BEGIN CERTIFICATE"
+        in _certificate_path(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="agent-ca",
+        ).read_text()
+    )
+
+
+def _mock_site_gui_context(mocker: MockerFixture) -> MagicMock:
+    mocker.patch("cmk.gui.site_config.site_is_local").return_value = True
+    mocker.patch("cmk.gui.watolib.global_settings.load_configuration_settings").return_value = {
+        "trusted_certificate_authorities": {"trusted_cas": [], "use_system_wide_cas": False}
+    }
+
+    mock_site = SiteConfigurations(
+        {
+            SiteId("test_site"): {
+                "alias": "Local site test_site",
+                "disable_wato": True,
+                "disabled": False,
+                "id": SiteId("test_site"),
+                "insecure": False,
+                "message_broker_port": 5672,
+                "multisiteurl": "",
+                "persist": False,
+                "proxy": None,
+                "replicate_ec": False,
+                "replicate_mkps": False,
+                "replication": None,
+                "socket": ("local", None),
+                "status_host": None,
+                "timeout": 5,
+                "url_prefix": "/test_site/",
+                "user_login": True,
+                "user_sync": "all",
+                "is_trusted": True,
+            }
+        }
+    )
+
+    mock_context = MagicMock()
+    mock_context.__enter__.return_value = (mock_site, Config(sites=mock_site))
+    mock_context.__exit__.return_value = None
+
+    return mock_context
+
+
+def test_rotate_site_ca(
+    mocker: MockerFixture,
+    omd_root: Path,
+    site_ca: Path,
+) -> None:
+    mocker.patch("cmk.gui.cmkcert_rotate._site_gui_context").return_value = _mock_site_gui_context(
+        mocker
+    )
+
+    with patch("cmk.gui.watolib.changes.add_change") as mock_add_change:
+        with patch(
+            "cmk.gui.watolib.global_settings.save_global_settings"
+        ) as mock_save_global_settings:
+            _run_rotate(
+                omd_root=omd_root,
+                site_id=_site_id(),
+                target_certificate="site-ca",
+                expiry=90,
+                finalize=False,
+            )
+            mock_add_change.assert_called_once()
+            mock_save_global_settings.assert_called_once()
 
     # site-ca rotation requires a second call with finalize=True to complete the rotation
-    if target_certificate == "site-ca":
-        _run_cmkcert(
-            omd_root=tmp_path,
-            site_id=_site_id(),
-            target_certificate=target_certificate,
-            expiry=90,
-            finalize=True,
-        )
+    _run_rotate(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate="site-ca",
+        expiry=90,
+        finalize=True,
+    )
 
-    assert "BEGIN CERTIFICATE" in (tmp_path / target_cert_path).read_text()
+    assert "BEGIN CERTIFICATE" in SiteCA.root_ca_path(cert_dir(omd_root)).read_text()

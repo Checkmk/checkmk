@@ -75,7 +75,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
             ),
             "sections": DictElement(
                 parameter_form=MultipleChoice(
-                    title=Title("Optional sections"),
+                    title=Title("Sections"),
                     help_text=Help("Unselect sections which you don't want to include."),
                     elements=[
                         MultipleChoiceElement(

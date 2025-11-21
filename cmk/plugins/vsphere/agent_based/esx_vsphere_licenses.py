@@ -77,15 +77,15 @@ def _make_levels(
 def check_esx_vsphere_licenses(
     item: str, params: Mapping[str, Any], section: _Section
 ) -> CheckResult:
-    if not (license := section.get(item)):
+    if not (license_count := section.get(item)):
         return
 
-    yield Result(state=State.OK, summary=f"{license.keys} Key(s)")
-    yield Result(state=State.OK, summary=f"Total licenses: {license.total}")
+    yield Result(state=State.OK, summary=f"{license_count.keys} Key(s)")
+    yield Result(state=State.OK, summary=f"Total licenses: {license_count.total}")
     yield from check_levels(
-        license.used,
+        license_count.used,
         metric_name="licenses",
-        levels_upper=_make_levels(license.total, params["levels"]),
+        levels_upper=_make_levels(license_count.total, params["levels"]),
         label="Used",
         render_func=str,
     )

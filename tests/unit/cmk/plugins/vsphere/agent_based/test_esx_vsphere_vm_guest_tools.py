@@ -12,8 +12,12 @@ from cmk.plugins.vsphere.lib.esx_vsphere import ESXStatus, SectionESXVm
 
 
 def test_parse_esx_vsphere_guest_tools() -> None:
-    status = esx_vsphere_vm._parse_vm_status({"guest.toolsVersionStatus": ["guestToolsUnmanaged"]})
-    assert status == ESXStatus.guestToolsUnmanaged
+    assert (
+        section := esx_vsphere_vm.parse_esx_vsphere_vm(
+            [["guest.toolsVersionStatus", "guestToolsUnmanaged"]]
+        )
+    )
+    assert section.status == ESXStatus.guestToolsUnmanaged
 
 
 @pytest.mark.parametrize(

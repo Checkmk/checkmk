@@ -1331,6 +1331,20 @@ class FilterMigrationChoice(FilterMigration):
         return migrated if value != migrated else {}
 
 
+@dataclass(frozen=True, kw_only=True)
+class FilterMigrationBool(FilterMigration):
+    def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]:
+        migrated = {n: value.get(n, "") for c in (True, False, None) for n in (f"{self.name}_{c}",)}
+        if filter_value := value.get(self.name):
+            # FilterInvtableAvailable
+            match filter_value:
+                case "yes":
+                    migrated[f"{self.name}_True"] = "on"
+                case "no":
+                    migrated[f"{self.name}_False"] = "on"
+        return migrated if value != migrated else {}
+
+
 def find_non_canonical_filters(
     plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
 ) -> Mapping[str, FilterMigration]:
@@ -1398,6 +1412,12 @@ def find_non_canonical_filters(
                         name=name,
                         choices=list(field_from_api.mapping),
                     ),
+                )
+
+            elif isinstance(field_from_api, BoolFieldFromAPI):
+                filters.setdefault(
+                    name,
+                    FilterMigrationBool(name=name),
                 )
 
     for raw_path, legacy_hint in legacy_hints.items():

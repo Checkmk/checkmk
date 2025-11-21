@@ -7,10 +7,9 @@
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import time
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import datetime
 from typing import Literal, Protocol
 
@@ -1979,7 +1978,7 @@ class CommandScheduleDowntimesForm:
             cssclass="inline",
         )
 
-    def _get_child_hosts(self, site, hosts, recurse):
+    def _get_child_hosts(self, site: SiteId, hosts: Iterable[str], recurse: bool) -> list[str]:
         hosts = set(hosts)
 
         sites.live().set_only_sites([site])

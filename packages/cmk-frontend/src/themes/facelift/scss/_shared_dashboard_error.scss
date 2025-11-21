@@ -1,0 +1,35 @@
+@charset "UTF-8";
+// Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+#cmk_shared_dashboard_error_page {
+  height: 100%;
+  width: 100%;
+  padding: $spacing-double;
+
+  .cmk_main_logo {
+    position: absolute;
+    top: $spacing-double;
+    left: $spacing-double;
+    padding: $spacing-double;
+  }
+
+  .error_message_container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .message_text_container {
+    padding-top: $spacing-double;
+    font-size: 16px;
+
+    h1 {
+      font-size: 32px;
+    }
+  }
+}

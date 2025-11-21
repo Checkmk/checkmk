@@ -6,6 +6,11 @@ load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
+# This detects the plugin families automatically.
+# Each subdirectory in cmk/plugins/ is considered a family.
+# In most cases it should be sufficient to add the two targets `:<family>` and `:<family>-test`
+# Sorting them alphabetically would be nice. Thank you :-)
+
 FAMILIES = [
     d.removeprefix("cmk/plugins/")
     for d in glob(
@@ -13,26 +18,6 @@ FAMILIES = [
         exclude_directories = 0,
     )
 ]
-
-exports_files([
-    "dev-requirements.in",
-    "pyproject.toml",
-    "requirements.in",
-])
-
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("pytest"),
-    ],
-)
-
-py_doc_test(
-    name = "doctest",
-    size = "small",
-    srcs = [":%s" % family for family in FAMILIES],
-    tags = ["no-mypy"],
-)
 
 py_library(
     name = "lib",
@@ -95,6 +80,33 @@ py_test(
         requirement("pytest"),
         requirement("time-machine"),
     ],
+)
+
+#   ____                           _   _                       _
+#  / ___| ___ _ __   ___ _ __ __ _| | | |_ __ _ _ __ __ _  ___| |_ ___
+# | |  _ / _ \ '_ \ / _ \ '__/ _` | | | __/ _` | '__/ _` |/ _ \ __/ __|
+# | |_| |  __/ | | |  __/ | | (_| | | | || (_| | | | (_| |  __/ |_\__ \
+#  \____|\___|_| |_|\___|_|  \__,_|_|  \__\__,_|_|  \__, |\___|\__|___/
+#                                                   |___/
+
+exports_files([
+    "dev-requirements.in",
+    "pyproject.toml",
+    "requirements.in",
+])
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("pytest"),
+    ],
+)
+
+py_doc_test(
+    name = "doctest",
+    size = "small",
+    srcs = [":%s" % family for family in FAMILIES],
+    tags = ["no-mypy"],
 )
 
 filegroup(

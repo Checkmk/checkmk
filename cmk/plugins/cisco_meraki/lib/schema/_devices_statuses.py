@@ -10,7 +10,7 @@ from typing import TypedDict
 
 class RawDevicesStatus(TypedDict):
     """
-    Organization Device Statuses Resource
+    Organization Device Statuses Resource [Deprecated]
     <https://developer.cisco.com/meraki/api-v1/get-organization-devices-statuses/>
     """
 

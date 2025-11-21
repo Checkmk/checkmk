@@ -52,7 +52,6 @@ const activeBreadcrumb = computed<BreadcrumbItem[]>(() => {
 <style scoped>
 .db-breadcrumb--container {
   white-space: nowrap;
-  width: 100%;
   font-size: var(--font-size-normal);
   padding: var(--dimension-3) var(--dimension-4) 0;
 }

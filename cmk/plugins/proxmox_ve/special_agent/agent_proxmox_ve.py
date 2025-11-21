@@ -426,7 +426,7 @@ def _create_vm_sections(
             name=vm["name"],
             uptime=vm["uptime"],
             lock=lock_state,
-        ).model_dump(),
+        ).model_dump_json(),
     )
     if vm["type"] != "qemu":
         yield (

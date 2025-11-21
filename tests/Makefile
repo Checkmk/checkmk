@@ -204,7 +204,7 @@ test-lint-bazel:
 	../scripts/run-buildifier --lint=warn --mode=check
 
 test-lint-groovy:
-	cd ../; bazel run //bazel/tools:groovy-lint -- --failon=error --noserver $(GROOVYLINT_OUTPUT_ARGS) `pwd`/buildscripts/
+	bazel run //bazel/tools:groovy-lint -- --failon=error --noserver $(GROOVYLINT_OUTPUT_ARGS) $(REPO_PATH)/buildscripts/
 
 test-performance:
 	$(UVENV) "$(realpath performance)/perftest.sh"

@@ -10,11 +10,11 @@ from cmk.gui.type_defs import Visual
 from cmk.gui.views.inventory import find_non_canonical_filters
 from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.visuals import TVisual
-from cmk.update_config.plugins.actions.visuals import _migrate_visual
+from cmk.update_config.plugins.actions.visuals import migrate_visuals
 
 
 @pytest.mark.parametrize(
-    "visual, result",
+    "visual, expected_has_changed, expected_visual",
     [
         pytest.param(
             Visual(
@@ -41,6 +41,7 @@ from cmk.update_config.plugins.actions.visuals import _migrate_visual
                 link_from={},
                 main_menu_search_terms=[],
             ),
+            False,
             Visual(
                 owner=UserId("user"),
                 name="",
@@ -100,6 +101,7 @@ from cmk.update_config.plugins.actions.visuals import _migrate_visual
                 link_from={},
                 main_menu_search_terms=[],
             ),
+            True,
             Visual(
                 owner=UserId("user"),
                 name="",
@@ -136,7 +138,17 @@ from cmk.update_config.plugins.actions.visuals import _migrate_visual
         ),
     ],
 )
-def test__migrate_visual(visual: TVisual, result: TVisual) -> None:
+def test__migrate_visual(
+    visual: TVisual, expected_has_changed: bool, expected_visual: TVisual
+) -> None:
     non_canonical_filters = find_non_canonical_filters(inventory_displayhints)
-    assert _migrate_visual(visual, non_canonical_filters) == result
-    assert _migrate_visual(result, non_canonical_filters) == result
+
+    migration = migrate_visuals({(UserId("userid"), "name"): visual}, non_canonical_filters)
+    assert migration.has_changed is expected_has_changed
+    assert migration.migrated == {"userid": {("userid", "name"): expected_visual}}
+
+    migration = migrate_visuals(
+        {(UserId("userid"), "name"): expected_visual}, non_canonical_filters
+    )
+    assert not migration.has_changed
+    assert migration.migrated == {"userid": {("userid", "name"): expected_visual}}

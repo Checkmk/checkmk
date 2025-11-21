@@ -5,11 +5,11 @@
 
 from collections.abc import Mapping
 from logging import Logger
-from typing import override
+from typing import Final, override
 
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard.store import get_all_dashboards
-from cmk.gui.type_defs import Visual
+from cmk.gui.type_defs import Visual, VisualName
 from cmk.gui.views.inventory import find_non_canonical_filters, TransformAttrs
 from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.store import get_all_views
@@ -30,30 +30,56 @@ def _migrate_context_value(
     return migrated
 
 
-def _migrate_visual(
-    visual: TVisual, non_canonical_filters: Mapping[str, TransformAttrs]
-) -> TVisual:
-    if not (context := visual.get("context")):
+class Migration:
+    def __init__(self, visuals: Mapping[tuple[UserId, VisualName], Visual]) -> None:
+        self._visuals: Final = visuals
+        self._migrated: Mapping[tuple[UserId, VisualName], Visual] = {}
+        self._has_changed = False
+
+    def _migrate_visual(
+        self, visual: TVisual, non_canonical_filters: Mapping[str, TransformAttrs]
+    ) -> TVisual:
+        if not (context := visual.get("context")):
+            return visual
+
+        assert isinstance(context, dict)
+        migrated = {}
+        for key, value in context.items():
+            transform_attrs = non_canonical_filters.get(key)
+            if transform_attrs and (value_ := _migrate_context_value(key, value, transform_attrs)):
+                migrated[transform_attrs.filter_name()] = value_
+                self._has_changed = True
+            else:
+                migrated[key] = value
+
+        visual["context"] = migrated
         return visual
-    assert isinstance(context, dict)
-    migrated = {}
-    for key, value in context.items():
-        transform_attrs = non_canonical_filters.get(key)
-        if transform_attrs and (value_ := _migrate_context_value(key, value, transform_attrs)):
-            migrated[transform_attrs.filter_name()] = value_
-        else:
-            migrated[key] = value
-    visual["context"] = migrated
-    return visual
+
+    def migrate(self, non_canonical_filters: Mapping[str, TransformAttrs]) -> None:
+        self._migrated = {
+            key: self._migrate_visual(visual, non_canonical_filters)
+            for key, visual in self._visuals.items()
+        }
+
+    @property
+    def migrated(self) -> Mapping[UserId, dict[tuple[UserId, VisualName], Visual]]:
+        by_users: dict[UserId, dict[tuple[UserId, VisualName], Visual]] = {}
+        for key, visual in self._migrated.items():
+            by_users.setdefault(key[0], {}).setdefault(key, visual)
+        return by_users
+
+    @property
+    def has_changed(self) -> bool:
+        return self._has_changed
 
 
 def migrate_visuals(
-    visuals: Mapping[tuple[UserId, str], Visual],
+    visuals: Mapping[tuple[UserId, VisualName], Visual],
     non_canonical_filters: Mapping[str, TransformAttrs],
-) -> Mapping[tuple[UserId, str], Visual]:
-    return {
-        name: _migrate_visual(visual, non_canonical_filters) for name, visual in visuals.items()
-    }
+) -> Migration:
+    migration = Migration(visuals)
+    migration.migrate(non_canonical_filters)
+    return migration
 
 
 class MigrateVisualsInvAttrFilter(UpdateAction):
@@ -61,15 +87,15 @@ class MigrateVisualsInvAttrFilter(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         non_canonical_filters = find_non_canonical_filters(inventory_displayhints)
 
-        dashboards = get_all_dashboards()
-        if dashboards != (
-            migrated_dashboards := migrate_visuals(dashboards, non_canonical_filters)
-        ):
-            save("dashboards", dict(migrated_dashboards))
+        if (
+            migrated_dashboards := migrate_visuals(get_all_dashboards(), non_canonical_filters)
+        ).has_changed:
+            for user_id, visuals in migrated_dashboards.migrated.items():
+                save("dashboards", visuals, user_id)
 
-        views = get_all_views()
-        if views != (migrated_views := migrate_visuals(views, non_canonical_filters)):
-            save("views", dict(migrated_views))
+        if (migrated_views := migrate_visuals(get_all_views(), non_canonical_filters)).has_changed:
+            for user_id, visuals in migrated_views.migrated.items():
+                save("views", visuals, user_id)
 
 
 update_action_registry.register(

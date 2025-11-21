@@ -17,7 +17,6 @@ CONFIG_FILE = "agent_receiver_config.json"
 class Config(BaseModel):
     task_ttl: float = 120.0
     max_pending_tasks_per_relay: int = 10
-    site_url: str = "http://localhost"
 
     @classmethod
     def load(cls, path: Path | None = None) -> Config:
@@ -83,6 +82,18 @@ class Config(BaseModel):
     @property
     def raw_data_socket(self) -> Path:
         return self.omd_root / "tmp/run/raw-data"
+
+    @property
+    def rest_api_url(self) -> str:
+        address = "localhost"
+        port = 80
+        for site_config_line in self.site_config_path.read_text().splitlines():
+            key, value = site_config_line.split("=")
+            if key == "CONFIG_APACHE_TCP_PORT":
+                port = int(value.strip("'"))
+            if key == "CONFIG_APACHE_TCP_ADDR":
+                address = value.strip("'")
+        return f"http://{address}:{port}/{self.site_name}/check_mk/api/1.0"
 
 
 @cache

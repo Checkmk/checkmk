@@ -37,10 +37,9 @@ class RelaysRepository:
         cls, site_url: str, site_name: str, helper_config_dir: Path
     ) -> "RelaysRepository":
         """Create RelaysRepository from site configuration."""
-        base_url = f"{site_url}/{site_name}/check_mk/api/1.0"
         # FIXME async client
         client = httpx.Client(
-            base_url=base_url,
+            base_url=site_url,
             headers={"Content-Type": "application/json"},
         )
         return cls(client, site_name, helper_config_dir)

@@ -36,7 +36,13 @@ def site_context(
     os.environ["OMD_ROOT"] = str(site_dir)
     os.environ["OMD_SITE"] = site_name
 
-    site_context = Config(site_url=wiremock.base_url)
+    site_conf = site_dir / "etc/omd/site.conf"
+    site_conf.parent.mkdir(parents=True, exist_ok=True)
+    site_conf.write_text(
+        f"CONFIG_APACHE_TCP_ADDR='{wiremock.wiremock_hostname}'\nCONFIG_APACHE_TCP_PORT='{wiremock.port}'\n"
+    )
+
+    site_context = Config()
     site_context.internal_secret_path.parent.mkdir(parents=True, exist_ok=True)
     site_context.internal_secret_path.write_text("lol")
 

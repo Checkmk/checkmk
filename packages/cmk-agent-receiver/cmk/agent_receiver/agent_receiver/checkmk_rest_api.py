@@ -39,23 +39,9 @@ class CMKEdition(Enum):
         )
 
 
-def _local_apache() -> tuple[str, int]:
-    address = "localhost"
-    port = 80
-    config = get_config()
-    for site_config_line in config.site_config_path.read_text().splitlines():
-        key, value = site_config_line.split("=")
-        if key == "CONFIG_APACHE_TCP_PORT":
-            port = int(value.strip("'"))
-        if key == "CONFIG_APACHE_TCP_ADDR":
-            address = value.strip("'")
-    return address, port
-
-
 def _local_rest_api_url() -> str:
-    address, port = _local_apache()
     config = get_config()
-    return f"http://{address}:{port}/{config.site_name}/check_mk/api/1.0"
+    return config.rest_api_url
 
 
 def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:

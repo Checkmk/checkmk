@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import enum
@@ -249,7 +248,7 @@ def _permission_descriptions(
     description_map: Mapping[str, str] = descriptions if descriptions is not None else {}
     _description: list[str] = ["This endpoint requires the following permissions: "]
 
-    def _count_perms(_perms):
+    def _count_perms(_perms: list[permissions.BasePerm]) -> int:
         return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
 
     def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:

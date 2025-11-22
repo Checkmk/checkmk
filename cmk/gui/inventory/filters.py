@@ -402,7 +402,7 @@ class FilterInvtableText(InputTextFilter):
         )
 
 
-def _rows_filter_table(
+def _filter_rows_table_text_with_sort_key(
     ident: str,
     request_vars: list[str],
     sort_key: Callable[[str], Comparable],
@@ -435,7 +435,9 @@ class FilterInvtableTextWithSortKey(Filter):
         self.query_filter = query_filters.Query(
             ident=ident,
             request_vars=request_vars,
-            rows_filter=partial(_rows_filter_table, ident, request_vars, sort_key),
+            rows_filter=partial(
+                _filter_rows_table_text_with_sort_key, ident, request_vars, sort_key
+            ),
         )
         super().__init__(
             ident=self.query_filter.ident,

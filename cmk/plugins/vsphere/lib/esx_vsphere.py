@@ -5,10 +5,11 @@
 import enum
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-Section = OrderedDict
+Section = OrderedDict[str, Any]
 
 CounterValues = Sequence[str]
 SubSectionCounter = Mapping[str, list[tuple[CounterValues, str]]]

@@ -12,8 +12,6 @@ import time_machine
 from cmk.agent_based.v2 import Attributes
 from cmk.plugins.collection.agent_based.inv_esx_vsphere_hostsystem import inv_esx_vsphere_hostsystem
 
-from .utils_inventory import sort_inventory_result
-
 section = OrderedDict(
     (
         ("config.product.build", ["123456"]),
@@ -53,8 +51,8 @@ def test_inventory() -> None:
     # Setting the timezone is needed, otherwise test results will differ between CI and local
     # runs
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
-        actual = sort_inventory_result(inv_esx_vsphere_hostsystem(section))
-    assert actual == sort_inventory_result(
+        actual = list(inv_esx_vsphere_hostsystem(section))
+    assert actual == list(
         [
             Attributes(
                 path=["hardware", "cpu"],

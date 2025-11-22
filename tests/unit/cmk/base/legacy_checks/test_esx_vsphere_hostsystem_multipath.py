@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="type-arg"
 
 import pytest
 
-from cmk.agent_based.v1 import Result, State
-from cmk.agent_based.v2 import CheckResult
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.agent_based.v2 import CheckResult, Result, State
+from cmk.plugins.vsphere.agent_based import esx_vsphere_hostsystem as esxhs
 from cmk.plugins.vsphere.lib.esx_vsphere import Section
 
 
@@ -71,10 +68,9 @@ from cmk.plugins.vsphere.lib.esx_vsphere import Section
     ],
 )
 def test_check_esx_vsphere_hostsystem_multipath(
-    agent_based_plugins: AgentBasedPlugins, section: Section, item: str, check_results: CheckResult
+    section: Section, item: str, check_results: CheckResult
 ) -> None:
-    check = agent_based_plugins.check_plugins[CheckPluginName("esx_vsphere_hostsystem_multipath")]
     assert (
-        list(check.check_function(item=item, params={"levels_map": {}}, section=section))
+        list(esxhs.check_esx_vsphere_hostsystem_multipath(item, {"levels_map": {}}, section))
         == check_results
     )

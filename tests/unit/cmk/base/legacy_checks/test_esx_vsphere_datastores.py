@@ -3,12 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import Any
 
 import pytest
 import time_machine
@@ -68,7 +64,6 @@ def test_discover_esx_vsphere_datastores() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "mocked_store, item, params, string_table, expected_results",
     [
@@ -466,11 +461,11 @@ def test_discover_esx_vsphere_datastores() -> None:
 )
 def test_check_esx_vsphere_datastores(
     monkeypatch: pytest.MonkeyPatch,
-    mocked_store: Mapping[str, Any],
+    mocked_store: Mapping[str, object],
     item: str,
-    params: Mapping[str, Any],
+    params: Mapping[str, object],
     string_table: StringTable,
-    expected_results: Sequence[Any],
+    expected_results: Sequence[Metric | Result],
 ) -> None:
     """Test check function for esx_vsphere_datastores check."""
     monkeypatch.setattr(esxds, "get_value_store", lambda: mocked_store)

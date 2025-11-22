@@ -193,7 +193,7 @@ def _filter_with_sort_key(
     return True
 
 
-def _rows_filter_attribute(
+def _filter_rows_text_with_sort_key(
     ident: str,
     request_vars: list[str],
     inventory_path: InventoryPath,
@@ -229,7 +229,7 @@ class FilterInvTextWithSortKey(Filter):
             ident=ident,
             request_vars=request_vars,
             rows_filter=partial(
-                _rows_filter_attribute, ident, request_vars, inventory_path, sort_key
+                _filter_rows_text_with_sort_key, ident, request_vars, inventory_path, sort_key
             ),
         )
         super().__init__(

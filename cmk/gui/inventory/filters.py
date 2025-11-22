@@ -122,6 +122,26 @@ class FilterInvFloat(FilterNumberRange):
         return any(self.query_filter.extractor(value))
 
 
+def _filter_by_host_inventory(
+    inventory_path: InventoryPath,
+) -> Callable[[str, str], Callable[[Row], bool]]:
+    def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
+        regex = query_filters.re_ignorecase(filtertext, column)
+
+        def filt(row: Row) -> bool:
+            return bool(
+                regex.search(
+                    str(
+                        row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key)
+                    )
+                )
+            )
+
+        return filt
+
+    return row_filter
+
+
 class FilterInvText(InputTextFilter):
     def __init__(
         self,
@@ -465,26 +485,6 @@ class FilterInvtableDualChoice(DualListFilter):
         if not (selection := self.query_filter.selection(value)):
             return rows  # No types selected, filter is unused
         return [row for row in rows if str(row[self.query_filter.column]) in selection]
-
-
-def _filter_by_host_inventory(
-    inventory_path: InventoryPath,
-) -> Callable[[str, str], Callable[[Row], bool]]:
-    def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
-        regex = query_filters.re_ignorecase(filtertext, column)
-
-        def filt(row: Row) -> bool:
-            return bool(
-                regex.search(
-                    str(
-                        row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key)
-                    )
-                )
-            )
-
-        return filt
-
-    return row_filter
 
 
 class FilterInvtableTimestampAsAge(FilterNumberRange):

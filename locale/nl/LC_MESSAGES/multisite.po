@@ -20616,6 +20616,10 @@ msgstr "Toestand apparaat niet beschikbaar"
 msgid "Device statuses"
 msgstr "Dienstverleningsstatus"
 
+#, fuzzy
+msgid "Device statuses <b>[deprecated]</b>"
+msgstr "Dienstverleningsstatus"
+
 msgid "Device type"
 msgstr "Type apparaat"
 
@@ -22674,6 +22678,9 @@ msgstr "Dump bestand: %s"
 #, python-format
 msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr "Dubbele tag ID \"%s\" in hulptags"
+
+msgid "Duplicated elements provided."
+msgstr ""
 
 msgid "Duplicated messages management"
 msgstr "Beheer van dubbele berichten"
@@ -49050,10 +49057,6 @@ msgstr "Optionele login (indien nodig)"
 msgid "Optional parameters"
 msgstr "Optionele parameters"
 
-#, fuzzy
-msgid "Optional sections"
-msgstr "Facultatieve selectie van een locatie"
-
 msgid "Optional selection of a site"
 msgstr "Facultatieve selectie van een locatie"
 
@@ -59092,6 +59095,9 @@ msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 "Sectie(s) kunnen niet tegelijkertijd worden uitgeschakeld en ingeschakeld:"
 
+msgid "Sections"
+msgstr "Secties"
+
 msgid "Sections - data to collect"
 msgstr "Secties - te verzamelen gegevens"
 
@@ -59486,6 +59492,12 @@ msgid ""
 msgstr ""
 "Selecteer het bereik waartussen de waarden worden weergegeven. Dit heeft "
 "alleen invloed op het streepje als 'Toon historische waarden' is geselecteerd"
+
+msgid ""
+"Select the sections that you want to include in the agent output.<p><b>Note:"
+"</b> some Meraki resources are marked as deprecated, whichmeans that they "
+"could be removed at some point in the future.</p>"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -60256,6 +60268,22 @@ msgstr "Dienst Metriek"
 msgid "Service monitoring rules"
 msgstr "Regels voor toezicht op diensten"
 
+msgid "Service moved to disabled services table. Monitoring is disabled."
+msgstr ""
+
+#, fuzzy
+msgid "Service moved to monitored services table. Monitoring is enabled."
+msgstr ""
+"Voeg alle gedetecteerde maar nog niet bewaakte diensten toe aan de bewaking."
+
+msgid "Service moved to undecided services table. Monitoring is disabled."
+msgstr ""
+
+msgid ""
+"Service moved to vanished services table. Monitoring is enabled, but service "
+"is unknown."
+msgstr ""
+
 msgid "Service name"
 msgstr "Naam van de dienst"
 
@@ -60365,6 +60393,10 @@ msgstr "Dienstproblemen voor NagStaMon"
 
 msgid "Service recovers to OK"
 msgstr "Dienst herstelt naar OK"
+
+#, fuzzy
+msgid "Service removed. Monitoring is disabled."
+msgstr "Regels voor toezicht op diensten"
 
 msgid "Service report for multiple services"
 msgstr "Dienstrapport voor meerdere diensten"
@@ -63794,6 +63826,9 @@ msgstr ""
 msgid ""
 "Specify when and how notifications are sent based on frequency, timing, and "
 "content criteria."
+msgstr ""
+
+msgid "Specify which organizations to fetch data from."
 msgstr ""
 
 msgid "Specify which port types should not be discovered"
@@ -70427,6 +70462,13 @@ msgstr ""
 "van je gemonitorde hosts, dan zal die host worden gebruikt als de parent van "
 "de host. Als zo'n host niet bestaat, zal een kunstmatige ping-only gateway "
 "host worden aangemaakt als je deze functie niet hebt uitgeschakeld."
+
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"De naam van de view mag alleen letters, cijfers en underscores bevatten."
 
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
@@ -81938,9 +81980,6 @@ msgstr "Niet-voorbehouden gelijktijdige executies"
 msgid "Unreserved concurrent executions in percent"
 msgstr "Niet gereserveerde gelijktijdige executies in procenten"
 
-msgid "Unselect sections which you don't want to include."
-msgstr ""
-
 msgid "Unset user attributes on migration"
 msgstr "Gebruikersattributen verwijderen bij migratie"
 
@@ -93086,8 +93125,23 @@ msgid "Success! Your runtime filters have been applied"
 msgstr ""
 
 #, fuzzy
-msgid "Settings Menu"
-msgstr "Instellingen"
+msgid "Share"
+msgstr "Gedeelde sleutel"
+
+#, fuzzy
+msgid "Copy internal link"
+msgstr "interne ID"
+
+#, fuzzy
+msgid "Copy public link"
+msgstr "Publiek"
+
+#, fuzzy
+msgid "Configure sharing"
+msgstr "Zijbalk configureren"
+
+msgid "Clone dashboard to generate public link"
+msgstr ""
 
 #, fuzzy
 msgid "Dashboard settings"
@@ -93134,8 +93188,36 @@ msgid "Unnamed Dashboard"
 msgstr "Dashboard"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "Instellingen"
+
+#, fuzzy
 msgid "Show date and time"
 msgstr "Eindtijd downtime"
+
+#, fuzzy
+msgid "Sharing"
+msgstr "String"
+
+#, fuzzy
+msgid "Sharing until"
+msgstr "Geldig tot"
+
+#, fuzzy
+msgid "expires in %{days} days"
+msgstr " in %d dagen"
+
+#, fuzzy
+msgid "expires in 1 day"
+msgstr "Verloopt op"
+
+#, fuzzy
+msgid "expires today"
+msgstr "Verloopt op"
+
+#, fuzzy
+msgid "Sharing expired on"
+msgstr "Groeperingsexpressie"
 
 #, fuzzy
 msgid "No items selected"
@@ -93897,6 +93979,100 @@ msgstr "Verberg deze %s in vervolgkeuzemenu's"
 #, fuzzy
 msgid "Dashboard settings of %{name}"
 msgstr "Eigenschappen van het dashboard"
+
+#, fuzzy
+msgid "Users with access permissions can view this dashboard"
+msgstr "Gebruikers zonder deze toestemming worden helemaal niet binnengelaten"
+
+#, fuzzy
+msgid "Dashboard url"
+msgstr "Dashboard"
+
+msgid "Stop sharing public link?"
+msgstr ""
+
+msgid "This will disable the link and revoke access for all viewers."
+msgstr ""
+
+#, fuzzy
+msgid "Enable access"
+msgstr "Actieve controles inschakelen"
+
+#, fuzzy
+msgid "Enable public link?"
+msgstr "Inschakelen replicatie"
+
+msgid "Anyone with the link can view this dashboard."
+msgstr ""
+
+msgid "Access will automatically expire on %{date}."
+msgstr ""
+
+#, fuzzy
+msgid "Disable access"
+msgstr "Uitgeschakelde controles"
+
+#, fuzzy
+msgid "Delete public link?"
+msgstr "Publiek"
+
+msgid "This will delete the link and revoke access for all viewers."
+msgstr ""
+
+#, fuzzy
+msgid "Public access"
+msgstr "Volledige toegang"
+
+msgid "Anyone with this link can view the dashboard"
+msgstr ""
+
+#, fuzzy
+msgid "Navigation and menus are hidden."
+msgstr "Pictogrammen navigatiebalk"
+
+#, fuzzy
+msgid "Generate public link"
+msgstr "Publiek"
+
+#, fuzzy
+msgid "Public dashboard URL"
+msgstr "Probleem dashboard"
+
+#, fuzzy
+msgid "Expiration date cannot be in the past."
+msgstr ""
+"Je kunt tellen en verwachten niet tegelijk gebruiken in dezelfde regel."
+
+msgid "Expiration date cannot be more than 2 years in the future."
+msgstr ""
+
+#, fuzzy
+msgid "Link settings"
+msgstr "SLA-instellingen"
+
+msgid ""
+"Choose how the dashboard appears, set an expiration date or add a comment"
+msgstr ""
+
+#, fuzzy
+msgid "Link settings saved."
+msgstr "Licentie staat"
+
+#, fuzzy
+msgid "Set expiration date"
+msgstr "Registratie Staat"
+
+#, fuzzy
+msgid "Public link expiration date"
+msgstr "Registratie Staat"
+
+#, fuzzy
+msgid "Internal comment, not visible to viewers"
+msgstr "Begin of einde van een geplande downtime"
+
+#, fuzzy
+msgid "Save changes"
+msgstr "Is veranderd"
 
 #, fuzzy
 msgid "Event selection"
@@ -95108,6 +95284,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Optional sections"
+#~ msgstr "Facultatieve selectie van een locatie"
+
+#, fuzzy
 #~ msgid "Organization device statuses"
 #~ msgstr "Apparaatstatussen van de organisatie"
 
@@ -95118,9 +95298,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Organization sensor readings"
 #~ msgstr "Organisatie sensor metingen"
-
-#~ msgid "Sections"
-#~ msgstr "Secties"
 
 #, fuzzy
 #~ msgid "This rule configures the OpenTelemetry special agent."

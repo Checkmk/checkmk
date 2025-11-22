@@ -20442,6 +20442,10 @@ msgstr "Stato del dispositivo non disponibile"
 msgid "Device statuses"
 msgstr "Stato del servizio"
 
+#, fuzzy
+msgid "Device statuses <b>[deprecated]</b>"
+msgstr "Stato del servizio"
+
 msgid "Device type"
 msgstr "Tipo di dispositivo"
 
@@ -22498,6 +22502,9 @@ msgstr "File di scarico: %s"
 #, python-format
 msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr "ID tag duplicato \"%s\" nei tag ausiliari"
+
+msgid "Duplicated elements provided."
+msgstr ""
 
 msgid "Duplicated messages management"
 msgstr "Gestione dei messaggi duplicati"
@@ -48661,10 +48668,6 @@ msgstr "Accesso opzionale (se richiesto)"
 msgid "Optional parameters"
 msgstr "Parametri opzionali"
 
-#, fuzzy
-msgid "Optional sections"
-msgstr "Selezione facoltativa di un sito"
-
 msgid "Optional selection of a site"
 msgstr "Selezione facoltativa di un sito"
 
@@ -58650,6 +58653,9 @@ msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 "Le sezioni non possono essere disabilitate e abilitate allo stesso tempo:"
 
+msgid "Sections"
+msgstr "Sezioni"
+
 msgid "Sections - data to collect"
 msgstr "Sezioni - dati da raccogliere"
 
@@ -59038,6 +59044,12 @@ msgid ""
 msgstr ""
 "Selezionare l'intervallo tra cui visualizzare i valori. Questo influisce sul "
 "dashlet solo se è selezionato 'Mostra valori storici'"
+
+msgid ""
+"Select the sections that you want to include in the agent output.<p><b>Note:"
+"</b> some Meraki resources are marked as deprecated, whichmeans that they "
+"could be removed at some point in the future.</p>"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -59793,6 +59805,22 @@ msgstr "Metriche di servizio"
 msgid "Service monitoring rules"
 msgstr "Regole di monitoraggio del servizio"
 
+msgid "Service moved to disabled services table. Monitoring is disabled."
+msgstr ""
+
+#, fuzzy
+msgid "Service moved to monitored services table. Monitoring is enabled."
+msgstr ""
+"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+
+msgid "Service moved to undecided services table. Monitoring is disabled."
+msgstr ""
+
+msgid ""
+"Service moved to vanished services table. Monitoring is enabled, but service "
+"is unknown."
+msgstr ""
+
 msgid "Service name"
 msgstr "Nome del servizio"
 
@@ -59903,6 +59931,10 @@ msgstr "Problemi di servizio per NagStaMon"
 
 msgid "Service recovers to OK"
 msgstr "Il servizio recupera a OK"
+
+#, fuzzy
+msgid "Service removed. Monitoring is disabled."
+msgstr "Regole di monitoraggio del servizio"
 
 msgid "Service report for multiple services"
 msgstr "Rapporto di servizio per servizi multipli"
@@ -63327,6 +63359,9 @@ msgstr ""
 msgid ""
 "Specify when and how notifications are sent based on frequency, timing, and "
 "content criteria."
+msgstr ""
+
+msgid "Specify which organizations to fetch data from."
 msgstr ""
 
 msgid "Specify which port types should not be discovered"
@@ -69895,6 +69930,14 @@ msgstr ""
 "a uno dei tuoi host monitorati, quell'host sarà usato come genitore "
 "dell'host. Se non esiste un tale host, verrà creato un host gateway ping-"
 "only artificiale se non hai disabilitato questa caratteristica."
+
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"Il nome della vista può contenere solo lettere, cifre e caratteri di "
+"sottolineatura."
 
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
@@ -81293,9 +81336,6 @@ msgstr "Esecuzioni concorrenti non riservate"
 msgid "Unreserved concurrent executions in percent"
 msgstr "Esecuzioni concorrenti non riservate in percentuale"
 
-msgid "Unselect sections which you don't want to include."
-msgstr ""
-
 msgid "Unset user attributes on migration"
 msgstr "Attributi utente non impostati durante la migrazione"
 
@@ -92342,8 +92382,23 @@ msgid "Success! Your runtime filters have been applied"
 msgstr ""
 
 #, fuzzy
-msgid "Settings Menu"
-msgstr "Impostazioni"
+msgid "Share"
+msgstr "Condiviso"
+
+#, fuzzy
+msgid "Copy internal link"
+msgstr "ID interno"
+
+#, fuzzy
+msgid "Copy public link"
+msgstr "Pubblico"
+
+#, fuzzy
+msgid "Configure sharing"
+msgstr "Configurare la barra laterale"
+
+msgid "Clone dashboard to generate public link"
+msgstr ""
 
 #, fuzzy
 msgid "Dashboard settings"
@@ -92390,8 +92445,36 @@ msgid "Unnamed Dashboard"
 msgstr "Dashboard"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "Impostazioni"
+
+#, fuzzy
 msgid "Show date and time"
 msgstr "Data e ora"
+
+#, fuzzy
+msgid "Sharing"
+msgstr "Stringa"
+
+#, fuzzy
+msgid "Sharing until"
+msgstr "Valido fino a"
+
+#, fuzzy
+msgid "expires in %{days} days"
+msgstr " in %d giorni"
+
+#, fuzzy
+msgid "expires in 1 day"
+msgstr "Scadenza il"
+
+#, fuzzy
+msgid "expires today"
+msgstr "Scadenza il"
+
+#, fuzzy
+msgid "Sharing expired on"
+msgstr "Espressione di raggruppamento"
 
 #, fuzzy
 msgid "No items selected"
@@ -93152,6 +93235,99 @@ msgstr "Nascondi questo %s nei menu a discesa"
 #, fuzzy
 msgid "Dashboard settings of %{name}"
 msgstr "Proprietà del cruscotto"
+
+#, fuzzy
+msgid "Users with access permissions can view this dashboard"
+msgstr "Gli utenti che non hanno questa autorizzazione non sono ammessi"
+
+#, fuzzy
+msgid "Dashboard url"
+msgstr "Dashboard"
+
+msgid "Stop sharing public link?"
+msgstr ""
+
+msgid "This will disable the link and revoke access for all viewers."
+msgstr ""
+
+#, fuzzy
+msgid "Enable access"
+msgstr "Abilitare i controlli attivi"
+
+#, fuzzy
+msgid "Enable public link?"
+msgstr "Abilita la replica"
+
+msgid "Anyone with the link can view this dashboard."
+msgstr ""
+
+msgid "Access will automatically expire on %{date}."
+msgstr ""
+
+#, fuzzy
+msgid "Disable access"
+msgstr "Controlli disabilitati"
+
+#, fuzzy
+msgid "Delete public link?"
+msgstr "Pubblico"
+
+msgid "This will delete the link and revoke access for all viewers."
+msgstr ""
+
+#, fuzzy
+msgid "Public access"
+msgstr "Accesso completo"
+
+msgid "Anyone with this link can view the dashboard"
+msgstr ""
+
+#, fuzzy
+msgid "Navigation and menus are hidden."
+msgstr "Icone della barra di navigazione"
+
+#, fuzzy
+msgid "Generate public link"
+msgstr "Pubblico"
+
+#, fuzzy
+msgid "Public dashboard URL"
+msgstr "Cruscotto dei problemi"
+
+#, fuzzy
+msgid "Expiration date cannot be in the past."
+msgstr "Non è possibile impostare una data e un'ora di scadenza passate:"
+
+msgid "Expiration date cannot be more than 2 years in the future."
+msgstr ""
+
+#, fuzzy
+msgid "Link settings"
+msgstr "Impostazioni SLA"
+
+msgid ""
+"Choose how the dashboard appears, set an expiration date or add a comment"
+msgstr ""
+
+#, fuzzy
+msgid "Link settings saved."
+msgstr "Stato della licenza"
+
+#, fuzzy
+msgid "Set expiration date"
+msgstr "Nessuna data di scadenza"
+
+#, fuzzy
+msgid "Public link expiration date"
+msgstr "Nessuna data di scadenza"
+
+#, fuzzy
+msgid "Internal comment, not visible to viewers"
+msgstr "Inserire un commento per programmare il tempo di inattività"
+
+#, fuzzy
+msgid "Save changes"
+msgstr "Cambiamento di stato"
 
 #, fuzzy
 msgid "Event selection"
@@ -94363,6 +94539,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Optional sections"
+#~ msgstr "Selezione facoltativa di un sito"
+
+#, fuzzy
 #~ msgid "Organization device statuses"
 #~ msgstr "Stati dell'organizzazione del dispositivo"
 
@@ -94373,9 +94553,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Organization sensor readings"
 #~ msgstr "Letture del sensore di organizzazione"
-
-#~ msgid "Sections"
-#~ msgstr "Sezioni"
 
 #, fuzzy
 #~ msgid "This rule configures the OpenTelemetry special agent."

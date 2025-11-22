@@ -19450,6 +19450,10 @@ msgstr "デバイスの状態は利用できません"
 msgid "Device statuses"
 msgstr "サービスステータス"
 
+#, fuzzy
+msgid "Device statuses <b>[deprecated]</b>"
+msgstr "サービスステータス"
+
 msgid "Device type"
 msgstr "デバイスタイプ"
 
@@ -21359,6 +21363,9 @@ msgstr "ダンプファイル:%s"
 #, python-format
 msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr "補助タグ内の重複タグID \"%s\""
+
+msgid "Duplicated elements provided."
+msgstr ""
 
 msgid "Duplicated messages management"
 msgstr "重複メッセージの管理"
@@ -46122,10 +46129,6 @@ msgstr "オプションのログイン(必要な場合)"
 msgid "Optional parameters"
 msgstr "オプションのパラメータ"
 
-#, fuzzy
-msgid "Optional sections"
-msgstr "サイトオプション選択"
-
 msgid "Optional selection of a site"
 msgstr "サイトオプション選択"
 
@@ -55406,6 +55409,9 @@ msgstr "監視するファイルのセクション"
 msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr "セクションの無効化と有効化を同時に行うことはできません。"
 
+msgid "Sections"
+msgstr "セクション"
+
 msgid "Sections - data to collect"
 msgstr "セクション - 収集するデータ"
 
@@ -55812,6 +55818,12 @@ msgid ""
 msgstr ""
 "値を表示する範囲を選択します。これは、「履歴値を表示する」が選択されている場"
 "合にのみダッシュレットに影響します"
+
+msgid ""
+"Select the sections that you want to include in the agent output.<p><b>Note:"
+"</b> some Meraki resources are marked as deprecated, whichmeans that they "
+"could be removed at some point in the future.</p>"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -56534,6 +56546,21 @@ msgstr "サービスメトリクス"
 msgid "Service monitoring rules"
 msgstr "サービス監視ルール"
 
+msgid "Service moved to disabled services table. Monitoring is disabled."
+msgstr ""
+
+#, fuzzy
+msgid "Service moved to monitored services table. Monitoring is enabled."
+msgstr "検出されたがまだ監視されていないすべてのサービスを監視に追加します。"
+
+msgid "Service moved to undecided services table. Monitoring is disabled."
+msgstr ""
+
+msgid ""
+"Service moved to vanished services table. Monitoring is enabled, but service "
+"is unknown."
+msgstr ""
+
 msgid "Service name"
 msgstr "サービス名"
 
@@ -56630,6 +56657,10 @@ msgstr "NagStaMonのサービスの問題"
 
 msgid "Service recovers to OK"
 msgstr "サービスがOKに回復する時"
+
+#, fuzzy
+msgid "Service removed. Monitoring is disabled."
+msgstr "サービス監視ルール"
 
 msgid "Service report for multiple services"
 msgstr "複数のサービスのサービスレポート"
@@ -59886,6 +59917,9 @@ msgid ""
 msgstr ""
 "通知の送信日時と方法を、頻度、タイミング、およびコンテンツの基準に基づいて指"
 "定します。"
+
+msgid "Specify which organizations to fetch data from."
+msgstr ""
 
 msgid "Specify which port types should not be discovered"
 msgstr "検出しないポートタイプを指定します"
@@ -66205,6 +66239,14 @@ msgstr ""
 "のホストがホストの親として使用されます。そのようなホストが存在しない場合、こ"
 "の機能を無効にしていなければ、 擬似的なピングオンリーのゲートウェイホストが作"
 "成されます。"
+
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"ビューの名前には、文字、数字、およびアンダースコアのみを含めることができま"
+"す。"
 
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
@@ -76823,9 +76865,6 @@ msgstr "予約なしの同時執行"
 msgid "Unreserved concurrent executions in percent"
 msgstr "未消化の同時死刑執行率(%)"
 
-msgid "Unselect sections which you don't want to include."
-msgstr ""
-
 msgid "Unset user attributes on migration"
 msgstr "移行時のユーザー属性設定解除"
 
@@ -87316,8 +87355,23 @@ msgid "Success! Your runtime filters have been applied"
 msgstr ""
 
 #, fuzzy
-msgid "Settings Menu"
-msgstr "設定"
+msgid "Share"
+msgstr "共有"
+
+#, fuzzy
+msgid "Copy internal link"
+msgstr "内部ID"
+
+#, fuzzy
+msgid "Copy public link"
+msgstr "公衆"
+
+#, fuzzy
+msgid "Configure sharing"
+msgstr "サイドバーの設定"
+
+msgid "Clone dashboard to generate public link"
+msgstr ""
 
 #, fuzzy
 msgid "Dashboard settings"
@@ -87364,8 +87418,36 @@ msgid "Unnamed Dashboard"
 msgstr "ダッシュボード"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "設定"
+
+#, fuzzy
 msgid "Show date and time"
 msgstr "日付と時間"
+
+#, fuzzy
+msgid "Sharing"
+msgstr "ストリング"
+
+#, fuzzy
+msgid "Sharing until"
+msgstr "まで有効"
+
+#, fuzzy
+msgid "expires in %{days} days"
+msgstr " %d 日で"
+
+#, fuzzy
+msgid "expires in 1 day"
+msgstr "有効期限"
+
+#, fuzzy
+msgid "expires today"
+msgstr "有効期限"
+
+#, fuzzy
+msgid "Sharing expired on"
+msgstr "グルーピング表現"
 
 #, fuzzy
 msgid "No items selected"
@@ -88108,6 +88190,99 @@ msgstr "ドロップダウンメニューでこの %sを非表示にする"
 #, fuzzy
 msgid "Dashboard settings of %{name}"
 msgstr "ダッシュボードのプロパティ"
+
+#, fuzzy
+msgid "Users with access permissions can view this dashboard"
+msgstr "この権限を持たないユーザは入れない"
+
+#, fuzzy
+msgid "Dashboard url"
+msgstr "ダッシュボード"
+
+msgid "Stop sharing public link?"
+msgstr ""
+
+msgid "This will disable the link and revoke access for all viewers."
+msgstr ""
+
+#, fuzzy
+msgid "Enable access"
+msgstr "アクティブチェックを有効にする"
+
+#, fuzzy
+msgid "Enable public link?"
+msgstr "レプリケーションを有効にする"
+
+msgid "Anyone with the link can view this dashboard."
+msgstr ""
+
+msgid "Access will automatically expire on %{date}."
+msgstr ""
+
+#, fuzzy
+msgid "Disable access"
+msgstr "無効なチェック"
+
+#, fuzzy
+msgid "Delete public link?"
+msgstr "公衆"
+
+msgid "This will delete the link and revoke access for all viewers."
+msgstr ""
+
+#, fuzzy
+msgid "Public access"
+msgstr "フルアクセス"
+
+msgid "Anyone with this link can view the dashboard"
+msgstr ""
+
+#, fuzzy
+msgid "Navigation and menus are hidden."
+msgstr "ナビゲーションバーのアイコン"
+
+#, fuzzy
+msgid "Generate public link"
+msgstr "公衆"
+
+#, fuzzy
+msgid "Public dashboard URL"
+msgstr "問題のダッシュボード"
+
+#, fuzzy
+msgid "Expiration date cannot be in the past."
+msgstr "過去の有効期限を設定することはできません："
+
+msgid "Expiration date cannot be more than 2 years in the future."
+msgstr ""
+
+#, fuzzy
+msgid "Link settings"
+msgstr "SLA設定"
+
+msgid ""
+"Choose how the dashboard appears, set an expiration date or add a comment"
+msgstr ""
+
+#, fuzzy
+msgid "Link settings saved."
+msgstr "ライセンスが保存されました。"
+
+#, fuzzy
+msgid "Set expiration date"
+msgstr "有効期限なし"
+
+#, fuzzy
+msgid "Public link expiration date"
+msgstr "有効期限なし"
+
+#, fuzzy
+msgid "Internal comment, not visible to viewers"
+msgstr "コメントを入力しダウンタイムをスケジュールする"
+
+#, fuzzy
+msgid "Save changes"
+msgstr "ステータス変更"
 
 #, fuzzy
 msgid "Event selection"
@@ -89278,6 +89453,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Optional sections"
+#~ msgstr "サイトオプション選択"
+
 #~ msgid "Organization device statuses"
 #~ msgstr "組織のデバイス状態"
 
@@ -89286,9 +89465,6 @@ msgstr ""
 
 #~ msgid "Organization sensor readings"
 #~ msgstr "組織センサーの読取"
-
-#~ msgid "Sections"
-#~ msgstr "セクション"
 
 #~ msgid "This rule configures the OpenTelemetry special agent."
 #~ msgstr "このルールは、OpenTelemetry スペシャルエージェントを設定します。"

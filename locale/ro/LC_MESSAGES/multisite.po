@@ -20662,6 +20662,10 @@ msgstr "Starea dispozitivului nu este disponibilă"
 msgid "Device statuses"
 msgstr "Starea serviciului"
 
+#, fuzzy
+msgid "Device statuses <b>[deprecated]</b>"
+msgstr "Starea serviciului"
+
 msgid "Device type"
 msgstr "Tipul de dispozitiv"
 
@@ -22727,6 +22731,9 @@ msgstr "Fișier de vidanjare: %s"
 #, python-format
 msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr "ID-ul de etichetă duplicat \"%s\" în etichetele auxiliare"
+
+msgid "Duplicated elements provided."
+msgstr ""
 
 msgid "Duplicated messages management"
 msgstr "Gestionarea mesajelor duplicate"
@@ -49165,10 +49172,6 @@ msgstr "Autentificare opțională (dacă este necesar)"
 msgid "Optional parameters"
 msgstr "Parametrii opționali"
 
-#, fuzzy
-msgid "Optional sections"
-msgstr "Selectarea opțională a unui site"
-
 msgid "Optional selection of a site"
 msgstr "Selectarea opțională a unui site"
 
@@ -59211,6 +59214,9 @@ msgstr ""
 "Secțiunea (secțiunile) nu poate (pot) fi dezactivată(e) și activată(e) în "
 "același timp:"
 
+msgid "Sections"
+msgstr "Secțiuni"
+
 msgid "Sections - data to collect"
 msgstr "Secțiuni - date de colectat"
 
@@ -59623,6 +59629,12 @@ msgid ""
 msgstr ""
 "Selectați intervalul între care sunt afișate valorile. Acest lucru afectează "
 "dashlet-ul numai dacă 'Show historical values' este selectat"
+
+msgid ""
+"Select the sections that you want to include in the agent output.<p><b>Note:"
+"</b> some Meraki resources are marked as deprecated, whichmeans that they "
+"could be removed at some point in the future.</p>"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -60403,6 +60415,23 @@ msgstr "Metrici de servicii"
 msgid "Service monitoring rules"
 msgstr "Reguli de monitorizare a serviciilor"
 
+msgid "Service moved to disabled services table. Monitoring is disabled."
+msgstr ""
+
+#, fuzzy
+msgid "Service moved to monitored services table. Monitoring is enabled."
+msgstr ""
+"Adăugați la monitorizare toate serviciile detectate, dar care nu au fost "
+"încă monitorizate."
+
+msgid "Service moved to undecided services table. Monitoring is disabled."
+msgstr ""
+
+msgid ""
+"Service moved to vanished services table. Monitoring is enabled, but service "
+"is unknown."
+msgstr ""
+
 msgid "Service name"
 msgstr "Denumirea serviciului"
 
@@ -60514,6 +60543,11 @@ msgstr "Probleme de service pentru NagStaMon"
 
 msgid "Service recovers to OK"
 msgstr "Serviciul revine la OK"
+
+# georgem ##############
+#, fuzzy
+msgid "Service removed. Monitoring is disabled."
+msgstr "Reguli de monitorizare a serviciilor"
 
 msgid "Service report for multiple services"
 msgstr "Raport de servicii pentru mai multe servicii"
@@ -64000,6 +64034,9 @@ msgstr ""
 msgid ""
 "Specify when and how notifications are sent based on frequency, timing, and "
 "content criteria."
+msgstr ""
+
+msgid "Specify which organizations to fetch data from."
 msgstr ""
 
 msgid "Specify which port types should not be discovered"
@@ -70646,6 +70683,14 @@ msgstr ""
 "aparține uneia dintre gazdele monitorizate, acea gazdă va fi utilizată ca "
 "gazdă părinte. Dacă nu există o astfel de gazdă, va fi creată o gazdă de "
 "gateway artificială doar pentru ping, dacă nu ați dezactivat această funcție."
+
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"Numele vizualizării poate conține numai litere, cifre și caractere de "
+"subliniere."
 
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
@@ -82160,9 +82205,6 @@ msgstr "Execuții simultane fără rezerve"
 msgid "Unreserved concurrent executions in percent"
 msgstr "Execuții concomitente nerezervate în procente"
 
-msgid "Unselect sections which you don't want to include."
-msgstr ""
-
 msgid "Unset user attributes on migration"
 msgstr "Anulare atribute de utilizator la migrare"
 
@@ -93341,8 +93383,23 @@ msgid "Success! Your runtime filters have been applied"
 msgstr ""
 
 #, fuzzy
-msgid "Settings Menu"
-msgstr "Setari"
+msgid "Share"
+msgstr "Partajat"
+
+#, fuzzy
+msgid "Copy internal link"
+msgstr "ID intern"
+
+#, fuzzy
+msgid "Copy public link"
+msgstr "Public"
+
+#, fuzzy
+msgid "Configure sharing"
+msgstr "Configurați bara laterală"
+
+msgid "Clone dashboard to generate public link"
+msgstr ""
 
 #, fuzzy
 msgid "Dashboard settings"
@@ -93389,8 +93446,36 @@ msgid "Unnamed Dashboard"
 msgstr "Tabloul de bord"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "Setari"
+
+#, fuzzy
 msgid "Show date and time"
 msgstr "Data și ora"
+
+#, fuzzy
+msgid "Sharing"
+msgstr "Șir de caractere"
+
+#, fuzzy
+msgid "Sharing until"
+msgstr "Valabil până la"
+
+#, fuzzy
+msgid "expires in %{days} days"
+msgstr " în %d zile"
+
+#, fuzzy
+msgid "expires in 1 day"
+msgstr "Expiră la"
+
+#, fuzzy
+msgid "expires today"
+msgstr "Expiră la"
+
+#, fuzzy
+msgid "Sharing expired on"
+msgstr "Expresia de grupare"
 
 #, fuzzy
 msgid "No items selected"
@@ -94155,6 +94240,100 @@ msgstr "Ascundeți acest %s în meniurile derulante"
 #, fuzzy
 msgid "Dashboard settings of %{name}"
 msgstr "Proprietățile tabloului de bord"
+
+#, fuzzy
+msgid "Users with access permissions can view this dashboard"
+msgstr ""
+"Utilizatorii care nu au această permisiune nu sunt lăsați să intre deloc."
+
+#, fuzzy
+msgid "Dashboard url"
+msgstr "Tabloul de bord"
+
+msgid "Stop sharing public link?"
+msgstr ""
+
+msgid "This will disable the link and revoke access for all viewers."
+msgstr ""
+
+#, fuzzy
+msgid "Enable access"
+msgstr "Activarea verificărilor active"
+
+#, fuzzy
+msgid "Enable public link?"
+msgstr "Activați replicarea"
+
+msgid "Anyone with the link can view this dashboard."
+msgstr ""
+
+msgid "Access will automatically expire on %{date}."
+msgstr ""
+
+#, fuzzy
+msgid "Disable access"
+msgstr "Controale pentru persoanele cu handicap"
+
+#, fuzzy
+msgid "Delete public link?"
+msgstr "Public"
+
+msgid "This will delete the link and revoke access for all viewers."
+msgstr ""
+
+#, fuzzy
+msgid "Public access"
+msgstr "Acces complet"
+
+msgid "Anyone with this link can view the dashboard"
+msgstr ""
+
+#, fuzzy
+msgid "Navigation and menus are hidden."
+msgstr "Pictogramele barei de navigare"
+
+#, fuzzy
+msgid "Generate public link"
+msgstr "Public"
+
+#, fuzzy
+msgid "Public dashboard URL"
+msgstr "Tablou de bord cu probleme"
+
+#, fuzzy
+msgid "Expiration date cannot be in the past."
+msgstr "Nu puteți seta o dată și o oră de expirare care se află în trecut:"
+
+msgid "Expiration date cannot be more than 2 years in the future."
+msgstr ""
+
+#, fuzzy
+msgid "Link settings"
+msgstr "Setări SLA"
+
+msgid ""
+"Choose how the dashboard appears, set an expiration date or add a comment"
+msgstr ""
+
+#, fuzzy
+msgid "Link settings saved."
+msgstr "Statul de licență"
+
+#, fuzzy
+msgid "Set expiration date"
+msgstr "Fără dată de expirare"
+
+#, fuzzy
+msgid "Public link expiration date"
+msgstr "Fără dată de expirare"
+
+#, fuzzy
+msgid "Internal comment, not visible to viewers"
+msgstr "Introduceți un comentariu pentru a programa timpul de oprire"
+
+#, fuzzy
+msgid "Save changes"
+msgstr "Schimbare de stare"
 
 #, fuzzy
 msgid "Event selection"
@@ -95374,6 +95553,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Optional sections"
+#~ msgstr "Selectarea opțională a unui site"
+
+#, fuzzy
 #~ msgid "Organization device statuses"
 #~ msgstr "Starea dispozitivelor de organizare"
 
@@ -95384,9 +95567,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Organization sensor readings"
 #~ msgstr "Citiri ale senzorilor de organizare"
-
-#~ msgid "Sections"
-#~ msgstr "Secțiuni"
 
 #, fuzzy
 #~ msgid "This rule configures the OpenTelemetry special agent."

@@ -10,7 +10,6 @@ be referenced in the result of _build_code_templates.
 """
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import functools
@@ -322,7 +321,9 @@ def first_sentence(text: str) -> str:
     return "".join(re.split(r"(\w\.)", text)[:2])
 
 
-def _transform_params(param_list):
+def _transform_params(
+    param_list: Sequence[Mapping[str, object]],
+) -> dict[str, Mapping[str, object]]:
     """Transform a list of parameters to a dict addressable by name.
 
     Args:
@@ -695,7 +696,7 @@ def fill_out_parameters(ctx: dict[str, Any], val: str) -> str:
     return fill_out_path_template(val, to_param_dict(ctx["path_params"]))
 
 
-def indent(s, skip_lines=0, spaces=2):
+def indent(s: str, skip_lines: int = 0, spaces: int = 2) -> str:
     """Indent a text by a number of spaces.
 
     Lines can be skipped from the start by using the `skip_lines` parameter.

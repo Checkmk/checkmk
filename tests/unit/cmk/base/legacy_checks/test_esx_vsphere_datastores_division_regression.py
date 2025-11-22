@@ -38,6 +38,13 @@ _STRING_TABLE: Final = [
 ]
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fixture to provide an empty value store."""
+    store = dict[str, object]()
+    monkeypatch.setattr(esxds, "get_value_store", lambda: store)
+
+
 def test_discover_esx_vsphere_datastores_division_regression() -> None:
     """Test discovery function for ESX vSphere datastores."""
     assert list(
@@ -51,7 +58,6 @@ def test_discover_esx_vsphere_datastores_division_regression() -> None:
 
 
 def test_check_esx_vsphere_datastores_division_regression_basic(
-    initialised_item_state: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function basic functionality with value store initialized."""
@@ -82,7 +88,7 @@ def test_check_esx_vsphere_datastores_division_regression_basic(
 
 
 def test_check_esx_vsphere_datastores_division_regression_inaccessible(
-    initialised_item_state: None,
+    empty_value_store: None,
 ) -> None:
     """Test check function with inaccessible datastore."""
     string_table = [
@@ -124,7 +130,7 @@ def test_check_esx_vsphere_datastores_division_regression_missing_data() -> None
 
 
 def test_check_esx_vsphere_datastores_division_regression_zero_capacity(
-    initialised_item_state: None,
+    empty_value_store: None,
 ) -> None:
     """Test check function with zero capacity (division by zero protection)."""
     string_table = [
@@ -144,7 +150,7 @@ def test_check_esx_vsphere_datastores_division_regression_zero_capacity(
 
 
 def test_check_esx_vsphere_datastores_division_regression_provisioning(
-    initialised_item_state: None,
+    empty_value_store: None,
 ) -> None:
     """Test provisioning calculations without division errors."""
     string_table = [

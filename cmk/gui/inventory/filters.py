@@ -122,7 +122,7 @@ class FilterInvFloat(FilterNumberRange):
         return any(self.query_filter.extractor(value))
 
 
-def _filter_by_host_inventory(
+def _make_filter_row_text(
     inventory_path: InventoryPath,
 ) -> Callable[[str, str], Callable[[Row], bool]]:
     def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
@@ -156,7 +156,7 @@ class FilterInvText(InputTextFilter):
             sort_index=800,
             info="host",
             query_filter=query_filters.TableTextQuery(
-                ident=ident, row_filter=_filter_by_host_inventory(inventory_path)
+                ident=ident, row_filter=_make_filter_row_text(inventory_path)
             ),
             show_heading=False,
             is_show_more=is_show_more,

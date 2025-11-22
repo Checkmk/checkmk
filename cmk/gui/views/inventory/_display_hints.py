@@ -736,9 +736,7 @@ def _make_attr_names(
     return _Names(
         for_object=name,
         for_filter=(
-            transform_attrs.filter_name
-            if (transform_attrs := non_canonical_filters.get(name))
-            else name
+            migration.filter_name if (migration := non_canonical_filters.get(name)) else name
         ),
     )
 
@@ -752,9 +750,7 @@ def _make_col_names(
     return _Names(
         for_object=name,
         for_filter=(
-            transform_attrs.filter_name
-            if (transform_attrs := non_canonical_filters.get(name))
-            else name
+            migration.filter_name if (migration := non_canonical_filters.get(name)) else name
         ),
     )
 

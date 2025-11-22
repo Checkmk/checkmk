@@ -46,7 +46,7 @@ from ._tree import InventoryPath
 
 
 # Filter tables
-def inside_inventory(inventory_path: InventoryPath) -> Callable[[bool, Row], bool]:
+def _make_filter_row_bool(inventory_path: InventoryPath) -> Callable[[bool, Row], bool]:
     def keep_row(on: bool, row: Row) -> bool:
         return row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key) is on
 
@@ -69,7 +69,7 @@ class FilterInvBool(FilterOption):
             query_filter=query_filters.TristateQuery(
                 ident=ident,
                 filter_code=lambda x: "",  # No Livestatus filtering right now
-                filter_row=inside_inventory(inventory_path),
+                filter_row=_make_filter_row_bool(inventory_path),
             ),
             is_show_more=is_show_more,
         )

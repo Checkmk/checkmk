@@ -78,7 +78,7 @@ class FilterInvBool(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-def _filter_in_host_inventory_range(
+def _make_filter_row_float(
     inventory_path: InventoryPath,
 ) -> Callable[[Row, str, query_filters.MaybeBounds], bool]:
     def row_filter(row: Row, column: str, bounds: query_filters.MaybeBounds) -> bool:
@@ -110,7 +110,7 @@ class FilterInvFloat(FilterNumberRange):
             query_filter=query_filters.NumberRangeQuery(
                 ident=ident,
                 filter_livestatus=False,
-                filter_row=_filter_in_host_inventory_range(inventory_path),
+                filter_row=_make_filter_row_float(inventory_path),
                 request_var_suffix="",
                 bound_rescaling=scale if scale is not None else 1.0,
             ),

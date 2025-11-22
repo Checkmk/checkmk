@@ -387,21 +387,21 @@ def _get_unit_from_number_field(number_field: NumberFieldFromAPI) -> str:
 def _make_attribute_filter(
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
     *,
-    name: str,
+    filter_ident: str,
     long_title: str,
     inventory_path: inventory.InventoryPath,
 ) -> FilterInvBool | FilterInvFloat | FilterInvText | FilterInvChoice | FilterInvTextWithSortKey:
     match field_from_api:
         case BoolFieldFromAPI():
             return FilterInvBool(
-                ident=name,
+                ident=filter_ident,
                 title=long_title,
                 inventory_path=inventory_path,
                 is_show_more=True,
             )
         case NumberFieldFromAPI():
             return FilterInvFloat(
-                ident=name,
+                ident=filter_ident,
                 title=long_title,
                 inventory_path=inventory_path,
                 unit=_get_unit_from_number_field(field_from_api),
@@ -411,21 +411,21 @@ def _make_attribute_filter(
         case TextFieldFromAPI():
             if field_from_api.sort_key:
                 return FilterInvTextWithSortKey(
-                    ident=name,
+                    ident=filter_ident,
                     title=long_title,
                     inventory_path=inventory_path,
                     sort_key=field_from_api.sort_key,
                     is_show_more=True,
                 )
             return FilterInvText(
-                ident=name,
+                ident=filter_ident,
                 title=long_title,
                 inventory_path=inventory_path,
                 is_show_more=True,
             )
         case ChoiceFieldFromAPI():
             return FilterInvChoice(
-                ident=name,
+                ident=filter_ident,
                 title=long_title,
                 inventory_path=inventory_path,
                 options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
@@ -447,7 +447,7 @@ def _parse_attr_field_from_api(
     title = _make_str(field_from_api.title)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
-        name=names.for_object,
+        name=names.object_ident,
         title=title,
         short_title=title,
         long_title=long_title,
@@ -455,7 +455,7 @@ def _parse_attr_field_from_api(
         sort_function=_decorate_sort_function(_make_sort_function(field_from_api)),
         filter=_make_attribute_filter(
             field_from_api,
-            name=names.for_filter,
+            filter_ident=names.filter_ident,
             long_title=long_title,
             inventory_path=inventory.InventoryPath(
                 path=path,
@@ -488,8 +488,8 @@ def _make_column_filter(
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
     *,
     table_view_name: str,
-    ident: str,
-    row_name: str,
+    filter_ident: str,
+    row_ident: str,
     long_title: str,
 ) -> (
     FilterInvtableText
@@ -503,8 +503,8 @@ def _make_column_filter(
         case BoolFieldFromAPI():
             return FilterInvtableChoice(
                 inv_info=table_view_name,
-                ident=ident,
-                row_name=row_name,
+                ident=filter_ident,
+                row_ident=row_ident,
                 title=long_title,
                 options=[
                     ("True", _make_str(field_from_api.render_true)),
@@ -518,14 +518,14 @@ def _make_column_filter(
             ):
                 return FilterInvtableAgeRange(
                     inv_info=table_view_name,
-                    ident=ident,
-                    row_name=row_name,
+                    ident=filter_ident,
+                    row_ident=row_ident,
                     title=long_title,
                     unit=_get_unit_from_number_field(field_from_api),
                 )
             return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=filter_ident,
                 title=long_title,
                 unit=_get_unit_from_number_field(field_from_api),
                 scale=1,
@@ -534,27 +534,27 @@ def _make_column_filter(
             if field_from_api.sort_key:
                 return FilterInvtableTextWithSortKey(
                     inv_info=table_view_name,
-                    ident=ident,
+                    ident=filter_ident,
                     title=long_title,
                     sort_key=field_from_api.sort_key,
                 )
             return FilterInvtableText(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=filter_ident,
                 title=long_title,
             )
         case ChoiceFieldFromAPI():
             if _is_choice(len(field_from_api.mapping)):
                 return FilterInvtableChoice(
                     inv_info=table_view_name,
-                    ident=ident,
-                    row_name=row_name,
+                    ident=filter_ident,
+                    row_ident=row_ident,
                     title=long_title,
                     options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
                 )
             return FilterInvtableDualChoice(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=filter_ident,
                 title=long_title,
                 options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
             )
@@ -573,7 +573,7 @@ def _parse_col_field_of_view_from_api(
     title = _make_str(field_from_api.title)
     long_title = _make_long_title(node_title, title)
     return ColumnDisplayHintOfView(
-        name=names.for_object,
+        name=names.object_ident,
         title=title,
         short_title=title,
         long_title=long_title,
@@ -582,8 +582,8 @@ def _parse_col_field_of_view_from_api(
         filter=_make_column_filter(
             field_from_api,
             table_view_name=table_view_name,
-            ident=names.for_filter,
-            row_name=names.for_object,
+            filter_ident=names.filter_ident,
+            row_ident=names.row_ident,
             long_title=long_title,
         ),
     )
@@ -725,8 +725,9 @@ def _make_node_name(path: SDPath) -> str:
 
 @dataclass(frozen=True, kw_only=True)
 class _Names:
-    for_object: str
-    for_filter: str
+    object_ident: str
+    filter_ident: str
+    row_ident: str
 
 
 def _make_attr_names(
@@ -734,10 +735,11 @@ def _make_attr_names(
 ) -> _Names:
     name = f"{node_name}_{key}"
     return _Names(
-        for_object=name,
-        for_filter=(
+        object_ident=name,
+        filter_ident=(
             migration.filter_name if (migration := non_canonical_filters.get(name)) else name
         ),
+        row_ident=name,
     )
 
 
@@ -745,13 +747,14 @@ def _make_col_names(
     table_view_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, FilterMigration]
 ) -> _Names:
     if not table_view_name:
-        return _Names(for_object="", for_filter="")
+        return _Names(object_ident="", filter_ident="", row_ident="")
     name = f"{table_view_name}_{key}"
     return _Names(
-        for_object=name,
-        for_filter=(
+        object_ident=name,
+        filter_ident=(
             migration.filter_name if (migration := non_canonical_filters.get(name)) else name
         ),
+        row_ident=name,
     )
 
 
@@ -830,7 +833,7 @@ def _parse_attr_field_from_legacy(
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
-        name=names.for_object,
+        name=names.object_ident,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -842,7 +845,7 @@ def _parse_attr_field_from_legacy(
             path=path,
             key=key,
             data_type=data_type,
-            name=names.for_filter,
+            name=names.filter_ident,
             long_title=long_title,
             is_show_more=legacy_hint.get("is_show_more", True),
         ),
@@ -1005,7 +1008,7 @@ def _parse_col_field_from_legacy_of_view(
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return ColumnDisplayHintOfView(
-        name=names.for_object,
+        name=names.object_ident,
         title=title,
         short_title=(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
@@ -1014,7 +1017,10 @@ def _parse_col_field_from_legacy_of_view(
         paint_function=_wrap_paint_function(paint_function),
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
         filter=_parse_col_filter_from_legacy(
-            table_view_name, names.for_filter, long_title, legacy_hint.get("filter")
+            table_view_name,
+            names.filter_ident,
+            long_title,
+            legacy_hint.get("filter"),
         ),
     )
 
@@ -1107,7 +1113,7 @@ class NodeDisplayHint:
             title = key.replace("_", " ").title()
             long_title = _make_long_title(self.title if self.path else "", title)
             return AttributeDisplayHint(
-                name=names.for_object,
+                name=names.object_ident,
                 title=title,
                 short_title=title,
                 long_title=long_title,
@@ -1119,7 +1125,7 @@ class NodeDisplayHint:
                     path=self.path,
                     key=key,
                     data_type="str",
-                    name=names.for_filter,
+                    name=names.filter_ident,
                     long_title=long_title,
                     is_show_more=True,
                 ),

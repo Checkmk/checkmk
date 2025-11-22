@@ -296,12 +296,12 @@ class FilterInvChoice(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-def _filter_table_choices(ident: str, row_name: str, context: VisualContext, rows: Rows) -> Rows:
+def _filter_table_choices(ident: str, row_ident: str, context: VisualContext, rows: Rows) -> Rows:
     values = context.get(ident, {})
 
     def _add_row(row: Row) -> bool:
         # Apply filter if and only if a filter value is set
-        value = row.get(row_name)
+        value = row.get(row_ident)
         if (filter_key := f"{ident}_{value}") in values:
             return values[filter_key] == "on"
         return True
@@ -315,7 +315,7 @@ class FilterInvtableChoice(CheckboxRowFilter):
         *,
         inv_info: str,
         ident: str,
-        row_name: str,
+        row_ident: str,
         title: str,
         options: Sequence[tuple[str, str]],
     ) -> None:
@@ -326,7 +326,7 @@ class FilterInvtableChoice(CheckboxRowFilter):
             query_filter=query_filters.MultipleOptionsQuery(
                 ident=ident,
                 options=[(f"{ident}_{k}", v) for k, v in options],
-                rows_filter=partial(_filter_table_choices, ident, row_name),
+                rows_filter=partial(_filter_table_choices, ident, row_ident),
             ),
         )
 
@@ -367,7 +367,7 @@ class FilterInvtableAgeRange(FilterNumberRange):
         *,
         inv_info: str,
         ident: str,
-        row_name: str,
+        row_ident: str,
         title: str,
         unit: str | LazyString,
     ) -> None:
@@ -378,7 +378,7 @@ class FilterInvtableAgeRange(FilterNumberRange):
             query_filter=query_filters.NumberRangeQuery(
                 ident=ident,
                 filter_livestatus=False,
-                filter_row=lambda r, c, b: query_filters.column_age_in_range(r, row_name, b),
+                filter_row=lambda r, c, b: query_filters.column_age_in_range(r, row_ident, b),
                 request_var_suffix="",
                 bound_rescaling=1.0,
             ),

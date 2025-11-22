@@ -45,6 +45,14 @@ from cmk.inventory_ui.v1_unstable import Comparable
 from ._tree import InventoryPath
 
 
+# Filter tables
+def inside_inventory(inventory_path: InventoryPath) -> Callable[[bool, Row], bool]:
+    def keep_row(on: bool, row: Row) -> bool:
+        return row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key) is on
+
+    return keep_row
+
+
 class FilterInvBool(FilterOption):
     def __init__(
         self,
@@ -625,14 +633,6 @@ class FilterInvtableInterfaceType(DualListFilter):
         if not selection:
             return rows  # No types selected, filter is unused
         return [row for row in rows if str(row[self.query_filter.column]) in selection]
-
-
-# Filter tables
-def inside_inventory(inventory_path: InventoryPath) -> Callable[[bool, Row], bool]:
-    def keep_row(on: bool, row: Row) -> bool:
-        return row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key) is on
-
-    return keep_row
 
 
 class FilterHasInv(FilterOption):

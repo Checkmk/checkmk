@@ -296,7 +296,9 @@ class FilterInvChoice(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-def _filter_table_choices(ident: str, row_ident: str, context: VisualContext, rows: Rows) -> Rows:
+def _filter_rows_table_choice(
+    ident: str, row_ident: str, context: VisualContext, rows: Rows
+) -> Rows:
     values = context.get(ident, {})
 
     def _add_row(row: Row) -> bool:
@@ -326,7 +328,7 @@ class FilterInvtableChoice(CheckboxRowFilter):
             query_filter=query_filters.MultipleOptionsQuery(
                 ident=ident,
                 options=[(f"{ident}_{k}", v) for k, v in options],
-                rows_filter=partial(_filter_table_choices, ident, row_ident),
+                rows_filter=partial(_filter_rows_table_choice, ident, row_ident),
             ),
         )
 

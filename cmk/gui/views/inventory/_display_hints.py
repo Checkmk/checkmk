@@ -1313,13 +1313,24 @@ class FilterMigration(abc.ABC):
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationScale(FilterMigration):
-    legacy_suffix: str
     scale: int
 
     def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
-            if filter_value := value.get(f"{self.name}_{direction}{self.legacy_suffix}"):
+            if filter_value := value.get(f"{self.name}_{direction}"):
+                migrated[f"{self.filter_name}_{direction}"] = str(int(filter_value) * self.scale)
+        return migrated
+
+
+@dataclass(frozen=True, kw_only=True)
+class FilterMigrationTime(FilterMigration):
+    scale: int
+
+    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
+        migrated = {}
+        for direction in ("from", "until"):
+            if filter_value := value.get(f"{self.name}_{direction}_days"):
                 migrated[f"{self.filter_name}_{direction}"] = str(int(filter_value) * self.scale)
         return migrated
 
@@ -1373,34 +1384,28 @@ def find_non_canonical_filters(
         # "bytes"
         "inv_hardware_cpu_cache_size": FilterMigrationScale(
             name="inv_hardware_cpu_cache_size",
-            legacy_suffix="",
             scale=1024 * 1024,
         ),
         # "bytes_rounded"
         "inv_hardware_memory_total_ram_usable": FilterMigrationScale(
             name="inv_hardware_memory_total_ram_usable",
-            legacy_suffix="",
             scale=1024 * 1024,
         ),
         "inv_hardware_memory_total_swap": FilterMigrationScale(
             name="inv_hardware_memory_total_swap",
-            legacy_suffix="",
             scale=1024 * 1024,
         ),
         "inv_hardware_memory_total_vmalloc": FilterMigrationScale(
             name="inv_hardware_memory_total_vmalloc",
-            legacy_suffix="",
             scale=1024 * 1024,
         ),
         # "hz"
         "inv_hardware_cpu_bus_speed": FilterMigrationScale(
             name="inv_hardware_cpu_bus_speed",
-            legacy_suffix="",
             scale=1000 * 1000,
         ),
         "inv_hardware_cpu_max_speed": FilterMigrationScale(
             name="inv_hardware_cpu_max_speed",
-            legacy_suffix="",
             scale=1000 * 1000,
         ),
     }
@@ -1417,9 +1422,8 @@ def find_non_canonical_filters(
             ):
                 filters.setdefault(
                     name,
-                    FilterMigrationScale(
+                    FilterMigrationTime(
                         name=name,
-                        legacy_suffix="_days",
                         scale=24 * 60 * 60,
                     ),
                 )
@@ -1450,13 +1454,11 @@ def find_non_canonical_filters(
             case "bytes" | "bytes_rounded":
                 filters[name] = FilterMigrationScale(
                     name=name,
-                    legacy_suffix="",
                     scale=1024 * 1024,
                 )
             case "hz":
                 filters[name] = FilterMigrationScale(
                     name=name,
-                    legacy_suffix="",
                     scale=1000 * 1000,
                 )
     return filters

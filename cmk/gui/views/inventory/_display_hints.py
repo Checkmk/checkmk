@@ -1337,7 +1337,7 @@ class FilterMigrationTime(FilterMigration):
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationChoice(FilterMigration):
-    choices: Sequence[int, float, str]
+    choices: Sequence[int | float | str]
 
     def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAdminStatus

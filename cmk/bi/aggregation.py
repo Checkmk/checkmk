@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
@@ -66,7 +65,7 @@ class BIAggregation:
     def schema(cls) -> type[BIAggregationSchema]:
         return BIAggregationSchema
 
-    def serialize(self):
+    def serialize(self) -> AggrConfigDict:
         return {
             "id": self.id,
             "comment": self.comment,

@@ -68007,6 +68007,14 @@ msgstr ""
 "gazdă părinte. Dacă nu există o astfel de gazdă, va fi creată o gazdă de "
 "gateway artificială doar pentru ping, dacă nu ați dezactivat această funcție."
 
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"Numele vizualizării poate conține numai litere, cifre și caractere de "
+"subliniere."
+
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "Parola nu poate fi schimbată (este blocată de conectorul de utilizator)."

@@ -65516,6 +65516,12 @@ msgstr ""
 "künstliches ping-only Gateway-Host erstellt (wenn Sie diese Option nicht "
 "deaktiviert haben)."
 
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr "Gültige Zeichen im Namen: Buchstaben, Ziffern und <b>_</b>."
+
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "Passwortänderung nicht möglich (es ist durch den user connector gesperrt)."

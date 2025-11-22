@@ -67804,6 +67804,12 @@ msgstr ""
 "um host de gateway artificial será criado se você não tiver desabilitado "
 "este recurso."
 
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr "O nome da vista só pode conter letras, dígitos e sublinhados."
+
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "A senha não pode ser alterada (Ela é bloqueada pelo conector do usuário)."

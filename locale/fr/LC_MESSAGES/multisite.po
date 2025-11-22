@@ -68457,6 +68457,14 @@ msgstr ""
 "Si un tel hôte n'existe pas, un hôte artificiel de passerelle ping-only sera "
 "créé si vous n'avez pas désactivé cette fonctionnalité."
 
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"Le nom de la vue ne peut contenir que des lettres, des chiffres et des "
+"caractères de soulignement."
+
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "Le mot de passe ne peut pas être modifié (il est verrouillé par le "

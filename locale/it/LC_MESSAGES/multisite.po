@@ -67287,6 +67287,14 @@ msgstr ""
 "dell'host. Se non esiste un tale host, verrà creato un host gateway ping-"
 "only artificiale se non hai disabilitato questa caratteristica."
 
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"Il nome della vista può contenere solo lettere, cifre e caratteri di "
+"sottolineatura."
+
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "La password non può essere cambiata (è bloccata dal connettore utente)."

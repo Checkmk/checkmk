@@ -67832,6 +67832,13 @@ msgstr ""
 "de host. Als zo'n host niet bestaat, zal een kunstmatige ping-only gateway "
 "host worden aangemaakt als je deze functie niet hebt uitgeschakeld."
 
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"De naam van de view mag alleen letters, cijfers en underscores bevatten."
+
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "Het wachtwoord kan niet worden gewijzigd (het is vergrendeld door de "

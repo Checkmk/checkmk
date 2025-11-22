@@ -63749,6 +63749,14 @@ msgstr ""
 "の機能を無効にしていなければ、 擬似的なピングオンリーのゲートウェイホストが作"
 "成されます。"
 
+#, fuzzy, python-format
+msgid ""
+"The password ID '%s' is not usable by the OTel collector. It must contain "
+"only letters, digits and underscores."
+msgstr ""
+"ビューの名前には、文字、数字、およびアンダースコアのみを含めることができま"
+"す。"
+
 msgid "The password can not be changed (It is locked by the user connector)."
 msgstr ""
 "パスワードは変更できません(ユーザーコネクタによってロックされています)。"

@@ -11,6 +11,8 @@ from collections.abc import Iterable, Iterator, Sequence
 from pprint import pformat
 from typing import Generic, NamedTuple, Protocol, TypeVar
 
+import pytest
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, InventoryPlugin
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
@@ -28,12 +30,18 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
+from tests.unit.cmk.gui.common_fixtures import perform_load_plugins
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 TF = TypeVar("TF", bound=Rulespec)
 TC = TypeVar("TC", bound=CheckPlugin | InventoryPlugin)
+
+
+@pytest.fixture(autouse=True)
+def load_plugins() -> None:
+    perform_load_plugins()
 
 
 class MergeKey(NamedTuple):
@@ -252,15 +260,6 @@ def test_plugin_vs_wato(agent_based_plugins: AgentBasedPlugins) -> None:
 class ErrorReporter:
     KNOWN_WATO_UNUSED = {
         # type # name
-        # ----- these belong to the plugin family 'netapp' (also see CMK-27183) ----------
-        ("check", RuleGroup.CheckgroupParameters("fcp")),
-        ("check", RuleGroup.CheckgroupParameters("hw_psu")),
-        ("check", RuleGroup.CheckgroupParameters("netapp_luns")),
-        ("check", RuleGroup.CheckgroupParameters("netapp_snapshots")),
-        ("check", RuleGroup.CheckgroupParameters("snapvault")),
-        ("check", RuleGroup.CheckgroupParameters("netapp_volumes")),
-        ("discovery", "discovery_qtree"),
-        ("discovery", "discovery_snapvault"),
         # --------------------------------------------------------------------------------
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),

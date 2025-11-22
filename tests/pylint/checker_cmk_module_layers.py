@@ -1052,10 +1052,18 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.nonfree.pro.licensing",
         "cmk.utils.paths",
     ),
-    Component("tests.integration.nonfree.ultimate.metric_backend"): _allow(
+    Component("tests.integration.cmk.plugins_consistency"): _allow(
         *PACKAGE_CCC,
-        *PACKAGE_METRIC_BACKEND,
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.plugins",
+        "cmk.base.config",
+        "cmk.checkengine",
+        "cmk.discover_plugins",
         "cmk.gui",
+        "cmk.server_side_calls_backend",
+        "cmk.utils.check_utils",
+        "cmk.utils.man_pages",
+        "cmk.utils.rulesets",
     ),
     Component("tests.integration.cmk.base"): _allow(
         *PACKAGE_CCC,
@@ -1091,6 +1099,11 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         "cmk.snmplib",
         "cmk.utils",
+    ),
+    Component("tests.integration.nonfree.ultimate.metric_backend"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_METRIC_BACKEND,
+        "cmk.gui",
     ),
     Component("tests.integration.nonfree.ultimate.otel"): _allow(
         *PACKAGE_CCC,

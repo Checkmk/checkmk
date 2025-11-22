@@ -48,7 +48,6 @@ from cmk.plugins.smb.special_agent import agent_smb_share
 from cmk.plugins.splunk.special_agent import agent_splunk
 from cmk.plugins.storeonce4x.special_agent import agent_storeonce4x
 from cmk.server_side_calls_backend import load_special_agents
-from cmk.utils import password_store
 
 agent_metric_backend_custom_query: ModuleType | None = None
 try:
@@ -315,8 +314,7 @@ def test_all_agents_versions() -> None:
 @pytest.mark.parametrize(
     "name, module", [(n, m) for n, m in TESTED_SA_MODULES.items() if m is not None]
 )
-def test_parse_arguments(monkeypatch: pytest.MonkeyPatch, name: str, module: ModuleType) -> None:
-    monkeypatch.setattr(password_store, "lookup", lambda x: x)
+def test_parse_arguments(name: str, module: ModuleType) -> None:
     minimal_args_list = REQUIRED_ARGUMENTS[name]
 
     # Special agents should process their arguments in a function called parse_arguments

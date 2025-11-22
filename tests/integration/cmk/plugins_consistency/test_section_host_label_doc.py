@@ -13,14 +13,13 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from typing import Final
 
-import cmk.ccc.version as cmk_version
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AgentSectionPlugin,
     SectionName,
     SNMPSectionPlugin,
 )
-from cmk.utils import paths
+from tests.testlib.common.repo import is_non_free_repo
 
 CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",
@@ -90,9 +89,9 @@ CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 
 
 def all_documented_builtin_host_labels() -> set[str]:
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
-        return CRE_DOCUMENTED_BUILTIN_HOST_LABELS
-    return CEE_DOCUMENTED_BUILTIN_HOST_LABELS | CRE_DOCUMENTED_BUILTIN_HOST_LABELS
+    if is_non_free_repo():
+        return CEE_DOCUMENTED_BUILTIN_HOST_LABELS | CRE_DOCUMENTED_BUILTIN_HOST_LABELS
+    return CEE_DOCUMENTED_BUILTIN_HOST_LABELS
 
 
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {

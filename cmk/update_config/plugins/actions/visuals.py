@@ -38,7 +38,7 @@ class Migration:
         migrated = {}
         for key, value in context.items():
             if (filter_migration := non_canonical_filters.get(key)) and (
-                migrated_value := filter_migration.migrate(value)
+                migrated_value := filter_migration(value)
             ):
                 migrated[filter_migration.filter_name] = migrated_value
                 self._has_changed = True
@@ -48,7 +48,7 @@ class Migration:
         visual["context"] = migrated
         return visual
 
-    def migrate(self, non_canonical_filters: Mapping[str, FilterMigration]) -> None:
+    def __call__(self, non_canonical_filters: Mapping[str, FilterMigration]) -> None:
         self._migrated = {
             key: self._migrate_visual(visual, non_canonical_filters)
             for key, visual in self._visuals.items()
@@ -71,7 +71,7 @@ def migrate_visuals(
     non_canonical_filters: Mapping[str, FilterMigration],
 ) -> Migration:
     migration = Migration(visuals)
-    migration.migrate(non_canonical_filters)
+    migration(non_canonical_filters)
     return migration
 
 

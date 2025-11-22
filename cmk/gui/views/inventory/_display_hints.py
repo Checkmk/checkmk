@@ -1302,7 +1302,7 @@ class FilterMigration(abc.ABC):
     name: str
 
     @abc.abstractmethod
-    def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]: ...
+    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]: ...
 
     @property
     def filter_name(self) -> str:
@@ -1314,7 +1314,7 @@ class FilterMigrationScale(FilterMigration):
     legacy_suffix: str
     scale: int
 
-    def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]:
+    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
             if filter_value := value.get(f"{self.name}_{direction}{self.legacy_suffix}"):
@@ -1326,7 +1326,7 @@ class FilterMigrationScale(FilterMigration):
 class FilterMigrationChoice(FilterMigration):
     choices: Sequence[int, float, str]
 
-    def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]:
+    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAdminStatus
         migrated = {f"{self.filter_name}_{c}": "" for c in self.choices}
         match value.get(self.name):
@@ -1348,7 +1348,7 @@ class FilterMigrationChoice(FilterMigration):
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationBool(FilterMigration):
-    def migrate(self, value: Mapping[str, str]) -> Mapping[str, str]:
+    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAvailable
         migrated = {f"{self.filter_name}_{c}": "" for c in (True, False, None)}
         match value.get(self.name):

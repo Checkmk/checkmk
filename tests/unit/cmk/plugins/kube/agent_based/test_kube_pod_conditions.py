@@ -16,11 +16,6 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import ValidationError
 
 from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
-from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
-    AgentSectionPlugin,
-    CheckPlugin,
-)
 from cmk.plugins.kube.agent_based import kube_pod_conditions
 from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 
@@ -178,22 +173,6 @@ def params():
 @pytest.fixture
 def check_result(params, section):
     return kube_pod_conditions._check(TIMESTAMP, params, section)
-
-
-@pytest.fixture
-def agent_section(agent_based_plugins: AgentBasedPlugins) -> AgentSectionPlugin:
-    for name, section in agent_based_plugins.agent_sections.items():
-        if str(name) == "kube_pod_conditions_v1":
-            return section
-    assert False, "Should be able to find the section"
-
-
-@pytest.fixture
-def check_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
-    for name, plugin in agent_based_plugins.check_plugins.items():
-        if str(name) == "kube_pod_conditions":
-            return plugin
-    assert False, "Should be able to find the plugin"
 
 
 def test_parse(string_table: StringTable) -> None:
@@ -366,17 +345,19 @@ def test_check_results_sets_summary_when_status_false(
         assert isinstance(result, Result) and result.summary.startswith(expected_prefix)
 
 
-def test_register_agent_section_calls(agent_section: AgentSectionPlugin) -> None:
-    assert str(agent_section.name) == "kube_pod_conditions_v1"
-    assert str(agent_section.parsed_section_name) == "kube_pod_conditions"
+def test_register_agent_section_calls() -> None:
+    agent_section = kube_pod_conditions.agent_section_kube_pod_conditions_v1
+    assert agent_section.name == "kube_pod_conditions_v1"
+    assert agent_section.parsed_section_name == "kube_pod_conditions"
     assert agent_section.parse_function == kube_pod_conditions.parse
 
 
-def test_register_check_plugin_calls(check_plugin: CheckPlugin) -> None:
-    assert str(check_plugin.name) == "kube_pod_conditions"
+def test_register_check_plugin_calls() -> None:
+    check_plugin = kube_pod_conditions.check_plugin_kube_pod_conditions
+    assert check_plugin.name == "kube_pod_conditions"
     assert check_plugin.service_name == "Condition"
-    assert check_plugin.discovery_function.__wrapped__ == kube_pod_conditions.discovery  # type: ignore[attr-defined]
-    assert check_plugin.check_function.__wrapped__ == kube_pod_conditions.check  # type: ignore[attr-defined]
+    assert check_plugin.discovery_function == kube_pod_conditions.discovery
+    assert check_plugin.check_function == kube_pod_conditions.check
     assert check_plugin.check_default_parameters == {
         "scheduled": "no_levels",
         "hasnetwork": "no_levels",
@@ -384,7 +365,7 @@ def test_register_check_plugin_calls(check_plugin: CheckPlugin) -> None:
         "containersready": "no_levels",
         "ready": "no_levels",
     }
-    assert str(check_plugin.check_ruleset_name) == "kube_pod_conditions"
+    assert check_plugin.check_ruleset_name == "kube_pod_conditions"
 
 
 def test_check_disruption_target_condition():

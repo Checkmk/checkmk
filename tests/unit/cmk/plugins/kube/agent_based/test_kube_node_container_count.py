@@ -14,11 +14,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
-from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
-    AgentSectionPlugin,
-    CheckPlugin,
-)
 from cmk.plugins.kube.agent_based import kube_node_container_count
 from cmk.plugins.kube.schemata.section import ContainerCount
 
@@ -48,35 +43,21 @@ def section(string_table):
     return kube_node_container_count.parse(string_table)
 
 
-@pytest.fixture
-def agent_section(agent_based_plugins: AgentBasedPlugins) -> AgentSectionPlugin:
-    for name, section in agent_based_plugins.agent_sections.items():
-        if str(name) == "kube_node_container_count_v1":
-            return section
-    assert False, "Should be able to find the section"
-
-
-@pytest.fixture
-def check_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
-    for name, plugin in agent_based_plugins.check_plugins.items():
-        if str(name) == "kube_node_container_count":
-            return plugin
-    assert False, "Should be able to find the plugin"
-
-
-def test_register_agent_section_calls(agent_section: AgentSectionPlugin) -> None:
+def test_register_agent_section_calls() -> None:
+    agent_section = kube_node_container_count.agent_section_kube_node_container_count_v1
     assert str(agent_section.name) == "kube_node_container_count_v1"
     assert str(agent_section.parsed_section_name) == "kube_node_container_count"
     assert agent_section.parse_function == kube_node_container_count.parse
 
 
-def test_register_check_plugin_calls(check_plugin) -> None:
-    assert str(check_plugin.name) == "kube_node_container_count"
+def test_register_check_plugin_calls() -> None:
+    check_plugin = kube_node_container_count.check_plugin_kube_node_container_count
+    assert check_plugin.name == "kube_node_container_count"
     assert check_plugin.service_name == "Containers"
-    assert check_plugin.discovery_function.__wrapped__ == kube_node_container_count.discovery
-    assert check_plugin.check_function.__wrapped__ == kube_node_container_count.check
+    assert check_plugin.discovery_function == kube_node_container_count.discovery
+    assert check_plugin.check_function == kube_node_container_count.check
     assert check_plugin.check_default_parameters == {}
-    assert str(check_plugin.check_ruleset_name) == "kube_node_container_count"
+    assert check_plugin.check_ruleset_name == "kube_node_container_count"
 
 
 def test_parse(string_table: StringTable, running: int, waiting: int, terminated: int) -> None:

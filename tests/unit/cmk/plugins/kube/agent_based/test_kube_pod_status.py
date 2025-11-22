@@ -28,6 +28,12 @@ from cmk.plugins.kube.schemata.api import (
 from cmk.plugins.kube.schemata.section import PodContainers, PodLifeCycle
 
 
+@pytest.fixture
+def initialised_item_state(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(kube_pod_status, "get_value_store", lambda: store)
+
+
 def _mocked_container_info_from_state(
     state: ContainerRunningState | ContainerTerminatedState | ContainerWaitingState,
 ) -> ContainerStatus:

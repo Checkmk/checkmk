@@ -41,6 +41,12 @@ from cmk.plugins.kube.schemata.section import (
 )
 
 
+@pytest.fixture
+def initialised_item_state(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(kube_replicas, "get_value_store", lambda: store)
+
+
 def test_parse_kube_deployment_replicas() -> None:
     assert parse_kube_deployment_replicas(
         [

@@ -299,13 +299,13 @@ class FilterInvChoice(FilterOption):
 def _filter_rows_table_choice(
     ident: str, row_ident: str, context: VisualContext, rows: Rows
 ) -> Rows:
-    values = context.get(ident, {})
+    filter_vars = context.get(ident, {})
 
     def _add_row(row: Row) -> bool:
         # Apply filter if and only if a filter value is set
         value = row.get(row_ident)
-        if (filter_key := f"{ident}_{value}") in values:
-            return values[filter_key] == "on"
+        if (filter_key := f"{ident}_{value}") in filter_vars:
+            return filter_vars[filter_key] == "on"
         return True
 
     return [row for row in rows if _add_row(row)]

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.mssql_utils import mssql_item_spec_instance_database_file
@@ -16,7 +15,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Integer, ListOf, Percentage, Tuple
 
 
-def levels_absolute_or_dynamic(name, value):
+def levels_absolute_or_dynamic(name: str, value: str) -> Alternative:
     return Alternative(
         title=_("Levels of %s %s") % (name, value),
         default_value=(80.0, 90.0),
@@ -83,7 +82,7 @@ def levels_absolute_or_dynamic(name, value):
     )
 
 
-def _parameter_valuespec_mssql_datafiles():
+def _parameter_valuespec_mssql_datafiles() -> Dictionary:
     return Dictionary(
         title=_("File size levels"),
         help=_(

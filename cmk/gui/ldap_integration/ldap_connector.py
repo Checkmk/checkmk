@@ -9,7 +9,6 @@
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 # TODO FIXME: Change attribute sync plug-ins to classes. The current dict
@@ -90,6 +89,8 @@ from cmk.gui.site_config import has_distributed_setup_remote_sites
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.user_connection_config_types import (
     ActivePlugins,
+    Discover,
+    Fixed,
     GroupsToAttributes,
     GroupsToContactGroups,
     GroupsToRoles,
@@ -226,7 +227,7 @@ LDAPUserSpec = dict[str, list[str]]
 #   '----------------------------------------------------------------------'
 
 
-def _get_ad_locator():
+def _get_ad_locator() -> Any:
     # "unused-ignore" is needed because rules_mypy and the IDEs behave differently
     # See https://tribe29.slack.com/archives/C01EA6ZBG58/p1753888028549459
     import activedirectory  # type: ignore[import-untyped,unused-ignore]
@@ -234,7 +235,7 @@ def _get_ad_locator():
 
     class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc,name-defined,unused-ignore]
         @override
-        def _detect_site(self, domain):
+        def _detect_site(self, domain: Any) -> str | None:
             """Detect our site using the netlogon protocol.
             This modified function only changes the number of parallel queried servers from 3 to 60
             """
@@ -597,12 +598,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     @classmethod
     @override
-    def title(cls):
+    def title(cls) -> str:
         return _("LDAP (Active Directory, OpenLDAP)")
 
     @classmethod
     @override
-    def short_title(cls):
+    def short_title(cls) -> str:
         return _("LDAP")
 
     @classmethod
@@ -611,7 +612,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
     @property
     @override
-    def id(self):
+    def id(self) -> str:
         return self._config["id"]
 
     @property
@@ -844,8 +845,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def servers(self) -> list[str]:
         connect_params = self._get_connect_params()
         if self._uses_discover_nearest_server():
+            connect_params = cast(Discover, connect_params)
             servers = [self._discover_nearest_dc(connect_params["domain"])]
         else:
+            connect_params = cast(Fixed, connect_params)
             servers = [connect_params["server"]] + connect_params.get("failover_servers", [])
 
         return servers
@@ -854,7 +857,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
         return self._config["directory_type"][1]["connect_to"][0] == "discover"
 
-    def _get_connect_params(self):
+    def _get_connect_params(self) -> Fixed | Discover:
         # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
         return self._config["directory_type"][1]["connect_to"][1]
 
@@ -885,7 +888,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 )
             yield key, params, plugin
 
-    def _directory_type(self):
+    def _directory_type(self) -> str:
         return self._config["directory_type"][0]
 
     def _is_active_directory(self) -> bool:
@@ -894,7 +897,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def has_user_base_dn_configured(self) -> bool:
         return self._config["user_dn"] != ""
 
-    def create_users_only_on_login(self):
+    def create_users_only_on_login(self) -> bool:
         return self._config.get("create_only_on_login", False)
 
     def _user_id_attr(self) -> str:
@@ -961,7 +964,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _ldap_paged_async_search(
         self,
         base: DistinguishedName,
-        scope: str,
+        scope: int,
         filt: str,
         columns: Sequence[str],
     ) -> list[tuple[str, dict[str, list[bytes]]]]:
@@ -1093,7 +1096,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         self._logger.info("  RESULT length: %d, duration: %0.3f" % (len(result), duration))
         return result
 
-    def _ldap_get_scope(self, scope):
+    def _ldap_get_scope(self, scope: str) -> int:
         # Had "subtree" in Checkmk for several weeks. Better be compatible to both definitions.
         if scope in ["sub", "subtree"]:
             return SCOPE_SUBTREE
@@ -1847,7 +1850,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # attributes that aren't defined by UserSpec.
             user.update(plugin.sync_func(self, params, user_id, ldap_user, user, user_attributes))  # type: ignore[typeddict-item]
 
-    def _flush_caches(self):
+    def _flush_caches(self) -> None:
         self._num_queries = 0
         self._user_cache.clear()
         self._group_cache.clear()
@@ -1876,7 +1879,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         except Exception:
             return 0
 
-    def _get_cache_livetime(self):
+    def _get_cache_livetime(self) -> int:
         return self._config["cache_livetime"]
 
     # Calculates the attributes of the users which are locked for users managed
@@ -1913,7 +1916,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return list(attrs)
 
 
-def _escape_dn(dn):
+def _escape_dn(dn: str) -> str:
     """Handle "#" in DNs (as allowed by Active Directory)
 
     This is obviously not a full featured escaping function for the DNs. This
@@ -1925,7 +1928,7 @@ def _escape_dn(dn):
     return dn.replace("#", r"\#")
 
 
-def _unescape_dn(dn):
+def _unescape_dn(dn: str) -> str:
     """Inverse of _escape_dn()"""
     return dn.replace(r"\#", "#")
 
@@ -2030,7 +2033,7 @@ class LDAPAttributePlugin:
 
 
 class LDAPAttributePluginRegistry(cmk.ccc.plugin_registry.Registry[LDAPAttributePlugin]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: LDAPAttributePlugin) -> str:
         return instance.ident
 
 
@@ -2215,7 +2218,7 @@ def _get_groups_of_user(
     return group_cns
 
 
-def _group_membership_parameters():
+def _group_membership_parameters() -> list[DictionaryEntry]:
     return [
         (
             "nested",

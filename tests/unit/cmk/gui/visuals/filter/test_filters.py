@@ -1002,7 +1002,10 @@ filter_table_tests = [
     # Testing base class FilterInvtableAdminStatus
     FilterTableTest(
         ident="invinterface_admin_status",
-        request_vars=[("invinterface_admin_status", "1")],
+        request_vars=[
+            ("invinterface_admin_status_1", "on"),
+            ("invinterface_admin_status_2", ""),
+        ],
         rows=[
             {"invinterface_admin_status": "1"},
             {"invinterface_admin_status": "2"},
@@ -1013,7 +1016,10 @@ filter_table_tests = [
     ),
     FilterTableTest(
         ident="invinterface_admin_status",
-        request_vars=[("invinterface_admin_status", "2")],
+        request_vars=[
+            ("invinterface_admin_status_1", ""),
+            ("invinterface_admin_status_2", "on"),
+        ],
         rows=[
             {"invinterface_admin_status": "1"},
             {"invinterface_admin_status": "2"},
@@ -1024,7 +1030,7 @@ filter_table_tests = [
     ),
     FilterTableTest(
         ident="invinterface_admin_status",
-        request_vars=[("invinterface_admin_status", "-1")],
+        request_vars=[],
         rows=[
             {"invinterface_admin_status": "1"},
             {"invinterface_admin_status": "2"},
@@ -1038,7 +1044,8 @@ filter_table_tests = [
     FilterTableTest(
         ident="invinterface_available",
         request_vars=[
-            ("invinterface_available", "no"),
+            ("invinterface_available_True", ""),
+            ("invinterface_available_False", "on"),
         ],
         rows=[
             {"invinterface_available": False},
@@ -1051,7 +1058,8 @@ filter_table_tests = [
     FilterTableTest(
         ident="invinterface_available",
         request_vars=[
-            ("invinterface_available", "yes"),
+            ("invinterface_available_True", "on"),
+            ("invinterface_available_False", ""),
         ],
         rows=[
             {"invinterface_available": False},
@@ -1063,9 +1071,7 @@ filter_table_tests = [
     ),
     FilterTableTest(
         ident="invinterface_available",
-        request_vars=[
-            ("invinterface_available", ""),
-        ],
+        request_vars=[],
         rows=[
             {"invinterface_available": False},
             {"invinterface_available": True},
@@ -1093,10 +1099,10 @@ filter_table_tests = [
     ),
     # Testing base class FilterInvtableTimestampAsAge
     FilterTableTest(
-        ident="invinterface_last_change",
+        ident="invinterface_last_change_canonical",
         request_vars=[
-            ("invinterface_last_change_from_days", "1"),
-            ("invinterface_last_change_until_days", "5"),
+            ("invinterface_last_change_canonical_from", "86400"),
+            ("invinterface_last_change_canonical_until", "432000"),
         ],
         rows=[
             {"invinterface_last_change": 1523811000},

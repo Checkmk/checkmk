@@ -31,6 +31,7 @@ from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, Plugin
 from cmk.gui import inventory
 from cmk.gui.color import parse_color_from_api
 from cmk.gui.i18n import _, _l
+from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.inventory.filters import (
     FilterInvBool,
     FilterInvChoice,
@@ -390,13 +391,17 @@ def _make_attribute_filter(
     filter_ident: str,
     long_title: str,
     inventory_path: inventory.InventoryPath,
-) -> FilterInvBool | FilterInvFloat | FilterInvText | FilterInvChoice | FilterInvTextWithSortKey:
+) -> FilterInvFloat | FilterInvText | FilterInvChoice | FilterInvTextWithSortKey:
     match field_from_api:
         case BoolFieldFromAPI():
-            return FilterInvBool(
+            return FilterInvChoice(
                 ident=filter_ident,
                 title=long_title,
                 inventory_path=inventory_path,
+                options=[
+                    ("True", _make_str(field_from_api.render_true)),
+                    ("False", _make_str(field_from_api.render_false)),
+                ],
                 is_show_more=True,
             )
         case NumberFieldFromAPI():
@@ -492,11 +497,11 @@ def _make_column_filter(
     row_ident: str,
     long_title: str,
 ) -> (
-    FilterInvtableText
-    | FilterInvtableIntegerRange
-    | FilterInvtableAgeRange
+    FilterInvtableAgeRange
     | FilterInvtableChoice
     | FilterInvtableDualChoice
+    | FilterInvtableIntegerRange
+    | FilterInvtableText
     | FilterInvtableTextWithSortKey
 ):
     match field_from_api:
@@ -759,7 +764,7 @@ def _make_col_names(
 
 def _make_attribute_filter_from_legacy_hint(
     *, path: SDPath, key: str, data_type: str, filter_ident: str, title: str, is_show_more: bool
-) -> FilterInvText | FilterInvBool | FilterInvFloat:
+) -> FilterInvText | FilterInvChoice | FilterInvFloat:
     inventory_path = inventory.InventoryPath(
         path=path,
         source=inventory.TreeSource.attributes,
@@ -774,11 +779,15 @@ def _make_attribute_filter_from_legacy_hint(
                 is_show_more=is_show_more,
             )
         case "bool":
-            return FilterInvBool(
+            return FilterInvChoice(
                 ident=filter_ident,
                 title=title,
                 inventory_path=inventory_path,
-                is_show_more=is_show_more,
+                options=[
+                    ("True", _("yes")),
+                    ("False", _("no")),
+                ],
+                is_show_more=True,
             )
         case "bytes" | "bytes_rounded":
             unit = _("B")
@@ -809,9 +818,7 @@ class AttributeDisplayHint:
     long_title: str
     paint_function: PaintFunctionFromAPI
     sort_function: SortFunction
-    filter: (
-        FilterInvText | FilterInvBool | FilterInvFloat | FilterInvChoice | FilterInvTextWithSortKey
-    )
+    filter: FilterInvText | FilterInvFloat | FilterInvChoice | FilterInvTextWithSortKey
 
     @property
     def long_inventory_title(self) -> str:
@@ -882,6 +889,7 @@ def _parse_col_filter_from_legacy(
     *,
     table_view_name: str,
     filter_ident: str,
+    row_ident: str,
     title: str,
     filter_class: (
         None
@@ -898,13 +906,12 @@ def _parse_col_filter_from_legacy(
         | type[FilterInvtableVersion]
     ),
 ) -> (
-    FilterInvtableAdminStatus
-    | FilterInvtableAvailable
+    FilterInvtableAgeRange
+    | FilterInvtableChoice
+    | FilterInvtableDualChoice
     | FilterInvtableIntegerRange
-    | FilterInvtableInterfaceType
-    | FilterInvtableOperStatus
     | FilterInvtableText
-    | FilterInvtableTimestampAsAge
+    | FilterInvtableTextWithSortKey
     | FilterInvtableVersion
 ):
     if not filter_class:
@@ -915,16 +922,26 @@ def _parse_col_filter_from_legacy(
         )
     match filter_class.__name__:
         case "FilterInvtableAdminStatus":
-            return FilterInvtableAdminStatus(
+            return FilterInvtableChoice(
                 inv_info=table_view_name,
                 ident=filter_ident,
+                row_ident=row_ident,
                 title=title,
+                options=[
+                    ("1", _("up")),
+                    ("2", _("down")),
+                ],
             )
         case "FilterInvtableAvailable":
-            return FilterInvtableAvailable(
+            return FilterInvtableChoice(
                 inv_info=table_view_name,
                 ident=filter_ident,
+                row_ident=row_ident,
                 title=title,
+                options=[
+                    ("True", _("free")),
+                    ("False", _("used")),
+                ],
             )
         case "FilterInvtableIntegerRange":
             return FilterInvtableIntegerRange(
@@ -935,16 +952,28 @@ def _parse_col_filter_from_legacy(
                 scale=1,
             )
         case "FilterInvtableInterfaceType":
-            return FilterInvtableInterfaceType(
+            return FilterInvtableDualChoice(
                 inv_info=table_view_name,
                 ident=filter_ident,
                 title=title,
+                options=[
+                    (str(k), str(v))
+                    for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])
+                ],
             )
         case "FilterInvtableOperStatus":
-            return FilterInvtableOperStatus(
+            return FilterInvtableChoice(
                 inv_info=table_view_name,
                 ident=filter_ident,
+                row_ident=row_ident,
                 title=title,
+                options=[
+                    (str(state), title)
+                    for state, title in interface_oper_states().items()
+                    # needed because of silly types
+                    # skip artificial state 8 (degraded) and 9 (admin down)
+                    if isinstance(state, int) and state < 8
+                ],
             )
         case "FilterInvtableText":
             return FilterInvtableText(
@@ -953,10 +982,12 @@ def _parse_col_filter_from_legacy(
                 title=title,
             )
         case "FilterInvtableTimestampAsAge":
-            return FilterInvtableTimestampAsAge(
+            return FilterInvtableAgeRange(
                 inv_info=table_view_name,
                 ident=filter_ident,
+                row_ident=row_ident,
                 title=title,
+                unit="s",
             )
         case "FilterInvtableVersion":
             return FilterInvtableVersion(
@@ -976,14 +1007,10 @@ class ColumnDisplayHintOfView:
     paint_function: PaintFunctionFromAPI
     sort_function: SortFunction
     filter: (
-        FilterInvtableAdminStatus
-        | FilterInvtableAgeRange
-        | FilterInvtableAvailable
+        FilterInvtableAgeRange
         | FilterInvtableChoice
         | FilterInvtableDualChoice
         | FilterInvtableIntegerRange
-        | FilterInvtableInterfaceType
-        | FilterInvtableOperStatus
         | FilterInvtableText
         | FilterInvtableTextWithSortKey
         | FilterInvtableTimestampAsAge
@@ -1019,6 +1046,7 @@ def _parse_col_field_from_legacy_of_view(
         filter=_parse_col_filter_from_legacy(
             table_view_name=table_view_name,
             filter_ident=names.filter_ident,
+            row_ident=names.row_ident,
             title=long_title,
             filter_class=legacy_hint.get("filter"),
         ),
@@ -1307,13 +1335,17 @@ class FilterMigration(abc.ABC):
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]: ...
 
     @property
-    def filter_name(self) -> str:
-        return f"{self.name}_canonical"
+    @abc.abstractmethod
+    def filter_name(self) -> str: ...
 
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationScale(FilterMigration):
     scale: int
+
+    @property
+    def filter_name(self) -> str:
+        return f"{self.name}_canonical"
 
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
@@ -1327,6 +1359,10 @@ class FilterMigrationScale(FilterMigration):
 class FilterMigrationTime(FilterMigration):
     scale: int
 
+    @property
+    def filter_name(self) -> str:
+        return f"{self.name}_canonical"
+
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
@@ -1339,40 +1375,75 @@ class FilterMigrationTime(FilterMigration):
 class FilterMigrationChoice(FilterMigration):
     choices: Sequence[int | float | str]
 
+    @property
+    def filter_name(self) -> str:
+        return self.name
+
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAdminStatus
         match filter_vars.get(self.name):
             case "1":
-                return {f"{self.filter_name}_1": "on"}
+                migrated = {f"{self.filter_name}_{c}": "" for c in self.choices}
+                migrated[f"{self.filter_name}_1"] = "on"
+                return migrated
             case "2":
-                return {f"{self.filter_name}_2": "on"}
+                migrated = {f"{self.filter_name}_{c}": "" for c in self.choices}
+                migrated[f"{self.filter_name}_2"] = "on"
+                return migrated
             case "-1":
-                return {}
+                # legacy ignore
+                return {f"{self.filter_name}_{c}": "on" for c in self.choices}
             case _:
                 # FilterInvtableOperStatus
                 return {
-                    f"{self.filter_name}_{c}": v
+                    f"{self.filter_name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
                     for c in self.choices
-                    if (v := filter_vars.get(f"{self.name}_{c}"))
                 }
 
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationBool(FilterMigration):
+    @property
+    def filter_name(self) -> str:
+        return self.name
+
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAvailable
         match filter_vars.get(self.name):
             case "yes":
-                return {f"{self.filter_name}_True": "on"}
+                return {f"{self.filter_name}_True": "on", f"{self.filter_name}_False": ""}
             case "no":
-                return {f"{self.filter_name}_False": "on"}
+                return {f"{self.filter_name}_True": "", f"{self.filter_name}_False": "on"}
             case "":
-                return {}
+                # legacy ignore
+                return {f"{self.filter_name}_{c}": "on" for c in (True, False)}
             case _:
                 return {
-                    f"{self.filter_name}_{c}": v
+                    f"{self.filter_name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
                     for c in (True, False)
-                    if (v := filter_vars.get(f"{self.name}_{c}"))
+                }
+
+
+@dataclass(frozen=True, kw_only=True)
+class FilterMigrationBoolIs(FilterMigration):
+    @property
+    def filter_name(self) -> str:
+        return self.name
+
+    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
+        # FilterInvBool
+        match filter_vars.get(f"is_{self.name}"):
+            case "1":
+                return {f"{self.filter_name}_True": "on", f"{self.filter_name}_False": ""}
+            case "0":
+                return {f"{self.filter_name}_True": "", f"{self.filter_name}_False": "on"}
+            case "-1":
+                # legacy ignore
+                return {f"{self.filter_name}_{c}": "on" for c in (True, False)}
+            case _:
+                return {
+                    f"{self.filter_name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
+                    for c in (True, False)
                 }
 
 
@@ -1406,6 +1477,11 @@ def find_non_canonical_filters(
         "inv_hardware_cpu_max_speed": FilterMigrationScale(
             name="inv_hardware_cpu_max_speed",
             scale=1000 * 1000,
+        ),
+        #
+        "invinterface_last_change": FilterMigrationTime(
+            name="invinterface_last_change",
+            scale=24 * 60 * 60,
         ),
     }
 
@@ -1446,20 +1522,62 @@ def find_non_canonical_filters(
 
     for raw_path, legacy_hint in legacy_hints.items():
         inv_path = inventory.parse_internal_raw_path(raw_path)
-        if inv_path.source != inventory.TreeSource.attributes or not inv_path.key:
+        if not inv_path.key:
             continue
-        name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
-        match legacy_hint.get("paint"):
-            case "bytes" | "bytes_rounded":
-                filters[name] = FilterMigrationScale(
-                    name=name,
-                    scale=1024 * 1024,
-                )
-            case "hz":
-                filters[name] = FilterMigrationScale(
-                    name=name,
-                    scale=1000 * 1000,
-                )
+        if inv_path.source == inventory.TreeSource.attributes:
+            name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
+            match legacy_hint.get("paint"):
+                case "bytes" | "bytes_rounded":
+                    filters[name] = FilterMigrationScale(
+                        name=name,
+                        scale=1024 * 1024,
+                    )
+                case "hz":
+                    filters[name] = FilterMigrationScale(
+                        name=name,
+                        scale=1000 * 1000,
+                    )
+                case "bool":
+                    filters.setdefault(
+                        name,
+                        FilterMigrationBoolIs(name=name),
+                    )
+        if (
+            inv_path.source == inventory.TreeSource.table
+            and (view_name := legacy_hint.get("view"))
+            and (legacy_filter := legacy_hint.get("filter"))
+        ):
+            name = f"{_parse_view_name(view_name)}_{inv_path.key}"
+            match legacy_filter.__class__.__name__:
+                case "FilterInvtableOperStatus":
+                    filters.setdefault(
+                        name,
+                        FilterMigrationChoice(
+                            name=name,
+                            choices=["1", "2", "3", "4", "5", "6", "7"],
+                        ),
+                    )
+                case "FilterInvtableAdminStatus":
+                    filters.setdefault(
+                        name,
+                        FilterMigrationChoice(
+                            name=name,
+                            choices=["1", "2"],
+                        ),
+                    )
+                case "FilterInvtableAvailable":
+                    filters.setdefault(
+                        name,
+                        FilterMigrationBool(name=name),
+                    )
+                case "FilterInvtableTimestampAsAge":
+                    filters.setdefault(
+                        name,
+                        FilterMigrationTime(
+                            name=name,
+                            scale=24 * 60 * 60,
+                        ),
+                    )
     return filters
 
 

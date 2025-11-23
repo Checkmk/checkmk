@@ -303,8 +303,9 @@ def _filter_rows_table_choice(
 
     def _add_row(row: Row) -> bool:
         # Apply filter if and only if a filter value is set
-        value = row.get(row_ident)
-        if (filter_key := f"{ident}_{value}") in filter_vars:
+        if (value := row.get(row_ident)) is not None and (
+            filter_key := f"{ident}_{value}"
+        ) in filter_vars:
             return filter_vars[filter_key] == "on"
         return True
 

@@ -60,6 +60,11 @@ _PLUGINS = DiscoveredPlugins(
                 "total_ram_usable": NumberFieldFromAPI(
                     TitleFromAPI("Total usable RAM"), render=UnitFromAPI(IECNotationFromAPI("B"))
                 ),
+                "foobar": BoolFieldFromAPI(
+                    TitleFromAPI("Foo bar"),
+                    render_true=LabelFromAPI("It's true"),
+                    render_false=LabelFromAPI("It's false"),
+                ),
             },
         ),
         PluginLocation("module", "node_networking_interfaces"): NodeFromAPI(
@@ -141,6 +146,7 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
         "is_show_more": False,
     },
     ".hardware.memory.total_ram_usable": {"title": "Total usable RAM", "paint": "bytes_rounded"},
+    ".hardware.memory.foobar": {"title": "Foo bar", "paint": "bool"},
     ".networking.interfaces:*.oper_status": {
         "title": "Operational status",
         "paint": "if_oper_status",
@@ -223,6 +229,159 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 main_menu_search_terms=[],
             ),
             id="canonical-inv-attrs-filters",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "inv_hardware_memory_foobar": {
+                        "is_inv_hardware_memory_foobar": "1",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            True,
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "inv_hardware_memory_foobar": {
+                        "inv_hardware_memory_foobar_True": "on",
+                        "inv_hardware_memory_foobar_False": "",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="inv-attrs-filter-bool-true",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "inv_hardware_memory_foobar": {
+                        "is_inv_hardware_memory_foobar": "0",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            True,
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "inv_hardware_memory_foobar": {
+                        "inv_hardware_memory_foobar_True": "",
+                        "inv_hardware_memory_foobar_False": "on",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="inv-attrs-filter-bool-false",
+        ),
+        pytest.param(
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "inv_hardware_memory_foobar": {
+                        "is_inv_hardware_memory_foobar": "-1",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            True,
+            Visual(
+                owner=UserId("user"),
+                name="",
+                context={
+                    "inv_hardware_memory_foobar": {
+                        "inv_hardware_memory_foobar_False": "on",
+                        "inv_hardware_memory_foobar_True": "on",
+                    },
+                },
+                single_infos=[],
+                add_context_to_title=False,
+                title="",
+                description="",
+                topic="",
+                sort_index=1,
+                is_show_more=False,
+                icon="",
+                hidden=False,
+                hidebutton=False,
+                public=False,
+                packaged=False,
+                link_from={},
+                main_menu_search_terms=[],
+            ),
+            id="inv-attrs-filter-bool-ignore",
         ),
         pytest.param(
             Visual(
@@ -374,14 +533,19 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 link_from={},
                 main_menu_search_terms=[],
             ),
-            True,
+            False,
             Visual(
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_oper_status_canonical": {
-                        "invinterface_oper_status_canonical_2": "on",
-                        "invinterface_oper_status_canonical_6": "on",
+                    "invinterface_oper_status": {
+                        "invinterface_oper_status_1": "",
+                        "invinterface_oper_status_2": "on",
+                        "invinterface_oper_status_3": "",
+                        "invinterface_oper_status_4": "",
+                        "invinterface_oper_status_5": "",
+                        "invinterface_oper_status_6": "on",
+                        "invinterface_oper_status_7": "",
                     },
                 },
                 single_infos=[],
@@ -430,7 +594,10 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_admin_status_canonical": {},
+                    "invinterface_admin_status": {
+                        "invinterface_admin_status_1": "on",
+                        "invinterface_admin_status_2": "on",
+                    },
                 },
                 single_infos=[],
                 add_context_to_title=False,
@@ -478,8 +645,9 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_admin_status_canonical": {
-                        "invinterface_admin_status_canonical_1": "on",
+                    "invinterface_admin_status": {
+                        "invinterface_admin_status_1": "on",
+                        "invinterface_admin_status_2": "",
                     },
                 },
                 single_infos=[],
@@ -528,8 +696,9 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_admin_status_canonical": {
-                        "invinterface_admin_status_canonical_2": "on",
+                    "invinterface_admin_status": {
+                        "invinterface_admin_status_1": "",
+                        "invinterface_admin_status_2": "on",
                     },
                 },
                 single_infos=[],
@@ -628,7 +797,10 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_available_canonical": {},
+                    "invinterface_available": {
+                        "invinterface_available_False": "on",
+                        "invinterface_available_True": "on",
+                    },
                 },
                 single_infos=[],
                 add_context_to_title=False,
@@ -676,8 +848,9 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_available_canonical": {
-                        "invinterface_available_canonical_True": "on",
+                    "invinterface_available": {
+                        "invinterface_available_True": "on",
+                        "invinterface_available_False": "",
                     },
                 },
                 single_infos=[],
@@ -726,8 +899,9 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_available_canonical": {
-                        "invinterface_available_canonical_False": "on",
+                    "invinterface_available": {
+                        "invinterface_available_True": "",
+                        "invinterface_available_False": "on",
                     },
                 },
                 single_infos=[],

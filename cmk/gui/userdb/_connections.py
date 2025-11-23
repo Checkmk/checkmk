@@ -6,9 +6,9 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, assert_never, Literal, overload, override, TypeGuard
+from typing import assert_never, Literal, overload, override, TypeGuard
 
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
@@ -170,7 +170,7 @@ def load_connection_config(lock: bool = False) -> UserConnections:
 
 
 def save_snapshot_user_connection_config(
-    connections: list[Mapping[str, Any]],
+    connections: Sequence[ConfigurableUserConnectionSpec],
     snapshot_work_dir: str,
 ) -> None:
     save_dir = Path(snapshot_work_dir, "etc/check_mk/multisite.d/wato")

@@ -759,7 +759,7 @@ def _make_col_names(
 
 
 def _make_attribute_filter_from_legacy_hint(
-    *, path: SDPath, key: str, data_type: str, name: str, long_title: str, is_show_more: bool
+    *, path: SDPath, key: str, data_type: str, name: str, title: str, is_show_more: bool
 ) -> FilterInvText | FilterInvBool | FilterInvFloat:
     inventory_path = inventory.InventoryPath(
         path=path,
@@ -770,14 +770,14 @@ def _make_attribute_filter_from_legacy_hint(
         case "str":
             return FilterInvText(
                 ident=name,
-                title=long_title,
+                title=title,
                 inventory_path=inventory_path,
                 is_show_more=is_show_more,
             )
         case "bool":
             return FilterInvBool(
                 ident=name,
-                title=long_title,
+                title=title,
                 inventory_path=inventory_path,
                 is_show_more=is_show_more,
             )
@@ -794,7 +794,7 @@ def _make_attribute_filter_from_legacy_hint(
 
     return FilterInvFloat(
         ident=name,
-        title=long_title,
+        title=title,
         inventory_path=inventory_path,
         unit=unit,
         scale=1,
@@ -846,7 +846,7 @@ def _parse_attr_field_from_legacy(
             key=key,
             data_type=data_type,
             name=names.filter_ident,
-            long_title=long_title,
+            title=long_title,
             is_show_more=legacy_hint.get("is_show_more", True),
         ),
     )
@@ -1126,7 +1126,7 @@ class NodeDisplayHint:
                     key=key,
                     data_type="str",
                     name=names.filter_ident,
-                    long_title=long_title,
+                    title=long_title,
                     is_show_more=True,
                 ),
             )

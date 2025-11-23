@@ -96,7 +96,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "python-snap7",
     "pyyaml",
     "recurring_ical_events",
-    "redfish",
     "redis",
     "reportlab",
     "requests",

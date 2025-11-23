@@ -82,6 +82,39 @@ py_test(
     ],
 )
 
+py_library(
+    name = "redfish",
+    srcs = glob(["cmk/plugins/redfish/**/*.py"]),
+    data = glob([
+        "cmk/plugins/redfish/checkman/*",
+        "cmk/plugins/redfish/libexec/*",
+    ]) + ["cmk/plugins/redfish/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lib",
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("redfish"),
+    ],
+)
+
+py_test(
+    name = "redfish-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/redfish/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":redfish",
+        requirement("pytest"),
+    ],
+)
+
 #   ____                           _   _                       _
 #  / ___| ___ _ __   ___ _ __ __ _| | | |_ __ _ _ __ __ _  ___| |_ ___
 # | |  _ / _ \ '_ \ / _ \ '__/ _` | | | __/ _` | '__/ _` |/ _ \ __/ __|

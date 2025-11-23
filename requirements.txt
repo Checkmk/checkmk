@@ -4293,7 +4293,7 @@ recurring-ical-events==3.8.0 \
 redfish==3.3.4 \
     --hash=sha256:77257477a8bc3880ae740be5ded6bc0a6803e0c1c9f71289051be1d5ff2ed0e2 \
     --hash=sha256:a72cbe6dac4df8b2a41d701592866705901a06b9a3410ecfe8c5d49d728c72b0
-    # via -r cmk/requirements.in
+    # via -r packages/cmk-plugins/requirements.in
 redis==7.1.0 \
     --hash=sha256:23c52b208f92b56103e17c5d06bdc1a6c2c0b3106583985a76a18f83b265de2b \
     --hash=sha256:b1cc3cfa5a2cb9c2ab3ba700864fb0ad75617b41f01352ce5779dabf6d5f9c3c

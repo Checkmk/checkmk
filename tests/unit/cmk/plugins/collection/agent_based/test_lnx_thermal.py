@@ -11,6 +11,12 @@ from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, Stri
 from cmk.plugins.collection.agent_based import lnx_thermal
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(lnx_thermal, "get_value_store", lambda: store)
+
+
 def splitter(text: str, split_symbol: str | None = None) -> Sequence[Sequence[str]]:
     return [line.split(split_symbol) for line in text.split("\n")]
 
@@ -133,12 +139,14 @@ RESULT_CHECK = [
 ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, discovered, results", list(zip(AGENT_INFO, RESULT_DISCOVERY, RESULT_CHECK))
 )
 def test_check_functions_perfdata(
-    string_table: StringTable, discovered: Sequence[Service], results: CheckResult
+    string_table: StringTable,
+    discovered: Sequence[Service],
+    results: CheckResult,
+    empty_value_store: None,
 ) -> None:
     section = lnx_thermal.parse_lnx_thermal(string_table)
     for service, result in zip(discovered, results):
@@ -214,7 +222,6 @@ def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
     assert not list(lnx_thermal.discover_lnx_thermal(section))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "line, item, result",
     [
@@ -272,7 +279,7 @@ def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
     ],
 )
 def test_check_functions_perfdata_2(
-    line: list[str], item: str, result: list[Metric | Result]
+    line: list[str], item: str, result: list[Metric | Result], empty_value_store: None
 ) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
     assert list(lnx_thermal.check_lnx_thermal(item, {}, section)) == result

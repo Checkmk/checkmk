@@ -9,8 +9,14 @@ from collections.abc import Mapping
 import pytest
 
 import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_disk_throughput as pvdt
-from cmk.agent_based.v1 import IgnoreResults
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, State
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(pvdt, "get_value_store", lambda: store)
+
 
 VM_DATA_START = pvdt.parse_proxmox_ve_disk_throughput(
     [[json.dumps({"disk_read": "123456", "disk_write": "123456", "uptime": 0})]]
@@ -54,12 +60,12 @@ VM_DATA_END = pvdt.parse_proxmox_ve_disk_throughput(
         ),
     ],
 )
-@pytest.mark.usefixtures("initialised_item_state")
 def test_check_proxmox_ve_vm_info(
     params: Mapping[str, object],
     section_start: pvdt.Section,
     section_end: pvdt.Section,
     expected_results: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert tuple(pvdt.check_proxmox_ve_disk_throughput(params, section_start)) == (
         IgnoreResults(

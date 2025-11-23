@@ -9,6 +9,13 @@ import cmk.plugins.netscaler.agent_based.df_netscaler as dfn
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS, FSBlocks
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(dfn, "get_value_store", lambda: store)
+
+
 STRING_TABLE = [
     ["/var", "96133", "87418"],
     ["/flash", "7976", "7256"],
@@ -27,8 +34,7 @@ def test_discovery(section: FSBlocks) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_no_item(section: FSBlocks) -> None:
+def test_check_no_item(section: FSBlocks, empty_value_store: None) -> None:
     assert not list(dfn.check_df_netscaler("knut", {}, section))
 
 

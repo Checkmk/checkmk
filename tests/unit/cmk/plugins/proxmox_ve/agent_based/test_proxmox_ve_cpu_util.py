@@ -11,6 +11,13 @@ import pytest
 import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_cpu_util as pvcu
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(pvcu, "get_value_store", lambda: store)
+
+
 VM_DATA = pvcu.parse_proxmox_ve_cpu_util(
     [
         [
@@ -55,9 +62,11 @@ VM_DATA = pvcu.parse_proxmox_ve_cpu_util(
         ),
     ],
 )
-@pytest.mark.usefixtures("initialised_item_state")
 def test_check_proxmox_ve_vm_info(
-    params: Mapping[str, object], section: pvcu.Section, expected_results: CheckResult
+    params: Mapping[str, object],
+    section: pvcu.Section,
+    expected_results: CheckResult,
+    empty_value_store: None,
 ) -> None:
     results = tuple(pvcu.check_proxmox_ve_cpu_util(params, section))
     assert results == expected_results

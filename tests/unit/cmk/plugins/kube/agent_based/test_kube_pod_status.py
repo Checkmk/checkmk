@@ -29,7 +29,7 @@ from cmk.plugins.kube.schemata.section import PodContainers, PodLifeCycle
 
 
 @pytest.fixture
-def initialised_item_state(monkeypatch: pytest.MonkeyPatch) -> None:
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store = dict[str, object]()
     monkeypatch.setattr(kube_pod_status, "get_value_store", lambda: store)
 
@@ -50,7 +50,6 @@ def _mocked_container_info_from_state(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -109,6 +108,7 @@ def test_check_kube_pod_status_no_issues_in_containers(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     """
     Tested Pods have a single container which is configured correctly and in a good state.
@@ -123,7 +123,6 @@ def test_check_kube_pod_status_no_issues_in_containers(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -176,6 +175,7 @@ def test_check_kube_pod_status_failing_container(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     """
     Tested Pods with a single failing or misconfigured container.
@@ -190,7 +190,6 @@ def test_check_kube_pod_status_failing_container(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -269,6 +268,7 @@ def test_check_kube_pod_status_multiple_issues(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     """
     Tested Pods have two containers with different issues, which are then summarized into a
@@ -310,7 +310,6 @@ def test_check_alert_if_pending_too_long() -> None:
         assert summary_result.summary.endswith(expected_message)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_init_containers, section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -347,6 +346,7 @@ def test_check_kube_pod_status_init_container_broken(
     section_kube_pod_containers: PodContainers,
     section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result: str,
+    empty_value_store: None,
 ) -> None:
     """
     Tested Pods has a failing init-container.
@@ -476,8 +476,7 @@ def test_check_group_timer() -> None:
             assert expected_notice == notice[0].details
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_group_order_matters() -> None:
+def test_check_group_order_matters(empty_value_store: None) -> None:
     params = kube_pod_status.Params(
         groups=[
             ("no_levels", [".*"]),

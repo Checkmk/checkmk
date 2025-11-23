@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
+import typing
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -34,6 +35,18 @@ from cmk.plugins.collection.agent_based import (
     cmciii_temp,
     cmciii_temp_in_out,
 )
+
+
+@pytest.fixture(name="empty_value_store")
+def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.cmciii_temp_in_out.get_value_store",
+        lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
+    )
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.cmciii_temp.get_value_store",
+        lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
+    )
 
 
 @pytest.mark.parametrize(
@@ -226,7 +239,7 @@ def test_cmciii_lcp_discovery(plugin: CheckPlugin, expected: DiscoveryResult) ->
     assert sorted(plugin.discovery_function({}, section)) == expected
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "item, expected",
     [
@@ -999,7 +1012,7 @@ def test_genericdataset_cmciii_discovery(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "plugin, params, items",
     [

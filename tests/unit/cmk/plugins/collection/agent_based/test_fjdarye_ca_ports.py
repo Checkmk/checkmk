@@ -7,11 +7,18 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based import fjdarye_ca_ports
 from cmk.plugins.collection.agent_based.fjdarye_ca_ports import (
     check_fjdarye_ca_ports,
     discover_fjdarye_ca_ports,
     parse_fjdarye_ca_ports,
 )
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store = dict[str, object]()
+    monkeypatch.setattr(fjdarye_ca_ports, "get_value_store", lambda: value_store)
 
 
 @pytest.mark.parametrize(
@@ -240,7 +247,7 @@ def test_discover_fjdarye_ca_ports(
     assert list(discover_fjdarye_ca_ports(section=section, params=params)) == discovery_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "item, section, check_result_showing_mode",
     [
@@ -264,6 +271,7 @@ def test_check_fjdarye_ca_ports(
     item: str,
     section: Mapping[str, Mapping[str, float | str]],
     check_result_showing_mode: Result,
+    empty_value_store: None,
 ) -> None:
     check_result = list(check_fjdarye_ca_ports(item=item, params={}, section=section))
     assert check_result[0] == check_result_showing_mode

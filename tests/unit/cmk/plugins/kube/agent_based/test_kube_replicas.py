@@ -42,7 +42,7 @@ from cmk.plugins.kube.schemata.section import (
 
 
 @pytest.fixture
-def initialised_item_state(monkeypatch: pytest.MonkeyPatch) -> None:
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store = dict[str, object]()
     monkeypatch.setattr(kube_replicas, "get_value_store", lambda: store)
 
@@ -195,8 +195,7 @@ def test_discover_kube_replicas() -> None:
     assert not list(discover_kube_replicas(None, None, None))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_kube_replicas() -> None:
+def test_check_kube_replicas(empty_value_store: None) -> None:
     assert list(
         check_kube_replicas(
             {},

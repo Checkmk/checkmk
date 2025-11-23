@@ -6,11 +6,19 @@
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
+from cmk.plugins.collection.agent_based import diskstat
 from cmk.plugins.collection.agent_based.diskstat import check_diskstat
 from cmk.plugins.collection.agent_based.docker_container_diskstat_cgroupv2 import (
     parse_docker_container_diskstat_cgroupv2,
 )
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store = dict[str, object]()
+    monkeypatch.setattr(diskstat, "get_value_store", lambda: value_store)
+
 
 AGENT_OUTPUT = """[time]
 1614786439
@@ -116,8 +124,8 @@ def _split(string: str) -> StringTable:
     return [line.split(" ") for line in string.split("\n")]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_docker_container_diskstat_cgroupv2() -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_docker_container_diskstat_cgroupv2(empty_value_store: None) -> None:
     with pytest.raises(IgnoreResultsError):
         # no rate metrics yet
         _ = list(

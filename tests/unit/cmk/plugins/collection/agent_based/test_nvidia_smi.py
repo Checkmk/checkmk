@@ -18,6 +18,13 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.collection.agent_based import nvidia_smi
 from cmk.plugins.lib.temperature import TempParamType
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(nvidia_smi, "get_value_store", lambda: store)
+
+
 STRING_TABLE = [
     ['<?xml version="1.0" ?>'],
     ['<!DOCTYPE nvidia_smi_log SYSTEM "nvsmi_device_v11.dtd">'],
@@ -298,7 +305,7 @@ def test_discover_nvidia_smi_temperature(
     assert list(nvidia_smi.discover_nvidia_smi_temperature(section)) == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [

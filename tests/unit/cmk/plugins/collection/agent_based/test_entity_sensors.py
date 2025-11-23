@@ -16,6 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.collection.agent_based import entity_sensors
 from cmk.plugins.collection.agent_based.entity_sensors import (
     check_entity_sensors_fan,
     check_entity_sensors_power_presence,
@@ -27,6 +28,13 @@ from cmk.plugins.collection.agent_based.entity_sensors import (
 )
 from cmk.plugins.lib.entity_sensors import EntitySensor, EntitySensorSection
 from cmk.plugins.lib.temperature import TempParamType
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(entity_sensors, "get_value_store", lambda: store)
+
 
 _SECTION_CISCO_ENTITY_SENSORS = {
     "fan": {
@@ -145,7 +153,6 @@ def test_discover_entity_sensors_power_presence(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -223,7 +230,11 @@ def test_discover_entity_sensors_power_presence(
     ],
 )
 def test_check_entity_sensors_temp(
-    item: str, params: TempParamType, section: EntitySensorSection, expected_result: CheckResult
+    item: str,
+    params: TempParamType,
+    section: EntitySensorSection,
+    expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert list(check_entity_sensors_temp(item, params, section)) == expected_result
 

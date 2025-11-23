@@ -7,12 +7,19 @@ import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.lib.temperature import TempParamDict
+from cmk.plugins.liebert.agent_based import liebert_temp_fluid
 from cmk.plugins.liebert.agent_based.liebert_temp_fluid import (
     check_liebert_temp_fluid,
     discover_liebert_temp_fluid,
     parse_liebert_temp_fluid,
     Section,
 )
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(liebert_temp_fluid, "get_value_store", lambda: store)
 
 
 @pytest.fixture(name="section", scope="module")
@@ -50,7 +57,6 @@ def test_discover(section: Section) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["item", "params", "expected_result"],
     [
@@ -89,6 +95,7 @@ def test_check(
     params: TempParamDict,
     section: Section,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert (
         list(

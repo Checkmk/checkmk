@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 
+import cmk.plugins.aws.agent_based.aws_ec2
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.aws.agent_based.aws_ec2 import (
     check_aws_ec2_cpu_credits,
@@ -39,7 +40,13 @@ METRICS = {
 }
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(cmk.plugins.aws.agent_based.aws_ec2, "get_value_store", lambda: store)
+
+
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_aws_ec2_network_io() -> None:
     assert list(
         check_aws_ec2_network_io(
@@ -83,7 +90,7 @@ def test_aws_ec2_disk_io_discovery(
     assert list(discover_aws_ec2_disk_io(section)) == discovery_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_aws_ec2_disk_io() -> None:
     check_result = list(check_aws_ec2_disk_io(item="Summary", params={}, section=METRICS))
 
@@ -182,7 +189,7 @@ def test_aws_ec2_cpu_util_discovery(
     assert list(discover_aws_ec2_cpu_util(section)) == discovery_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "section, params, expected_check_result",
     [

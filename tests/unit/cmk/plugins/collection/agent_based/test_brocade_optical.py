@@ -97,7 +97,14 @@ def test_discover_brocade_optical(
     ) == (expect_service and services or [])
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.brocade_optical.get_value_store",
+        lambda: {},
+    )
+
+
 @pytest.mark.parametrize(
     "item,params,section,expected",
     [
@@ -177,12 +184,15 @@ def test_discover_brocade_optical(
     ],
 )
 def test_check_brocade_optical(
-    item: str, params: Mapping[str, object], section: brocade_optical.Section, expected: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    section: brocade_optical.Section,
+    expected: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, discovery_results, items_params_results",
     [
@@ -941,6 +951,7 @@ def test_regression(
     string_table,
     discovery_results,
     items_params_results,
+    empty_value_store: None,
 ):
     section = brocade_optical.parse_brocade_optical(string_table)
 

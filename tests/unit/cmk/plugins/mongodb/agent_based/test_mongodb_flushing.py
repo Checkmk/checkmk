@@ -10,10 +10,18 @@
 import pytest
 
 from cmk.agent_based.v2 import Result
+from cmk.plugins.mongodb.agent_based import mongodb_flushing
 from cmk.plugins.mongodb.agent_based.mongodb_flushing import (
     check_mongodb_flushing,
     parse_mongodb_flushing,
 )
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(mongodb_flushing, "get_value_store", lambda: store)
+
 
 # <<<mongodb_flushing>>>
 # average_ms 1.28893335892
@@ -21,7 +29,6 @@ from cmk.plugins.mongodb.agent_based.mongodb_flushing import (
 # flushed 36479
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "info,expected_results",
     [
@@ -65,7 +72,7 @@ from cmk.plugins.mongodb.agent_based.mongodb_flushing import (
         ),
     ],
 )
-def test_check_function(info, expected_results):
+def test_check_function(info, expected_results, empty_value_store: None):
     """
     Test the MongoDB flushing check function with various input combinations.
     """

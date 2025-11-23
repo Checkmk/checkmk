@@ -16,6 +16,14 @@ from cmk.plugins.prism.agent_based.prism_cluster_cpu import (
     discovery_prism_cluster_cpu,
 )
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.prism.agent_based.prism_cluster_cpu.get_value_store", lambda: {}
+    )
+
+
 SECTION = {
     "stats": {
         "controller_avg_io_latency_usecs": "1246",
@@ -75,7 +83,6 @@ def test_discovery_prism_host_stats(
     assert list(discovery_prism_cluster_cpu(section)) == expected_discovery_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["params", "section", "expected_check_result"],
     [
@@ -94,6 +101,7 @@ def test_check_prism_cluster_cpu(
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
+    empty_value_store: None,
 ) -> None:
     assert (
         list(

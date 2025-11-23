@@ -10,7 +10,6 @@ import pytest
 from cmk.agent_based.v2 import (
     DiscoveryResult,
     FixedLevelsT,
-    get_value_store,
     Metric,
     Result,
     Service,
@@ -18,6 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.azure_v2.agent_based import lib
 from cmk.plugins.azure_v2.agent_based.azure_sites import check_azure_sites, discover_azure_sites
 from cmk.plugins.azure_v2.agent_based.lib import parse_resource
 
@@ -212,8 +212,7 @@ def test_discovery_azure_sites(string_table: StringTable, expected_result: Disco
     assert services == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_azure_sites_resource_1() -> None:
+def test_check_azure_sites_resource_1(monkeypatch: pytest.MonkeyPatch) -> None:
     section = parse_resource(STRING_TABLE_1)
     assert section
     params: Mapping[str, FixedLevelsT[float]] = {
@@ -223,13 +222,20 @@ def test_check_azure_sites_resource_1() -> None:
     }
 
     # Pre-populate value store to avoid GetRateError
-    value_store = get_value_store()
-    value_store[
-        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazspo-solutions-rg/providers/Microsoft.Web/sites/spo-solutions-fa1.total_Http5xx"
-    ] = (1536073020.0, 0.0)
-    value_store[
-        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_CpuTime"
-    ] = (1536073020.0, 0.0)
+    monkeypatch.setattr(
+        lib,
+        "get_value_store",
+        lambda: {
+            "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazspo-solutions-rg/providers/Microsoft.Web/sites/spo-solutions-fa1.total_Http5xx": (
+                1536073020.0,
+                0.0,
+            ),
+            "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_CpuTime": (
+                1536073020.0,
+                0.0,
+            ),
+        },
+    )
 
     results = list(check_azure_sites(params, section))
 
@@ -244,8 +250,7 @@ def test_check_azure_sites_resource_1() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_azure_sites_resource_2() -> None:
+def test_check_azure_sites_resource_2(monkeypatch: pytest.MonkeyPatch) -> None:
     section = parse_resource(STRING_TABLE_2)
     assert section
     params: Mapping[str, FixedLevelsT[float]] = {
@@ -255,13 +260,20 @@ def test_check_azure_sites_resource_2() -> None:
     }
 
     # Pre-populate value store to avoid GetRateError
-    value_store = get_value_store()
-    value_store[
-        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_Http5xx"
-    ] = (1536073020.0, 0.0)
-    value_store[
-        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_CpuTime"
-    ] = (1536073020.0, 0.0)
+    monkeypatch.setattr(
+        lib,
+        "get_value_store",
+        lambda: {
+            "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_Http5xx": (
+                1536073020.0,
+                0.0,
+            ),
+            "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_CpuTime": (
+                1536073020.0,
+                0.0,
+            ),
+        },
+    )
 
     results = list(check_azure_sites(params, section))
 

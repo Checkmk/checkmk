@@ -11,6 +11,13 @@ import pytest
 import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_network_throughput as pvnt
 from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, State
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(pvnt, "get_value_store", lambda: store)
+
+
 VM_DATA_START = pvnt.parse_proxmox_ve_network_throughput(
     [
         [
@@ -73,12 +80,12 @@ VM_DATA_END = pvnt.parse_proxmox_ve_network_throughput(
         ),
     ],
 )
-@pytest.mark.usefixtures("initialised_item_state")
 def test_check_proxmox_ve_vm_info(
     params: Mapping[str, object],
     section_start: pvnt.Section,
     section_end: pvnt.Section,
     expected_results: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert tuple(pvnt.check_proxmox_ve_network_throughput(params, section_start)) == (
         IgnoreResults(

@@ -81,6 +81,13 @@ SECTION = {
 }
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.prism.agent_based.prism_host_stats.get_value_store", lambda: {}
+    )
+
+
 @pytest.mark.parametrize(
     ["section", "expected_discovery_result"],
     [
@@ -107,7 +114,6 @@ def test_discovery_prism_host_stats(
     assert list(discovery_prism_host_stats_mem(section)) == expected_discovery_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["section", "expected_check_result"],
     [
@@ -128,6 +134,7 @@ def test_discovery_prism_host_stats(
 def test_check_prism_host_stats(
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
+    empty_value_store: None,
 ) -> None:
     assert (
         list(
@@ -139,7 +146,6 @@ def test_check_prism_host_stats(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["params", "section", "expected_check_result"],
     [
@@ -162,6 +168,7 @@ def test_check_prism_host_stats_cpu(
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
+    empty_value_store: None,
 ) -> None:
     assert (
         list(

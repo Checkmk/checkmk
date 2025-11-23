@@ -59,7 +59,14 @@ def test_discover_sensor_temperature(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_sensor_readings.get_value_store",
+        lambda: {},
+    )
+
+
 @pytest.mark.parametrize(
     "string_table, expected_results",
     [
@@ -81,7 +88,7 @@ def test_discover_sensor_temperature(
     ],
 )
 def test_check_sensor_temperature(
-    string_table: StringTable, expected_results: Sequence[Result]
+    string_table: StringTable, expected_results: Sequence[Result], empty_value_store: None
 ) -> None:
     section = cisco_meraki_org_sensor_readings.parse_sensor_readings(string_table)
     with time_machine.travel(datetime.datetime(2000, 1, 30, 12, tzinfo=ZoneInfo("UTC"))):

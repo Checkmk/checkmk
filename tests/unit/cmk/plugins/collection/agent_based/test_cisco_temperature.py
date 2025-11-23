@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import typing
 from collections.abc import Callable
 from pathlib import Path
 
@@ -17,6 +18,14 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
 )
+
+
+@pytest.fixture(name="empty_value_store")
+def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.cisco_temperature.get_value_store",
+        lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
+    )
 
 
 @pytest.mark.parametrize(
@@ -985,8 +994,7 @@ def test_discovery_temp(section_temp: ct.Section) -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_temp(section_temp: ct.Section) -> None:
+def test_check_temp(section_temp: ct.Section, empty_value_store: None) -> None:
     assert list(
         ct.check_cisco_temperature(
             "Ethernet1/1 Lane 1 Transceiver Temperature Sensor", {}, section_temp
@@ -1002,7 +1010,6 @@ def test_check_temp(section_temp: ct.Section) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["item", "expected_result"],
     [
@@ -1017,12 +1024,14 @@ def test_check_temp(section_temp: ct.Section) -> None:
     ],
 )
 def test_check_temp_not_ok_sensors(
-    item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
+    item: str,
+    expected_result: CheckResult,
+    section_not_ok_sensors: ct.Section,
+    empty_value_store: None,
 ) -> None:
     assert list(ct.check_cisco_temperature(item, {}, section_not_ok_sensors)) == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["item", "expected_result"],
     [
@@ -1037,7 +1046,10 @@ def test_check_temp_not_ok_sensors(
     ],
 )
 def test_check_dom_not_ok_sensors(
-    item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
+    item: str,
+    expected_result: CheckResult,
+    section_not_ok_sensors: ct.Section,
+    empty_value_store: None,
 ) -> None:
     assert list(ct.check_cisco_temperature_dom(item, {}, section_not_ok_sensors)) == expected_result
 

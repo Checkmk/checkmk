@@ -5,6 +5,7 @@
 
 import pytest
 
+import cmk.plugins.collection.agent_based.cpu_utilization_os
 from cmk.agent_based.v2 import GetRateError, Metric, Result, State, StringTable
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName, SectionName
 
@@ -171,7 +172,15 @@ LXC_CONTAINER_CPU_CGROUPV2_10 = [
 ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(
+        cmk.plugins.collection.agent_based.cpu_utilization_os, "get_value_store", lambda: store
+    )
+
+
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.usefixtures("num_cpu")
 @pytest.mark.usefixtures("mocker")
 @pytest.mark.parametrize(

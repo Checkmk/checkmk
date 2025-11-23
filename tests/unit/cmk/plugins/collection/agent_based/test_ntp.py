@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
+import cmk.plugins.collection.agent_based.ntp
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.collection.agent_based.ntp import (
     _ntp_fmt_time,
@@ -20,6 +21,12 @@ from cmk.plugins.collection.agent_based.ntp import (
 )
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(cmk.plugins.collection.agent_based.ntp, "get_value_store", lambda: store)
+
+
 def test_check_ntp() -> None:
     section: Section = {
         "42.202.61.100": Peer("-", "42.202.61.100", ".INIT.", 16, _ntp_fmt_time("-"), "0", 0.0, 0.0)
@@ -27,7 +34,7 @@ def test_check_ntp() -> None:
     assert not list(check_ntp("item", {}, section))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_ntp_summanry() -> None:
     section: Section = {}
     assert list(check_ntp_summary({}, section)) == [

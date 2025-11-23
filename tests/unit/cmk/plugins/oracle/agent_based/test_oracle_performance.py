@@ -17,10 +17,18 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
+from cmk.plugins.oracle.agent_based import oracle_performance_check
 from cmk.plugins.oracle.agent_based import oracle_performance_check as opc
 from cmk.plugins.oracle.agent_based.liboracle import SectionPerformance
 from cmk.plugins.oracle.agent_based.oracle_performance_inventory import inventory_oracle_performance
 from cmk.plugins.oracle.agent_based.oracle_performance_section import parse_oracle_performance
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(oracle_performance_check, "get_value_store", lambda: store)
+
 
 _AGENT_OUTPUT_1 = [
     ["TWH", "sys_time_model", "DB CPU", "14826"],
@@ -93,7 +101,6 @@ def test_discover_oracle_performance(
     assert sorted(opc.discover_oracle_performance({}, section)) == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, item, expected_result",
     [
@@ -155,7 +162,11 @@ def test_discover_oracle_performance(
     ],
 )
 def test_check_oracle_performance(
-    get_rate_zero: None, string_table: StringTable, item: str, expected_result: CheckResult
+    get_rate_zero: None,
+    string_table: StringTable,
+    item: str,
+    expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     section = parse_oracle_performance(string_table)
     assert (
@@ -168,7 +179,6 @@ def test_check_oracle_performance(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, expected_result",
     [
@@ -208,7 +218,7 @@ def test_check_oracle_performance(
     ],
 )
 def test_inventory_oracle_performance(
-    string_table: StringTable, expected_result: InventoryResult
+    string_table: StringTable, expected_result: InventoryResult, empty_value_store: None
 ) -> None:
     assert (
         list(inventory_oracle_performance(parse_oracle_performance(string_table)))
@@ -216,7 +226,6 @@ def test_inventory_oracle_performance(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -247,6 +256,7 @@ def test_check_oracle_performance_dbtime(
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert list(opc.check_oracle_performance_dbtime(item, params, section)) == expected_result
 
@@ -290,7 +300,6 @@ def test_check_oracle_performance_memory(
     assert list(opc.check_oracle_performance_memory(item, params, section)) == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -333,11 +342,11 @@ def test_check_oracle_performance_iostat_ios(
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert list(opc.check_oracle_performance_iostat_ios(item, params, section)) == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -372,5 +381,6 @@ def test_check_oracle_performance_waitclasses(
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert list(opc.check_oracle_performance_waitclasses(item, params, section)) == expected_result

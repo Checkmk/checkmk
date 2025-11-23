@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
@@ -191,7 +192,14 @@ def test_discover_bluecoat_sensors_temp() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.bluecoat_sensors.get_value_store",
+        lambda: {},
+    )
+
+
 @pytest.mark.parametrize(
     [
         "item",
@@ -229,6 +237,7 @@ def test_discover_bluecoat_sensors_temp() -> None:
 def test_check_bluecoat_sensors_temp(
     item: str,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert (
         list(

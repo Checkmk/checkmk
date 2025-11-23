@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based import ibm_svc_systemstats
 from cmk.plugins.collection.agent_based.ibm_svc_systemstats import (
     check_ibm_svc_systemstats_cache,
     check_ibm_svc_systemstats_cpu,
@@ -23,6 +24,13 @@ from cmk.plugins.collection.agent_based.ibm_svc_systemstats import (
     ibm_svc_systemstats_parse,
     IBMSystemStats,
 )
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(ibm_svc_systemstats, "get_value_store", lambda: store)
+
 
 TEST_INFO: Sequence[Sequence[str]] = [
     ["stat_name", "stat_current", "stat_peak", "stat_peak_time"],
@@ -291,7 +299,6 @@ def test_discovery_ibm_svc_systemstats_cpu(
     assert result == expected_discovery
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, expected_result",
     [
@@ -335,6 +342,7 @@ def test_check_ibm_svc_systemstats_cpu(
     section: IBMSystemStats,
     params: Mapping[str, Any],
     expected_result: Sequence[CheckResult],
+    empty_value_store: None,
 ) -> None:
     assert list(check_ibm_svc_systemstats_cpu(params=params, section=section)) == list(
         expected_result

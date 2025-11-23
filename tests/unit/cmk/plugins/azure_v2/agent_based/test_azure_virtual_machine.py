@@ -349,7 +349,14 @@ def test_discover_azure_vm_network_io(
     assert list(discover_azure_vm_network_io(section)) == expected_discovery
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.azure_v2.agent_based.azure_virtual_machine.get_value_store",
+        lambda: {},
+    )
+
+
 @pytest.mark.parametrize(
     "params,section,expected_result",
     [
@@ -392,6 +399,7 @@ def test_check_azure_vm_network_io(
     params: Mapping[str, tuple[float, float]],
     section: Resource,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert list(check_azure_vm_network_io("Network IO", params, section)) == expected_result
 

@@ -77,7 +77,13 @@ def test_discovery(sensors_count: int, section: Section) -> None:
     assert len(list(cisco_ie_temp.discover(section))) == sensors_count
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(cisco_ie_temp, "get_value_store", lambda: store)
+
+
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_result_includes_metric(check_result: CheckResult) -> None:
     assert any(isinstance(m, Metric) for m in check_result)
 

@@ -8,6 +8,12 @@ from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import etherbox
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(etherbox, "get_value_store", lambda: store)
+
+
 def test_parsing() -> None:
     string_table = [
         [["0"]],
@@ -184,8 +190,7 @@ def test_check_humidity() -> None:
     }
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_temp() -> None:
+def test_check_temp(empty_value_store: None) -> None:
     section = etherbox.etherbox_convert(
         [
             [["0"]],

@@ -5,6 +5,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.gcp.agent_based import gcp_gce
 from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
 from cmk.plugins.gcp.agent_based.gcp_gce import (
     check_disk_summary,
@@ -16,6 +17,12 @@ from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.gcp.special_agents import agent_gcp
 from cmk.plugins.lib import uptime
 from cmk.plugins.lib.interfaces import CHECK_DEFAULT_PARAMETERS
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(gcp_gce, "get_value_store", lambda: store)
 
 
 def test_parse_piggy_back() -> None:
@@ -40,8 +47,7 @@ NETWORK_SECTION = [
 ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_network_check() -> None:
+def test_network_check(empty_value_store: None) -> None:
     section = gcp.parse_piggyback(NETWORK_SECTION)
     params = CHECK_DEFAULT_PARAMETERS
     item = "nic0"

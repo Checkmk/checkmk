@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
@@ -33,6 +35,14 @@ STRING_TABLE = [
 ]
 
 
+@pytest.fixture(name="empty_value_store")
+def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.cisco_cpu_memory.get_value_store",
+        lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
+    )
+
+
 @pytest.fixture(name="section", scope="module")
 def _get_section() -> Section:
     return parse_cisco_cpu_memory_multiitem(STRING_TABLE)
@@ -44,8 +54,7 @@ def test_discovery(section: Section) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_no_levels(section: Section) -> None:
+def test_check_no_levels(section: Section, empty_value_store: None) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem("Switch2 Supervisor 1 (virtual slot 11)", {}, section)
     ) == [
@@ -54,8 +63,7 @@ def test_check_no_levels(section: Section) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_used_levels(section: Section) -> None:
+def test_check_used_levels(section: Section, empty_value_store: None) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(
             "Switch2 Supervisor 1 (virtual slot 11)", {"levels": (50.0, 90.0)}, section
@@ -69,8 +77,7 @@ def test_check_used_levels(section: Section) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_free_levels(section: Section) -> None:
+def test_check_free_levels(section: Section, empty_value_store: None) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(
             "Switch2 Supervisor 1 (virtual slot 11)", {"levels": (-20.0, -10.0)}, section

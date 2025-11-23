@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
+import cmk.plugins.collection.agent_based.cadvisor_diskstat
 from cmk.agent_based.v2 import Service
 from cmk.plugins.collection.agent_based.cadvisor_diskstat import (
     check_cadvisor_diskstat,
@@ -23,6 +24,14 @@ SECTION = {
         "write_throughput": 0.0,
     }
 }
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(
+        cmk.plugins.collection.agent_based.cadvisor_diskstat, "get_value_store", lambda: store
+    )
 
 
 @pytest.mark.parametrize(
@@ -47,7 +56,7 @@ def test_discover_cadvisor_diskstat(
     assert list(discover_cadvisor_diskstat(section)) == discovered_services
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_cadvisor_diskstat() -> None:
     check_result = list(check_cadvisor_diskstat(item="Summary", params={}, section=SECTION))
     assert len(check_result) == 10  # A Result and Metric for every field in the section

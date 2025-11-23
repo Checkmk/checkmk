@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
 import pytest
 
 from cmk.agent_based.v1 import GetRateError, Metric, Result, State
@@ -44,6 +46,15 @@ AGENT_OUTPUT_1 = [
 ]
 
 
+@pytest.fixture(name="empty_value_store")
+def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: typing.MutableMapping[str, typing.Any] = {}
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.cpu_utilization_os.get_value_store",
+        lambda: store,
+    )
+
+
 def test_parse_cpu_cgroupv2() -> None:
     assert parse_cpu(AGENT_OUTPUT) == SectionCpuUtilizationOs(
         time_base=200716.86,
@@ -52,8 +63,7 @@ def test_parse_cpu_cgroupv2() -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_cpu_cgroupv2() -> None:
+def test_check_cpu_cgroupv2(empty_value_store: None) -> None:
     with pytest.raises(GetRateError):
         # no rate metrics yet
         _ = list(check_cpu_utilization_os({}, parse_cpu(AGENT_OUTPUT_0)))

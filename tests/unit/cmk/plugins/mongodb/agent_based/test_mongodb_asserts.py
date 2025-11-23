@@ -7,7 +7,8 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, get_value_store, LevelsT, Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, LevelsT, Metric, Result, Service, State
+from cmk.plugins.mongodb.agent_based import asserts
 from cmk.plugins.mongodb.agent_based.asserts import (
     _check_mongodb_asserts,
     discover_mongodb_asserts,
@@ -27,7 +28,6 @@ def test_discover_mongodb_asserts() -> None:
     assert list(discover_mongodb_asserts(parse_mongodb_asserts(_STRING_TABLE))) == [Service()]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, expected_result",
     [
@@ -74,17 +74,20 @@ def test_discover_mongodb_asserts() -> None:
     ],
 )
 def test_check_mongodb_asserts(
+    monkeypatch: pytest.MonkeyPatch,
     params: Mapping[str, LevelsT[float]],
     expected_result: CheckResult,
 ) -> None:
-    get_value_store().update(
-        {
+    monkeypatch.setattr(
+        asserts,
+        "get_value_store",
+        lambda: {
             "msg": (0, 0),
             "rollovers": (0, 0),
             "regular": (0, 0),
             "warning": (0, 0),
             "user": (0, 0),
-        }
+        },
     )
     assert (
         list(

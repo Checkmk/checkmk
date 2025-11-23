@@ -7,6 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
+import cmk.plugins.collection.agent_based.ciena_cpu_util
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.collection.agent_based.ciena_cpu_util import (
     check_ciena_cpu_util_5142,
@@ -18,7 +19,15 @@ SECTION_5171 = Section5171(util=12, cores=[("2", 10), ("3", 0)])
 SECTION_5142 = 12
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(
+        cmk.plugins.collection.agent_based.ciena_cpu_util, "get_value_store", lambda: store
+    )
+
+
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "params, result",
     [
@@ -60,7 +69,7 @@ def test_check_ciena_cpu_util_5171(params: Mapping[str, object], result: CheckRe
     assert list(check_ciena_cpu_util_5171(params, SECTION_5171)) == result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "params, result",
     [

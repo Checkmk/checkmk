@@ -196,7 +196,13 @@ def test_check_elphase(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(apc_symmetra, "get_value_store", lambda: store)
+
+
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     ["string_table", "item", "params", "expected"],
     [

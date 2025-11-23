@@ -13,6 +13,20 @@ from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Service
 from cmk.plugins.lib import diskstat
 from cmk.plugins.windows.agent_based import winperf_phydisk
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: dict[str, object] = {}
+
+    def get_value_store() -> dict[str, object]:
+        return store
+
+    monkeypatch.setattr("cmk.agent_based.v2.get_value_store", get_value_store)
+    monkeypatch.setattr(
+        "cmk.plugins.windows.agent_based.winperf_phydisk.get_value_store", get_value_store
+    )
+
+
 STRING_TABLE = [
     ["1435670669.29", "234", "2", "3"],
     ["2", "instances:", "0_C:", "_Total"],
@@ -305,12 +319,11 @@ def _test_check_winperf_phydisk(
 DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_winperf_phydisk(item: str) -> None:
+def test_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
     section_1 = {
         item: DISK_HALF,
     }
@@ -325,12 +338,11 @@ def test_check_winperf_phydisk(item: str) -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_winperf_phydisk(item: str) -> None:
+def test_cluster_check_winperf_phydisk(item: str, empty_value_store: None) -> None:
     section_1 = {
         item: DISK_HALF,
     }

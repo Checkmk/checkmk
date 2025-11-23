@@ -104,7 +104,13 @@ def test_check_aruba_psu_status(
     assert list(aruba_psu.check_aruba_psu_status(item, section)) == result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(aruba_psu, "get_value_store", lambda: store)
+
+
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "string_table, item, result",
     [

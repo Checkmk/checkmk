@@ -14,6 +14,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based import extreme_vsp_switches_cpu_util
 from cmk.plugins.collection.agent_based.extreme_vsp_switches_cpu_util import (
     check_vsp_switches_cpu_util,
     discover_vsp_switches_cpu_util,
@@ -21,6 +22,12 @@ from cmk.plugins.collection.agent_based.extreme_vsp_switches_cpu_util import (
 )
 
 _STRING_TABLE = [["8"]]
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store = dict[str, object]()
+    monkeypatch.setattr(extreme_vsp_switches_cpu_util, "get_value_store", lambda: value_store)
 
 
 @pytest.mark.parametrize(
@@ -48,7 +55,7 @@ def test_discover_vsp_switches_cpu_util(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "string_table, params, expected_check_result",
     [
@@ -85,6 +92,7 @@ def test_check_vsp_switches_cpu_util(
     string_table: StringTable,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result],
+    empty_value_store: None,
 ) -> None:
     with time_machine.travel(datetime.datetime(2023, 1, 30, 12, tzinfo=ZoneInfo("UTC"))):
         assert (

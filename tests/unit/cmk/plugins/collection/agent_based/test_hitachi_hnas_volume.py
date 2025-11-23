@@ -162,7 +162,13 @@ def test_check_hitachi_hnas_volume(
             assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(hitachi_hnas_volume, "get_value_store", lambda: store)
+
+
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "item,params,section,expected",
     [

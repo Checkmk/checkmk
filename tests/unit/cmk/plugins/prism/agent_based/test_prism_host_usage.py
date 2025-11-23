@@ -17,6 +17,14 @@ from cmk.plugins.prism.agent_based.prism_host_usage import (
     discovery_prism_host_usage,
 )
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.prism.agent_based.prism_host_usage.get_value_store", lambda: {}
+    )
+
+
 SECTION = {
     "state": "NORMAL",
     "usage_stats": {
@@ -58,7 +66,6 @@ def test_discovery_prism_host_usage(
     assert list(discovery_prism_host_usage(section)) == expected_discovery_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["item", "params", "section", "expected_check_result"],
     [
@@ -94,6 +101,7 @@ def test_check_prism_host_usage(
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
+    empty_value_store: None,
 ) -> None:
     assert (
         list(

@@ -6,6 +6,8 @@
 
 import pytest
 
+import cmk.plugins.collection.agent_based.lnx_if
+import cmk.plugins.lib.interfaces
 from cmk.agent_based.v2 import Result
 from cmk.plugins.collection.agent_based.lnx_if import check_lnx_if, discover_lnx_if
 from cmk.plugins.collection.agent_based.section_lnx_container_host_if import (
@@ -74,6 +76,12 @@ INTERFACE = InterfaceWithCounters(
 )
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(cmk.plugins.lib.interfaces, "get_value_store", lambda: store)
+
+
 def test_parse_lnx_container_host_if() -> None:
     assert parse_lnx_container_host_if(STRING_TABLE) == ([INTERFACE], {})
 
@@ -92,7 +100,7 @@ def test_discover_lnx_if_default_discovery() -> None:
     assert discovered_services[0].item == "2"
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_lnx_if() -> None:
     check_results = list(
         check_lnx_if(item="2", params={}, section_lnx_if=([INTERFACE], {}), section_bonding=None)

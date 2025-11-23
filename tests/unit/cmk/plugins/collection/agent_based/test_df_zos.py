@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
 import pytest
 
 from cmk.agent_based.v2 import Service
@@ -24,6 +26,14 @@ Filetag : T=off   codeset=0
 ]
 
 
+@pytest.fixture(name="empty_value_store")
+def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.df_zos.get_value_store",
+        lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
+    )
+
+
 @pytest.fixture(scope="module", name="section")
 def _get_section() -> df_zos.Section:
     return df_zos.parse_df_zos(STRING_TABLE)
@@ -33,8 +43,7 @@ def test_discovery(section: df_zos.Section) -> None:
     assert sorted(df_zos.discover_df_zos([{"groups": []}], section)) == [Service(item="/ALF0")]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_no_item(section: df_zos.Section) -> None:
+def test_check_no_item(section: df_zos.Section, empty_value_store: None) -> None:
     assert not list(df_zos.check_df_zos("knut", {}, section))
 
 

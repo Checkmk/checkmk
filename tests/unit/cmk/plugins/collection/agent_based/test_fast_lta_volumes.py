@@ -11,6 +11,7 @@ from collections.abc import Callable
 import pytest
 
 from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
+from cmk.base.check_legacy_includes import size_trend
 from cmk.checkengine.plugins import (
     CheckFunction,
     CheckPluginName,
@@ -23,6 +24,12 @@ type DiscoveryFunction = Callable[..., DiscoveryResult]
 
 parsed = {"Archiv_Test": [("Archiv_Test", 953674.31640625, 944137.5732421875, 0)]}
 check_name = "fast_lta_volumes"
+
+
+@pytest.fixture(name="empty_value_store")
+def fixture_empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(size_trend, "get_value_store", lambda: store)
 
 
 # TODO: drop this after migration
@@ -64,8 +71,11 @@ def test_discovery_fast_lta_volumes(
     assert list(discover_fast_lta_volumes(parsed)) == [Service(item="Archiv_Test")]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_fast_lta_volumes(check_fast_lta_volumes: CheckFunction) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_fast_lta_volumes(
+    check_fast_lta_volumes: CheckFunction,
+    empty_value_store: None,
+) -> None:
     assert list(check_fast_lta_volumes("Archiv_Test", FILESYSTEM_DEFAULT_PARAMS, parsed)) == [
         Result(state=State.OK, summary="Used: 1.00% - 9.31 GiB of 931 GiB"),
         Metric(

@@ -6,22 +6,3 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Mapping
-from typing import NamedTuple
-from unittest import mock
-
-import pytest
-
-
-class _MockVSManager(NamedTuple):
-    active_service_interface: Mapping[str, object]
-
-
-@pytest.fixture()
-def initialised_item_state():
-    mock_vs = _MockVSManager({})
-    with mock.patch(
-        "cmk.agent_based.v1.value_store._active_host_value_store",
-        mock_vs,
-    ):
-        yield

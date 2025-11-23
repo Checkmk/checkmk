@@ -15,12 +15,20 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.gcp.agent_based import gcp_filestore as gcp_filestore_module
 from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
 from cmk.plugins.gcp.agent_based.gcp_filestore import check, check_summary, discover, parse
 from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.gcp.special_agents.agent_gcp import FILESTORE
 
 from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(gcp_filestore_module, "get_value_store", lambda: store)
+
 
 ASSET_TABLE = [
     [f'{{"project":"backup-255820", "config": ["{FILESTORE.name}"]}}'],
@@ -110,16 +118,14 @@ def generate_results(plugin: Plugin) -> CheckResult:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_results_as_specified(plugin: Plugin) -> None:
+def test_yield_results_as_specified(plugin: Plugin, empty_value_store: None) -> None:
     results = {r for r in generate_results(plugin) if isinstance(r, Result)}
     assert results == plugin.expected_results()
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_metrics_as_specified(plugin: Plugin) -> None:
+def test_yield_metrics_as_specified(plugin: Plugin, empty_value_store: None) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == plugin.expected_metrics()
 

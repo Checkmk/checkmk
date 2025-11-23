@@ -15,6 +15,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.gcp.agent_based import gcp_sql
 from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
 from cmk.plugins.gcp.agent_based.gcp_sql import (
     check_gcp_sql_cpu,
@@ -33,6 +34,13 @@ from cmk.plugins.gcp.lib.gcp import Section, SectionItem
 from cmk.plugins.gcp.special_agents.agent_gcp import CLOUDSQL
 
 from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(gcp_sql, "get_value_store", lambda: store)
+
 
 ASSET_TABLE = [
     [f'{{"project":"backup-255820", "config": ["{CLOUDSQL.name}"]}}'],
@@ -296,16 +304,14 @@ def generate_results(plugin: Plugin) -> CheckResult:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_results_as_specified(plugin: Plugin) -> None:
+def test_yield_results_as_specified(plugin: Plugin, empty_value_store: None) -> None:
     results = {r for r in generate_results(plugin) if isinstance(r, Result)}
     assert results == set(plugin.results)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("plugin", PLUGINS)
-def test_yield_metrics_as_specified(plugin: Plugin) -> None:
+def test_yield_metrics_as_specified(plugin: Plugin, empty_value_store: None) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
     assert results == plugin.expected_metrics()
 

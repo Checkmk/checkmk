@@ -17,6 +17,14 @@ from cmk.plugins.prism.agent_based.prism_containers import (
     discovery_prism_container,
 )
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.prism.agent_based.prism_containers.get_value_store", lambda: {}
+    )
+
+
 SECTION = {
     "NutanixManagementShare": {
         "name": "NutanixManagementShare",
@@ -415,7 +423,7 @@ SECTION = {
             "data_reduction.erasure_coding.parity_bytes": "0",
             "data_reduction.erasure_coding.post_reduction_bytes": "9180763971584",
             "data_reduction.erasure_coding.pre_reduction_bytes": "9180763971584",
-            "data_reduction.erasure_coding.saving_ratio_ppm": "1000000",
+            "data_reduction.erasure_coding.saving_ratio_ppM": "1000000",
             "data_reduction.erasure_coding.user_post_reduction_bytes": "4590381985792",
             "data_reduction.erasure_coding.user_pre_reduction_bytes": "4590381985792",
             "data_reduction.erasure_coding.user_saved_bytes": "0",
@@ -494,7 +502,6 @@ def test_discovery_prism_container(
     assert list(discovery_prism_container(section)) == expected_discovery_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["item", "params", "section", "expected_check_result"],
     [
@@ -551,6 +558,7 @@ def test_check_prism_container(
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
+    empty_value_store: None,
 ) -> None:
     assert (
         list(

@@ -32,7 +32,14 @@ TEST_INFO: list[StringTable] = [
 ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.apc_netbotz_sensors.get_value_store",
+        lambda: {},
+    )
+
+
 @pytest.mark.parametrize(
     "item, params, expected_result",
     [
@@ -61,6 +68,7 @@ def test_apc_netbotz_sensors_temp(
     item: str,
     params: TempParamType,
     expected_result: Sequence[Result | Metric],
+    empty_value_store: None,
 ) -> None:
     parsed = parse_apc_netbotz_v2_sensors(TEST_INFO)
     result = list(check_apc_netbotz_sensors_temp(item=item, params=params, section=parsed))
@@ -96,7 +104,6 @@ def test_apc_netbotz_sensors_humidity(
     assert result == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, expected_result",
     [
@@ -119,6 +126,7 @@ def test_apc_netbotz_sensors_humidity(
 def test_apc_netbotz_sensors_dewpoint(
     item: str,
     expected_result: Sequence[Result | Metric],
+    empty_value_store: None,
 ) -> None:
     parsed = parse_apc_netbotz_v2_sensors(TEST_INFO)
     result = list(check_apc_netbotz_sensors_dewpoint(item=item, params={}, section=parsed))

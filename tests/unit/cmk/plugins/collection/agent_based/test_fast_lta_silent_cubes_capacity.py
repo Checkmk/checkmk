@@ -11,6 +11,7 @@ from collections.abc import Callable
 import pytest
 
 from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
+from cmk.base.check_legacy_includes import size_trend
 from cmk.checkengine.plugins import CheckFunction, CheckPluginName
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
@@ -18,6 +19,12 @@ type DiscoveryFunction = Callable[..., DiscoveryResult]
 
 info = [["8001591181312", "3875508482048"]]
 check_name = "fast_lta_silent_cubes_capacity"
+
+
+@pytest.fixture(name="empty_value_store")
+def fixture_empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(size_trend, "get_value_store", lambda: store)
 
 
 # TODO: drop this after migration
@@ -44,9 +51,10 @@ def test_discovery_fast_lta_silent_cube_capacity(
     assert list(discover_fast_lta_silent_cubes_capacity(info)) == [Service(item="Total")]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_fast_lta_silent_cube_capacity(
     check_fast_lta_silent_cubes_capacity: CheckFunction,
+    empty_value_store: None,
 ) -> None:
     actual_check_results = list(
         check_fast_lta_silent_cubes_capacity(None, FILESYSTEM_DEFAULT_PARAMS, info)

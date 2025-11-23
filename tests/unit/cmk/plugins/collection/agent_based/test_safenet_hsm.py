@@ -9,6 +9,7 @@
 
 import pytest
 
+import cmk.plugins.safenet.agent_based.safenet_hsm
 from cmk.agent_based.v1 import IgnoreResultsError
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.safenet.agent_based.safenet_hsm import (
@@ -52,7 +53,15 @@ def _get_section() -> Section | None:
     return parse_safenet_hsm(STRING_TABLE)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(
+        cmk.plugins.safenet.agent_based.safenet_hsm, "get_value_store", lambda: store
+    )
+
+
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_safenet_hsm_events(section: Section) -> None:
     with pytest.raises(IgnoreResultsError):
         list(check_safenet_hsm_events(DEFAULT_EVENT_PARAMS, section))
@@ -69,7 +78,7 @@ def test_check_safenet_hsm_events(section: Section) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_safenet_hsm_op_stats(section: Section) -> None:
     with pytest.raises(IgnoreResultsError):
         list(check_safenet_hsm(DEFAULT_OPS_PARAMS, section))

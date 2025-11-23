@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
+import cmk.plugins.lib.interfaces
 from cmk.agent_based.v2 import (
     Attributes,
     CheckResult,
@@ -32,6 +33,13 @@ from cmk.plugins.fritzbox.agent_based.fritz import (
     Section,
 )
 from cmk.plugins.lib.interfaces import CHECK_DEFAULT_PARAMETERS, DISCOVERY_DEFAULT_PARAMETERS
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(cmk.plugins.lib.interfaces, "get_value_store", lambda: store)
+
 
 _STRING_TABLE = [
     ["VersionOS", "137.06.83"],
@@ -138,7 +146,6 @@ def test_discover_fritz_wan_if(
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     [
         "section",
@@ -184,6 +191,7 @@ def test_discover_fritz_wan_if(
 def test_check_fritz_wan_if(
     section: Section,
     expected_result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     assert (
         list(

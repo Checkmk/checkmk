@@ -31,6 +31,12 @@ from cmk.plugins.collection.agent_based.mqtt import (
 )
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(mqtt, "get_value_store", lambda: store)
+
+
 # TODO: Seems to be useful for other check tests. Do we already have something like this? We might
 # be able to generalize this with some more work.
 class SectionScenario(NamedTuple):
@@ -459,10 +465,19 @@ def test_check_mqtt_broker(check_scenario: CheckScenario, monkeypatch: pytest.Mo
         ),
         pytest.param(
             DiscoveryScenario(
+                section=_SCENARIO_MOSQUITTO_1609.parse_result,
+                expected_result=[
+                    Service(item="broker"),
+                ],
+            ),
+            id="broker_1.6.9",
+        ),
+        pytest.param(
+            DiscoveryScenario(
                 section=_SCENARIO_EMPTY.parse_result,
                 expected_result=[],
             ),
-            id="broker",
+            id="empty",
         ),
     ],
 )
@@ -473,7 +488,7 @@ def test_discovery_mqtt_messages(discovery_scenario: DiscoveryScenario) -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "check_scenario",
     [
@@ -624,7 +639,7 @@ def test_discovery_mqtt_clients(discovery_scenario: DiscoveryScenario) -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "check_scenario",
     [

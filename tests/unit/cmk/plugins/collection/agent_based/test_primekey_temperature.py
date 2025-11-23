@@ -6,9 +6,18 @@
 
 import pytest
 
+import cmk.plugins.collection.agent_based.primekey_temperature
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.primekey_temperature import check, discover, parse
 from cmk.plugins.lib.temperature import TempParamDict
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(
+        cmk.plugins.collection.agent_based.primekey_temperature, "get_value_store", lambda: store
+    )
 
 
 def test_parse() -> None:
@@ -19,7 +28,7 @@ def test_discover() -> None:
     assert list(discover(section={"CPU": 31.0})) == [Service(item="CPU")]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check() -> None:
     assert list(
         check(

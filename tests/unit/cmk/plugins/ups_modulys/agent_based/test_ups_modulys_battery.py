@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.ups_modulys.agent_based import ups_modulys_battery
 from cmk.plugins.ups_modulys.agent_based.ups_modulys_battery import (
     check_ups_modulys_battery,
     check_ups_modulys_battery_temp,
@@ -16,6 +17,12 @@ from cmk.plugins.ups_modulys.agent_based.ups_modulys_battery import (
     UPSBattery,
     UPSBatterySection,
 )
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(ups_modulys_battery, "get_value_store", lambda: store)
 
 
 def test_discover_ups_modulys_battery() -> None:
@@ -227,8 +234,7 @@ def test_discover_ups_modulys_battery_temp_no_services_discovered() -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_ups_modulys_battery_temp_ok_state() -> None:
+def test_check_ups_modulys_battery_temp_ok_state(empty_value_store: None) -> None:
     assert list(
         check_ups_modulys_battery_temp(
             item="test",
@@ -251,8 +257,7 @@ def test_check_ups_modulys_battery_temp_ok_state() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_ups_modulys_battery_temp_warn_state() -> None:
+def test_check_ups_modulys_battery_temp_warn_state(empty_value_store: None) -> None:
     assert list(
         check_ups_modulys_battery_temp(
             item="test",
@@ -275,8 +280,7 @@ def test_check_ups_modulys_battery_temp_warn_state() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_ups_modulys_battery_temp_crit_state() -> None:
+def test_check_ups_modulys_battery_temp_crit_state(empty_value_store: None) -> None:
     assert list(
         check_ups_modulys_battery_temp(
             item="test",

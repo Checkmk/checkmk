@@ -21,6 +21,13 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.collection.agent_based import smart
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(smart, "get_value_store", lambda: store)
+
+
 STRING_TABLE_SD = [
     [
         "/dev/sda",
@@ -612,7 +619,7 @@ def test_check_smart_stats(
     assert list(smart.check_smart_stats(item, params, section)) == result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_smart_command_timeout_rate() -> None:
     section_timeout = {"/dev/sda": {"Command_Timeout_Counter": 0}}
     now_simulated = 581792400

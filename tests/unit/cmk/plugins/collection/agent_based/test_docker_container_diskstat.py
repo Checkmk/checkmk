@@ -21,6 +21,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.agent_based.v2.render import iobandwidth
+from cmk.plugins.collection.agent_based import diskstat
 from cmk.plugins.collection.agent_based.diskstat import check_plugin_diskstat
 from cmk.plugins.collection.agent_based.docker_container_diskstat import (
     agent_section_docker_container_diskstat,
@@ -29,6 +30,13 @@ from cmk.plugins.collection.agent_based.docker_container_diskstat_cgroupv2 impor
     agent_section_docker_container_diskstat_cgroupv2,
     DockerDiskstatParser,
 )
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(diskstat, "get_value_store", lambda: value_store)
+
 
 # The following string tables are created by executing the following commands:
 #   fio --name wxyz --direct=1 --buffered=0 --size=512m --bs=4k --rw=read --ioengine=sync --numjobs=1
@@ -247,7 +255,7 @@ def test_parser() -> None:
     assert parser.names.names == {"b": "2"}
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "section, string_table_0, string_table_10, read_bytes, write_bytes, read_ops, write_ops",
     [
@@ -297,6 +305,7 @@ def test_docker_container_diskstat(
     write_bytes: float,
     read_ops: float,
     write_ops: float,
+    empty_value_store: None,
 ) -> None:
     section_0_seconds = section.parse_function(string_table_0)
     section_60_seconds = section.parse_function(string_table_10)

@@ -25,6 +25,12 @@ from cmk.plugins.lib import memory
 from cmk.plugins.lib import ps as ps_utils
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store = dict[str, object]()
+    monkeypatch.setattr(ps_utils, "get_value_store", lambda: value_store)
+
+
 def splitter(
     text: str,
     split_symbol: str | None = None,
@@ -978,13 +984,15 @@ check_results = [
 ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "inv_item, reference",
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
-def test_check_ps_common(inv_item: Service, reference: Sequence[Result | Metric]) -> None:
+def test_check_ps_common(
+    inv_item: Service, reference: Sequence[Result | Metric], empty_value_store: None
+) -> None:
     parsed: list = []
 
     now = 1540375342
@@ -1105,9 +1113,9 @@ cpu_util_data = [
 ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
-def test_check_ps_common_cpu(data: cpu_config) -> None:
+def test_check_ps_common_cpu(data: cpu_config, empty_value_store: None) -> None:
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
         _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
             check_time, splitter(agent_info.format(cputime))
@@ -1156,7 +1164,7 @@ def test_check_ps_common_cpu(data: cpu_config) -> None:
     assert output[8] == Result(state=State.OK, summary="Running for: 3 hours 59 minutes")
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "levels, reference",
     [
@@ -1177,7 +1185,9 @@ def test_check_ps_common_cpu(data: cpu_config) -> None:
     ],
 )
 def test_check_ps_common_count(
-    levels: tuple[int, int, int, int], reference: Sequence[Result | Metric]
+    levels: tuple[int, int, int, int],
+    reference: Sequence[Result | Metric],
+    empty_value_store: None,
 ) -> None:
     _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
         int(time.time()), splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
@@ -1205,8 +1215,8 @@ def test_check_ps_common_count(
     assert output == reference
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_subset_patterns() -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_subset_patterns(empty_value_store: None) -> None:
     section_ps = ps_section._parse_ps(
         int(time.time()),
         splitter(
@@ -1282,9 +1292,9 @@ def test_subset_patterns() -> None:
         assert output[0] == Result(state=State.OK, summary="Processes: %s" % count)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
-def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
+def test_cpu_util_single_process_levels(cpu_cores: int, empty_value_store: None) -> None:
     """Test CPU utilization per single process.
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""
@@ -1372,8 +1382,8 @@ def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
     assert output == reference
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_parse_ps_windows(mocker: MockerFixture) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_parse_ps_windows(mocker: MockerFixture, empty_value_store: None) -> None:
     section_ps = ps_section._parse_ps(
         int(time.time()),
         splitter(
@@ -1485,8 +1495,8 @@ def test_discover_empty_command_line() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_empty_command_line() -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_empty_command_line(empty_value_store: None) -> None:
     assert list(
         ps_check.check_ps(
             "my_proc",
@@ -1519,8 +1529,8 @@ def test_check_empty_command_line() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_ps_check_percent_memory_unknown() -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_ps_check_percent_memory_unknown(empty_value_store: None) -> None:
     assert Result(
         state=State.UNKNOWN, summary="Percentual RAM levels configured, but total RAM is unknown"
     ) in list(
@@ -1536,8 +1546,8 @@ def test_ps_check_percent_memory_unknown() -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_ps_check_percent_memory_mem_total() -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_ps_check_percent_memory_mem_total(empty_value_store: None) -> None:
     assert Result(
         state=State.CRIT,
         summary="Percentage of resident memory: 100.00% (warn/crit at 5.00%/10.00%)",
@@ -1554,8 +1564,8 @@ def test_ps_check_percent_memory_mem_total() -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_ps_check_percent_memory_mem_used() -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_ps_check_percent_memory_mem_used(empty_value_store: None) -> None:
     assert Result(
         state=State.CRIT,
         summary="Percentage of resident memory: 100.00% (warn/crit at 5.00%/10.00%)",

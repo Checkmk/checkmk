@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
 from cmk.agent_based.v2 import (
@@ -137,7 +138,14 @@ def test_discover_aruba_sw_temp_status(
     assert list(aruba_sw_temp.discover_aruba_sw_temp(section)) == result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.collection.agent_based.aruba_sw_temp.get_value_store",
+        lambda: {},
+    )
+
+
 @pytest.mark.parametrize(
     "string_table, item, result",
     [
@@ -355,6 +363,7 @@ def test_check_aruba_fan_status(
     string_table: StringTable,
     item: str,
     result: CheckResult,
+    empty_value_store: None,
 ) -> None:
     section = aruba_sw_temp.parse_aruba_sw_temp(string_table)
     assert (

@@ -7,6 +7,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.collection.agent_based import scaleio_volume
 from cmk.plugins.collection.agent_based.scaleio_volume import (
     check_scaleio_volume,
     discover_scaleio_volume,
@@ -14,6 +15,13 @@ from cmk.plugins.collection.agent_based.scaleio_volume import (
     ScaleioVolumeSection,
 )
 from cmk.plugins.scaleio.lib import DiskReadWrite, StorageConversionError
+
+
+@pytest.fixture(name="empty_value_store")
+def fixture_empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store = dict[str, object]()
+    monkeypatch.setattr(scaleio_volume, "get_value_store", lambda: value_store)
+
 
 SECTION = {
     "c07a5f6c00000001": ScaleioVolume(
@@ -66,8 +74,8 @@ def test_inventory_scaleio_volume(
     assert list(discover_scaleio_volume(parsed_section)) == discovered_services
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_scaleio_volume() -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_scaleio_volume(empty_value_store: None) -> None:
     check_result = list(check_scaleio_volume(item=ITEM, params={}, section=SECTION))
     assert check_result[0] == Result(state=State.OK, summary="Name: CF1SIOVCD001, Size: 2.0 TB")
     assert len(check_result) == 9

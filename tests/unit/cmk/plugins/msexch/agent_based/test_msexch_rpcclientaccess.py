@@ -7,7 +7,6 @@ import pytest
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
-    get_value_store,
     Metric,
     Result,
     Service,
@@ -19,6 +18,7 @@ from cmk.plugins.msexch.agent_based.msexch_rpcclientaccess import (
     discover_msexch_rpcclientaccess,
     Params,
 )
+from cmk.plugins.windows.agent_based import libwmi
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 _AGENT_OUTPUT = [
@@ -131,7 +131,6 @@ def test_parse_msexch_rpcclientaccess(
     assert sorted(discover_msexch_rpcclientaccess(section)) == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, params, expected_result",
     [
@@ -161,7 +160,9 @@ def test_check_msexch_rpcclientaccess(
     string_table: StringTable,
     params: Params,
     expected_result: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    get_value_store().update({"RPCRequests_": (0.0, 0.0)})
+    store = {"RPCRequests_": (0.0, 0.0)}
+    monkeypatch.setattr(libwmi, "get_value_store", lambda: store)
     section = parse_wmi_table(string_table)
     assert list(check_msexch_rpcclientaccess(params, section)) == expected_result

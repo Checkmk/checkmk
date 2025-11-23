@@ -17,6 +17,12 @@ from cmk.plugins.collection.agent_based import lnx_if
 from cmk.plugins.lib import interfaces
 
 
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store = dict[str, object]()
+    monkeypatch.setattr(interfaces, "get_value_store", lambda: value_store)
+
+
 @pytest.mark.parametrize(
     "string_table, result",
     [
@@ -306,8 +312,8 @@ PARAMS = {
 }
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_lnx_if(monkeypatch: pytest.MonkeyPatch, empty_value_store: None) -> None:
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
     monkeypatch.setattr("time.time", lambda: 0)
@@ -339,8 +345,8 @@ def test_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result_lnx_if == result_interfaces
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch, empty_value_store: None) -> None:
     section: dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):

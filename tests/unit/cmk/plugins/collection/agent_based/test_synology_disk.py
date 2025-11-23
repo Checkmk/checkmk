@@ -12,6 +12,13 @@ from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.collection.agent_based import synology_disks
 from tests.unit.cmk.plugins.collection.agent_based.snmp import get_parsed_snmp_section
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(synology_disks, "get_value_store", lambda: store)
+
+
 # SUP-13080
 DATA_0 = """
 .1.3.6.1.2.1.1.1.0 Linux PPPPPP 1.1.111+ #00000 SMP Tue Nov 11 11:11:11 CST 1111 x86_64
@@ -92,20 +99,18 @@ def make_section(
     }
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "state, expected",
     [(1, State.OK), (2, State.OK), (3, State.WARN), (4, State.CRIT), (5, State.CRIT)],
 )
-def test_result_state(state: int, expected: State) -> None:
+def test_result_state(state: int, expected: State, empty_value_store: None) -> None:
     section = make_section(state=state)
     item = list(section.keys())[0]
     result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_temperature_metric() -> None:
+def test_temperature_metric(empty_value_store: None) -> None:
     temperature = 42.0
     section = make_section(temperature=temperature)
     item = list(section.keys())[0]
@@ -115,20 +120,20 @@ def test_temperature_metric() -> None:
     assert result.name == "temp"
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "role, expected",
     [("hotspare", State.OK), ("ssd_cache", State.OK), ("none", State.WARN), ("data", State.WARN)],
 )
-def test_check_role_is_ok_even_if_not_initialized(role: str, expected: State) -> None:
+def test_check_role_is_ok_even_if_not_initialized(
+    role: str, expected: State, empty_value_store: None
+) -> None:
     section = make_section(role=role, state=3)
     item = list(section.keys())[0]
     result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_disk_health_status(as_path: Callable[[str], Path]) -> None:
+def test_disk_health_status(as_path: Callable[[str], Path], empty_value_store: None) -> None:
     parsed = get_parsed_snmp_section(synology_disks.snmp_section_synology_disks, as_path(DATA_0))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 3", {}, parsed)) == [
@@ -140,8 +145,9 @@ def test_disk_health_status(as_path: Callable[[str], Path]) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_disk_health_status_missing(as_path: Callable[[str], Path]) -> None:
+def test_disk_health_status_missing(
+    as_path: Callable[[str], Path], empty_value_store: None
+) -> None:
     parsed = get_parsed_snmp_section(synology_disks.snmp_section_synology_disks, as_path(DATA_1))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 1", {}, parsed)) == [
@@ -153,8 +159,7 @@ def test_disk_health_status_missing(as_path: Callable[[str], Path]) -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_hotspare(as_path: Callable[[str], Path]) -> None:
+def test_hotspare(as_path: Callable[[str], Path], empty_value_store: None) -> None:
     parsed = get_parsed_snmp_section(synology_disks.snmp_section_synology_disks, as_path(DATA_2))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 4", {}, parsed)) == [

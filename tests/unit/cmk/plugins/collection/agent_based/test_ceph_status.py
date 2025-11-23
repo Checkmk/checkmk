@@ -9,7 +9,9 @@
 
 from functools import lru_cache
 
-from cmk.agent_based.v2 import get_value_store, Result, State
+import pytest
+
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.collection.agent_based import ceph_status
 
 STRING_TABLE_1 = [
@@ -69,8 +71,15 @@ def section_osds() -> ceph_status.Section:
     return ceph_status.parse_ceph_status(STRING_TABLE_OSDS)
 
 
-def test_check_ceph_status(initialised_item_state: None) -> None:
-    get_value_store().update({"ceph_status.epoch.rate": (0, 175986)})
+@pytest.fixture
+def value_store(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
+    store = dict[str, object]()
+    monkeypatch.setattr(ceph_status, "get_value_store", lambda: store)
+    return store
+
+
+def test_check_ceph_status(value_store: dict[str, object]) -> None:
+    value_store.update({"ceph_status.epoch.rate": (0, 175986)})
     assert list(ceph_status.check_ceph_status({"epoch": (1, 3, 30)}, section1())) == [
         Result(state=State.OK, summary="Health: OK"),
         Result(state=State.OK, summary="Epoch rate (30 minutes 0 seconds average): 0.00"),
@@ -78,8 +87,8 @@ def test_check_ceph_status(initialised_item_state: None) -> None:
     assert not list(ceph_status.check_ceph_status_mgrs({"epoch": (1, 2, 5)}, section1()))
 
 
-def test_check_ceph_status_osds(initialised_item_state: None) -> None:
-    get_value_store().update({"ceph_status.epoch.rate": (0, 175986)})
+def test_check_ceph_status_osds(value_store: dict[str, object]) -> None:
+    value_store.update({"ceph_status.epoch.rate": (0, 175986)})
     assert list(
         ceph_status.check_ceph_status(
             {

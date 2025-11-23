@@ -5,8 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v1 import GetRateError
+import cmk.plugins.safenet.agent_based.safenet_ntls
 from cmk.agent_based.v2 import (
+    GetRateError,
     Metric,
     Result,
     State,
@@ -20,6 +21,15 @@ from cmk.plugins.safenet.agent_based.safenet_ntls import (
     parse_safenet_ntls,
     Section,
 )
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(
+        cmk.plugins.safenet.agent_based.safenet_ntls, "get_value_store", lambda: store
+    )
+
 
 STRING_TABLE = [["1", "0", "0", "50599", "2", "Nov 17 11:38:50 2100 GMT"]]
 
@@ -40,7 +50,7 @@ def _get_section() -> Section | None:
     return parse_safenet_ntls(STRING_TABLE)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_safenet_ntls_connrate(section: Section) -> None:
     with pytest.raises(GetRateError):
         list(check_safenet_ntls_connrate("successful", section))

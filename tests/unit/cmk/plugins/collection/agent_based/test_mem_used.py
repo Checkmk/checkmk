@@ -13,6 +13,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Attributes, CheckResult, Metric, Result, Service, State
+from cmk.plugins.collection.agent_based import mem_used
 from cmk.plugins.collection.agent_based.mem_used import (
     check_mem_used,
     discover_mem_used,
@@ -22,6 +23,13 @@ from cmk.plugins.collection.agent_based.mem_used import (
 from cmk.plugins.lib import memory
 
 from .utils_inventory import sort_inventory_result
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store = dict[str, object]()
+    monkeypatch.setattr(mem_used, "get_value_store", lambda: value_store)
+
 
 state = State  # TODO: cleanup
 
@@ -281,7 +289,6 @@ def test_check_memory_fails(
         list(check_mem_used(params, meminfo))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params,meminfo,expected",
     [
@@ -746,7 +753,7 @@ def test_check_memory_fails(
     ],
 )
 def test_check_memory(
-    params: Mapping, meminfo: memory.SectionMemUsed, expected: CheckResult
+    params: Mapping, meminfo: memory.SectionMemUsed, expected: CheckResult, empty_value_store: None
 ) -> None:
     copy_info = meminfo.copy()
 

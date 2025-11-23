@@ -10,10 +10,17 @@ import time
 
 import pytest
 
-from cmk.agent_based.v1 import IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
 from cmk.checkengine.parameters import Parameters
 from cmk.plugins.collection.agent_based.domino_tasks import check_domino_tasks
 from cmk.plugins.lib import ps
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store = dict[str, object]()
+    monkeypatch.setattr(ps, "get_value_store", lambda: value_store)
+
 
 SECTION_DOMINO_TASKS_DATA = (
     1,
@@ -54,7 +61,7 @@ SECTION_DOMINO_TASKS_DATA = (
 )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "params, expected_result",
     [
@@ -87,7 +94,7 @@ SECTION_DOMINO_TASKS_DATA = (
         ),
     ],
 )
-def test_check_domino_tasks(params, expected_result):
+def test_check_domino_tasks(params, expected_result, empty_value_store: None):
     result = check_domino_tasks("mock_item", params, SECTION_DOMINO_TASKS_DATA, None)
     assert list(result) == expected_result
 

@@ -8,10 +8,16 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import get_value_store, IgnoreResultsError, Metric, Result, Service, State
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import diskstat
 from cmk.plugins.lib.diskstat import NoIOSection
 from cmk.plugins.lib.multipath import Group
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(diskstat, "get_value_store", lambda: store)
 
 
 def test_parse_diskstat_minimum() -> None:
@@ -22,7 +28,7 @@ def test_parse_diskstat_minimum() -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_parse_diskstat_predictive() -> None:
     # SUP-5924
     DATA = [
@@ -1298,35 +1304,26 @@ EXP_METRICS = {
 }
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_same_time_same_values() -> None:
     # same timestamp twice --> IgnoreResultsError twice
+    store = dict[str, object]()
     with pytest.raises(IgnoreResultsError):
-        diskstat._compute_rates_single_disk(
-            DISK,
-            get_value_store(),
-        )
+        diskstat._compute_rates_single_disk(DISK, store)
     with pytest.raises(IgnoreResultsError):
-        diskstat._compute_rates_single_disk(
-            DISK,
-            get_value_store(),
-        )
+        diskstat._compute_rates_single_disk(DISK, store)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_diff_time_same_values() -> None:
+    store = dict[str, object]()
     # different timestamps --> IgnoreResults once
     with pytest.raises(IgnoreResultsError):
-        diskstat._compute_rates_single_disk(
-            DISK,
-            get_value_store(),
-        )
+        diskstat._compute_rates_single_disk(DISK, store)
     disk_w_rates = diskstat._compute_rates_single_disk(
         {
             **DISK,
             "timestamp": DISK["timestamp"] + 100,
         },
-        get_value_store(),
+        store,
     )
     assert disk_w_rates == {
         **{metric: 0 for metric in EXP_METRICS},
@@ -1334,18 +1331,12 @@ def test_compute_rates_single_disk_diff_time_same_values() -> None:
     }
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_diff_time_diff_values() -> None:
     # different timestamps --> IgnoreResults once
+    store = dict[str, object]()
     with pytest.raises(IgnoreResultsError):
-        diskstat._compute_rates_single_disk(
-            DISK_HALF,
-            get_value_store(),
-        )
-    disk_w_rates = diskstat._compute_rates_single_disk(
-        DISK,
-        get_value_store(),
-    )
+        diskstat._compute_rates_single_disk(DISK_HALF, store)
+    disk_w_rates = diskstat._compute_rates_single_disk(DISK, store)
     assert set(disk_w_rates) == EXP_METRICS
     for k, v in disk_w_rates.items():
         if k == "queue_length":
@@ -1354,7 +1345,7 @@ def test_compute_rates_single_disk_diff_time_diff_values() -> None:
             assert v > 0
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_diskstat_single_item() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1399,7 +1390,7 @@ def test_check_diskstat_single_item() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_diskstat_summary() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1482,7 +1473,7 @@ def test_check_diskstat_summary() -> None:
             assert res_sum.value >= res_single.value
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_cluster_check_diskstat_single_item() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1541,7 +1532,7 @@ def test_cluster_check_diskstat_single_item() -> None:
     assert results_cluster == results_non_cluster
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_cluster_check_diskstat_summary() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1606,7 +1597,7 @@ def test_cluster_check_diskstat_summary() -> None:
     assert results_cluster == results_non_cluster
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_latency_calculation() -> None:
     with pytest.raises(IgnoreResultsError):
         list(

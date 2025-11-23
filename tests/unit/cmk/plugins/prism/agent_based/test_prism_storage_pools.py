@@ -17,6 +17,14 @@ from cmk.plugins.prism.agent_based.prism_storage_pools import (
     discovery_prism_storage_pools,
 )
 
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.plugins.prism.agent_based.prism_storage_pools.get_value_store", lambda: {}
+    )
+
+
 SECTION = {
     "StoragePool": {
         "capacity": 41713429587402,
@@ -73,7 +81,6 @@ def test_discovery_prism_storage_pools(
     assert list(discovery_prism_storage_pools(section)) == expected_discovery_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["item", "params", "section", "expected_check_result"],
     [
@@ -108,6 +115,7 @@ def test_check_prism_storage_pools(
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
+    empty_value_store: None,
 ) -> None:
     assert (
         list(

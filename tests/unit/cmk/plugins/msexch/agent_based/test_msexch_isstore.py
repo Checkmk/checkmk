@@ -7,7 +7,6 @@ import pytest
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
-    get_value_store,
     Metric,
     Result,
     Service,
@@ -19,7 +18,15 @@ from cmk.plugins.msexch.agent_based.msexch_isstore import (
     discover_msexch_isstore,
     Params,
 )
+from cmk.plugins.windows.agent_based import libwmi
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(libwmi, "get_value_store", lambda: store)
+
 
 _AGENT_OUTPUT = [
     [
@@ -1263,7 +1270,6 @@ def test_parse_msexch_isstore(string_table: StringTable, expected_result: Discov
     assert sorted(discover_msexch_isstore(section)) == expected_result
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, item, params, expected_result",
     [
@@ -1345,7 +1351,9 @@ def test_check_msexch_isstore(
     item: str,
     params: Params,
     expected_result: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    get_value_store().update({"RPCRequests_": (0.0, 1145789)})
+    value_store = {"RPCRequests_": (0.0, 1145789)}
+    monkeypatch.setattr(libwmi, "get_value_store", lambda: value_store)
     section = parse_wmi_table(string_table)
     assert list(check_msexch_isstore(item, params, section)) == expected_result

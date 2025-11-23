@@ -31,6 +31,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "boto3",
     "botocore",
     "cryptography",
+    "defusedxml",
     "docstring-parser",
     "exchangelib",  # missing wheel
     "fastapi",

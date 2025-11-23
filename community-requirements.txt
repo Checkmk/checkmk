@@ -1048,6 +1048,7 @@ defusedxml==0.7.1 \
     --hash=sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61
     # via
     #   -c requirements.txt
+    #   -r cmk/requirements.in
     #   exchangelib
     #   jira
     #   pysaml2

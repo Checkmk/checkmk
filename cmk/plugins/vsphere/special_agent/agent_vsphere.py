@@ -24,6 +24,7 @@ from xml.dom import minicompat, minidom
 import dateutil.parser
 import requests
 import urllib3
+from defusedxml.minidom import parseString
 
 from cmk.password_store.v1_unstable import (
     parser_add_secret_option,
@@ -1864,7 +1865,7 @@ def _get_text(node: minicompat.NodeList[minidom.Element]) -> str:
 def get_section_licenses(connection: ESXConnection) -> list[str]:
     section_lines = ["<<<esx_vsphere_licenses:sep(9)>>>"]
     licenses_response = connection.query_server("licensesused")
-    root_node = minidom.parseString(licenses_response)
+    root_node = parseString(licenses_response)
     licenses_node = root_node.getElementsByTagName("LicenseManagerLicenseInfo")
     for license_node in licenses_node:
         total = _get_text(license_node.getElementsByTagName("total"))

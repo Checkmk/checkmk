@@ -882,7 +882,7 @@ def _parse_col_field_from_legacy(
 def _parse_col_filter_from_legacy(
     table_view_name: str,
     filter_ident: str,
-    long_title: str,
+    title: str,
     filter_class: (
         None
         | type[FilterInvText]
@@ -911,26 +911,26 @@ def _parse_col_filter_from_legacy(
         return FilterInvtableText(
             inv_info=table_view_name,
             ident=filter_ident,
-            title=long_title,
+            title=title,
         )
     match filter_class.__name__:
         case "FilterInvtableAdminStatus":
             return FilterInvtableAdminStatus(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                title=long_title,
+                title=title,
             )
         case "FilterInvtableAvailable":
             return FilterInvtableAvailable(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                title=long_title,
+                title=title,
             )
         case "FilterInvtableIntegerRange":
             return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                title=long_title,
+                title=title,
                 unit="",
                 scale=1,
             )
@@ -938,31 +938,31 @@ def _parse_col_filter_from_legacy(
             return FilterInvtableInterfaceType(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                title=long_title,
+                title=title,
             )
         case "FilterInvtableOperStatus":
             return FilterInvtableOperStatus(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                title=long_title,
+                title=title,
             )
         case "FilterInvtableText":
             return FilterInvtableText(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                title=long_title,
+                title=title,
             )
         case "FilterInvtableTimestampAsAge":
             return FilterInvtableTimestampAsAge(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                title=long_title,
+                title=title,
             )
         case "FilterInvtableVersion":
             return FilterInvtableVersion(
                 inv_info=table_view_name,
                 ident=filter_ident,
-                title=long_title,
+                title=title,
             )
     raise TypeError(filter_class)
 

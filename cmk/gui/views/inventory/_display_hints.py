@@ -880,6 +880,7 @@ def _parse_col_field_from_legacy(
 
 
 def _parse_col_filter_from_legacy(
+    *,
     table_view_name: str,
     filter_ident: str,
     title: str,
@@ -1017,10 +1018,10 @@ def _parse_col_field_from_legacy_of_view(
         paint_function=_wrap_paint_function(paint_function),
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
         filter=_parse_col_filter_from_legacy(
-            table_view_name,
-            names.filter_ident,
-            long_title,
-            legacy_hint.get("filter"),
+            table_view_name=table_view_name,
+            filter_ident=names.filter_ident,
+            title=long_title,
+            filter_class=legacy_hint.get("filter"),
         ),
     )
 

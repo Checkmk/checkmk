@@ -17,8 +17,15 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import GetRateError
-from cmk.base.legacy_checks.msexch_owa import check_msexch_owa, discover_msexch_owa
+from cmk.base.check_legacy_includes import wmi
+from cmk.base.legacy_checks import msexch_owa
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: dict[str, object] = {}
+    monkeypatch.setattr(wmi, "get_value_store", lambda: store)
 
 
 @pytest.fixture(name="parsed")
@@ -59,18 +66,18 @@ def fixture_parsed() -> Mapping[str, Any]:
 
 def test_msexch_owa_discovery(parsed: Mapping[str, Any]) -> None:
     """Test discovery function returns correct items."""
-    result = list(discover_msexch_owa(parsed))
+    result = list(msexch_owa.discover_msexch_owa(parsed))
     assert result == [(None, {})]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_msexch_owa_check(parsed: Mapping[str, Any]) -> None:
     """Test Microsoft Exchange OWA check function."""
     # Based on the original dataset, this should produce rates for OWA metrics
     # The rate calculation gets GetRateError on first run due to initialization
     # Should get GetRateError on first check (normal behavior)
     with pytest.raises(GetRateError):
-        list(check_msexch_owa(None, {}, parsed))
+        list(msexch_owa.check_msexch_owa(None, {}, parsed))
 
 
 def test_msexch_owa_parse_function() -> None:
@@ -114,7 +121,7 @@ def test_msexch_owa_discovery_empty_section() -> None:
     string_table: list[list[str]] = []
 
     parsed = parse_wmi_table(string_table)
-    result = list(discover_msexch_owa(parsed))
+    result = list(msexch_owa.discover_msexch_owa(parsed))
 
     assert result == []
 
@@ -124,7 +131,7 @@ def test_msexch_owa_check_no_data() -> None:
     parsed: Mapping[str, Any] = {"": {}}
 
     try:
-        result = list(check_msexch_owa(None, {}, parsed))
+        result = list(msexch_owa.check_msexch_owa(None, {}, parsed))
         # Should have empty results or raise an error
         assert len(result) >= 0
     except Exception:

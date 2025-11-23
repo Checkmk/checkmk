@@ -16,8 +16,15 @@
 
 import pytest
 
-from cmk.base.legacy_checks.skype import check_skype_av_edge
+from cmk.base.check_legacy_includes import wmi
+from cmk.base.legacy_checks import skype
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(wmi, "get_value_store", lambda: store)
 
 
 @pytest.fixture(name="skype_edge_parsed")
@@ -47,7 +54,7 @@ def _get_skype_edge_parsed():
     return parse_wmi_table(info, key="instance")
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_skype_edge_udp_zero_counters(skype_edge_parsed):
     """Test Skype A/V Edge UDP monitoring with zero authentication failures, allocate requests, and packets dropped."""
     params = {
@@ -59,10 +66,10 @@ def test_skype_edge_udp_zero_counters(skype_edge_parsed):
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError as expected
     with pytest.raises(Exception):  # GetRateError or similar rate-related error
-        list(check_skype_av_edge("127527", params, skype_edge_parsed))
+        list(skype.check_skype_av_edge("127527", params, skype_edge_parsed))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_skype_edge_udp_specific_item_monitoring(skype_edge_parsed):
     """Test Skype A/V Edge UDP monitoring for specific network interface item."""
     params = {
@@ -74,10 +81,10 @@ def test_skype_edge_udp_specific_item_monitoring(skype_edge_parsed):
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError/AssertionError as expected
     with pytest.raises(Exception):  # GetRateError or AssertionError
-        list(check_skype_av_edge("127527", params, skype_edge_parsed))
+        list(skype.check_skype_av_edge("127527", params, skype_edge_parsed))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_skype_edge_udp_public_ipv4_interface(skype_edge_parsed):
     """Test Skype A/V Edge UDP monitoring for Public IPv4 Network Interface."""
     params = {
@@ -89,10 +96,10 @@ def test_skype_edge_udp_public_ipv4_interface(skype_edge_parsed):
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError/AssertionError as expected
     with pytest.raises(Exception):  # GetRateError or AssertionError
-        list(check_skype_av_edge("127527", params, skype_edge_parsed))
+        list(skype.check_skype_av_edge("127527", params, skype_edge_parsed))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_skype_edge_udp_ipv6_zero_interface(skype_edge_parsed):
     """Test Skype A/V Edge UDP monitoring for Public IPv6 Network Interface with all zero counters."""
     params = {
@@ -104,10 +111,10 @@ def test_skype_edge_udp_ipv6_zero_interface(skype_edge_parsed):
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError/AssertionError as expected
     with pytest.raises(Exception):  # GetRateError or AssertionError
-        list(check_skype_av_edge("127527", params, skype_edge_parsed))
+        list(skype.check_skype_av_edge("127527", params, skype_edge_parsed))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_skype_edge_udp_custom_thresholds(skype_edge_parsed):
     """Test Skype A/V Edge UDP monitoring with custom threshold parameters."""
     params = {
@@ -119,4 +126,4 @@ def test_skype_edge_udp_custom_thresholds(skype_edge_parsed):
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError/AssertionError as expected
     with pytest.raises(Exception):  # GetRateError or AssertionError
-        list(check_skype_av_edge("127527", params, skype_edge_parsed))
+        list(skype.check_skype_av_edge("127527", params, skype_edge_parsed))

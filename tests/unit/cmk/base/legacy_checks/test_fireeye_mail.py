@@ -14,19 +14,7 @@ from typing import Never
 
 import pytest
 
-from cmk.base.legacy_checks.fireeye_mail import (
-    check_fireeye_attachment,
-    check_fireeye_mail,
-    check_fireeye_mail_received,
-    check_fireeye_mail_statistics,
-    check_fireeye_url,
-    discover_fireeye_mail,
-    discover_fireeye_mail_attachment,
-    discover_fireeye_mail_received,
-    discover_fireeye_mail_statistics,
-    discover_fireeye_mail_url,
-    parse_fireeye_mail,
-)
+from cmk.base.legacy_checks import fireeye_mail
 
 
 @pytest.fixture(name="string_table")
@@ -55,75 +43,93 @@ def _string_table() -> list[list[str]]:
 
 @pytest.fixture(name="parsed")
 def _parsed(string_table: list[list[str]]) -> list[list[str]]:
-    return parse_fireeye_mail(string_table)
+    return fireeye_mail.parse_fireeye_mail(string_table)
 
 
 def test_parse_fireeye_mail(string_table: list[list[str]]) -> None:
-    result = parse_fireeye_mail(string_table)
+    result = fireeye_mail.parse_fireeye_mail(string_table)
     assert result == string_table
 
 
 def test_discover_fireeye_mail(parsed: list[list[str]]) -> None:
-    result = list(discover_fireeye_mail(parsed))
+    result = list(fireeye_mail.discover_fireeye_mail(parsed))
     assert result == [(None, {})]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_fireeye_mail(parsed: list[list[str]]) -> None:
+def test_check_fireeye_mail(parsed: list[list[str]], monkeypatch: pytest.MonkeyPatch) -> None:
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError as expected
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(fireeye_mail, "get_value_store", lambda: value_store)
     with pytest.raises(Exception):  # GetRateError or similar rate-related error
-        list(check_fireeye_mail(None, {}, parsed))
+        list(fireeye_mail.check_fireeye_mail(None, {}, parsed))
 
 
 def test_discover_fireeye_mail_attachment(parsed: list[list[str]]) -> None:
-    result = list(discover_fireeye_mail_attachment(parsed))
+    result = list(fireeye_mail.discover_fireeye_mail_attachment(parsed))
     assert result == [(None, {})]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_fireeye_mail_attachment(parsed: list[list[str]]) -> None:
+def test_check_fireeye_mail_attachment(
+    parsed: list[list[str]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError as expected
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(fireeye_mail, "get_value_store", lambda: value_store)
     with pytest.raises(Exception):  # GetRateError or similar rate-related error
-        list(check_fireeye_attachment(None, {}, parsed))
+        list(fireeye_mail.check_fireeye_attachment(None, {}, parsed))
 
 
 def test_discover_fireeye_mail_url(parsed: list[list[str]]) -> None:
-    result = list(discover_fireeye_mail_url(parsed))
+    result = list(fireeye_mail.discover_fireeye_mail_url(parsed))
     assert result == [(None, {})]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_fireeye_mail_url(parsed: list[list[str]]) -> None:
+def test_check_fireeye_mail_url(parsed: list[list[str]], monkeypatch: pytest.MonkeyPatch) -> None:
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError as expected
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(fireeye_mail, "get_value_store", lambda: value_store)
     with pytest.raises(Exception):  # GetRateError or similar rate-related error
-        list(check_fireeye_url(None, {}, parsed))
+        list(fireeye_mail.check_fireeye_url(None, {}, parsed))
 
 
 def test_discover_fireeye_mail_statistics(parsed: list[list[str]]) -> None:
-    result = list(discover_fireeye_mail_statistics(parsed))
+    result = list(fireeye_mail.discover_fireeye_mail_statistics(parsed))
     assert result == [(None, {})]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_fireeye_mail_statistics(parsed: list[list[str]]) -> None:
+def test_check_fireeye_mail_statistics(
+    parsed: list[list[str]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # This function uses get_rate which requires multiple calls to work properly
     # First call will raise GetRateError as expected
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(fireeye_mail, "get_value_store", lambda: value_store)
     with pytest.raises(Exception):  # GetRateError or similar rate-related error
-        list(check_fireeye_mail_statistics(None, {}, parsed))
+        list(fireeye_mail.check_fireeye_mail_statistics(None, {}, parsed))
 
 
 def test_discover_fireeye_mail_received(parsed: list[list[str]]) -> None:
-    result = list(discover_fireeye_mail_received(parsed))
+    result = list(fireeye_mail.discover_fireeye_mail_received(parsed))
     assert result == [(None, {})]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_fireeye_mail_received(parsed: list[list[str]]) -> None:
+def test_check_fireeye_mail_received(
+    parsed: list[list[str]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     params = {"rate": (6000, 7000)}
-    result = list(check_fireeye_mail_received(None, params, parsed))
+    # Pre-populate value store for rate calculation
+    # Parsed contains 120 emails received over 60 seconds (04/06/17 12:00:00 to 12:01:00)
+    # To get rate of 2.00/s, we need to set up proper previous values
+    import time
+
+    current_time = time.mktime(time.strptime("04/06/17 12:01:00", "%d/%m/%y %H:%M:%S"))
+    value_store: dict[str, object] = {"mail_received": (current_time - 60, 0)}  # 60s ago, 0 mails
+    monkeypatch.setattr(fireeye_mail, "get_value_store", lambda: value_store)
+
+    result = list(fireeye_mail.check_fireeye_mail_received(None, params, parsed))
 
     assert len(result) == 2
 
@@ -141,9 +147,17 @@ def test_check_fireeye_mail_received(parsed: list[list[str]]) -> None:
         assert result[1][2] == [("mail_received_rate", 2.0, 6000, 7000)]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_fireeye_mail_received_no_thresholds(parsed: list[list[str]]) -> None:
-    result = list(check_fireeye_mail_received(None, {}, parsed))
+def test_check_fireeye_mail_received_no_thresholds(
+    parsed: list[list[str]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Pre-populate value store for rate calculation
+    import time
+
+    current_time = time.mktime(time.strptime("04/06/17 12:01:00", "%d/%m/%y %H:%M:%S"))
+    value_store: dict[str, object] = {"mail_received": (current_time - 60, 0)}  # 60s ago, 0 mails
+    monkeypatch.setattr(fireeye_mail, "get_value_store", lambda: value_store)
+
+    result = list(fireeye_mail.check_fireeye_mail_received(None, {}, parsed))
 
     # Check mails received count
     assert result[0][0] == 0  # OK state
@@ -160,11 +174,11 @@ def test_check_fireeye_mail_received_no_thresholds(parsed: list[list[str]]) -> N
 
 def test_fireeye_mail_comprehensive_discovery(parsed: list[list[str]]) -> None:
     # Test that all services are discovered
-    main_discovery = list(discover_fireeye_mail(parsed))
-    attachment_discovery = list(discover_fireeye_mail_attachment(parsed))
-    url_discovery = list(discover_fireeye_mail_url(parsed))
-    statistics_discovery = list(discover_fireeye_mail_statistics(parsed))
-    received_discovery = list(discover_fireeye_mail_received(parsed))
+    main_discovery = list(fireeye_mail.discover_fireeye_mail(parsed))
+    attachment_discovery = list(fireeye_mail.discover_fireeye_mail_attachment(parsed))
+    url_discovery = list(fireeye_mail.discover_fireeye_mail_url(parsed))
+    statistics_discovery = list(fireeye_mail.discover_fireeye_mail_statistics(parsed))
+    received_discovery = list(fireeye_mail.discover_fireeye_mail_received(parsed))
 
     assert main_discovery == [(None, {})]
     assert attachment_discovery == [(None, {})]
@@ -178,8 +192,8 @@ def test_fireeye_mail_empty_info() -> None:
     empty_info = list[Never]()
 
     # Discovery functions should return empty lists for empty info
-    assert list(discover_fireeye_mail(empty_info)) == []
-    assert list(discover_fireeye_mail_attachment(empty_info)) == []
-    assert list(discover_fireeye_mail_url(empty_info)) == []
-    assert list(discover_fireeye_mail_statistics(empty_info)) == []
-    assert list(discover_fireeye_mail_received(empty_info)) == []
+    assert list(fireeye_mail.discover_fireeye_mail(empty_info)) == []
+    assert list(fireeye_mail.discover_fireeye_mail_attachment(empty_info)) == []
+    assert list(fireeye_mail.discover_fireeye_mail_url(empty_info)) == []
+    assert list(fireeye_mail.discover_fireeye_mail_statistics(empty_info)) == []
+    assert list(fireeye_mail.discover_fireeye_mail_received(empty_info)) == []

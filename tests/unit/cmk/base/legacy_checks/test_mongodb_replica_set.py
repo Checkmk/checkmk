@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code=no-untyped-call
+
 import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName, SectionName
+from cmk.agent_based.v2 import Result
+from cmk.base.legacy_checks import mongodb_replica_set
 
 _STRING_TABLE = [
     [
@@ -74,19 +76,15 @@ _STRING_TABLE_PYMONGO_3 = [
 ]
 
 
-@pytest.fixture(name="check_plugin", scope="module")
-def check_plugin_fixture(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
-    return agent_based_plugins.check_plugins[CheckPluginName("mongodb_replica_set")]
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(mongodb_replica_set, "get_value_store", lambda: store)
 
 
-def test_discover_mongodb_replica_set(
-    check_plugin: CheckPlugin,
-    agent_based_plugins: AgentBasedPlugins,
-) -> None:
-    section = agent_based_plugins.agent_sections[SectionName("mongodb_replica_set")].parse_function(
-        _STRING_TABLE
-    )
-    assert list(check_plugin.discovery_function(section)) == [Service()]
+def test_discover_mongodb_replica_set() -> None:
+    section = mongodb_replica_set.parse_mongodb_replica_set(_STRING_TABLE)
+    assert list(mongodb_replica_set.discover_mongodb_replica_set(section)) == [(None, {})]
 
 
 @pytest.mark.parametrize(
@@ -95,36 +93,44 @@ def test_discover_mongodb_replica_set(
         [
             _STRING_TABLE,
             [
-                Result(
-                    state=State.OK,
-                    summary="6 additional details available",
-                    details="\n".join(
+                (0, "", []),
+                (0, "", []),
+                (
+                    0,
+                    "\n".join(
                         (
+                            "",
                             "source: mvgenmongodb02:27017",
                             "syncedTo: 2022-08-01 10:28:52 (UTC)",
                             "member (mvgenmongodb02:27017) is 1s (0h) behind primary (mvgenmongodb01:27017)",
+                            "",
                             "source: mvgenmongodb03:27017",
                             "syncedTo: 2022-08-01 10:28:53 (UTC)",
                             "member (mvgenmongodb03:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)",
+                            "",
                         )
                     ),
-                )
+                ),
             ],
         ],
         [
             _STRING_TABLE_PYMONGO_3,
             [
-                Result(
-                    state=State.OK,
-                    summary="6 additional details available",
-                    details="\n".join(
+                (0, "", []),
+                (0, "", []),
+                (
+                    0,
+                    "\n".join(
                         (
+                            "",
                             "source: bbbbbbbbbbbbbbbbbbbbbb.bbbbbb:27017",
                             "syncedTo: 2024-05-13 12:41:07 (UTC)",
                             "member (bbbbbbbbbbbbbbbbbbbbbb.bbbbbb:27017) is 2s (0h) behind primary (aaaaaaaaaaaaaaaaaaaaaa.aaaaaa:27017)",
+                            "",
                             "source: cccccccccccccccccccccc.cccccc:27017",
                             "syncedTo: 2024-05-13 12:41:07 (UTC)",
                             "member (cccccccccccccccccccccc.cccccc:27017) is 2s (0h) behind primary (aaaaaaaaaaaaaaaaaaaaaa.aaaaaa:27017)",
+                            "",
                         )
                     ),
                 ),
@@ -132,22 +138,17 @@ def test_discover_mongodb_replica_set(
         ],
     ],
 )
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_mongodb_replica_set(
-    check_plugin: CheckPlugin,
-    agent_based_plugins: AgentBasedPlugins,
     string_table: list[list[str]],
     expected_result: list[Result],
 ) -> None:
-    section = agent_based_plugins.agent_sections[SectionName("mongodb_replica_set")].parse_function(
-        string_table
-    )
+    section = mongodb_replica_set.parse_mongodb_replica_set(string_table)
     with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("UTC"))):
         assert (
             list(
-                check_plugin.check_function(
-                    params=check_plugin.check_default_parameters,
-                    section=section,
+                mongodb_replica_set.check_mongodb_replica_set_lag(
+                    None, mongodb_replica_set.CHECK_DEFAULT_PARAMETERS, section
                 )
             )
             == expected_result

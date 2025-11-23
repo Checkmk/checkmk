@@ -16,12 +16,14 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import get_value_store
-from cmk.base.check_legacy_includes.graylog import parse_graylog_agent_data
-from cmk.base.legacy_checks.graylog_messages import (
-    check_graylog_messages,
-    inventory_graylog_messages,
-)
+from cmk.base.check_legacy_includes import graylog
+from cmk.base.legacy_checks import graylog_messages
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(graylog, "get_value_store", lambda: store)
 
 
 def test_discovery_graylog_messages() -> None:
@@ -31,29 +33,30 @@ def test_discovery_graylog_messages() -> None:
         ['{"events": 1000}'],
     ]
 
-    parsed = parse_graylog_agent_data(info)
-    result = list(inventory_graylog_messages(parsed))
+    parsed = graylog.parse_graylog_agent_data(info)
+    result = list(graylog_messages.inventory_graylog_messages(parsed))
 
     # Should discover one item with None as the item name
     assert len(result) == 1
     assert result[0][0] is None
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_graylog_messages() -> None:
+def test_check_graylog_messages(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test check function for graylog_messages."""
     # Sample graylog agent data with message statistics
     info = [
         ['{"events": 1000}'],
     ]
 
-    parsed = parse_graylog_agent_data(info)
+    parsed = graylog.parse_graylog_agent_data(info)
     params: dict[str, Any] = {}
 
     # Pre-populate value store to avoid GetRateError on first run
-    get_value_store()["graylog_msgs_avg.rate"] = 1670328674.09963, 900
+    monkeypatch.setattr(
+        graylog, "get_value_store", lambda: {"graylog_msgs_avg.rate": (1670328674.09963, 900)}
+    )
 
-    result = list(check_graylog_messages(None, params, parsed))
+    result = list(graylog_messages.check_graylog_messages(None, params, parsed))
 
     # Should return 3 results: total messages, average rate, and message diff
     assert len(result) == 3

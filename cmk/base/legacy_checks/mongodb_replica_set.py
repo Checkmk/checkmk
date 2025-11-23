@@ -27,6 +27,8 @@ check_info = {}
 
 Section = Mapping
 
+CHECK_DEFAULT_PARAMETERS = {"levels_mongdb_replication_lag": (10, 60, 3600)}
+
 
 def parse_mongodb_replica_set(string_table):
     """
@@ -209,7 +211,7 @@ check_info["mongodb_replica_set"] = LegacyCheckDefinition(
     discovery_function=discover_mongodb_replica_set,
     check_function=check_mongodb_replica_set_lag,
     check_ruleset_name="mongodb_replica_set",
-    check_default_parameters={"levels_mongdb_replication_lag": (10, 60, 3600)},
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
 )
 
 #   .--primary election----------------------------------------------------.

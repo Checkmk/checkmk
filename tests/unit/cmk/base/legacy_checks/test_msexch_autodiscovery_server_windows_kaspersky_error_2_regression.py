@@ -17,11 +17,15 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import GetRateError
-from cmk.base.legacy_checks.msexch_autodiscovery import (
-    check_msexch_autodiscovery,
-    discover_msexch_autodiscovery,
-)
+from cmk.base.check_legacy_includes import wmi
+from cmk.base.legacy_checks import msexch_autodiscovery
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: dict[str, object] = {}
+    monkeypatch.setattr(wmi, "get_value_store", lambda: store)
 
 
 @pytest.fixture
@@ -67,21 +71,21 @@ def parsed() -> Mapping[str, Any]:
 
 def test_msexch_autodiscovery_discovery(parsed: Mapping[str, Any]) -> None:
     """Test Microsoft Exchange Autodiscovery discovery function."""
-    result = list(discover_msexch_autodiscovery(parsed))
+    result = list(msexch_autodiscovery.discover_msexch_autodiscovery(parsed))
 
     # Should discover exactly one service (empty string as item name)
     assert len(result) == 1
     assert result[0] == (None, {})
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_msexch_autodiscovery_check(parsed: Mapping[str, Any]) -> None:
     """Test Microsoft Exchange Autodiscovery check function."""
     # Based on the original dataset, this should produce a rate of 0.00 requests/sec
     # The rate calculation gets GetRateError on first run due to initialization
     # Should get GetRateError on first check (normal behavior)
     with pytest.raises(GetRateError):
-        list(check_msexch_autodiscovery(None, {}, parsed))
+        list(msexch_autodiscovery.check_msexch_autodiscovery(None, {}, parsed))
 
 
 def test_msexch_autodiscovery_parse_function() -> None:
@@ -114,7 +118,7 @@ def test_msexch_autodiscovery_parse_function() -> None:
 
 def test_msexch_autodiscovery_discovery_empty_section() -> None:
     """Test Microsoft Exchange Autodiscovery discovery function with empty section."""
-    result = list(discover_msexch_autodiscovery({}))
+    result = list(msexch_autodiscovery.discover_msexch_autodiscovery({}))
 
     # Should not discover any service for empty section
     assert len(result) == 0
@@ -124,4 +128,4 @@ def test_msexch_autodiscovery_check_no_data() -> None:
     """Test Microsoft Exchange Autodiscovery check function with no data."""
     # Check function expects key "" to exist, so it will raise KeyError on missing data
     with pytest.raises(KeyError):
-        list(check_msexch_autodiscovery(None, {}, {}))
+        list(msexch_autodiscovery.check_msexch_autodiscovery(None, {}, {}))

@@ -10,8 +10,8 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v1 import get_value_store
-from cmk.base.legacy_checks.azure_sites import check_azure_sites, discover_azure_sites
+from cmk.base.check_legacy_includes import azure
+from cmk.base.legacy_checks import azure_sites
 from cmk.plugins.azure.lib import parse_resources, Resource
 
 
@@ -172,7 +172,7 @@ def parsed_data(string_table: list[list[str]]) -> Mapping[str, Resource]:
 
 def test_discovery_azure_sites(parsed_data: Mapping[str, Resource]) -> None:
     """Test discovery function finds both sites with correct service labels"""
-    services = list(discover_azure_sites(parsed_data))
+    services = list(azure_sites.discover_azure_sites(parsed_data))
 
     assert len(services) == 2
 
@@ -196,8 +196,9 @@ def test_discovery_azure_sites(parsed_data: Mapping[str, Resource]) -> None:
     )
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_azure_sites_spo_solutions_fa1(parsed_data: Mapping[str, Resource]) -> None:
+def test_check_azure_sites_spo_solutions_fa1(
+    parsed_data: Mapping[str, Resource], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test check function for spo-solutions-fa1 with error rate metric only"""
     params = {
         "cpu_time_percent_levels": (85.0, 95.0),
@@ -206,12 +207,15 @@ def test_check_azure_sites_spo_solutions_fa1(parsed_data: Mapping[str, Resource]
     }
 
     # Pre-populate value store to avoid GetRateError
-    value_store = get_value_store()
-    value_store[
-        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazspo-solutions-rg/providers/Microsoft.Web/sites/spo-solutions-fa1.total_Http5xx"
-    ] = (1536073020.0, 0.0)
+    value_store = {
+        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazspo-solutions-rg/providers/Microsoft.Web/sites/spo-solutions-fa1.total_Http5xx": (
+            1536073020.0,
+            0.0,
+        )
+    }
+    monkeypatch.setattr(azure, "get_value_store", lambda: value_store)
 
-    results = list(check_azure_sites("spo-solutions-fa1", params, parsed_data))
+    results = list(azure_sites.check_azure_sites("spo-solutions-fa1", params, parsed_data))
 
     assert len(results) == 6
 
@@ -241,8 +245,9 @@ def test_check_azure_sites_spo_solutions_fa1(parsed_data: Mapping[str, Resource]
         assert expected_msg in summary
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_azure_sites_zcldazwamonseas_as(parsed_data: Mapping[str, Resource]) -> None:
+def test_check_azure_sites_zcldazwamonseas_as(
+    parsed_data: Mapping[str, Resource], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test check function for zcldazwamonseas-as with all three metrics"""
     params = {
         "cpu_time_percent_levels": (85.0, 95.0),
@@ -251,15 +256,19 @@ def test_check_azure_sites_zcldazwamonseas_as(parsed_data: Mapping[str, Resource
     }
 
     # Pre-populate value store to avoid GetRateError
-    value_store = get_value_store()
-    value_store[
-        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_CpuTime"
-    ] = (1536073020.0, 0.0)
-    value_store[
-        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_Http5xx"
-    ] = (1536073020.0, 0.0)
+    value_store = {
+        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_CpuTime": (
+            1536073020.0,
+            0.0,
+        ),
+        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_Http5xx": (
+            1536073020.0,
+            0.0,
+        ),
+    }
+    monkeypatch.setattr(azure, "get_value_store", lambda: value_store)
 
-    results = list(check_azure_sites("zcldazwamonseas-as", params, parsed_data))
+    results = list(azure_sites.check_azure_sites("zcldazwamonseas-as", params, parsed_data))
 
     assert len(results) == 8
 
@@ -319,7 +328,7 @@ def test_check_azure_sites_missing_item(parsed_data: Mapping[str, Resource]) -> 
     from cmk.agent_based.v1._checking_classes import IgnoreResultsError
 
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
-        list(check_azure_sites("non-existent-site", params, parsed_data))
+        list(azure_sites.check_azure_sites("non-existent-site", params, parsed_data))
 
 
 def test_parsed_data_structure(parsed_data: Mapping[str, Resource]) -> None:

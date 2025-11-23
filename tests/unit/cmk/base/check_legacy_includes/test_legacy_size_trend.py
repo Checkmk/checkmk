@@ -3,9 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 from pytest import MonkeyPatch
 
 from cmk.base.check_legacy_includes import size_trend
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(size_trend, "get_value_store", lambda: store)
 
 
 def patch_rate_and_average(monkeypatch: MonkeyPatch, negative: bool = False) -> None:
@@ -18,7 +25,7 @@ def patch_rate_and_average(monkeypatch: MonkeyPatch, negative: bool = False) -> 
     monkeypatch.setattr(size_trend, "get_average", lambda *_args: growth)
 
 
-def test_size_trend_growing(monkeypatch: MonkeyPatch, initialised_item_state: None) -> None:
+def test_size_trend_growing(monkeypatch: MonkeyPatch, empty_value_store: None) -> None:
     patch_rate_and_average(monkeypatch, False)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",
@@ -52,7 +59,7 @@ def test_size_trend_growing(monkeypatch: MonkeyPatch, initialised_item_state: No
     ]
 
 
-def test_size_trend_shrinking(monkeypatch: MonkeyPatch, initialised_item_state: None) -> None:
+def test_size_trend_shrinking(monkeypatch: MonkeyPatch, empty_value_store: None) -> None:
     patch_rate_and_average(monkeypatch, True)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",
@@ -85,9 +92,7 @@ def test_size_trend_shrinking(monkeypatch: MonkeyPatch, initialised_item_state: 
     ]
 
 
-def test_size_trend_negative_free_space(
-    monkeypatch: MonkeyPatch, initialised_item_state: None
-) -> None:
+def test_size_trend_negative_free_space(monkeypatch: MonkeyPatch, empty_value_store: None) -> None:
     patch_rate_and_average(monkeypatch, False)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",

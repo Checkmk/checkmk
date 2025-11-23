@@ -17,11 +17,15 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import GetRateError
-from cmk.base.legacy_checks.msexch_availability import (
-    check_msexch_availability,
-    discover_msexch_availability,
-)
+from cmk.base.check_legacy_includes import wmi
+from cmk.base.legacy_checks import msexch_availability
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: dict[str, object] = {}
+    monkeypatch.setattr(wmi, "get_value_store", lambda: store)
 
 
 @pytest.fixture
@@ -119,21 +123,21 @@ def parsed() -> Mapping[str, Any]:
 
 def test_msexch_availability_discovery(parsed: Mapping[str, Any]) -> None:
     """Test Microsoft Exchange Availability discovery function."""
-    result = list(discover_msexch_availability(parsed))
+    result = list(msexch_availability.discover_msexch_availability(parsed))
 
     # Should discover exactly one service (empty string as item name)
     assert len(result) == 1
     assert result[0] == (None, {})
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_msexch_availability_check(parsed: Mapping[str, Any]) -> None:
     """Test Microsoft Exchange Availability check function."""
     # Based on the original dataset, this should produce a rate of 0.00 requests/sec
     # The rate calculation gets GetRateError on first run due to initialization
     # Should get GetRateError on first check (normal behavior)
     with pytest.raises(GetRateError):
-        list(check_msexch_availability(None, {}, parsed))
+        list(msexch_availability.check_msexch_availability(None, {}, parsed))
 
 
 def test_msexch_availability_parse_function() -> None:
@@ -166,7 +170,7 @@ def test_msexch_availability_parse_function() -> None:
 
 def test_msexch_availability_discovery_empty_section() -> None:
     """Test Microsoft Exchange Availability discovery function with empty section."""
-    result = list(discover_msexch_availability({}))
+    result = list(msexch_availability.discover_msexch_availability({}))
 
     # Should not discover any service for empty section
     assert len(result) == 0
@@ -176,4 +180,4 @@ def test_msexch_availability_check_no_data() -> None:
     """Test Microsoft Exchange Availability check function with no data."""
     # Check function expects key "" to exist, so it will raise KeyError on missing data
     with pytest.raises(KeyError):
-        list(check_msexch_availability(None, {}, {}))
+        list(msexch_availability.check_msexch_availability(None, {}, {}))

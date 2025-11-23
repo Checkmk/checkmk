@@ -17,8 +17,7 @@ from typing import Any
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import get_value_store
-from cmk.base.legacy_checks.kernel import check_kernel_performance, inventory_kernel_performance
+from cmk.base.legacy_checks import kernel
 from cmk.plugins.collection.agent_based.kernel import parse_kernel, Section
 
 
@@ -45,27 +44,30 @@ def parsed() -> Section:
 def test_inventory_kernel_performance(parsed: Section) -> None:
     """Test kernel performance discovery function."""
 
-    result = inventory_kernel_performance(parsed)
+    result = kernel.inventory_kernel_performance(parsed)
 
     assert len(result) == 1
     assert result[0] == (None, {})
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel("2020-06-04 15:40:00")
-def test_check_kernel_performance_no_params(parsed: Section) -> None:
+def test_check_kernel_performance_no_params(
+    parsed: Section, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test kernel performance check function without parameters."""
 
     # Pre-populate value store for rate calculations to avoid GetRateError
-    value_store = get_value_store()
     base_time = 10000.0  # Base timestamp for rate calculations (before current 11238)
-    value_store["ctxt"] = (base_time, 500000000)  # Previous context switches
-    value_store["processes"] = (base_time, 4500000)  # Previous process creations
-    value_store["pgmajfault"] = (base_time, 1750000)  # Previous major page faults
-    value_store["pswpin"] = (base_time, 240000)  # Previous page swap in
-    value_store["pswpout"] = (base_time, 720000)  # Previous page swap out
+    value_store: dict[str, object] = {
+        "ctxt": (base_time, 500000000),  # Previous context switches
+        "processes": (base_time, 4500000),  # Previous process creations
+        "pgmajfault": (base_time, 1750000),  # Previous major page faults
+        "pswpin": (base_time, 240000),  # Previous page swap in
+        "pswpout": (base_time, 720000),  # Previous page swap out
+    }
+    monkeypatch.setattr(kernel, "get_value_store", lambda: value_store)
 
-    results = list(check_kernel_performance(None, {}, parsed))
+    results = list(kernel.check_kernel_performance(None, {}, parsed))
 
     assert len(results) == 5
 
@@ -90,19 +92,22 @@ def test_check_kernel_performance_no_params(parsed: Section) -> None:
     assert metric_names == expected_metrics
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel("2020-06-04 15:40:00")
-def test_check_kernel_performance_with_thresholds(parsed: tuple[float, Mapping[str, Any]]) -> None:
+def test_check_kernel_performance_with_thresholds(
+    parsed: tuple[float, Mapping[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test kernel performance check function with threshold parameters."""
 
     # Pre-populate value store for rate calculations
-    value_store = get_value_store()
     base_time = 10000.0
-    value_store["ctxt"] = (base_time, 500000000)
-    value_store["processes"] = (base_time, 4500000)
-    value_store["pgmajfault"] = (base_time, 1750000)
-    value_store["pswpin"] = (base_time, 240000)
-    value_store["pswpout"] = (base_time, 720000)
+    value_store: dict[str, object] = {
+        "ctxt": (base_time, 500000000),
+        "processes": (base_time, 4500000),
+        "pgmajfault": (base_time, 1750000),
+        "pswpin": (base_time, 240000),
+        "pswpout": (base_time, 720000),
+    }
+    monkeypatch.setattr(kernel, "get_value_store", lambda: value_store)
 
     params = {
         "ctxt": (30000.0, 45000.0),
@@ -111,7 +116,7 @@ def test_check_kernel_performance_with_thresholds(parsed: tuple[float, Mapping[s
         "page_swap_out_levels_lower": (500.0, 100.0),
     }
 
-    results = list(check_kernel_performance(None, params, parsed))
+    results = list(kernel.check_kernel_performance(None, params, parsed))
 
     assert len(results) == 5
 
@@ -132,23 +137,22 @@ def test_check_kernel_performance_with_thresholds(parsed: tuple[float, Mapping[s
 
 
 def test_check_kernel_performance_no_timestamp() -> None:
-    assert not list(check_kernel_performance(None, {}, (None, {})))
+    assert not list(kernel.check_kernel_performance(None, {}, (None, {})))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel("2020-06-04 15:40:00")
-def test_check_kernel_performance_missing_counters() -> None:
+def test_check_kernel_performance_missing_counters(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test kernel performance check function with missing counters."""
 
     # Create parsed data with minimal counters
     minimal_parsed = (11238.0, {"Context Switches": [("ctxt", 539210403)]})
 
     # Pre-populate value store
-    value_store = get_value_store()
     base_time = 10000.0
-    value_store["ctxt"] = (base_time, 500000000)
+    value_store: dict[str, object] = {"ctxt": (base_time, 500000000)}
+    monkeypatch.setattr(kernel, "get_value_store", lambda: value_store)
 
-    results = list(check_kernel_performance(None, {}, minimal_parsed))
+    results = list(kernel.check_kernel_performance(None, {}, minimal_parsed))
 
     # Should only get results for available counters
     assert len(results) == 1
@@ -170,4 +174,4 @@ def test_kernel_parse_function_empty() -> None:
 
 
 def test_inventory_kernel_performance_no_data() -> None:
-    assert not list(inventory_kernel_performance((11238.0, {})))
+    assert not list(kernel.inventory_kernel_performance((11238.0, {})))

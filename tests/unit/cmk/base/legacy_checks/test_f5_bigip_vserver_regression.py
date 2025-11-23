@@ -17,12 +17,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import get_value_store
-from cmk.base.legacy_checks.f5_bigip_vserver import (
-    check_f5_bigip_vserver,
-    inventory_f5_bigip_vserver,
-    parse_f5_bigip_vserver,
-)
+from cmk.base.legacy_checks import f5_bigip_vserver
 
 
 @pytest.fixture(name="string_table")
@@ -107,7 +102,7 @@ def _string_table() -> list[list[str]]:
 
 @pytest.fixture(name="parsed")
 def _parsed(string_table: list[list[str]]) -> Mapping[str, Any]:
-    return parse_f5_bigip_vserver(string_table)
+    return f5_bigip_vserver.parse_f5_bigip_vserver(string_table)
 
 
 def test_parse_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
@@ -138,7 +133,7 @@ def test_parse_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
 
 
 def test_inventory_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> None:
-    result = list(inventory_f5_bigip_vserver(parsed))
+    result = list(f5_bigip_vserver.inventory_f5_bigip_vserver(parsed))
 
     expected_items = [
         "/Common/sight-seeing.wurmhole.univ",
@@ -153,14 +148,17 @@ def test_inventory_f5_bigip_vserver_regression(parsed: Mapping[str, Any]) -> Non
         assert params == {}
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_f5_bigip_vserver_regression_unknown_state(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_regression_unknown_state(
+    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Pre-populate value store for items that need it
-    value_store = get_value_store()
-    value_store["connections_rate.0"] = (0, 42)
+    value_store: dict[str, object] = {"connections_rate.0": (0, 42)}
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: value_store)
 
     result = list(
-        check_f5_bigip_vserver("/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS", {}, parsed)
+        f5_bigip_vserver.check_f5_bigip_vserver(
+            "/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS", {}, parsed
+        )
     )
 
     assert len(result) == 3
@@ -181,13 +179,16 @@ def test_check_f5_bigip_vserver_regression_unknown_state(parsed: Mapping[str, An
     assert metric_dict["connections"] == 0
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_f5_bigip_vserver_regression_with_rate(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_regression_with_rate(
+    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Pre-populate value store for rate calculations
-    value_store = get_value_store()
-    value_store["connections_rate.0"] = (0, 42)
+    value_store: dict[str, object] = {"connections_rate.0": (0, 42)}
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: value_store)
 
-    result = list(check_f5_bigip_vserver("/Common/www.wurmhole.univ_HTTP2HTTPS", {}, parsed))
+    result = list(
+        f5_bigip_vserver.check_f5_bigip_vserver("/Common/www.wurmhole.univ_HTTP2HTTPS", {}, parsed)
+    )
 
     assert len(result) == 4
 
@@ -209,21 +210,24 @@ def test_check_f5_bigip_vserver_regression_with_rate(parsed: Mapping[str, Any]) 
     assert result[3] == (0, "Connections rate: 0.00/sec")
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_f5_bigip_vserver_regression_missing_item(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_regression_missing_item(
+    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Test item that was discovered but doesn't produce any check results
-    result = list(check_f5_bigip_vserver("/Common/www.wurmhole.univ", {}, parsed))
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: value_store)
+    result = list(f5_bigip_vserver.check_f5_bigip_vserver("/Common/www.wurmhole.univ", {}, parsed))
     assert result == []
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_f5_bigip_vserver_regression_unknown_enabled_state(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_regression_unknown_enabled_state(
+    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Test starfleet.space which has empty enabled state (unknown)
-    value_store = get_value_store()
-    value_store["if_out_pkts.0"] = (0, 42)
-    value_store["if_in_octets.0"] = (0, 32)
+    value_store: dict[str, object] = {"if_out_pkts.0": (0, 42), "if_in_octets.0": (0, 32)}
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: value_store)
 
-    result = list(check_f5_bigip_vserver("/Common/starfleet.space", {}, parsed))
+    result = list(f5_bigip_vserver.check_f5_bigip_vserver("/Common/starfleet.space", {}, parsed))
 
     assert len(result) >= 3
 
@@ -238,12 +242,12 @@ def test_check_f5_bigip_vserver_regression_unknown_enabled_state(parsed: Mapping
     assert "To infinity and beyond!" in result[1][1]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_f5_bigip_vserver_regression_with_thresholds(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_regression_with_thresholds(
+    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Test starfleet.space with threshold parameters
-    value_store = get_value_store()
-    value_store["if_out_pkts.0"] = (0, 42)
-    value_store["if_in_octets.0"] = (0, 32)
+    value_store: dict[str, object] = {"if_out_pkts.0": (0, 42), "if_in_octets.0": (0, 32)}
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: value_store)
 
     params = {
         "if_in_octets": (-23, 42),
@@ -251,7 +255,9 @@ def test_check_f5_bigip_vserver_regression_with_thresholds(parsed: Mapping[str, 
         "if_total_pkts": (300, 400),
     }
 
-    result = list(check_f5_bigip_vserver("/Common/starfleet.space", params, parsed))
+    result = list(
+        f5_bigip_vserver.check_f5_bigip_vserver("/Common/starfleet.space", params, parsed)
+    )
 
     assert len(result) >= 5
 
@@ -266,10 +272,15 @@ def test_check_f5_bigip_vserver_regression_with_thresholds(parsed: Mapping[str, 
     assert len(threshold_messages) >= 2  # At least 2 threshold checks
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_f5_bigip_vserver_regression_available_basic(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_regression_available_basic(
+    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Test the basic available virtual server
-    result = list(check_f5_bigip_vserver("/Common/sight-seeing.wurmhole.univ", {}, parsed))
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: value_store)
+    result = list(
+        f5_bigip_vserver.check_f5_bigip_vserver("/Common/sight-seeing.wurmhole.univ", {}, parsed)
+    )
 
     assert len(result) >= 2
 

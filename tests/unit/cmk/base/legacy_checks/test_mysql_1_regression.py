@@ -16,16 +16,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import get_value_store
-from cmk.base.legacy_checks.mysql import (
-    _discover_keys,
-    check_mysql_connections,
-    check_mysql_iostat,
-    check_mysql_sessions,
-    check_mysql_version,
-    discover_mysql_sessions,
-    parse_mysql,
-)
+from cmk.base.legacy_checks import mysql
 
 
 @pytest.fixture
@@ -57,12 +48,12 @@ def parsed() -> Mapping[str, Mapping[str, Any]]:
         *[[str(i), str(i)] for i in range(200)],
     ]
 
-    return parse_mysql(string_table)
+    return mysql.parse_mysql(string_table)
 
 
 def test_mysql_version_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
     """Test MySQL version discovery function."""
-    discovery_func = _discover_keys({"version"})
+    discovery_func = mysql._discover_keys({"version"})
     result = list(discovery_func(parsed))
 
     # Should discover exactly one service
@@ -72,7 +63,7 @@ def test_mysql_version_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> Non
 
 def test_mysql_version_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
     """Test MySQL version check function."""
-    result = list(check_mysql_version("mysql", {}, parsed))
+    result = list(mysql.check_mysql_version("mysql", {}, parsed))
 
     # Should have exactly one result
     assert len(result) == 1
@@ -84,20 +75,22 @@ def test_mysql_version_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
 
 def test_mysql_sessions_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
     """Test MySQL sessions discovery function."""
-    result = list(discover_mysql_sessions(parsed))
+    result = list(mysql.discover_mysql_sessions(parsed))
 
     # Should discover exactly one service (data has > 200 entries)
     assert len(result) == 1
     assert result[0] == ("mysql", {})
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_mysql_sessions_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
+def test_mysql_sessions_check(
+    parsed: Mapping[str, Mapping[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test MySQL sessions check function."""
     # Pre-populate value store to avoid GetRateError
-    get_value_store()["mysql.sessions"] = (0, 2)
+    value_store: dict[str, object] = {"mysql.sessions": (0, 2)}
+    monkeypatch.setattr(mysql, "get_value_store", lambda: value_store)
 
-    result = list(check_mysql_sessions("mysql", {}, parsed))
+    result = list(mysql.check_mysql_sessions("mysql", {}, parsed))
 
     # Should have exactly 3 results (total, running, connections rate)
     assert len(result) == 3
@@ -128,7 +121,7 @@ def test_mysql_sessions_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
 
 def test_mysql_connections_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
     """Test MySQL connections discovery function."""
-    discovery_func = _discover_keys(
+    discovery_func = mysql._discover_keys(
         {"Max_used_connections", "max_connections", "Threads_connected"}
     )
     result = list(discovery_func(parsed))
@@ -141,7 +134,7 @@ def test_mysql_connections_discovery(parsed: Mapping[str, Mapping[str, Any]]) ->
 def test_mysql_connections_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
     """Test MySQL connections check function."""
     params = {"perc_used": (75, 80), "perc_conn_threads": (40, 50)}
-    result = list(check_mysql_connections("mysql", params, parsed))
+    result = list(mysql.check_mysql_connections("mysql", params, parsed))
 
     # Should have exactly 5 results
     assert len(result) == 5
@@ -166,7 +159,7 @@ def test_mysql_connections_check(parsed: Mapping[str, Mapping[str, Any]]) -> Non
 
 def test_mysql_innodb_io_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
     """Test MySQL InnoDB I/O discovery function."""
-    discovery_func = _discover_keys({"Innodb_data_read"})
+    discovery_func = mysql._discover_keys({"Innodb_data_read"})
     result = list(discovery_func(parsed))
 
     # Should discover exactly one service
@@ -174,14 +167,15 @@ def test_mysql_innodb_io_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> N
     assert result[0] == ("mysql", {})
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_mysql_innodb_io_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
+def test_mysql_innodb_io_check(
+    parsed: Mapping[str, Mapping[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test MySQL InnoDB I/O check function."""
     # Pre-populate value store to avoid GetRateError
-    get_value_store()["read"] = (0.0, 1024)
-    get_value_store()["write"] = (0.0, 2048)
+    value_store: dict[str, object] = {"read": (0.0, 1024), "write": (0.0, 2048)}
+    monkeypatch.setattr(mysql, "get_value_store", lambda: value_store)
 
-    result = list(check_mysql_iostat("mysql", {}, parsed))
+    result = list(mysql.check_mysql_iostat("mysql", {}, parsed))
 
     # Should have exactly 3 results (read, write, perfdata)
     assert len(result) == 3
@@ -216,7 +210,7 @@ def test_mysql_parse_function() -> None:
         ["Innodb_data_written", "2048"],
     ]
 
-    result = parse_mysql(string_table)
+    result = mysql.parse_mysql(string_table)
 
     # Should parse exactly one MySQL instance
     assert "mysql" in result
@@ -234,7 +228,7 @@ def test_mysql_parse_function() -> None:
 
 def test_mysql_version_discovery_empty_section() -> None:
     """Test MySQL version discovery function with empty section."""
-    discovery_func = _discover_keys({"version"})
+    discovery_func = mysql._discover_keys({"version"})
     result = list(discovery_func({}))
 
     # Should not discover any service for empty section
@@ -245,7 +239,7 @@ def test_mysql_sessions_discovery_insufficient_data() -> None:
     """Test MySQL sessions discovery function with insufficient data."""
     # Create parsed data with < 200 entries
     small_parsed = {"mysql": {"version": "test", "Threads_connected": "3"}}
-    result = list(discover_mysql_sessions(small_parsed))
+    result = list(mysql.discover_mysql_sessions(small_parsed))
 
     # Should not discover any service with insufficient data
     assert len(result) == 0

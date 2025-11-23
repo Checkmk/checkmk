@@ -19,12 +19,7 @@ from typing import Any
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import get_value_store
-from cmk.base.legacy_checks.innovaphone_priports_l1 import (
-    check_innovaphone_priports_l1,
-    inventory_innovaphone_priports_l1,
-    parse_innovaphone_priports_l1,
-)
+from cmk.base.legacy_checks import innovaphone_priports_l1
 
 
 @pytest.fixture(name="parsed", scope="module")
@@ -33,7 +28,7 @@ def fixture_parsed() -> dict[str, Any]:
         ["Foo", "1", "0", "23"],  # item, state, sigloss, slip
         ["Bar", "2", "42", "23"],  # item, state, sigloss, slip
     ]
-    return parse_innovaphone_priports_l1(string_table)
+    return innovaphone_priports_l1.parse_innovaphone_priports_l1(string_table)
 
 
 def test_parse_innovaphone_priports_l1() -> None:
@@ -41,7 +36,7 @@ def test_parse_innovaphone_priports_l1() -> None:
         ["Foo", "1", "0", "23"],
         ["Bar", "2", "42", "23"],
     ]
-    result = parse_innovaphone_priports_l1(string_table)
+    result = innovaphone_priports_l1.parse_innovaphone_priports_l1(string_table)
 
     expected = {
         "Foo": {"state": 1, "sigloss": 0, "slip": 23},
@@ -51,21 +46,24 @@ def test_parse_innovaphone_priports_l1() -> None:
 
 
 def test_inventory_innovaphone_priports_l1(parsed: dict[str, Any]) -> None:
-    result = list(inventory_innovaphone_priports_l1(parsed))
+    result = list(innovaphone_priports_l1.inventory_innovaphone_priports_l1(parsed))
 
     # Only "Bar" should be discovered because it has state != 1
     assert result == [("Bar", {"err_slip_count": 23})]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(60.0)
-def test_check_innovaphone_priports_l1_down_state(parsed: dict[str, Any]) -> None:
+def test_check_innovaphone_priports_l1_down_state(
+    parsed: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test check function for item in Down state (state=1)"""
     # Pre-populate value store to avoid GetRateError on first run
-    value_store = get_value_store()
-    value_store["innovaphone_priports_l1.Foo"] = (50.0, 0)  # Previous: time=50, value=0
+    value_store = {"innovaphone_priports_l1.Foo": (50.0, 0)}  # Previous: time=50, value=0
+    monkeypatch.setattr(innovaphone_priports_l1, "get_value_store", lambda: value_store)
 
-    result = list(check_innovaphone_priports_l1("Foo", {"err_slip_count": 22}, parsed))
+    result = list(
+        innovaphone_priports_l1.check_innovaphone_priports_l1("Foo", {"err_slip_count": 22}, parsed)
+    )
 
     assert len(result) == 2
 
@@ -80,15 +78,18 @@ def test_check_innovaphone_priports_l1_down_state(parsed: dict[str, Any]) -> Non
     assert "Slip error count at 23" in summary
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(60.0)
-def test_check_innovaphone_priports_l1_up_state(parsed: dict[str, Any]) -> None:
+def test_check_innovaphone_priports_l1_up_state(
+    parsed: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test check function for item in UP state (state=2) with signal loss"""
     # Pre-populate value store to simulate rate calculation
-    value_store = get_value_store()
-    value_store["innovaphone_priports_l1.Bar"] = (50.0, 0)  # Previous: time=50, value=0
+    value_store = {"innovaphone_priports_l1.Bar": (50.0, 0)}  # Previous: time=50, value=0
+    monkeypatch.setattr(innovaphone_priports_l1, "get_value_store", lambda: value_store)
 
-    result = list(check_innovaphone_priports_l1("Bar", {"err_slip_count": 23}, parsed))
+    result = list(
+        innovaphone_priports_l1.check_innovaphone_priports_l1("Bar", {"err_slip_count": 23}, parsed)
+    )
 
     assert len(result) == 2
 
@@ -104,20 +105,23 @@ def test_check_innovaphone_priports_l1_up_state(parsed: dict[str, Any]) -> None:
     # Rate calculation: (42 - 0) / (60 - 50) = 42 / 10 = 4.20
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(60.0)
-def test_check_innovaphone_priports_l1_no_signal_loss() -> None:
+def test_check_innovaphone_priports_l1_no_signal_loss(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test check function with no signal loss"""
     string_table = [
         ["Test", "2", "0", "15"],  # UP state, no signal loss, low slip count
     ]
-    parsed = parse_innovaphone_priports_l1(string_table)
+    parsed = innovaphone_priports_l1.parse_innovaphone_priports_l1(string_table)
 
     # Pre-populate value store to avoid GetRateError on first run
-    value_store = get_value_store()
-    value_store["innovaphone_priports_l1.Test"] = (50.0, 0)  # Previous: time=50, value=0
+    value_store = {"innovaphone_priports_l1.Test": (50.0, 0)}  # Previous: time=50, value=0
+    monkeypatch.setattr(innovaphone_priports_l1, "get_value_store", lambda: value_store)
 
-    result = list(check_innovaphone_priports_l1("Test", {"err_slip_count": 20}, parsed))
+    result = list(
+        innovaphone_priports_l1.check_innovaphone_priports_l1(
+            "Test", {"err_slip_count": 20}, parsed
+        )
+    )
 
     # Should only have state check, no signal loss or slip error
     assert len(result) == 1
@@ -130,6 +134,6 @@ def test_check_innovaphone_priports_l1_no_signal_loss() -> None:
 def test_check_innovaphone_priports_l1_item_not_found() -> None:
     """Test check function with non-existent item"""
     parsed = {}
-    result = list(check_innovaphone_priports_l1("NonExistent", {}, parsed))
+    result = list(innovaphone_priports_l1.check_innovaphone_priports_l1("NonExistent", {}, parsed))
 
     assert len(result) == 0

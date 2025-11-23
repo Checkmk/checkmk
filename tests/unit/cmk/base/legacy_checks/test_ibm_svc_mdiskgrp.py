@@ -13,11 +13,14 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.base.legacy_checks.ibm_svc_mdiskgrp import (
-    check_ibm_svc_mdiskgrp,
-    inventory_ibm_svc_mdiskgrp,
-    parse_ibm_svc_mdiskgrp,
-)
+from cmk.base.check_legacy_includes import size_trend
+from cmk.base.legacy_checks import ibm_svc_mdiskgrp
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store = dict[str, object]()
+    monkeypatch.setattr(size_trend, "get_value_store", lambda: store)
 
 
 @pytest.mark.parametrize(
@@ -317,15 +320,16 @@ from cmk.base.legacy_checks.ibm_svc_mdiskgrp import (
         ),
     ],
 )
-def test_inventory_ibm_svc_mdiskgrp(
+def test_discovery_ibm_svc_mdiskgrp(
     string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
 ) -> None:
     """Test discovery function for ibm_svc_mdiskgrp check."""
-    parsed = parse_ibm_svc_mdiskgrp(string_table)
-    result = list(inventory_ibm_svc_mdiskgrp(parsed))
+    parsed = ibm_svc_mdiskgrp.parse_ibm_svc_mdiskgrp(string_table)
+    result = list(ibm_svc_mdiskgrp.inventory_ibm_svc_mdiskgrp(parsed))
     assert sorted(result) == sorted(expected_discoveries)
 
 
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "item, params, string_table, expected_results",
     [
@@ -633,10 +637,8 @@ def test_inventory_ibm_svc_mdiskgrp(
         ),
     ],
 )
-def test_check_ibm_svc_mdiskgrp(
-    initialised_item_state, item, params, string_table, expected_results
-):
+def test_check_ibm_svc_mdiskgrp(item, params, string_table, expected_results):
     """Test check function for ibm_svc_mdiskgrp check."""
-    parsed = parse_ibm_svc_mdiskgrp(string_table)
-    result = list(check_ibm_svc_mdiskgrp(item, params, parsed))
+    parsed = ibm_svc_mdiskgrp.parse_ibm_svc_mdiskgrp(string_table)
+    result = list(ibm_svc_mdiskgrp.check_ibm_svc_mdiskgrp(item, params, parsed))
     assert result == expected_results

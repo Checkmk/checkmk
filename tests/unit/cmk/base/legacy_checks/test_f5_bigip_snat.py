@@ -19,12 +19,8 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import get_value_store, StringTable
-from cmk.base.legacy_checks.f5_bigip_snat import (
-    check_f5_bigip_snat,
-    inventory_f5_bigip_snat,
-    parse_f5_bigip_snat,
-)
+from cmk.agent_based.v2 import StringTable
+from cmk.base.legacy_checks import f5_bigip_snat
 
 
 @pytest.fixture(name="f5_bigip_snat_string_table")
@@ -63,12 +59,12 @@ def _f5_bigip_snat_string_table() -> StringTable:
 @pytest.fixture(name="f5_bigip_snat_parsed")
 def _f5_bigip_snat_parsed(f5_bigip_snat_string_table: StringTable) -> dict[str, dict[str, Any]]:
     """Parsed F5 BigIP SNAT data."""
-    return parse_f5_bigip_snat(f5_bigip_snat_string_table)
+    return f5_bigip_snat.parse_f5_bigip_snat(f5_bigip_snat_string_table)
 
 
 def test_discover_f5_bigip_snat(f5_bigip_snat_parsed: dict[str, dict[str, Any]]) -> None:
     """Test discovery function for F5 BigIP SNAT."""
-    result = list(inventory_f5_bigip_snat(f5_bigip_snat_parsed))
+    result = list(f5_bigip_snat.inventory_f5_bigip_snat(f5_bigip_snat_parsed))
     # Should discover all SNAT entries including zero value ones
     expected_items = [
         "AS2_proxy",
@@ -96,21 +92,21 @@ def test_discover_f5_bigip_snat(f5_bigip_snat_parsed: dict[str, dict[str, Any]])
 
 def test_check_f5_bigip_snat_as2_proxy(
     f5_bigip_snat_parsed: dict[str, dict[str, Any]],
-    initialised_item_state: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function for AS2_proxy (zero traffic scenario)."""
     # Pre-populate value store to avoid rate calculation errors
-
-    value_store = get_value_store()
     base_time = 1000000000
-    # Set up previous values for rate calculations
-    value_store["if_in_pkts.0"] = (base_time, 10)
-    value_store["if_out_pkts.0"] = (base_time, 712)
-    value_store["if_in_octets.0"] = (base_time, 5)
-    value_store["if_out_octets.0"] = (base_time, 236)
-    value_store["connections_rate.0"] = (base_time, 7)
+    value_store = {
+        "if_in_pkts.0": (base_time, 10),
+        "if_out_pkts.0": (base_time, 712),
+        "if_in_octets.0": (base_time, 5),
+        "if_out_octets.0": (base_time, 236),
+        "connections_rate.0": (base_time, 7),
+    }
+    monkeypatch.setattr(f5_bigip_snat, "get_value_store", lambda: value_store)
 
-    result = list(check_f5_bigip_snat("AS2_proxy", {}, f5_bigip_snat_parsed))
+    result = list(f5_bigip_snat.check_f5_bigip_snat("AS2_proxy", {}, f5_bigip_snat_parsed))
 
     # Should have 2 results: connections and rate
     assert len(result) == 2
@@ -129,22 +125,23 @@ def test_check_f5_bigip_snat_as2_proxy(
 
 def test_check_f5_bigip_snat_keycomp_high_traffic(
     f5_bigip_snat_parsed: dict[str, dict[str, Any]],
-    initialised_item_state: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function for keycomp (high traffic scenario)."""
-
-    value_store = get_value_store()
     # Use current time for realistic rate calculations
     current_time = time.time()
     base_time = current_time - 60  # 60 seconds ago
     # Set up previous values for high traffic item (smaller values to avoid negative rates)
-    value_store["if_in_pkts.0"] = (base_time, 2534200)  # Current: 2534239
-    value_store["if_out_pkts.0"] = (base_time, 2132789500)  # Current: 2132789593
-    value_store["if_in_octets.0"] = (base_time, 2490900)  # Current: 2490959
-    value_store["if_out_octets.0"] = (base_time, 1972334900)  # Current: 1972334953
-    value_store["connections_rate.0"] = (base_time, 460)  # Current: 464
+    value_store = {
+        "if_in_pkts.0": (base_time, 2534200),  # Current: 2534239
+        "if_out_pkts.0": (base_time, 2132789500),  # Current: 2132789593
+        "if_in_octets.0": (base_time, 2490900),  # Current: 2490959
+        "if_out_octets.0": (base_time, 1972334900),  # Current: 1972334953
+        "connections_rate.0": (base_time, 460),  # Current: 464
+    }
+    monkeypatch.setattr(f5_bigip_snat, "get_value_store", lambda: value_store)
 
-    result = list(check_f5_bigip_snat("keycomp", {}, f5_bigip_snat_parsed))
+    result = list(f5_bigip_snat.check_f5_bigip_snat("keycomp", {}, f5_bigip_snat_parsed))
 
     # Should have 2 results: connections and rate
     assert len(result) == 2
@@ -161,11 +158,9 @@ def test_check_f5_bigip_snat_keycomp_high_traffic(
 
 def test_check_f5_bigip_snat_outbound_snat_large_numbers(
     f5_bigip_snat_parsed: dict[str, dict[str, Any]],
-    initialised_item_state: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function for Outbound_SNAT (very large numbers scenario)."""
-
-    value_store = get_value_store()
     # Use current time for realistic rate calculations
     current_time = time.time()
     base_time = current_time - 60  # 60 seconds ago
@@ -175,13 +170,16 @@ def test_check_f5_bigip_snat_outbound_snat_large_numbers(
     # connections_rate: [8870002], connections: [8279]
 
     # Set up previous values for rate calculations (using correct field mapping)
-    value_store["if_in_pkts.0"] = (base_time, 160630000)  # Current: 160631017
-    value_store["if_out_pkts.0"] = (base_time, 30383696000)  # Current: 30383696271
-    value_store["if_in_octets.0"] = (base_time, 217420000)  # Current: 217420496
-    value_store["if_out_octets.0"] = (base_time, 220088423000)  # Current: 220088423650
-    value_store["connections_rate.0"] = (base_time, 8869900)  # Current: 8870002
+    value_store = {
+        "if_in_pkts.0": (base_time, 160630000),  # Current: 160631017
+        "if_out_pkts.0": (base_time, 30383696000),  # Current: 30383696271
+        "if_in_octets.0": (base_time, 217420000),  # Current: 217420496
+        "if_out_octets.0": (base_time, 220088423000),  # Current: 220088423650
+        "connections_rate.0": (base_time, 8869900),  # Current: 8870002
+    }
+    monkeypatch.setattr(f5_bigip_snat, "get_value_store", lambda: value_store)
 
-    result = list(check_f5_bigip_snat("Outbound_SNAT", {}, f5_bigip_snat_parsed))
+    result = list(f5_bigip_snat.check_f5_bigip_snat("Outbound_SNAT", {}, f5_bigip_snat_parsed))
 
     # Should have 2 results: connections and rate
     assert len(result) == 2
@@ -210,18 +208,19 @@ def test_check_f5_bigip_snat_outbound_snat_large_numbers(
 
 def test_check_f5_bigip_snat_with_thresholds(
     f5_bigip_snat_parsed: dict[str, dict[str, Any]],
-    initialised_item_state: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test check function with configured thresholds."""
-
-    value_store = get_value_store()
     base_time = 1000000000
     # Set up previous values
-    value_store["if_in_pkts.0"] = (base_time, 2500)
-    value_store["if_out_pkts.0"] = (base_time, 260000)
-    value_store["if_in_octets.0"] = (base_time, 2100)
-    value_store["if_out_octets.0"] = (base_time, 2130000)
-    value_store["connections_rate.0"] = (base_time, 160)
+    value_store = {
+        "if_in_pkts.0": (base_time, 2500),
+        "if_out_pkts.0": (base_time, 260000),
+        "if_in_octets.0": (base_time, 2100),
+        "if_out_octets.0": (base_time, 2130000),
+        "connections_rate.0": (base_time, 160),
+    }
+    monkeypatch.setattr(f5_bigip_snat, "get_value_store", lambda: value_store)
 
     # Test with threshold parameters
     params = {
@@ -229,7 +228,7 @@ def test_check_f5_bigip_snat_with_thresholds(
         "if_out_octets": (5000000, 10000000),  # Higher thresholds for outgoing
     }
 
-    result = list(check_f5_bigip_snat("MI-VSP", params, f5_bigip_snat_parsed))
+    result = list(f5_bigip_snat.check_f5_bigip_snat("MI-VSP", params, f5_bigip_snat_parsed))
 
     # Should have base results plus any threshold violations
     assert len(result) >= 2  # At least connections and rate
@@ -241,7 +240,7 @@ def test_check_f5_bigip_snat_nonexistent_item(
     f5_bigip_snat_parsed: dict[str, dict[str, Any]],
 ) -> None:
     """Test check function with nonexistent SNAT item."""
-    result = list(check_f5_bigip_snat("nonexistent_snat", {}, f5_bigip_snat_parsed))
+    result = list(f5_bigip_snat.check_f5_bigip_snat("nonexistent_snat", {}, f5_bigip_snat_parsed))
 
     # Should return empty result for nonexistent items
     assert len(result) == 0
@@ -255,7 +254,7 @@ def test_parse_f5_bigip_snat_structure() -> None:
         ["invalid_snat", "abc", "def", "xyz", "123", "0", "1"],  # Invalid values
     ]
 
-    result = parse_f5_bigip_snat(string_table)
+    result = f5_bigip_snat.parse_f5_bigip_snat(string_table)
 
     # Should parse valid entries
     assert "test_snat" in result
@@ -288,7 +287,7 @@ def test_parse_f5_bigip_snat_structure() -> None:
 
 def test_parse_f5_bigip_snat_empty_input() -> None:
     """Test parsing function with empty input."""
-    result = parse_f5_bigip_snat([])
+    result = f5_bigip_snat.parse_f5_bigip_snat([])
 
     # Should return empty dict for empty input
     assert result == {}
@@ -301,7 +300,7 @@ def test_parse_f5_bigip_snat_malformed_data() -> None:
         ["", "1", "2", "3", "4", "5", "6"],  # Empty name but complete data
     ]
 
-    result = parse_f5_bigip_snat(string_table)
+    result = f5_bigip_snat.parse_f5_bigip_snat(string_table)
 
     # Should handle complete rows properly
     assert "normal_entry" in result

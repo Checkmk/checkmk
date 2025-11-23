@@ -16,8 +16,15 @@ from typing import Any
 
 import pytest
 
-from cmk.base.legacy_checks.wmi_webservices import check_wmi_webservices, discover_wmi_webservices
+from cmk.base.check_legacy_includes import wmi
+from cmk.base.legacy_checks import wmi_webservices
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: dict[str, object] = {}
+    monkeypatch.setattr(wmi, "get_value_store", lambda: store)
 
 
 @pytest.fixture(name="parsed")
@@ -66,7 +73,7 @@ def fixture_parsed() -> Mapping[str, Any]:
 
 def test_wmi_webservices_discovery(parsed: Mapping[str, Any]) -> None:
     """Test discovery function returns correct items."""
-    result = list(discover_wmi_webservices(parsed))
+    result = list(wmi_webservices.discover_wmi_webservices(parsed))
 
     # Should discover both web sites
     assert len(result) == 2
@@ -75,11 +82,11 @@ def test_wmi_webservices_discovery(parsed: Mapping[str, Any]) -> None:
     assert discovered_services == expected_services
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_wmi_webservices_check_default_site(parsed: Mapping[str, Any]) -> None:
     """Test WMI Web Services check function for Default Web Site."""
     # Based on the original dataset, Default Web Site has 0 connections
-    result = list(check_wmi_webservices("Default Web Site", {}, parsed))
+    result = list(wmi_webservices.check_wmi_webservices("Default Web Site", {}, parsed))
 
     # Should have 1 result for connections
     assert len(result) == 1
@@ -91,11 +98,11 @@ def test_wmi_webservices_check_default_site(parsed: Mapping[str, Any]) -> None:
     assert result[0][2][0][1] == 0
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_wmi_webservices_check_exchange_backend(parsed: Mapping[str, Any]) -> None:
     """Test WMI Web Services check function for Exchange Back End."""
     # Based on the original dataset, Exchange Back End has 11 connections
-    result = list(check_wmi_webservices("Exchange Back End", {}, parsed))
+    result = list(wmi_webservices.check_wmi_webservices("Exchange Back End", {}, parsed))
 
     # Should have 1 result for connections
     assert len(result) == 1
@@ -156,6 +163,6 @@ def test_wmi_webservices_discovery_empty_section() -> None:
     string_table: list[list[str]] = []
 
     parsed = parse_wmi_table(string_table)
-    result = list(discover_wmi_webservices(parsed))
+    result = list(wmi_webservices.discover_wmi_webservices(parsed))
 
     assert result == []

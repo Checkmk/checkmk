@@ -17,12 +17,13 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import get_value_store
-from cmk.base.legacy_checks.f5_bigip_vserver import (
-    check_f5_bigip_vserver,
-    inventory_f5_bigip_vserver,
-    parse_f5_bigip_vserver,
-)
+from cmk.base.legacy_checks import f5_bigip_vserver
+
+
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    store: dict[str, object] = {}
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: store)
 
 
 @pytest.fixture(name="string_table")
@@ -50,10 +51,10 @@ def _string_table() -> list[list[str]]:
 
 @pytest.fixture(name="parsed")
 def _parsed(string_table: list[list[str]]) -> Mapping[str, Any]:
-    return parse_f5_bigip_vserver(string_table)
+    return f5_bigip_vserver.parse_f5_bigip_vserver(string_table)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_parse_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -> None:
     assert "VS_BM" in parsed
     vs_data = parsed["VS_BM"]
@@ -77,22 +78,25 @@ def test_parse_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -
 
 
 def test_inventory_f5_bigip_vserver_division_regression(parsed: Mapping[str, Any]) -> None:
-    result = list(inventory_f5_bigip_vserver(parsed))
+    result = list(f5_bigip_vserver.inventory_f5_bigip_vserver(parsed))
     assert result == [("VS_BM", {})]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_f5_bigip_vserver_division_regression_basic(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_division_regression_basic(
+    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Pre-populate value store to avoid rate calculation errors on first run
-    value_store = get_value_store()
-    value_store["connections_rate.0"] = (0, 2535)
-    value_store["if_in_pkts.0"] = (0, 70981)
-    value_store["if_out_pkts.0"] = (0, 84431)
-    value_store["if_in_octets.0"] = (0, 10961763)
-    value_store["if_out_octets.0"] = (0, 83403367)
-    value_store["packet_velocity_asic.0"] = (0, 0)
+    value_store: dict[str, object] = {
+        "connections_rate.0": (0, 2535),
+        "if_in_pkts.0": (0, 70981),
+        "if_out_pkts.0": (0, 84431),
+        "if_in_octets.0": (0, 10961763),
+        "if_out_octets.0": (0, 83403367),
+        "packet_velocity_asic.0": (0, 0),
+    }
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: value_store)
 
-    result = list(check_f5_bigip_vserver("VS_BM", {}, parsed))
+    result = list(f5_bigip_vserver.check_f5_bigip_vserver("VS_BM", {}, parsed))
 
     assert len(result) == 4
 
@@ -125,29 +129,32 @@ def test_check_f5_bigip_vserver_division_regression_basic(parsed: Mapping[str, A
     assert result[3] == (0, "Connections rate: 0.00/sec")
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_f5_bigip_vserver_division_regression_missing_item(parsed: Mapping[str, Any]) -> None:
-    result = list(check_f5_bigip_vserver("NonExistent", {}, parsed))
+    result = list(f5_bigip_vserver.check_f5_bigip_vserver("NonExistent", {}, parsed))
     assert result == []
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_check_f5_bigip_vserver_division_regression_with_params(parsed: Mapping[str, Any]) -> None:
+def test_check_f5_bigip_vserver_division_regression_with_params(
+    parsed: Mapping[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Pre-populate value store
-    value_store = get_value_store()
-    value_store["connections_rate.0"] = (0, 2535)
-    value_store["if_in_pkts.0"] = (0, 70981)
-    value_store["if_out_pkts.0"] = (0, 84431)
-    value_store["if_in_octets.0"] = (0, 10961763)
-    value_store["if_out_octets.0"] = (0, 83403367)
-    value_store["packet_velocity_asic.0"] = (0, 0)
+    value_store: dict[str, object] = {
+        "connections_rate.0": (0, 2535),
+        "if_in_pkts.0": (0, 70981),
+        "if_out_pkts.0": (0, 84431),
+        "if_in_octets.0": (0, 10961763),
+        "if_out_octets.0": (0, 83403367),
+        "packet_velocity_asic.0": (0, 0),
+    }
+    monkeypatch.setattr(f5_bigip_vserver, "get_value_store", lambda: value_store)
 
     params = {
         "connections": (50, 100),  # warn, crit thresholds
         "state": {"is_up_and_available": 0},
     }
 
-    result = list(check_f5_bigip_vserver("VS_BM", params, parsed))
+    result = list(f5_bigip_vserver.check_f5_bigip_vserver("VS_BM", params, parsed))
 
     assert len(result) == 4
 
@@ -157,7 +164,7 @@ def test_check_f5_bigip_vserver_division_regression_with_params(parsed: Mapping[
     assert "Client connections: 0" in summary
 
 
-@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_f5_bigip_vserver_division_regression_disabled(string_table: list[list[str]]) -> None:
     # Modify string table to have a disabled virtual server
     disabled_string_table = [
@@ -180,8 +187,8 @@ def test_check_f5_bigip_vserver_division_regression_disabled(string_table: list[
         ],
     ]
 
-    parsed = parse_f5_bigip_vserver(disabled_string_table)
-    result = list(check_f5_bigip_vserver("VS_DISABLED", {}, parsed))
+    parsed = f5_bigip_vserver.parse_f5_bigip_vserver(disabled_string_table)
+    result = list(f5_bigip_vserver.check_f5_bigip_vserver("VS_DISABLED", {}, parsed))
 
     # Should have at least the status check
     assert len(result) >= 2

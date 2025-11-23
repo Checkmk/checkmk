@@ -7,7 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import get_value_store, Metric, Result, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
+from cmk.base.check_legacy_includes import graylog
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, CheckPluginName, SectionName
 
 
@@ -16,7 +17,6 @@ def _graylog_sources_check_plugin(agent_based_plugins: AgentBasedPlugins) -> Che
     return agent_based_plugins.check_plugins[CheckPluginName("graylog_sources")]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, item, expected_check_result",
     [
@@ -71,6 +71,7 @@ def _graylog_sources_check_plugin(agent_based_plugins: AgentBasedPlugins) -> Che
     ],
 )
 def test_check_graylog_sources(
+    monkeypatch: pytest.MonkeyPatch,
     check: CheckPlugin,
     agent_based_plugins: AgentBasedPlugins,
     section: StringTable,
@@ -81,7 +82,9 @@ def test_check_graylog_sources(
         SectionName("graylog_sources")
     ].parse_function
 
-    get_value_store()["graylog_msgs_avg.rate"] = 1670328674.09963, 457
+    monkeypatch.setattr(
+        graylog, "get_value_store", lambda: {"graylog_msgs_avg.rate": (1670328674.09963, 457)}
+    )
 
     assert (
         list(

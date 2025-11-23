@@ -14,12 +14,7 @@
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import get_value_store
-from cmk.base.legacy_checks.veeam_tapejobs import (
-    check_veeam_tapejobs,
-    inventory_veeam_tapejobs,
-    parse_veeam_tapejobs,
-)
+from cmk.base.legacy_checks import veeam_tapejobs
 
 
 @pytest.fixture(name="string_table")
@@ -45,12 +40,12 @@ def fixture_string_table() -> list[list[str]]:
 @pytest.fixture(name="parsed_data")
 def fixture_parsed_data(string_table: list[list[str]]) -> dict[str, dict[str, str]]:
     """Parsed Veeam tape job data with job information."""
-    return parse_veeam_tapejobs(string_table)
+    return veeam_tapejobs.parse_veeam_tapejobs(string_table)
 
 
 def test_parse_veeam_tapejobs(string_table: list[list[str]]) -> None:
     """Test parsing Veeam tape job data with various job states."""
-    parsed = parse_veeam_tapejobs(string_table)
+    parsed = veeam_tapejobs.parse_veeam_tapejobs(string_table)
 
     assert len(parsed) == 7
 
@@ -85,7 +80,7 @@ def test_parse_veeam_tapejobs_incomplete_lines() -> None:
         ["Another Complete", "2", "Failed", "Stopped"],
     ]
 
-    parsed = parse_veeam_tapejobs(string_table)
+    parsed = veeam_tapejobs.parse_veeam_tapejobs(string_table)
 
     # Should only parse complete lines
     assert len(parsed) == 2
@@ -96,7 +91,7 @@ def test_parse_veeam_tapejobs_incomplete_lines() -> None:
 
 def test_inventory_veeam_tapejobs(parsed_data: dict[str, dict[str, str]]) -> None:
     """Test discovery of all Veeam tape backup jobs."""
-    assert list(inventory_veeam_tapejobs(parsed_data)) == [
+    assert list(veeam_tapejobs.inventory_veeam_tapejobs(parsed_data)) == [
         ("Job One", {}),
         ("Job Two", {}),
         ("Job Three", {}),
@@ -107,14 +102,19 @@ def test_inventory_veeam_tapejobs(parsed_data: dict[str, dict[str, str]]) -> Non
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(1562056877.0)
 def test_check_veeam_tapejobs_completed_success(
-    parsed_data: dict[str, dict[str, str]],
+    parsed_data: dict[str, dict[str, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check for successfully completed backup job."""
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(veeam_tapejobs, "get_value_store", lambda: value_store)
 
-    results = list(check_veeam_tapejobs("Job One", {"levels_upper": (86400, 172800)}, parsed_data))
+    results = list(
+        veeam_tapejobs.check_veeam_tapejobs(
+            "Job One", {"levels_upper": (86400, 172800)}, parsed_data
+        )
+    )
 
     assert results == [
         (0, "Last backup result: Success"),
@@ -122,14 +122,19 @@ def test_check_veeam_tapejobs_completed_success(
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(1562056877.0)
 def test_check_veeam_tapejobs_completed_warning(
-    parsed_data: dict[str, dict[str, str]],
+    parsed_data: dict[str, dict[str, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check for backup job completed with warning."""
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(veeam_tapejobs, "get_value_store", lambda: value_store)
 
-    results = list(check_veeam_tapejobs("Job Two", {"levels_upper": (86400, 172800)}, parsed_data))
+    results = list(
+        veeam_tapejobs.check_veeam_tapejobs(
+            "Job Two", {"levels_upper": (86400, 172800)}, parsed_data
+        )
+    )
 
     assert results == [
         (1, "Last backup result: Warning"),
@@ -137,15 +142,18 @@ def test_check_veeam_tapejobs_completed_warning(
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(1562056877.0)
 def test_check_veeam_tapejobs_completed_failed(
-    parsed_data: dict[str, dict[str, str]],
+    parsed_data: dict[str, dict[str, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check for failed backup job."""
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(veeam_tapejobs, "get_value_store", lambda: value_store)
 
     results = list(
-        check_veeam_tapejobs("Job Three", {"levels_upper": (86400, 172800)}, parsed_data)
+        veeam_tapejobs.check_veeam_tapejobs(
+            "Job Three", {"levels_upper": (86400, 172800)}, parsed_data
+        )
     )
 
     assert results == [
@@ -154,20 +162,22 @@ def test_check_veeam_tapejobs_completed_failed(
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(1562056877.0)
 def test_check_veeam_tapejobs_working_normal_runtime(
-    parsed_data: dict[str, dict[str, str]],
+    parsed_data: dict[str, dict[str, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check for working job with normal runtime."""
     # Pre-populate value store with runtime tracking
     # 2019-07-02 08:41:17 timestamp is 1562056877.0
     # Job Four: ~14 minutes ago would be 1562056000
+    value_store: dict[str, object] = {"4.running_since": 1562056000}  # Job Four: ~14 minutes ago
+    monkeypatch.setattr(veeam_tapejobs, "get_value_store", lambda: value_store)
 
-    value_store = get_value_store()
-    value_store["4.running_since"] = 1562056000  # Job Four: ~14 minutes ago
-
-    results = list(check_veeam_tapejobs("Job Four", {"levels_upper": (86400, 172800)}, parsed_data))
+    results = list(
+        veeam_tapejobs.check_veeam_tapejobs(
+            "Job Four", {"levels_upper": (86400, 172800)}, parsed_data
+        )
+    )
 
     assert len(results) == 2
     # First result: status message
@@ -180,21 +190,21 @@ def test_check_veeam_tapejobs_working_normal_runtime(
     assert "Running time:" in results[1][1]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(1562056877.0)
 def test_check_veeam_tapejobs_working_long_runtime(
-    parsed_data: dict[str, dict[str, str]],
+    parsed_data: dict[str, dict[str, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check for working job with excessive runtime."""
     # Pre-populate value store with old runtime tracking
     # 2019-07-02 08:41:17 timestamp is 1562056877.0
     # Job Five: ~24 days ago would be 1560006000
-
-    value_store = get_value_store()
-    value_store["5.running_since"] = 1560006000  # Job Five: ~24 days ago
+    value_store: dict[str, object] = {"5.running_since": 1560006000}  # Job Five: ~24 days ago
+    monkeypatch.setattr(veeam_tapejobs, "get_value_store", lambda: value_store)
 
     results = list(
-        check_veeam_tapejobs("Job Five (older)", {"levels_upper": (86400, 172800)}, parsed_data)
+        veeam_tapejobs.check_veeam_tapejobs(
+            "Job Five (older)", {"levels_upper": (86400, 172800)}, parsed_data
+        )
     )
 
     assert len(results) == 2
@@ -209,20 +219,22 @@ def test_check_veeam_tapejobs_working_long_runtime(
     assert "warn/crit at" in results[1][1]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(1562056877.0)
 def test_check_veeam_tapejobs_idle_normal_runtime(
-    parsed_data: dict[str, dict[str, str]],
+    parsed_data: dict[str, dict[str, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check for idle job with normal runtime."""
     # Pre-populate value store with runtime tracking
     # 2019-07-02 08:41:17 timestamp is 1562056877.0
     # Job Six: ~14 minutes ago would be 1562056000
+    value_store: dict[str, object] = {"6.running_since": 1562056000}  # Job Six: ~14 minutes ago
+    monkeypatch.setattr(veeam_tapejobs, "get_value_store", lambda: value_store)
 
-    value_store = get_value_store()
-    value_store["6.running_since"] = 1562056000  # Job Six: ~14 minutes ago
-
-    results = list(check_veeam_tapejobs("Job Six", {"levels_upper": (86400, 172800)}, parsed_data))
+    results = list(
+        veeam_tapejobs.check_veeam_tapejobs(
+            "Job Six", {"levels_upper": (86400, 172800)}, parsed_data
+        )
+    )
 
     assert len(results) == 2
     # First result: status message
@@ -235,15 +247,20 @@ def test_check_veeam_tapejobs_idle_normal_runtime(
     assert "Running time:" in results[1][1]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @time_machine.travel(1562056877.0)
 def test_check_veeam_tapejobs_new_job_no_runtime_tracking(
-    parsed_data: dict[str, dict[str, str]],
+    parsed_data: dict[str, dict[str, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test check for new working job without existing runtime tracking."""
     # Value store is empty (initialized but no data)
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(veeam_tapejobs, "get_value_store", lambda: value_store)
 
-    results = list(check_veeam_tapejobs("Job Four", {"levels_upper": (86400, 172800)}, parsed_data))
+    results = list(
+        veeam_tapejobs.check_veeam_tapejobs(
+            "Job Four", {"levels_upper": (86400, 172800)}, parsed_data
+        )
+    )
 
     assert len(results) == 2
     # Should initialize runtime tracking and show minimal runtime
@@ -256,7 +273,9 @@ def test_check_veeam_tapejobs_nonexistent_item(
     parsed_data: dict[str, dict[str, str]],
 ) -> None:
     """Test check for non-existent job item."""
-    result = check_veeam_tapejobs("Nonexistent Job", {"levels_upper": (86400, 172800)}, parsed_data)
+    result = veeam_tapejobs.check_veeam_tapejobs(
+        "Nonexistent Job", {"levels_upper": (86400, 172800)}, parsed_data
+    )
 
     # Should return None/empty generator for missing items
     assert result is None or not list(result)

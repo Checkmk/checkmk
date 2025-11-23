@@ -258,7 +258,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.shared_typing.vue_formspec_components",
         "cmk.metric_backend",
         "cmk.utils.paths",
-        "cmk.discover_plugins",
     ),
     "robotmk": ("cmk.nonfree.pro.robotmk",),
     "sftp": ("cmk.utils.paths",),

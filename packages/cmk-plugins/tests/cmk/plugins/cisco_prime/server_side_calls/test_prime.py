@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.cisco.server_side_calls.prime import special_agent_cisco_prime
+from cmk.plugins.cisco_prime.server_side_calls.prime import special_agent_cisco_prime
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 

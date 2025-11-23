@@ -14,7 +14,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.cisco.agent_based.prime_wlan_controller import (
+from cmk.plugins.cisco_prime.agent_based.prime_wlan_controller import (
     AlarmStatus,
     check_wlan_controller_access_points,
     check_wlan_controller_alarm_status,

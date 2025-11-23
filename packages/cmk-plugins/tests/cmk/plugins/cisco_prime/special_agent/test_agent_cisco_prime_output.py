@@ -9,7 +9,7 @@
 import pytest
 import responses
 
-from cmk.plugins.cisco.special_agent.agent_cisco_prime import main
+from cmk.plugins.cisco_prime.special_agent.agent_cisco_prime import main
 
 AUTH = ("user", "passw0rd")
 HOST = "httpbin.org"

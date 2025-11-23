@@ -20,6 +20,40 @@ FAMILIES = [
 ]
 
 py_library(
+    name = "cisco_prime",
+    srcs = glob(["cmk/plugins/cisco_prime/**/*.py"]),
+    data = glob([
+        "cmk/plugins/cisco_prime/checkman/*",
+        "cmk/plugins/cisco_prime/libexec/*",
+    ]) + ["cmk/plugins/cisco_prime/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:password_store",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("requests"),
+        requirement("urllib3"),
+    ],
+)
+
+py_test(
+    name = "cisco_prime-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/cisco_prime/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":cisco_prime",
+        requirement("pytest"),
+        requirement("responses"),
+        requirement("time-machine"),
+    ],
+)
+
+py_library(
     name = "kube",
     srcs = glob([
         "cmk/plugins/kube/**/*.py",

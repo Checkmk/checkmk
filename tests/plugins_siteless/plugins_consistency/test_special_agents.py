@@ -22,8 +22,8 @@ from cmk.plugins.azure_status.special_agent import agent_azure_status
 from cmk.plugins.azure_v2.special_agent import agent_azure_v2 as agent_azure_v2
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.checkmk.special_agents import agent_bi
-from cmk.plugins.cisco.special_agent import agent_cisco_prime
 from cmk.plugins.cisco_meraki.lib import agent as agent_cisco_meraki
+from cmk.plugins.cisco_prime.special_agent import agent_cisco_prime
 from cmk.plugins.couchbase.special_agent import agent_couchbase
 from cmk.plugins.datadog.special_agent import agent_datadog
 from cmk.plugins.elasticsearch.special_agent import agent_elasticsearch

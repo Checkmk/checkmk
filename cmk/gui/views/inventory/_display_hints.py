@@ -1305,7 +1305,7 @@ class FilterMigration(abc.ABC):
     name: str
 
     @abc.abstractmethod
-    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]: ...
+    def __call__(self, context: Mapping[str, str]) -> Mapping[str, str]: ...
 
     @property
     def filter_name(self) -> str:
@@ -1316,10 +1316,10 @@ class FilterMigration(abc.ABC):
 class FilterMigrationScale(FilterMigration):
     scale: int
 
-    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
+    def __call__(self, context: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
-            if filter_value := value.get(f"{self.name}_{direction}"):
+            if filter_value := context.get(f"{self.name}_{direction}"):
                 migrated[f"{self.filter_name}_{direction}"] = str(int(filter_value) * self.scale)
         return migrated
 
@@ -1328,10 +1328,10 @@ class FilterMigrationScale(FilterMigration):
 class FilterMigrationTime(FilterMigration):
     scale: int
 
-    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
+    def __call__(self, context: Mapping[str, str]) -> Mapping[str, str]:
         migrated = {}
         for direction in ("from", "until"):
-            if filter_value := value.get(f"{self.name}_{direction}_days"):
+            if filter_value := context.get(f"{self.name}_{direction}_days"):
                 migrated[f"{self.filter_name}_{direction}"] = str(int(filter_value) * self.scale)
         return migrated
 
@@ -1340,10 +1340,10 @@ class FilterMigrationTime(FilterMigration):
 class FilterMigrationChoice(FilterMigration):
     choices: Sequence[int | float | str]
 
-    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
+    def __call__(self, context: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAdminStatus
         migrated = {f"{self.filter_name}_{c}": "" for c in self.choices}
-        match value.get(self.name):
+        match context.get(self.name):
             case "1":
                 migrated[f"{self.filter_name}_1"] = "on"
                 return migrated
@@ -1355,17 +1355,17 @@ class FilterMigrationChoice(FilterMigration):
             case _:
                 # FilterInvtableOperStatus
                 return {
-                    f"{self.filter_name}_{c}": value.get(f"{self.name}_{c}", "")
+                    f"{self.filter_name}_{c}": context.get(f"{self.name}_{c}", "")
                     for c in self.choices
                 }
 
 
 @dataclass(frozen=True, kw_only=True)
 class FilterMigrationBool(FilterMigration):
-    def __call__(self, value: Mapping[str, str]) -> Mapping[str, str]:
+    def __call__(self, context: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAvailable
         migrated = {f"{self.filter_name}_{c}": "" for c in (True, False, None)}
-        match value.get(self.name):
+        match context.get(self.name):
             case "yes":
                 migrated[f"{self.filter_name}_True"] = "on"
                 return migrated

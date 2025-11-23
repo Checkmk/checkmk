@@ -509,7 +509,6 @@ def _make_column_filter(
                 options=[
                     ("True", _make_str(field_from_api.render_true)),
                     ("False", _make_str(field_from_api.render_false)),
-                    ("None", "None"),
                 ],
             )
         case NumberFieldFromAPI():
@@ -1342,21 +1341,19 @@ class FilterMigrationChoice(FilterMigration):
 
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAdminStatus
-        migrated = {f"{self.filter_name}_{c}": "" for c in self.choices}
         match filter_vars.get(self.name):
             case "1":
-                migrated[f"{self.filter_name}_1"] = "on"
-                return migrated
+                return {f"{self.filter_name}_1": "on"}
             case "2":
-                migrated[f"{self.filter_name}_2"] = "on"
-                return migrated
+                return {f"{self.filter_name}_2": "on"}
             case "-1":
-                return migrated
+                return {}
             case _:
                 # FilterInvtableOperStatus
                 return {
-                    f"{self.filter_name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
+                    f"{self.filter_name}_{c}": v
                     for c in self.choices
+                    if (v := filter_vars.get(f"{self.name}_{c}"))
                 }
 
 
@@ -1364,18 +1361,19 @@ class FilterMigrationChoice(FilterMigration):
 class FilterMigrationBool(FilterMigration):
     def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
         # FilterInvtableAvailable
-        migrated = {f"{self.filter_name}_{c}": "" for c in (True, False, None)}
         match filter_vars.get(self.name):
             case "yes":
-                migrated[f"{self.filter_name}_True"] = "on"
-                return migrated
+                return {f"{self.filter_name}_True": "on"}
             case "no":
-                migrated[f"{self.filter_name}_False"] = "on"
-                return migrated
+                return {f"{self.filter_name}_False": "on"}
             case "":
-                return migrated
+                return {}
             case _:
-                return migrated
+                return {
+                    f"{self.filter_name}_{c}": v
+                    for c in (True, False)
+                    if (v := filter_vars.get(f"{self.name}_{c}"))
+                }
 
 
 def find_non_canonical_filters(

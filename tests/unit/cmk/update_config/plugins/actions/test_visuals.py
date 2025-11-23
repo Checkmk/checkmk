@@ -376,13 +376,8 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 name="",
                 context={
                     "invinterface_oper_status_canonical": {
-                        "invinterface_oper_status_canonical_1": "",
                         "invinterface_oper_status_canonical_2": "on",
-                        "invinterface_oper_status_canonical_3": "",
-                        "invinterface_oper_status_canonical_4": "",
-                        "invinterface_oper_status_canonical_5": "",
                         "invinterface_oper_status_canonical_6": "on",
-                        "invinterface_oper_status_canonical_7": "",
                     },
                 },
                 single_infos=[],
@@ -431,17 +426,7 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_admin_status_canonical": {
-                        "invinterface_admin_status_canonical_1": "",
-                        "invinterface_admin_status_canonical_2": "",
-                        "invinterface_admin_status_canonical_3": "",
-                        "invinterface_admin_status_canonical_4": "",
-                        "invinterface_admin_status_canonical_5": "",
-                        "invinterface_admin_status_canonical_6": "",
-                        "invinterface_admin_status_canonical_7": "",
-                        "invinterface_admin_status_canonical_8": "",
-                        "invinterface_admin_status_canonical_9": "",
-                    },
+                    "invinterface_admin_status_canonical": {},
                 },
                 single_infos=[],
                 add_context_to_title=False,
@@ -491,14 +476,6 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 context={
                     "invinterface_admin_status_canonical": {
                         "invinterface_admin_status_canonical_1": "on",
-                        "invinterface_admin_status_canonical_2": "",
-                        "invinterface_admin_status_canonical_3": "",
-                        "invinterface_admin_status_canonical_4": "",
-                        "invinterface_admin_status_canonical_5": "",
-                        "invinterface_admin_status_canonical_6": "",
-                        "invinterface_admin_status_canonical_7": "",
-                        "invinterface_admin_status_canonical_8": "",
-                        "invinterface_admin_status_canonical_9": "",
                     },
                 },
                 single_infos=[],
@@ -548,15 +525,7 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 name="",
                 context={
                     "invinterface_admin_status_canonical": {
-                        "invinterface_admin_status_canonical_1": "",
                         "invinterface_admin_status_canonical_2": "on",
-                        "invinterface_admin_status_canonical_3": "",
-                        "invinterface_admin_status_canonical_4": "",
-                        "invinterface_admin_status_canonical_5": "",
-                        "invinterface_admin_status_canonical_6": "",
-                        "invinterface_admin_status_canonical_7": "",
-                        "invinterface_admin_status_canonical_8": "",
-                        "invinterface_admin_status_canonical_9": "",
                     },
                 },
                 single_infos=[],
@@ -655,11 +624,7 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 owner=UserId("user"),
                 name="",
                 context={
-                    "invinterface_available_canonical": {
-                        "invinterface_available_canonical_True": "",
-                        "invinterface_available_canonical_False": "",
-                        "invinterface_available_canonical_None": "",
-                    },
+                    "invinterface_available_canonical": {},
                 },
                 single_infos=[],
                 add_context_to_title=False,
@@ -708,9 +673,7 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 name="",
                 context={
                     "invinterface_available_canonical": {
-                        "invinterface_available_canonical_True": "",
                         "invinterface_available_canonical_False": "on",
-                        "invinterface_available_canonical_None": "",
                     },
                 },
                 single_infos=[],
@@ -761,8 +724,6 @@ _LEGACY_HINTS: Mapping[str, InventoryHintSpec] = {
                 context={
                     "invinterface_available_canonical": {
                         "invinterface_available_canonical_True": "on",
-                        "invinterface_available_canonical_False": "",
-                        "invinterface_available_canonical_None": "",
                     },
                 },
                 single_infos=[],

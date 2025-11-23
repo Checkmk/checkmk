@@ -37,10 +37,8 @@ class Migration:
         assert isinstance(context, dict)
         migrated = {}
         for filter_ident, filter_vars in context.items():
-            if (filter_migration := non_canonical_filters.get(filter_ident)) and (
-                migrated_value := filter_migration(filter_vars)
-            ):
-                migrated[filter_migration.filter_name] = migrated_value
+            if filter_migration := non_canonical_filters.get(filter_ident):
+                migrated[filter_migration.filter_name] = filter_migration(filter_vars)
                 self._has_changed = True
             else:
                 migrated[filter_ident] = filter_vars

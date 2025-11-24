@@ -1963,7 +1963,9 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
     )
 
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
+        mgmt_client.login(
+            args.tenant, args.client, resolve_secret_option(args, SECRET_OPTION).reveal()
+        )
         all_resources = (AzureResource(r, args.tag_key_pattern) for r in mgmt_client.resources())
 
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]

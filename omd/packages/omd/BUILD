@@ -56,11 +56,6 @@ WRAPPED_EXECUTABLES = [
     renames = {"use_system_openssl": executable},
 ) for executable in WRAPPED_EXECUTABLES]
 
-pkg_files(
-    name = "wrapped_executables",
-    srcs = ["wrapper_" + executable for executable in WRAPPED_EXECUTABLES],
-)
-
 genrule(
     name = "omd_man_gz",
     srcs = ["omd.8"],
@@ -254,7 +249,7 @@ pkg_tar(
         ":skel",
         ":xinetd_link",
     ] + select({
-        "@cmk//distro:incompatible-openssl": [":wrapped_executables"],
+        "@cmk//distro:incompatible-openssl": ["wrapper_" + executable for executable in WRAPPED_EXECUTABLES],
         "//conditions:default": [],
     }),
     empty_dirs = [

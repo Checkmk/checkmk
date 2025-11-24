@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Iterable, Mapping
@@ -193,7 +192,7 @@ def _fs_burst_balance() -> Mapping[str, DictElement]:
     }
 
 
-def _fs_cpu_credits_balance():
+def _fs_cpu_credits_balance() -> Mapping[str, DictElement]:
     return {
         "balance_levels_lower": DictElement(
             parameter_form=enable_deprecated_alternative(
@@ -262,7 +261,7 @@ def _fs_latency() -> Mapping[str, DictElement]:
     }
 
 
-def _item_spec_aws_limits_generic():
+def _item_spec_aws_limits_generic() -> String:
     return String(
         title=Title("Region name"), help_text=Help("An AWS region name such as 'eu-central-1'")
     )
@@ -367,7 +366,7 @@ def fs_aws_limits(
 #   '----------------------------------------------------------------------'
 
 
-def _parameter_form_spec_aws_glacier_vaults():
+def _parameter_form_spec_aws_glacier_vaults() -> Dictionary:
     return Dictionary(elements=_fs_glacier_vaults())
 
 
@@ -716,7 +715,7 @@ rule_spec_aws_s3_limits = CheckParameters(
 )
 
 
-def _parameter_form_spec_aws_s3_http_errors():
+def _parameter_form_spec_aws_s3_http_errors() -> Dictionary:
     return Dictionary(
         title=Title("Upper levels for HTTP errors"),
         elements=_fs_elements_http_errors(["4xx", "5xx"]),
@@ -1041,7 +1040,7 @@ rule_spec_aws_elb_healthy_hosts = CheckParameters(
 )
 
 
-def _parameter_form_spec_aws_elb_backend_connection_errors():
+def _parameter_form_spec_aws_elb_backend_connection_errors() -> Dictionary:
     return Dictionary(
         elements={
             "levels_backend_connections_errors_rate": DictElement(
@@ -1172,7 +1171,7 @@ rule_spec_aws_elbv2_lcu = CheckParameters(
 )
 
 
-def _parameter_form_spec_aws_elbv2_application_target_errors():
+def _parameter_form_spec_aws_elbv2_application_target_errors() -> Dictionary:
     return Dictionary(
         title=Title("Upper levels for HTTP & Lambda user errors"),
         elements={
@@ -1317,7 +1316,7 @@ rule_spec_aws_ebs_limits = CheckParameters(
 #   '----------------------------------------------------------------------'
 
 
-def _item_spec_aws_rds():
+def _item_spec_aws_rds() -> String:
     return String(
         title=Title("Instance identifier & region"),
         help_text=Help(
@@ -1438,7 +1437,7 @@ rule_spec_aws_rds_connections = CheckParameters(
 )
 
 
-def _parameter_form_spec_aws_rds_replica_lag():
+def _parameter_form_spec_aws_rds_replica_lag() -> Dictionary:
     return Dictionary(
         elements={
             "lag_levels": DictElement(
@@ -1734,7 +1733,7 @@ rule_spec_aws_dynamodb_latency = CheckParameters(
 #   '----------------------------------------------------------------------'
 
 
-def _item_spec_aws_wafv2_limits():
+def _item_spec_aws_wafv2_limits() -> String:
     return String(
         title=Title("Region name"),
         help_text=Help(

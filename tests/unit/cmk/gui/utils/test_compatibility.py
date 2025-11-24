@@ -59,7 +59,7 @@ from cmk.utils.licensing.handler import LicenseState
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             EditionsIncompatible(
-                "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+                "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
             id="community-ultimatemt",
         ),
@@ -101,7 +101,7 @@ from cmk.utils.licensing.handler import LicenseState
             Edition.ULTIMATEMT,
             LicenseState.LICENSED,
             EditionsIncompatible(
-                "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+                "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
             id="pro-ultimatemt",
         ),
@@ -275,7 +275,7 @@ from cmk.utils.licensing.handler import LicenseState
             Edition.COMMUNITY,
             LicenseState.LICENSED,
             EditionsIncompatible(
-                "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+                "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
             id="ultimatemt-community",
         ),
@@ -285,7 +285,7 @@ from cmk.utils.licensing.handler import LicenseState
             Edition.PRO,
             LicenseState.LICENSED,
             EditionsIncompatible(
-                "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+                "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
             id="ultimatemt-pro",
         ),
@@ -295,7 +295,7 @@ from cmk.utils.licensing.handler import LicenseState
             Edition.ULTIMATE,
             LicenseState.LICENSED,
             EditionsIncompatible(
-                "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+                "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
             id="ultimatemt-ultimate",
         ),
@@ -548,7 +548,7 @@ def test_license_compatibility_distributed_setup(
             LicenseState.LICENSED,
             Edition.ULTIMATE,
             EditionsIncompatible(
-                "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+                "Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible."
             ),
             id="ultimatemt-ultimate",
         ),

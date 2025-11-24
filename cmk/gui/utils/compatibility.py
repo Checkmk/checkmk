@@ -93,7 +93,7 @@ def is_distributed_setup_compatible_for_licensing(
         remote_edition is cmk_version.Edition.ULTIMATEMT
     ):
         return EditionsIncompatible(
-            _("Mix of Checkmk Ultimate with and without multi-tenancy is not allowed.")
+            _("Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible.")
         )
     return LicensingCompatible()
 
@@ -120,7 +120,7 @@ def is_distributed_monitoring_compatible_for_licensing(
         and remote_edition is cmk_version.Edition.ULTIMATE
     ):
         return EditionsIncompatible(
-            _("Mix of Checkmk Ultimate with and without multi-tenancy is not allowed.")
+            _("Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not possible.")
         )
     return LicensingCompatible()
 

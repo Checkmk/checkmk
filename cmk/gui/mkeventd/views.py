@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 
 import urllib.parse
@@ -333,7 +332,7 @@ class DataSourceECEvents(ABCDataSource):
         return _("Event Console: Current events")
 
     @property
-    def table(self):
+    def table(self) -> RowTableEC:
         return RowTableEC("eventconsoleevents")
 
     @property
@@ -341,19 +340,19 @@ class DataSourceECEvents(ABCDataSource):
         return ["event", "host"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "host_name", "event_id"]
 
     @property
-    def auth_domain(self):
+    def auth_domain(self) -> str:
         return "ec"
 
     @property
-    def time_filters(self):
+    def time_filters(self) -> list[ColumnName]:
         return ["event_first"]
 
 
@@ -367,7 +366,7 @@ class DataSourceECEventHistory(ABCDataSource):
         return _("Event Console: Event history")
 
     @property
-    def table(self):
+    def table(self) -> RowTableEC:
         return RowTableEC("eventconsolehistory")
 
     @property
@@ -375,19 +374,19 @@ class DataSourceECEventHistory(ABCDataSource):
         return ["history", "event", "host"]
 
     @property
-    def keys(self):
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self):
+    def id_keys(self) -> list[ColumnName]:
         return ["site", "host_name", "event_id", "history_line"]
 
     @property
-    def auth_domain(self):
+    def auth_domain(self) -> str:
         return "ec"
 
     @property
-    def time_filters(self):
+    def time_filters(self) -> list[ColumnName]:
         return ["history_time"]
 
 
@@ -463,10 +462,10 @@ class PainterEventId(Painter):
     def ident(self) -> str:
         return "event_id"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("ID of the event")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("ID")
 
     @property
@@ -482,10 +481,10 @@ class PainterEventCount(Painter):
     def ident(self) -> str:
         return "event_count"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Count (number of recent occurrences)")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Cnt.")
 
     @property
@@ -501,10 +500,10 @@ class PainterEventText(Painter):
     def ident(self) -> str:
         return "event_text"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Text/Message of the event")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Message")
 
     @property
@@ -522,10 +521,10 @@ class PainterEventMatchGroups(Painter):
     def ident(self) -> str:
         return "event_match_groups"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Match groups")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Match")
 
     @property
@@ -547,10 +546,10 @@ class PainterEventFirst(Painter):
     def ident(self) -> str:
         return "event_first"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Time of first occurrence of this serial")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("First")
 
     @property
@@ -558,7 +557,7 @@ class PainterEventFirst(Painter):
         return ["event_first"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -576,10 +575,10 @@ class PainterEventLast(Painter):
     def ident(self) -> str:
         return "event_last"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Time of last occurrence")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Last")
 
     @property
@@ -587,7 +586,7 @@ class PainterEventLast(Painter):
         return ["event_last"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -605,10 +604,10 @@ class PainterEventComment(Painter):
     def ident(self) -> str:
         return "event_comment"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Comment to the event")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Comment")
 
     @property
@@ -624,10 +623,10 @@ class PainterEventSl(Painter):
     def ident(self) -> str:
         return "event_sl"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Service-level")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Level")
 
     @property
@@ -701,10 +700,10 @@ class PainterEventIpaddress(Painter):
     def ident(self) -> str:
         return "event_ipaddress"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Original IP address")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Orig. IP")
 
     @property
@@ -720,10 +719,10 @@ class PainterEventHostInDowntime(Painter):
     def ident(self) -> str:
         return "event_host_in_downtime"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Host in downtime during event creation")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Dt.")
 
     @property
@@ -739,10 +738,10 @@ class PainterEventOwner(Painter):
     def ident(self) -> str:
         return "event_owner"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Owner of event")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Owner")
 
     @property
@@ -758,10 +757,10 @@ class PainterEventContact(Painter):
     def ident(self) -> str:
         return "event_contact"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Contact person")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Contact")
 
     @property
@@ -777,10 +776,10 @@ class PainterEventApplication(Painter):
     def ident(self) -> str:
         return "event_application"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Application / Syslog-Tag")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Application")
 
     @property
@@ -796,10 +795,10 @@ class PainterEventPid(Painter):
     def ident(self) -> str:
         return "event_pid"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Process ID")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("PID")
 
     @property
@@ -823,10 +822,10 @@ class PainterEventPriority(Painter):
     def ident(self) -> str:
         return "event_priority"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Syslog-Priority")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Prio")
 
     @property
@@ -842,10 +841,10 @@ class PainterEventFacility(Painter):
     def ident(self) -> str:
         return "event_facility"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Syslog-Facility")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Facility")
 
     @property
@@ -861,10 +860,10 @@ class PainterEventRuleId(Painter):
     def ident(self) -> str:
         return "event_rule_id"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Rule-ID")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Rule")
 
     @property
@@ -884,10 +883,10 @@ class PainterEventState(Painter):
     def ident(self) -> str:
         return "event_state"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("State (severity) of event")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("State")
 
     @property
@@ -907,10 +906,10 @@ class PainterEventPhase(Painter):
     def ident(self) -> str:
         return "event_phase"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Phase of event (open, counting, etc.)")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Phase")
 
     @property
@@ -1032,10 +1031,10 @@ class PainterEventIcons(Painter):
     def ident(self) -> str:
         return "event_icons"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Event icons")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Icons")
 
     @property
@@ -1043,7 +1042,7 @@ class PainterEventIcons(Painter):
         return ["event_phase", "event_host_in_downtime"]
 
     @property
-    def printable(self):
+    def printable(self) -> bool:
         return False
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -1055,10 +1054,10 @@ class PainterEventHistoryIcons(Painter):
     def ident(self) -> str:
         return "event_history_icons"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Event history icons")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Icons")
 
     @property
@@ -1066,7 +1065,7 @@ class PainterEventHistoryIcons(Painter):
         return ["event_phase", "event_host_in_downtime"]
 
     @property
-    def printable(self):
+    def printable(self) -> bool:
         return False
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -1078,10 +1077,10 @@ class PainterEventContactGroups(Painter):
     def ident(self) -> str:
         return "event_contact_groups"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Contact groups defined in rule")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Rule contact groups")
 
     @property
@@ -1102,10 +1101,10 @@ class PainterEventEffectiveContactGroups(Painter):
     def ident(self) -> str:
         return "event_effective_contact_groups"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Contact groups effective (host or rule contact groups)")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Contact groups")
 
     @property
@@ -1137,10 +1136,10 @@ class PainterHistoryLine(Painter):
     def ident(self) -> str:
         return "history_line"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Line number in log file")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Line")
 
     @property
@@ -1156,10 +1155,10 @@ class PainterHistoryTime(Painter):
     def ident(self) -> str:
         return "history_time"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Time of entry in logfile")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Time")
 
     @property
@@ -1167,7 +1166,7 @@ class PainterHistoryTime(Painter):
         return ["history_time"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
@@ -1185,10 +1184,10 @@ class PainterHistoryWhat(Painter):
     def ident(self) -> str:
         return "history_what"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Type of event action")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Action")
 
     @property
@@ -1221,10 +1220,10 @@ class PainterHistoryWho(Painter):
     def ident(self) -> str:
         return "history_who"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("User who performed action")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Who")
 
     @property
@@ -1240,10 +1239,10 @@ class PainterHistoryAddinfo(Painter):
     def ident(self) -> str:
         return "history_addinfo"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Additional information")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("Info")
 
     @property
@@ -1675,9 +1674,8 @@ def cmp_simple_state(column: ColumnName, ra: Row, rb: Row) -> int:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-def mkeventd_view(d):
-    x = {
+_EC_VIEW_DEFAULTS = ViewSpec(
+    {
         "topic": "events",
         "browser_reload": 60,
         "column_headers": "pergroup",
@@ -1691,80 +1689,91 @@ def mkeventd_view(d):
         "play_sounds": False,
         "public": True,
         "sorters": [],
-        "user_sortable": "on",
+        "user_sortable": True,
         "link_from": {},
         "add_context_to_title": True,
         "main_menu_search_terms": [],
-    }
-    x.update(d)
-    return x
-
-
-# Table of all open events
-EC_EVENTS = mkeventd_view(
-    {
-        "group_painters": [],
-        "sorters": [SorterSpec(sorter="event_last", negate=False)],
-        "sort_index": 10,
-        "title": _l("Events"),
-        "description": _l("Table of all currently open events (handled and unhandled)"),
-        "datasource": "mkeventd_events",
-        "layout": "table",
-        "painters": [
-            ColumnSpec(
-                name="event_id",
-                link_spec=VisualLinkSpec(type_name="views", name="ec_event"),
-            ),
-            ColumnSpec(name="event_icons"),
-            ColumnSpec(name="event_state"),
-            ColumnSpec(name="event_sl"),
-            ColumnSpec(
-                name="event_host",
-                link_spec=VisualLinkSpec(type_name="views", name="ec_events_of_host"),
-            ),
-            ColumnSpec(name="event_rule_id"),
-            ColumnSpec(name="event_application"),
-            ColumnSpec(name="event_text"),
-            ColumnSpec(name="event_last"),
-            ColumnSpec(name="event_count"),
-        ],
-        "is_show_more": True,
-        "packaged": False,
         "owner": UserId.builtin(),
-        "name": "ec_events",
+        "name": "",
         "single_infos": [],
-        "context": {
-            "event_id": {},
-            "event_rule_id": {},
-            "event_text": {},
-            "event_application": {},
-            "event_contact": {},
-            "event_comment": {},
-            "event_host_regex": {},
-            "event_ipaddress": {},
-            "event_count": {},
-            "event_phase": {
-                "event_phase_counting": "",
-                "event_phase_delayed": "",
-                "event_phase_open": "on",
-                "event_phase_ack": "on",
-            },
-            "event_state": {},
-            "event_first": {},
-            "event_last": {},
-            "event_priority": {},
-            "event_facility": {},
-            "event_sl": {},
-            "event_sl_max": {},
-            "event_host_in_downtime": {},
-            "hostregex": {},
-            "siteopt": {},
-        },
+        "context": {},
+        "sort_index": 99,
+        "is_show_more": False,
+        "packaged": False,
+        "title": "",
+        "description": "",
+        "datasource": "",
+        "layout": "table",
+        "painters": [],
     }
 )
 
-EC_EVENTS_OF_MONHOST = mkeventd_view(
+
+# Table of all open events
+EC_EVENTS: ViewSpec = {
+    **_EC_VIEW_DEFAULTS,
+    "group_painters": [],
+    "sorters": [SorterSpec(sorter="event_last", negate=False)],
+    "sort_index": 10,
+    "title": _l("Events"),
+    "description": _l("Table of all currently open events (handled and unhandled)"),
+    "datasource": "mkeventd_events",
+    "layout": "table",
+    "painters": [
+        ColumnSpec(
+            name="event_id",
+            link_spec=VisualLinkSpec(type_name="views", name="ec_event"),
+        ),
+        ColumnSpec(name="event_icons"),
+        ColumnSpec(name="event_state"),
+        ColumnSpec(name="event_sl"),
+        ColumnSpec(
+            name="event_host",
+            link_spec=VisualLinkSpec(type_name="views", name="ec_events_of_host"),
+        ),
+        ColumnSpec(name="event_rule_id"),
+        ColumnSpec(name="event_application"),
+        ColumnSpec(name="event_text"),
+        ColumnSpec(name="event_last"),
+        ColumnSpec(name="event_count"),
+    ],
+    "is_show_more": True,
+    "packaged": False,
+    "owner": UserId.builtin(),
+    "name": "ec_events",
+    "single_infos": [],
+    "context": {
+        "event_id": {},
+        "event_rule_id": {},
+        "event_text": {},
+        "event_application": {},
+        "event_contact": {},
+        "event_comment": {},
+        "event_host_regex": {},
+        "event_ipaddress": {},
+        "event_count": {},
+        "event_phase": {
+            "event_phase_counting": "",
+            "event_phase_delayed": "",
+            "event_phase_open": "on",
+            "event_phase_ack": "on",
+        },
+        "event_state": {},
+        "event_first": {},
+        "event_last": {},
+        "event_priority": {},
+        "event_facility": {},
+        "event_sl": {},
+        "event_sl_max": {},
+        "event_host_in_downtime": {},
+        "hostregex": {},
+        "siteopt": {},
+    },
+}
+
+EC_EVENTS_OF_MONHOST = ViewSpec(
     {
+        **_EC_VIEW_DEFAULTS,
         "hidden": True,
         "group_painters": [],
         "sorters": [SorterSpec(sorter="event_last", negate=False)],
@@ -1814,8 +1823,9 @@ EC_EVENTS_OF_MONHOST = mkeventd_view(
     }
 )
 
-EC_EVENTS_OF_HOST = mkeventd_view(
+EC_EVENTS_OF_HOST = ViewSpec(
     {
+        **_EC_VIEW_DEFAULTS,
         "hidden": True,
         "group_painters": [],
         "sorters": [SorterSpec(sorter="event_last", negate=False)],
@@ -1866,8 +1876,9 @@ EC_EVENTS_OF_HOST = mkeventd_view(
     }
 )
 
-EC_EVENT = mkeventd_view(
+EC_EVENT = ViewSpec(
     {
+        **_EC_VIEW_DEFAULTS,
         "browser_reload": 0,
         "hidden": True,
         "group_painters": [],
@@ -1917,8 +1928,9 @@ EC_EVENT = mkeventd_view(
     }
 )
 
-EC_HISTORY_RECENT = mkeventd_view(
+EC_HISTORY_RECENT = ViewSpec(
     {
+        **_EC_VIEW_DEFAULTS,
         "icon": {"icon": "event_console", "emblem": "time"},
         "group_painters": [],
         "sorters": [
@@ -1988,8 +2000,9 @@ EC_HISTORY_RECENT = mkeventd_view(
     }
 )
 
-EC_HISTORYENTRY = mkeventd_view(
+EC_HISTORYENTRY = ViewSpec(
     {
+        **_EC_VIEW_DEFAULTS,
         "browser_reload": 0,
         "hidden": True,
         "group_painters": [],
@@ -2043,8 +2056,9 @@ EC_HISTORYENTRY = mkeventd_view(
     }
 )
 
-EC_HISTORY_OF_EVENT = mkeventd_view(
+EC_HISTORY_OF_EVENT = ViewSpec(
     {
+        **_EC_VIEW_DEFAULTS,
         "browser_reload": 0,
         "hidden": True,
         "group_painters": [],
@@ -2056,7 +2070,7 @@ EC_HISTORY_OF_EVENT = mkeventd_view(
         "description": _l("History entries of one specific event"),
         "datasource": "mkeventd_history",
         "layout": "table",
-        "columns": 1,
+        "num_columns": 1,
         "painters": [
             ColumnSpec(name="history_time"),
             ColumnSpec(
@@ -2086,8 +2100,9 @@ EC_HISTORY_OF_EVENT = mkeventd_view(
     }
 )
 
-EC_HISTORY_OF_HOST = mkeventd_view(
+EC_HISTORY_OF_HOST = ViewSpec(
     {
+        **_EC_VIEW_DEFAULTS,
         "browser_reload": 0,
         "hidden": True,
         "group_painters": [],
@@ -2099,7 +2114,6 @@ EC_HISTORY_OF_HOST = mkeventd_view(
         "description": _l("History entries of one specific host"),
         "datasource": "mkeventd_history",
         "layout": "table",
-        "columns": 1,
         "painters": [
             ColumnSpec(name="history_time"),
             ColumnSpec(
@@ -2158,6 +2172,7 @@ EC_HISTORY_OF_HOST = mkeventd_view(
 )
 
 EC_EVENT_MOBILE: ViewSpec = {
+    **_EC_VIEW_DEFAULTS,
     "browser_reload": 0,
     "column_headers": "pergroup",
     "context": {},
@@ -2216,6 +2231,7 @@ EC_EVENT_MOBILE: ViewSpec = {
 }
 
 EC_EVENTS_MOBILE: ViewSpec = {
+    **_EC_VIEW_DEFAULTS,
     "browser_reload": 60,
     "column_headers": "pergroup",
     "context": {

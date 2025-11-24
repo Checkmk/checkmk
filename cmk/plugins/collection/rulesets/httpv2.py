@@ -216,7 +216,7 @@ def _valuespec_expected_regex_body() -> Dictionary:
                 required=True,
             ),
             "invert": DictElement(
-                parameter_form=BooleanChoice(label=Label("Return WARNING if found, OK if not")),
+                parameter_form=BooleanChoice(label=Label("Return CRITICAL if found, OK if not")),
                 required=True,
             ),
         },
@@ -594,6 +594,11 @@ def _valuespec_connection() -> Dictionary:
 def _valuespec_content() -> Dictionary:
     return Dictionary(
         title=Title("Search for strings"),
+        help_text=Help(
+            "Provide fixed string or regular expression conditions for the HTTP reponse."
+            " If the response fails the condition (E.g., expected string not found in body),"
+            " this will result in a CRITICAL state."
+        ),
         elements={
             "header": DictElement(
                 parameter_form=CascadingSingleChoice(
@@ -601,7 +606,7 @@ def _valuespec_content() -> Dictionary:
                     help_text=Help(
                         "The provided header key and value need to match exactly with the "
                         "actual header of the response. Please note that the service will "
-                        "get a WARN, if either the key or the value does not match. If searching "
+                        "get a CRIT, if either the key or the value does not match. If searching "
                         "for a regular expression, the first match is considered a success."
                     ),
                     prefill=DefaultValue("string"),

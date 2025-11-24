@@ -7,11 +7,11 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
-from contextlib import contextmanager
+from collections.abc import Iterator
+from contextlib import AbstractContextManager, contextmanager
 from typing import Any, Literal, TypeGuard
 
 import cmk.gui.view_utils
@@ -197,10 +197,16 @@ class ABCFoldableTreeRenderer(abc.ABC):
                 html.a(service.replace(" ", "&nbsp;"), href=service_url)
 
     @abc.abstractmethod
-    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
+    def _show_node(
+        self,
+        tree: BIAggrTreeState | BILeafTreeState,
+        show_host: bool,
+        mousecode: str | None = None,
+        img_class: str | None = None,
+    ) -> AbstractContextManager[None]:
         raise NotImplementedError()
 
-    def _assume_icon(self, site, host, service):
+    def _assume_icon(self, site: str, host: str, service: str | None) -> None:
         ass = user.bi_assumptions.get(get_state_assumption_key(site, host, service))
         current_state = str(ass).lower()
 
@@ -329,11 +335,11 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
     @contextmanager
     def _show_node(
         self,
-        tree,
-        show_host,
-        mousecode=None,
-        img_class=None,
-    ):
+        tree: BIAggrTreeState | BILeafTreeState,
+        show_host: bool,
+        mousecode: str | None = None,
+        img_class: str | None = None,
+    ) -> Iterator[None]:
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
             addclass = ["assumed"]
@@ -478,10 +484,16 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             html.close_span()
 
     @contextmanager
-    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
+    def _show_node(
+        self,
+        tree: BIAggrTreeState | BILeafTreeState,
+        show_host: bool,
+        mousecode: str | None = None,
+        img_class: str | None = None,
+    ) -> Iterator[None]:
         yield
 
-    def _assume_icon(self, site, host, service):
+    def _assume_icon(self, site: str, host: str, service: str | None) -> None:
         return  # No assume icon with boxes
 
 

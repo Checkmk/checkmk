@@ -126,6 +126,7 @@ class QueryDataKey:
 class QueryDataValue:
     metric_type: Literal["gauge", "sum", "histogram", "exponential_histogram", "summary"]
     time_series: TimeSeries
+    id: str
 
 
 type RRDData = Mapping[RRDDataKey, TimeSeries]

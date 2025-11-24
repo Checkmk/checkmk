@@ -996,7 +996,9 @@ const graphDesignerContentAsJson = computed(() => {
             @click="openSlideIn(graphLine)"
           />
         </td>
-        <td class="narrow"><CmkColorPicker v-model:data="graphLine.color" /></td>
+        <td class="narrow">
+          <CmkColorPicker v-if="graphLine.type !== 'query'" v-model:data="graphLine.color" />
+        </td>
         <td class="nobr narrow">{{ graphLine.auto_title }}</td>
         <td class="nobr narrow"><FormTitle v-model:data="graphLine.custom_title" /></td>
         <td class="buttons"><CmkSwitch v-model:data="graphLine.visible" /></td>

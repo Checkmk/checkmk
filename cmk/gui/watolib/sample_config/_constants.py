@@ -75,7 +75,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [  # sorted by descr
         "value": {"descr": f"%u {ps_name}", "match": match, **_PS_COMMON_OPTS},
         "condition": _CMK_SERVER_CONDITION,
         "options": {
-            "description": f"Shipped rule to monitor sites {ps_name}",
+            "description": f"Shipped rule to monitor site's {ps_name}",
             **_SHIPPED_RULE_OPTIONS,
         },
     }

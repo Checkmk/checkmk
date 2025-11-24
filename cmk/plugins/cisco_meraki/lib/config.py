@@ -68,6 +68,7 @@ type _CacheDecorator[**P, R] = Callable[[Callable[P, R]], Callable[P, R]]
 @dataclass(frozen=True)
 class _CacheConfig:
     appliance_uplinks: _CacheDecorator[[str], Sequence[schema.RawUplinkStatuses]]
+    appliance_vpns: _CacheDecorator[[str], Sequence[schema.RawUplinkVpnStatuses]]
     devices: _CacheDecorator[[str, str], dict[str, schema.Device]]
     device_statuses: _CacheDecorator[[str], Sequence[schema.RawDevicesStatus]]
     licenses_overview: _CacheDecorator[[str, str], schema.LicensesOverview | None]
@@ -81,6 +82,10 @@ class _CacheConfig:
             appliance_uplinks=cache.cache_ttl(
                 Storage("cisco_meraki_appliance_uplinks", host=args.hostname),
                 ttl=args.cache_appliance_uplinks,
+            ),
+            appliance_vpns=cache.cache_ttl(
+                Storage("cisco_meraki_appliance_vpns", host=args.hostname),
+                ttl=args.cache_appliance_vpns,
             ),
             devices=cache.cache_ttl(
                 Storage("cisco_meraki_devices", host=args.hostname),
@@ -112,6 +117,7 @@ class _CacheConfig:
 @dataclass(frozen=True)
 class _RequiredSections:
     appliance_uplinks: bool
+    appliance_vpns: bool
     device_statuses: bool
     licenses_overview: bool
     sensor_readings: bool
@@ -120,6 +126,7 @@ class _RequiredSections:
     def build(cls, sections: set[str]) -> Self:
         return cls(
             appliance_uplinks=constants.SEC_NAME_APPLIANCE_UPLINKS in sections,
+            appliance_vpns=constants.SEC_NAME_APPLIANCE_VPNS in sections,
             device_statuses=constants.SEC_NAME_DEVICE_STATUSES in sections,
             licenses_overview=constants.SEC_NAME_LICENSES_OVERVIEW in sections,
             sensor_readings=constants.SEC_NAME_SENSOR_READINGS in sections,
@@ -127,4 +134,9 @@ class _RequiredSections:
 
     @property
     def devices(self) -> bool:
-        return self.device_statuses or self.sensor_readings or self.appliance_uplinks
+        return (
+            self.device_statuses
+            or self.sensor_readings
+            or self.appliance_uplinks
+            or self.appliance_vpns
+        )

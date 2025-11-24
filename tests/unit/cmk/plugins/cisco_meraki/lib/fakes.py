@@ -26,6 +26,28 @@ class _FakeApplianceSDK:
         }
         return uplink_statuses.get(organizationId, [])
 
+    def getOrganizationApplianceVpnStatuses(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawUplinkVpnStatuses]:
+        uplink_statuses = {
+            "123": [
+                factories.RawUplinkVpnStatusesFactory.build(
+                    networkName="one",
+                    deviceSerial="S123-1",
+                    merakiVpnPeers=[{"networkName": "one"}],
+                ),
+                factories.RawUplinkVpnStatusesFactory.build(
+                    networkName="one",
+                    deviceSerial="S123-2",
+                    thirdPartyVpnPeers=[{"name": "one"}],
+                ),
+            ],
+            "456": [
+                factories.RawUplinkVpnStatusesFactory.build(networkName="two", serial="S456"),
+            ],
+        }
+        return uplink_statuses.get(organizationId, [])
+
     def getOrganizationApplianceUplinksUsageByNetwork(
         self, organizationId: str, total_pages: TotalPages, timespan: int
     ) -> Sequence[schema.RawUplinkUsage]:

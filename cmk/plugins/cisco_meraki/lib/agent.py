@@ -168,6 +168,17 @@ class MerakiOrganisation:
                             piggyback=piggyback,
                         )
 
+            if self.config.required.appliance_vpns:
+                for vpn_status in self.client.get_uplink_vpn_statuses(self.id):
+                    if piggyback := self._get_device_piggyback(
+                        vpn_status["deviceSerial"], devices_by_serial
+                    ):
+                        yield Section(
+                            name="cisco_meraki_org_appliance_vpns",
+                            data=vpn_status,
+                            piggyback=piggyback,
+                        )
+
     def _get_device_piggyback(
         self, serial: str, devices_by_serial: Mapping[str, Device]
     ) -> str | None:
@@ -282,6 +293,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
 
     parser.add_argument("--cache-appliance-uplinks", type=float, default=3600.0)  # 1 hour
+    parser.add_argument("--cache-appliance-vpns", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-devices", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-device-statuses", type=float, default=3600.0)  # 1 hour
     parser.add_argument("--cache-licenses-overview", type=float, default=36000.0)  # 10 hours

@@ -19,6 +19,9 @@ class ApplianceSDK(Protocol):
     def getOrganizationApplianceUplinksUsageByNetwork(
         self, organizationId: str, total_pages: TotalPages, timespan: int
     ) -> Sequence[schema.RawUplinkUsage]: ...
+    def getOrganizationApplianceVpnStatuses(
+        self, organizationId: str, total_pages: TotalPages
+    ) -> Sequence[schema.RawUplinkVpnStatuses]: ...
 
 
 class ApplianceClient:
@@ -43,4 +46,11 @@ class ApplianceClient:
             log.LOGGER.debug(
                 "Organisation ID: %r: Get Appliance uplink usage by network: %r", id, e
             )
+            return []
+
+    def get_uplink_vpn_statuses(self, id: str, /) -> Sequence[schema.RawUplinkVpnStatuses]:
+        try:
+            return self._sdk.getOrganizationApplianceVpnStatuses(id, total_pages="all")
+        except APIError as e:
+            log.LOGGER.debug("Organisation ID: %r: Get Appliance VPN status by network: %r", id, e)
             return []

@@ -24,6 +24,7 @@ from cmk.server_side_calls.v1 import (
 
 class CachePerSection(BaseModel):
     appliance_uplinks: int | None = None
+    appliance_vpns: int | None = None
     devices: int | None = None
     device_statuses: int | None = None
     licenses_overview: int | None = None
@@ -81,6 +82,8 @@ def agent_cisco_meraki_arguments(
     if not params.no_cache and (cache_per_section := params.cache_per_section):
         if cache_per_section.appliance_uplinks:
             args += ["--cache-appliance-uplinks", str(cache_per_section.appliance_uplinks)]
+        if cache_per_section.appliance_vpns:
+            args += ["--cache-appliance-vpns", str(cache_per_section.appliance_vpns)]
         if cache_per_section.devices:
             args += ["--cache-devices", str(cache_per_section.devices)]
         if cache_per_section.device_statuses:

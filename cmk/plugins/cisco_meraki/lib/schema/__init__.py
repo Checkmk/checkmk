@@ -11,6 +11,7 @@ from ._organizations import RawOrganisation
 from ._sensor_readings import RawSensorReadings
 from ._uplink_statuses import RawUplinkStatuses, UplinkStatuses, UplinkUsageByInterface
 from ._uplink_usage import RawUplinkUsage
+from ._uplink_vpn_statuses import RawUplinkVpnStatuses
 
 __all__ = [
     "Device",
@@ -24,6 +25,7 @@ __all__ = [
     "RawSensorReadings",
     "RawUplinkStatuses",
     "RawUplinkUsage",
+    "RawUplinkVpnStatuses",
     "UplinkStatuses",
     "UplinkUsageByInterface",
 ]

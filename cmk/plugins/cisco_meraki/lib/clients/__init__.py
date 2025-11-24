@@ -76,6 +76,11 @@ class MerakiClient:
         fetch = fn if self._no_cache else self._cache.appliance_uplinks(fn)
         return fetch(id)
 
+    def get_uplink_vpn_statuses(self, id: str) -> Sequence[schema.RawUplinkVpnStatuses]:
+        fn = self._appliance_client.get_uplink_vpn_statuses
+        fetch = fn if self._no_cache else self._cache.appliance_vpns(fn)
+        return fetch(id)
+
     def get_uplink_usage(self, id: str) -> Sequence[schema.RawUplinkUsage]:
         return self._appliance_client.get_uplink_usage(id)
 

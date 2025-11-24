@@ -45,6 +45,7 @@ class TestMerakiAgentOutput:
         value = set(re.findall(r"<<<cisco_meraki_org_(\w+):sep\(0\)>>>", capsys.readouterr().out))
         expected = {
             "appliance_uplinks",
+            "appliance_vpns",
             "device_info",
             "device_status",
             "licenses_overview",

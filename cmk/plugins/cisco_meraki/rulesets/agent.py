@@ -88,6 +88,9 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                             name="appliance_uplinks", title=Title("Appliance uplink statuses")
                         ),
                         MultipleChoiceElement(
+                            name="appliance_vpns", title=Title("Appliance uplink VPN statuses")
+                        ),
+                        MultipleChoiceElement(
                             name="device_statuses",
                             title=Title("Device statuses <b>[deprecated]</b>"),
                         ),
@@ -101,6 +104,7 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     prefill=DefaultValue(
                         [
                             "appliance_uplinks",
+                            "appliance_vpns",
                             "device_statuses",
                             "licenses_overview",
                             "sensor_readings",
@@ -151,6 +155,17 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                         "appliance_uplinks": DictElement(
                             parameter_form=TimeSpan(
                                 title=Title("Appliance uplink statuses"),
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(3600.0),  # 1 hour
+                                custom_validate=[NumberInRange(min_value=0.0)],
+                            )
+                        ),
+                        "appliance_vpns": DictElement(
+                            parameter_form=TimeSpan(
+                                title=Title("Appliance uplink VPN statuses"),
                                 displayed_magnitudes=(
                                     TimeMagnitude.HOUR,
                                     TimeMagnitude.MINUTE,

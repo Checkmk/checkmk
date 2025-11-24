@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import typing
@@ -516,7 +515,9 @@ class PainterAggrAcknowledged(Painter):
         return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
 
-def _paint_aggr_state_short(state, assumed=False):
+def _paint_aggr_state_short(
+    state: dict[str, Any] | None, assumed: bool = False
+) -> tuple[str, str | HTML]:
     if state is None:
         return "", ""
     name = short_service_state_name(state["state"], "")
@@ -552,10 +553,10 @@ class PainterAggrStateNum(Painter):
     def ident(self) -> str:
         return "aggr_state_num"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Aggregated state (number)")
 
-    def short_title(self, cell):
+    def short_title(self, cell: Cell) -> str:
         return _("State")
 
     @property
@@ -1081,7 +1082,7 @@ def render_tree_json(
     return render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-def compute_output_message(effective_state, rule):
+def compute_output_message(effective_state: dict[str, Any], rule: dict[str, Any]) -> str:
     output = []
     if effective_state["output"]:
         output.append(effective_state["output"])

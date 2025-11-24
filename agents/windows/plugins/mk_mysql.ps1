@@ -121,6 +121,42 @@ function CreateMysqlLocalIni {
     }
 }
 
+function CreateMysqlLocalIni {
+    try {
+        # The following logic exists as well in the linux bash script mk_mysql
+        $cfgDir = GetCfgDir
+        if (-not $cfgDir) {
+            Write-Debug "CreateMysqlLocalIni failed: configuration directory not initialized"
+            return
+        }
+
+        if (-not (Test-Path $cfgDir -PathType Container)) {
+            Write-Debug "CreateMysqlLocalIni: configuration directory doesn't exist or is not a directory: $cfgDir"
+            return
+        }
+
+        $mysqlLocalIni = Join-Path $cfgDir "mysql.local.ini"
+        if (Test-Path $mysqlLocalIni) {
+            Write-Debug "CreateMysqlLocalIni: $mysqlLocalIni file already exists, skipping creation"
+            return
+        }
+
+        $content = "# This file is created by mk_mysql.ps1 because some versions of mysqladmin`n# issue a warning if there are missing includes."
+        Set-Content -Path $mysqlLocalIni -Value $content -ErrorAction SilentlyContinue -ErrorVariable writeError
+
+        if ($writeError) {
+            Write-Debug "CreateMysqlLocalIni: failed to create file $mysqlLocalIni - $writeError"
+            return
+        }
+
+        Write-Debug "CreateMysqlLocalIni: successfully created $mysqlLocalIni"
+    }
+    catch {
+        Write-Debug "Exception in CreateMysqlLocalIni: $($_.Exception.Message)"
+        return
+    }
+}
+
 function GetConnectionArgsForTheInstance {
     param (
         [string]$instanceName,
@@ -256,8 +292,6 @@ function Invoke-SafetyCheck( [String]$file ) {
           return "Exception '$_' during check '$file'"
      }
 }
-
-
 
 function OutputInfosForTheInstance {
     param (

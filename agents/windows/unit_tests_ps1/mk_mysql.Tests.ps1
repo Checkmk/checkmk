@@ -77,7 +77,15 @@ Context "mk_mysql.ps1 Tests" {
     Describe "CreateMysqlLocalIni Function" {
         BeforeAll {
             Mock GetCfgDir { return "C:\ProgramData\checkmk\agent\config" }
-            Mock Test-Path { return $false }
+            Mock Test-Path { 
+                param($Path, $PathType)
+                if ($PathType -eq "Container" -and $Path -eq "C:\ProgramData\checkmk\agent\config") {
+                    return $true
+                } elseif ($Path -eq "C:\ProgramData\checkmk\agent\config\mysql.local.ini") {
+                    return $false
+                }
+                return $false
+            }
             Mock Set-Content { return }
         }
         It "Should invoke file creation command once" {

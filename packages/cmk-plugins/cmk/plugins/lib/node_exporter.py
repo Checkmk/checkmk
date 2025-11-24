@@ -336,15 +336,16 @@ class NodeExporter:
                 ("pgmajfault", "node_vmstat_pgmajfault"),
             ]
         ]
-        return self._process_kernel_info(self._retrieve_kernel_info(kernel_list))
+        return self.process_kernel_info(time.time(), kernel_list)
 
     @staticmethod
-    def _process_kernel_info(
-        temp_result: dict[str, dict[str, dict[str, int]]],
+    def process_kernel_info(
+        now: float, kernel_list: list[tuple[str, list[PromQLMetric]]]
     ) -> dict[str, SectionStr]:
+        cpu_results = NodeExporter._retrieve_kernel_info(kernel_list)
         result: dict[str, SectionStr] = {}
-        for node_name, cpu_result in temp_result.items():
-            temp: list[str] = ["%d" % time.time()]
+        for node_name, cpu_result in cpu_results.items():
+            temp: list[str] = ["%d" % now]
             for entity_name, entity_info in cpu_result.items():
                 if entity_name.startswith("cpu"):
                     entity_parsed = (

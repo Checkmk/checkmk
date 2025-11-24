@@ -37,6 +37,7 @@ pub struct ClientConfig {
     pub force_ip: Option<ForceIP>,
     pub min_tls_version: Option<TlsVersion>,
     pub max_tls_version: Option<TlsVersion>,
+    pub tls_compatibility_mode: bool,
     pub collect_tls_info: bool,
     pub ignore_proxy_env: bool,
     pub proxy_url: Option<String>,
@@ -96,6 +97,12 @@ fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> Reqwest
         }
     } else {
         client.use_rustls_tls()
+    };
+
+    let client = if cfg.tls_compatibility_mode {
+        client.use_native_tls()
+    } else {
+        client
     };
 
     let client = if let Some(version) = cfg.max_tls_version {

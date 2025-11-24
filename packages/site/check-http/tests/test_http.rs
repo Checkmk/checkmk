@@ -89,6 +89,7 @@ fn make_standard_configs(
             force_ip: None,
             min_tls_version: None,
             max_tls_version: None,
+            tls_compatibility_mode: false,
             collect_tls_info: false,
             ignore_proxy_env: false,
             proxy_url: None,

@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 import re
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 from cmk.ccc.regex import RegexFutureWarning
 from cmk.gui import query_filters
@@ -194,7 +193,7 @@ class _FilterAggrGroupTree(Filter):
 
 
 class _BIFrozenAggregations(Filter):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             ident="aggregation_types",
             title=_("Aggregation types"),
@@ -321,7 +320,7 @@ class _FilterAggrHosts(Filter):
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[1])
 
-    def find_host(self, host, hostlist):
+    def find_host(self, host: str, hostlist: Sequence[tuple[str, str]]) -> bool:
         return any((h == host for _s, h in hostlist))
 
     def request_vars_from_row(self, row: Row) -> dict[str, str]:

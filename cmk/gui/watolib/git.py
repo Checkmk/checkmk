@@ -145,6 +145,7 @@ def _write_gitignore_files() -> None:
             "!.gitignore\n"
             "*swp\n"
             "*.mk.new\n"
+            "*.pkl\n"
         )
 
     for subdir in config_dir.iterdir():

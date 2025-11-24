@@ -9,7 +9,6 @@ import shutil
 import signal
 import subprocess
 import traceback
-import warnings as warnings_module
 from collections.abc import Iterable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -25,7 +24,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
-from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.certificate import Certificate, CertificatePEM, NegativeSerialException
 from cmk.crypto.hash import HashAlgorithm
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -60,17 +59,14 @@ from cmk.utils.log.security_event import log_security_event
 ProcessId = NewType("ProcessId", int)
 
 
-class _NegativeSerialException(Exception):
-    def __init__(self, message: str, subject: str, fingerprint: str) -> None:
-        super().__init__(message)
-        self.subject = subject
-        self.fingerprint = fingerprint
-
-    def should_be_ignored(self) -> bool:
-        # We ignore CAs with negative serials and we warn about them, except these, see CMK-16410
-        return self.fingerprint in (
-            "88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799",  # EC-ACC
+def should_be_negative_serial_exception_be_ignored(exception: NegativeSerialException) -> bool:
+    # We ignore CAs with negative serials and we warn about them, except these, see CMK-16410
+    return (
+        exception.fingerprint
+        in (
+            "88:49:7F:01:60:2F:31:54:24:6A:E2:8C:4D:5A:EF:10:F1:D8:7E:BB:76:62:6F:4A:E0:B7:F9:5B:A7:96:87:99",  # EC-ACC
         )
+    )
 
 
 @dataclass
@@ -330,14 +326,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             current_certs = {}
         else:
             current_certs = {
-                (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(
+                (cert := Certificate.load_pem(CertificatePEM(value))).fingerprint(
                     HashAlgorithm.Sha256
                 ): cert
                 for value in config_before["trusted_cas"] or []
             }
 
         new_certs = {
-            (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(
+            (cert := Certificate.load_pem(CertificatePEM(value))).fingerprint(
                 HashAlgorithm.Sha256
             ): cert
             for value in config_after["trusted_cas"]
@@ -448,31 +444,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             remote_cas_store.save(site, cert)
 
     @staticmethod
-    def _load_cert(cert_str: str) -> Certificate:
-        """load a cert and return it except it has a negative serial number
-
-        Cryptography started to warn about negative serial numbers, these warnings are "blindly" written
-        to stderr so it might confuse users.
-        Here we catch these warnings and raise an exception if the serial number is negative.
-        """
-        with warnings_module.catch_warnings(record=True, category=UserWarning):
-            cert = Certificate.load_pem(CertificatePEM(cert_str))
-
-            if cert.serial_number < 0:
-                raise _NegativeSerialException(
-                    f"Certificate with a negative serial number {cert.serial_number!r}",
-                    cert.subject.rfc4514_string(),
-                    cert.fingerprint(HashAlgorithm.Sha256).hex(),
-                )
-        return cert
-
-    @staticmethod
     def _load_certs(trusted_cas: Sequence[str]) -> Iterable[Certificate]:
         for cert_str in trusted_cas:
             try:
-                yield ConfigDomainCACertificates._load_cert(cert_str)
-            except _NegativeSerialException as e:
-                if not e.should_be_ignored():
+                yield Certificate.load_pem(CertificatePEM(cert_str))
+            except NegativeSerialException as e:
+                if not should_be_negative_serial_exception_be_ignored(e):
                     logger.warning(
                         "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
                         e.subject,
@@ -497,7 +474,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     @staticmethod
     def is_valid_cert(raw_cert: str) -> bool:
         try:
-            ConfigDomainCACertificates._load_cert(raw_cert)
+            Certificate.load_pem(CertificatePEM(raw_cert))
             return True
         except ValueError:
             return False
@@ -531,8 +508,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                         if self.is_valid_cert(raw_cert):
                             trusted_cas.add(raw_cert)
                             continue
-                    except _NegativeSerialException as e:
-                        if e.should_be_ignored():
+                    except NegativeSerialException as e:
+                        if should_be_negative_serial_exception_be_ignored(e):
                             continue
 
                     logger.exception("Skipping invalid certificates in file %s", cert_file_path)

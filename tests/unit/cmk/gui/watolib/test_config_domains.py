@@ -290,7 +290,3 @@ def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
         "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
         "CN=Test,O=Internet Widgits Pty Ltd,ST=Some-State,C=DE",
     )
-
-
-def test_load_cert() -> None:
-    assert config_domains.ConfigDomainCACertificates()._load_cert(remote2) is not None

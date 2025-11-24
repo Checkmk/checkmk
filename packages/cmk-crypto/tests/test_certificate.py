@@ -23,6 +23,7 @@ from cmk.crypto.certificate import (
     CertificatePEM,
     CertificateWithPrivateKey,
     InvalidExpiryError,
+    NegativeSerialException,
     PersistedCertificateWithPrivateKey,
 )
 from cmk.crypto.keys import InvalidSignatureError, PlaintextPrivateKeyPEM, PrivateKey
@@ -366,3 +367,39 @@ JxDm8nhVOD3txg6wadiqhhdB
         cert.get_extension_for_class(pyca_x509.KeyUsage)
 
     assert cert.may_sign_certificates()
+
+
+def test_negative_serial_number() -> None:
+    pem = CertificatePEM(
+        "-----BEGIN CERTIFICATE-----\n"
+        "MIIDdjCCAl6gAwIBAgIB1jANBgkqhkiG9w0BAQsFADBUMQswCQYDVQQGEwJERTET\n"
+        "MBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQ\n"
+        "dHkgTHRkMQ0wCwYDVQQDDARUZXN0MB4XDTI0MDMxMjEyMjczNVoXDTI0MDQxMTEy\n"
+        "MjczNVowVDELMAkGA1UEBhMCREUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNV\n"
+        "BAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDENMAsGA1UEAwwEVGVzdDCCASIw\n"
+        "DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALwjwGHMwjbfpYhedHiQTMv840lX\n"
+        "tAAj7qMzFAcEScmSM7eA3/8lJDsECu6IJrHWr9E+xYPjYfDo0FvE7LClKjewZ/ZM\n"
+        "1wNOQGZpSXRf1fuIj9j7V3D4jsf9NNhh39OkVom9kFzmgpLBvZi+vV2PWBt+MWHp\n"
+        "2hE1p0FvqizECcJuPurM+1YLV19xekO2jG/pQdWapoP1+3ygXK2BFn2hfmBkuLME\n"
+        "PMRtIilTfQKwLktQ4jrLo8r/3CuAvGzhn6xs0bkjlMVSq+P2ZAyBbiOA4ZgBvoS2\n"
+        "XnL0b9OV5hKHcLXvV79pcSOkfTW1vn61SIs3hqsQB9qXRwTfKS1z/1Ecs7ECAwEA\n"
+        "AaNTMFEwHQYDVR0OBBYEFJwCbbR6GEf0bz8c4U0LFXmBMt5xMB8GA1UdIwQYMBaA\n"
+        "FJwCbbR6GEf0bz8c4U0LFXmBMt5xMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcN\n"
+        "AQELBQADggEBAKMxGO4A/095brhG6zb5Ttxzmmwm6sYxbvFQ1P9XEhH9muNJRwR1\n"
+        "JGlLqMFrlwprA4jJ2mKbug2dFhBC38K/Y8teZpVgfIDbmnbvWoydh7tHk7IO3XKh\n"
+        "zRiKHH5hPVulLnfSjhZkb0zEL3HtzLloO3kTlq2hse8NG457B1+cp6VbVzTt28FP\n"
+        "vYSuV6jo4O+RwoCWtpSHpaHj+9OqS+FgW50hZJ1Dka9Rn7ffuH8cM3BkAC9Hs7t1\n"
+        "X7TQFDWfQAIVDKvgV5HUU274PnjmriGShrevm12LB+/iuetYiYBgwMU9jwh5vty0\n"
+        "/VrSsAozs97u+tzvnA/C255sFL3J7hobGi8=\n"
+        "-----END CERTIFICATE-----\n"
+    )
+    with pytest.raises(NegativeSerialException) as exc_info:
+        Certificate.load_pem(pem)
+
+    exception = exc_info.value
+    assert exception.subject == "CN=Test,O=Internet Widgits Pty Ltd,ST=Some-State,C=DE"
+    assert (
+        exception.fingerprint
+        == "DF:29:9C:05:A8:AE:26:94:92:0B:31:66:1F:DF:27:92:28:8C:81:39:88:07:3A:86:B3:30:FB:66:39:FB:6E:71"
+    )
+    assert "-42" in str(exception)

@@ -34,6 +34,7 @@ PublicKey/PrivateKey
 from __future__ import annotations
 
 import re
+import warnings as warnings_module
 from dataclasses import dataclass
 from datetime import datetime, UTC
 from pathlib import Path
@@ -69,6 +70,13 @@ class CertificatePEM(_PEMData):
 
 class InvalidExpiryError(MKCryptoException):
     """The certificate is either not yet valid or not valid anymore"""
+
+
+class NegativeSerialException(MKCryptoException):
+    def __init__(self, message: str, subject: str, fingerprint: str) -> None:
+        super().__init__(message)
+        self.subject = subject
+        self.fingerprint = fingerprint
 
 
 class CertificateWithPrivateKey(NamedTuple):
@@ -426,7 +434,18 @@ class Certificate:
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
         try:
-            return cls(pyca_x509.load_pem_x509_certificate(pem_data.bytes))
+            with warnings_module.catch_warnings(record=True, category=UserWarning):
+                cert = cls(pyca_x509.load_pem_x509_certificate(pem_data.bytes))
+
+            if cert.serial_number < 0:
+                raise NegativeSerialException(
+                    f"Certificate with a negative serial number {cert.serial_number!r}",
+                    cert.subject.rfc4514_string(),
+                    cert.show_fingerprint(),
+                )
+
+            return cert
+
         except ValueError as exc:
             raise PEMDecodingError("Unable to load certificate.") from exc
 

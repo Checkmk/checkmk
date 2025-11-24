@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -36,7 +35,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 
 
-def _item_help_logwatch_rules():
+def _item_help_logwatch_rules() -> str:
     return _(
         'Put the item names of the logfiles here. For example "System$" '
         'to select the service "LOG System". You can use regular '

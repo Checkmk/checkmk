@@ -2275,7 +2275,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
             "network_statistics": {
                 "name": "network_statistics",
                 "title": _("Network statistics"),
-                "icon_name": "topic_network_statistics",
+                "icon_name": "topic_network",
                 "description": "",
                 "sort_index": 95,
                 "public": True,

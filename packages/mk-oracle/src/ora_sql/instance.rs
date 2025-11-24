@@ -21,7 +21,6 @@ use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
 use crate::setup::{detect_runtime, Env};
 use crate::types::{InstanceName, SqlBindParam, SqlQuery, UseHostClient};
-use crate::utils;
 use std::collections::HashSet;
 
 use crate::config::connection::add_tns_admin_to_env;
@@ -45,7 +44,6 @@ impl OracleConfig {
                         "Error detecting runtime".to_string()
                     }));
             }
-            OracleConfig::prepare_cache_sub_dir(environment, &ora_sql.config_cache_dir());
             log::info!("Generating main data");
             let mut output: Vec<String> = Vec::new();
             output.extend(
@@ -58,7 +56,6 @@ impl OracleConfig {
             );
             for (num, config) in std::iter::zip(0.., ora_sql.configs()) {
                 log::info!("Generating configs data");
-                OracleConfig::prepare_cache_sub_dir(environment, &config.config_cache_dir());
                 let configs_data = generate_data(config, environment)
                     .await
                     .unwrap_or_else(|e| {
@@ -76,14 +73,6 @@ impl OracleConfig {
         } else {
             log::error!("No config");
             anyhow::bail!("No Config")
-        }
-    }
-
-    fn prepare_cache_sub_dir(environment: &Env, hash: &str) {
-        match environment.obtain_cache_sub_dir(hash).map(utils::touch_dir) {
-            Some(Err(e)) => log::error!("Error touching dir: {e}, caching may be not possible"),
-            Some(Ok(p)) => log::info!("Using cache dir {p:?}"),
-            None => log::warn!("No cache dir defined, caching is not possible"),
         }
     }
 }

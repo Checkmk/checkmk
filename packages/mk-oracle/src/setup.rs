@@ -111,12 +111,6 @@ impl Env {
         self.execution.clone()
     }
 
-    /// guaranteed to return cache dir or None
-    pub fn base_cache_dir(&self) -> Option<PathBuf> {
-        self.state_dir()
-            .map(|state_dir| state_dir.join("mk-sql-cache"))
-    }
-
     fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {
         if dir.is_some() {
             dir.as_deref()
@@ -125,31 +119,6 @@ impl Env {
         }
         .map(PathBuf::from)
         .filter(|p| Path::is_dir(p))
-    }
-
-    pub fn calc_cache_sub_dir(&self, sub_dir: &str) -> Option<PathBuf> {
-        self.base_cache_dir().map(|d| d.join(sub_dir))
-    }
-
-    pub fn obtain_cache_sub_dir(&self, sub_dir: &str) -> Option<PathBuf> {
-        if let Some(cache_dir) = self.calc_cache_sub_dir(sub_dir) {
-            if cache_dir.is_dir() {
-                log::info!("Cache dir exists {:?}", cache_dir);
-                Some(cache_dir)
-            } else if cache_dir.exists() {
-                log::error!("Cache dir exists but isn't usable(not a directory)");
-                None
-            } else {
-                log::info!("Cache dir {:?} to be created", cache_dir);
-                std::fs::create_dir_all(&cache_dir).unwrap_or_else(|e| {
-                    log::error!("Failed to create root cache dir: {e}");
-                });
-                cache_dir.is_dir().then_some(cache_dir)
-            }
-        } else {
-            log::error!("Cache dir exists but is not usable");
-            None
-        }
     }
 }
 
@@ -680,14 +649,6 @@ mod tests {
         let e = Env::new(&args);
         assert_eq!(e.log_dir(), Some(Path::new(".")));
         assert_eq!(e.temp_dir(), Some(Path::new(".")));
-        assert_eq!(
-            e.base_cache_dir(),
-            Some(PathBuf::from(".").join("mk-sql-cache"))
-        );
-        assert_eq!(
-            e.calc_cache_sub_dir("aa"),
-            Some(PathBuf::from(".").join("mk-sql-cache").join("aa"))
-        );
     }
     #[test]
     fn test_env_dir_absent() {
@@ -699,9 +660,6 @@ mod tests {
         let e = Env::new(&args);
         assert!(e.log_dir().is_none());
         assert!(e.temp_dir().is_none());
-        assert!(e.base_cache_dir().is_none());
-        assert!(e.calc_cache_sub_dir("aa").is_none());
-        assert!(e.obtain_cache_sub_dir("a").is_none());
     }
     #[test]
     fn test_create_info_text() {

@@ -40,7 +40,7 @@ const relayImageReference = computed(() => `checkmk/check-mk-relay:${props.siteV
 
 const registrationCommand = computed(() =>
   [
-    'docker run --rm \\',
+    'sudo docker run --rm \\',
     '  -v checkmk_relay_data:/opt/check-mk-relay/workdir \\',
     `  ${relayImageReference.value} \\`,
     `  sh -c "cmk-relay register \\`,
@@ -54,7 +54,7 @@ const registrationCommand = computed(() =>
 
 const daemonCommand = computed(() =>
   [
-    'docker run --rm \\',
+    'sudo docker run --rm \\',
     '  -v checkmk_relay_data:/opt/check-mk-relay/workdir \\',
     `  ${relayImageReference.value} \\`,
     '  sh -c "cmk-relay daemon"'

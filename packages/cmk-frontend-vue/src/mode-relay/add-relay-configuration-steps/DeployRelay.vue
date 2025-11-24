@@ -21,7 +21,7 @@ const props = defineProps<CmkWizardStepProps & { siteVersion: string }>()
 
 const relayImageReference = computed(() => `checkmk/check-mk-relay:${props.siteVersion}`)
 
-const codeText = computed(() => `docker pull ${relayImageReference.value}`)
+const codeText = computed(() => `sudo docker pull ${relayImageReference.value}`)
 </script>
 
 <template>

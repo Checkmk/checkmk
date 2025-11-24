@@ -15,7 +15,6 @@ import sys
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TypedDict
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
@@ -61,10 +60,6 @@ class Section:
 #   |                  \__, |\__,_|\___|_|  |_|\___||___/                  |
 #   |                     |_|                                              |
 #   '----------------------------------------------------------------------'
-
-
-class SupportsDeviceSerial(TypedDict):
-    serial: str
 
 
 @dataclass(frozen=True)
@@ -115,7 +110,7 @@ class MerakiOrganisation:
             yield Section(
                 name="cisco_meraki_org_device_info",
                 data=device,
-                piggyback=self._get_device_piggyback(device, devices_by_serial),
+                piggyback=self._get_device_piggyback(device["serial"], devices_by_serial),
             )
 
         if self.config.required.device_statuses:
@@ -123,7 +118,9 @@ class MerakiOrganisation:
                 # Empty device names are possible when reading from the meraki API, let's set the
                 # piggyback to None so that the output is written to the main section.
                 if (
-                    piggyback := self._get_device_piggyback(device_status, devices_by_serial)
+                    piggyback := self._get_device_piggyback(
+                        device_status["serial"], devices_by_serial
+                    )
                 ) is not None:
                     yield Section(
                         name="cisco_meraki_org_device_status",
@@ -141,7 +138,9 @@ class MerakiOrganisation:
                     # Empty device names are possible when reading from the meraki API, let's set the
                     # piggyback to None so that the output is written to the main section.
                     if (
-                        piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial)
+                        piggyback := self._get_device_piggyback(
+                            sensor_reading["serial"], devices_by_serial
+                        )
                     ) is not None:
                         yield Section(
                             name="cisco_meraki_org_sensor_readings",
@@ -155,7 +154,9 @@ class MerakiOrganisation:
         if devices_by_type.get("appliance"):
             if self.config.required.appliance_uplinks:
                 for raw_data in self.client.get_uplink_statuses(self.id):
-                    if piggyback := self._get_device_piggyback(raw_data, devices_by_serial):
+                    if piggyback := self._get_device_piggyback(
+                        raw_data["serial"], devices_by_serial
+                    ):
                         uplink_statuses = UplinkStatuses(
                             networkName=networks[raw_data["networkId"]]["organizationName"],
                             usageByInterface=self._get_usage_by_serial(),
@@ -168,11 +169,11 @@ class MerakiOrganisation:
                         )
 
     def _get_device_piggyback(
-        self, device: SupportsDeviceSerial, devices_by_serial: Mapping[str, Device]
+        self, serial: str, devices_by_serial: Mapping[str, Device]
     ) -> str | None:
         prefix = self._get_piggyback_prefix()
         try:
-            return f"{prefix}{devices_by_serial[device['serial']]['name']}"
+            return f"{prefix}{devices_by_serial[serial]['name']}"
         except KeyError as e:
             LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.id, e)
             return None

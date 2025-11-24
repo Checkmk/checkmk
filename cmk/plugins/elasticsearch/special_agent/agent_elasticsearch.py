@@ -57,7 +57,7 @@ def agent_elasticsearch_main(args: argparse.Namespace) -> int:
 
                 auth = (
                     (args.user, resolve_secret_option(args, SECRET_OPTION).reveal())
-                    if args.user and args.password
+                    if args.user
                     else None
                 )
                 certcheck = not args.no_cert_check

@@ -22,6 +22,7 @@ Describe "StrDateTimeToCheckmkFormat" {
 
 Describe "GetKasperskyRegistryDateValue" {
     It "Returns key value when present" {
+        Mock Test-Path { $true }
         Mock Get-ItemPropertyValue { param($Path, $Name) "value" }
         $result = GetKasperskyRegistryDateValue "dummy" "dummy"
         $result | Should -Be "value"

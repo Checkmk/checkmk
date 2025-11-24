@@ -44,9 +44,23 @@ function GetKasperskyRegistryDateValue {
         [string]$RegistryPath,
         [string]$Name
     )
-    $value = Get-ItemPropertyValue $RegistryPath -Name $Name
-    if ($null -eq $value -or $value -eq "") { return $null }
-    return $value
+    try {
+        if (-not (Test-Path $RegistryPath)) {
+            return $null
+        }
+
+        $value = Get-ItemPropertyValue $RegistryPath -Name $Name -ErrorAction SilentlyContinue -ErrorVariable regError
+
+        if ($regError -or $null -eq $value -or $value -eq "") {
+            return $null
+        }
+
+        return $value
+    }
+    catch {
+        Write-Output "GetKasperskyRegistryDateValue failed: $($_.Exception.Message)"
+        return $null
+    }
 }
 
 function GetKasperskyFullscanStatus {

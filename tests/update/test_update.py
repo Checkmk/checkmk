@@ -118,4 +118,12 @@ def test_update(  # pylint: disable=too-many-branches
     if apache_error_log in error_match_dict:
         error_match_dict.pop(apache_error_log)
 
+    # using OPENSSL version > 3.4.0 in test-containers leads to an error in web.log when starting a
+    # cmk site with version <= 2.3.0p40
+    # Error reported:
+    # > '... Error building RPM packet'
+    web_log = str(target_site.logs_dir / "web.log")
+    if web_log in error_match_dict:
+        error_match_dict.pop(web_log)
+
     assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"

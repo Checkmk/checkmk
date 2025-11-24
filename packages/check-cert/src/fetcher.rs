@@ -20,8 +20,6 @@ pub enum ConnectionType {
     SmtpStarttls,
     #[value(name = "postgres_starttls")]
     PostgresStarttls,
-    #[value(name = "proxy_tls")]
-    ProxyTls,
 }
 
 #[derive(Debug, Clone, TypedBuilder)]
@@ -71,13 +69,13 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
         Some(dur) => TcpStream::connect_timeout(&addr, dur)?,
     };
     stream.set_read_timeout(config.timeout)?;
-    if let ConnectionType::ProxyTls = config.connection_type {
+    if config.proxy.is_some() {
         build_proxy_stream(&mut stream, config.proxy.unwrap().auth, server, port)?;
     };
     stream.set_read_timeout(config.timeout)?;
 
     match config.connection_type {
-        ConnectionType::Tls | ConnectionType::ProxyTls => (),
+        ConnectionType::Tls => (),
         ConnectionType::SmtpStarttls => starttls::smtp::perform(&mut stream, server)?,
         ConnectionType::PostgresStarttls => starttls::postgres::perform(&mut stream)?,
     };

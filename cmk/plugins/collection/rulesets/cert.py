@@ -8,8 +8,7 @@ from collections.abc import Mapping, Sequence
 from cryptography.x509.oid import ObjectIdentifier, SignatureAlgorithmOID
 
 from cmk.plugins.collection.server_side_calls.cert import (
-    ConfigurableConnectionType,
-    NonConfigurableConnectionType,
+    ConnectionType,
 )
 from cmk.rulesets.internal.form_specs import InternalProxy
 from cmk.rulesets.v1 import Help, Label, Title
@@ -55,8 +54,8 @@ def _valuespec_response_time() -> SimpleLevels[float]:
     )
 
 
-def _valuespec_connection() -> CascadingSingleChoice:
-    return CascadingSingleChoice(
+def _valuespec_connection() -> SingleChoice:
+    return SingleChoice(
         title=Title("Connection type"),
         help_text=Help(
             "Select the connection type for the SSL/TLS check. "
@@ -66,28 +65,20 @@ def _valuespec_connection() -> CascadingSingleChoice:
             "proxy configurations are supported."
         ),
         elements=[
-            CascadingSingleChoiceElement(
-                name=NonConfigurableConnectionType.TLS.value,
+            SingleChoiceElement(
+                name=ConnectionType.TLS.value,
                 title=Title("TLS/SSL"),
-                parameter_form=FixedValue[None](value=None),
             ),
-            CascadingSingleChoiceElement(
-                name=NonConfigurableConnectionType.SMTP_STARTTLS.value,
+            SingleChoiceElement(
+                name=ConnectionType.SMTP_STARTTLS.value,
                 title=Title("SMTP STARTTLS"),
-                parameter_form=FixedValue[None](value=None),
             ),
-            CascadingSingleChoiceElement(
-                name=NonConfigurableConnectionType.POSTGRES_STARTTLS.value,
+            SingleChoiceElement(
+                name=ConnectionType.POSTGRES_STARTTLS.value,
                 title=Title("Postgres STARTTLS"),
-                parameter_form=FixedValue[None](value=None),
-            ),
-            CascadingSingleChoiceElement(
-                name=ConfigurableConnectionType.PROXY_TLS.value,
-                title=Title("Proxy"),
-                parameter_form=InternalProxy(),
             ),
         ],
-        prefill=DefaultValue(NonConfigurableConnectionType.TLS.value),
+        prefill=DefaultValue(ConnectionType.TLS.value),
     )
 
 
@@ -384,6 +375,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                         ),
                         elements={
                             "connection": DictElement(parameter_form=_valuespec_connection()),
+                            "proxy": DictElement(parameter_form=InternalProxy()),
                             "response_time": DictElement(parameter_form=_valuespec_response_time()),
                             "validity": DictElement[Mapping[str, object]](
                                 parameter_form=_valuespec_validity()
@@ -413,6 +405,7 @@ def _valuespec_standard_settings() -> Dictionary:
                 required=True,
             ),
             "connection": DictElement(parameter_form=_valuespec_connection()),
+            "proxy": DictElement(parameter_form=InternalProxy()),
             "response_time": DictElement(parameter_form=_valuespec_response_time()),
             "validity": DictElement[Mapping[str, object]](parameter_form=_valuespec_validity()),
             "cert_details": DictElement[Mapping[str, object]](

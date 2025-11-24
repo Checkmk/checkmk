@@ -34,20 +34,11 @@ class ServicePrefix(StrEnum):
     NONE = "none"
 
 
-class NonConfigurableConnectionType(StrEnum):
+class ConnectionType(StrEnum):
     TLS = "tls"
     SMTP_STARTTLS = "smtp_starttls"
     POSTGRES_STARTTLS = "postgres_starttls"
 
-
-class ConfigurableConnectionType(StrEnum):
-    PROXY_TLS = "proxy_tls"
-
-
-Connection = (
-    tuple[NonConfigurableConnectionType, None]
-    | tuple[ConfigurableConnectionType, EnvProxy | URLProxy | NoProxy]
-)
 
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
@@ -95,7 +86,8 @@ class CertificateDetails(BaseModel):
 
 
 class Settings(BaseModel):
-    connection: Connection | None = None
+    connection: ConnectionType | None = None
+    proxy: NoProxy | EnvProxy | URLProxy | None = None
     response_time: FloatLevels | None = None
     validity: Certificate | None = None
     cert_details: CertificateDetails | None = None
@@ -197,12 +189,11 @@ def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Itera
     if (settings := endpoint.individual_settings) is None:
         return
 
-    if (connection := settings.connection) is not None:
-        connection_type, config = connection
+    if (connection_type := settings.connection) is not None:
         yield "--connection-type"
         yield connection_type
-        if connection_type == ConfigurableConnectionType.PROXY_TLS and config is not None:
-            yield from _proxy_args(config)
+    if (proxy := settings.proxy) is not None:
+        yield from _proxy_args(proxy)
     if (response_time := settings.response_time) is not None:
         yield from _response_time_args(response_time)
     if (validity := settings.validity) is not None:

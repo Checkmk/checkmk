@@ -128,7 +128,8 @@ def check_mkbackup(job_state: JobData) -> CheckResult:
             # add a 120 seconds buffer to prevent a critical when the backup is about to start
             # 60 seconds in case the check before the backup is delayed and
             # 60 seconds in case the mkbackup plugin doesn't update its state
-            if next_run < time.time() + 120:
+            expected_time_with_buffer = next_run + 60 * 2
+            if time.time() > expected_time_with_buffer:
                 state = State.CRIT
             else:
                 state = State.OK

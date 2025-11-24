@@ -2187,7 +2187,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
             "network_statistics": PagetypeTopicConfig(
                 name="network_statistics",
                 title=_("Network statistics"),
-                icon_name="topic_network_statistics",
+                icon_name="topic_network",
                 sort_index=95,
                 public=True,
                 hide=not is_ntop_configured(),

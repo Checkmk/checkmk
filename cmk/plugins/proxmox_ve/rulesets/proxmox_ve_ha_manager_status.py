@@ -2,7 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.rulesets.v1 import Title
+
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -17,21 +18,18 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 def _parameter_valuespec_proxmox_ve_ha_manager_status():
     return Dictionary(
         elements={
-            "ignored_vms_state": DictElement(
+            "differing_service_state": DictElement(
                 required=True,
                 parameter_form=ServiceState(
-                    title=Title("Service state for Ignored VMs"),
-                    prefill=DefaultValue(ServiceState.OK),
+                    title=Title("Service state for Differing Service States"),
+                    help_text=Help(
+                        "If a service's current state differs from its requested state, "
+                        "the state of the Service will be set to this value."
+                    ),
+                    prefill=DefaultValue(ServiceState.WARN),
                 ),
             ),
-            "stopped_vms_state": DictElement(
-                required=True,
-                parameter_form=ServiceState(
-                    title=Title("Service state for Stopped VMs"),
-                    prefill=DefaultValue(ServiceState.OK),
-                ),
-            ),
-        }
+        },
     )
 
 

@@ -13,6 +13,7 @@ class ItemType(StrEnum):
     QUORUM = "quorum"
     LRM = "lrm"
     SERVICE = "service"
+    MASTER = "master"
 
 
 class QuorumItem(BaseModel, frozen=True):
@@ -31,6 +32,7 @@ class ServiceItem(BaseModel, frozen=True):
         alias="type",
         validation_alias=AliasChoices("type", "raw_type"),
     )
+    request_state: str | None = None
 
     @property
     def type(self) -> str:
@@ -46,18 +48,34 @@ class LrmNode(BaseModel):
 
     @property
     def readable_status(self) -> str:
-        if "(" not in self.status:
-            return self.status
-        try:
-            after_paren = self.status.split("(", 1)[1]
-            return after_paren.split(",", 1)[0].strip()
-        except (IndexError, AttributeError):
-            return self.status
+        return _create_readable_status(self.status)
+
+
+class MasterNode(BaseModel):
+    node: str
+    type: Literal["master"]
+    status: str
+    timestamp: int
+
+    @property
+    def readable_status(self) -> str:
+        return _create_readable_status(self.status)
+
+
+def _create_readable_status(status: str) -> str:
+    if "(" not in status:
+        return status
+    try:
+        after_paren = status.split("(", 1)[1]
+        return after_paren.split(",", 1)[0].strip()
+    except (IndexError, AttributeError):
+        return status
 
 
 class SectionHaManagerCurrent(BaseModel, frozen=True):
     quorum: QuorumItem | None = None
     lrm_nodes: Mapping[str, LrmNode]
+    master: MasterNode | None = None
 
     @classmethod
     def from_json_list(
@@ -66,6 +84,7 @@ class SectionHaManagerCurrent(BaseModel, frozen=True):
         quorum = None
         lrm_nodes: MutableMapping[str, LrmNode] = {}
         services_by_node: MutableMapping[str, MutableMapping[str, ServiceItem]] = {}
+        master = None
 
         for item in raw_data:
             if (t := item.get("type")) == ItemType.QUORUM:
@@ -76,8 +95,10 @@ class SectionHaManagerCurrent(BaseModel, frozen=True):
             elif t == ItemType.SERVICE:
                 service = ServiceItem.model_validate(item)
                 services_by_node.setdefault(service.node, {})[service.sid] = service
+            elif t == ItemType.MASTER:
+                master = MasterNode.model_validate(item)
 
         for node, lrm in lrm_nodes.items():
             lrm.services = services_by_node.get(node, {})
 
-        return cls(quorum=quorum, lrm_nodes=lrm_nodes)
+        return cls(quorum=quorum, lrm_nodes=lrm_nodes, master=master)

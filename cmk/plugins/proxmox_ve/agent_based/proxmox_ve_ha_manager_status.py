@@ -23,10 +23,6 @@ from cmk.plugins.proxmox_ve.lib.ha_manager_status import (
     ServiceItem,
 )
 
-STATE_MAP = {
-    "started": (State.OK, "OK"),
-}
-
 LRM_NODE_STATUS_TO_STATE_MAP = {
     "active": State.OK,
     "idle": State.OK,
@@ -36,8 +32,7 @@ LRM_NODE_STATUS_TO_STATE_MAP = {
 
 
 class Params(TypedDict):
-    ignored_vms_state: Literal[0, 1, 2, 3]
-    stopped_vms_state: Literal[0, 1, 2, 3]
+    differing_service_state: Literal[0, 1, 2, 3]
 
 
 def parse_proxmox_ve_ha_manager_status(string_table: StringTable) -> SectionHaManagerCurrent:
@@ -67,13 +62,20 @@ def check_proxmox_ve_ha_manager_status(
         return
 
     yield from _check_quorum(section.quorum)
+
+    if section.master:
+        yield Result(
+            state=State.OK,
+            summary=f'Master node: "{section.master.node}"',
+        )
+
     if (node := section.lrm_nodes.get(item)) is None:
         return
 
     yield from _check_lrm_node(node)
 
-    vms = [svc for svc in node.services.values() if svc.type == "vm"]
-    yield from _check_vms(vms, params)
+    services = [svc for svc in node.services.values() if svc.type in ("vm", "ct")]
+    yield from _check_services(services, params)
 
 
 def _check_quorum(quorum: QuorumItem) -> CheckResult:
@@ -91,19 +93,24 @@ def _check_lrm_node(node: LrmNode) -> CheckResult:
     )
 
 
-def _check_vms(vms: Sequence[ServiceItem], params: Params) -> CheckResult:
-    counts = Counter(vm.state for vm in vms)
-    state_map = {
-        "started": State.OK,
-        "disabled": State.OK,
-        "stopped": State(params["stopped_vms_state"]),
-        "ignored": State(params["ignored_vms_state"]),
-    }
+def _check_services(services: Sequence[ServiceItem], params: Params) -> CheckResult:
+    counts = Counter(service.state for service in services)
+
     for state, count in counts.items():
         yield Result(
-            state=state_map.get(state, State.CRIT),
+            state=State.OK,
             summary=f"{state.capitalize()}: {count}",
         )
+
+    for service in services:
+        if service.request_state and service.state != service.request_state:
+            yield Result(
+                state=State(params["differing_service_state"]),
+                summary=(
+                    f'VM/CT "{service.sid}" state "{service.state}" '
+                    f'differs from requested state "{service.request_state}"'
+                ),
+            )
 
 
 check_plugin_proxmox_ve_ha_manager_status = CheckPlugin(
@@ -112,5 +119,5 @@ check_plugin_proxmox_ve_ha_manager_status = CheckPlugin(
     discovery_function=discover_proxmox_ve_ha_manager_status,
     check_function=check_proxmox_ve_ha_manager_status,
     check_ruleset_name="proxmox_ve_ha_manager_status",
-    check_default_parameters={"ignored_vms_state": 0, "stopped_vms_state": 0},
+    check_default_parameters={"differing_service_state": 1},
 )

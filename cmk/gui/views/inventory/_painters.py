@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import time
@@ -83,7 +82,7 @@ def _validate_inventory_tree_uniqueness(row: Row) -> None:
 
 
 class PainterOptionShowInternalTreePaths(PainterOption):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             ident="show_internal_tree_paths",
             valuespec=Checkbox(
@@ -98,7 +97,7 @@ class PainterInventoryTree(Painter):
     def ident(self) -> str:
         return "inventory_tree"
 
-    def title(self, cell):
+    def title(self, cell: Cell) -> str:
         return _("Inventory tree")
 
     @property
@@ -106,11 +105,11 @@ class PainterInventoryTree(Painter):
         return ["host_inventory", "host_structured_status"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["show_internal_tree_paths"]
 
     @property
-    def load_inv(self):
+    def load_inv(self) -> bool:
         return True
 
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> ImmutableTree:
@@ -192,7 +191,7 @@ class PainterInvhistDelta(Painter):
         return ["invhist_delta", "invhist_time"]
 
     @property
-    def painter_options(self):
+    def painter_options(self) -> list[str]:
         return ["show_internal_tree_paths"]
 
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> ImmutableDeltaTree:

@@ -6,6 +6,7 @@ import enum
 import time
 import typing
 from collections.abc import Mapping
+from contextlib import suppress
 from typing import NotRequired
 
 import pydantic
@@ -324,45 +325,51 @@ class NodeExporter:
 
     def kernel_summary(self) -> dict[str, SectionStr]:
         kernel_list = [
-            ("cpu", "sum by (mode, instance)(node_cpu_seconds_total*100)"),
-            ("cpu", "node_cpu_seconds_total*100"),
-            ("guest", "sum by (mode, instance)(node_cpu_guest_seconds_total)"),
-            ("guest", "node_cpu_guest_seconds_total"),
-            ("ctxt", "node_context_switches_total"),
-            ("pswpin", "node_vmstat_pswpin"),
-            ("pwpout", "node_vmstat_pswpout"),
-            ("pgmajfault", "node_vmstat_pgmajfault"),
+            (entity_name, self.get_promql(promql_query))
+            for entity_name, promql_query in [
+                ("cpu", "sum by (mode, instance)(node_cpu_seconds_total*100)"),
+                ("cpu", "node_cpu_seconds_total*100"),
+                ("guest", "sum by (mode, instance)(node_cpu_guest_seconds_total)"),
+                ("guest", "node_cpu_guest_seconds_total"),
+                ("ctxt", "node_context_switches_total"),
+                ("pswpin", "node_vmstat_pswpin"),
+                ("pwpout", "node_vmstat_pswpout"),
+                ("pgmajfault", "node_vmstat_pgmajfault"),
+            ]
         ]
-        return self._process_kernel_info(self._retrieve_kernel_info(kernel_list))
+        return self.process_kernel_info(time.time(), kernel_list)
 
     @staticmethod
-    def _process_kernel_info(
-        temp_result: dict[str, dict[str, dict[str, int]]],
+    def process_kernel_info(
+        now: float, kernel_list: list[tuple[str, list[PromQLMetric]]]
     ) -> dict[str, SectionStr]:
+        cpu_results = NodeExporter._retrieve_kernel_info(kernel_list)
         result: dict[str, SectionStr] = {}
-        for node_name, cpu_result in temp_result.items():
-            temp: list[str] = ["%d" % time.time()]
-            for entity_name, entity_info in cpu_result.items():
-                if entity_name.startswith("cpu"):
-                    entity_parsed = (
-                        "{cpu} {user} {nice} {system} {idle} {iowait} {irq} "
-                        "{softirq} {steal} {guest_user} {guest_nice}".format(
-                            cpu=entity_name, **entity_info
+        for node_name, cpu_result in cpu_results.items():
+            temp: list[str] = ["%d" % now]
+            with suppress(KeyError):
+                for entity_name, entity_info in cpu_result.items():
+                    if entity_name.startswith("cpu"):
+                        entity_parsed = (
+                            "{cpu} {user} {nice} {system} {idle} {iowait} {irq} "
+                            "{softirq} {steal} {guest_user} {guest_nice}".format(
+                                cpu=entity_name, **entity_info
+                            )
                         )
-                    )
-                    temp.append(entity_parsed)
-                else:
-                    temp.append("{} {}".format(entity_name, entity_info["value"]))
-            result[node_name] = _create_section("kernel", temp)
+                        temp.append(entity_parsed)
+                    else:
+                        temp.append("{} {}".format(entity_name, entity_info["value"]))
+                result[node_name] = _create_section("kernel", temp)
         return result
 
+    @staticmethod
     def _retrieve_kernel_info(
-        self, kernel_list: list[tuple[str, str]]
+        kernel_list: list[tuple[str, list[PromQLMetric]]],
     ) -> dict[str, dict[str, dict[str, int]]]:
         result: dict[str, dict[str, dict[str, int]]] = {}
 
-        for entity_name, promql_query in kernel_list:
-            for device_info in self.get_promql(promql_query):
+        for entity_name, metrics in kernel_list:
+            for device_info in metrics:
                 metric_value = int(float(device_info["value"]))
                 labels = device_info["labels"]
                 node = result.setdefault(labels["instance"], {})

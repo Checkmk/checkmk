@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 
 import logging
@@ -83,7 +82,7 @@ class SendingPayloadProcess(multiprocessing.Process):
         self.crash_report_callback = crash_report_callback
         self.task_name = "publishing on queue 'payload'"
 
-    def run(self):
+    def run(self) -> None:
         self.logger.info("Starting: %s", self.task_name)
         signal.signal(
             signal.SIGTERM,

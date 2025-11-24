@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="unreachable"
 
 import time
@@ -303,7 +302,7 @@ def inv_paint_timestamp_as_age_days(value: SDValue) -> PaintResult:
     if not isinstance(value, int | float):
         raise ValueError(value)
 
-    def round_to_day(ts):
+    def round_to_day(ts: int | float) -> int:
         broken = time.localtime(ts)
         return int(
             time.mktime(

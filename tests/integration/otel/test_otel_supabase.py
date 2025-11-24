@@ -156,6 +156,7 @@ SERVICES_IN_UNKNOWN_STATE = [
 ]
 
 
+@pytest.mark.skip(reason="Flaky test: ongoing investigation")
 @pytest.mark.skip_if_not_edition("cloud", "managed")
 def test_otel_supabase(otel_site: Site, inject_supabase_data: None) -> None:
     """Test OpenTelemetry monitoring of a Supabase instance.

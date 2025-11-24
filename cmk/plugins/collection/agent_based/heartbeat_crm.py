@@ -513,6 +513,9 @@ def _check_heartbeat_crm_resources(
             yield Result(state=State.CRIT, summary=f'Resource is in state "{resource[2]}"')
             continue
 
+        if len(resource) <= 3:
+            continue
+
         current_node = resource[3]
         if (
             (target_node := params["expected_node"])

@@ -332,3 +332,96 @@ def test_discover_heartbeat_crm_resources_pacemaker_v2(section_pacemaker_v2: Sec
     expected_services = [Service(item="rhevfence"), Service(item="QPID"), Service(item="BRIDGE")]
 
     assert discovered_services == expected_services
+
+
+@pytest.fixture(name="section_with_no_resources")
+def _section_with_no_resources() -> Section:
+    string_table = [
+        [
+            "Status",
+            "of",
+            "pacemakerd:",
+            "'Pacemaker",
+            "is",
+            "running'",
+            "(last",
+            "updated",
+            "2025-11-10",
+            "08:44:47Z)",
+        ],
+        ["Cluster", "Summary:"],
+        ["_*", "Stack:", "corosync"],
+        [
+            "_*",
+            "Current",
+            "DC:",
+            "Test",
+            "(version",
+            "2.1.5)",
+            "-",
+            "partition",
+            "with",
+            "quorum",
+        ],
+        ["_*", "Last", "updated:", "Mon", "Nov", "10", "08:44:48", "2025"],
+        [
+            "_*",
+            "Last",
+            "change:",
+            "Mon",
+            "Oct",
+            "20",
+            "05:58:47",
+            "2025",
+            "by",
+            "hacluster",
+            "via",
+            "crmd",
+            "on",
+            "Test",
+        ],
+        ["_*", "2", "nodes", "configured"],
+        ["_*", "0", "resource", "instances", "configured"],
+        ["Node", "List:"],
+        ["_*", "Online:", "[", "Test", "]"],
+        ["_*", "OFFLINE:", "[", "test2", "]"],
+        ["Full", "List", "of", "Resources:"],
+        ["_*", "No", "resources"],
+    ]
+    section = parse_heartbeat_crm(string_table)
+    assert section
+    return section
+
+
+def test_parse_heartbeat_crm_with_no_resources(section_with_no_resources: Section) -> None:
+    assert section_with_no_resources.cluster.dc == "Test"
+    assert section_with_no_resources.cluster.num_nodes == 2
+    assert section_with_no_resources.cluster.num_resources == 0
+    assert section_with_no_resources.cluster.error is None
+
+    assert section_with_no_resources.cluster.last_updated is not None
+    assert isinstance(section_with_no_resources.resources.resources, dict)
+
+
+def test_check_heartbeat_crm_resources_explicit_no_resources(
+    section_with_no_resources: Section,
+) -> None:
+    """Test that check_heartbeat_crm_resources handles section with explicit "_* No resources"
+    without crashing.
+    """
+    assert "No" in section_with_no_resources.resources.resources
+    results = list(
+        check_heartbeat_crm_resources(
+            "No",
+            HeartbeatCrmResourcesParameters(
+                expected_node=None,
+                monitoring_state_if_unmanaged_nodes=1,
+            ),
+            section_with_no_resources,
+        )
+    )
+
+    assert len(results) == 1
+    assert isinstance(results[0], Result)
+    assert results[0].state == State.OK
+    assert "No resources" in results[0].summary

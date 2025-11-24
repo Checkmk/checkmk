@@ -15,7 +15,6 @@ You can find an introduction to BI in the
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import http
 import http.client
@@ -67,7 +66,7 @@ BI_PACK_ID = {
 }
 
 
-def _make_error(message):
+def _make_error(message: str) -> ProblemException:
     return ProblemException(404, http.client.responses[404], message)
 
 

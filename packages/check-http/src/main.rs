@@ -28,6 +28,11 @@ async fn main() {
 
     init_tracing(args.logging_level(), args.debug_headers, args.debug_content);
 
+    if let Err(e) = args.validate() {
+        eprintln!("Error: {}", e);
+        std::process::exit(3);
+    }
+
     let (client_cfg, request_cfg, request_information, check_params) = make_configs(args);
     let output = Output::from_check_results(
         collect_checks(client_cfg, request_cfg, request_information, check_params).await,
@@ -124,6 +129,7 @@ fn make_configs(
                 .map(map_tls_version)
                 .or(args.tls_version.as_ref().map(map_tls_version)),
             max_tls_version: args.tls_version.as_ref().map(map_tls_version),
+            tls_compatibility_mode: args.tls_compatibility_mode,
             collect_tls_info: args.certificate_levels.is_some(),
             ignore_proxy_env: args.ignore_proxy_env,
             proxy_url: args.proxy_url,

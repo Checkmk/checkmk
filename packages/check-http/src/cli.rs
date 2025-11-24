@@ -209,6 +209,14 @@ pub struct Cli {
     #[arg(long, conflicts_with = "tls_version")]
     pub min_tls_version: Option<TlsVersion>,
 
+    /// Enable compatibility mode
+    ///
+    /// Switches to native-tls backend instead of rustls.
+    ///
+    /// This option is not compatible with TLS 1.3.
+    #[arg(long, default_value_t = false)]
+    pub tls_compatibility_mode: bool,
+
     /// Print HTTP headers to stderr.
     #[arg(long, default_value_t = false)]
     pub debug_headers: bool,
@@ -240,6 +248,18 @@ impl Cli {
             1 => LevelFilter::INFO,
             _ => LevelFilter::OFF,
         }
+    }
+
+    pub fn validate(&self) -> AnyhowResult<()> {
+        if self.tls_compatibility_mode {
+            if matches!(self.tls_version, Some(TlsVersion::Tls13)) {
+                bail!("Enforcing TLS 1.3 is not possible in compatibility mode.");
+            }
+            if matches!(self.min_tls_version, Some(TlsVersion::Tls13)) {
+                bail!("Minimum TLS 1.3 is not possible in compatibility mode");
+            }
+        }
+        Ok(())
     }
 }
 
@@ -455,5 +475,46 @@ mod tests {
             parse_string_header_pair("NaMe:VaLüE").unwrap(),
             ("name".to_string(), "VaLüE".to_string())
         );
+    }
+
+    #[test]
+    fn test_validate_compatibility_mode() {
+        let mut cli = Cli::parse_from([
+            "check_httpv2",
+            "--url",
+            "https://example.com",
+            "--tls-compatibility-mode",
+            "--tls-version",
+            "tls13",
+        ]);
+        assert!(cli.validate().is_err());
+        assert_eq!(
+            cli.validate().unwrap_err().to_string(),
+            "Enforcing TLS 1.3 is not possible in compatibility mode."
+        );
+
+        cli = Cli::parse_from([
+            "check_httpv2",
+            "--url",
+            "https://example.com",
+            "--tls-compatibility-mode",
+            "--min-tls-version",
+            "tls13",
+        ]);
+        assert!(cli.validate().is_err());
+        assert_eq!(
+            cli.validate().unwrap_err().to_string(),
+            "Minimum TLS 1.3 is not possible in compatibility mode"
+        );
+
+        cli = Cli::parse_from([
+            "check_httpv2",
+            "--url",
+            "https://example.com",
+            "--tls-compatibility-mode",
+            "--tls-version",
+            "tls12",
+        ]);
+        assert!(cli.validate().is_ok());
     }
 }

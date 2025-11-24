@@ -32,6 +32,8 @@ from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
 
+pytestmark = pytest.mark.skip(reason="[PEV] CMK-25981: Migration to the new dashboard already done")
+
 
 @pytest.fixture(scope="function")
 def cloned_linux_hosts_dashboard(

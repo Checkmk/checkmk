@@ -329,7 +329,7 @@ fn check_headers(
                 )]
             } else {
                 notice(
-                    State::Warn,
+                    State::Crit,
                     &format!(
                         "{}: {}:{} (not {})",
                         match_text,
@@ -409,7 +409,7 @@ fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Op
                 )]
             } else {
                 notice(
-                    State::Warn,
+                    State::Crit,
                     &format!("{}: {} ({})", match_text, m.inner(), not_match_predicate),
                 )
             }
@@ -899,17 +899,17 @@ mod test_check_headers {
             ),
             vec![
                 CheckResult::summary(
-                    State::Warn,
+                    State::Crit,
                     "Expected HTTP header: some_key1:value1 (not found)"
                 ),
                 CheckResult::details(
-                    State::Warn,
+                    State::Crit,
                     "Expected HTTP header: some_key1:value1 (not found)"
                 ),
-                CheckResult::summary(State::Warn, "Expected HTTP header: :value (not found)"),
-                CheckResult::details(State::Warn, "Expected HTTP header: :value (not found)"),
-                CheckResult::summary(State::Warn, "Expected HTTP header: some_key3: (not found)"),
-                CheckResult::details(State::Warn, "Expected HTTP header: some_key3: (not found)"),
+                CheckResult::summary(State::Crit, "Expected HTTP header: :value (not found)"),
+                CheckResult::details(State::Crit, "Expected HTTP header: :value (not found)"),
+                CheckResult::summary(State::Crit, "Expected HTTP header: some_key3: (not found)"),
+                CheckResult::details(State::Crit, "Expected HTTP header: some_key3: (not found)"),
             ]
         )
     }
@@ -941,8 +941,8 @@ mod test_check_headers {
                     State::Ok,
                     "Expected HTTP header: some_key1:some_value1 (found)"
                 ),
-                CheckResult::summary(State::Warn, "Expected HTTP header: :value (not found)"),
-                CheckResult::details(State::Warn, "Expected HTTP header: :value (not found)"),
+                CheckResult::summary(State::Crit, "Expected HTTP header: :value (not found)"),
+                CheckResult::details(State::Crit, "Expected HTTP header: :value (not found)"),
             ]
         )
     }
@@ -1000,11 +1000,11 @@ mod test_check_headers {
             ),
             vec![
                 CheckResult::summary(
-                    State::Warn,
+                    State::Crit,
                     "Expected HTTP header: some_key1:some_value2 (not found)"
                 ),
                 CheckResult::details(
-                    State::Warn,
+                    State::Crit,
                     "Expected HTTP header: some_key1:some_value2 (not found)"
                 ),
             ]
@@ -1025,11 +1025,11 @@ mod test_check_headers {
             ),
             vec![
                 CheckResult::summary(
-                    State::Warn,
+                    State::Crit,
                     "Expected HTTP header: some_key1:ßome_value1 (not found)"
                 ),
                 CheckResult::details(
-                    State::Warn,
+                    State::Crit,
                     "Expected HTTP header: some_key1:ßome_value1 (not found)"
                 ),
             ]
@@ -1086,11 +1086,11 @@ mod test_check_headers {
                     "Expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (matched)"
                 ),
                 CheckResult::summary(
-                    State::Warn,
+                    State::Crit,
                     "Expected regex in HTTP headers: foobar:baz (not matched)"
                 ),
                 CheckResult::details(
-                    State::Warn,
+                    State::Crit,
                     "Expected regex in HTTP headers: foobar:baz (not matched)"
                 ),
             ]
@@ -1262,8 +1262,8 @@ mod test_check_body_matching {
                 vec![TextMatcher::Contains("bar".to_string())]
             ),
             vec![
-                CheckResult::summary(State::Warn, "Expected string in body: bar (not found)"),
-                CheckResult::details(State::Warn, "Expected string in body: bar (not found)"),
+                CheckResult::summary(State::Crit, "Expected string in body: bar (not found)"),
+                CheckResult::details(State::Crit, "Expected string in body: bar (not found)"),
             ]
         );
     }
@@ -1279,10 +1279,10 @@ mod test_check_body_matching {
                 ]
             ),
             vec![
-                CheckResult::summary(State::Warn, "Expected string in body: bar (not found)"),
-                CheckResult::details(State::Warn, "Expected string in body: bar (not found)"),
-                CheckResult::summary(State::Warn, "Expected string in body: baz (not found)"),
-                CheckResult::details(State::Warn, "Expected string in body: baz (not found)"),
+                CheckResult::summary(State::Crit, "Expected string in body: bar (not found)"),
+                CheckResult::details(State::Crit, "Expected string in body: bar (not found)"),
+                CheckResult::summary(State::Crit, "Expected string in body: baz (not found)"),
+                CheckResult::details(State::Crit, "Expected string in body: baz (not found)"),
             ]
         );
     }
@@ -1309,8 +1309,8 @@ mod test_check_body_matching {
                 vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true)]
             ),
             vec![
-                CheckResult::summary(State::Warn, "Expected regex in body: f.*z (not matched)"),
-                CheckResult::details(State::Warn, "Expected regex in body: f.*z (not matched)"),
+                CheckResult::summary(State::Crit, "Expected regex in body: f.*z (not matched)"),
+                CheckResult::details(State::Crit, "Expected regex in body: f.*z (not matched)"),
             ]
         );
     }
@@ -1337,8 +1337,8 @@ mod test_check_body_matching {
                 vec![TextMatcher::from_regex(Regex::new("argl").unwrap(), false)]
             ),
             vec![
-                CheckResult::summary(State::Warn, "Not expected regex in body: argl (matched)"),
-                CheckResult::details(State::Warn, "Not expected regex in body: argl (matched)")
+                CheckResult::summary(State::Crit, "Not expected regex in body: argl (matched)"),
+                CheckResult::details(State::Crit, "Not expected regex in body: argl (matched)")
             ]
         );
     }

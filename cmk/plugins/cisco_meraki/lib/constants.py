@@ -11,6 +11,7 @@ APIKEY_OPTION_NAME: Final = "apikey"
 SEC_NAME_LICENSES_OVERVIEW: Final = "licenses-overview"
 SEC_NAME_DEVICE_STATUSES: Final = "device-statuses"
 SEC_NAME_SENSOR_READINGS: Final = "sensor-readings"
+SEC_NAME_APPLIANCE_PERFORMANCE: Final = "appliance-performance"
 SEC_NAME_APPLIANCE_UPLINKS: Final = "appliance-uplinks"
 SEC_NAME_APPLIANCE_VPNS: Final = "appliance-vpns"
 

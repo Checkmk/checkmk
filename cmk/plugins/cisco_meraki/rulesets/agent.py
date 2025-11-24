@@ -85,6 +85,10 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     ),
                     elements=[
                         MultipleChoiceElement(
+                            name="appliance_performance",
+                            title=Title("Appliance uplink performance"),
+                        ),
+                        MultipleChoiceElement(
                             name="appliance_uplinks", title=Title("Appliance uplink statuses")
                         ),
                         MultipleChoiceElement(

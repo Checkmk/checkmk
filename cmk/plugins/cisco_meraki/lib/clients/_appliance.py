@@ -13,6 +13,9 @@ from cmk.plugins.cisco_meraki.lib.type_defs import TotalPages
 
 
 class ApplianceSDK(Protocol):
+    def getDeviceAppliancePerformance(
+        self, serial: str
+    ) -> Sequence[schema.RawAppliancePerformance]: ...
     def getOrganizationApplianceUplinkStatuses(
         self, organizationId: str, total_pages: TotalPages
     ) -> Sequence[schema.RawUplinkStatuses]: ...
@@ -27,6 +30,13 @@ class ApplianceSDK(Protocol):
 class ApplianceClient:
     def __init__(self, sdk: ApplianceSDK) -> None:
         self._sdk = sdk
+
+    def get_appliance_performance(self, serial: str, /) -> Sequence[schema.RawAppliancePerformance]:
+        try:
+            return self._sdk.getDeviceAppliancePerformance(serial)
+        except APIError as e:
+            log.LOGGER.debug("Serial: %r: Get appliance device performance: %r", serial, e)
+            return []
 
     def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:
         try:

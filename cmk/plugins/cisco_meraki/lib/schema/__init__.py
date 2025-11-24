@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._appliance_performance import RawAppliancePerformance
 from ._devices import Device, RawDevice
 from ._devices_statuses import RawDevicesStatus
 from ._licenses_overview import LicensesOverview, RawLicensesOverview
@@ -17,6 +18,7 @@ __all__ = [
     "Device",
     "LicensesOverview",
     "Network",
+    "RawAppliancePerformance",
     "RawDevice",
     "RawDevicesStatus",
     "RawLicensesOverview",

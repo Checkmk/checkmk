@@ -56,6 +56,21 @@ class TestMerakiAgentOutput:
 
         assert value == expected
 
+    def test_non_default_sections(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
+        updated_ctx = _update_section_names(ctx, sections={"appliance-performance"})
+        agent.run(updated_ctx)
+
+        # NOTE: testing on a set here because there could be duplicate matches with multiple orgs.
+        value = set(re.findall(r"<<<cisco_meraki_org_(\w+):sep\(0\)>>>", capsys.readouterr().out))
+        expected = {
+            "appliance_performance",
+            "device_info",
+            "networks",
+            "organisations",
+        }
+
+        assert value == expected
+
     def test_piggyback_headings(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
         agent.run(ctx)
 

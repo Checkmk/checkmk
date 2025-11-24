@@ -116,6 +116,7 @@ class _CacheConfig:
 
 @dataclass(frozen=True)
 class _RequiredSections:
+    appliance_performance: bool
     appliance_uplinks: bool
     appliance_vpns: bool
     device_statuses: bool
@@ -125,6 +126,7 @@ class _RequiredSections:
     @classmethod
     def build(cls, sections: set[str]) -> Self:
         return cls(
+            appliance_performance=constants.SEC_NAME_APPLIANCE_PERFORMANCE in sections,
             appliance_uplinks=constants.SEC_NAME_APPLIANCE_UPLINKS in sections,
             appliance_vpns=constants.SEC_NAME_APPLIANCE_VPNS in sections,
             device_statuses=constants.SEC_NAME_DEVICE_STATUSES in sections,
@@ -139,4 +141,5 @@ class _RequiredSections:
             or self.sensor_readings
             or self.appliance_uplinks
             or self.appliance_vpns
+            or self.appliance_performance
         )

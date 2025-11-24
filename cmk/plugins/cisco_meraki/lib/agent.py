@@ -179,6 +179,17 @@ class MerakiOrganisation:
                             piggyback=piggyback,
                         )
 
+            if self.config.required.appliance_performance:
+                for device in devices_by_type["appliance"]:
+                    serial = device["serial"]
+                    for appliance_performance in self.client.get_appliance_performance(serial):
+                        if piggyback := self._get_device_piggyback(serial, devices_by_serial):
+                            yield Section(
+                                name="cisco_meraki_org_appliance_performance",
+                                data=appliance_performance,
+                                piggyback=piggyback,
+                            )
+
     def _get_device_piggyback(
         self, serial: str, devices_by_serial: Mapping[str, Device]
     ) -> str | None:

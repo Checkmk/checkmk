@@ -4157,9 +4157,9 @@ schemathesis==3.38.10 \
     --hash=sha256:01cdd4f313d0b1a8625604cc3bf99ec09147a5668771c8e9bfc1f97990bba2da \
     --hash=sha256:32e2aaabf57e4e8327f11c6e7b8dd2f6e41b436f3d4eae35c17109c770d358d4
     # via -r requirements_dev.txt
-secretstorage==3.4.1 \
-    --hash=sha256:a799acf5be9fb93db609ebaa4ab6e8f1f3ed5ae640e0fa732bfea59e9c3b50e8 \
-    --hash=sha256:c55d57b4da3de568d8c3af89dad244ab24c35ca1da8625fc1b550edf005ebc41
+secretstorage==3.5.0 \
+    --hash=sha256:0ce65888c0725fcb2c5bc0fdb8e5438eece02c523557ea40ce0703c266248137 \
+    --hash=sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be
     # via keyring
 semver==3.0.2 \
     --hash=sha256:6253adb39c70f6e51afed2fa7152bcd414c411286088fb4b9effb133885ab4cc \
@@ -4476,9 +4476,9 @@ time-machine==2.16.0 \
     # via
     #   -r requirements_all.txt
     #   -r requirements_dev.txt
-tinycss2==1.5.0 \
-    --hash=sha256:6645326e562ea497d6d11cfa608ce3ad30c1e96576b0e43d678dcf6275df6761 \
-    --hash=sha256:6a7be7a654f38a2a55b61d2d97b1f65a7eb40d1cb4057ac37145f675f16efdf9
+tinycss2==1.5.1 \
+    --hash=sha256:3415ba0f5839c062696996998176c4a3751d18b7edaaeeb658c9ce21ec150661 \
+    --hash=sha256:d339d2b616ba90ccce58da8495a78f46e55d4d25f9fd71dfd526f07e7d53f957
     # via
     #   cssselect2
     #   svglib
@@ -4552,9 +4552,9 @@ twine==6.0.1 \
     --hash=sha256:36158b09df5406e1c9c1fb8edb24fc2be387709443e7376689b938531582ee27 \
     --hash=sha256:9c6025b203b51521d53e200f4a08b116dee7500a38591668c6a6033117bdc218
     # via -r requirements_dev.txt
-types-awscrt==0.28.4 \
-    --hash=sha256:15929da84802f27019ee8e4484fb1c102e1f6d4cf22eb48688c34a5a86d02eb6 \
-    --hash=sha256:2d453f9e27583fcc333771b69a5255a5a4e2c52f86e70f65f3c5a6789d3443d0
+types-awscrt==0.29.0 \
+    --hash=sha256:7f81040846095cbaf64e6b79040434750d4f2f487544d7748b778c349d393510 \
+    --hash=sha256:ece1906d5708b51b6603b56607a702ed1e5338a2df9f31950e000f03665ac387
     # via botocore-stubs
 types-beautifulsoup4==4.12.0.20241020 \
     --hash=sha256:158370d08d0cd448bd11b132a50ff5279237a5d4b5837beba074de152a513059 \
@@ -4660,9 +4660,9 @@ types-requests==2.32.4.20250611 \
     --hash=sha256:741c8777ed6425830bf51e54d6abe245f79b4dcb9019f1622b773463946bf826 \
     --hash=sha256:ad2fe5d3b0cb3c2c902c8815a70e7fb2302c4b8c1f77bdcd738192cdb3878072
     # via -r requirements_dev.txt
-types-s3transfer==0.14.0 \
-    --hash=sha256:108134854069a38b048e9b710b9b35904d22a9d0f37e4e1889c2e6b58e5b3253 \
-    --hash=sha256:17f800a87c7eafab0434e9d87452c809c290ae906c2024c24261c564479e9c95
+types-s3transfer==0.15.0 \
+    --hash=sha256:1e617b14a9d3ce5be565f4b187fafa1d96075546b52072121f8fda8e0a444aed \
+    --hash=sha256:43a523e0c43a88e447dfda5f4f6b63bf3da85316fdd2625f650817f2b170b5f7
     # via boto3-stubs
 types-setuptools==75.6.0.20241126 \
     --hash=sha256:7bf25ad4be39740e469f9268b6beddda6e088891fa5a27e985c6ce68bf62ace0 \

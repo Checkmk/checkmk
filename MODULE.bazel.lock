@@ -1835,7 +1835,7 @@
         "usagesDigest": "08kH9jjVabmjH4pZe4CwkHoktWUZb/WfeLdICjLor2c=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "bd0dd1a68478f17e71f1c6e025210b90f691f2c0be7023e8a8a6c210dd4c498a",
+          "@@//requirements_all_lock.txt": "239be34c3ac46700a7313064be716cadec942989672aa716efaabcf482505423",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -4375,7 +4375,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "tinycss2==1.5.0     --hash=sha256:6645326e562ea497d6d11cfa608ce3ad30c1e96576b0e43d678dcf6275df6761     --hash=sha256:6a7be7a654f38a2a55b61d2d97b1f65a7eb40d1cb4057ac37145f675f16efdf9"
+              "requirement": "tinycss2==1.5.1     --hash=sha256:3415ba0f5839c062696996998176c4a3751d18b7edaaeeb658c9ce21ec150661     --hash=sha256:d339d2b616ba90ccce58da8495a78f46e55d4d25f9fd71dfd526f07e7d53f957"
             }
           },
           "cmk_requirements_312_watchdog": {
@@ -6007,7 +6007,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "types-awscrt==0.28.4     --hash=sha256:15929da84802f27019ee8e4484fb1c102e1f6d4cf22eb48688c34a5a86d02eb6     --hash=sha256:2d453f9e27583fcc333771b69a5255a5a4e2c52f86e70f65f3c5a6789d3443d0"
+              "requirement": "types-awscrt==0.29.0     --hash=sha256:7f81040846095cbaf64e6b79040434750d4f2f487544d7748b778c349d393510     --hash=sha256:ece1906d5708b51b6603b56607a702ed1e5338a2df9f31950e000f03665ac387"
             }
           },
           "cmk_requirements_312_types_pillow": {
@@ -6228,7 +6228,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "secretstorage==3.4.1     --hash=sha256:a799acf5be9fb93db609ebaa4ab6e8f1f3ed5ae640e0fa732bfea59e9c3b50e8     --hash=sha256:c55d57b4da3de568d8c3af89dad244ab24c35ca1da8625fc1b550edf005ebc41"
+              "requirement": "secretstorage==3.5.0     --hash=sha256:0ce65888c0725fcb2c5bc0fdb8e5438eece02c523557ea40ce0703c266248137     --hash=sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be"
             }
           },
           "cmk_requirements_312_types_pika_ts": {
@@ -7350,7 +7350,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "types-s3transfer==0.14.0     --hash=sha256:108134854069a38b048e9b710b9b35904d22a9d0f37e4e1889c2e6b58e5b3253     --hash=sha256:17f800a87c7eafab0434e9d87452c809c290ae906c2024c24261c564479e9c95"
+              "requirement": "types-s3transfer==0.15.0     --hash=sha256:1e617b14a9d3ce5be565f4b187fafa1d96075546b52072121f8fda8e0a444aed     --hash=sha256:43a523e0c43a88e447dfda5f4f6b63bf3da85316fdd2625f650817f2b170b5f7"
             }
           },
           "cmk_requirements_312_types_setuptools": {

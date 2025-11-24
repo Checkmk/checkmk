@@ -21,6 +21,9 @@ from cmk.gui.inventory.filters import (
 
 from .registry import InventoryHintRegistry
 
+### PLEASE DO NO ADD FURTHER LEGACY DISPLAY HINTS ###
+# Use cmk.inventory_ui.v1_unstable
+
 
 # fmt: off
 def register(inventory_displayhints: InventoryHintRegistry) -> None:

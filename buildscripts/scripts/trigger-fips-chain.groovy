@@ -14,10 +14,12 @@ def main() {
         "FAKE_WINDOWS_ARTIFACTS",
     ]);
 
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
+    def safe_branch_name = versioning.safe_branch_name();
 
     /// NOTE: this way ALL parameter are being passed through..
     def job_parameters = [
@@ -39,6 +41,7 @@ def main() {
         |===== CONFIGURATION ===============================
         |edition:............... │${params.EDITION}│
         |version:............... │${params.VERSION}│
+        |safe_branch_name:...... │${safe_branch_name}│
         |override_distros:...... │${params.OVERRIDE_DISTROS}│
         |fake_windows_artifacts: │${params.FAKE_WINDOWS_ARTIFACTS}│
         |custom_git_ref:........ │${effective_git_ref}│
@@ -47,40 +50,41 @@ def main() {
 
     def success = true;
 
-    // We currently run those tests sequential due to resource constraints.
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        // We currently run those tests sequential due to resource constraints.
+        // use smart_stage to capture build result, but continue with next steps
+        success &= smart_stage(
+                name: "Run composition tests on FIPS",
+                condition: true,
+                raiseOnError: false,) {
+            smart_build(
+                job: "${branch_base_folder}/fips/test-composition-fips",
+                parameters: job_parameters
+            );
+        }[0]
 
-    // use smart_stage to capture build result, but continue with next steps
-    success &= smart_stage(
-            name: "Run composition tests on FIPS",
-            condition: true,
-            raiseOnError: false,) {
-        smart_build(
-            job: "${branch_base_folder}/fips/test-composition-fips",
-            parameters: job_parameters
-        );
-    }[0]
+        success &= smart_stage(
+                name: "Run GUI End-to-End tests on FIPS",
+                condition: true,
+                raiseOnError: false,) {
+            smart_build(
+                job: "${branch_base_folder}/fips/test-gui-e2e-fips",
+                parameters: job_parameters
+            );
+        }[0]
 
-    success &= smart_stage(
-            name: "Run GUI End-to-End tests on FIPS",
-            condition: true,
-            raiseOnError: false,) {
-        smart_build(
-            job: "${branch_base_folder}/fips/test-gui-e2e-fips",
-            parameters: job_parameters
-        );
-    }[0]
+        success &= smart_stage(
+                name: "Run integration tests on FIPS",
+                condition: true,
+                raiseOnError: false,) {
+            smart_build(
+                job: "${branch_base_folder}/fips/test-integration-fips",
+                parameters: job_parameters
+            );
+        }[0]
 
-    success &= smart_stage(
-            name: "Run integration tests on FIPS",
-            condition: true,
-            raiseOnError: false,) {
-        smart_build(
-            job: "${branch_base_folder}/fips/test-integration-fips",
-            parameters: job_parameters
-        );
-    }[0]
-
-    currentBuild.result = success ? "SUCCESS" : "FAILURE";
+        currentBuild.result = success ? "SUCCESS" : "FAILURE";
+    }
 }
 
 return this;

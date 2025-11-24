@@ -18,6 +18,8 @@ from cmk.agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
 from cmk.agent_receiver.checkmk_rest_api import ControllerCertSettings
 from cmk.agent_receiver.main import main_app
 
+# pylint: disable=invalid-name
+
 _CA = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
 xHdURADCMYS/jIpYAJzT0zTHwbP54gGA0ADqJoXIrfZdcZWJWEsHJqC6WnJsxGRN

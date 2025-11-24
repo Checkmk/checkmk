@@ -77,7 +77,7 @@ class PathConfig:
             manifests_dir=Path(raw["manifests_dir"]),
         )
 
-    def get_path(self, part: PackagePart) -> Path:
+    def get_path(self, part: PackagePart) -> Path:  # pylint: disable=too-many-branches
         match part:
             case PackagePart.CMK_PLUGINS:
                 return self.cmk_plugins_dir
@@ -144,7 +144,7 @@ class PathConfig:
         return sorted(PackagePart, key=_depth, reverse=True)
 
 
-def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
+def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:  # pylint: disable=too-many-branches
     match part:
         case PackagePart.CMK_PLUGINS:
             return _("Shipped Checkmk plug-ins")

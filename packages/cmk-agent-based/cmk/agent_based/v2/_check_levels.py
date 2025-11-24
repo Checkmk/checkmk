@@ -20,7 +20,7 @@ PredictiveLevelsT = tuple[
     Literal["predictive"], tuple[str, float | None, tuple[_NumberT, _NumberT] | None]
 ]
 
-LevelsT = NoLevelsT | FixedLevelsT[_NumberT] | PredictiveLevelsT[_NumberT]
+LevelsT = NoLevelsT | FixedLevelsT[_NumberT] | PredictiveLevelsT[_NumberT]  # pylint: disable=invalid-name
 
 
 class Direction(StrEnum):

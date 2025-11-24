@@ -14,6 +14,8 @@ from ._levels import (
 
 _NumberT = TypeVar("_NumberT", int, float)
 
+# pylint: disable=match-class-bind-self
+
 
 def _extract_bound(
     model: object, scale: float, ntype: type[_NumberT], level_dir: LevelDirection | None

@@ -1456,16 +1456,20 @@ def test_migrate_content_is_none(rule_value: Mapping[str, object], config: Confi
         (
             EXAMPLE_25,
             KEEP_CONFIGURATION,
-            {"min_version": TlsVersion.TLS_1_2, "allow_higher": False},
+            {"min_version": TlsVersion.TLS_1_2, "allow_higher": False, "compatibility_mode": False},
         ),
-        (EXAMPLE_27, KEEP_CONFIGURATION, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
+        (
+            EXAMPLE_27,
+            KEEP_CONFIGURATION,
+            {"min_version": TlsVersion.AUTO, "allow_higher": True, "compatibility_mode": False},
+        ),
         (
             EXAMPLE_22,
             Config(
                 ssl_incompatible=SSLIncompatible.negotiate,
                 v2_checks_certificates=V2ChecksCertificates.keep,
             ),
-            {"min_version": TlsVersion.AUTO, "allow_higher": True},
+            {"min_version": TlsVersion.AUTO, "allow_higher": True, "compatibility_mode": False},
         ),
         (
             EXAMPLE_23,
@@ -1473,7 +1477,7 @@ def test_migrate_content_is_none(rule_value: Mapping[str, object], config: Confi
                 ssl_incompatible=SSLIncompatible.negotiate,
                 v2_checks_certificates=V2ChecksCertificates.keep,
             ),
-            {"min_version": TlsVersion.AUTO, "allow_higher": True},
+            {"min_version": TlsVersion.AUTO, "allow_higher": True, "compatibility_mode": False},
         ),
         (
             EXAMPLE_24,
@@ -1481,7 +1485,7 @@ def test_migrate_content_is_none(rule_value: Mapping[str, object], config: Confi
                 ssl_incompatible=SSLIncompatible.negotiate,
                 v2_checks_certificates=V2ChecksCertificates.keep,
             ),
-            {"min_version": TlsVersion.AUTO, "allow_higher": True},
+            {"min_version": TlsVersion.AUTO, "allow_higher": True, "compatibility_mode": False},
         ),
         (
             EXAMPLE_93,
@@ -1489,7 +1493,7 @@ def test_migrate_content_is_none(rule_value: Mapping[str, object], config: Confi
                 ssl_incompatible=SSLIncompatible.negotiate,
                 v2_checks_certificates=V2ChecksCertificates.keep,
             ),
-            {"min_version": TlsVersion.AUTO, "allow_higher": True},
+            {"min_version": TlsVersion.AUTO, "allow_higher": True, "compatibility_mode": False},
         ),
     ],
 )

@@ -113,6 +113,7 @@ FloatLevels = (
 class EnforceTlsVersion(BaseModel):
     min_version: TlsVersion
     allow_higher: bool
+    compatibility_mode: bool = False
 
 
 class SendDataInner(BaseModel):
@@ -331,6 +332,9 @@ def _auth_args(
 
 
 def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
+    if tls_versions.compatibility_mode:
+        yield "--tls-compatibility-mode"
+
     if tls_versions.min_version is TlsVersion.AUTO:
         return
 

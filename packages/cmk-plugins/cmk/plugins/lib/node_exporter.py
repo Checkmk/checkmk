@@ -6,6 +6,7 @@ import enum
 import time
 import typing
 from collections.abc import Mapping
+from contextlib import suppress
 from typing import NotRequired
 
 import pydantic
@@ -346,18 +347,19 @@ class NodeExporter:
         result: dict[str, SectionStr] = {}
         for node_name, cpu_result in cpu_results.items():
             temp: list[str] = ["%d" % now]
-            for entity_name, entity_info in cpu_result.items():
-                if entity_name.startswith("cpu"):
-                    entity_parsed = (
-                        "{cpu} {user} {nice} {system} {idle} {iowait} {irq} "
-                        "{softirq} {steal} {guest_user} {guest_nice}".format(
-                            cpu=entity_name, **entity_info
+            with suppress(KeyError):
+                for entity_name, entity_info in cpu_result.items():
+                    if entity_name.startswith("cpu"):
+                        entity_parsed = (
+                            "{cpu} {user} {nice} {system} {idle} {iowait} {irq} "
+                            "{softirq} {steal} {guest_user} {guest_nice}".format(
+                                cpu=entity_name, **entity_info
+                            )
                         )
-                    )
-                    temp.append(entity_parsed)
-                else:
-                    temp.append("{} {}".format(entity_name, entity_info["value"]))
-            result[node_name] = _create_section("kernel", temp)
+                        temp.append(entity_parsed)
+                    else:
+                        temp.append("{} {}".format(entity_name, entity_info["value"]))
+                result[node_name] = _create_section("kernel", temp)
         return result
 
     @staticmethod

@@ -168,6 +168,10 @@ function selectSuggestion(suggestion: Suggestion | null) {
     selectedOption.value = highlightedOption.value?.name || null
     return
   }
+  if (suggestion && suggestion.name === selectedOption.value) {
+    emit('request-close-suggestions')
+    return
+  }
   selectedOption.value = suggestion?.name || null
 }
 

@@ -140,6 +140,33 @@ test('dropdown shows and hides options', async () => {
   expect(screen.queryByText('Option 2')).toBeNull()
 })
 
+test('dropdown hides after clicking already selected option', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: {
+        type: 'fixed',
+        suggestions: [
+          { title: 'Option 1', name: 'option1' },
+          { title: 'Option 2', name: 'option2' }
+        ]
+      },
+      selectedOption: 'option1',
+      inputHint: 'Select an option',
+      label: 'some aria label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+  await fireEvent.click(dropdown)
+
+  // Dropdown is open and options are visible
+  await screen.findByText('Option 2')
+
+  await fireEvent.click(screen.getByRole('option', { name: 'Option 1' }))
+
+  expect(screen.queryByText('Option 2')).toBeNull()
+})
+
 test.each([{ showFilter: true }, { showFilter: false }])(
   'dropdown updates selecedOption selected via keyboard with showFilter=$showFilter',
   async ({ showFilter }) => {

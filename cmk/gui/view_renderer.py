@@ -518,13 +518,16 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
     def _extend_display_dropdown(self, menu: PageMenu, show_filters: list[Filter]) -> None:
+        painter_options = PainterOptions.get_instance()
+        painter_options.set_used_option_names(self.view.painter_options)
+
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
         display_dropdown.topics.insert(
             0,
             PageMenuTopic(
                 title=_("View layout"),
-                entries=list(self._page_menu_entries_view_layout()),
+                entries=list(self._page_menu_entries_view_layout(painter_options)),
             ),
         )
 
@@ -540,6 +543,30 @@ class GUIViewRenderer(ABCViewRenderer):
                 ),
             )
 
+        if (
+            display_options.enabled(display_options.D)
+            and painter_options.painter_option_graph_time_form_enabled()
+        ):
+            display_dropdown.topics.insert(
+                0,
+                PageMenuTopic(
+                    title=_("Graph time and refresh"),
+                    entries=[
+                        PageMenuEntry(
+                            title=_("Graph time and refresh"),
+                            icon_name="painteroptions",
+                            item=PageMenuPopup(
+                                self._render_painter_options_timerange_form(painter_options)
+                            ),
+                            name="display_painter_options_timerange",
+                            is_shortcut=True,
+                            is_suggested=True,
+                            is_list_entry=False,
+                        )
+                    ],
+                ),
+            )
+
     def _page_menu_entries_filter(self, show_filters: list[Filter]) -> Iterator[PageMenuEntry]:
         is_filter_set = check_if_non_default_filter_in_request(
             AjaxInitialViewFilters().get_context(page_name=self.view.name)
@@ -552,13 +579,14 @@ class GUIViewRenderer(ABCViewRenderer):
             is_shortcut=True,
         )
 
-    def _page_menu_entries_view_layout(self) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_view_layout(
+        self, painter_options: PainterOptions
+    ) -> Iterator[PageMenuEntry]:
         if display_options.enabled(display_options.D):
-            painter_options = PainterOptions.get_instance()
             yield PageMenuEntry(
                 title=_("Modify display options"),
                 icon_name="painteroptions",
-                item=PageMenuPopup(self._render_painter_options_form()),
+                item=PageMenuPopup(self._render_painter_options_form(painter_options)),
                 name="display_painter_options",
                 is_enabled=painter_options.painter_option_form_enabled(),
             )
@@ -639,10 +667,14 @@ class GUIViewRenderer(ABCViewRenderer):
             show_filter_form(self.view, show_filters)
             return HTML.without_escaping(output_funnel.drain())
 
-    def _render_painter_options_form(self) -> HTML:
+    def _render_painter_options_form(self, painter_options: PainterOptions) -> HTML:
         with output_funnel.plugged():
-            painter_options = PainterOptions.get_instance()
-            painter_options.show_form(self.view.spec, self.view.painter_options)
+            painter_options.show_form(self.view.spec)
+            return HTML.without_escaping(output_funnel.drain())
+
+    def _render_painter_options_timerange_form(self, painter_options: PainterOptions) -> HTML:
+        with output_funnel.plugged():
+            painter_options.show_graph_time_form(self.view.spec)
             return HTML.without_escaping(output_funnel.drain())
 
     def _render_command_form(self, info_name: InfoName, command: Command) -> HTML:

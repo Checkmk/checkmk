@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import abc
 import time
-from collections.abc import Sequence
-from typing import Any, override
+from collections.abc import Iterable, Sequence
+from typing import Any, Final, override
 
 import cmk.utils.render
 from cmk.ccc.plugin_registry import Registry
@@ -25,6 +25,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec
+
+_GRAPH_TIME_OPTION_NAMES: Final[Sequence[str]] = ["pnp_timerange", "refresh"]
 
 
 def register(painter_option_registry_: PainterOptionRegistry) -> None:
@@ -100,21 +102,32 @@ class PainterOptions:
             return
 
         if request.has_var("_reset_painter_options"):
-            self._clear_painter_options(view_name)
+            self._clear_painter_options("po", view_name, painter_option_registry.keys())
+            return
+
+        if request.has_var("_reset_painter_options_graph_time"):
+            self._clear_painter_options("pog", view_name, _GRAPH_TIME_OPTION_NAMES)
             return
 
         if request.has_var("_update_painter_options"):
-            self._set_from_submitted_form(view_name)
+            self._set_from_submitted_form("po", view_name, self._used_option_names)
 
-    def _set_from_submitted_form(self, view_name: str) -> None:
+        if request.has_var("_update_painter_options_graph_time"):
+            self._set_from_submitted_form(
+                "pog", view_name, set(used_option_names) & set(_GRAPH_TIME_OPTION_NAMES)
+            )
+
+    def _set_from_submitted_form(
+        self, prefix: str, view_name: str, used_option_names: Iterable[str]
+    ) -> None:
         # TODO: Remove all keys that are in painter_option_registry
         # but not in self._used_option_names
 
         modified = False
-        for option_name in self._used_option_names:
+        for option_name in used_option_names:
             # Get new value for the option from the value spec
             vs = self.get_valuespec_of(option_name)
-            value = vs.from_html_vars("po_%s" % option_name)
+            value = vs.from_html_vars(f"{prefix}_{option_name}")
 
             if not self._is_set(option_name) or self.get(option_name) != value:
                 modified = True
@@ -124,10 +137,12 @@ class PainterOptions:
         if modified:
             self.save_to_config(view_name)
 
-    def _clear_painter_options(self, view_name: str) -> None:
-        # TODO: This never removes options that are not existant anymore
+    def _clear_painter_options(
+        self, prefix: str, view_name: str, option_names: Iterable[str]
+    ) -> None:
+        # TODO: This never removes options that are not existent anymore
         modified = False
-        for name in painter_option_registry.keys():
+        for name in option_names:
             try:
                 del self._options[name]
                 modified = True
@@ -140,8 +155,9 @@ class PainterOptions:
         # Also remove the options from current html vars. Otherwise the
         # painter option form will display the just removed options as
         # defaults of the painter option form.
-        for varname, _value in list(request.itervars(prefix="po_")):
-            request.del_var(varname)
+        for varname, _value in list(request.itervars(prefix=f"{prefix}_")):
+            if any(varname.startswith(f"{prefix}_{name}") for name in option_names):
+                request.del_var(varname)
 
     def get_valuespec_of(self, name: str) -> ValueSpec:
         return painter_option_registry[name].valuespec
@@ -179,12 +195,18 @@ class PainterOptions:
     def painter_options_permitted(self) -> bool:
         return user.may("general.painter_options")
 
+    def set_used_option_names(self, used_option_names: Sequence[str]) -> None:
+        self._used_option_names = used_option_names
+
     def painter_option_form_enabled(self) -> bool:
         return bool(self._used_option_names) and self.painter_options_permitted()
 
-    def show_form(self, view_spec: ViewSpec, used_option_names: Sequence[str]) -> None:
-        self._used_option_names = used_option_names
+    def painter_option_graph_time_form_enabled(self) -> bool:
+        # the form should only be available if a graph is actually shown, so we explicitly check for
+        # the pnp_timerange option here (since refresh is available elsewhere too)
+        return "pnp_timerange" in self._used_option_names and self.painter_options_permitted()
 
+    def show_form(self, view_spec: ViewSpec) -> None:
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
             return
 
@@ -201,6 +223,41 @@ class PainterOptions:
 
             html.button(varname="_update_painter_options", title=_("Submit"), cssclass="hot submit")
             html.button(varname="_reset_painter_options", title=_("Reset"), cssclass="submit")
+
+            html.hidden_fields()
+
+    def show_graph_time_form(self, view_spec: ViewSpec) -> None:
+        """Show only the timerange and refresh part of the painter options form."""
+        if (
+            not display_options.enabled(display_options.D)
+            or not self.painter_option_graph_time_form_enabled()
+        ):
+            return
+
+        # we need separate IDs for the form elements to avoid conflicts with the normal form
+        with html.form_context("painteroptions_graph_time"):
+            forms.header("", show_table_head=False)
+            for name in _GRAPH_TIME_OPTION_NAMES:
+                if name not in self._used_option_names:
+                    continue
+                vs = self.get_valuespec_of(name)
+                forms.section(vs.title())
+                if name == "refresh":
+                    vs.render_input(
+                        "pog_%s" % name, view_spec.get("browser_reload", self.get(name))
+                    )
+                    continue
+                vs.render_input("pog_%s" % name, self.get(name, view_spec.get(name)))
+            forms.end()
+
+            html.button(
+                varname="_update_painter_options_graph_time",
+                title=_("Submit"),
+                cssclass="hot submit",
+            )
+            html.button(
+                varname="_reset_painter_options_graph_time", title=_("Reset"), cssclass="submit"
+            )
 
             html.hidden_fields()
 

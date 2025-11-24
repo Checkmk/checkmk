@@ -8,7 +8,8 @@ Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
 import cmk.product_telemetry.collectors.grafana as grafana_collector
 from cmk.ccc.version import Edition, edition
@@ -21,7 +22,7 @@ from cmk.gui.graphing import (
     metric_backend_registry,
     metrics_from_api,
 )
-from cmk.gui.http import request
+from cmk.gui.http import request, Response
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
@@ -47,9 +48,14 @@ from cmk.utils import paths
     request_schema=request_schemas.GetSchema,
     response_schema=response_schemas.GraphCollectionSchema,
     sort=0,
-    supported_editions={Edition.COMMUNITY, Edition.PRO, Edition.ULTIMATE, Edition.ULTIMATEMT},
+    supported_editions={
+        Edition.COMMUNITY,
+        Edition.PRO,
+        Edition.ULTIMATE,
+        Edition.ULTIMATEMT,
+    },
 )
-def get_graph(params):
+def get_graph(params: Mapping[str, Any]) -> Response:
     """Get metrics
 
     This endpoint retrieves a predefined graph (consisting of multiple metrics) or a single metric.

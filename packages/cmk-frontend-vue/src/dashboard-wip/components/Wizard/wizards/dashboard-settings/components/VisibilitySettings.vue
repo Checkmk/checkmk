@@ -15,6 +15,12 @@ import VisibilityProperties from '../../../components/DashboardSettings/Visibili
 
 const { _t } = usei18n()
 
+interface VisibilitySettingsProps {
+  sortIndexError: string[]
+}
+
+defineProps<VisibilitySettingsProps>()
+
 const hideInMonitorMenu = defineModel<boolean>('hideInMonitorMenu', { required: true })
 const monitorMenuTopic = defineModel<string>('monitorMenuTopic', { default: '' })
 const sortIndex = defineModel<number>('sortIndex', { required: true })
@@ -33,6 +39,7 @@ const onShowMoreLabel = _t('Only show when "Show more" is enabled')
     v-model:monitor-menu-topic="monitorMenuTopic"
     v-model:sort-index="sortIndex"
     :show-in-monitor-menu="showInMonitorMenu"
+    :sort-index-error="sortIndexError"
     @update:show-in-monitor-menu="(val) => (hideInMonitorMenu = !val)"
   >
     <template #extra-visibility-settings>

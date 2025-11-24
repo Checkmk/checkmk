@@ -61,6 +61,7 @@ const {
   showInMonitorMenu,
   monitorMenuTopic,
   sortIndex,
+  sortIndexError,
   validateGeneralSettings,
   buildSettings
 } = useDashboardGeneralSettings()
@@ -228,6 +229,7 @@ const cancel = () => {
             v-model:monitor-menu-topic="monitorMenuTopic"
             v-model:show-in-monitor-menu="showInMonitorMenu"
             v-model:sort-index="sortIndex"
+            :sort-index-error="sortIndexError"
           />
         </template>
       </BoxedSection>

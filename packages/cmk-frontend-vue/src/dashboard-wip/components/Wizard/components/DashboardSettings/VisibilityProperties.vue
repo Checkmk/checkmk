@@ -17,6 +17,12 @@ import MonitorMenuTopicSelector from './MonitorMenuTopicSelector.vue'
 
 const { _t } = usei18n()
 
+interface VisibilityPropertiesProps {
+  sortIndexError: string[]
+}
+
+defineProps<VisibilityPropertiesProps>()
+
 const showInMonitorMenu = defineModel<boolean>('showInMonitorMenu', { required: true })
 const monitorMenuTopic = defineModel<string>('monitorMenuTopic', { default: '' })
 const sortIndex = defineModel<number>('sortIndex', { required: true })
@@ -50,7 +56,7 @@ const sortIndex = defineModel<number>('sortIndex', { required: true })
           />
         </FieldDescription>
         <FieldComponent>
-          <CmkInput :model-value="sortIndex" type="number" />
+          <CmkInput v-model="sortIndex as number" type="number" :external-errors="sortIndexError" />
         </FieldComponent>
       </TableFormRow>
     </TableForm>

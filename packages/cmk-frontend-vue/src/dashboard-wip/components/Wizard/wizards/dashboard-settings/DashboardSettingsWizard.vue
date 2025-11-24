@@ -51,7 +51,7 @@ const dashboardTypeString =
 
 const dashboardIcon = ref<string | null>(generalSettings.menu.icon?.name || null)
 const dashboardEmblem = ref<string | null>(generalSettings.menu.icon?.emblem || null)
-
+const sortIndexError = ref<string[]>([])
 const openedTab = ref<string | number>('general')
 
 const _nameValidation = (): [boolean, TranslatedString[]] => {
@@ -101,7 +101,12 @@ const save = async () => {
   nameErrors.value = nameValidationErrors
   uniqueIdErrors.value = uniqueIdValidationErrors
 
-  if (nameIsValid && uniqueIdIsValid) {
+  sortIndexError.value =
+    !Number.isInteger(generalSettings.menu.sort_index) || generalSettings.menu.sort_index < 0
+      ? [_t('Must be a non-negative integer.')]
+      : []
+
+  if (nameIsValid && uniqueIdIsValid && sortIndexError.value.length === 0) {
     if (dashboardIcon.value !== null) {
       const icon: DashboardIcon = { name: dashboardIcon.value }
       if (dashboardEmblem.value !== null) {
@@ -170,6 +175,7 @@ const save = async () => {
               v-model:sort-index="generalSettings.menu.sort_index"
               v-model:hide-in-dropdowns-menu="generalSettings.visibility.hide_in_drop_down_menus"
               v-model:show-when-show-more-is-enabled="generalSettings.menu.is_show_more"
+              :sort-index-error="sortIndexError"
             />
           </CmkTabContent>
         </template>

@@ -32,6 +32,14 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
   const showInMonitorMenu = ref<boolean>(s ? !s.visibility.hide_in_monitor_menu : false)
   const monitorMenuTopic = ref<string>(s?.menu.topic ?? '')
   const sortIndex = ref<number>(99)
+  const sortIndexError = ref<string[]>([])
+
+  const validateSortIndex = () => {
+    sortIndexError.value = []
+    if (!Number.isInteger(sortIndex.value) || sortIndex.value < 0) {
+      sortIndexError.value = [_t('Must be a non-negative integer.')]
+    }
+  }
 
   const validateName = () => {
     nameErrors.value = []
@@ -66,7 +74,8 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
   const validateGeneralSettings = async (): Promise<boolean> => {
     validateName()
     await validateUniqueId()
-    return nameErrors.value.length + uniqueIdErrors.value.length === 0
+    validateSortIndex()
+    return nameErrors.value.length + uniqueIdErrors.value.length + sortIndexError.value.length === 0
   }
 
   const buildSettings = (): DashboardGeneralSettings => {
@@ -113,6 +122,7 @@ export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSe
     showInMonitorMenu,
     monitorMenuTopic,
     sortIndex,
+    sortIndexError,
     addFilterSuffix,
 
     // api

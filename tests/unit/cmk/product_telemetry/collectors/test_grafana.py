@@ -113,3 +113,22 @@ def test_grafana_data_collector_store_usage_data_twice() -> None:
     grafana_collector.store_usage_data(
         headers=Headers(headers), var_dir=var_dir, logger=mock.Mock()
     )
+
+
+def test_remove_grafana_usage_data() -> None:
+    headers = {
+        "X-Grafana-Org-Id": "1",
+        "User-Agent": "Grafana/1",
+        "X-Grafana-Referer": "https://whatever.com",
+    }
+    grafana_collector.store_usage_data(
+        headers=Headers(headers), var_dir=var_dir, logger=mock.Mock()
+    )
+
+    data = grafana_collector.collect(var_dir)
+    assert data is not None
+
+    grafana_collector.remove_grafana_usage_data(var_dir)
+
+    data = grafana_collector.collect(var_dir)
+    assert data is None

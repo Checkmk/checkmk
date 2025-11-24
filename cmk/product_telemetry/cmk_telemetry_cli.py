@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from cmk.product_telemetry.collection import collect_telemetry_data, store_telemetry_data
+from cmk.product_telemetry.transmission import transmit_telemetry_data
 from cmk.utils import paths
 
 
@@ -32,8 +33,7 @@ def main(args: Sequence[str]) -> int:
                 store_telemetry_data(data, paths.var_dir)
 
         if request.upload:
-            # TODO: Send telemetry data to https://telemetry.checkmk.com/upload
-            pass
+            transmit_telemetry_data(paths.var_dir)
 
     except Exception as e:
         sys.stderr.write(f"cmk-telemetry: {e}\n")

@@ -63,6 +63,12 @@ def _write_grafana_usage_file(data: GrafanaUsageData, grafana_file_path: Path) -
     shutil.move(f.name, grafana_file_path)
 
 
+def remove_grafana_usage_data(var_dir: Path) -> None:
+    grafana_fp = _grafana_usage_file_path(var_dir)
+    if grafana_fp.exists():
+        grafana_fp.unlink()
+
+
 def collect(var_dir: Path) -> GrafanaUsageData | None:
     grafana_fp = _grafana_usage_file_path(var_dir)
 

@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from pathlib import Path
+from typing import TypedDict
+from unittest.mock import patch
+
+import pytest
+from pytest_mock import MockerFixture
+
+from cmk.product_telemetry.transmission import transmit_telemetry_data
+
+
+class FileInfo(TypedDict):
+    filename: str
+    success: bool
+
+
+@pytest.mark.parametrize(
+    ("files", "grafana_info_deleted"),
+    [
+        ([], False),
+        ([{"filename": "telemetry_1.json", "success": True}], True),
+        ([{"filename": "telemetry_1.json", "success": False}], False),
+        (
+            [
+                {"filename": "telemetry_1.json", "success": True},
+                {"filename": "telemetry_2.json", "success": False},
+            ],
+            False,
+        ),
+        (
+            [
+                {"filename": "telemetry_1.json", "success": False},
+                {"filename": "telemetry_2.json", "success": False},
+                {"filename": "telemetry_10.json", "success": False},
+                {"filename": "telemetry_99.json", "success": True},
+            ],
+            True,
+        ),
+    ],
+)
+def test_transmission(
+    files: list[FileInfo], grafana_info_deleted: bool, tmp_path: Path, mocker: MockerFixture
+) -> None:
+    mocked_telemetry_dir = tmp_path / "telemetry"
+    mocked_telemetry_dir.mkdir(parents=True, exist_ok=True)
+
+    mocks = []
+
+    (mocked_telemetry_dir / "grafana_usage.json").write_text("{}")
+    # Create test files and mock responses
+    for file in files:
+        (mocked_telemetry_dir / file["filename"]).write_text("{}")
+        mocked = mocker.Mock()
+        mocked.return_value.ok = file["success"]
+        mocks.append(mocked.return_value)
+
+    with patch("requests.post") as mock_post:
+        mock_post.side_effect = mocks
+        transmit_telemetry_data(tmp_path)
+
+    for file in files:
+        file_path = mocked_telemetry_dir / file["filename"]
+        if file["success"]:
+            assert not file_path.exists()
+        else:
+            assert file_path.exists()
+
+    assert (mocked_telemetry_dir / "grafana_usage.json").exists() != grafana_info_deleted

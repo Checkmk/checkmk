@@ -1,0 +1,31 @@
+-- Copyright (C) 2025 Checkmk GmbH
+--
+-- Licensed under the Apache License, Version 2.0 (the "License")
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--    http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+-- SPDX-License-Identifier: Apache-2.0
+
+-- This is example of a custom section
+-- 1. place this file in <config-dir>/mssql folder, where config-dir is defined 
+-- as either $MK_CONFIG or as "."
+-- 2. Add in yaml file
+--    sections:
+--      - instance:
+--      - jobs_ext:
+-- run mk_sql -c config
+-- Output Example:
+-- <<<mssql_jobs_ext>>>
+-- SQLEXPRESS_NAME
+-- C:\Program Files\Microsoft SQL Server\MSSQL12.SQLEXPRESS_ID\MSSQL\DATA\master.mdf
+-- C:\Program Files\Microsoft SQL Server\MSSQL12.SQLEXPRESS_ID\MSSQL\DATA\mastlog.ldf
+
+select *  from V$database

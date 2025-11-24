@@ -2,13 +2,13 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
+from typing import Any
 
 # mypy: disable-error-code="exhaustive-match"
-
 # mypy: disable-error-code="type-arg"
-
 from cmk.rulesets.internal.form_specs import InternalProxy, migrate_to_internal_proxy
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -37,6 +37,8 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
+
+from ..server_side_calls.httpv2 import TlsVersion
 
 _DAY = 24.0 * 3600.0
 _DEFAULT_USER_AGENT = "checkmk-active-httpv2/2.4.0"
@@ -302,6 +304,27 @@ header_dict_elements = {
 }
 
 
+def validate_tls_versions(value: Mapping[str, Any]) -> None:
+    if value["compatibility_mode"] and value["min_version"] == TlsVersion.TLS_1_3:
+        raise validators.ValidationError(
+            Message(
+                "Enforce TLS 1.3 is not supported in compatibility mode. "
+                "Please select a lower minimum TLS version or disable compatibility mode."
+            )
+        )
+
+
+def migrate_tls_versions_compatibility_mode(params: object) -> Mapping[str, object]:
+    if not isinstance(params, dict):
+        raise TypeError(f"Invalid parameters: {params!r}")
+
+    if "compatibility_mode" in params:
+        return params
+
+    params["compatibility_mode"] = False
+    return params
+
+
 def _valuespec_connection() -> Dictionary:
     return Dictionary(
         title=Title("Connection buildup"),
@@ -369,6 +392,8 @@ def _valuespec_connection() -> Dictionary:
             "tls_versions": DictElement(
                 parameter_form=Dictionary(
                     title=Title("TLS version"),
+                    custom_validate=[validate_tls_versions],
+                    migrate=migrate_tls_versions_compatibility_mode,
                     help_text=Help(
                         "You may choose to enforce the usage of a specific TLS version. "
                         "Either by pinning to exactly the selected version, or by also allowing "
@@ -397,6 +422,19 @@ def _valuespec_connection() -> Dictionary:
                         "allow_higher": DictElement(
                             group=DictGroup(),
                             parameter_form=BooleanChoice(label=Label("Allow higher versions")),
+                            required=True,
+                        ),
+                        "compatibility_mode": DictElement(
+                            parameter_form=BooleanChoice(
+                                label=Label("Enable compatibility mode"),
+                                help_text=Help(
+                                    "Enable this option if you encounter TLS connection failures with this check "
+                                    "while other tools like cURL or the legacy check_http succeed. The default TLS "
+                                    "backend (rustls) is more restrictive and strictly adheres to TLS standards. "
+                                    "Enabling compatibility mode switches to a less restrictive TLS backend (native-tls) "
+                                    "that behaves similarly to cURL and other common tools."
+                                ),
+                            ),
                             required=True,
                         ),
                     },

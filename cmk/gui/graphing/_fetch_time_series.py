@@ -57,6 +57,14 @@ def fetch_augmented_time_series(
         end_time=end_time,
         step=step,
     )
+    # Align grid (start, end, step) to RRD data if available. We need this because our graph
+    # rendering code assumes a fixed grid for all time series in a graph. The RRDs are already
+    # aligned to a fixed grid (the grid used by the first RRD time series).
+    if first_rrd_series := next(iter(rrd_data.values()), None):
+        start_time = first_rrd_series.start
+        end_time = first_rrd_series.end
+        step = first_rrd_series.step
+
     query_data = (
         backend_time_series_fetcher(
             list(query_keys),

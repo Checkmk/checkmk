@@ -125,14 +125,46 @@ def _render_mac_address(bytestring: str) -> str | None:
 
 
 def _sanitize_mac(mac: str) -> str | None:
-    """
-    Returns mac address from string in the format AA:BB:CC:DD:EE:FF
-    Valid input MAC formats are (upper case is also ok)
-    aa:bb:cc:dd:ee:ff
-    aabb-ccdd-eeff
-    aabbcc-ddeeff
-    aabbccddeeff
-    :type mac: str
+    """Sanitize and normalize a MAC address to the format AA:BB:CC:DD:EE:FF.
+
+    Accepts MAC addresses in multiple formats (case-insensitive):
+    - aa:bb:cc:dd:ee:ff (colon-separated pairs)
+    - aabb-ccdd-eeff (dash-separated pairs)
+    - aabb.ccdd.eeff (dot-separated pairs)
+    - aabbcc-ddeeff (dash-separated triplets)
+    - aabbccddeeff (no separators)
+
+    Args:
+        mac: A MAC address string in one of the supported formats.
+
+    Returns:
+        A normalized MAC address string in the format AA:BB:CC:DD:EE:FF if the input
+        is valid, otherwise None.
+
+    Examples:
+        >>> _sanitize_mac("aa:bb:cc:dd:ee:ff")
+        'AA:BB:CC:DD:EE:FF'
+
+        >>> _sanitize_mac("aabb-ccdd-eeff")
+        'AA:BB:CC:DD:EE:FF'
+
+        >>> _sanitize_mac("aabb.ccdd.eeff")
+        'AA:BB:CC:DD:EE:FF'
+
+        >>> _sanitize_mac("aabbcc-ddeeff")
+        'AA:BB:CC:DD:EE:FF'
+
+        >>> _sanitize_mac("aabbccddeeff")
+        'AA:BB:CC:DD:EE:FF'
+
+        >>> _sanitize_mac("AA:BB:CC:DD:EE:FF")
+        'AA:BB:CC:DD:EE:FF'
+
+        >>> _sanitize_mac("invalid") is None
+        True
+
+        >>> _sanitize_mac("aa:bb:cc:dd:ee") is None
+        True
     """
     re_mac_pattern = (
         "^"  # beginning of line

@@ -17,9 +17,6 @@ from unittest.mock import patch
 import pytest
 
 from cmk.agent_receiver.lib.config import Config
-from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
-    SOCKET_TIMEOUT,
-)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
@@ -32,6 +29,9 @@ from cmk.testlib.agent_receiver.mock_socket import (
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 
 HOST = "testhost"
+# Test timeout - should match the override in conftest.py
+# Production uses 5.0s, tests use 2.0s for faster execution
+TEST_SOCKET_TIMEOUT = 2.0
 
 
 def test_forward_monitoring_data(
@@ -50,7 +50,7 @@ def test_forward_monitoring_data(
         f"host_by_name:{HOST};"
     )
     saved_socket: MockSocket  # assigned in with-block
-    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT) as ms:
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
         saved_socket = ms
         monitoring_data = MonitoringData(
             serial=serial,
@@ -63,7 +63,7 @@ def test_forward_monitoring_data(
             monitoring_data=monitoring_data,
         )
         assert response.status_code == HTTPStatus.NO_CONTENT
-        chunk = ms.data_queue.get(timeout=SOCKET_TIMEOUT)
+        chunk = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
         lines = chunk.data.splitlines()
         assert lines[0].decode() == expected_header
         assert lines[1] == payload
@@ -82,9 +82,11 @@ def test_forward_monitoring_data_with_delay(
     If the socket is slower in accepting data, the data can still be forwarded.
     Note: the configured socket timeouts don't seem to have an effect (on UNIX sockets at least).
     """
-    delay = SOCKET_TIMEOUT + 1
+    delay = TEST_SOCKET_TIMEOUT + 1
 
-    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT, delay=delay) as ms:
+    with create_socket(
+        socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT, delay=delay
+    ) as ms:
         payload = b"monitoring payload"
         monitoring_data = MonitoringData(
             serial=serial,
@@ -97,7 +99,7 @@ def test_forward_monitoring_data_with_delay(
             monitoring_data=monitoring_data,
         )
         assert response.status_code == HTTPStatus.NO_CONTENT, response.text
-        chunk = ms.data_queue.get(timeout=SOCKET_TIMEOUT + delay + 1)
+        chunk = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + delay + 1)
         assert_monitoring_data_payload(chunk.data, payload)
 
 
@@ -124,14 +126,15 @@ def test_socket_busy_but_not_timeout(
         payload=base64.b64encode(regular_payload),
     )
 
-    sleep = 2.0
-    assert SOCKET_TIMEOUT > sleep
+    # Sleep should be less than timeout to avoid triggering timeout
+    sleep = TEST_SOCKET_TIMEOUT - 0.5
+    assert TEST_SOCKET_TIMEOUT > sleep
 
     connection_barrier = threading.Barrier(2, timeout=10)
     send_barrier = threading.Barrier(2, timeout=10)
     close_barrier = threading.Barrier(2, timeout=10)
 
-    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT * 2) as ms:
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT * 2) as ms:
         slow_client_thread = threading.Thread(
             target=slow_client_thread_func,
             kwargs={
@@ -148,7 +151,7 @@ def test_socket_busy_but_not_timeout(
         # At this moment the slow client is connected, but has not sent any data yet.
 
         # Let the slow client sleep for a while, then this agent_receiver client sends data (while the slow client is connected).
-        # Don't sleep more than SOCKET_TIMEOUT.
+        # Don't sleep more than TEST_SOCKET_TIMEOUT.
 
         time.sleep(sleep)
         response = agent_receiver.forward_monitoring_data(
@@ -165,8 +168,8 @@ def test_socket_busy_but_not_timeout(
 
         assert response.status_code == HTTPStatus.NO_CONTENT, response.text
 
-        chunk_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + sleep + 1)
-        chunk_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + sleep + 1)
+        chunk_1 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + sleep + 1)
+        chunk_2 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + sleep + 1)
 
     assert chunk_1.data == slow_client_payload
     assert_monitoring_data_payload(chunk_2.data, regular_payload)
@@ -217,13 +220,13 @@ def test_socket_busy_slow_send(
         payload=base64.b64encode(regular_payload),
     )
 
-    send_sleep = SOCKET_TIMEOUT + 2
+    send_sleep = TEST_SOCKET_TIMEOUT + 1
 
     connection_barrier = threading.Barrier(2, timeout=10)
     send_barrier = threading.Barrier(2, timeout=10)
     close_barrier = threading.Barrier(2, timeout=10)
 
-    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT) as ms:
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
         slow_client_thread = threading.Thread(
             target=slow_client_thread_func,
             kwargs={
@@ -246,7 +249,7 @@ def test_socket_busy_slow_send(
             monitoring_data=monitoring_data,
         )
 
-        # Do a long sleep (more than SOCKET_TIMEOUT), then let the slow client send data.
+        # Do a long sleep (more than TEST_SOCKET_TIMEOUT), then let the slow client send data.
         # This request from slow client will be ignored.
 
         time.sleep(send_sleep)
@@ -259,12 +262,12 @@ def test_socket_busy_slow_send(
 
         assert response.status_code == HTTPStatus.NO_CONTENT, response.text
 
-        chunk = ms.data_queue.get(timeout=SOCKET_TIMEOUT + send_sleep + 1)
+        chunk = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + send_sleep + 1)
         assert_monitoring_data_payload(chunk.data, regular_payload)
 
         # No other request (corresponding to the slow client) in the queue.
         with pytest.raises(queue.Empty):
-            ms.data_queue.get(timeout=SOCKET_TIMEOUT + send_sleep + 1)
+            ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + send_sleep + 1)
     assert ms.data_queue.empty()
 
 
@@ -289,13 +292,13 @@ def test_socket_busy_slow_close(
         payload=base64.b64encode(regular_payload),
     )
 
-    close_sleep = SOCKET_TIMEOUT + 2
+    close_sleep = TEST_SOCKET_TIMEOUT + 1
 
     connection_barrier = threading.Barrier(2, timeout=10)
     send_barrier = threading.Barrier(2, timeout=10)
     close_barrier = threading.Barrier(2, timeout=10)
 
-    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT) as ms:
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
         slow_client_thread = threading.Thread(
             target=slow_client_thread_func,
             kwargs={
@@ -314,7 +317,7 @@ def test_socket_busy_slow_close(
         # Let the slow client send data
         send_barrier.wait()
 
-        # Do a long sleep (more than SOCKET_TIMEOUT).
+        # Do a long sleep (more than TEST_SOCKET_TIMEOUT).
         time.sleep(close_sleep)
 
         # The agent_receiver client sends data, although the slow client is still using the socket.
@@ -331,10 +334,10 @@ def test_socket_busy_slow_close(
 
         assert response.status_code == HTTPStatus.NO_CONTENT, response.text
 
-        chunk_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + close_sleep + 1)
+        chunk_1 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + close_sleep + 1)
         assert chunk_1.data == slow_client_payload
 
-        chunk_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + close_sleep + 1)
+        chunk_2 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + close_sleep + 1)
         assert_monitoring_data_payload(chunk_2.data, regular_payload)
 
     assert ms.data_queue.empty()
@@ -371,7 +374,7 @@ def test_socket_busy_interlaced_send(
             sock.sendall(slow_payload_part_2)
             sock.shutdown(socket.SHUT_RDWR)
 
-    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT) as ms:
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
         slow_client_thread = threading.Thread(target=client_func)
         slow_client_thread.start()
         part_1_barrier.wait()
@@ -390,9 +393,9 @@ def test_socket_busy_interlaced_send(
 
         assert response.status_code == HTTPStatus.NO_CONTENT, response.text
 
-        chunk_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
-        chunk_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
-        chunk_3 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
+        chunk_1 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
+        chunk_2 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
+        chunk_3 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
 
     # the regular payload is postponed until after the slow client has finished sending
 
@@ -437,7 +440,7 @@ def test_socket_busy_interlaced_send_with_timeout(
                 pass
             sock.shutdown(socket.SHUT_RDWR)
 
-    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT) as ms:
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
         slow_client_thread = threading.Thread(target=client_func)
         slow_client_thread.start()
         part_1_barrier.wait()
@@ -451,7 +454,7 @@ def test_socket_busy_interlaced_send_with_timeout(
         )
 
         # Do sleep timeout before sending the second part of the payload
-        time.sleep(SOCKET_TIMEOUT + 1)
+        time.sleep(TEST_SOCKET_TIMEOUT + 1)
 
         # Now let the slow client send the second part of its payload.
         part_2_barrier.wait()
@@ -461,11 +464,11 @@ def test_socket_busy_interlaced_send_with_timeout(
 
         # Only two requests received
 
-        chunk_1 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
-        chunk_2 = ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
+        chunk_1 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
+        chunk_2 = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
 
         with pytest.raises(queue.Empty):
-            ms.data_queue.get(timeout=SOCKET_TIMEOUT + 1)
+            ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT + 1)
 
     # The regular payload is postponed until after the slow client has finished sending the first part
     # of the payload. The second part is not received.

@@ -5,8 +5,7 @@
 import dataclasses
 import socket
 from pathlib import Path
-
-SOCKET_TIMEOUT = 5.0
+from typing import Final
 
 
 class FailedToSendMonitoringDataError(Exception):
@@ -15,8 +14,9 @@ class FailedToSendMonitoringDataError(Exception):
 
 @dataclasses.dataclass
 class ForwardMonitoringDataHandler:
-    def __init__(self, data_socket: Path) -> None:
-        self._data_socket = data_socket
+    def __init__(self, data_socket: Path, socket_timeout: float = 5.0) -> None:
+        self._data_socket: Path = data_socket
+        self._socket_timeout: Final = socket_timeout
 
     def process(self, *, payload: bytes, host: str, config_serial: str, timestamp: int) -> None:
         # TODO: Are we sure host and config_serial cannot contain illegal characters like ';'?
@@ -39,7 +39,7 @@ class ForwardMonitoringDataHandler:
         """
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
-                sock.settimeout(SOCKET_TIMEOUT)
+                sock.settimeout(self._socket_timeout)
                 sock.connect(str(self._data_socket))
                 sock.sendall(data)
 

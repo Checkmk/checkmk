@@ -36,7 +36,7 @@ class HostsDashboard(BaseDashboard):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
-        self.main_area.check_page_title(self.page_title)
+        self.check_dashboard_selector_placeholder()
         expect(
             self.main_area.locator("div#dashboard"),
             message=f"Dashboard '{self.page_title}' is not loaded",

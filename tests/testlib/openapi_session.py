@@ -47,7 +47,13 @@ from cmk import trace
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
 from cmk.relay_protocols.relays import RelayRegistrationRequest
-from cmk.relay_protocols.tasks import TaskListResponse, TaskResponse
+from cmk.relay_protocols.tasks import (
+    FetchAdHocTask,
+    TaskCreateRequest,
+    TaskCreateResponse,
+    TaskListResponse,
+    TaskResponse,
+)
 from tests.testlib.version import CMKVersion
 
 logger = logging.getLogger("rest-session")
@@ -1867,6 +1873,15 @@ class AgentReceiverRelayAPI(ARBaseAPI):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
+
+    def put_task(self, relay_id: str, task: FetchAdHocTask) -> TaskCreateResponse:
+        response = self.session.post(
+            url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/tasks"),
+            json=TaskCreateRequest(spec=task).model_dump(),
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return TaskCreateResponse.model_validate(response.json())
 
     def get_tasks(self, relay_id: str) -> list[TaskResponse]:
         response = self.session.get(

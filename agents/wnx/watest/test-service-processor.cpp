@@ -118,7 +118,8 @@ TEST(ServiceProcessorTest, Generate) {
 
     auto s2 = sp.generate<provider::SystemTime>();
     auto t2 = tools::SplitString(s2, "\n");
-    EXPECT_FALSE(t2.empty());
+    // system_time is _not_ included by default
+    EXPECT_TRUE(t2.empty());
 
     auto s3 = sp.generate<provider::Empty>();
     auto t3 = tools::SplitString(s3, "\n");
@@ -131,9 +132,6 @@ TEST(ServiceProcessorTest, Generate) {
     ASSERT_TRUE(ret.size() > 5);
     auto t = tools::SplitString(data, "\n");
     EXPECT_EQ(t[0] + "\n", section::MakeHeader(section::kCheckMk));
-    EXPECT_EQ(t[t.size() - 2] + "\n", section::MakeHeader(section::kSystemTime))
-        << "data:\n"
-        << data;
 }
 
 TEST(ServiceProcessorTest, StartStopExe) {

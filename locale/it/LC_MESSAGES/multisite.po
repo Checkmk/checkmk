@@ -13208,9 +13208,7 @@ msgstr ""
 
 msgid ""
 "Checkmk has identified and attempted to redact sensitive information in the "
-"crash report. It is advised that you manually review the content of this "
-"report and ensure any additional sensitive data is removed before sharing "
-"the crash report."
+"crash report."
 msgstr ""
 
 msgid "Checkmk helper usage"
@@ -16742,6 +16740,12 @@ msgstr "Rapporto di crash: %s"
 msgid "Crash reports"
 msgstr "Rapporti sugli incidenti"
 
+msgid ""
+"Crash reports might contain sensitive information such as secrets. It is "
+"advised that you manually review the content of this report and ensure any "
+"additional sensitive data is removed before sharing the crash report."
+msgstr ""
+
 #, fuzzy
 msgid "Crash service item"
 msgstr "Questo servizio è stantio"
@@ -18293,6 +18297,10 @@ msgstr "Dashboard"
 
 msgid "Dashboard element"
 msgstr "Elemento del cruscotto"
+
+#, fuzzy
+msgid "Dashboard not available"
+msgstr "Non è disponibile"
 
 #, python-format
 msgid "Dashboard of user %s"
@@ -43207,7 +43215,9 @@ msgstr "Variabile mancante siteid"
 msgid "Missing variable user_id"
 msgstr "Variabile mancante user_id"
 
-msgid "Mix of Checkmk Ultimate with and without multi-tenancy is not allowed."
+msgid ""
+"Mix of Checkmk Ultimate and Checkmk Ultimate with multi-tenancy is not "
+"possible."
 msgstr ""
 
 msgid "Mixed"
@@ -67186,6 +67196,9 @@ msgstr ""
 "indirizzi IP di origine o da una rete IPv4/IPv6 nella notazione X.X.X.X/Bits "
 "o X:X:.../Bits per IPv6."
 
+msgid "The access token is invalid or revoked or expired."
+msgstr ""
+
 #, python-format
 msgid "The action '%s' is not implemented"
 msgstr "L'azione \"%s\" non è implementata"
@@ -75987,6 +76000,10 @@ msgid ""
 "package's resources."
 msgstr ""
 
+#, fuzzy
+msgid "This shared link is not valid."
+msgstr "Stato in cui la licenza non è valida"
+
 msgid "This sidebar element is only available on the manager's central site."
 msgstr ""
 "Questo elemento della barra laterale è disponibile solo sul sito centrale "
@@ -77530,6 +77547,10 @@ msgstr "Autenticazione con token"
 
 msgid "Token based authentication"
 msgstr "Autenticazione basata su token"
+
+#, fuzzy
+msgid "Token invalid"
+msgstr "non valido:"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "Periodo di tolleranza per lo stato di 'attivazione'"
@@ -92675,6 +92696,9 @@ msgstr "Filtrare la selezione %s per servizio: "
 #, fuzzy
 msgid "Select option"
 msgstr "Connessioni rifiutate"
+
+msgid "Must be a non-negative integer."
+msgstr ""
 
 #, fuzzy
 msgid "Name is required."

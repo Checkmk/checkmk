@@ -233,17 +233,6 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                                 custom_validate=[NumberInRange(min_value=0.0)],
                             )
                         ),
-                        "sensor_readings": DictElement(
-                            parameter_form=TimeSpan(
-                                title=Title("Sensor readings"),
-                                displayed_magnitudes=(
-                                    TimeMagnitude.HOUR,
-                                    TimeMagnitude.MINUTE,
-                                ),
-                                prefill=DefaultValue(0.0),  # 0 minutes
-                                custom_validate=[NumberInRange(min_value=0.0)],
-                            )
-                        ),
                     },
                 ),
             ),

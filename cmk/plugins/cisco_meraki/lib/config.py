@@ -74,7 +74,6 @@ class _CacheConfig:
     licenses_overview: _CacheDecorator[[str, str], schema.LicensesOverview | None]
     networks: _CacheDecorator[[str, str], Sequence[schema.Network]]
     organizations: _CacheDecorator[[], Sequence[schema.RawOrganisation]]
-    sensor_readings: _CacheDecorator[[str], Sequence[schema.RawSensorReadings]]
 
     @classmethod
     def build(cls, args: Namespace) -> Self:
@@ -106,10 +105,6 @@ class _CacheConfig:
             organizations=cache.cache_ttl(
                 Storage("cisco_meraki_organizations", host=args.hostname),
                 ttl=args.cache_organizations,
-            ),
-            sensor_readings=cache.cache_ttl(
-                Storage("cisco_meraki_sensor_readings", host=args.hostname),
-                ttl=args.cache_sensor_readings,
             ),
         )
 

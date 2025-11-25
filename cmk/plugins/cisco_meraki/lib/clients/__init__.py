@@ -70,9 +70,7 @@ class MerakiClient:
         return fetch()
 
     def get_sensor_readings(self, id: str) -> Sequence[schema.RawSensorReadings]:
-        fn = self._sensor_client.get_sensor_readings
-        fetch = fn if self._no_cache else self._cache.sensor_readings(fn)
-        return fetch(id)
+        return self._sensor_client.get_sensor_readings(id)
 
     def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:
         fn = self._appliance_client.get_uplink_statuses

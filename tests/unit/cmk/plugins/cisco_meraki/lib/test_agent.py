@@ -117,8 +117,8 @@ class TestMerakiAgentOutput:
 
     @pytest.mark.usefixtures("patch_storage_env")
     def test_cache_is_being_used(self, ctx: MerakiRunContext, capsys: CaptureFixture[str]) -> None:
-        # override resources that aren't cached by default.
-        args = agent.parse_arguments([*_DEFAULT_ARGS, "--cache-sensor-readings", "60.0"])
+        only_cached_sections = ["--sections", "device-statuses", "licenses-overview"]
+        args = agent.parse_arguments([*_DEFAULT_ARGS, *only_cached_sections])
         config = MerakiConfig.build(args)
         client = MerakiClient(FakeMerakiSDK(), config)
         ctx = MerakiRunContext(config=config, client=client)

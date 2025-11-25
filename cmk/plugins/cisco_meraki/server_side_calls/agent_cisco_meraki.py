@@ -30,7 +30,6 @@ class CachePerSection(BaseModel):
     licenses_overview: int | None = None
     networks: int | None = None
     organizations: int | None = None
-    sensor_readings: int | None = None
 
 
 class Params(BaseModel):
@@ -94,8 +93,6 @@ def agent_cisco_meraki_arguments(
             args += ["--cache-networks", str(cache_per_section.networks)]
         if cache_per_section.organizations:
             args += ["--cache-organizations", str(cache_per_section.organizations)]
-        if cache_per_section.sensor_readings:
-            args += ["--cache-sensor-readings", str(cache_per_section.sensor_readings)]
 
     yield SpecialAgentCommand(command_arguments=args)
 

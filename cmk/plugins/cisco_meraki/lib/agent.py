@@ -310,7 +310,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--cache-licenses-overview", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-networks", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-organizations", type=float, default=36000.0)  # 10 hours
-    parser.add_argument("--cache-sensor-readings", type=float, default=0.0)  # 0 minutes
 
     parser.add_argument(
         "--sections",

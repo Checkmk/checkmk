@@ -6,7 +6,11 @@
 import socket
 import ssl
 import warnings
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+
+from tests.testlib.https import HTTPSDummy
 
 
 class CMKTLSError(RuntimeError): ...
@@ -41,3 +45,23 @@ def tls_connect(host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion
                 # Probably a client cert is required
                 return
             raise CMKTLSError(str(e)) from e
+
+
+@contextmanager
+def tls_listening_socket(tmp_path: Path, tls_version: ssl.TLSVersion) -> Iterator[tuple[int, Path]]:
+    """Open a tls listening socket with a specific tls version"""
+    server = HTTPSDummy(cert_dir=tmp_path)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="ssl.TLSVersion..* is deprecated",
+            category=DeprecationWarning,
+        )
+        server.ssl_context.minimum_version = tls_version
+        server.ssl_context.maximum_version = tls_version
+    server.ssl_context.set_ciphers("DEFAULT@SECLEVEL=0")
+    try:
+        port = server.run()
+        yield port, server.cert_file
+    finally:
+        server.stop()

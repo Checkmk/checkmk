@@ -19,7 +19,8 @@ from pydantic import BaseModel
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult
 from cmk.base import config
-from cmk.base.automations.automations import AutomationError
+from cmk.base.app import make_app
+from cmk.base.automations.automations import AutomationContext, AutomationError
 from cmk.base.config import ConfigCache
 from cmk.ccc import tty
 from cmk.ccc import version as cmk_version
@@ -36,6 +37,7 @@ from ._tracer import TRACER
 class AutomationEngine(Protocol):
     def execute(
         self,
+        ctx: AutomationContext,
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
@@ -249,7 +251,11 @@ def _execute_automation_endpoint(
             clear_caches_before_each_call(state.loading_result.config_cache)
         try:
             automation_start_time = time.time()
+            app = make_app(cmk_version.edition(paths.omd_root))
             result_or_error_code: ABCAutomationResult | int = engine.execute(
+                AutomationContext(
+                    edition=app.edition,
+                ),
                 payload.name,
                 list(payload.args),
                 state.plugins,

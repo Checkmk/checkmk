@@ -8,6 +8,7 @@ from pytest import MonkeyPatch
 import cmk.base.automations.check_mk as automations
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 from cmk.base.app import make_app
+from cmk.base.automations.automations import AutomationContext
 from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
@@ -94,6 +95,9 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         "explicit": "explicit",
     }
     assert automation.execute(
+        AutomationContext(
+            edition=edition(paths.omd_root),
+        ),
         ["test-host"],
         AgentBasedPlugins.empty(),
         LoadingResult(loaded_config=EMPTY_CONFIG, config_cache=config_cache),
@@ -137,6 +141,9 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
 
     assert automation.execute(
+        AutomationContext(
+            edition=edition(paths.omd_root),
+        ),
         ["test-host", "CPU load", "CPU temp"],
         AgentBasedPlugins.empty(),
         LoadingResult(loaded_config=EMPTY_CONFIG, config_cache=config_cache),

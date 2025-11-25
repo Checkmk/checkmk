@@ -15,15 +15,18 @@ from cmk.automations.results import (
     AnalyzeHostRuleMatchesResult,
     AnalyzeServiceRuleMatchesResult,
 )
+from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
     AutomationAnalyzeHostRuleMatches,
     AutomationAnalyzeServiceRuleMatches,
 )
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import edition
 from cmk.gui.config import active_config
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, HostsAndFoldersConfig
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
+from cmk.utils import paths
 from cmk.utils.labels import Labels
 from cmk.utils.paths import default_config_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -45,7 +48,14 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return AutomationAnalyzeHostRuleMatches().execute([h], None, None)
+            return AutomationAnalyzeHostRuleMatches().execute(
+                AutomationContext(
+                    edition=edition(paths.omd_root),
+                ),
+                [h],
+                None,
+                None,
+            )
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
 
@@ -170,7 +180,12 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
             return AutomationAnalyzeServiceRuleMatches().execute(
-                [host_name, service_or_item], None, None
+                AutomationContext(
+                    edition=edition(paths.omd_root),
+                ),
+                [host_name, service_or_item],
+                None,
+                None,
             )
 
     monkeypatch.setattr(rulesets, "analyze_service_rule_matches", analyze_with_matcher)

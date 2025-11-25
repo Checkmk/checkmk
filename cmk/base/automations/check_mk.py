@@ -90,6 +90,7 @@ from cmk.automations.results import (
 from cmk.base import config, notify, sources
 from cmk.base.automations.automations import (
     Automation,
+    AutomationContext,
     Automations,
     load_config,
     load_plugins,
@@ -311,11 +312,11 @@ class AutomationDiscovery(DiscoveryAutomation):
     # be skipped.
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ServiceDiscoveryResult:
-        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         force_snmp_cache_refresh, args = _extract_directive("@scan", args)
         _prevent_scan, args = _extract_directive("@noscan", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
@@ -391,7 +392,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         fetcher = CMKFetcher(
             config_cache,
             get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-            make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+            make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
             factory=config_cache.fetcher_factory(
                 service_configurer,
                 ip_address_of,
@@ -499,6 +500,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -581,11 +583,11 @@ class AutomationDiscoveryPreview(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ServiceDiscoveryPreviewResult:
-        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         prevent_fetching, args = _extract_directive("@nofetch", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
         host_name = HostName(args[0])
@@ -624,7 +626,7 @@ class AutomationDiscoveryPreview(Automation):
         fetcher = CMKFetcher(
             config_cache,
             get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-            make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+            make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
             factory=config_cache.fetcher_factory(
                 service_configurer,
                 ip_address_of_with_fallback,
@@ -1013,29 +1015,28 @@ class AutomationAutodiscovery(DiscoveryAutomation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> AutodiscoveryResult:
-        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         with redirect_stdout(open(os.devnull, "w")):
-            result = _execute_autodiscovery(edition, plugins, loading_result)
+            result = _execute_autodiscovery(ctx, plugins, loading_result)
 
         return AutodiscoveryResult(*result)
 
 
 def _make_configured_bake_on_restart_callback(
+    edition: cmk_version.Edition,
     loading_result: config.LoadingResult,
     hosts: Sequence[HostAddress],
 ) -> Callable[[], None]:
-    # TODO: consider passing the edition here, instead of "detecting" it (and thus
-    # silently failing if the bakery is missing unexpectedly)
-    try:
-        from cmk.base.configlib.nonfree.pro.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            make_configured_bake_on_restart_callback,
-        )
-    except ImportError:
+    if edition is cmk_version.Edition.COMMUNITY:
         return lambda: None
+
+    from cmk.base.configlib.nonfree.pro.bakery import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+        make_configured_bake_on_restart_callback,
+    )
 
     return make_configured_bake_on_restart_callback(  # type: ignore[no-any-return, unused-ignore]
         loading_result,
@@ -1062,7 +1063,7 @@ def _make_configured_notify_relay(relays_present: bool) -> Callable[[], None]:
 
 
 def _execute_autodiscovery(
-    edition: cmk_version.Edition,
+    ctx: AutomationContext,
     ab_plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> tuple[Mapping[HostName, DiscoveryReport], bool]:
@@ -1127,7 +1128,7 @@ def _execute_autodiscovery(
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
-        make_trigger=lambda relay_id: config.make_fetcher_trigger(edition, relay_id),
+        make_trigger=lambda relay_id: config.make_fetcher_trigger(ctx.edition, relay_id),
         factory=config_cache.fetcher_factory(
             service_configurer,
             slightly_different_ip_address_of,
@@ -1296,7 +1297,7 @@ def _execute_autodiscovery(
         return discovery_results, False
 
     core = create_core(
-        edition,
+        ctx.edition,
         ruleset_matcher,
         label_manager,
         loaded_config,
@@ -1313,7 +1314,7 @@ def _execute_autodiscovery(
             config_cache.initialize()
             hosts_config = config.make_hosts_config(loaded_config)
             bake_on_restart = _make_configured_bake_on_restart_callback(
-                loading_result, hosts_config.hosts
+                ctx.edition, loading_result, hosts_config.hosts
             )
             notify_relay = _make_configured_notify_relay(bool(loaded_config.relays))
 
@@ -1415,6 +1416,7 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -1490,6 +1492,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -1523,11 +1526,11 @@ class AutomationRenameHosts(Automation):
     # [("old1", "new1"), ("old2", "new2")])
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> RenameHostsResult:
-        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         renamings: list[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
 
         if plugins is None:
@@ -1556,7 +1559,7 @@ class AutomationRenameHosts(Automation):
                 actions.append("history")
 
         core = create_core(
-            edition,
+            ctx.edition,
             ruleset_matcher,
             label_manager,
             loaded_config,
@@ -1627,7 +1630,7 @@ class AutomationRenameHosts(Automation):
                         service_dependencies=loaded_config.service_dependencies,
                     ),
                     bake_on_restart=_make_configured_bake_on_restart_callback(
-                        loading_result, hosts_config.hosts
+                        ctx.edition, loading_result, hosts_config.hosts
                     ),
                     notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
                 )
@@ -1908,6 +1911,7 @@ class AutomationGetServicesLabels(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -1956,6 +1960,7 @@ class AutomationGetServiceName(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2001,6 +2006,7 @@ class AutomationAnalyseServices(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2288,6 +2294,7 @@ class AutomationAnalyseHost(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2313,6 +2320,7 @@ class AutomationAnalyzeHostRuleMatches(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2352,6 +2360,7 @@ class AutomationAnalyzeServiceRuleMatches(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2399,6 +2408,7 @@ class AutomationAnalyzeHostRuleEffectiveness(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2504,6 +2514,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2560,6 +2571,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2603,11 +2615,11 @@ class AutomationRestart(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> RestartResult:
-        edition = cmk_version.edition(omd_root)
         if args:
             nodes = {HostName(hn) for hn in args}
         else:
@@ -2646,7 +2658,7 @@ class AutomationRestart(Automation):
 
         return _execute_silently(
             create_core(
-                edition,
+                ctx.edition,
                 ruleset_matcher,
                 label_manager,
                 loaded_config,
@@ -2672,7 +2684,7 @@ class AutomationRestart(Automation):
                 service_dependencies=loaded_config.service_dependencies,
             ),
             bake_on_restart=_make_configured_bake_on_restart_callback(
-                loading_result, hosts_config.hosts
+                ctx.edition, loading_result, hosts_config.hosts
             ),
             notify_relay=_make_configured_notify_relay(bool(loaded_config.relays)),
         )
@@ -2725,11 +2737,12 @@ class AutomationReload(AutomationRestart):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ReloadResult:
-        return ReloadResult(super().execute(args, plugins, loading_result).config_warnings)
+        return ReloadResult(super().execute(ctx, args, plugins, loading_result).config_warnings)
 
 
 def _execute_silently(
@@ -2808,6 +2821,7 @@ class AutomationGetConfiguration(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2839,6 +2853,7 @@ class AutomationGetCheckInformation(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2888,6 +2903,7 @@ class AutomationGetSectionInformation(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: object,
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2918,6 +2934,7 @@ class AutomationScanParents(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -3028,6 +3045,7 @@ class AutomationDiagSpecialAgent(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -3107,6 +3125,7 @@ class AutomationPingHost(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loaded_config: config.LoadingResult | None,
@@ -3132,6 +3151,7 @@ class AutomationDiagCmkAgent(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         _plugins: AgentBasedPlugins | None,
         _loading_result: config.LoadingResult | None,
@@ -3227,11 +3247,11 @@ class AutomationDiagHost(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> DiagHostResult:
-        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         host_name = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
         ipaddress = HostAddress(ipaddress)
@@ -3294,7 +3314,7 @@ class AutomationDiagHost(Automation):
             if test == "agent":
                 return DiagHostResult(
                     *self._execute_agent(
-                        edition,
+                        ctx.edition,
                         loading_result.loaded_config,
                         loading_result.config_cache,
                         label_manager,
@@ -3722,6 +3742,7 @@ class AutomationActiveCheck(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -3885,6 +3906,7 @@ class AutomationUpdatePasswordsMergedFile(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -3902,6 +3924,7 @@ class AutomationUpdateDNSCache(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -3940,11 +3963,11 @@ class AutomationGetAgentOutput(Automation):
     # For SNMP we are not getting the output we would get during checking, but a walk.
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> GetAgentOutputResult:
-        edition = cmk_version.edition(cmk.utils.paths.omd_root)
         hostname = HostName(args[0])
         ty = args[1]
 
@@ -3979,7 +4002,7 @@ class AutomationGetAgentOutput(Automation):
 
         host_labels = label_manager.labels_of_host(hostname)
         relay_id = config.get_relay_id(host_labels)
-        trigger = config.make_fetcher_trigger(edition, relay_id)
+        trigger = config.make_fetcher_trigger(ctx.edition, relay_id)
 
         success = True
         output = ""
@@ -4185,6 +4208,7 @@ class AutomationNotificationReplay(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -4224,6 +4248,7 @@ class AutomationNotificationAnalyse(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -4264,6 +4289,7 @@ class AutomationNotificationTest(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -4308,6 +4334,7 @@ class AutomationGetBulks(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -4330,6 +4357,7 @@ class AutomationCreateDiagnosticsDump(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: DiagnosticsCLParameters,
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -4355,6 +4383,7 @@ class AutomationFindUnknownCheckParameterRuleSets(Automation):
 
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loaded_config: config.LoadingResult | None,

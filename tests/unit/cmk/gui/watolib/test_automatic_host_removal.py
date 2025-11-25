@@ -17,16 +17,18 @@ import time_machine
 from pytest_mock import MockerFixture
 
 from cmk.automations.results import AnalyzeHostRuleMatchesResult
+from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleMatches
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition
 from cmk.gui.config import Config
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.paths import default_config_dir
+from cmk.utils.paths import default_config_dir, omd_root
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
@@ -220,7 +222,14 @@ def fixture_mock_analyze_host_rule_matches_automation(
         h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
     ) -> AnalyzeHostRuleMatchesResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return AutomationAnalyzeHostRuleMatches().execute([h], None, None)
+            return AutomationAnalyzeHostRuleMatches().execute(
+                AutomationContext(
+                    edition=edition(omd_root),
+                ),
+                [h],
+                None,
+                None,
+            )
 
     return mocker.patch.object(
         automatic_host_removal, "analyze_host_rule_matches", analyze_with_matcher

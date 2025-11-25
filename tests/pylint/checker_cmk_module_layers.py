@@ -419,6 +419,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.base.automations",
         "cmk.base.config",
         "cmk.base.notify",
+        "cmk.ccc.version",
         "cmk.checkengine",
         "cmk.utils",
     ),

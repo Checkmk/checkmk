@@ -9,6 +9,7 @@ import os
 import sys
 from collections.abc import Iterable
 from contextlib import nullcontext, redirect_stdout, suppress
+from dataclasses import dataclass
 from typing import assert_never
 
 import cmk.ccc.debug
@@ -35,6 +36,11 @@ class AutomationError(enum.IntEnum):
     UNKNOWN_ERROR = 2
 
 
+@dataclass(frozen=True, kw_only=True)
+class AutomationContext:
+    edition: cmk_version.Edition
+
+
 class Automations:
     def __init__(self) -> None:
         super().__init__()
@@ -47,6 +53,7 @@ class Automations:
 
     def execute(
         self,
+        ctx: AutomationContext,
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
@@ -58,10 +65,11 @@ class Automations:
             if timeout is None
             else Timeout(timeout, message="Action timed out after %s seconds." % timeout)
         ):
-            return self._execute(cmd, remaining_args, plugins, loading_result)
+            return self._execute(ctx, cmd, remaining_args, plugins, loading_result)
 
     def execute_and_write_serialized_result_to_stdout(
         self,
+        ctx: AutomationContext,
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
@@ -69,6 +77,7 @@ class Automations:
     ) -> int:
         try:
             result = self.execute(
+                ctx,
                 cmd,
                 args,
                 plugins,
@@ -93,6 +102,7 @@ class Automations:
 
     def _execute(
         self,
+        ctx: AutomationContext,
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
@@ -108,7 +118,7 @@ class Automations:
                 )
 
             with tracer.span(f"execute_automation[{cmd}]"):
-                result = automation.execute(args, plugins, loading_result)
+                result = automation.execute(ctx, args, plugins, loading_result)
 
         except (MKGeneralException, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)
@@ -152,6 +162,7 @@ class Automation(abc.ABC):
     @abc.abstractmethod
     def execute(
         self,
+        ctx: AutomationContext,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loaded_config: config.LoadingResult | None,

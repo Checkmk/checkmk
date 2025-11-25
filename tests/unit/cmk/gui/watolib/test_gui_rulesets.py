@@ -25,6 +25,7 @@ from cmk.automations.results import (
     AnalyzeHostRuleEffectivenessResult,
     AnalyzeHostRuleMatchesResult,
 )
+from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
     AutomationAnalyzeHostRuleEffectiveness,
     AutomationAnalyzeHostRuleMatches,
@@ -749,7 +750,14 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return AutomationAnalyzeHostRuleMatches().execute([h], None, loading_result)
+            return AutomationAnalyzeHostRuleMatches().execute(
+                AutomationContext(
+                    edition=version.edition(paths.omd_root),
+                ),
+                [h],
+                None,
+                loading_result,
+            )
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
 
@@ -897,7 +905,14 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return AutomationAnalyzeHostRuleEffectiveness().execute([], None, loading_result)
+            return AutomationAnalyzeHostRuleEffectiveness().execute(
+                AutomationContext(
+                    edition=version.edition(paths.omd_root),
+                ),
+                [],
+                None,
+                loading_result,
+            )
 
     monkeypatch.setattr(
         rulesets, "analyze_host_rule_effectiveness", analyze_host_rule_effectiveness

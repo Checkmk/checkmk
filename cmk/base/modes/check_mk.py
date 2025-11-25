@@ -2006,7 +2006,7 @@ _BROWSE_MAN_MODE = Mode(
 
 
 def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
-    from cmk.base.automations.automations import MKAutomationError
+    from cmk.base.automations.automations import AutomationContext, MKAutomationError
 
     if not args:
         raise MKAutomationError("You need to provide arguments")
@@ -2034,7 +2034,13 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
         },
     ):
         sys.exit(
-            app.automations.execute_and_write_serialized_result_to_stdout(name, automation_args)
+            app.automations.execute_and_write_serialized_result_to_stdout(
+                AutomationContext(
+                    edition=app.edition,
+                ),
+                name,
+                automation_args,
+            )
         )
 
 

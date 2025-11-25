@@ -14,22 +14,26 @@ import pytest
 
 import cmk.ccc.debug
 import cmk.ccc.resulttype as result
-
-# We need an active check plugin that exists.
-# The ExecutableFinder demands a location that exits :-/
-# We're importing it here, so that this fails the linters if that is removed.
 import cmk.plugins.collection.server_side_calls.ftp
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 from cmk.base import config
+from cmk.base.app import make_app
 from cmk.base.automations import check_mk
+
+# We need an active check plugin that exists.
+# The ExecutableFinder demands a location that exits :-/
+# We're importing it here, so that this fails the linters if that is removed.
+from cmk.base.automations.automations import AutomationContext
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.version import edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import PluginLocation
 from cmk.fetchers import AdHocSecrets, Fetcher, Mode, PiggybackFetcher, PlainFetcherTrigger
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
+from cmk.utils import paths
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
@@ -102,6 +106,9 @@ class TestAutomationDiagHost:
         loaded_config = replace(EMPTY_CONFIG, host_tags=configured_tags)
 
         assert check_mk.AutomationDiagHost().execute(
+            AutomationContext(
+                edition=(make_app(edition(paths.omd_root))).edition,
+            ),
             args,
             AgentBasedPlugins.empty(),
             config.LoadingResult(
@@ -242,6 +249,9 @@ def test_automation_active_check(
     active_check = AutomationActiveCheckTestable()
     assert (
         active_check.execute(
+            AutomationContext(
+                edition=(make_app(edition(paths.omd_root))).edition,
+            ),
             active_check_args,
             AgentBasedPlugins.empty(),
             config.LoadingResult(
@@ -311,6 +321,9 @@ def test_automation_active_check_invalid_args(
 
     active_check = check_mk.AutomationActiveCheck()
     active_check.execute(
+        AutomationContext(
+            edition=edition(paths.omd_root),
+        ),
         active_check_args,
         AgentBasedPlugins.empty(),
         config.LoadingResult(loaded_config=loaded_config, config_cache=config_cache),

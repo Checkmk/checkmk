@@ -150,7 +150,12 @@ def _fetch_time_series_of_service(
 
 
 def _align_and_resample_rrds(
-    rrd_data: RRDData, consolidation_function: GraphConsolidationFunction | None
+    rrd_data: RRDData,
+    *,
+    consolidation_function: GraphConsolidationFunction | None,
+    target_start: int,
+    target_end: int,
+    target_step: int,
 ) -> None:
     """RRDTool aligns start/end/step to its internal precision.
 
@@ -158,29 +163,25 @@ def _align_and_resample_rrds(
     info resampling and alignment is done in reference to the first metric.
 
     TimeSeries are mutated in place, argument rrd_data is thus mutated"""
-    time_window = None
     for key, time_series in rrd_data.items():
         if not time_series:
             spec_title = f"{key.host_name}/{key.service_name}/{key.metric_name}"
             raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
 
-        if time_window is None:
-            time_window = (time_series.start, time_series.end, time_series.step)
-        elif time_window != (time_series.start, time_series.end, time_series.step):
-            time_series.values = (
-                time_series.downsample(
-                    start=time_window[0],
-                    end=time_window[1],
-                    step=time_window[2],
-                    cf=key.consolidation_function or consolidation_function,
-                )
-                if time_window[2] >= time_series.step
-                else time_series.forward_fill_resample(
-                    start=time_window[0],
-                    end=time_window[1],
-                    step=time_window[2],
-                )
+        time_series.values = (
+            time_series.downsample(
+                start=target_start,
+                end=target_end,
+                step=target_step,
+                cf=consolidation_function,
             )
+            if target_step >= time_series.step
+            else time_series.forward_fill_resample(
+                start=target_start,
+                end=target_end,
+                step=target_step,
+            )
+        )
 
 
 def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
@@ -197,9 +198,6 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
 def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
-    if not rrd_data:
-        return
-
     sample_data = next(iter(rrd_data.values()))
     step = sample_data.step
     # Disable graph chop for graphs which do not end within the current step
@@ -248,8 +246,20 @@ def fetch_time_series_rrd(
                     )
                 ] = time_series
 
-    _align_and_resample_rrds(rrd_data, consolidation_function)
-    _chop_last_empty_step(end_time, rrd_data)
+    if rrd_data:
+        first_rrd_series = next(iter(rrd_data.values()))
+        target_start = first_rrd_series.start
+        target_end = first_rrd_series.end
+        target_step = first_rrd_series.step
+        _align_and_resample_rrds(
+            rrd_data,
+            consolidation_function=consolidation_function,
+            target_start=target_start,
+            target_end=target_end,
+            target_step=target_step,
+        )
+        _chop_last_empty_step(end_time, rrd_data)
+
     return rrd_data
 
 

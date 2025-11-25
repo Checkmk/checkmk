@@ -8196,11 +8196,18 @@ def ColorWithThemeAndMetricDefault(
     )
 
 
-SSHKeyPairValue = tuple[str, str]
+type SSHPrivateKey = str
+type SSHPublicKey = str
+type SSHKeyPairValue = tuple[SSHPrivateKey, SSHPublicKey]
 
 
 class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
-    """An SSH key pair consisting of (private key, public key)"""
+    """
+    An SSH key pair consisting of (private key, public key)
+
+    The None variant indicates that there is no keypair yet, and one will be generated
+    when the form is saved.
+    """
 
     def render_input(self, varprefix: str, value: SSHKeyPairValue | None) -> None:
         if value:
@@ -8237,14 +8244,20 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
 
     @staticmethod
     def _encode_key_for_url(value: SSHKeyPairValue) -> str:
-        return "|".join(value)
+        return (
+            f"{base64.b64encode(Encrypter.encrypt(value[0])).decode('ascii')}|"
+            f"{base64.b64encode(value[1].encode('ascii')).decode('ascii')}"
+        )
 
     @staticmethod
     def _decode_key_from_url(text: str) -> SSHKeyPairValue:
         parts = text.split("|")
         if len(parts) != 2:
             raise ValueError("Invalid value: %r" % text)
-        return parts[0], parts[1]
+        return (
+            Encrypter.decrypt(base64.b64decode(parts[0].encode("ascii"))),
+            base64.b64decode(parts[1]).decode("ascii"),
+        )
 
     @staticmethod
     def _generate_ssh_key() -> SSHKeyPairValue:

@@ -55,8 +55,9 @@ def test_socket_timeout(socket_path: str) -> None:
     The socket must be stoppable even if no client connects to it. `Accept` must not block
     indefinitely.
     """
-    with create_socket(socket_path=socket_path, socket_timeout=SOCKET_TIMEOUT) as ms:
-        time.sleep(SOCKET_TIMEOUT + 1)
+    socket_timeout = 0.5
+    with create_socket(socket_path=socket_path, socket_timeout=socket_timeout) as ms:
+        time.sleep(socket_timeout + 0.5)
 
     assert not ms.is_running
 

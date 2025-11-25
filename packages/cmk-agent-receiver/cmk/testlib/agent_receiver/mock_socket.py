@@ -23,9 +23,9 @@ class DataChunk:
 @dataclasses.dataclass
 class MockSocket:
     socket_path: str
-    _soc: socket.socket
-    _buffer_size: int
-    _socket_timeout: float
+    soc: socket.socket
+    buffer_size: int
+    socket_timeout: float
     delay: float | None = None
     data_queue: queue.SimpleQueue[DataChunk] = dataclasses.field(init=False)
 
@@ -44,30 +44,30 @@ class MockSocket:
 
     def start(self) -> None:
         def thread_func() -> None:
-            soc = self._soc
-            self._start_barrier.wait()
+            soc = self.soc
+            _ = self._start_barrier.wait()
             while not self._stop_event.is_set():
                 # Check if the socket is ready to be used
-                rlist, _, _ = select.select([soc], [], [], 5.0)
+                rlist, _, _ = select.select([soc], [], [], 0.5)
                 if rlist:
-                    soc.settimeout(self._socket_timeout)
+                    soc.settimeout(self.socket_timeout)
                     try:
                         conn, _ = soc.accept()
                         socket_id = str(secrets.token_urlsafe(6))
-                        conn.settimeout(self._socket_timeout)
+                        conn.settimeout(self.socket_timeout)
                         if self.delay:
                             time.sleep(self.delay)
-                        data = conn.recv(self._buffer_size)
+                        data = conn.recv(self.buffer_size)
                         while data != b"":
                             self.data_queue.put_nowait(DataChunk(socket_id=socket_id, data=data))
-                            data = conn.recv(self._buffer_size)
+                            data = conn.recv(self.buffer_size)
                         conn.shutdown(socket.SHUT_RDWR)
                         conn.close()
                     except TimeoutError:
                         pass
                 else:
                     # If the socket is not ready yet, wait just a bit more.
-                    time.sleep(0.2)
+                    time.sleep(0.1)
 
         self._start_barrier.reset()
         self._stop_event.clear()
@@ -90,7 +90,7 @@ class MockSocket:
 
     @property
     def fileno(self) -> int:
-        return self._soc.fileno()
+        return self.soc.fileno()
 
 
 @contextlib.contextmanager
@@ -103,10 +103,10 @@ def create_socket(
         soc.bind(socket_path)
         soc.listen()
         ms = MockSocket(
-            _soc=soc,
+            soc=soc,
             socket_path=socket_path,
-            _buffer_size=buffer_size,
-            _socket_timeout=socket_timeout,
+            buffer_size=buffer_size,
+            socket_timeout=socket_timeout,
             delay=delay,
         )
         ms.start()

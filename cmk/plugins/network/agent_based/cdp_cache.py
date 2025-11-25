@@ -8,10 +8,11 @@
 
 from binascii import hexlify
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from ipaddress import AddressValueError, IPv4Address
 from re import compile as re_compile
 from re import match as re_match
+
+from pydantic import BaseModel
 
 from cmk.agent_based.v2 import (
     Attributes,
@@ -44,16 +45,14 @@ _INTERFACE_DISPLAY_HINTS = {
 }
 
 
-@dataclass(frozen=True)
-class CdpGlobal:
+class CdpGlobal(BaseModel, frozen=True):
     enabled: str | None
     hold_time: int | None
     local_id: str | None
     message_interval: int | None
 
 
-@dataclass(frozen=True)
-class CdpNeighbor:
+class CdpNeighbor(BaseModel, frozen=True):
     # key columns
     neighbor_id: str
     neighbor_port: str
@@ -69,8 +68,7 @@ class CdpNeighbor:
     vtp_mgmt_domain: str | None
 
 
-@dataclass(frozen=True)
-class Cdp:
+class Cdp(BaseModel, frozen=True):
     cdp_global: CdpGlobal | None
     cdp_neighbors: Sequence[CdpNeighbor]
 

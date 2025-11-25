@@ -2,14 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Callable, Coroutine
-from typing import override
+from typing import Final, override
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from starlette.status import HTTP_400_BAD_REQUEST
+
+INJECTED_UUID_HEADER: Final[str] = "verified-uuid"
 
 
 class UUIDValidationRoute(APIRoute):
@@ -27,7 +28,7 @@ class UUIDValidationRoute(APIRoute):
 
 
 def _mismatch_header_vs_url_uuid_response(request: Request) -> JSONResponse | None:
-    header_uuid = request.headers.get("verified-uuid", "header missing")
+    header_uuid = request.headers.get(INJECTED_UUID_HEADER, "header missing")
     url_uuid = request.url.path.split("/")[-1]
     return (
         None if header_uuid == url_uuid else _create_400_bad_request(header_uuid, url_uuid=url_uuid)

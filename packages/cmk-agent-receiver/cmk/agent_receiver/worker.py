@@ -2,8 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 import asyncio
 from ssl import SSLObject
 from typing import override
@@ -13,6 +11,8 @@ import h11
 from uvicorn.protocols.http.flow_control import HIGH_WATER_LIMIT, service_unavailable
 from uvicorn.protocols.http.h11_impl import H11Protocol, RequestResponseCycle
 from uvicorn_worker import UvicornWorker
+
+from cmk.agent_receiver.lib.route_classes import INJECTED_UUID_HEADER
 
 
 def _extract_client_cert_cn(ssl_object: SSLObject | None) -> str | None:
@@ -66,7 +66,7 @@ class _ClientCertProtocol(H11Protocol):
                 client_cn = _extract_client_cert_cn(self.transport.get_extra_info("ssl_object"))
                 self.headers = [
                     (
-                        b"verified-uuid",
+                        INJECTED_UUID_HEADER.encode(),
                         (
                             client_cn.encode()
                             if client_cn is not None

@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import io
 import stat
 from collections.abc import MutableMapping
@@ -30,6 +29,7 @@ from cmk.agent_receiver.agent_receiver.models import (
 from cmk.agent_receiver.agent_receiver.utils import R4R
 from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.config import get_config
+from cmk.agent_receiver.lib.route_classes import INJECTED_UUID_HEADER
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
 
 
@@ -575,7 +575,7 @@ def test_register_new_ongoing_success(
 def fixture_agent_data_headers(uuid: UUID4) -> dict[str, str]:
     return {
         "compression": "zlib",
-        "verified-uuid": str(uuid),
+        INJECTED_UUID_HEADER: str(uuid),
     }
 
 
@@ -697,7 +697,7 @@ def test_agent_data_success(
 @pytest.fixture(name="registration_status_headers")
 def fixture_registration_status_headers(uuid: UUID4) -> dict[str, str]:
     return {
-        "verified-uuid": str(uuid),
+        INJECTED_UUID_HEADER: str(uuid),
     }
 
 

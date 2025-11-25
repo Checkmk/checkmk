@@ -7,6 +7,8 @@
 .coverage.*
 .directory
 .DS_Store
+.github/prompts
+.github/agents/*.local.md
 .idea/
 .metadata
 .mypy_cache

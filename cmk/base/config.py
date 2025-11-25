@@ -68,7 +68,7 @@ from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import ParserConfig
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.regex import regex
 from cmk.ccc.site import omd_site, SiteId
@@ -1090,6 +1090,53 @@ def set_use_core_config(
     finally:
         cmk.utils.paths.autochecks_dir = orig_autochecks_dir
         cmk.utils.paths.discovered_host_labels_dir = orig_discovered_host_labels_dir
+
+
+def parse_hostname_list(
+    config_cache: ConfigCache,
+    hosts_config: Hosts,
+    args: list[str],
+    with_clusters: bool = True,
+    with_foreign_hosts: bool = False,
+) -> Sequence[HostName]:
+    if with_foreign_hosts:
+        valid_hosts = set(hosts_config.hosts)
+    else:
+        valid_hosts = {
+            hn
+            for hn in hosts_config.hosts
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        }
+
+    if with_clusters:
+        valid_hosts = valid_hosts.union(
+            hn
+            for hn in hosts_config.clusters
+            # Inconsistent with `with_foreign_hosts` above.
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        )
+
+    hostlist: list[HostName] = []
+    for arg in args:
+        if arg[0] != "@" and arg in valid_hosts:
+            hostlist.append(HostName(arg))
+        else:
+            if arg[0] == "@":
+                arg = arg[1:]
+            tagspec = arg.split(",")
+
+            num_found = 0
+            for hostname in valid_hosts:
+                if tuple_rulesets.hosttags_match_taglist(
+                    config_cache.host_tags.tag_list(hostname), (TagID(_) for _ in tagspec)
+                ):
+                    hostlist.append(hostname)
+                    num_found += 1
+            if num_found == 0:
+                raise MKBailOut(
+                    "Host name or tag specification '%s' does not match any host." % arg
+                )
+    return hostlist
 
 
 # .

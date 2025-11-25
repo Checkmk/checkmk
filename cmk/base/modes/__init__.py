@@ -12,17 +12,13 @@
 from __future__ import annotations
 
 import textwrap
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 
 from cmk import trace
-from cmk.base.config import ConfigCache
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
-from cmk.ccc.hostaddress import HostName, Hosts
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
-from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
-from cmk.utils.tags import TagID
 
 OptionSpec = str
 Argument = str
@@ -138,53 +134,6 @@ class Modes:
             if text:
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
-
-    def parse_hostname_list(
-        self,
-        config_cache: ConfigCache,
-        hosts_config: Hosts,
-        args: list[str],
-        with_clusters: bool = True,
-        with_foreign_hosts: bool = False,
-    ) -> Sequence[HostName]:
-        if with_foreign_hosts:
-            valid_hosts = set(hosts_config.hosts)
-        else:
-            valid_hosts = {
-                hn
-                for hn in hosts_config.hosts
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            }
-
-        if with_clusters:
-            valid_hosts = valid_hosts.union(
-                hn
-                for hn in hosts_config.clusters
-                # Inconsistent with `with_foreign_hosts` above.
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            )
-
-        hostlist: list[HostName] = []
-        for arg in args:
-            if arg[0] != "@" and arg in valid_hosts:
-                hostlist.append(HostName(arg))
-            else:
-                if arg[0] == "@":
-                    arg = arg[1:]
-                tagspec = arg.split(",")
-
-                num_found = 0
-                for hostname in valid_hosts:
-                    if hosttags_match_taglist(
-                        config_cache.host_tags.tag_list(hostname), (TagID(_) for _ in tagspec)
-                    ):
-                        hostlist.append(hostname)
-                        num_found += 1
-                if num_found == 0:
-                    raise MKBailOut(
-                        "Host name or tag specification '%s' does not match any host." % arg
-                    )
-        return hostlist
 
     #
     # GENERAL OPTIONS

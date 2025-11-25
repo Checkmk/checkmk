@@ -153,4 +153,4 @@ def _write_gitignore_files() -> None:
 
         if subdir.joinpath("wato").exists():
             with subdir.joinpath("wato/.gitignore").open("w", encoding="utf-8") as f:
-                f.write("!*\n")
+                f.write("!*\n*swp\n*.mk.new\n*.pkl\n")

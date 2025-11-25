@@ -537,6 +537,13 @@ class Certificate:
 
         return True
 
+    def has_authority_key_identifier(self) -> bool:
+        try:
+            self.get_extension_for_class(pyca_x509.AuthorityKeyIdentifier)
+            return True
+        except pyca_x509.ExtensionNotFound:
+            return False
+
     def is_self_signed(self) -> bool:
         """Is the issuer the same as the subject?"""
         return self._cert.subject == self._cert.issuer

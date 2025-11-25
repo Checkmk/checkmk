@@ -5,11 +5,14 @@
 """Rulesets"""
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from cmk.gui.config import active_config
+from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.ruleset.fields import (
     RULESET_NAME,
@@ -50,7 +53,7 @@ PERMISSIONS = permissions.Perm("wato.rulesets")
     response_schema=RulesetCollection,
     permissions_required=LIST_PERMISSIONS,
 )
-def list_rulesets(param):
+def list_rulesets(param: Mapping[str, Any]) -> Response:
     """Search rule sets"""
     user.need_permission("wato.rulesets")
     all_sets = (
@@ -59,7 +62,7 @@ def list_rulesets(param):
         else AllRulesets.load_all_rulesets()
     )
 
-    def _get_search_options(params):
+    def _get_search_options(params: Mapping[str, Any]) -> dict[str, Any]:
         # We remove 'folder' because that has already been handled at the start of the endpoint.
         options = dict(params)
         if "folder" in options:
@@ -98,7 +101,7 @@ def list_rulesets(param):
     response_schema=RulesetObject,
     permissions_required=PERMISSIONS,
 )
-def show_ruleset(param):
+def show_ruleset(param: Mapping[str, Any]) -> Response:
     """Show a ruleset"""
     ruleset_name = param["ruleset_name"]
     user.need_permission("wato.rulesets")

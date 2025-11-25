@@ -122,3 +122,7 @@ def main(sys_args=None):
 
     sys.stdout.write(f"{infotext}\n")
     return state
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

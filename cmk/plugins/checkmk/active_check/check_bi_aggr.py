@@ -2,7 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Check Checkmk BI aggregations"""
+"""check_bi_aggr
+
+Check Checkmk BI aggregations
+"""
 
 import argparse
 import json
@@ -24,7 +27,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n")
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument(
         "-b",
@@ -285,3 +289,7 @@ def main(argv: Sequence[str]) -> None:
 
     sys.stdout.write("%s\n" % aggr_output)
     sys.exit(aggr_state)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

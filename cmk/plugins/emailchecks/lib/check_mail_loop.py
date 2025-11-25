@@ -2,7 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Email server roundtrip active check"""
+"""check_mail_loop
+
+Email server roundtrip active check"""
 
 # mypy: disable-error-code="comparison-overlap"
 
@@ -43,7 +45,8 @@ DEPRECATION_AGE = 2 * 3600
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n")
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     add_trx_arguments(parser, Scope.SEND)
 
@@ -333,3 +336,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
 def main() -> None:
     logging.getLogger().name = "check_mail_loop"
     active_check_main(create_argument_parser(), check_mail_roundtrip)
+
+
+if __name__ == "__main__":
+    main()

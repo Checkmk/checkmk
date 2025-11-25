@@ -37,11 +37,11 @@ class Metric:
 
 
 def main(
-    argv: Sequence[str] | None = None,
+    argv: Sequence[str],
     smb_share: SMBShareDiskUsageProto | None = None,
 ) -> int:
     exitcode, summary, perfdata = _check_disk_usage_main(
-        argv or sys.argv[1:],
+        argv,
         smb_share or _SMBShareDiskUsage(),
     )
     _output_check_result(summary, perfdata)
@@ -410,3 +410,7 @@ def _check_disk_usage_main(
         levels=args.levels,
         share_name=args.share,
     )
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

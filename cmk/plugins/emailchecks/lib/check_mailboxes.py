@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+"""check_mailboxes"""
 
 import argparse
 import logging
@@ -16,7 +16,7 @@ from cmk.utils.render import approx_age
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog=__doc__)
     parser.add_argument(
         "--warn-age-oldest",
         type=int,
@@ -167,3 +167,7 @@ def check_mailboxes(args: Args) -> CheckResult:
 def main() -> None:
     logging.getLogger().name = "check_mailboxes"
     active_check_main(create_argument_parser(), check_mailboxes)
+
+
+if __name__ == "__main__":
+    main()

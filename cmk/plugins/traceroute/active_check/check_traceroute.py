@@ -2,6 +2,10 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""check_traceroute
+
+Check the route to a network host using the traceroute command.
+"""
 
 # This check does a traceroute to the specified target host
 # (usually $HOSTADDRESS$ itself) and checks which route(s) are
@@ -59,7 +63,7 @@ from typing import assert_never, Protocol
 
 
 def main(
-    argv: Sequence[str] | None = None,
+    argv: Sequence[str],
     routetracer: RoutetracerProto | None = None,
 ) -> int:
     exitcode, info, perf = _check_traceroute_main(
@@ -139,8 +143,10 @@ def _check_traceroute_main(
 
 
 def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n")
     parser = argparse.ArgumentParser(
-        description="Check the route to a network host using the traceroute command.",
+        prog=prog,
+        description=description,
     )
     parser.add_argument(
         "target",
@@ -350,3 +356,7 @@ class _TracerouteRoutertrace:
             # drop additional information such as !X
             if not part.startswith("!")
         )
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

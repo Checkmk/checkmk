@@ -325,3 +325,7 @@ def main() -> int:
     status, checks_info = check.run_optional_checks()
     output_check_result(", ".join(login_info + checks_info))
     return status
+
+
+if __name__ == "__main__":
+    sys.exit(main())

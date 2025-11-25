@@ -11,10 +11,11 @@
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
-"""
+"""check_form_submit
+
 This check performs HTTP requests with some advanced features like
 a) Detecting, populating and submitting HTML forms
-b) Accepts and uses cookies
+b) Accepting and using cookies
 c) Follos HTTP redirects
 d) Extends HTTP headers
 """
@@ -33,7 +34,8 @@ from collections.abc import Mapping, Sequence
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n")
+    parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument(
         "hosts",
         type=str,

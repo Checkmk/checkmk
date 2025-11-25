@@ -15,7 +15,10 @@
 # SQLAnywhere support requires installation of the SAP SQL Anywhere binaries, the `sqlanydb` python
 # package, and certain environment variables set in the site's runtime environment. See the checkman
 # documentation for more information.
-"""Checkmk SQL Database Request Check"""
+"""check_sql
+
+Checkmk SQL Database Request Check
+"""
 
 import argparse
 import logging
@@ -59,7 +62,8 @@ def sql_cmd_piece(values: str) -> str:
 def parse_args(argv: list[str]) -> argparse.Namespace:
     """Parse commandline arguments (incl password store and logging set up)"""
     help_fmt = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=help_fmt)
+    prog, description = __doc__.split("\n\n")
+    parser = argparse.ArgumentParser(prog=prog, description=description, formatter_class=help_fmt)
     # flags
     parser.add_argument(
         "-v",

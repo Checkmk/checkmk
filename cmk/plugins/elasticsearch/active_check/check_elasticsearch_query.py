@@ -2,7 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""check_elasticsearch_query
 
+CheckMK check for elasticsearch queries.
+"""
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -26,7 +29,7 @@ USER_AGENT = f"checkmk-active-elasticsearch-query-{__version__}"
 PASSWORD_OPTION = "password"
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Sequence[str]) -> int:
     args = parse_arguments(argv)
     auth = _make_auth(args)
     try:
@@ -157,8 +160,9 @@ def parse_arguments(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
+    prog, description = __doc__.split("\n\n")
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
 
     parser.add_argument(
@@ -253,3 +257,7 @@ def parse_arguments(argv=None):
     )
 
     return parser.parse_args(argv)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

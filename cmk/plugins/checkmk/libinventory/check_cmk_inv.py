@@ -110,9 +110,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(
-    argv: Sequence[str] | None = None,
-) -> int:
+def main(argv: Sequence[str]) -> int:
     args = parse_arguments(argv or sys.argv[1:])
     parameters = HWSWInventoryParameters(
         hw_changes=args.hw_changes,
@@ -280,3 +278,7 @@ def load_plugins_from_index(config_path: Path) -> AgentBasedPlugins:
     plugin_idx = plugin_index.load_plugin_index(config_path)
     _errors, sections, checks = config.load_and_convert_legacy_checks(plugin_idx.legacy)
     return load_selected_plugins(plugin_idx.locations, sections, checks, validate=False)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

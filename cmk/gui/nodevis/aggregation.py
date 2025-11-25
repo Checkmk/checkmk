@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import json
@@ -155,7 +154,7 @@ class AjaxFetchAggregationData(AjaxPage):
 
 
 class NodeVisualizationBIDataMapper:
-    def __init__(self, is_single_host_aggregation=False):
+    def __init__(self, is_single_host_aggregation: bool = False) -> None:
         super().__init__()
         self._is_single_host_aggregation = is_single_host_aggregation
         self._siblings: dict[str, int] = {}
@@ -331,7 +330,7 @@ def _bi_map(ctx: PageContext) -> None:
     )
 
 
-def _register_builtin_views():
+def _register_builtin_views() -> None:
     multisite_builtin_views.update(
         {
             "bi_map_hover_host": {

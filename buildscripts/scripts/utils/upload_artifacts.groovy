@@ -43,23 +43,21 @@ def download_version_dir(DOWNLOAD_SOURCE,
         ||==========================================================================================
         """.stripMargin());
 
-    stage("Download from shared storage (${INFO})") {
-        withCredentials([
-            sshUserPrivateKey(
-                // We're using here a key which is usable for the fips server AND the other build nodes in order
-                // to streamline the keys.
-                credentialsId: 'jenkins-fips-server',
-                keyFileVariable: 'ssh_key')
-            ]) {
-            sh("mkdir -p ${DOWNLOAD_DEST}");
-            sh("""
-                rsync --recursive --links --perms --times --verbose \
-                    --exclude=${EXCLUDE_PATTERN} \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${ssh_key} -p ${PORT}" \
-                    ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
-                    ${DOWNLOAD_DEST}/
-            """);
-            }
+    withCredentials([
+        sshUserPrivateKey(
+            // We're using here a key which is usable for the fips server AND the other build nodes in order
+            // to streamline the keys.
+            credentialsId: 'jenkins-fips-server',
+            keyFileVariable: 'ssh_key')
+    ]) {
+        sh("mkdir -p ${DOWNLOAD_DEST}");
+        sh("""
+            rsync --recursive --links --perms --times --verbose \
+                --exclude=${EXCLUDE_PATTERN} \
+                -e "ssh -o StrictHostKeyChecking=no -i ${ssh_key} -p ${PORT}" \
+                ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
+                ${DOWNLOAD_DEST}/
+        """);
     }
 }
 /* groovylint-enable ParameterCount */

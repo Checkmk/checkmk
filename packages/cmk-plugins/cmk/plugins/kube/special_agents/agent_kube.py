@@ -79,6 +79,7 @@ from cmk.plugins.kube.common import (
     PodsToHost,
     RawMetrics,
 )
+from cmk.plugins.kube.prometheus_api import ResponseSuccess
 from cmk.plugins.kube.schemata import api, section
 from cmk.server_side_programs.v1_unstable import vcrtrace
 
@@ -1278,6 +1279,11 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         common.write_sections(
             [prometheus_section.debug_section(usage_config.query_url(), cpu, memory)]
         )
+
+        if all(not isinstance(response[1], ResponseSuccess) for response in (cpu, memory)):
+            LOGGER.debug("Prometheus queries failed. Skipping generation of 'machine_sections'")
+            return
+
         prometheus_selectors = prometheus_section.create_selectors(cpu[1], memory[1])
         common.write_sections(
             common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)

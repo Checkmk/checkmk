@@ -1063,9 +1063,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.discover_plugins",
         "cmk.gui",
         "cmk.server_side_calls_backend",
-        "cmk.utils.check_utils",
-        "cmk.utils.man_pages",
-        "cmk.utils.rulesets",
+        "cmk.utils",
     ),
     Component("tests.integration.cmk.base"): _allow(
         *PACKAGE_CCC,

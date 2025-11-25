@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 
@@ -20,10 +21,12 @@ class MonitoringPlugin:
     """
 
     binary_name: str
-    path: str = "lib/nagios/plugins"
     # by default, output the version of the plugin
     cmd_line_option: str = "-V"
     expected: str = "v2.4.0"
+
+    def detect_full_path(self, site: Site) -> Path:
+        return site.root / "lib/nagios/plugins" / self.binary_name
 
 
 @dataclass(frozen=True)
@@ -31,16 +34,34 @@ class CheckmkActiveCheck:
     """Data corresponding to Checkmk active checks."""
 
     binary_name: str
-    path: str = "lib/nagios/plugins"
+    path: str | None = None
     usage_text: str = "usage"
-
-    @property
-    def cmd_line_option(self) -> str:
-        return "-h"
+    cmd_line_option: str = "-h"
 
     @property
     def expected(self) -> str:
         return f"{self.usage_text}: {self.binary_name} "
+
+    def detect_full_path(self, site: Site) -> Path:
+        if self.path:
+            return site.root / self.path / self.binary_name
+        return site.root / _find_libexec(site, self.binary_name)
+
+
+@dataclass(frozen=True)
+class SpecialAgent:
+    """Data corresponding to Checkmk special agents."""
+
+    binary_name: str
+    usage_text: str = "usage"
+    cmd_line_option: str = "-h"
+
+    @property
+    def expected(self) -> str:
+        return f"{self.usage_text}: {self.binary_name} "
+
+    def detect_full_path(self, site: Site) -> Path:
+        return site.root / _find_libexec(site, self.binary_name)
 
 
 Plugin = MonitoringPlugin | CheckmkActiveCheck
@@ -109,24 +130,93 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_mkevents", cmd_line_option="", expected="OK - no events for "),
     MonitoringPlugin("check_nrpe", expected="Version: 3.2.1"),
     MonitoringPlugin("check_snmp"),
-    CheckmkActiveCheck("check_always_crit"),
-    CheckmkActiveCheck("check_bi_aggr", path="lib/python3/cmk/plugins/checkmk/libexec"),
-    CheckmkActiveCheck("check_disk_smb", path="lib/python3/cmk/plugins/smb/libexec"),
-    CheckmkActiveCheck(
-        "check_elasticsearch_query",
-        path="lib/python3/cmk/plugins/elasticsearch/libexec",
-    ),
-    CheckmkActiveCheck("check_form_submit", path="lib/python3/cmk/plugins/form_submit/libexec"),
-    CheckmkActiveCheck("check_httpv2", usage_text="Usage"),
-    CheckmkActiveCheck("check_mailboxes", path="lib/python3/cmk/plugins/emailchecks/libexec"),
-    CheckmkActiveCheck("check_mail_loop", path="lib/python3/cmk/plugins/emailchecks/libexec"),
-    CheckmkActiveCheck("check_mail", path="lib/python3/cmk/plugins/emailchecks/libexec"),
-    CheckmkActiveCheck("check_notify_count", path="lib/python3/cmk/plugins/checkmk/libexec"),
-    CheckmkActiveCheck("check_sftp", path="lib/python3/cmk/plugins/sftp/libexec"),
-    CheckmkActiveCheck("check_sql", path="lib/python3/cmk/plugins/sql/libexec"),
-    CheckmkActiveCheck("check_traceroute", path="lib/python3/cmk/plugins/traceroute/libexec"),
-    CheckmkActiveCheck("check_uniserv", path="lib/python3/cmk/plugins/uniserv/libexec"),
+    CheckmkActiveCheck("check_always_crit", path="lib/nagios/plugins"),
+    CheckmkActiveCheck("check_bi_aggr"),
+    CheckmkActiveCheck("check_cmk_inv"),
+    CheckmkActiveCheck("check_disk_smb"),
+    CheckmkActiveCheck("check_elasticsearch_query"),
+    CheckmkActiveCheck("check_form_submit"),
+    CheckmkActiveCheck("check_httpv2", path="lib/nagios/plugins", usage_text="Usage"),
+    CheckmkActiveCheck("check_mailboxes"),
+    CheckmkActiveCheck("check_mail_loop"),
+    CheckmkActiveCheck("check_mail"),
+    CheckmkActiveCheck("check_notify_count"),
+    CheckmkActiveCheck("check_sftp"),
+    CheckmkActiveCheck("check_sql"),
+    CheckmkActiveCheck("check_traceroute"),
+    CheckmkActiveCheck("check_uniserv"),
 )
+
+
+SPECIAL_AGENTS = [
+    SpecialAgent("agent_activemq"),
+    SpecialAgent("agent_alertmanager"),
+    SpecialAgent("agent_allnet_ip_sensoric"),
+    SpecialAgent("agent_appdynamics"),
+    SpecialAgent("agent_aws"),
+    SpecialAgent("agent_aws_status"),
+    SpecialAgent("agent_azure"),
+    SpecialAgent("agent_azure_status"),
+    SpecialAgent("agent_azure_v2"),
+    SpecialAgent("agent_bazel_cache"),
+    SpecialAgent("agent_bi"),
+    SpecialAgent("agent_cisco_meraki"),
+    SpecialAgent("agent_cisco_prime"),
+    SpecialAgent("agent_couchbase"),
+    SpecialAgent("agent_datadog"),
+    SpecialAgent("agent_ddn_s2a"),
+    SpecialAgent("agent_elasticsearch"),
+    SpecialAgent("agent_fritzbox"),
+    SpecialAgent("agent_gcp"),
+    SpecialAgent("agent_gcp_status"),
+    SpecialAgent("agent_gerrit"),
+    SpecialAgent("agent_graylog"),
+    SpecialAgent("agent_hivemanager"),
+    SpecialAgent("agent_hivemanager_ng"),
+    SpecialAgent("agent_hp_msa"),
+    SpecialAgent("agent_ibmsvc"),
+    SpecialAgent("agent_innovaphone"),
+    SpecialAgent("agent_ipmi_sensors"),
+    SpecialAgent("agent_jenkins"),
+    SpecialAgent("agent_jira"),
+    SpecialAgent("agent_jolokia"),
+    SpecialAgent("agent_kube"),
+    SpecialAgent("agent_metric_backend_custom_query"),
+    SpecialAgent("agent_mobileiron"),
+    SpecialAgent("agent_mqtt"),
+    SpecialAgent("agent_netapp_ontap"),
+    SpecialAgent("agent_otel"),
+    SpecialAgent("agent_prism"),
+    SpecialAgent("agent_prometheus"),
+    SpecialAgent("agent_proxmox_ve"),
+    SpecialAgent("agent_pure_storage_fa"),
+    SpecialAgent("agent_rabbitmq"),
+    SpecialAgent("agent_random"),
+    SpecialAgent("agent_redfish"),
+    SpecialAgent("agent_redfish_power"),
+    SpecialAgent("agent_ruckus_spot"),
+    SpecialAgent("agent_salesforce"),
+    SpecialAgent("agent_siemens_plc"),
+    SpecialAgent("agent_smb_share"),
+    SpecialAgent("agent_splunk"),
+    SpecialAgent("agent_storeonce"),
+    SpecialAgent("agent_storeonce4x"),
+    SpecialAgent("agent_three_par"),
+    SpecialAgent("agent_tinkerforge", usage_text="Usage"),
+    SpecialAgent("agent_ucs_bladecenter"),
+    SpecialAgent("agent_vnx_quotas"),
+    SpecialAgent("agent_vsphere"),
+    SpecialAgent("agent_zerto"),
+]
+
+_SKIPPED_SPECIAL_AGENTS = {
+    "agent_acme_sbc",  # has no help option
+}
+
+_ULTIMATE_AGENTS = {
+    "agent_metric_backend_custom_query",
+    "agent_otel",
+}
 
 
 @pytest.mark.medium_test_chain
@@ -139,13 +229,59 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     if site.edition.is_cloud_edition() and plugin.binary_name == "check_mkevents":
         pytest.skip("check_mkevents is disabled in SaaS edition")
 
-    cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]
+    cmd_line = [plugin.detect_full_path(site).as_posix(), plugin.cmd_line_option]
     # check=False; '<plugin-name> -V' returns in exit-code 3 for most plugins!
     process = site.run(cmd_line, check=False)
     assert plugin.expected in process.stdout, (
         f"Expected command:'{' '.join(cmd_line)}'\nto result in output having '{plugin.expected}'!"
     )
     assert not process.stderr
+
+
+@pytest.mark.medium_test_chain
+@pytest.mark.parametrize(
+    "agent",
+    (pytest.param(p, id=f"{p.binary_name}") for p in SPECIAL_AGENTS),
+)
+def test_special_agents_can_be_executed(agent: SpecialAgent, site: Site) -> None:
+    """Validate the plugin's presence and version in the site."""
+    if not site.edition.is_ultimate_edition() and agent.binary_name in _ULTIMATE_AGENTS:
+        pytest.skip(f"{agent.binary_name} is disabled in this edition")
+
+    cmd_line = [agent.detect_full_path(site).as_posix(), agent.cmd_line_option]
+    process = site.run(cmd_line, check=False)
+    assert agent.expected in process.stdout, (
+        f"Expected command:'{' '.join(cmd_line)}'\nto result in output having '{agent.expected}'!"
+    )
+    assert not process.stderr
+
+
+@pytest.mark.medium_test_chain
+def test_monitoring_plugins_coverage(site: Site) -> None:
+    """Make sure `MONITORING_PLUGINS` is up to date.
+
+    If this fails, add the new plugin you added to the list above.
+    """
+    covered = {p.binary_name for p in MONITORING_PLUGINS}
+    found = {f.split("/")[-1] for f in _find_libexec(site, "check_*").split("\n")}
+    assert found <= covered
+
+
+@pytest.mark.medium_test_chain
+def test_special_agents_coverage(site: Site) -> None:
+    """Make sure `SPECIAL_AGENTS` is up to date.
+
+    If this fails, add the new special agent you added to the list above.
+    """
+    covered = {p.binary_name for p in SPECIAL_AGENTS} | _SKIPPED_SPECIAL_AGENTS
+    found = {f.split("/")[-1] for f in _find_libexec(site, "agent_*").split("\n")}
+    assert found <= covered
+
+
+def _find_libexec(site: Site, search_pattern: str) -> str:
+    return str(
+        site.run(["find", "lib/", "-wholename", f"*/libexec/{search_pattern}"]).stdout
+    ).strip()
 
 
 @pytest.mark.medium_test_chain

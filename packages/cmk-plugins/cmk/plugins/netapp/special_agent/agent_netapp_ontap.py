@@ -2,7 +2,10 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_netapp_ontap
 
+Checkmk special agent to monitor Netapp via ONTAP REST API.
+"""
 
 import argparse
 import logging
@@ -994,7 +997,8 @@ def write_sections(
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(
         "--debug",
@@ -1123,5 +1127,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    # TODO: Remove this
     main()

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import glob
@@ -74,7 +73,7 @@ class TopologyDatasourceConfiguration:
     reference: str = "default"
     compare_to: str = "default"
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.available_datasources:
             sorted_list = sorted(glob.glob("*", root_dir=topology_data_dir))
             try:
@@ -144,7 +143,7 @@ class FrontendConfiguration:
     )
     custom_node_settings: dict[str, dict[str, Any]] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Used as faster lookup, not serialized
         self._growth_root_nodes_set = set(self.growth_root_nodes)
         self._growth_forbidden_nodes_set = set(self.growth_forbidden_nodes)

@@ -2161,3 +2161,76 @@ def test_create_rules_with_basic_and_token_auth(
     }
     r1 = clients.RuleNotification.create(rule_config=config)
     assert r1.json["extensions"] == {"rule_config": config}
+
+
+def test_forbid_explicit_email_addresses_in_a_create_notification_request_in_cse(
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that explicit_email_addresses field is forbidden in CSE edition."""
+    monkeypatch.setattr(
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.version.edition",
+        lambda _: version.Edition.CSE,
+    )
+
+    config = notification_rule_request_example()
+    config["contact_selection"]["explicit_email_addresses"] = {
+        "state": "enabled",
+        "value": ["test@example.com"],
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
+    resp.assert_status_code(400)
+
+    assert "explicit_email_addresses" in resp.json["fields"]["rule_config"]["contact_selection"]
+    assert (
+        "not allowed in CSE edition"
+        in resp.json["fields"]["rule_config"]["contact_selection"]["explicit_email_addresses"][0]
+    )
+
+
+def test_explicit_email_addresses_disabled_in_cse(
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that explicit_email_addresses field is disabled in CSE edition."""
+    monkeypatch.setattr(
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.version.edition",
+        lambda _: version.Edition.CSE,
+    )
+
+    config = notification_rule_request_example()
+    del config["contact_selection"]["explicit_email_addresses"]
+
+    resp = clients.RuleNotification.create(rule_config=config)
+    assert (
+        "explicit_email_addresses"
+        not in resp.json["extensions"]["rule_config"]["contact_selection"]
+    )
+
+
+@pytest.mark.parametrize("edition", [e for e in version.Edition if e != version.Edition.CSE])
+def test_explicit_email_addresses_allowed_in_non_cse_editions(
+    clients: ClientRegistry,
+    edition: version.Edition,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that explicit_email_addresses field is allowed in all non-CSE editions."""
+    monkeypatch.setattr(
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.version.edition",
+        lambda _: edition,
+    )
+
+    config = notification_rule_request_example()
+    config["contact_selection"]["explicit_email_addresses"] = {
+        "state": "enabled",
+        "value": ["test@example.com"],
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config)
+    assert (
+        resp.json["extensions"]["rule_config"]["contact_selection"]["explicit_email_addresses"][
+            "state"
+        ]
+        == "enabled"
+    )

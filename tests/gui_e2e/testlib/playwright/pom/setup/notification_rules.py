@@ -144,6 +144,14 @@ class BaseNotificationPage(QuickSetupPage):
     def notification_method_option(self, option: str) -> Locator:
         return self.stage_three_locator.get_by_role("option", name=option)
 
+    def notification_effect_toggle(self, effect_label: str) -> Locator:
+        return self.stage_three_locator.get_by_role("button", name=effect_label)
+
+    def select_notification_effect(self, effect_label: str) -> None:
+        effect_toggle = self.notification_effect_toggle(effect_label)
+        expect(effect_toggle).to_be_visible()
+        effect_toggle.click()
+
     def create_html_parameter_using_slide_in(self) -> None:
         """Open the slide-in window to initialize a new notifications parameter."""
         # `force=True` - prevents UI from sliding out of view during test runs

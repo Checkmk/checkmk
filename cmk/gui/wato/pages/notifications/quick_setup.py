@@ -6,6 +6,9 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never, cast, Final, get_args, Literal
 
+from cmk.ccc.version import Edition, edition
+
+import cmk.utils.paths
 from cmk.utils.notify_types import HostEventType, ServiceEventType
 from cmk.utils.tags import AuxTag, TagGroup
 from cmk.utils.timeperiod import TimeperiodName
@@ -1450,6 +1453,101 @@ def custom_macros_cannot_be_empty(custom_macros: Sequence[tuple[str, str]]) -> N
 
 def recipient() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
+        recipient_elements = [
+            UniqueCascadingSingleChoiceElement(
+                parameter_form=CascadingSingleChoiceElementExtended(
+                    title=Title("All contacts of the affected object"),
+                    name="all_contacts_affected",
+                    parameter_form=FixedValue(value=None),
+                ),
+            ),
+            UniqueCascadingSingleChoiceElement(
+                parameter_form=CascadingSingleChoiceElementExtended(
+                    title=Title("All users with an email address"),
+                    name="all_email_users",
+                    parameter_form=FixedValue(value=None),
+                ),
+            ),
+            UniqueCascadingSingleChoiceElement(
+                parameter_form=CascadingSingleChoiceElementExtended(
+                    title=Title("Contact group"),
+                    name="contact_group",
+                    parameter_form=ListUniqueSelection(
+                        prefill=DefaultValue([]),
+                        single_choice_prefill=InputHint(Title("Select contact group")),
+                        single_choice_type=SingleChoice,
+                        elements=_contact_group_choice(),
+                        custom_validate=[
+                            LengthInRange(
+                                min_value=1,
+                                error_msg=Message("Please add at least one contact group"),
+                            )
+                        ],
+                    ),
+                ),
+            ),
+        ]
+
+        if edition(cmk.utils.paths.omd_root) != Edition.CSE:
+            recipient_elements.append(
+                UniqueCascadingSingleChoiceElement(
+                    parameter_form=CascadingSingleChoiceElementExtended(
+                        title=Title("Explicit email addresses"),
+                        name="explicit_email_addresses",
+                        parameter_form=ListOfStrings(
+                            layout=ListOfStringsLayout.vertical,
+                            string_spec=String(
+                                custom_validate=[EmailAddress()],
+                            ),
+                            custom_validate=[
+                                LengthInRange(
+                                    min_value=1,
+                                    error_msg=Message("Please add at least one email address"),
+                                ),
+                            ],
+                        ),
+                    ),
+                )
+            )
+
+        recipient_elements.extend(
+            [
+                UniqueCascadingSingleChoiceElement(
+                    parameter_form=CascadingSingleChoiceElementExtended(
+                        title=Title("Specific users"),
+                        name="specific_users",
+                        parameter_form=ListUniqueSelection(
+                            prefill=DefaultValue([]),
+                            single_choice_prefill=InputHint(Title("Select user")),
+                            single_choice_type=SingleChoice,
+                            elements=[
+                                UniqueSingleChoiceElement(
+                                    parameter_form=SingleChoiceElementExtended(
+                                        name=ident,
+                                        title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                    )
+                                )
+                                for ident, title in _get_sorted_users()
+                            ],
+                            custom_validate=[
+                                LengthInRange(
+                                    min_value=1,
+                                    error_msg=Message("Please add at least one user"),
+                                ),
+                            ],
+                        ),
+                    ),
+                ),
+                UniqueCascadingSingleChoiceElement(
+                    parameter_form=CascadingSingleChoiceElementExtended(
+                        title=Title("All users"),
+                        name="all_users",
+                        parameter_form=FixedValue(value=None),
+                    ),
+                ),
+            ]
+        )
+
         return [
             ConditionalNotificationDialogWidget(
                 items=[
@@ -1475,101 +1573,7 @@ def recipient() -> QuickSetupStage:
                                 prefill=DefaultValue([("all_contacts_affected", None)]),
                                 single_choice_type=CascadingSingleChoice,
                                 cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
-                                elements=[
-                                    UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElementExtended(
-                                            title=Title("All contacts of the affected object"),
-                                            name="all_contacts_affected",
-                                            parameter_form=FixedValue(value=None),
-                                        ),
-                                    ),
-                                    UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElementExtended(
-                                            title=Title("All users with an email address"),
-                                            name="all_email_users",
-                                            parameter_form=FixedValue(value=None),
-                                        ),
-                                    ),
-                                    UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElementExtended(
-                                            title=Title("Contact group"),
-                                            name="contact_group",
-                                            parameter_form=ListUniqueSelection(
-                                                prefill=DefaultValue([]),
-                                                single_choice_prefill=InputHint(
-                                                    Title("Select contact group")
-                                                ),
-                                                single_choice_type=SingleChoice,
-                                                elements=_contact_group_choice(),
-                                                custom_validate=[
-                                                    LengthInRange(
-                                                        min_value=1,
-                                                        error_msg=Message(
-                                                            "Please add at least one contact group"
-                                                        ),
-                                                    )
-                                                ],
-                                            ),
-                                        ),
-                                    ),
-                                    UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElementExtended(
-                                            title=Title("Explicit email addresses"),
-                                            name="explicit_email_addresses",
-                                            parameter_form=ListOfStrings(
-                                                layout=ListOfStringsLayout.vertical,
-                                                string_spec=String(
-                                                    custom_validate=[EmailAddress()],
-                                                ),
-                                                custom_validate=[
-                                                    LengthInRange(
-                                                        min_value=1,
-                                                        error_msg=Message(
-                                                            "Please add at least one email address"
-                                                        ),
-                                                    ),
-                                                ],
-                                            ),
-                                        ),
-                                    ),
-                                    UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElementExtended(
-                                            title=Title("Specific users"),
-                                            name="specific_users",
-                                            parameter_form=ListUniqueSelection(
-                                                prefill=DefaultValue([]),
-                                                single_choice_prefill=InputHint(
-                                                    Title("Select user")
-                                                ),
-                                                single_choice_type=SingleChoice,
-                                                elements=[
-                                                    UniqueSingleChoiceElement(
-                                                        parameter_form=SingleChoiceElementExtended(
-                                                            name=ident,
-                                                            title=Title(title),  # pylint: disable=localization-of-non-literal-string
-                                                        )
-                                                    )
-                                                    for ident, title in _get_sorted_users()
-                                                ],
-                                                custom_validate=[
-                                                    LengthInRange(
-                                                        min_value=1,
-                                                        error_msg=Message(
-                                                            "Please add at least one user"
-                                                        ),
-                                                    ),
-                                                ],
-                                            ),
-                                        ),
-                                    ),
-                                    UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElementExtended(
-                                            title=Title("All users"),
-                                            name="all_users",
-                                            parameter_form=FixedValue(value=None),
-                                        ),
-                                    ),
-                                ],
+                                elements=recipient_elements,
                                 add_element_label=Label("Add recipient"),
                                 custom_validate=[
                                     not_empty(

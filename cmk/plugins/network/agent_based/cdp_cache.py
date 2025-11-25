@@ -367,12 +367,12 @@ def host_label_inv_cdp_cache(section: Cdp) -> HostLabelGenerator:
 
     Labels:
 
-        cmk/has_cdp_neighbours:
-            This label is set to "yes" if the device has any CDP neighbours.
+        cmk/has_cdp_neighbors:
+            This label is set to "yes" if the device has any CDP neighbors.
 
     """
     if section.cdp_neighbors:
-        yield HostLabel(name="cmk/has_cdp_neighbours", value="yes")
+        yield HostLabel(name="cmk/has_cdp_neighbors", value="yes")
 
 
 def inventory_cdp_cache(params: Mapping[str, str], section: Cdp) -> InventoryResult:

@@ -144,7 +144,7 @@ def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | No
         ),
         (
             CDP,
-            [HostLabel("cmk/has_cdp_neighbours", "yes")],
+            [HostLabel("cmk/has_cdp_neighbors", "yes")],
         ),
     ],
     ids=["no neighbors", "with neighbors"],

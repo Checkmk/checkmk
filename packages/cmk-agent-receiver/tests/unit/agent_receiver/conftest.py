@@ -65,6 +65,6 @@ def fixture_client() -> TestClient:
     return TestClient(mount.app)
 
 
-@pytest.fixture(name="uuid")
+@pytest.fixture(name="uuid", scope="session")
 def fixture_uuid() -> UUID4:
     return UUID(str(uuid4()))

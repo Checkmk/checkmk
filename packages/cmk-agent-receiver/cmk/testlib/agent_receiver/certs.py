@@ -80,7 +80,7 @@ def set_up_ca_certs(config: Config) -> None:
 
 # Copied from test/testlib/certs.py to make cmk-agent-receiver/tests self contained
 def generate_csr_pair(
-    cn: str, private_key_size: int = 2048
+    cn: str, private_key_size: int = 1024
 ) -> tuple[rsa.RSAPrivateKey, CertificateSigningRequest]:
     private_key = generate_private_key(private_key_size)
     return (

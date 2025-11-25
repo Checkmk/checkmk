@@ -51,7 +51,7 @@ def _symlink_push_host(
     source.symlink_to(target_dir)
 
 
-@pytest.fixture(name="serialized_csr")
+@pytest.fixture(name="serialized_csr", scope="session")
 def fixture_serialized_csr(uuid: UUID4) -> str:
     _key, csr = generate_csr_pair(str(uuid), 1024)
     return serialize_to_pem(csr)

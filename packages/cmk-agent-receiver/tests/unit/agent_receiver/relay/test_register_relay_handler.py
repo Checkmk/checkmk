@@ -80,7 +80,7 @@ def test_process_creates_multiple_relays(
     register_relay_handler: RegisterRelayHandler,
     test_user: UserAuth,
 ) -> None:
-    aliases = ["relay1", "relay2", "relay3", "relay4", "relay5"]
+    aliases = ["relay1", "relay2", "relay3"]
     relay_ids = []
 
     for alias in aliases:

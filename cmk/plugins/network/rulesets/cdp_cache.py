@@ -37,13 +37,13 @@ def _migrate_inv_cdp_cache(value: object) -> Mapping[str, object]:
 
 
 _remove_columns = [
-    MultipleChoiceElement(name="platform_details", title=Title("Neighbour platform details")),
+    MultipleChoiceElement(name="platform_details", title=Title("Neighbor platform details")),
     MultipleChoiceElement(name="capabilities", title=Title("Capabilities")),
     MultipleChoiceElement(name="vtp_mgmt_domain", title=Title("VTP domain")),
     MultipleChoiceElement(name="native_vlan", title=Title("Native VLAN")),
     MultipleChoiceElement(name="duplex", title=Title("Duplex")),
     MultipleChoiceElement(name="power_consumption", title=Title("Power level")),
-    MultipleChoiceElement(name="platform", title=Title("Neighbour platform")),
+    MultipleChoiceElement(name="platform", title=Title("Neighbor platform")),
 ]
 
 
@@ -54,13 +54,13 @@ def _parameter_form_inv_cdp_cache() -> Dictionary:
             "remove_domain": DictElement(
                 parameter_form=FixedValue(
                     value=True,
-                    title=Title("Remove domain name from neighbour device name"),
+                    title=Title("Remove domain name from neighbor device name"),
                     label=Label("enabled"),
                 )
             ),
             "domain_name": DictElement(
                 parameter_form=String(
-                    title=Title("Specific domain name to remove from neighbour device name"),
+                    title=Title("Specific domain name to remove from neighbor device name"),
                     custom_validate=[
                         LengthInRange(
                             min_value=1, error_msg=Message("This field can not be empty.")

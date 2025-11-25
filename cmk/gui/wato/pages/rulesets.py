@@ -42,8 +42,12 @@ from cmk.gui.form_specs import (
     DisplayMode,
     get_visitor,
     parse_data_from_field_id,
+    process_validation_errors,
     RawDiskData,
+    RawFrontendData,
+    read_data_from_frontend,
     render_form_spec,
+    validate_value_from_frontend,
     VisitorOptions,
 )
 from cmk.gui.form_specs.unstable import CommentTextArea, LegacyValueSpec
@@ -2174,14 +2178,14 @@ class ABCEditRuleMode(WatoMode):
         if not transactions.check_transaction():
             return redirect(self._back_url())
 
+        self._do_validate_on_render = True
+
         tree = folder_tree()
         is_locked = is_locked_by_quick_setup(self._rule.locked_by)
         if not (
             self._rule_is_updated_from_vars(folder_choices=tree.folder_choices, is_locked=is_locked)
         ):
             return redirect(self._back_url())
-
-        self._do_validate_on_render = True
 
         # Check permissions on folders
         new_rule_folder = tree.folder(
@@ -2328,10 +2332,10 @@ class ABCEditRuleMode(WatoMode):
             disabled=raw_properties["disabled"],
         )
 
-    def _get_rule_value_from_catalog_value(self, raw_value: object) -> object:
-        if not isinstance(raw_value, dict):
-            raise TypeError(raw_value)
-        return raw_value["value"]["value"]
+    def _get_rule_value_from_catalog_value(self, raw_value: RawFrontendData) -> object:
+        if not isinstance(raw_value.value, dict):
+            raise TypeError(raw_value.value)
+        return raw_value.value["value"]["value"]
 
     def _get_rule_properties_from_rule(self) -> RawDiskData:
         return RawDiskData(
@@ -2382,19 +2386,20 @@ class ABCEditRuleMode(WatoMode):
         match render_mode:
             case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
-                value = self._get_rule_value_from_catalog_value(
-                    parse_data_from_field_id(
-                        self._create_rule_value_catalog(
-                            title=None, value_parameter_form=registered_form_spec
-                        ),
-                        self._vue_field_id(),
-                    )
-                )
+                frontend_value = read_data_from_frontend(self._vue_field_id())
+                self._rule.value = self._get_rule_value_from_catalog_value(frontend_value)
+                if validation_errors := validate_value_from_frontend(
+                    self._create_rule_value_catalog(
+                        title=None, value_parameter_form=registered_form_spec
+                    ),
+                    frontend_value,
+                ):
+                    process_validation_errors(list(validation_errors))
             case RenderMode.BACKEND:
                 value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
                 self._ruleset.rulespec.valuespec.validate_value(value, "ve")
+                self._rule.value = value
 
-        self._rule.value = value
         return True
 
     def _get_condition_type_from_vars(self) -> str | None:

@@ -49,7 +49,7 @@ class VueAppConfig:
     display_mode: str
 
 
-def _process_validation_errors(
+def process_validation_errors(
     validation_errors: list[shared_type_defs.ValidationMessage],
 ) -> None:
     """This functions introduces validation errors from the vue-world into the CheckMK-GUI-world
@@ -128,7 +128,7 @@ def read_data_from_frontend(field_id: str) -> RawFrontendData:
 
 def parse_and_validate_frontend_data(form_spec: FormSpec[T], data: RawFrontendData) -> object:
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=False))
-    _process_validation_errors(visitor.validate(data))
+    process_validation_errors(visitor.validate(data))
     return visitor.to_disk(data)
 
 

@@ -50,7 +50,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import AnnotatedUserId
+from cmk.gui.type_defs import AnnotatedUserId, UserSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import AbsoluteDate
@@ -266,10 +266,7 @@ def page_message(ctx: PageContext) -> None:
     menu = _page_menu(breadcrumb)
     make_header(html, title, breadcrumb, menu)
 
-    spec = _message_spec(
-        userdb.UserData.from_userspec({"user_id": UserId(uid), **attrs})
-        for uid, attrs in ctx.config.multisite_users.items()
-    )
+    spec = _message_spec(ctx.config.multisite_users)
 
     flat_catalog = create_flat_catalog_from_dictionary(spec)
 
@@ -328,9 +325,9 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return menu
 
 
-def _message_spec(users: Iterable[userdb.UserData]) -> Dictionary:
+def _message_spec(users: Mapping[str, UserSpec]) -> Dictionary:
     return Dictionary(
-        custom_validate=[partial(_validate_msg, all_users=users)],
+        custom_validate=[partial(_validate_msg, all_user_ids=map(UserId, users.keys()))],
         elements={
             "text": DictElement(
                 required=True,
@@ -366,7 +363,10 @@ def _message_spec(users: Iterable[userdb.UserData]) -> Dictionary:
                                     elements=[
                                         MultipleChoiceElement(name=key, title=Title(value))  # pylint: disable=localization-of-non-literal-string
                                         for key, value in sorted(
-                                            [(u.user_id, u.alias) for u in users],
+                                            [
+                                                (uid, u.get("alias", uid))
+                                                for uid, u in users.items()
+                                            ],
                                             key=lambda x: x[1].lower(),
                                         )
                                     ],
@@ -424,7 +424,7 @@ def _message_spec(users: Iterable[userdb.UserData]) -> Dictionary:
     )
 
 
-def _validate_msg(msg: Mapping[str, Any], all_users: Iterable[userdb.UserData]) -> None:
+def _validate_msg(msg: Mapping[str, Any], all_user_ids: Iterable[UserId]) -> None:
     if not msg.get("methods"):
         raise ValidationError(FSMessage("Please select at least one messaging method."))
 
@@ -435,8 +435,7 @@ def _validate_msg(msg: Mapping[str, Any], all_users: Iterable[userdb.UserData]) 
 
     # On manually entered list of users validate the names
     if isinstance(msg["dest"], tuple) and msg["dest"][0] == "list":
-        known_user_ids = frozenset(user.user_id for user in all_users)
-        unknown_user_ids = set(msg["dest"][1]) - known_user_ids
+        unknown_user_ids = set(msg["dest"][1]) - frozenset(all_user_ids)
         if unknown_user_ids:
             first_unknown = next(iter(unknown_user_ids))
             raise ValidationError(

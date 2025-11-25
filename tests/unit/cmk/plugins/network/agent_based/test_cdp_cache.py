@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.network.agent_based.cdp_cache import (
     Cdp,
     CdpGlobal,
-    CdpNeighbour,
+    CdpNeighbor,
     host_label_inv_cdp_cache,
     inventory_cdp_cache,
     parse_inv_cdp_cache,
@@ -64,10 +64,10 @@ CDP_GLOBAL = CdpGlobal(
     message_interval=60,
 )
 
-CDP_NEIGHBOURS = [
-    CdpNeighbour(
-        neighbour_id="SCHE-CH-BASEL-SW-1",
-        neighbour_port="FastEthernet0/1",
+CDP_NEIGHBORS = [
+    CdpNeighbor(
+        neighbor_id="SCHE-CH-BASEL-SW-1",
+        neighbor_port="FastEthernet0/1",
         local_port="Gi0/0",
         address=None,
         capabilities="Host, L2, L3, SB",
@@ -82,7 +82,7 @@ CDP_NEIGHBOURS = [
 
 CDP = Cdp(
     cdp_global=CDP_GLOBAL,
-    cdp_neighbours=CDP_NEIGHBOURS,
+    cdp_neighbors=CDP_NEIGHBORS,
 )
 
 CDP_GLOBAL_ATTRIBUTE = Attributes(
@@ -96,7 +96,7 @@ CDP_GLOBAL_ATTRIBUTE = Attributes(
     status_attributes={},
 )
 
-CDP_NEIGHBOUR_ATTRIBUTE = TableRow(
+CDP_NEIGHBOR_ATTRIBUTE = TableRow(
     path=["networking", "cdp_cache", "neighbours"],
     key_columns={
         "neighbour_name": "SCHE-CH-BASEL-SW-1",
@@ -138,7 +138,7 @@ def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | No
         (
             Cdp(
                 cdp_global=CDP_GLOBAL,
-                cdp_neighbours=[],
+                cdp_neighbors=[],
             ),
             [],
         ),
@@ -147,7 +147,7 @@ def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | No
             [HostLabel("cmk/has_cdp_neighbours", "yes")],
         ),
     ],
-    ids=["no neighbours", "with neighbours"],
+    ids=["no neighbors", "with neighbors"],
 )
 def test_host_label_inv_cdp_cache(section: Cdp, expected: list[HostLabel]) -> None:
     labels = list(host_label_inv_cdp_cache(section=section))
@@ -158,17 +158,17 @@ def test_host_label_inv_cdp_cache(section: Cdp, expected: list[HostLabel]) -> No
     "section, params, expected",
     [
         (
-            Cdp(cdp_global=CDP_GLOBAL, cdp_neighbours=[]),
+            Cdp(cdp_global=CDP_GLOBAL, cdp_neighbors=[]),
             {},
             [CDP_GLOBAL_ATTRIBUTE],
         ),
         (
             CDP,
             {},
-            [CDP_GLOBAL_ATTRIBUTE, CDP_NEIGHBOUR_ATTRIBUTE],
+            [CDP_GLOBAL_ATTRIBUTE, CDP_NEIGHBOR_ATTRIBUTE],
         ),
     ],
-    ids=["no neighbours", "with neighbours"],
+    ids=["no neighbors", "with neighbors"],
 )
 def test_inventory_cdp_cache(section: Cdp, params: Any, expected: InventoryResult) -> None:  # type: ignore[misc]
     parsed = list(inventory_cdp_cache(params=params, section=section))

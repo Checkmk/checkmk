@@ -53,10 +53,10 @@ class CdpGlobal:
 
 
 @dataclass(frozen=True)
-class CdpNeighbour:
+class CdpNeighbor:
     # key columns
-    neighbour_id: str
-    neighbour_port: str
+    neighbor_id: str
+    neighbor_port: str
     local_port: str
     # non-key columns
     address: str | None
@@ -72,7 +72,7 @@ class CdpNeighbour:
 @dataclass(frozen=True)
 class Cdp:
     cdp_global: CdpGlobal | None
-    cdp_neighbours: Sequence[CdpNeighbour]
+    cdp_neighbors: Sequence[CdpNeighbor]
 
 
 def _get_short_if_name(if_name: str) -> str:
@@ -283,7 +283,7 @@ def parse_inv_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
             local_id=str(local_device_id) if local_device_id else None,
         )
 
-    neighbours = []
+    neighbors = []
 
     for entry in cdp_info:
         try:
@@ -305,20 +305,20 @@ def parse_inv_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
             continue
 
         # skip neighbour if one of the key columns is None
-        if not (neighbour_id := _get_device_id(str(device_id))):
+        if not (neighbor_id := _get_device_id(str(device_id))):
             continue
-        if not (neighbour_port := _get_device_port(str(device_port))):
+        if not (neighbor_port := _get_device_port(str(device_port))):
             continue
         if_index = str(oid_end).split(".")[0]
         if not (local_port := interface_by_index.get(if_index, if_index)):
             continue
 
-        neighbours.append(
-            CdpNeighbour(
+        neighbors.append(
+            CdpNeighbor(
                 address=_get_address(str(address_type), str(address)),
                 platform_details=str(platform_details) if platform_details else None,
-                neighbour_id=neighbour_id,
-                neighbour_port=neighbour_port,
+                neighbor_id=neighbor_id,
+                neighbor_port=neighbor_port,
                 local_port=str(local_port),
                 platform=str(platform) if platform else None,
                 capabilities=_get_capabilities(capabilities),
@@ -329,7 +329,7 @@ def parse_inv_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
             )
         )
 
-    return Cdp(cdp_global=global_info, cdp_neighbours=neighbours)
+    return Cdp(cdp_global=global_info, cdp_neighbors=neighbors)
 
 
 def host_label_inv_cdp_cache(section: Cdp) -> HostLabelGenerator:
@@ -341,7 +341,7 @@ def host_label_inv_cdp_cache(section: Cdp) -> HostLabelGenerator:
             This label is set to "yes" if the device has any CDP neighbours.
 
     """
-    if section.cdp_neighbours:
+    if section.cdp_neighbors:
         yield HostLabel(name="cmk/has_cdp_neighbours", value="yes")
 
 
@@ -373,36 +373,36 @@ def inventory_cdp_cache(params: Mapping[str, str], section: Cdp) -> InventoryRes
         )
 
     path = path + ["neighbours"]
-    for neighbour in section.cdp_neighbours:
-        neighbour_id = str(neighbour.neighbour_id)
+    for neighbor in section.cdp_neighbors:
+        neighbor_id = str(neighbor.neighbor_id)
         if params.get("remove_domain"):
             if params.get("domain_name"):
-                neighbour_id = neighbour_id.replace(params["domain_name"], "")
+                neighbor_id = neighbor_id.replace(params["domain_name"], "")
             else:
-                neighbour_id = neighbour_id.split(".")[0]
+                neighbor_id = neighbor_id.split(".")[0]
 
-        neighbour_port = neighbour.neighbour_port
-        local_port = neighbour.local_port
+        neighbor_port = neighbor.neighbor_port
+        local_port = neighbor.local_port
         if params.get("use_short_if_name"):
-            neighbour_port = _get_short_if_name(neighbour_port)
+            neighbor_port = _get_short_if_name(neighbor_port)
             local_port = _get_short_if_name(local_port)
 
         key_columns = {
-            "neighbour_name": neighbour_id,
-            "neighbour_port": neighbour_port,
+            "neighbour_name": neighbor_id,
+            "neighbour_port": neighbor_port,
             "local_port": local_port,
         }
 
         inventory_columns = {}
         for key, value in [
-            ("neighbour_address", neighbour.address),
-            ("platform_details", neighbour.platform_details),
-            ("platform", neighbour.platform),
-            ("capabilities", neighbour.capabilities),
-            ("vtp_mgmt_domain", neighbour.vtp_mgmt_domain),
-            ("native_vlan", neighbour.native_vlan),
-            ("duplex", neighbour.duplex),
-            ("power_consumption", neighbour.power_consumption),
+            ("neighbour_address", neighbor.address),
+            ("platform_details", neighbor.platform_details),
+            ("platform", neighbor.platform),
+            ("capabilities", neighbor.capabilities),
+            ("vtp_mgmt_domain", neighbor.vtp_mgmt_domain),
+            ("native_vlan", neighbor.native_vlan),
+            ("duplex", neighbor.duplex),
+            ("power_consumption", neighbor.power_consumption),
         ]:
             if key not in params.get("removecolumns", []) and value is not None:
                 inventory_columns[key] = value

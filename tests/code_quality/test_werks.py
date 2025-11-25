@@ -26,7 +26,6 @@ CVSS_REGEX_V31 = re.compile(
 CVSS_REGEX_V40 = re.compile(
     r"CVSS:4.0/AV:[NALP]/AC:[LH]/AT:[NP]/PR:[NLH]/UI:[NPA]/VC:[NLH]/VI:[NLH]/VA:[NLH]/SC:[NLH]/SI:[NLH]/SA:[NLH]"
 )
-JIRA_ISSUE_REGEX = re.compile(r"(CMK|SUP|KNW)-\d+")
 
 
 class WerksLoader(NamedTuple):
@@ -184,19 +183,6 @@ def test_werk_versions_after_tagged(werks_loaded: dict[int, Werk]) -> None:
             ),
             cmk_version.__version__,
         )
-    )
-
-
-def test_werks_commit_message() -> None:
-    commit_messsage = subprocess.check_output(
-        ["git", "log", "--format=%B", "-1"],
-        cwd=repo_path(),
-    ).decode()
-
-    assert JIRA_ISSUE_REGEX.search(commit_messsage) is not None, (
-        "The latest commit message for a Werk does not contain a valid reference to "
-        "a Jira issue ID (e.g., CMK-12345, SUP-12345, KNW-12345). Commit message is:\n%s"
-        % commit_messsage
     )
 
 

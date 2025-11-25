@@ -29,7 +29,7 @@ from cmk.agent_receiver.agent_receiver.models import (
 from cmk.agent_receiver.agent_receiver.utils import R4R
 from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.config import get_config
-from cmk.agent_receiver.lib.route_classes import INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
 
 

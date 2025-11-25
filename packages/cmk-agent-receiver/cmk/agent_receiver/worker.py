@@ -12,7 +12,7 @@ from uvicorn.protocols.http.flow_control import HIGH_WATER_LIMIT, service_unavai
 from uvicorn.protocols.http.h11_impl import H11Protocol, RequestResponseCycle
 from uvicorn_worker import UvicornWorker
 
-from cmk.agent_receiver.lib.route_classes import INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 
 
 def _extract_client_cert_cn(ssl_object: SSLObject | None) -> str | None:

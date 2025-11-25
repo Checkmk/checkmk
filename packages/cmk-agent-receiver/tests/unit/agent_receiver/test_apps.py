@@ -2,19 +2,22 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.testclient import TestClient
 from starlette.routing import Mount
 
-from cmk.agent_receiver.lib.route_classes import INJECTED_UUID_HEADER, UUIDValidationRoute
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_UUID_HEADER,
+    mtls_authorization_check,
+)
 from cmk.agent_receiver.main import main_app
 
 
 def test_uuid_validation_route() -> None:
     app = FastAPI()
-    uuid_validation_router = APIRouter(route_class=UUIDValidationRoute)
+    uuid_validation_router = APIRouter(dependencies=[Depends(mtls_authorization_check)])
 
-    @uuid_validation_router.get("/endpoint/1234")
+    @uuid_validation_router.get("/endpoint/{uuid}")
     def endpoint() -> dict[str, str]:
         return {"Hello": "World"}
 

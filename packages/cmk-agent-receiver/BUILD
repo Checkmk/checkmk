@@ -26,7 +26,7 @@ py_library(
         "cmk/agent_receiver/lib/config.py",
         "cmk/agent_receiver/lib/log.py",
         "cmk/agent_receiver/lib/middleware.py",
-        "cmk/agent_receiver/lib/route_classes.py",
+        "cmk/agent_receiver/lib/mtls_auth_validator.py",
         "cmk/agent_receiver/main.py",
         "cmk/agent_receiver/relay/__init__.py",
         "cmk/agent_receiver/relay/api/__init__.py",

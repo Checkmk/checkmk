@@ -307,6 +307,7 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
             config_lock_data,
             logged_backup_data,
             snapshot_data,
+            node_cluster_mapping,
         ):
             sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(content)}\n")
         sys.stdout.write("<<<<>>>>\n")
@@ -413,6 +414,7 @@ def _create_vm_sections(
     config_lock_data: Mapping[str, Mapping[str, str]],
     logged_backup_data: Mapping[str, object],
     snapshot_data: Mapping[str, object],
+    node_cluster_mapping: Mapping[str, object],
 ) -> Iterable[tuple[str, object]]:
     lock_str = config_lock_data.get(vmid, {}).get("lock")
     lock_state = LockState(lock_str) if lock_str else None
@@ -426,6 +428,9 @@ def _create_vm_sections(
             name=vm["name"],
             uptime=vm["uptime"],
             lock=lock_state,
+            cluster=str(node_cluster_mapping[vm["node"]])
+            if vm["node"] in node_cluster_mapping
+            else None,
         ).model_dump_json(),
     )
     if vm["type"] != "qemu":

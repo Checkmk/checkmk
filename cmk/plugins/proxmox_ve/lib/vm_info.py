@@ -28,3 +28,4 @@ class SectionVMInfo(BaseModel, frozen=True):
     name: str
     uptime: int = Field(default=0, ge=0)
     lock: LockState | None = None
+    cluster: str | None = None

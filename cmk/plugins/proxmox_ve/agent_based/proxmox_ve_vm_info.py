@@ -56,6 +56,8 @@ def host_label_function(section: SectionVMInfo) -> HostLabelGenerator:
     """
     yield HostLabel("cmk/pve/entity", "vm" if section.type == "qemu" else "LXC")
     yield HostLabel("cmk/pve/node", section.node)
+    if section.cluster:
+        yield HostLabel("cmk/pve/cluster", section.cluster)
 
 
 def discover_single(section: SectionVMInfo) -> DiscoveryResult:

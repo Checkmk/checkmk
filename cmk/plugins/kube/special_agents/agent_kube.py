@@ -756,7 +756,7 @@ def write_cluster_collector_info_section(
         cluster_collector=cluster_collector,
         nodes=node_collectors_metadata,
     ).model_dump_json()
-    sys.stdout.write("<<<kube_collector_metadata_v1>>>\n")
+    sys.stdout.write("<<<kube_collector_metadata_v1:sep(0)>>>\n")
     sys.stdout.write(f"{section_content}\n")
 
 
@@ -1327,7 +1327,7 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         container=collector_container_log,
         machine=collector_machine_log,
     ).model_dump_json()
-    sys.stdout.write("<<<kube_collector_processing_logs_v1>>>\n")
+    sys.stdout.write("<<<kube_collector_processing_logs_v1:sep(0)>>>\n")
     sys.stdout.write(f"{section_content}\n")
 
 

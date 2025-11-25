@@ -82,6 +82,7 @@ def main() {
                     edition: edition,
                     distro: distro,
                     download_dir: checkout_dir,
+                    disable_cache: params.DISABLE_CACHE,
                     bisect_comment: params.CIPARAM_BISECT_COMMENT,
                     fake_windows_artifacts: params.FAKE_WINDOWS_ARTIFACTS,
                     docker_tag: docker_tag,

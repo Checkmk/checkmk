@@ -23,7 +23,6 @@ import CmkList from '@/components/CmkList'
 import { type Suggestion } from '@/components/CmkSuggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
-import { inputSizes } from '@/components/user-input/sizes'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 
@@ -249,7 +248,6 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
           <FormAutocompleter
             v-model="metricName"
             :autocompleter="metricNameAutocompleter"
-            :size="inputSizes['MEDIUM'].width"
             :placeholder="_t('Metric name')"
           />
         </td>
@@ -270,7 +268,6 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             <FormAutocompleter
               v-model="resourceAttribute.key"
               :autocompleter="resourceAttributesAutocompleter()"
-              :size="inputSizes['MEDIUM'].width"
               :placeholder="_t('Attribute key')"
               @update:model-value="addResourceAttribute"
             />
@@ -279,7 +276,6 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             <FormAutocompleter
               v-model="resourceAttribute.value"
               :autocompleter="resourceAttributesAutocompleter(false)"
-              :size="inputSizes['MEDIUM'].width"
               :placeholder="_t('Attribute value')"
               @update:model-value="addResourceAttribute"
             />
@@ -302,7 +298,6 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             <FormAutocompleter
               v-model="scopeAttribute.key"
               :autocompleter="scopeAttributesAutocompleter()"
-              :size="inputSizes['MEDIUM'].width"
               :placeholder="_t('Attribute key')"
               @update:model-value="addScopeAttribute"
             />
@@ -311,7 +306,6 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             <FormAutocompleter
               v-model="scopeAttribute.value"
               :autocompleter="scopeAttributesAutocompleter(false)"
-              :size="inputSizes['MEDIUM'].width"
               :placeholder="_t('Attribute value')"
               @update:model-value="addScopeAttribute"
             />
@@ -334,7 +328,6 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             <FormAutocompleter
               v-model="dataPointAttribute.key"
               :autocompleter="dataPointAttributesAutocompleter()"
-              :size="inputSizes['MEDIUM'].width"
               :placeholder="_t('Attribute key')"
               @update:model-value="addDataPointAttribute"
             />
@@ -343,7 +336,6 @@ const aggregationSumRateUnitSuggestions: Suggestion[] = [
             <FormAutocompleter
               v-model="dataPointAttribute.value"
               :autocompleter="dataPointAttributesAutocompleter(false)"
-              :size="inputSizes['MEDIUM'].width"
               :placeholder="_t('Attribute value')"
               @update:model-value="addDataPointAttribute"
             />

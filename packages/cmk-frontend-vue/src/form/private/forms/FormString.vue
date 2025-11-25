@@ -14,7 +14,6 @@ import CmkDropdownButton from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
-import { inputSizes } from '@/components/user-input/sizes'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -51,7 +50,6 @@ const componentId = useId()
         :id="componentId"
         v-model="value"
         class="form-string--dropdown"
-        :size="inputSizes[props.spec.field_size].width"
         :autocompleter="spec.autocompleter"
         :placeholder="untranslated(spec.input_hint ?? '')"
         :label="spec.label || ''"

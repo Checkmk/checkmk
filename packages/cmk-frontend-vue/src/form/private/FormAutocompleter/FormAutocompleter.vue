@@ -20,7 +20,7 @@ const props = defineProps<{
   autocompleter?: Autocompleter
   filter?: (element: Suggestion) => boolean
   startOfGroup?: boolean
-  size: number
+  size?: number
   label?: string
 }>()
 

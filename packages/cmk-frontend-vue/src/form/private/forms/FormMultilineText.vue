@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed } from 'vue'
 
+import { inputSizes } from '@/components/user-input//sizes'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -24,11 +25,10 @@ const [validation, value] = useValidation<string>(
   () => props.backendValidation
 )
 const style = computed(() => {
-  return props.spec.monospaced
-    ? {
-        'font-family': 'monospace, sans-serif'
-      }
-    : {}
+  return {
+    ...(props.spec.monospaced ? { 'font-family': 'monospace, sans-serif' } : {}),
+    width: inputSizes['LARGE'].width
+  }
 })
 </script>
 
@@ -44,7 +44,6 @@ const style = computed(() => {
       :placeholder="spec.input_hint || ''"
       :aria-label="spec.label || spec.title"
       rows="4"
-      cols="60"
     />
     <FormValidation :validation="validation"></FormValidation>
   </div>

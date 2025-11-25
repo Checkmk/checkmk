@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts" generic="T extends 'text' | 'number' | 'date' | 'time' = 'text'">
 import { type VariantProps, cva } from 'class-variance-authority'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
@@ -46,6 +46,7 @@ const {
 
 const data = defineModel<InputDataType<T>>()
 const validation = ref<string[]>([])
+const width = computed(() => inputSizes[fieldSize].width)
 
 watch(data, (newData) => {
   if (newData !== undefined && validators && validators.length > 0) {
@@ -69,14 +70,7 @@ immediateWatch(
 </script>
 
 <template>
-  <input
-    v-model="data"
-    v-bind="$attrs"
-    :class="propsCva({ type })"
-    :type="type"
-    :size="inputSizes[fieldSize].width"
-    step="any"
-  />
+  <input v-model="data" v-bind="$attrs" :class="propsCva({ type })" :type="type" step="any" />
   <span v-if="unit"><CmkSpace size="small" />{{ unit }}</span>
   <CmkInlineValidation :validation="validation"></CmkInlineValidation>
 </template>
@@ -91,5 +85,9 @@ input.cmk-input--number::-webkit-inner-spin-button {
 input.cmk-input--number {
   width: 5.8ex;
   appearance: textfield;
+}
+
+input.cmk-input--text {
+  width: v-bind('width');
 }
 </style>

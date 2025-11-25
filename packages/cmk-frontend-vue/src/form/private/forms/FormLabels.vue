@@ -10,7 +10,6 @@ import { onBeforeUpdate, ref, watch } from 'vue'
 import CmkList from '@/components/CmkList'
 import { type Suggestion } from '@/components/CmkSuggestions'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import { inputSizes } from '@/components/user-input/sizes'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -132,7 +131,6 @@ const deleteItem = (index: number) => {
     <!-- @vue-ignore keydown.enter does not exist on FormAutocompleter -->
     <FormAutocompleter
       v-model="selectedValue"
-      :size="inputSizes['MEDIUM'].width"
       :autocompleter="props.spec.autocompleter"
       :placeholder="props.spec.i18n.add_some_labels"
       :filter="filterKeyValuePairs"

@@ -9,12 +9,8 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_dat
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
 )
-from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay import (
-    UnregisterRelayHandler,
-)
 
 __all__ = [
     "RegisterRelayHandler",
-    "UnregisterRelayHandler",
     "ForwardMonitoringDataHandler",
 ]

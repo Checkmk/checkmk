@@ -56,11 +56,6 @@ class AgentReceiverClient:
             },
         )
 
-    def unregister_relay(self, relay_id: str) -> httpx.Response:
-        return self.client.delete(
-            f"/{self.site_name}/relays/{relay_id}",
-        )
-
     def push_task(self, *, relay_id: str, spec: TaskCreateRequestSpec) -> httpx.Response:
         return self.client.post(
             f"/{self.site_name}/relays/{relay_id}/tasks",

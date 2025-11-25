@@ -16,9 +16,6 @@ from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
 )
-from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay import (
-    UnregisterRelayHandler,
-)
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     GetRelayTaskHandler,
     GetRelayTasksHandler,
@@ -68,14 +65,6 @@ def create_relay_mock_transport() -> httpx.MockTransport:
         ):
             items = [{"id": relay_id} for relay_id in registered_relays]
             return httpx.Response(HTTPStatus.OK, json={"value": items})
-
-        # Delete relay
-        elif request.method == "DELETE" and "/objects/relay/" in request.url.path:
-            relay_id = request.url.path.split("/")[-1]
-            if relay_id in registered_relays:
-                registered_relays.remove(relay_id)
-                return httpx.Response(HTTPStatus.NO_CONTENT)
-            return httpx.Response(HTTPStatus.NOT_FOUND, json={"error": "Relay not found"})
 
         # Unhandled request
         return httpx.Response(HTTPStatus.NOT_FOUND, json={"error": "Endpoint not found"})
@@ -129,15 +118,6 @@ def tasks_repository() -> Iterator[TasksRepository]:
 def register_relay_handler(relays_repository: RelaysRepository) -> Iterator[RegisterRelayHandler]:
     """Provides a RegisterRelayHandler with mock dependencies."""
     handler = RegisterRelayHandler(relays_repository=relays_repository)
-    yield handler
-
-
-@pytest.fixture()
-def unregister_relay_handler(
-    relays_repository: RelaysRepository,
-) -> Iterator[UnregisterRelayHandler]:
-    """Provides an UnregisterRelayHandler with mock dependencies."""
-    handler = UnregisterRelayHandler(relays_repository=relays_repository)
     yield handler
 
 

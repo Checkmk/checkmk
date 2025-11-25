@@ -71,12 +71,6 @@ class RelaysRepository:
         logger.error("could not check if relay exists %s : %s", resp.status_code, resp.text)
         raise CheckmkAPIError(resp.text)
 
-    def remove_relay(self, relay_id: RelayID, auth: SiteAuth) -> None:
-        resp = self.client.delete(url=f"objects/relay/{relay_id}", auth=auth)
-        if resp.status_code != HTTPStatus.NO_CONTENT:
-            logger.error("could not delete relay %s : %s", resp.status_code, resp.text)
-            raise CheckmkAPIError(resp.text)
-
     def get_all_relay_ids(self) -> list[RelayID]:
         latest = self.helper_config_dir / "latest/relays"
         try:

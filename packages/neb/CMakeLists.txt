@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_COMPILER g++-14) # TODO: replace with more intelligent approach
 
-set(CMK_VERSION 2.3.0p41)
+set(CMK_VERSION 2.3.0p42)
 string(REGEX REPLACE "([0-9]+)\.([0-9]+)\.([0-9]+).*" "\\1.\\2.\\3"
                      MANGLED_VERSION ${CMK_VERSION})
 

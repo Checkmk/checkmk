@@ -80,6 +80,7 @@ from cmk.plugins.kube.common import (
     PodsToHost,
     RawMetrics,
 )
+from cmk.plugins.kube.prometheus_api import ResponseSuccess
 from cmk.plugins.kube.schemata import api, section
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.v0_unstable.misc import vcrtrace
@@ -1101,6 +1102,12 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     ],
                     logger=LOGGER,
                 )
+
+                if all(not isinstance(response[1], ResponseSuccess) for response in (cpu, memory)):
+                    LOGGER.debug(
+                        "Prometheus queries failed. Skipping generation of 'machine_sections'"
+                    )
+                    return 0
 
                 common.write_sections(
                     [prometheus_section.debug_section(usage_config.query_url(), cpu, memory)]

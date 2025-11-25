@@ -12,14 +12,12 @@ import { type Relay, getRelayCollection } from '@/lib/rest-api-client/relay/clie
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
-import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
+import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
-
-import { hasValidRelayNameCharacters } from '@/mode-relay/lib/validation'
 
 const { _t } = usei18n()
 
@@ -37,12 +35,6 @@ const getNameErrors = () => {
     errors.push('A relay name is required')
   } else if (savedRelays.value.some((relay) => relay.alias === name)) {
     errors.push('This relay name is already in use')
-  } else if (!hasValidRelayNameCharacters(name)) {
-    errors.push(
-      'Allowed characters are word characters (letters, digits, underscores), ',
-      'dollar signs, spaces, at signs, dots, plus signs, and hyphens. ',
-      'Must start and end with a word character or dollar sign.'
-    )
   }
   return errors
 }

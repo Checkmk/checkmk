@@ -4,6 +4,7 @@
 
 // execute tests, catch error and output log
 void execute_test(Map config = [:]) {
+    def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def safe_branch_name = versioning.safe_branch_name();
 
@@ -30,7 +31,20 @@ void execute_test(Map config = [:]) {
             } else {
                 container(defaultDict.container_name) {
                     println("'execute_test' is using k8s container '${defaultDict.container_name}'");
-                    run_sh_command(cmd);
+                    artifacts_helper.withHotCache([
+                        download_dest: "~",
+                        remove_existing_cache: true,
+                        target_name: defaultDict.name,
+                        cache_prefix: versioning.distro_code(),
+                        files_to_consider: [
+                            '.bazelversion',
+                            'WORKSPACE',
+                            'MODULE.bazel.lock',
+                            'requirements.txt'
+                        ],
+                    ]) {
+                        run_sh_command(cmd);
+                    }
                 }
             }
         }

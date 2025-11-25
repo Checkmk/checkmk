@@ -109,6 +109,110 @@ void upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
     }
 }
 
+boolean download_hot_cache(Map args) {
+    try {
+        // around 10/15sec to download 1.6GB (gzip)/ 2.0GB (lz4) from tstbuilds
+        download_version_dir(
+            "${INTERNAL_DEPLOY_DEST}" + "caches",
+            "${INTERNAL_DEPLOY_PORT}",
+            "",
+            "${args.download_dest}",
+            "${args.file_pattern}",
+        );
+    }
+    catch (Exception exc) {
+        print("hot cache: ran into exception while running download_version_dir() for ${args.file_pattern}: ${exc}");
+        return true;
+    }
+
+    try {
+        println("hot cache: Decompressing ${args.file_pattern} in ${args.download_dest}");
+
+        sh("""
+            cd ${args.download_dest}
+            time lz4 -dc ${args.file_pattern} | tar -xf - 2>/dev/null
+            du -sh ~/.cache
+        """);
+    }
+    catch (Exception exc) {
+        print("hot cache: Decompression failed, contact your local CI dealer and tell: ${exc}");
+        return true;
+    }
+
+    return false;
+}
+
+void upload_hot_cache(Map args) {
+    sh("""
+        cd ${args.download_dest}
+        if [ -d ".cache" ]; then
+            du -sh .cache
+            time tar -cf - .cache | lz4 > ${args.file_pattern}
+        fi
+    """);
+
+    if (!sh(script:"test -f ${args.download_dest}/${args.file_pattern}", returnStatus:true)) {
+        upload_via_rsync(
+            "${args.download_dest}",
+            "",
+            "${args.file_pattern}",
+            "${INTERNAL_DEPLOY_DEST}" + "caches",
+            INTERNAL_DEPLOY_PORT,
+        );
+    }
+}
+
+String hashFiles(files) {
+    return files.collect({ path ->
+        cmd_output("sha256sum ${path} | cut -c 1-8")?.toString();
+    }).join("-");
+}
+
+void withHotCache(Map args, Closure body) {
+    body.resolveStrategy = Closure.OWNER_FIRST;
+    body.delegate = [:];
+
+    // TODO: Remove me as soon as this is stable
+    if (env.USE_STASHED_BAZEL_FOLDER == "0") {
+        body();
+        return;
+    }
+
+    if (args.remove_existing_cache == null ? false : args.remove_existing_cache.asBoolean()) {
+        // remove may existing cache shipped with the container
+        sh("""
+            rm -rf ~/.cache/
+        """);
+    }
+
+    // use a combination of "JOB_BASE_NAME" and "arg.name"
+    // as a single job might execute multiple targts (e.g. test-github-actions)
+    // groovylint-disable-next-line LineLength
+    def file_pattern = "${args.cache_prefix}-cache-${hashFiles(args.files_to_consider)}-${args.target_name.replaceAll(' ', '-')}-${JOB_BASE_NAME}.tar.lz4";
+
+    def upload_new_bazel_folder_artifact = download_hot_cache([
+        file_pattern: "${file_pattern}",
+        download_dest: args.download_dest,
+    ]);
+
+    try {
+        body();
+    } finally {
+        if (upload_new_bazel_folder_artifact) {
+            println("hot cache: Creating ${args.download_dest}/${file_pattern}");
+
+            upload_hot_cache([
+                download_dest: args.download_dest,
+                file_pattern: "${file_pattern}",
+            ]);
+        } else {
+            println("hot cache: No need to re-upload an existing artifact");
+        }
+    }
+
+    return;
+}
+
 void create_hash(FILE_PATH) {
     sh("""
         cd \$(dirname ${FILE_PATH});

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -219,7 +218,7 @@ class ABCTopologyPage(Page):
 
     @classmethod
     @abc.abstractmethod
-    def visual_spec(cls):
+    def visual_spec(cls) -> Visual:
         raise NotImplementedError
 
     @override
@@ -542,7 +541,7 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
     def unique_id(self) -> str:
         return "parent_child"
 
-    def name(self):
+    def name(self) -> str:
         return _("Parent / Child")
 
     def get_node_specific_info(self, node: TopologyNode) -> dict[str, Any]:
@@ -781,7 +780,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
     def unique_id(self) -> str:
         return _dynamic_network_data_id(self._data_type)
 
-    def name(self):
+    def name(self) -> str:
         return self._data_type.title()
 
     def get_node_specific_info(self, node: TopologyNode) -> dict[str, Any]:
@@ -883,7 +882,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             for node in self._topology_nodes.values():
                 node.mesh_depth = node.mesh_depth - 1
 
-    def _apply_service_visibility(self):
+    def _apply_service_visibility(self) -> None:
         general_service_visibility = (
             self._topology_configuration.frontend.overlays_config.computation_options.show_services
         )
@@ -934,7 +933,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             if visibility == "none" or self._node_extra_info.get(node_id, {}).get("state") == 0:
                 remove_service(node)
 
-    def _enrich_nodes_with_core_data(self):
+    def _enrich_nodes_with_core_data(self) -> None:
         # Enrich with data from core and adjust node_type
         core_hostnames = set()
         core_services = set()
@@ -1057,7 +1056,7 @@ class Topology:
         )
 
     @property
-    def growth_root_nodes(self):
+    def growth_root_nodes(self) -> set[str]:
         return self._growth_root_nodes
 
     @property
@@ -1422,7 +1421,7 @@ class TopologyLayerRegistry(cmk.ccc.plugin_registry.Registry[type[ABCTopologyNod
 topology_layer_registry = TopologyLayerRegistry()
 
 
-def _register_builtin_views():
+def _register_builtin_views() -> None:
     multisite_builtin_views.update(
         {
             "topology_filters": {

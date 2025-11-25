@@ -53,8 +53,27 @@ class BaseDashboard(CmkPage):
         setattr(mapping, "Dashboards", "menu_dashboards")
         return mapping
 
-    def menu_icon(self, icon_title: str) -> Locator:
-        return self.main_area.locator("table#page_menu_bar").get_by_title(icon_title)
+    def check_dashboard_selector_placeholder(self) -> None:
+        """Check that the dashboard selector has the expected placeholder text."""
+        expect(
+            self.dashboard_selector,
+            message=(
+                "The dashboard selector does not contain the expected dashboard name."
+                f" Expected: '{self.page_title}';"
+                f" actual value: '{self.dashboard_selector.get_attribute('placeholder')}'"
+            ),
+        ).to_have_attribute("placeholder", self.page_title)
+
+    @property
+    def _menu_header(self) -> Locator:
+        return self.main_area.locator(".dashboard-menu-header")
+
+    @property
+    def dashboard_selector(self) -> Locator:
+        return self._menu_header.get_by_role("textbox")
+
+    def menu_button(self, button_name: str) -> Locator:
+        return self._menu_header.get_by_role("button", name=button_name)
 
     @property
     def dashlets(self) -> Locator:
@@ -62,7 +81,9 @@ class BaseDashboard(CmkPage):
         return self.main_area.locator("div.dashlet")
 
     def dashlet(self, dashlet_name: str) -> Locator:
-        return self.main_area.locator(f"div.dashlet:has(:text-is('{dashlet_name}'))")
+        return self.main_area.locator(
+            f"div.db-relative-grid-frame:has(:text-is('{dashlet_name}'))"
+        )  # To replace with data attribute when available
 
     def total_count(self, dashlet_title: str) -> Locator:
         return self.dashlet(dashlet_title).get_by_role("row", name="Total").locator("a.count")
@@ -238,12 +259,11 @@ class MainDashboard(BaseDashboard):
         "Top alerters (last 7 days)",
     ]
 
-    icons_list: list[str] = [
-        "Main dashboard",
-        "Problem dashboard",
-        "Checkmk dashboard",
+    header_buttons = (
         "Filter",
-    ]
+        "Settings",
+        "Edit widgets",
+    )
 
     @override
     def navigate(self) -> None:
@@ -257,9 +277,9 @@ class MainDashboard(BaseDashboard):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is 'Main dashboard' page")
-        self.main_area.check_page_title(self.page_title)
+        self.check_dashboard_selector_placeholder()
         expect(self.dashlet("Host statistics")).to_be_visible()
-        expect(self.menu_icon("Filter")).to_be_visible()
+        expect(self.menu_button("Filter")).to_be_visible()
 
 
 class DashboardMobile(BaseDashboard):
@@ -320,7 +340,7 @@ class ProblemDashboard(BaseDashboard):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
-        self.main_area.check_page_title(self.page_title)
+        self.check_dashboard_selector_placeholder()
         expect(self.dashlet("Host statistics")).to_be_visible()
         expect(self.dashlet("Events of recent 4 hours")).to_be_visible()
 

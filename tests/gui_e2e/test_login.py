@@ -17,6 +17,7 @@ from playwright.sync_api import BrowserContext, expect, Page
 from tests.gui_e2e.testlib.open_ldap import Group, OpenLDAPManager, User
 from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import ProblemDashboard
 from tests.testlib.site import Site
 from tests.testlib.utils import is_containerized
 
@@ -124,8 +125,8 @@ def test_ldap_user_login_success(
     _, page = new_browser_context_and_page
     login_page = LoginPage(page, test_site.internal_url)
     login_page.login(valid_ldap_credentials)
-    login_page.main_menu.monitor_menu("Problem dashboard").click()
-    login_page.main_area.check_page_title("Problem dashboard")
+
+    ProblemDashboard(login_page.page, navigate_to_page=True)
 
 
 @pytest.mark.skipif(not is_containerized(), reason="Only to be run in a container")

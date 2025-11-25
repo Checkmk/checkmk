@@ -396,29 +396,29 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.41.2 \
-    --hash=sha256:7054fbc61cadab383f40ea6d725013ba6c8f569641dddb14c0055e790280ad6c \
-    --hash=sha256:edcde82fdae4201aa690e3683f8e5b1a846cf1bbf79d03db4fa8a2f6f46dba9c
+boto3==1.41.3 \
+    --hash=sha256:10a3f5a72e071c362f5aa8443bd949edc31b7494c48a315ccdab14b1c387a1fd \
+    --hash=sha256:8a89f3900a356879022c1600f72cbb3d8b85708f094d2d08a461bd193d0b07ca
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.41.2 \
-    --hash=sha256:5aac2ee5c1bed1a322016d37077e42c68c3ff83a42f989549be3ed21f0a7e0a0 \
-    --hash=sha256:9bdac65413825b1202654bd5633316a561271164c6123211ac805e61cb59f120
+boto3-stubs[logs]==1.41.3 \
+    --hash=sha256:bec698419b31b499f3740f1dfb6dae6519167d9e3aa536f6f730ed280556230b \
+    --hash=sha256:c7cc9706ac969c8ea284c2d45ec45b6371745666d087c6c5e7c9d39dafdd48bc
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.41.2 \
-    --hash=sha256:154052dfaa7292212f01c8fab822c76cd10a15a7e164e4c45e4634eb40214b90 \
-    --hash=sha256:49a3e8f4c1a1759a687941fef8b36efd7bafcf63c1ef74aa75d6497eb4887c9c
+botocore==1.41.3 \
+    --hash=sha256:1c6ad338f445c9bf02e231bfa302239d60520ec6dd88ded3206b34dca100103c \
+    --hash=sha256:fe2379b30cc726e9e44bf47c3834fe208b85f7eaa57b934ab05f305ca9d05a8b
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.41.2.post1 \
-    --hash=sha256:4b6230cc65466ceb811df8442fe4cd025a955aad8328646791a0f1ed46bccd15 \
-    --hash=sha256:acf2145b85c5165378b298cb90bbc3a0da59e79204e4af3499d95d0d6d11987c
+botocore-stubs==1.41.3 \
+    --hash=sha256:6ab911bd9f7256f1dcea2e24a4af7ae0f9f07e83d0a760bba37f028f4a2e5589 \
+    --hash=sha256:bacd1647cd95259aa8fc4ccdb5b1b3893f495270c120cda0d7d210e0ae6a4170
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -673,9 +673,9 @@ charset-normalizer==3.4.4 \
     #   -c requirements.txt
     #   reportlab
     #   requests
-checkmk-dev-tools==1.2.1 \
-    --hash=sha256:09d8bc14bf4b6012a25e38a10a31d5ed990b533b7c60b2eca754fc1b6cd2e4ab \
-    --hash=sha256:faf80c3b23dafe957b0f896218b14845fc2129813bb687b310b07f79ac78e71c
+checkmk-dev-tools==2.0.0 \
+    --hash=sha256:8d6bf3ac94dd53abb9e0d8b6878f440ced5a7f375cf4d19a8e9a3327403407d7 \
+    --hash=sha256:d04933b61c94b4c4e177ec0c24a388734f5fa6215643afd74ebb15d67cfbe3fa
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -1172,9 +1172,9 @@ fakeredis[lua]==2.32.1 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-fastapi==0.121.3 \
-    --hash=sha256:0055bc24fe53e56a40e9e0ad1ae2baa81622c406e548e501e717634e2dfbc40b \
-    --hash=sha256:0c78fc87587fcd910ca1bbf5bc8ba37b80e119b388a7206b39f0ecc95ebf53e9
+fastapi==0.122.0 \
+    --hash=sha256:a456e8915dfc6c8914a50d9651133bd47ec96d331c5b44600baa635538a30d67 \
+    --hash=sha256:cd9b5352031f93773228af8b4c443eedc2ac2aa74b27780387b853c3726fb94b
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -2973,9 +2973,9 @@ mypy==1.18.2 \
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
     #   pylsp-mypy
-mypy-boto3-logs==1.41.0 \
-    --hash=sha256:cb89e176ae10ed9e647a96da8e7c3d090826bb02c572382a0cca2defde4433c7 \
-    --hash=sha256:e47af736fb87326bc7d2a46f26d039fea1cf77d0c17b8c6aedb34a0db9b0bd20
+mypy-boto3-logs==1.41.3 \
+    --hash=sha256:e12712010ae789b53fb3ffe062ae358681d445df8e9be6334c380d446183b8e4 \
+    --hash=sha256:ee9197c53f4f3a03e002174afaed35c720abce5e22010bd246196d163c9ffbbc
     # via
     #   -c requirements.txt
     #   boto3-stubs
@@ -5806,9 +5806,9 @@ types-protobuf==6.32.1.20251105 \
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
     #   mypy-protobuf
-types-psutil==7.1.1.20251122 \
-    --hash=sha256:9a5d074b472dee08c97891c986549f6ef4f0896fbdd6cdc0686c6663721995fe \
-    --hash=sha256:cdb39c30a81ce6e433aa672922d59b78c4c6a9c64cd9936f1f6894d26c82ae0f
+types-psutil==7.1.3.20251125 \
+    --hash=sha256:97245a6705c65410902b64fdb8c67339fe2557b737305dbcb8e4508f07db7efc \
+    --hash=sha256:bee98e02e496db28967e552bfb793f43deb11060cdf2d15ecb16c942aed02e3c
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in

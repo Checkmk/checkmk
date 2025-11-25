@@ -2030,6 +2030,7 @@ def fetch_data(connection: ESXConnection, opt: argparse.Namespace) -> list[str]:
     # Virtual machines
     ###########################
     systime = get_systemtime(connection, bool(opt.debug))
+    local_time = time.time()
 
     if "virtualmachine" in opt.modules:
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
@@ -2052,7 +2053,7 @@ def fetch_data(connection: ESXConnection, opt: argparse.Namespace) -> list[str]:
         output += get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt)
 
     if systime is not None:
-        output += ["<<<systemtime>>>", f"{systime} {time.time()}"]
+        output += ["<<<systemtime>>>", f"{systime} {local_time}"]
 
     return output
 

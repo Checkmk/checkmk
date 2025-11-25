@@ -86,7 +86,7 @@ def _iter_host_tree_paths_or_unknown_file_paths(
     for host_dir in archive_dirs + delta_cache_dirs:
         try:
             file_paths = list(host_dir.iterdir())
-        except FileNotFoundError:
+        except (FileNotFoundError, NotADirectoryError):
             file_paths = []
 
         raw_host_name = host_dir.name

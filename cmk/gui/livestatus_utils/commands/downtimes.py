@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains commands for managing downtimes through LiveStatus."""
 
-# mypy: disable-error-code="no-untyped-def"
-
 import datetime as dt
-from typing import Literal
+from collections.abc import Hashable, Sequence
+from typing import Literal, TypeVar
 
 from livestatus import MultiSiteConnection
 
@@ -852,9 +851,10 @@ def _recur_mode(recur: RecurMode, duration: int) -> int:
     return rv
 
 
-# not type checked due to mypy restrictions. this could be anything hashable but you can't type it
-# correctly. :-/
-def _deduplicate(seq):
+_T = TypeVar("_T", bound=Hashable)
+
+
+def _deduplicate(seq: Sequence[_T]) -> list[_T]:
     """Like set() but retains sorting order of input.
 
     Args:
@@ -867,8 +867,8 @@ def _deduplicate(seq):
 
 
     """
-    result = []
-    seen = set()
+    result: list[_T] = []
+    seen: set[_T] = set()
     for entry in seq:
         if entry in seen:
             continue

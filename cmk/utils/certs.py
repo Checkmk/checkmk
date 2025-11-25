@@ -423,6 +423,9 @@ class SiteBrokerCertificate:
         trusted_cas_store.write(signing_ca + additionally_trusted_ca)
         self.cert_path.write_bytes(cert)
 
+    def load(self) -> PersistedCertificateWithPrivateKey:
+        return PersistedCertificateWithPrivateKey.read_files(self.cert_path, self.key_path)
+
 
 class SiteBrokerCA:
     def __init__(self, cert_path: Path, key_path: Path) -> None:

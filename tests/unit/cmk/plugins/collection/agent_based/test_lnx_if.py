@@ -8,10 +8,22 @@
 
 import copy
 from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 
-from cmk.agent_based.v2 import Attributes, Metric, Result, Service, State, StringTable, TableRow
+from cmk.agent_based.v2 import (
+    Attributes,
+    HostLabel,
+    HostLabelGenerator,
+    InventoryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+    TableRow,
+)
 from cmk.plugins.bonding import lib as bonding
 from cmk.plugins.collection.agent_based import lnx_if
 from cmk.plugins.lib import interfaces
@@ -1266,3 +1278,103 @@ def test_inventory_lnx_if_with_bonding() -> None:
             status_columns={},
         ),
     ]
+
+
+__section_inventory = {
+    "lo": lnx_if.IPLinkInterface(
+        state_infos=["LOOPBACK", "UP", "LOWER_UP"],
+        link_ether="",
+        inet=["127.0.0.1/8"],
+        inet6=["::1/128"],
+    ),
+    "ens32": lnx_if.IPLinkInterface(
+        state_infos=["BROADCAST", "MULTICAST", "UP", "LOWER_UP"],
+        link_ether="\x00\x0c)\x82ýr",
+        inet=["192.168.10.144/24"],
+        inet6=["fe80::20c:29ff:fe82:fd72/64"],
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            (None, __section_inventory),
+            [
+                HostLabel("cmk/l3v4_topology", "singlehomed"),
+            ],
+        ),
+    ],
+)
+def test_host_label_lnx_ip_address(
+    section: lnx_if.Section, expected_result: HostLabelGenerator
+) -> None:
+    assert list(lnx_if.host_label_lnx_ip_address(section)) == list(expected_result)
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            ([], __section_inventory),
+            [
+                Attributes(
+                    path=["networking"],
+                    inventory_attributes={"total_ethernet_ports": 0, "total_interfaces": 0},
+                    status_attributes={},
+                ),
+                TableRow(
+                    path=["networking", "addresses"],
+                    key_columns={"address": "127.0.0.1", "device": "lo"},
+                    inventory_columns={
+                        "broadcast": "127.255.255.255",
+                        "cidr": 8,
+                        "netmask": "255.0.0.0",
+                        "network": "127.0.0.0",
+                        "type": "ipv4",
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["networking", "addresses"],
+                    key_columns={"address": "192.168.10.144", "device": "ens32"},
+                    inventory_columns={
+                        "broadcast": "192.168.10.255",
+                        "cidr": 24,
+                        "netmask": "255.255.255.0",
+                        "network": "192.168.10.0",
+                        "type": "ipv4",
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["networking", "addresses"],
+                    key_columns={"address": "fe80::20c:29ff:fe82:fd72", "device": "ens32"},
+                    inventory_columns={
+                        "broadcast": "fe80::ffff:ffff:ffff:ffff",
+                        "cidr": 64,
+                        "netmask": "ffff:ffff:ffff:ffff::",
+                        "network": "fe80::",
+                        "type": "ipv6",
+                    },
+                    status_columns={},
+                ),
+            ],
+        ),
+    ],
+)
+def test_inventory_lnx_if_ip(section: lnx_if.Section, expected_result: InventoryResult) -> None:
+    assert list(lnx_if.inventory_lnx_if(section, None)) == list(expected_result)
+
+
+if __name__ == "__main__":
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just set _PYTEST_RAISES=1 and run this file from your IDE and dive into the code.
+    source_file_path = (
+        (base := (test_file := Path(__file__)).parents[6])
+        / test_file.parent.relative_to(base / "tests/unit")
+        / test_file.name.lstrip("test_")
+    ).as_posix()
+    assert pytest.main(["--doctest-modules", source_file_path]) in {0, 5}
+    pytest.main(["-vvsx", __file__])

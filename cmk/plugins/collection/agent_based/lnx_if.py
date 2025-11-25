@@ -5,6 +5,7 @@
 
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import dataclass, field, replace
+from ipaddress import AddressValueError, ip_interface, NetmaskValueError
 from typing import Any, Literal
 
 from cmk.agent_based.v2 import (
@@ -12,6 +13,8 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    HostLabel,
+    HostLabelGenerator,
     InventoryPlugin,
     InventoryResult,
     RuleSetType,
@@ -252,10 +255,61 @@ def parse_lnx_if(string_table: StringTable) -> Section:
     return if_table, ip_stats
 
 
+def host_label_lnx_ip_address(section: Section) -> HostLabelGenerator:
+    """
+    Host label function
+    Labels:
+        cmk/l3v4_topology:
+            "singlehomed" is set for all devices with one IPv4 address
+            "multihomed" is set for all devices with more than one IPv4 address.
+        cmk/l3v6_topology:
+            "singlehomed" is set for all devices with one IPv6 address
+            "multihomed" is set for all devices with more than one IPv6 address.
+
+        Link-local ("FE80::/64), unspecified ("::") and local-host ("127.0.0.0/8", "::1") IPs don't count.
+    """
+    # Original author: thl-cmk[at]outlook[dot]com
+    #
+    # refactor-me: this should go to cmk.plugins.network.agent_based.ip_addresses.host_label_ip_addresses
+    #              but Section has to be unified first
+    valid_v4_ips = 0
+    valid_v6_ips = 0
+    _interfaces_with_counters, ip_stats = section
+    for if_name, interface in ip_stats.items():
+        for raw_interface_ips, _ in [
+            (interface.inet, "ipv4"),
+            (interface.inet6, "ipv6"),
+        ]:
+            for raw_interface_ip in raw_interface_ips:
+                try:
+                    interface_ip = ip_interface(raw_interface_ip)
+                except (AddressValueError, NetmaskValueError, ValueError):
+                    continue
+                if interface_ip.version == 4 and not interface_ip.is_loopback:
+                    valid_v4_ips += 1
+                    if valid_v4_ips == 1:
+                        yield HostLabel(name="cmk/l3v4_topology", value="singlehomed")
+                    if valid_v4_ips == 2:
+                        yield HostLabel(name="cmk/l3v4_topology", value="multihomed")
+
+                elif (
+                    interface_ip.version == 6
+                    and not interface_ip.is_loopback
+                    and not interface_ip.is_link_local
+                    and not interface_ip.is_unspecified
+                ):
+                    valid_v6_ips += 1
+                    if valid_v6_ips == 1:
+                        yield HostLabel(name="cmk/l3v6_topology", value="singlehomed")
+                    if valid_v6_ips == 2:
+                        yield HostLabel(name="cmk/l3v6_topology", value="multihomed")
+
+
 agent_section_lnx_if = AgentSection(
     name="lnx_if",
     parse_function=parse_lnx_if,
     supersedes=["if", "if64"],
+    host_label_function=host_label_lnx_ip_address,
 )
 
 
@@ -427,13 +481,25 @@ def _inventorize_addresses(ip_stats: SectionInventory) -> InventoryResult:
             (interface.inet6, "ipv6"),
         ]:
             for network in networks:
+                try:
+                    interface_ip = ip_interface(network)
+                except (AddressValueError, NetmaskValueError):
+                    continue
+
+                if interface_ip.ip.compressed == interface_ip.network.broadcast_address.compressed:
+                    continue  # drop broadcast IPs
+
                 yield TableRow(
                     path=["networking", "addresses"],
                     key_columns={
+                        "address": str(interface_ip.ip.compressed),
                         "device": if_name,
-                        "address": _get_address(network),
                     },
                     inventory_columns={
+                        "broadcast": str(interface_ip.network.broadcast_address),
+                        "cidr": interface_ip.network.prefixlen,
+                        "netmask": str(interface_ip.network.netmask),
+                        "network": str(interface_ip.network.network_address),
                         "type": ty,
                     },
                 )

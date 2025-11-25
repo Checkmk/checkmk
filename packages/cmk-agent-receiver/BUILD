@@ -131,6 +131,7 @@ py_test(
         requirement("pytest"),
         requirement("httpx"),
         requirement("pytest-asyncio"),
+        requirement("pytest-xdist"),
         requirement("pytest-socket"),
         requirement("pytest-random-order"),
         requirement("pytest-mock"),
@@ -161,6 +162,7 @@ py_test(
         ":__testlib_test__",
         ":testlib",
         requirement("pytest"),
+        requirement("pytest-xdist"),
         requirement("httpx"),
         requirement("pytest-random-order"),
     ],
@@ -170,7 +172,6 @@ py_pytest_main(
     name = "__component_test__",
     deps = [
         requirement("pytest"),
-        requirement("pytest-xdist"),
     ],
 )
 
@@ -189,6 +190,7 @@ py_test(
         ":cmk-agent-receiver",
         ":testlib",
         requirement("pytest"),
+        requirement("pytest-xdist"),
         requirement("pytest-socket"),
         requirement("pytest-random-order"),
         requirement("fastapi"),

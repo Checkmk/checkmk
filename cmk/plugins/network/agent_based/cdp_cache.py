@@ -341,7 +341,7 @@ def host_label_inv_cdp_cache(section: Cdp) -> HostLabelGenerator:
             This label is set to "yes" if the device has any CDP neighbours.
 
     """
-    if len(section.cdp_neighbours) > 0:
+    if section.cdp_neighbours:
         yield HostLabel(name="cmk/has_cdp_neighbours", value="yes")
 
 

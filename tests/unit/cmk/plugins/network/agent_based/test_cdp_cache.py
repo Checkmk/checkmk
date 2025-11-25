@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Any
 
 import pytest
 
@@ -21,6 +20,7 @@ from cmk.plugins.network.agent_based.cdp_cache import (
     CdpNeighbor,
     host_label_inv_cdp_cache,
     inventory_cdp_cache,
+    InventoryParams,
     parse_inv_cdp_cache,
 )
 
@@ -159,17 +159,29 @@ def test_host_label_inv_cdp_cache(section: Cdp, expected: list[HostLabel]) -> No
     [
         (
             Cdp(cdp_global=CDP_GLOBAL, cdp_neighbors=[]),
-            {},
+            InventoryParams(
+                remove_domain=False,
+                domain_name=None,
+                removecolumns=[],
+                use_short_if_name=False,
+            ),
             [CDP_GLOBAL_ATTRIBUTE],
         ),
         (
             CDP,
-            {},
+            InventoryParams(
+                remove_domain=False,
+                domain_name=None,
+                removecolumns=[],
+                use_short_if_name=False,
+            ),
             [CDP_GLOBAL_ATTRIBUTE, CDP_NEIGHBOR_ATTRIBUTE],
         ),
     ],
     ids=["no neighbors", "with neighbors"],
 )
-def test_inventory_cdp_cache(section: Cdp, params: Any, expected: InventoryResult) -> None:  # type: ignore[misc]
+def test_inventory_cdp_cache(
+    section: Cdp, params: InventoryParams, expected: InventoryResult
+) -> None:
     parsed = list(inventory_cdp_cache(params=params, section=section))
     assert parsed == expected

@@ -7,10 +7,11 @@
 # ToDo: add fallback if there is no if_name to if_description -> if_alias
 
 from binascii import hexlify
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from ipaddress import AddressValueError, IPv4Address
 from re import compile as re_compile
 from re import match as re_match
+from typing import TypedDict
 
 from pydantic import BaseModel
 
@@ -43,6 +44,13 @@ _INTERFACE_DISPLAY_HINTS = {
     "vlan": "Vlan",
     "management": "Ma",
 }
+
+
+class InventoryParams(TypedDict):
+    remove_domain: bool
+    domain_name: str | None
+    use_short_if_name: bool
+    removecolumns: Sequence[str]
 
 
 class CdpGlobal(BaseModel, frozen=True):
@@ -375,7 +383,7 @@ def host_label_inv_cdp_cache(section: Cdp) -> HostLabelGenerator:
         yield HostLabel(name="cmk/has_cdp_neighbors", value="yes")
 
 
-def inventory_cdp_cache(params: Mapping[str, str], section: Cdp) -> InventoryResult:
+def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResult:
     """Generates inventory for CDP cache"""
     path = ["networking", "cdp_cache"]
 
@@ -405,15 +413,15 @@ def inventory_cdp_cache(params: Mapping[str, str], section: Cdp) -> InventoryRes
     path = path + ["neighbours"]
     for neighbor in section.cdp_neighbors:
         neighbor_id = str(neighbor.neighbor_id)
-        if params.get("remove_domain"):
-            if params.get("domain_name"):
-                neighbor_id = neighbor_id.replace(params["domain_name"], "")
+        if params["remove_domain"]:
+            if domain_name := params["domain_name"]:
+                neighbor_id = neighbor_id.replace(domain_name, "")
             else:
                 neighbor_id = neighbor_id.split(".")[0]
 
         neighbor_port = neighbor.neighbor_port
         local_port = neighbor.local_port
-        if params.get("use_short_if_name"):
+        if params["use_short_if_name"]:
             neighbor_port = _get_short_if_name(neighbor_port)
             local_port = _get_short_if_name(local_port)
 
@@ -434,7 +442,7 @@ def inventory_cdp_cache(params: Mapping[str, str], section: Cdp) -> InventoryRes
             ("duplex", neighbor.duplex),
             ("power_consumption", neighbor.power_consumption),
         ]:
-            if key not in params.get("removecolumns", []) and value is not None:
+            if key not in params["removecolumns"] and value is not None:
                 inventory_columns[key] = value
 
         yield TableRow(
@@ -493,6 +501,11 @@ snmp_section_inv_cdp_cache = SNMPSection(
 inventory_plugin_inv_cdp_cache = InventoryPlugin(
     name="inv_cdp_cache",
     inventory_function=inventory_cdp_cache,
-    inventory_default_parameters={},
+    inventory_default_parameters=InventoryParams(
+        remove_domain=False,
+        domain_name=None,
+        use_short_if_name=False,
+        removecolumns=[],
+    ),
     inventory_ruleset_name="inv_cdp_cache",
 )

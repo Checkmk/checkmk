@@ -8,6 +8,8 @@ import usei18n from '@/lib/i18n'
 
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 
+import { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 import WorkflowListItem from './WorkflowListItem.vue'
 
@@ -16,11 +18,19 @@ const { _t } = usei18n()
 export interface AddWidgetDialogProperties {
   workflowItems: Record<string, WorkflowItem>
   open: boolean
+  availableFeatures: DashboardFeatures
 }
 
 const props = defineProps<AddWidgetDialogProperties>()
 
 const emit = defineEmits(['close', 'select'])
+
+const isDisabled = (id: string): boolean => {
+  return (
+    props.availableFeatures === DashboardFeatures.RESTRICTED &&
+    ['custom_graphs', 'hw_sw_inventory', 'alerts_notifications'].includes(id)
+  )
+}
 </script>
 
 <template>
@@ -40,6 +50,7 @@ const emit = defineEmits(['close', 'select'])
         :icon="item.icon"
         :subtitle="item.subtitle"
         :icon_emblem="item.icon_emblem"
+        :disabled="isDisabled(id)"
         @select="emit('select', id)"
       />
     </div>

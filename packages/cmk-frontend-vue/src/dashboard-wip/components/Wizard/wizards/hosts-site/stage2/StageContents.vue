@@ -11,7 +11,7 @@ import usei18n from '@/lib/i18n'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import { type DashboardConstants, DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -51,6 +51,7 @@ interface Stage2Props {
   filters: ConfiguredFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
+  availableFeatures: DashboardFeatures
 }
 
 const props = defineProps<Stage2Props>()
@@ -86,7 +87,7 @@ const gotoPrevStage = () => {
   emit('goPrev')
 }
 
-const enabledWidgets = getAvailableGraphs(props.hostFilterType)
+const enabledWidgets = getAvailableGraphs(props.hostFilterType, props.availableFeatures)
 const availableWidgets: WidgetItemList = [
   { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
   { id: Graph.HOST_STATISTICS, label: _t('Host statistics'), icon: 'folder' },
@@ -105,32 +106,39 @@ function getSelectedWidget(): Graph {
     case 'host_state_summary':
       return Graph.HOST_STATE_SUMMARY
   }
-  return Graph.SITE_OVERVIEW
+  return enabledWidgets[0]!
 }
 const selectedWidget = ref<Graph>(getSelectedWidget())
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.HOST_STATE]: await useHostState(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.HOST_STATE_SUMMARY]: await useHostStateSummary(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
   [Graph.HOST_STATISTICS]: await useHostStatistics(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.SITE_OVERVIEW]: await useSiteOverview(
     props.filters,
     props.dashboardConstants,
     props.editWidgetSpec
   )
 }
+
+if (props.availableFeatures === DashboardFeatures.UNRESTRICTED) {
+  handler[Graph.HOST_STATE] = await useHostState(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  )
+
+  handler[Graph.HOST_STATE_SUMMARY] = await useHostStateSummary(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  )
+
+  handler[Graph.SITE_OVERVIEW] = await useSiteOverview(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  )
+}
+
+const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTED
 </script>
 
 <template>
@@ -165,7 +173,7 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   <ContentSpacer />
 
   <HostState
-    v-if="selectedWidget === Graph.HOST_STATE"
+    v-if="selectedWidget === Graph.HOST_STATE && isUnrestricted"
     v-model:handler="handler[Graph.HOST_STATE] as unknown as UseHostState"
     :dashboard-name="dashboardName"
   />
@@ -177,13 +185,13 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   />
 
   <HostStatistics
-    v-if="selectedWidget === Graph.HOST_STATISTICS"
+    v-if="selectedWidget === Graph.HOST_STATISTICS && isUnrestricted"
     v-model:handler="handler[Graph.HOST_STATISTICS] as unknown as UseHostStatistics"
     :dashboard-name="dashboardName"
   />
 
   <SiteOverview
-    v-if="selectedWidget === Graph.SITE_OVERVIEW"
+    v-if="selectedWidget === Graph.SITE_OVERVIEW && isUnrestricted"
     v-model:handler="handler[Graph.SITE_OVERVIEW] as unknown as UseSiteOverview"
     :dashboard-name="dashboardName"
   />

@@ -4,16 +4,26 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 import WorkflowCard from './WorkflowCard.vue'
 
 export interface AddWidgetDialogProperties {
   workflowItems: Record<string, WorkflowItem>
+  availableFeatures: DashboardFeatures
 }
 
 const props = defineProps<AddWidgetDialogProperties>()
 
 const emit = defineEmits(['select'])
+
+const isDisabled = (id: string): boolean => {
+  return (
+    props.availableFeatures === DashboardFeatures.RESTRICTED &&
+    ['custom_graphs', 'hw_sw_inventory', 'alerts_notifications'].includes(id)
+  )
+}
 </script>
 
 <template>
@@ -26,6 +36,7 @@ const emit = defineEmits(['select'])
         :icon="item.icon"
         :subtitle="item.subtitle"
         :icon_emblem="item.icon_emblem"
+        :disabled="isDisabled(id)"
         @select="emit('select', id)"
       />
     </div>

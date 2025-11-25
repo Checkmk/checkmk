@@ -19,6 +19,7 @@ import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filte
 import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
+import type { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
@@ -34,6 +35,7 @@ interface Stage1Props {
   widgetActiveFilters: string[]
   contextFilters: ContextFilters
   isInFilterSelectionMenuFocus: (objectType: ObjectType) => boolean
+  availableFeatures: DashboardFeatures
 }
 
 interface Emits {
@@ -52,7 +54,7 @@ const gotoNextStage = () => {
 
 const hostObjectType = 'host'
 const hostFilterType = defineModel<ElementSelection>('hostFilterType', { required: true })
-const enabledWidgets = useSelectGraphTypes(hostFilterType)
+const enabledWidgets = useSelectGraphTypes(hostFilterType, props.availableFeatures)
 const availableWidgets: WidgetItemList = [
   { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
   { id: Graph.HOST_STATISTICS, label: _t('Host statistics'), icon: 'folder' },

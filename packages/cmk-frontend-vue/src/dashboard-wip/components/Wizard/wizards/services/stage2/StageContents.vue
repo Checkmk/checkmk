@@ -15,7 +15,7 @@ import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionBut
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import type { ElementSelection, UseWidgetHandler } from '@/dashboard-wip/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import { type DashboardConstants, DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -48,6 +48,7 @@ interface Stage2Props {
   filters: ConfiguredFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec: WidgetSpec | null
+  availableFeatures: DashboardFeatures
 }
 
 const props = defineProps<Stage2Props>()
@@ -83,7 +84,11 @@ const gotoPrevStage = () => {
   emit('goPrev')
 }
 
-const enabledWidgets = getAvailableGraphs(props.hostFilterType, props.serviceFilterType)
+const enabledWidgets = getAvailableGraphs(
+  props.hostFilterType,
+  props.serviceFilterType,
+  props.availableFeatures
+)
 const availableWidgets: WidgetItemList = [
   { id: Graph.SERVICE_STATE, label: _t('Service state'), icon: 'graph' },
   { id: Graph.SERVICE_STATE_SUMMARY, label: _t('Service state summary'), icon: 'gauge' },
@@ -115,22 +120,27 @@ function getDefaultSelectedWidget(): Graph | null {
 const selectedWidget = ref<Graph | null>(getDefaultSelectedWidget())
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.SERVICE_STATE]: await useServiceState(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.SERVICE_STATE_SUMMARY]: await useServiceStateSummary(
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
   [Graph.SERVICE_STATISTICS]: await useServiceStatistics(
     props.filters,
     props.dashboardConstants,
     props.editWidgetSpec
   )
 }
+
+if (props.availableFeatures === DashboardFeatures.UNRESTRICTED) {
+  handler[Graph.SERVICE_STATE] = await useServiceState(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  )
+  handler[Graph.SERVICE_STATE_SUMMARY] = await useServiceStateSummary(
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  )
+}
+
+const isUnrestricted = props.availableFeatures === DashboardFeatures.UNRESTRICTED
 </script>
 
 <template>
@@ -166,13 +176,13 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   <ContentSpacer />
 
   <ServiceState
-    v-if="selectedWidget === Graph.SERVICE_STATE"
+    v-if="selectedWidget === Graph.SERVICE_STATE && isUnrestricted"
     v-model:handler="handler[Graph.SERVICE_STATE] as unknown as UseServiceState"
     :dashboard-name="dashboardName"
   />
 
   <ServiceStateSummary
-    v-if="selectedWidget === Graph.SERVICE_STATE_SUMMARY"
+    v-if="selectedWidget === Graph.SERVICE_STATE_SUMMARY && isUnrestricted"
     v-model:handler="handler[Graph.SERVICE_STATE_SUMMARY] as unknown as UseServiceStateSummary"
     :dashboard-name="dashboardName"
   />

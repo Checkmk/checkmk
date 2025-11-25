@@ -12,7 +12,7 @@ import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/compon
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 // Local components
-import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { DashboardConstants, DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
@@ -45,6 +45,7 @@ interface MetricsWizardProps {
   contextFilters: ContextFilters
   dashboardConstants: DashboardConstants
   editWidgetSpec?: WidgetSpec | null
+  availableFeatures: DashboardFeatures
 }
 
 const props = defineProps<MetricsWizardProps>()
@@ -158,6 +159,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :context-filters="contextFilters"
         :is-in-filter-selection-menu-focus="widgetFilterManager.objectTypeIsInFocus"
+        :available-features="availableFeatures"
         @go-next="recapAndNext"
         @set-focus="widgetFilterManager.openSelectionMenu"
         @update-filter-values="
@@ -173,6 +175,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :filters="appliedFilters"
           :dashboard-constants="dashboardConstants"
           :edit-widget-spec="editWidgetSpec ?? null"
+          :available-features="availableFeatures"
           @go-prev="wizardHandler.prev"
           @add-widget="
             (content, generalSettings, filterContext) =>

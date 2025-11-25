@@ -405,6 +405,7 @@ function deepClone<T>(obj: T): T {
       <AddWidgetDialog
         v-model:open="openAddWidgetDialog"
         :workflow-items="dashboardWidgetWorkflows"
+        :available-features="available_features"
         @select="handleAddWidget"
         @close="openAddWidgetDialog = false"
       />
@@ -458,6 +459,7 @@ function deepClone<T>(obj: T): T {
       <AddWidgetPage
         v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
         :workflow-items="dashboardWidgetWorkflows"
+        :available-features="available_features"
         @select="handleAddWidget"
       />
       <DashboardComponent

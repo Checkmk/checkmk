@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { TranslatedString } from '@/lib/i18nString'
+
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -11,17 +13,20 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 
-defineProps<WorkflowItem>()
+interface WorkflowListItemProps extends WorkflowItem {
+  disabled?: boolean
+  disabledTooltip?: TranslatedString
+}
+
+defineProps<WorkflowListItemProps>()
 const emit = defineEmits(['select'])
 </script>
 
 <template>
-  <button class="db-workflow-list-item" @click="emit('select')">
+  <button class="db-workflow-list-item" :disabled="!!disabled" @click="emit('select')">
     <CmkIconEmblem :emblem="icon_emblem"><CmkIcon :name="icon" size="xxlarge" /></CmkIconEmblem>
     <div class="db-workflow-list-item__content">
-      <CmkHeading type="h2">
-        {{ title }}
-      </CmkHeading>
+      <CmkHeading type="h2"> {{ title }}</CmkHeading>
       <CmkParagraph class="db-workflow-list-item__subtitle">{{ subtitle }}</CmkParagraph>
     </div>
   </button>

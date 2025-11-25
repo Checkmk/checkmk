@@ -11,12 +11,28 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 
-defineProps<WorkflowItem>()
+interface WorkflowCardProps extends WorkflowItem {
+  disabled?: boolean
+}
+
+const props = defineProps<WorkflowCardProps>()
+
 const emit = defineEmits(['select'])
+
+const doSelect = () => {
+  if (!props.disabled) {
+    emit('select')
+  }
+}
 </script>
 
 <template>
-  <a href="#" class="db-workflow-card" @click="emit('select')">
+  <a
+    href="#"
+    class="db-workflow-card"
+    :class="!!disabled ? 'db-workflow-card__disabled' : ''"
+    @click="doSelect"
+  >
     <CmkIconEmblem :emblem="icon_emblem"><CmkIcon :name="icon" size="xxlarge" /></CmkIconEmblem>
     <div class="db-workflow-card__content">
       <CmkHeading type="h2">
@@ -50,6 +66,12 @@ const emit = defineEmits(['select'])
   &:focus-visible {
     outline: var(--default-border-color-green) auto var(--dimension-1);
   }
+}
+
+.db-workflow-card__disabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .db-workflow-card__content {

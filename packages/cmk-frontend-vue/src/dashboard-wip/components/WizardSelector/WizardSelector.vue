@@ -96,6 +96,7 @@ const handleAddEditWidget = (
         :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
+        :available-features="availableFeatures"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
       />
@@ -127,6 +128,7 @@ const handleAddEditWidget = (
         :dashboard-constants="dashboardConstants"
         :context-filters="contextFilters"
         :edit-widget-spec="editWidgetSpec"
+        :available-features="availableFeatures"
         @go-back="handleGoBack"
         @add-widget="handleAddEditWidget"
       />

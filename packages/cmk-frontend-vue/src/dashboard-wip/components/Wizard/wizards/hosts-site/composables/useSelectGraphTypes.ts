@@ -5,6 +5,8 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
+import { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
+
 import { ElementSelection } from '../../../types'
 import { Graph } from '../types'
 
@@ -24,13 +26,16 @@ const graphSelector = {
 
 type UseAvailableGraphs = Ref<Graph[]>
 
-export const useSelectGraphTypes = (hostSelection: Ref<ElementSelection>): UseAvailableGraphs => {
+export const useSelectGraphTypes = (
+  hostSelection: Ref<ElementSelection>,
+  availableFeatures: DashboardFeatures
+): UseAvailableGraphs => {
   const availableGraphs = ref<Graph[]>([])
 
   watch(
     hostSelection,
-    (newHostSelection) => {
-      availableGraphs.value = [...graphSelector[newHostSelection]]
+    (newHostSelection): void => {
+      availableGraphs.value = getAvailableGraphs(newHostSelection, availableFeatures)
     },
     { deep: true, immediate: true }
   )
@@ -38,6 +43,13 @@ export const useSelectGraphTypes = (hostSelection: Ref<ElementSelection>): UseAv
   return availableGraphs
 }
 
-export const getAvailableGraphs = (hostSelection: ElementSelection): Graph[] => {
+export const getAvailableGraphs = (
+  hostSelection: ElementSelection,
+  availableFeatures: DashboardFeatures
+): Graph[] => {
+  if (availableFeatures === DashboardFeatures.RESTRICTED) {
+    return [Graph.HOST_STATISTICS]
+  }
+
   return [...graphSelector[hostSelection]]
 }

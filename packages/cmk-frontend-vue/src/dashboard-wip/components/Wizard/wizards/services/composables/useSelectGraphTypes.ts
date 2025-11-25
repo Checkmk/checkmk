@@ -6,6 +6,7 @@
 import { type Ref, ref, watch } from 'vue'
 
 import { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
+import { DashboardFeatures } from '@/dashboard-wip/types/dashboard'
 
 export enum Graph {
   SERVICE_STATE = 'SERVICE_STATE',
@@ -37,14 +38,19 @@ type UseAvailableGraphs = Ref<Graph[]>
 
 export const useSelectGraphTypes = (
   hostSelection: Ref<ElementSelection>,
-  serviceSelection: Ref<ElementSelection>
+  serviceSelection: Ref<ElementSelection>,
+  availableFeatures: DashboardFeatures
 ): UseAvailableGraphs => {
   const availableGraphs = ref<Graph[]>([])
 
   watch(
     [hostSelection, serviceSelection],
     ([newHostSelection, newServiceSelection]) => {
-      availableGraphs.value = [...graphSelector[newHostSelection][newServiceSelection]]
+      availableGraphs.value = getAvailableGraphs(
+        newHostSelection,
+        newServiceSelection,
+        availableFeatures
+      )
     },
     { deep: true, immediate: true }
   )
@@ -54,7 +60,11 @@ export const useSelectGraphTypes = (
 
 export const getAvailableGraphs = (
   hostSelection: ElementSelection,
-  serviceSelection: ElementSelection
+  serviceSelection: ElementSelection,
+  availableFeatures: DashboardFeatures
 ): Graph[] => {
+  if (availableFeatures === DashboardFeatures.RESTRICTED) {
+    return [Graph.SERVICE_STATISTICS]
+  }
   return [...graphSelector[hostSelection][serviceSelection]]
 }

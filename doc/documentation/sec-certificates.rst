@@ -39,6 +39,7 @@ Architecture
             ' certs
             rectangle "[[../sec-certificates.html#https-certificate HTTPS Certificate]]" <<$certificate>> as $label##_https_cert
             rectangle "[[../sec-certificates.html#agentca Site '$site-name' agent signing CA]]" <<$certificate>> as $label##_agent_ca
+            rectangle "[[../sec-certificates.html#relayca Site '$site-name' relay signing CA]]" <<$certificate>> as $label##_relay_ca
             rectangle "[[../sec-certificates.html#site-site-name-local-ca Site '$site-name' local CA]]" <<$certificate>> as $label##_site_ca
             rectangle "[[../sec-certificates.html#sitecertificate $site-name]]" <<$certificate>> as $label##_site_cert
 
@@ -85,9 +86,19 @@ Architecture
             interface tls as $label##_agent_ctl_i
             $label##_agent_ctl -u- $label##_agent_ctl_i
             $label##_agent_ctl ..> $label##_agent_receiver_i
+
+            rectangle "[[../sec-certificates.html#relay-uuid $relay-uuid]]" <<$certificate>> as $label##_relay_cert
+            $label##_relay_ca -> $label##_relay_cert: signs
+
+            component relay_engine as $label##_relay_engine
+            interface tls as $label##_relay_engine_i
+            $label##_relay_engine -u- $label##_relay_engine_i
+            $label##_relay_engine ..> $label##_agent_receiver_i
+
         $label##_fetcher ..> $label##_agent_ctl_i
 
         $label##_agent_ctl_i -[dotted]u- $label##_agent_cert
+        $label##_relay_engine_i -[dotted]u- $label##_relay_cert
         }
     !endprocedure
 
@@ -118,6 +129,16 @@ Site '$site-name' agent signing CA
 * `etc/ssl/agents/ca.pem`
 * must be a CA
 * signs the agent certs
+
+.. _RelayCA:
+
+Site '$site-name' relay signing CA
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Created by omd
+* `etc/ssl/relays/ca.pem`
+* must be a CA
+* signs the relay certs
 
 Site '$site-name' local CA
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -174,6 +195,12 @@ Push-mode:
 
 * agent-receiver has cert :ref:`sitecertificate`
 * agent controller provides cert signed by :ref:`agentca`.
+
+Interface relay-engine - agent-receiver
+---------------------------------------------------
+
+* agent-receiver has cert :ref:`sitecertificate`
+* relay-engine provides cert signed by :ref:`relayca`.
 
 Risks and technical debts
 =========================

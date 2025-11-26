@@ -63,6 +63,9 @@ case "$1" in
         for pemfile in "${OMD_ROOT}"/etc/ssl/agents/*.pem; do
             openssl x509 -in "${pemfile}" >>"${CERT_STORE}"
         done
+        for pemfile in "${OMD_ROOT}"/etc/ssl/relays/*.pem; do
+            openssl x509 -in "${pemfile}" >>"${CERT_STORE}"
+        done
 
         if gunicorn -D -p "$PIDFILE" \
             --error-logfile "$OMD_ROOT/var/log/agent-receiver/error.log" \

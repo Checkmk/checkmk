@@ -2,8 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 import enum
 import os
 import subprocess
@@ -26,7 +24,13 @@ from omdlib.users_and_groups import switch_to_site_user
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.site import SiteId
-from cmk.utils.certs import agent_root_ca_path, cert_dir, RootCA, SiteCA
+from cmk.utils.certs import (
+    agent_root_ca_path,
+    cert_dir,
+    RelaysCA,
+    RootCA,
+    SiteCA,
+)
 
 
 def initialize_site_ca(
@@ -55,6 +59,13 @@ def initialize_agent_ca(site: SiteContext) -> None:
     """
     site_home = Path(SitePaths.from_site_name(site.name).home)
     RootCA.load_or_create(agent_root_ca_path(site_home), f"Site '{site.name}' agent signing CA")
+
+
+def initialize_relay_ca(site: SiteContext) -> None:
+    """Initialize the relay CA folder alongside a default relay signing CA."""
+    site_home = Path(SitePaths.from_site_name(site.name).home)
+    ca_path = cert_dir(Path(site_home))
+    RelaysCA.load_or_create(ca_path, SiteId(site.name))
 
 
 class CommandType(Enum):
@@ -119,6 +130,7 @@ def finalize_site_as_user(
     config_set_all(site, config, verbose, ignored_hooks)
     initialize_site_ca(site)
     initialize_agent_ca(site)
+    initialize_relay_ca(site)
     save_site_conf(site_home, config)
     update_cmk_core_config(site_home, config)
 

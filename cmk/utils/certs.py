@@ -254,7 +254,10 @@ class SiteCA:
             common_name=str(site_id),
             organization=f"Checkmk Site {site_id}",
             subject_alternative_names=SubjectAlternativeNames(
-                [SAN.dns_name(site_id), SAN.checkmk_site(site_id)]
+                [
+                    SAN.dns_name(site_id),
+                    SAN.checkmk_site(site_id),
+                ]
             ),
             expiry=expiry,
             key_size=key_size,
@@ -496,6 +499,73 @@ class LocalBrokerCertificate:
 
     def exists(self) -> bool:
         return self.cert_path.exists()
+
+
+class RelaysCA:
+    def __init__(self, certificate_directory: Path, root_ca: CertificateWithPrivateKey) -> None:
+        """Initialize SiteCA with a certificate directory and root CA.
+
+        You should probably use `load_or_create` or `load` instead.
+        """
+        self.cert_dir: Final[Path] = certificate_directory
+        self.root_ca: Final[CertificateWithPrivateKey] = root_ca
+
+    @classmethod
+    def load_or_create(
+        cls,
+        cert_dir: Path,
+        site_id: SiteId,
+        key_size: int = 4096,
+    ) -> RelaysCA:
+        try:
+            return cls.load(cert_dir)
+        except FileNotFoundError:
+            return cls.create(cert_dir=cert_dir, site_id=site_id, key_size=key_size)
+
+    @classmethod
+    def load(cls, cert_dir: Path) -> RelaysCA:
+        cert_content = cls._ca_file(cert_dir).read_text()
+        return cls(
+            cert_dir,
+            CertificateWithPrivateKey.load_combined_file_content(cert_content, passphrase=None),
+        )
+
+    @classmethod
+    def create(cls, cert_dir: Path, site_id: SiteId, key_size: int = 4096) -> RelaysCA:
+        expiry = relativedelta(years=10)
+        ca = CertificateWithPrivateKey.generate_self_signed(
+            common_name=site_id,
+            organization=f"Site '{site_id}' relay signing CA",
+            expiry=expiry,
+            key_size=key_size,
+            is_ca=True,
+        )
+        cls._save_combined_pem(
+            target_file=cls._ca_file(cert_dir),
+            certificate=ca.certificate,
+            private_key=ca.private_key,
+            issuer=None,
+        )
+        return cls(cert_dir, ca)
+
+    @staticmethod
+    def _save_combined_pem(
+        target_file: Path,
+        certificate: Certificate,
+        private_key: PrivateKey,
+        issuer: Certificate | None,
+    ) -> None:
+        target_file.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
+        with target_file.open(mode="wb") as f:
+            f.write(private_key.dump_pem(password=None).bytes)
+            f.write(certificate.dump_pem().bytes)
+            if issuer is not None:
+                f.write(issuer.dump_pem().bytes)
+        target_file.chmod(mode=0o660)
+
+    @staticmethod
+    def _ca_file(certificate_directory: Path) -> Path:
+        return certificate_directory / "ca.pem"
 
 
 class MessagingTrustedCAs:

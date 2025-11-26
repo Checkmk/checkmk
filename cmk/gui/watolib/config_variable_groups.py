@@ -16,6 +16,7 @@ def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> Non
     config_variable_group_registry.register(ConfigVariableGroupSiteManagement)
     config_variable_group_registry.register(ConfigVariableGroupSupport)
     config_variable_group_registry.register(ConfigVariableGroupDeveloperTools)
+    config_variable_group_registry.register(ConfigVariableGroupProductTelemetry)
 
 
 ConfigVariableGroupNotifications = ConfigVariableGroup(
@@ -57,4 +58,9 @@ ConfigVariableGroupDeveloperTools = ConfigVariableGroup(
         "There is a high risk that using these features will break your Checkmk site. "
         "Any changes here will result in your Checkmk site no longer being officially supported."
     ),
+)
+
+ConfigVariableGroupProductTelemetry = ConfigVariableGroup(
+    title=_l("Product Telemetry"),
+    sort_index=100,
 )

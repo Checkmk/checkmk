@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-import urllib.parse
 from collections.abc import Iterable
 from typing import get_args, Literal
 
@@ -38,7 +37,7 @@ def HTTPProxyReference(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -
         return [
             (p["ident"], p["title"])
             for p in settings.get("http_proxies", {}).values()
-            if urllib.parse.urlparse(p["proxy_url"]).scheme in allowed_schemes
+            if p.get("proxy_config", {}).get("scheme") in allowed_schemes
         ]
 
     return CascadingDropdown(

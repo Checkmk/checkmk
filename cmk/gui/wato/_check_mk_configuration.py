@@ -64,6 +64,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.views.icon import icon_and_action_registry
+from cmk.gui.wato._http_proxy import HTTPProxyReference
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.check_mk_automations import get_section_information_cached
@@ -84,6 +85,7 @@ from cmk.gui.watolib.config_domains import (
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupDeveloperTools,
+    ConfigVariableGroupProductTelemetry,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
@@ -177,6 +179,7 @@ def register(
     config_variable_registry.register(ConfigVariableDefaultTemperatureUnit)
     config_variable_registry.register(ConfigVariableTrustedCertificateAuthorities)
     config_variable_registry.register(ConfigVariableSiteSubjectAlternativeNames)
+    config_variable_registry.register(ConfigVariableProductTelemetry)
     config_variable_registry.register(ConfigVariableAgentControllerCertificates)
     config_variable_registry.register(RestAPIETagLocking)
     config_variable_registry.register(ConfigVariableWATOMaxSnapshots)
@@ -1846,6 +1849,51 @@ ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
     ),
 )
 
+
+ConfigVariableProductTelemetry = ConfigVariable(
+    group=ConfigVariableGroupProductTelemetry,
+    primary_domain=ConfigDomainGUI,
+    ident="product_telemetry",
+    valuespec=lambda context: Dictionary(
+        title=_("Product Telemetry"),
+        elements=[
+            (
+                "enable_telemetry",
+                CascadingDropdown(
+                    help=_(
+                        "Enable or disable product telemetry. When disabled, you can configure "
+                        "whether to show a popup asking for consent on login."
+                    ),
+                    choices=[
+                        (
+                            "enabled",
+                            _("Enabled"),
+                            FixedValue(
+                                value=None,
+                                totext=_("Telemetry is enabled"),
+                            ),
+                        ),
+                        (
+                            "disabled",
+                            _("Disabled"),
+                            FixedValue(
+                                value=False,
+                                totext=_("Telemetry is disabled"),
+                            ),
+                        ),
+                    ],
+                    default_value="disabled",
+                ),
+            ),
+            (
+                "proxy_config",
+                HTTPProxyReference(),
+            ),
+        ],
+        optional_keys=[],
+        default_keys=["enable_telemetry", "proxy_config"],
+    ),
+)
 
 ConfigVariableAgentControllerCertificates = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,

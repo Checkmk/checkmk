@@ -286,7 +286,7 @@ def _get_device_port(raw_device_port: str) -> str | None:
     return raw_device_port
 
 
-def parse_inv_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
+def parse_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
     """Parses CDP cache from SNMP string table"""
 
     if len(string_table) != 3:
@@ -369,7 +369,7 @@ def parse_inv_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
     return Cdp(cdp_global=global_info, cdp_neighbors=neighbors)
 
 
-def host_label_inv_cdp_cache(section: Cdp) -> HostLabelGenerator:
+def host_label_cdp_cache(section: Cdp) -> HostLabelGenerator:
     """Generates host labels for CDP cache
 
     Labels:
@@ -457,8 +457,8 @@ def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResul
 
 snmp_section_inv_cdp_cache = SNMPSection(
     name="inv_cdp_cache",
-    parse_function=parse_inv_cdp_cache,
-    host_label_function=host_label_inv_cdp_cache,
+    parse_function=parse_cdp_cache,
+    host_label_function=host_label_cdp_cache,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.23.1.2.1.1",  # CISCO-CDP-MIB::cdpCacheEntry

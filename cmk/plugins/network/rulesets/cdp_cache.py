@@ -27,7 +27,7 @@ def _migrate_remove_columns(value: object) -> Sequence[str]:
     return []
 
 
-def _migrate_inv_cdp_cache(value: object) -> Mapping[str, object]:
+def _migrate_cdp_cache(value: object) -> Mapping[str, object]:
     if isinstance(value, dict):
         if "removecolumns" in value.keys():
             value["remove_columns"] = value.pop("removecolumns")
@@ -53,9 +53,9 @@ _remove_columns = [
 ]
 
 
-def _parameter_form_inv_cdp_cache() -> Dictionary:
+def parameter_form_cdp_cache() -> Dictionary:
     return Dictionary(
-        migrate=_migrate_inv_cdp_cache,
+        migrate=_migrate_cdp_cache,
         elements={
             "remove_domain": DictElement(
                 parameter_form=FixedValue(
@@ -97,7 +97,7 @@ def _parameter_form_inv_cdp_cache() -> Dictionary:
 
 rule_spec_inv_cdp_cache = InventoryParameters(
     name="inv_cdp_cache",
-    parameter_form=_parameter_form_inv_cdp_cache,
+    parameter_form=parameter_form_cdp_cache,
     title=Title("CDP cache"),
     topic=Topic.NETWORKING,
 )

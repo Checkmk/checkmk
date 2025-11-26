@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.network.rulesets.cdp_cache import (
-    _migrate_inv_cdp_cache,
+    _migrate_cdp_cache,
     _migrate_remove_columns,
 )
 
@@ -106,6 +106,6 @@ def test_migrate_remove_columns(data: object, expected: Sequence[str]) -> None:
         "removecolumns is migrated to remove_columns",
     ],
 )
-def test_migrate_inv_cdp_cache(data: object, expected: Mapping[str, object]) -> None:
-    migrated = _migrate_inv_cdp_cache(data)
+def test_migrate_cdp_cache(data: object, expected: Mapping[str, object]) -> None:
+    migrated = _migrate_cdp_cache(data)
     assert migrated == expected

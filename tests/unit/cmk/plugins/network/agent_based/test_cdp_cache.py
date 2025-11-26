@@ -18,10 +18,10 @@ from cmk.plugins.network.agent_based.cdp_cache import (
     Cdp,
     CdpGlobal,
     CdpNeighbor,
-    host_label_inv_cdp_cache,
+    host_label_cdp_cache,
     inventory_cdp_cache,
     InventoryParams,
-    parse_inv_cdp_cache,
+    parse_cdp_cache,
 )
 
 STRING_TABLE = [
@@ -98,7 +98,7 @@ CDP = Cdp(
     ids=["no data", "no power consumption"],
 )
 def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | None) -> None:
-    parsed = parse_inv_cdp_cache(string_table=data)
+    parsed = parse_cdp_cache(string_table=data)
     assert parsed == expected
 
 
@@ -123,7 +123,7 @@ def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | No
     ids=["no neighbors", "with neighbors"],
 )
 def test_host_label_inv_cdp_cache(section: Cdp, expected: list[HostLabel]) -> None:
-    labels = list(host_label_inv_cdp_cache(section=section))
+    labels = list(host_label_cdp_cache(section=section))
     assert labels == expected
 
 

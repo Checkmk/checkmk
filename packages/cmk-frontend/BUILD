@@ -16,7 +16,7 @@ SRCS = glob([
     # TODO: tsconfig.json is missing
     "src/css/*",  # just for the directory
     "src/images/**/*.*",
-    "src/jquery/**/*.js",
+    "src/jquery/**/*.*",
     "src/js/**/*.js",
     "src/js/**/*.ts",
     "src/openapi/**/*.*",

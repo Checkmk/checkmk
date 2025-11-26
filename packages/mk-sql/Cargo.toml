@@ -45,6 +45,7 @@ derive_more = { version = "0.99", features = [
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"
 odbc-api = "7.2.3"
+encoding_rs = "0.8.35"
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }

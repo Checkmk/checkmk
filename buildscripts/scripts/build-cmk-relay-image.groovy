@@ -33,7 +33,7 @@ def main() {
         |branch_name:......... │${branch_name}│
         |cmk_version:......... │${cmk_version}│
         |cmk_version_rc_aware: │${cmk_version_rc_aware}│
-        |artifact_directory:   │${artifact_directory}│
+        |artifact_directory:.. │${artifact_directory}│
         |branch_version:...... │${branch_version}│
         |push_to_registry:.... │${push_to_registry}│
         |===================================================

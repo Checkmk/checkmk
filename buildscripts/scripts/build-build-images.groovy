@@ -44,13 +44,13 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |all_distros:....................(local)  │${all_distros}│
-        |distros:........................(local)  │${distros}│
-        |publish_images:.................(local)  │${publish_images}│
-        |publish_special_images:.........(local)  │${publish_special_images}│
-        |vers_tag:.......................(local)  │${vers_tag}│
-        |safe_branch_name:...............(local)  │${safe_branch_name}│
-        |branch_version:.................(local)  │${branch_version}│
+        |all_distros:.............. │${all_distros}│
+        |distros:.................. │${distros}│
+        |publish_images:........... │${publish_images}│
+        |publish_special_images:... │${publish_images}│
+        |vers_tag:................. │${vers_tag}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |branch_version:........... │${branch_version}│
         |===================================================
         """.stripMargin());
 

@@ -238,7 +238,7 @@ def _get_capabilities(
 
 def _is_ascii(str_to_test: str) -> bool:
     try:
-        _test = str_to_test.encode().decode("ascii")
+        str_to_test.encode().decode("ascii")
     except UnicodeDecodeError:
         return False
     return True
@@ -306,13 +306,13 @@ def parse_inv_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
     else:
         cdp_run, cdp_message_interval, cdp_hold_time, local_device_id = cdp_global[0]
 
-        _cdp_run = {
+        cdp_run_mapping = {
             "0": "no",
             "1": "yes",
         }
 
         global_info = CdpGlobal(
-            enabled=_cdp_run.get(str(cdp_run)),
+            enabled=cdp_run_mapping.get(str(cdp_run)),
             message_interval=int(str(cdp_message_interval))
             if str(cdp_message_interval).isdigit()
             else None,

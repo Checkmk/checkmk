@@ -64,7 +64,7 @@ watch(
     }
     _debouncedGenerateUniqueId(toSnakeCase(newName.trim().toLowerCase()))
   },
-  { deep: true }
+  { deep: true, immediate: true }
 )
 
 const displaySuffixInput = computed(() => addFilterSuffix.value !== undefined)

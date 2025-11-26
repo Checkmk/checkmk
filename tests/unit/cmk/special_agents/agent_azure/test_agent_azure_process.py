@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from concurrent.futures import Executor, Future
+from typing import Any, TypeVar
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -34,6 +35,26 @@ from cmk.special_agents.agent_azure import (
 )
 
 pytestmark = pytest.mark.checks
+
+
+T = TypeVar("T")
+
+
+class FakeExecutor(Executor):
+    """Fake executor that runs synchronously for testing."""
+
+    def submit(self, fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> Future[T]:
+        raise NotImplementedError("not implemented in FakeExecutor")
+
+    def map(
+        self,
+        fn: Callable[..., T],
+        *iterables: Iterable[Any],
+        timeout: float | None = None,
+        chunksize: int = 1,
+    ) -> Iterator[T]:
+        # use synchronous map
+        return map(fn, *iterables)
 
 
 class MockMgmtApiClient(MgmtApiClient):
@@ -77,7 +98,7 @@ class MockMgmtApiClient(MgmtApiClient):
 
         return self.usage_data
 
-    def resource_health_view(self) -> object:
+    def resource_health_view(self, resource_group: str) -> object:
         if self.resource_health_exception is not None:
             raise self.resource_health_exception
 
@@ -858,6 +879,7 @@ def test_process_resource_health(
             mgmt_client,
             monitored_resources,
             Args(debug=True, services=["Microsoft.Compute/virtualMachines"]),
+            FakeExecutor(),
         )
     )
 
@@ -875,7 +897,29 @@ def test_process_resource_health_request_error(
         [], {}, 0, resource_health_exception=Exception("Request failed")
     )
 
-    list(process_resource_health(mgmt_client, [], Args(debug=False)))
+    list(
+        process_resource_health(
+            mgmt_client,
+            [
+                AzureResource(
+                    {
+                        "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
+                        "name": "VM-test-1",
+                        "type": "Microsoft.Compute/virtualMachines",
+                        "location": "uksouth",
+                        "zones": ["1"],
+                        "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa",
+                        "group": "test1",
+                        "provider": "Microsoft.Compute",
+                        "tags": {"tag1": "value1"},
+                    },
+                    TagsImportPatternOption.import_all,
+                )
+            ],
+            Args(debug=False),
+            FakeExecutor(),
+        )
+    )
 
     captured = capsys.readouterr()
     assert captured.out == (
@@ -894,7 +938,29 @@ def test_process_resource_health_request_error_debug(
     )
 
     with pytest.raises(Exception, match="Request failed"):
-        list(process_resource_health(mgmt_client, [], Args(debug=True)))
+        list(
+            process_resource_health(
+                mgmt_client,
+                [
+                    AzureResource(
+                        {
+                            "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
+                            "name": "VM-test-1",
+                            "type": "Microsoft.Compute/virtualMachines",
+                            "location": "uksouth",
+                            "zones": ["1"],
+                            "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa",
+                            "group": "test1",
+                            "provider": "Microsoft.Compute",
+                            "tags": {"tag1": "value1"},
+                        },
+                        TagsImportPatternOption.import_all,
+                    )
+                ],
+                Args(debug=True),
+                FakeExecutor(),
+            )
+        )
 
 
 @pytest.mark.parametrize(

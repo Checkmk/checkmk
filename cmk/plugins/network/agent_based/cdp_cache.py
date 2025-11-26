@@ -88,9 +88,8 @@ def _get_short_if_name(if_name: str) -> str:
     :type if_name: str
     """
 
-    for if_name_prefix in _INTERFACE_DISPLAY_HINTS.keys():  # noqa: PLC0206
+    for if_name_prefix, if_name_short in _INTERFACE_DISPLAY_HINTS.items():
         if if_name.lower().startswith(if_name_prefix.lower()):
-            if_name_short = _INTERFACE_DISPLAY_HINTS[if_name_prefix]
             return if_name.lower().replace(if_name_prefix.lower(), if_name_short, 1)
     return if_name
 

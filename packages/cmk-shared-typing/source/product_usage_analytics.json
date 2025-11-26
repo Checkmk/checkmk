@@ -1,0 +1,47 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "title": "product_usage_analytics_config",
+    "properties": {
+        "global_settings_link": { "type": "string" },
+        "i18n": { "$ref": "#/$defs/i18n" }
+    },
+    "required": ["global_settings_link", "i18n"],
+    "$defs": {
+        "i18n": {
+            "type": "object",
+            "properties": {
+                "popup_title": { "type": "string" },
+                "why_need_title": { "type": "string" },
+                "why_need_description": { "type": "string" },
+                "what_collect_title": { "type": "string" },
+                "we_collect_label": { "type": "string" },
+                "we_collect_details": { "type": "string" },
+                "we_do_not_collect_label": { "type": "string" },
+                "we_do_not_collect_details": { "type": "string" },
+                "mkp_warning_title": { "type": "string" },
+                "mkp_warning_description": { "type": "string" },
+                "global_settings_hint_title": { "type": "string" },
+                "global_settings_hint_description": { "type": "string" },
+                "ask_later_button": { "type": "string" },
+                "enable_settings_button": { "type": "string" }
+            },
+            "required": [
+                "popup_title",
+                "why_need_title",
+                "why_need_description",
+                "what_collect_title",
+                "we_collect_label",
+                "we_collect_details",
+                "we_do_not_collect_label",
+                "we_do_not_collect_details",
+                "mkp_warning_title",
+                "mkp_warning_description",
+                "global_settings_hint_title",
+                "global_settings_hint_description",
+                "ask_later_button",
+                "enable_settings_button"
+            ]
+        }
+    }
+}

@@ -14,6 +14,7 @@ import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
+import ProductUsageAnalyticsApp from '@/product-usage-analytics/ProductUsageAnalyticsApp.vue'
 
 import '@/assets/variables.css'
 
@@ -34,7 +35,6 @@ function setupVue() {
       const appData = JSON.parse(appDataRaw)
 
       let app
-
       switch (appName) {
         case 'form_spec': {
           app = createApp(FormApp, {
@@ -80,6 +80,13 @@ function setupVue() {
           app = createApp(GraphDesignerApp, {
             graph_lines: appData.graph_lines,
             graph_options: appData.graph_options,
+            i18n: appData.i18n
+          })
+          break
+        }
+        case 'product_usage_analytics': {
+          app = createApp(ProductUsageAnalyticsApp, {
+            global_settings_link: appData.global_settings_link,
             i18n: appData.i18n
           })
           break

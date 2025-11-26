@@ -7,11 +7,16 @@ import os
 from pathlib import Path
 from typing import Final, override
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
 
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
 from cmk.gui.wato._http_proxy import HTTPProxyReference
 from cmk.gui.watolib.config_domain_name import (
@@ -82,6 +87,35 @@ class ConfigVariableProductUsageAnalytics(ConfigVariable):
     def ident(self) -> str:
         return "product_usage_analytics"
 
+    def domain_hint(self) -> HTML:
+        return HTML.without_escaping(
+            _(
+                "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %s. "
+                "This allows you to review the data locally; it does not enable the feature or transmit any information."
+            )
+            % HTMLWriter.render_a(
+                content=_("download the full JSON report"),
+                href="download_product_usage.py",
+            )
+        )
+
+    def hint(self) -> HTML:
+        if cmk_version.edition(omd_root) is not cmk_version.Edition.CME:
+            return HTML.empty()
+        return HTML.without_escaping(
+            _(
+                "<b>Consent Requirement: </b>"
+                "You must request and receive permission from each customer before enabling the collection of product analytics data. "
+                "Do not activate data collection for any site unless the customer has agreed to data transmission. "
+                "For configuration options specifically for multi-tenant sites, please visit the %s."
+            )
+            % HTMLWriter.render_a(
+                content=_("User Guide"),
+                href=f"{user.get_docs_base_url()}/product_usage_analytics.html#distributed",
+                target="_blank",
+            )
+        )
+
     def valuespec(self) -> ValueSpec:
         return Dictionary(
             title=_("Product usage analytics"),
@@ -114,4 +148,14 @@ class ConfigVariableProductUsageAnalytics(ConfigVariable):
             ],
             optional_keys=[],
             default_keys=["enabled", "proxy_setting"],
+            help=_(
+                "<p><b>Network Configuration: </b>"
+                "To transmit analytics data, ensure your firewall permits outbound traffic to "
+                "<tt>https://analytics.checkmk.com/upload</tt> on port <tt>443</tt>. "
+                "If you are using a proxy, please verify that it allows connections to this destination.</p>"
+                "<p><b>Per-Site Configuration: </b>"
+                "You have to ensure connectivity for <b>each site individually</b>. "
+                "As every site collects and transmits data independently, "
+                "please verify that your firewall rules permit traffic from every site to prevent local transmission errors.</p>"
+            ),
         )

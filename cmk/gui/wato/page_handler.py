@@ -16,8 +16,10 @@ from cmk.gui.customer import customer_api
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
+from cmk.gui.product_usage_analytics_popup import render_product_usage_analytics_popup
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -57,6 +59,7 @@ from .pages.not_implemented import ModeNotImplemented
 
 def page_handler() -> None:
     initialize_wato_html_head()
+    render_product_usage_analytics_popup(user=user, request=request, response=response)
 
     if not active_config.wato_enabled:
         raise MKGeneralException(

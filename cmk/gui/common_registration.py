@@ -268,6 +268,8 @@ def register(
         config_variable_registry,
         config_variable_group_registry,
         replication_path_registry,
+        page_registry,
+        permission_registry,
     )
     quick_setup_registration.register(
         automation_command_registry,

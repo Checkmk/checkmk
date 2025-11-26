@@ -162,7 +162,7 @@ def parse_arguments(argv=None):
         "--timerange",
         type=int,
         default=60,
-        help=("The timerange to query, eg. x minutes from now."),
+        help=("The timerange to query, eg. x seconds from now."),
     )
     parser.add_argument(
         "--debug",

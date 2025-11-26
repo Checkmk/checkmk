@@ -305,15 +305,15 @@ fn check_headers(
                         if *expectation {
                             (
                                 "Expected regex in HTTP headers",
-                                "matched",
-                                "not matched",
+                                "match found",
+                                "no match found",
                                 *expectation,
                             )
                         } else {
                             (
                                 "Not expected regex in HTTP headers",
-                                "not matched",
-                                "matched",
+                                "no match found",
+                                "match found",
                                 *expectation,
                             )
                         }
@@ -406,9 +406,13 @@ fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Op
                     expectation,
                 } => {
                     if *expectation {
-                        ("Expected regex in body", "matched", "not matched")
+                        ("Expected regex in body", "match found", "no match found")
                     } else {
-                        ("Not expected regex in body", "not matched", "matched")
+                        (
+                            "Not expected regex in body",
+                            "no match found",
+                            "match found",
+                        )
                     }
                 }
                 TextMatcher::Contains(_) | TextMatcher::Exact(_) => {
@@ -1097,15 +1101,15 @@ mod test_check_headers {
             vec![
                 CheckResult::details(
                     State::Ok,
-                    "Expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (matched)"
+                    "Expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (match found)"
                 ),
                 CheckResult::summary(
                     State::Crit,
-                    "Expected regex in HTTP headers: foobar:baz (not matched)"
+                    "Expected regex in HTTP headers: foobar:baz (no match found)"
                 ),
                 CheckResult::details(
                     State::Crit,
-                    "Expected regex in HTTP headers: foobar:baz (not matched)"
+                    "Expected regex in HTTP headers: foobar:baz (no match found)"
                 ),
             ]
         )
@@ -1126,11 +1130,11 @@ mod test_check_headers {
             vec![
                 CheckResult::summary(
                     State::Crit,
-                    "Not expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (matched)"
+                    "Not expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (match found)"
                 ),
                 CheckResult::details(
                     State::Crit,
-                    "Not expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (matched)"
+                    "Not expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (match found)"
                 ),
             ]
         )
@@ -1335,7 +1339,7 @@ mod test_check_body_matching {
             ),
             vec![CheckResult::details(
                 State::Ok,
-                "Expected regex in body: f.*r (matched)"
+                "Expected regex in body: f.*r (match found)"
             ),]
         );
     }
@@ -1348,8 +1352,8 @@ mod test_check_body_matching {
                 vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true)]
             ),
             vec![
-                CheckResult::summary(State::Crit, "Expected regex in body: f.*z (not matched)"),
-                CheckResult::details(State::Crit, "Expected regex in body: f.*z (not matched)"),
+                CheckResult::summary(State::Crit, "Expected regex in body: f.*z (no match found)"),
+                CheckResult::details(State::Crit, "Expected regex in body: f.*z (no match found)"),
             ]
         );
     }
@@ -1363,7 +1367,7 @@ mod test_check_body_matching {
             ),
             vec![CheckResult::details(
                 State::Ok,
-                "Not expected regex in body: f.*z (not matched)"
+                "Not expected regex in body: f.*z (no match found)"
             ),]
         );
     }
@@ -1376,8 +1380,14 @@ mod test_check_body_matching {
                 vec![TextMatcher::from_regex(Regex::new("argl").unwrap(), false)]
             ),
             vec![
-                CheckResult::summary(State::Crit, "Not expected regex in body: argl (matched)"),
-                CheckResult::details(State::Crit, "Not expected regex in body: argl (matched)")
+                CheckResult::summary(
+                    State::Crit,
+                    "Not expected regex in body: argl (match found)"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Not expected regex in body: argl (match found)"
+                )
             ]
         );
     }

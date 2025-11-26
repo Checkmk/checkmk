@@ -9,7 +9,8 @@ def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+    def branch_base_folder = package_helper.branch_base_folder(true);
+    def safe_branch_name = versioning.safe_branch_name();
 
     def all_editions = versioning.get_editions();
     def editions_to_test = all_editions;
@@ -20,9 +21,11 @@ def main() {
     }
 
     def job_parameters = [
-        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE),
-        stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
-        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+        CUSTOM_GIT_REF: effective_git_ref,
+    ];
+    def job_parameters_no_check = [
+        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
     ];
 
     def override_editions = params.EDITIONS.trim() ?: "";
@@ -36,7 +39,9 @@ def main() {
         |editions:.............. │${editions_to_test}│
         |branch_base_folder:.... │${branch_base_folder}│
         |job_parameters:........ │${job_parameters}│
+        |job_parameters_no_check:│${job_parameters_no_check}│
         |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
+        |safe_branch_name:...... │${safe_branch_name}│
         |===================================================
         """.stripMargin());
 
@@ -56,13 +61,19 @@ def main() {
                 raiseOnError: true,
             ) {
                 smart_build(
-                    job: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
-                    parameters: job_parameters,
+                    use_upstream_build: true,
+                    relative_job_name: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
+                    build_params: job_parameters,
+                    build_params_no_check: job_parameters_no_check,
+                    download: false,
                 );
             }
         }]
     }
-    currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
 }
 
 return this;

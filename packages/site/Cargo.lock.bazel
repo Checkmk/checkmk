@@ -1,5 +1,5 @@
 {
-  "checksum": "bd476ce99bd178b25242d967b2b4d45ad01edee945264e8dcebad2815c5bd567",
+  "checksum": "488da907898c3ba255bd0f7ac3a1a0810c150225d3b1c90df9531f3aaa4427bb",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -2158,7 +2158,7 @@
               "target": "tracing"
             },
             {
-              "id": "tracing-subscriber 0.3.19",
+              "id": "tracing-subscriber 0.3.20",
               "target": "tracing_subscriber"
             },
             {
@@ -7036,14 +7036,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "matchers 0.1.0": {
+    "matchers 0.2.0": {
       "name": "matchers",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "package_url": "https://github.com/hawkw/matchers",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/matchers/0.1.0/download",
-          "sha256": "8263075bb86c5a1b1427b5ae862e8889656f126e9f77c484496e8b47cf5c5558"
+          "url": "https://static.crates.io/crates/matchers/0.2.0/download",
+          "sha256": "d1525a2a28c7f4fa0fc98bb91ae755d1e2d1505079e05539e35bc876b5d65ae9"
         }
       },
       "targets": [
@@ -7068,14 +7068,14 @@
         "deps": {
           "common": [
             {
-              "id": "regex-automata 0.1.10",
+              "id": "regex-automata 0.4.9",
               "target": "regex_automata"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.1.0"
+        "version": "0.2.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -7530,14 +7530,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "nu-ansi-term 0.46.0": {
+    "nu-ansi-term 0.50.3": {
       "name": "nu-ansi-term",
-      "version": "0.46.0",
+      "version": "0.50.3",
       "package_url": "https://github.com/nushell/nu-ansi-term",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/nu-ansi-term/0.46.0/download",
-          "sha256": "77a8165726e8236064dbb45459242600304b42a5ea24ee2948e18e023bf7ba84"
+          "url": "https://static.crates.io/crates/nu-ansi-term/0.50.3/download",
+          "sha256": "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
         }
       },
       "targets": [
@@ -7559,30 +7559,33 @@
         "compile_data_glob": [
           "**"
         ],
-        "deps": {
+        "crate_features": {
           "common": [
-            {
-              "id": "overload 0.1.1",
-              "target": "overload"
-            }
+            "default",
+            "std"
           ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [],
           "selects": {
-            "cfg(target_os = \"windows\")": [
+            "cfg(windows)": [
               {
-                "id": "winapi 0.3.9",
-                "target": "winapi"
+                "id": "windows-sys 0.59.0",
+                "target": "windows_sys",
+                "alias": "windows"
               }
             ]
           }
         },
-        "edition": "2018",
-        "version": "0.46.0"
+        "edition": "2021",
+        "version": "0.50.3"
       },
       "license": "MIT",
       "license_ids": [
         "MIT"
       ],
-      "license_file": null
+      "license_file": "LICENSE"
     },
     "num-bigint 0.4.6": {
       "name": "num-bigint",
@@ -8489,44 +8492,6 @@
         "MIT"
       ],
       "license_file": "LICENSE-MIT"
-    },
-    "overload 0.1.1": {
-      "name": "overload",
-      "version": "0.1.1",
-      "package_url": "https://github.com/danaugrs/overload",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/overload/0.1.1/download",
-          "sha256": "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "overload",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "overload",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "version": "0.1.1"
-      },
-      "license": "MIT",
-      "license_ids": [
-        "MIT"
-      ],
-      "license_file": "LICENSE"
     },
     "password-hash 0.5.0": {
       "name": "password-hash",
@@ -9857,62 +9822,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "regex-automata 0.1.10": {
-      "name": "regex-automata",
-      "version": "0.1.10",
-      "package_url": "https://github.com/BurntSushi/regex-automata",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/regex-automata/0.1.10/download",
-          "sha256": "6c230d73fb8d8c1b9c0b3135c5142a8acee3a0558fb8db5cf1cb65f8d7862132"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "regex_automata",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "regex_automata",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "regex-syntax",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "regex-syntax 0.6.29",
-              "target": "regex_syntax"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2015",
-        "version": "0.1.10"
-      },
-      "license": "Unlicense/MIT",
-      "license_ids": [
-        "MIT",
-        "Unlicense"
-      ],
-      "license_file": "LICENSE-MIT"
-    },
     "regex-automata 0.4.9": {
       "name": "regex-automata",
       "version": "0.4.9",
@@ -9945,6 +9854,7 @@
         "crate_features": {
           "common": [
             "alloc",
+            "dfa-build",
             "dfa-onepass",
             "dfa-search",
             "hybrid",
@@ -9989,59 +9899,6 @@
         },
         "edition": "2021",
         "version": "0.4.9"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "regex-syntax 0.6.29": {
-      "name": "regex-syntax",
-      "version": "0.6.29",
-      "package_url": "https://github.com/rust-lang/regex",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/regex-syntax/0.6.29/download",
-          "sha256": "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "regex_syntax",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "regex_syntax",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "unicode",
-            "unicode-age",
-            "unicode-bool",
-            "unicode-case",
-            "unicode-gencat",
-            "unicode-perl",
-            "unicode-script",
-            "unicode-segment"
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.6.29"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -17382,14 +17239,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "tracing-subscriber 0.3.19": {
+    "tracing-subscriber 0.3.20": {
       "name": "tracing-subscriber",
-      "version": "0.3.19",
+      "version": "0.3.20",
       "package_url": "https://github.com/tokio-rs/tracing",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tracing-subscriber/0.3.19/download",
-          "sha256": "e8189decb5ac0fa7bc8b96b7cb9b2701d60d48805aca84a238004d665fcc4008"
+          "url": "https://static.crates.io/crates/tracing-subscriber/0.3.20/download",
+          "sha256": "2054a14f5307d601f88daf0553e1cbf472acc4f2c51afab632431cdcd72124d5"
         }
       },
       "targets": [
@@ -17421,7 +17278,6 @@
             "matchers",
             "nu-ansi-term",
             "once_cell",
-            "regex",
             "registry",
             "sharded-slab",
             "smallvec",
@@ -17435,11 +17291,11 @@
         "deps": {
           "common": [
             {
-              "id": "matchers 0.1.0",
+              "id": "matchers 0.2.0",
               "target": "matchers"
             },
             {
-              "id": "nu-ansi-term 0.46.0",
+              "id": "nu-ansi-term 0.50.3",
               "target": "nu_ansi_term"
             },
             {
@@ -17447,8 +17303,8 @@
               "target": "once_cell"
             },
             {
-              "id": "regex 1.11.1",
-              "target": "regex"
+              "id": "regex-automata 0.4.9",
+              "target": "regex_automata"
             },
             {
               "id": "sharded-slab 0.1.7",
@@ -17478,7 +17334,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.3.19"
+        "version": "0.3.20"
       },
       "license": "MIT",
       "license_ids": [
@@ -18992,233 +18848,6 @@
         "MPL-2.0"
       ],
       "license_file": "LICENSE"
-    },
-    "winapi 0.3.9": {
-      "name": "winapi",
-      "version": "0.3.9",
-      "package_url": "https://github.com/retep998/winapi-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/winapi/0.3.9/download",
-          "sha256": "5c839a674fcd7a98952e593242ea400abe93992746761e38641405d28b00f419"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "winapi",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "winapi",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "consoleapi",
-            "errhandlingapi",
-            "fileapi",
-            "handleapi",
-            "processenv"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "winapi 0.3.9",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {
-            "i686-pc-windows-gnu": [
-              {
-                "id": "winapi-i686-pc-windows-gnu 0.4.0",
-                "target": "winapi_i686_pc_windows_gnu"
-              }
-            ],
-            "x86_64-pc-windows-gnu": [
-              {
-                "id": "winapi-x86_64-pc-windows-gnu 0.4.0",
-                "target": "winapi_x86_64_pc_windows_gnu"
-              }
-            ]
-          }
-        },
-        "edition": "2015",
-        "version": "0.3.9"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "winapi-i686-pc-windows-gnu 0.4.0": {
-      "name": "winapi-i686-pc-windows-gnu",
-      "version": "0.4.0",
-      "package_url": "https://github.com/retep998/winapi-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/winapi-i686-pc-windows-gnu/0.4.0/download",
-          "sha256": "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "winapi_i686_pc_windows_gnu",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "winapi_i686_pc_windows_gnu",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "winapi-i686-pc-windows-gnu 0.4.0",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2015",
-        "version": "0.4.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": null
-    },
-    "winapi-x86_64-pc-windows-gnu 0.4.0": {
-      "name": "winapi-x86_64-pc-windows-gnu",
-      "version": "0.4.0",
-      "package_url": "https://github.com/retep998/winapi-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/winapi-x86_64-pc-windows-gnu/0.4.0/download",
-          "sha256": "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "winapi_x86_64_pc_windows_gnu",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "winapi_x86_64_pc_windows_gnu",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "winapi-x86_64-pc-windows-gnu 0.4.0",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2015",
-        "version": "0.4.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": null
     },
     "windows-registry 0.2.0": {
       "name": "windows-registry",
@@ -21487,7 +21116,6 @@
     "i686-linux-android": [
       "i686-linux-android"
     ],
-    "i686-pc-windows-gnu": [],
     "i686-pc-windows-gnullvm": [],
     "i686-pc-windows-msvc": [
       "i686-pc-windows-msvc"
@@ -21534,7 +21162,6 @@
     "x86_64-linux-android": [
       "x86_64-linux-android"
     ],
-    "x86_64-pc-windows-gnu": [],
     "x86_64-pc-windows-gnullvm": [],
     "x86_64-pc-windows-msvc": [
       "x86_64-pc-windows-msvc"
@@ -21573,7 +21200,7 @@
     "time 0.3.39",
     "tokio 1.44.2",
     "tracing 0.1.41",
-    "tracing-subscriber 0.3.19",
+    "tracing-subscriber 0.3.20",
     "typed-builder 0.18.2",
     "x509-parser 0.15.1",
     "x509-parser 0.17.0"

@@ -5,16 +5,14 @@
 from typing import Annotated, Final
 
 from fastapi import Header, HTTPException, Path
+from fastapi.params import Depends
 from starlette.status import HTTP_400_BAD_REQUEST
 
 INJECTED_UUID_HEADER: Final[str] = "verified-uuid"
 
 
-def mtls_authorization_check(
-    header_uuid: Annotated[str, Header(alias=INJECTED_UUID_HEADER)],
-    path_uuid: Annotated[str, Path(alias="uuid")],
-) -> None:
-    """FastAPI dependency for mutual TLS (mTLS) authorization.
+def mtls_authorization_dependency(path_alias: str) -> Depends:
+    """FastAPI dependency generator for mutual TLS (mTLS) authorization.
 
     This function validates that the client certificate common name (CN) matches the
     UUID provided in the request URL path. It relies on a custom Uvicorn worker
@@ -36,20 +34,22 @@ def mtls_authorization_check(
     - Individual endpoints or routers can opt-in to mTLS authorization by adding
       this dependency
 
-    Args:
-        header_uuid: The client certificate CN extracted by the custom worker and
-                    injected as the INJECTED_UUID_HEADER header
-        path_uuid: The UUID from the URL path (optional, defaults to None)
-
     Raises:
         HTTPException: HTTP 400 if the certificate CN doesn't match the URL UUID
 
     Example:
-        @router.post("/{uuid}/data", dependencies=[Depends(mtls_authorization_check)])
+        @router.post("/{uuid}/data", dependencies=[mtls_authorization_dependency("uuid")])
         async def receive_data(uuid: str): ...
     """
-    if header_uuid != path_uuid:
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail=f"Verified client UUID ({header_uuid}) does not match UUID in URL ({path_uuid})",
-        )
+
+    def _mtls_authorization_check(
+        header_uuid: Annotated[str, Header(alias=INJECTED_UUID_HEADER)],
+        path_uuid: Annotated[str, Path(alias=path_alias)],
+    ) -> None:
+        if header_uuid != path_uuid:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail=f"Verified client UUID ({header_uuid}) does not match UUID in URL ({path_uuid})",
+            )
+
+    return Depends(_mtls_authorization_check)

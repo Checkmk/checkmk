@@ -71,9 +71,9 @@ from cmk.agent_receiver.lib.certs import (
 )
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
-from cmk.agent_receiver.lib.mtls_auth_validator import mtls_authorization_check
+from cmk.agent_receiver.lib.mtls_auth_validator import mtls_authorization_dependency
 
-UUID_VALIDATION_ROUTER = APIRouter(dependencies=[Depends(mtls_authorization_check)])
+UUID_VALIDATION_ROUTER = APIRouter(dependencies=[mtls_authorization_dependency("uuid")])
 AGENT_RECEIVER_ROUTER = APIRouter()
 security = HTTPBasic()
 

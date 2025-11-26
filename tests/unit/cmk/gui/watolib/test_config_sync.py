@@ -26,8 +26,11 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.watolib import activate_changes, config_sync
-from cmk.gui.watolib.automations import RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    remote_automation_config_from_site_config,
+)
 from cmk.messaging import rabbitmq
+from cmk.utils.automation_config import RemoteAutomationConfig
 from tests.testlib.common.repo import (
     is_cloud_repo,
     is_pro_repo,
@@ -591,7 +594,7 @@ def test_synchronize_site(
                 site_id,
                 snapshot_settings,
                 file_filter_func,
-                RemoteAutomationConfig.from_site_config(
+                remote_automation_config_from_site_config(
                     active_config.sites[SiteId("unit_remote_1")]
                 ),
             )

@@ -23,9 +23,13 @@ from cmk.gui.log import logger
 from cmk.gui.site_config import distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    remote_automation_config_from_site_config,
+)
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
+from cmk.utils.automation_config import RemoteAutomationConfig
 
 AuditLogs = Sequence[AuditLogStore.Entry]
 SiteChangeSequence = Sequence[ChangeSpec]
@@ -333,7 +337,7 @@ def _execute_sync_remote_sites(config: Config) -> None:
 
     SyncRemoteSitesJob().do_execute(
         sites=[
-            (site_id, RemoteAutomationConfig.from_site_config(site_config))
+            (site_id, remote_automation_config_from_site_config(site_config))
             for site_id, site_config in remote_site_configs
         ],
         debug=config.debug,

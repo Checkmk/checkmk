@@ -1,7 +1,7 @@
 from logging import Logger
 from typing import Callable, Collection
 
-from cmk.gui.watolib.automations import RemoteAutomationConfig
+from cmk.utils.automation_config import RemoteAutomationConfig
 
 
 class LicenseDistributionRegistry:

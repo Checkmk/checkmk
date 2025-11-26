@@ -35,9 +35,10 @@ from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
-    RemoteAutomationConfig,
+    remote_automation_config_from_site_config,
 )
 from cmk.gui.watolib.changes import add_change
+from cmk.utils.automation_config import RemoteAutomationConfig
 
 # In case the sync is done on the master of a distributed setup the auth serial
 # is increased on the master, but not on the slaves. The user can not access the
@@ -192,7 +193,7 @@ def handle_ldap_sync_finished(
         logger,
         profiles_to_synchronize,
         remote_sites=[
-            (site_id, RemoteAutomationConfig.from_site_config(site_configs[site_id]))
+            (site_id, remote_automation_config_from_site_config(site_configs[site_id]))
             for site_id in login_enabled_distributed_remote_sites(site_configs)
         ],
         wato_enabled=wato_enabled,

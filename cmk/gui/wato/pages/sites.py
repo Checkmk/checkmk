@@ -107,7 +107,7 @@ from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_site_login,
     MKAutomationException,
-    RemoteAutomationConfig,
+    remote_automation_config_from_site_config,
 )
 from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
@@ -1136,7 +1136,7 @@ class ModeDistributedMonitoring(WatoMode):
                 trigger_remote_certs_creation(login_id, site, force=False, debug=debug)
                 distribute_license_to_remotes(
                     logger,
-                    remote_automation_configs=[RemoteAutomationConfig.from_site_config(site)],
+                    remote_automation_configs=[remote_automation_config_from_site_config(site)],
                 )
 
                 _audit_log.log_audit(
@@ -1444,7 +1444,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
 
         sites = site_management_registry["site_management"].load_sites()
         replication_sites = [
-            (site_id, RemoteAutomationConfig.from_site_config(site_config))
+            (site_id, remote_automation_config_from_site_config(site_config))
             for (site_id, site_config) in sites.items()
             if is_replication_enabled(site_config)
         ]

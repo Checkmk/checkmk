@@ -21,8 +21,11 @@ from cmk.gui.user_async_replication import add_profile_replication_change
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC, update_activation_time
-from cmk.gui.watolib.automations import RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    remote_automation_config_from_site_config,
+)
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
+from cmk.utils.automation_config import RemoteAutomationConfig
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -53,7 +56,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         assert user.id is not None
         result = self._synchronize_profile(
             site_id,
-            RemoteAutomationConfig.from_site_config(ctx.config.sites[site_id]),
+            remote_automation_config_from_site_config(ctx.config.sites[site_id]),
             user.id,
             debug=ctx.config.debug,
         )

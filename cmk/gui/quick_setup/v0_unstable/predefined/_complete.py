@@ -39,9 +39,8 @@ from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfi
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
+    remote_automation_config_from_site_config,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
@@ -70,6 +69,7 @@ from cmk.gui.watolib.services import (
 from cmk.gui.watolib.sites import ReplicationStatusFetcher
 from cmk.password_store.v1_unstable import Secret
 from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
@@ -415,7 +415,7 @@ def _service_discovery_possible(
         return False
 
     remote_status = ReplicationStatusFetcher().fetch(
-        [(site_id, RemoteAutomationConfig.from_site_config(site_config))], debug=debug
+        [(site_id, remote_automation_config_from_site_config(site_config))], debug=debug
     )
     if not remote_status[site_id].success:
         return False

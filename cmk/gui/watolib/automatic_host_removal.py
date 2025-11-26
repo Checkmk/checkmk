@@ -31,14 +31,13 @@ from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
-    LocalAutomationConfig,
     make_automation_config,
     MKAutomationException,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import analyze_host_rule_matches, delete_hosts
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import log_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 

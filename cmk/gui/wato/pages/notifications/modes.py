@@ -145,7 +145,6 @@ from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import (
     do_remote_automation,
-    LocalAutomationConfig,
     make_automation_config,
 )
 from cmk.gui.watolib.check_mk_automations import (
@@ -187,6 +186,7 @@ from cmk.shared_typing.notifications import (
     RuleTopic,
 )
 from cmk.utils import paths
+from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import (

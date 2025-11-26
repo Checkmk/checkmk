@@ -110,9 +110,8 @@ from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
+    remote_automation_config_from_site_config,
 )
 from cmk.gui.watolib.broker_certificates import (
     broker_certificate_sync_registry,
@@ -150,6 +149,7 @@ from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 from cmk.messaging import rabbitmq
 from cmk.utils import agent_registration, paths, render, setup_search_index
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
@@ -2509,7 +2509,7 @@ def create_broker_certificates(
         try:
             _set_sync_state(site_activation_state, _("Syncing broker certificates"))
             broker_cert_sync.create_broker_certificates(
-                RemoteAutomationConfig.from_site_config(settings),
+                remote_automation_config_from_site_config(settings),
                 central_ca_bundle,
                 customer_ca_bundle,
                 debug=debug,

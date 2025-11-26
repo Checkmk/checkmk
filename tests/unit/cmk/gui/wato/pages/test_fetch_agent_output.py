@@ -19,9 +19,9 @@ from cmk.gui.wato.pages.fetch_agent_output import (
     get_fetch_agent_output_file,
     start_fetch_agent_job,
 )
-from cmk.gui.watolib.automations import LocalAutomationConfig
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.helper_interface import AgentRawData
+from cmk.utils.automation_config import LocalAutomationConfig
 from tests.testlib.common.repo import repo_path
 
 

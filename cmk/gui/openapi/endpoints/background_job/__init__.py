@@ -26,7 +26,10 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    remote_automation_config_from_site_config,
+)
 
 
 class JobID:
@@ -87,7 +90,7 @@ def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
             json.loads(
                 str(
                     do_remote_automation(
-                        RemoteAutomationConfig.from_site_config(site_config),
+                        remote_automation_config_from_site_config(site_config),
                         command="fetch-background-job-snapshot",
                         vars_=[("job_id", job_id)],
                         debug=active_config.debug,

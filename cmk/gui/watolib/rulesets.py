@@ -34,10 +34,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries
-from cmk.gui.watolib.automations import (
-    LocalAutomationConfig,
-    RemoteAutomationConfig,
-)
 from cmk.gui.watolib.check_mk_automations import (
     analyze_host_rule_effectiveness,
     analyze_host_rule_matches,
@@ -50,6 +46,7 @@ from cmk.server_side_calls_backend.config_processing import (
     process_configuration_to_parameters,
 )
 from cmk.utils import paths
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text

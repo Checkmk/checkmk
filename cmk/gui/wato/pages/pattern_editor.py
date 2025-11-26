@@ -42,9 +42,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.automations import (
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import (
     analyse_service,
@@ -56,6 +54,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preser
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import Rule, rules_grouped_by_folder, SingleRulesetRecursively
 from cmk.gui.watolib.utils import mk_repr
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 
 
 def register(

@@ -69,7 +69,10 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
-from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    remote_automation_config_from_site_config,
+)
 from cmk.utils.encoding import json_encode
 
 from .. import background_job
@@ -295,7 +298,7 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
         if site_id and not site_is_local(active_config.sites[SiteId(site_id)]):
             background_job_id = start_quick_setup_stage_action_job_on_remote(
                 site_id=SiteId(site_id),
-                automation_config=RemoteAutomationConfig.from_site_config(
+                automation_config=remote_automation_config_from_site_config(
                     active_config.sites[SiteId(site_id)]
                 ),
                 user_permission_config=UserPermissionSerializableConfig.from_global_config(
@@ -377,7 +380,7 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
         action_result = StageActionResult.model_validate_json(
             str(
                 do_remote_automation(
-                    RemoteAutomationConfig.from_site_config(site_config),
+                    remote_automation_config_from_site_config(site_config),
                     "fetch-quick-setup-stage-action-result",
                     [
                         ("job_id", action_background_job_id),

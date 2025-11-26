@@ -71,9 +71,7 @@ from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
@@ -98,6 +96,7 @@ from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.utils import wato_root_dir
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.host_storage import (
     ABCHostsStorage,

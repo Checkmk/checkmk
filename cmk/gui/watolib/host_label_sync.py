@@ -37,10 +37,11 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     MKAutomationException,
-    RemoteAutomationConfig,
+    remote_automation_config_from_site_config,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.paths import wato_var_dir
+from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 UpdatedHostLabelsEntry = tuple[str, float, str]
@@ -183,7 +184,7 @@ class DiscoveredHostLabelSyncJob:
                 copy_request_context(self._execute_site_sync_bg),
                 [
                     (
-                        RemoteAutomationConfig.from_site_config(site_spec),
+                        remote_automation_config_from_site_config(site_spec),
                         SiteRequest(newest_host_labels.get(site_id, 0.0), None, debug=debug),
                     )
                     for site_id, site_spec in remote_sites.items()

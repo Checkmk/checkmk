@@ -72,12 +72,11 @@ from cmk.gui.watolib.automation_commands import (
 )
 from cmk.gui.watolib.automations import (
     do_remote_automation,
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.diagnostics import (
     CheckmkFileInfo,
     CheckmkFileSensitivity,

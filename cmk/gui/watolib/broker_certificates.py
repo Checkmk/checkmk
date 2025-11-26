@@ -38,8 +38,12 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    remote_automation_config_from_site_config,
+)
 from cmk.utils import paths
+from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
     LocalBrokerCertificate,
     MessagingTrustedCAs,
@@ -242,7 +246,7 @@ def trigger_remote_certs_creation(
     central_ca = broker_sync.load_central_ca()
     customer_ca = broker_sync.load_or_create_customer_ca(settings.get("customer", "provider"))
     broker_sync.create_broker_certificates(
-        RemoteAutomationConfig.from_site_config(settings), central_ca, customer_ca, debug=debug
+        remote_automation_config_from_site_config(settings), central_ca, customer_ca, debug=debug
     )
     broker_sync.update_trusted_cas()
 

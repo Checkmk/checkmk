@@ -19,7 +19,7 @@ import subprocess
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, replace
 from io import BytesIO
 from typing import Annotated, Final, NamedTuple
 
@@ -63,6 +63,7 @@ from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.utils import mk_repr
 from cmk.utils import paths
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 
@@ -76,34 +77,24 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 ENV_VARIABLE_FORCE_CLI_INTERFACE: Final[str] = "_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE"
 
 
-@dataclass
-class LocalAutomationConfig: ...
-
-
-@dataclass
-class RemoteAutomationConfig:
-    site_id: SiteId
-    base_url: str
-    secret: str
-    insecure: bool
-
-    @classmethod
-    def from_site_config(cls, site_config: SiteConfiguration) -> RemoteAutomationConfig:
-        if "secret" not in site_config:
-            raise MKGeneralException(
-                _('Cannot connect to site "%s": The site is not logged in') % site_config["alias"]
-            )
-
-        if not is_replication_enabled(site_config):
-            raise MKGeneralException(
-                _('Cannot connect to site "%s": The replication is disabled') % site_config["alias"]
-            )
-        return cls(
-            site_id=site_config["id"],
-            base_url=site_config["multisiteurl"],
-            secret=site_config["secret"],
-            insecure=site_config["insecure"],
+def remote_automation_config_from_site_config(
+    site_config: SiteConfiguration,
+) -> RemoteAutomationConfig:
+    if "secret" not in site_config:
+        raise MKGeneralException(
+            _('Cannot connect to site "%s": The site is not logged in') % site_config["alias"]
         )
+
+    if not is_replication_enabled(site_config):
+        raise MKGeneralException(
+            _('Cannot connect to site "%s": The replication is disabled') % site_config["alias"]
+        )
+    return RemoteAutomationConfig(
+        site_id=site_config["id"],
+        base_url=site_config["multisiteurl"],
+        secret=site_config["secret"],
+        insecure=site_config["insecure"],
+    )
 
 
 def make_automation_config(
@@ -112,7 +103,7 @@ def make_automation_config(
     return (
         LocalAutomationConfig()
         if site_is_local(site_config)
-        else RemoteAutomationConfig.from_site_config(site_config)
+        else remote_automation_config_from_site_config(site_config)
     )
 
 

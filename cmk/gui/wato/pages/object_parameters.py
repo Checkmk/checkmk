@@ -36,9 +36,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.automations import (
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import (
@@ -59,6 +57,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecAllowList,
 )
 from cmk.gui.watolib.utils import mk_repr
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import Item

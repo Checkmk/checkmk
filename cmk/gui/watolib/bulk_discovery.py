@@ -56,9 +56,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.automations import (
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
@@ -70,6 +68,7 @@ from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
 from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile, tmp_run_dir
 
 DoFullScan = NewType("DoFullScan", bool)

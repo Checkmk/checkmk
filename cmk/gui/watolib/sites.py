@@ -68,7 +68,6 @@ from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     parse_license_state,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
@@ -81,6 +80,7 @@ from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.utils import paths
+from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.licensing.handler import LicenseState
 
 STATIC_PERMISSIONS_SITES = ["sites"]

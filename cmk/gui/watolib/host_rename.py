@@ -30,10 +30,10 @@ from cmk.gui.type_defs import CustomUserAttrSpec
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.automations import (
-    LocalAutomationConfig,
     make_automation_config,
 )
 from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 

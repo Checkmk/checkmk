@@ -50,8 +50,6 @@ from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automati
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
     do_remote_automation,
-    LocalAutomationConfig,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import (
     local_discovery,
@@ -68,6 +66,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.rulesets import EnabledDisabledServicesEditor, may_edit_ruleset
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.servicename import Item, ServiceName

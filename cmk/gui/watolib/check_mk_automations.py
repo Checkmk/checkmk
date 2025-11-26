@@ -22,11 +22,10 @@ from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     check_mk_remote_automation_serialized,
     get_local_automation_failure_message,
-    LocalAutomationConfig,
     MKAutomationException,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.hosts_and_folders import collect_all_hosts
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.labels import HostLabel, Labels
 from cmk.utils.notify import NotificationContext

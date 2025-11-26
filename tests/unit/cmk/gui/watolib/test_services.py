@@ -25,7 +25,6 @@ from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
 from cmk.gui.utils import transaction_manager
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import AuditLogStore
-from cmk.gui.watolib.automations import LocalAutomationConfig
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.services import (
     Discovery,
@@ -38,6 +37,7 @@ from cmk.gui.watolib.services import (
     perform_host_label_discovery,
     perform_service_discovery,
 )
+from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.labels import HostLabel
 from cmk.utils.servicename import ServiceName

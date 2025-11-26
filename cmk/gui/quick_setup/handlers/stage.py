@@ -82,9 +82,9 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     MKAutomationException,
-    RemoteAutomationConfig,
 )
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.utils.automation_config import RemoteAutomationConfig
 
 
 class InvalidStageException(MKGeneralException):

@@ -112,9 +112,7 @@ from cmk.gui.valuespec import LabelGroups as VSLabelGroups
 from cmk.gui.view_utils import render_label_groups
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import (
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import (
     analyse_service,
@@ -184,6 +182,7 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.rulesets.v1.form_specs import (
     String as StringAPI,
 )
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.labels import LabelGroups
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import (

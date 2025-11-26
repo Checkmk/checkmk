@@ -31,7 +31,6 @@ from cmk.gui.watolib.activate_changes import (
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
@@ -43,6 +42,7 @@ from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     save_global_settings,
 )
+from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
     agent_root_ca_path,
     cert_dir,

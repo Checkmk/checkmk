@@ -37,10 +37,9 @@ from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
-    LocalAutomationConfig,
     make_automation_config,
     MKAutomationException,
-    RemoteAutomationConfig,
+    remote_automation_config_from_site_config,
 )
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
@@ -60,6 +59,7 @@ from cmk.gui.watolib.services import (
     perform_service_discovery,
     ServiceDiscoveryBackgroundJob,
 )
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.everythingtype import EVERYTHING
 
 from ._response_schemas import ServiceDiscoveryResultSchema, ServiceDiscoveryRunSchema
@@ -816,7 +816,7 @@ def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
         return job.get_status_snapshot()
 
     return fetch_service_discovery_background_job_status(
-        RemoteAutomationConfig.from_site_config(active_config.sites[site_id]),
+        remote_automation_config_from_site_config(active_config.sites[site_id]),
         host.name(),
         debug=active_config.debug,
     )

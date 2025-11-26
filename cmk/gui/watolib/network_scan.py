@@ -33,7 +33,7 @@ from cmk.utils.paths import configuration_lockfile
 
 from . import bakery, builtin_attributes
 from .automation_commands import AutomationCommand, AutomationCommandRegistry
-from .automations import do_remote_automation, RemoteAutomationConfig
+from .automations import do_remote_automation, remote_automation_config_from_site_config
 from .host_attributes import (
     ExcludeIPRange,
     HostAttributeRegistry,
@@ -87,7 +87,7 @@ def execute_network_scan_job(config: Config) -> None:
                 found = _do_network_scan(folder)
             else:
                 raw_response = do_remote_automation(
-                    RemoteAutomationConfig.from_site_config(site_config),
+                    remote_automation_config_from_site_config(site_config),
                     "network-scan",
                     [("folder", folder.path())],
                     debug=config.debug,

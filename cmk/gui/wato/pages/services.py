@@ -72,9 +72,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
     cmk_version_of_remote_automation_source,
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
@@ -111,6 +109,7 @@ from cmk.shared_typing.setup import (
     AgentRegistrationCmds,
     AgentSlideout,
 )
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.html import get_html_state_marker

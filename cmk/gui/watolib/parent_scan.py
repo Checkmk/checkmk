@@ -35,9 +35,7 @@ from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfi
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
-    LocalAutomationConfig,
     make_automation_config,
-    RemoteAutomationConfig,
 )
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -49,6 +47,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
     Host,
 )
+from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile
 
 

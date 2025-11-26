@@ -319,11 +319,10 @@ def _create_core_config(
             service_depends_on=service_depends_on,
             passwords=passwords,
         )
-
-    cmk.utils.password_store.save(
-        {k: s.reveal() for k, s in passwords.items()},
-        cmk.utils.password_store.active_secrets_path_site(Path(config_path)),
-    )
+        cmk.utils.password_store.save(
+            {k: s.reveal() for k, s in passwords.items()},
+            cmk.utils.password_store.active_secrets_path_site(Path(config_path)),
+        )
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:

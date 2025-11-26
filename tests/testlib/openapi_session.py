@@ -1149,7 +1149,7 @@ class SitesAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-        value: dict[str, Any] = response.json()
+        value: dict[str, Any] = response.json()["extensions"]
         return value
 
     def delete(self, site_id: str) -> None:

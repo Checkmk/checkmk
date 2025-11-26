@@ -82,10 +82,47 @@ class Cdp(BaseModel, frozen=True):
 
 
 def _get_short_if_name(if_name: str) -> str:
-    """
-    returns short interface name from long interface name
-    if_name: is the long interface name
-    :type if_name: str
+    """Return a shortened, display-friendly interface name derived from a long interface name.
+
+    This function searches the module-level mapping `_INTERFACE_DISPLAY_HINTS`
+    (which maps long interface-name prefixes to short display prefixes, e.g.
+    {"GigabitEthernet": "Gi", "FastEthernet": "Fa"}) for a prefix that matches the
+    start of `if_name`. Matching is performed case-insensitively. On a match the
+    function returns a new string where the matched long prefix (in the lowered
+    input) is replaced by the corresponding short prefix from the mapping; only
+    the first matching prefix is replaced. If no prefix matches, the original
+    `if_name` is returned unchanged.
+
+    Parameters
+    ----------
+    if_name : str
+        The long/interface name to shorten (e.g. "GigabitEthernet0/1", "Loopback0").
+
+    Returns
+    -------
+    str
+        The shortened interface name when a known prefix is found, otherwise the
+        original `if_name`.
+
+    Notes
+    -----
+    - Matching is case-insensitive.
+    - The input is lowercased before performing the prefix replacement, and the
+      short prefix from `_INTERFACE_DISPLAY_HINTS` is inserted as provided.
+    - Only the first matching prefix from `_INTERFACE_DISPLAY_HINTS` is used.
+
+    Examples
+    --------
+    >>> # Ensure the mapping contains a known prefix for the examples
+    >>> _INTERFACE_DISPLAY_HINTS['GigabitEthernet'] = 'Gi'
+    >>> _get_short_if_name('GigabitEthernet0/1')
+    'Gi0/1'
+    >>> # Matching is case-insensitive
+    >>> _get_short_if_name('gigabitethernet0/2')
+    'Gi0/2'
+    >>> # If no known prefix matches, the original name is returned unchanged
+    >>> _get_short_if_name('UnknownPrefix0')
+    'UnknownPrefix0'
     """
 
     for if_name_prefix, if_name_short in _INTERFACE_DISPLAY_HINTS.items():

@@ -89,9 +89,16 @@ case "$1" in
       fi
     done
 
-    # we can't use dh_python3's py3compile here because we have a custom python interpreter
+    # We can't use dh_python3's py3compile here because we have a custom python interpreter.
+    # Keep in sync with omd/omd.spec.in!
+    # Remember to adopt tests/integration/omd/test_python.py:test_python_is_bytecode_compiled
+    # in case you modify exclusions!
     echo "pre-compile bytecode (.pyc) for Python files.."
-    "${BASE_PATH}/bin/python3" -m compileall -s "${BASE_PATH}" "${BASE_PATH}" >/dev/null
+    "${BASE_PATH}/bin/python3" -m compileall \
+        -x "check_mk/agents/plugins" \
+        -s "${BASE_PATH}" \
+        "${BASE_PATH}" \
+    >/dev/null
 
     db_stop
     # -- create apache config include if not exist

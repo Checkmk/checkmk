@@ -142,9 +142,16 @@ if [ $ACTIVATE_INIT -eq 1 ]; then
     fi
 fi
 
-echo "pre-compile bytecode (.pyc) for Python files.."
 BASE_PATH="/omd/versions/%{version}"
-"${BASE_PATH}/bin/python3" -m compileall -s "${BASE_PATH}" "${BASE_PATH}" >/dev/null
+# Keep in sync with omd/debian/postinst.in!
+# Remember to adopt tests/integration/omd/test_python.py:test_python_is_bytecode_compiled
+# in case you modify exclusions!
+echo "pre-compile bytecode (.pyc) for Python files.."
+"${BASE_PATH}/bin/python3" -m compileall \
+    -x "check_mk/agents/plugins" \
+    -s "${BASE_PATH}" \
+    "${BASE_PATH}" \
+>/dev/null
 
 # SLES: make sure apache modules are activated
 if which a2enmod >/dev/null 2>&1

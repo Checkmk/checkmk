@@ -23,6 +23,7 @@ import sys
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from concurrent.futures import Executor, ThreadPoolExecutor
 from multiprocessing import Lock
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypeVar
@@ -801,9 +802,11 @@ class MgmtApiClient(BaseApiClient):
             url.format(group, providers, vnet_gw), params={"api-version": "2015-01-01"}
         )
 
-    def resource_health_view(self):
-        path = "providers/Microsoft.ResourceHealth/availabilityStatuses"
-        return self._get(path, key="value", params={"api-version": "2022-05-01"})
+    def resource_health_view(self, resource_group):
+        path = "/resourceGroups/{}/providers/Microsoft.ResourceHealth/availabilityStatuses"
+        return self._get(
+            path.format(resource_group), key="value", params={"api-version": "2022-05-01"}
+        )
 
     def usagedetails(self):
         yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -1873,37 +1876,59 @@ def _get_monitored_resource(
 
 
 def process_resource_health(
-    mgmt_client: MgmtApiClient, monitored_resources: Sequence[AzureResource], args: Args
+    mgmt_client: MgmtApiClient,
+    monitored_resources: Sequence[AzureResource],
+    args: Args,
+    pool_executor: Executor,
 ) -> Iterator[AzureSection]:
+    def _fetch_and_build_section_for_resource(resource_group: str) -> dict[str, list[str]]:
+        """Fetch health data for a *single* resource group"""
+        try:
+            resource_health_view = mgmt_client.resource_health_view(resource_group)
+            health_entries = defaultdict(list)
+            for health in resource_health_view:
+                health_id = health.get("id")
+                _, group = get_params_from_azure_id(health_id)
+                resource_id = "/".join(health_id.split("/")[:-4])
+
+                # we get the health for *all* resources in the group, filter here
+                if (
+                    resource := _get_monitored_resource(resource_id, monitored_resources, args)
+                ) is None:
+                    continue
+
+                health_data = {
+                    "id": health_id,
+                    "name": "/".join(health_id.split("/")[-6:-4]),
+                    **filter_keys(
+                        health["properties"],
+                        ("availabilityState", "summary", "reasonType", "occuredTime"),
+                    ),
+                    "tags": resource.tags,
+                }
+
+                health_entries[group].append(json.dumps(health_data))
+
+            return health_entries
+        except ApiError:
+            LOGGER.warning("Could not fetch resource health for resource group %s", resource_group)
+            return {}
+
+    resource_groups_with_monitored_resources = {r.info["group"] for r in monitored_resources}
+    health_section: defaultdict[str, list[str]] = defaultdict(list)
     try:
-        resource_health_view = mgmt_client.resource_health_view()
+        # query each resource group in a separate thread
+        results = pool_executor.map(
+            _fetch_and_build_section_for_resource, resource_groups_with_monitored_resources
+        )
+        for group_result in results:
+            for group, values in group_result.items():
+                health_section[group].extend(values)
     except Exception as exc:
         if args.debug:
             raise
         write_exception_to_agent_info_section(exc, "Management client")
         return
-
-    health_section: defaultdict[str, list[str]] = defaultdict(list)
-
-    for health in resource_health_view:
-        health_id = health.get("id")
-        _, group = get_params_from_azure_id(health_id)
-        resource_id = "/".join(health_id.split("/")[:-4])
-
-        if (resource := _get_monitored_resource(resource_id, monitored_resources, args)) is None:
-            continue
-
-        health_data = {
-            "id": health_id,
-            "name": "/".join(health_id.split("/")[-6:-4]),
-            **filter_keys(
-                health["properties"],
-                ("availabilityState", "summary", "reasonType", "occuredTime"),
-            ),
-            "tags": resource.tags,
-        }
-
-        health_section[group].append(json.dumps(health_data))
 
     for group, values in health_section.items():
         section = AzureSection(
@@ -1975,8 +2000,11 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
         for section in resource_sections:
             section.write()
 
-    for section in process_resource_health(mgmt_client, monitored_resources, args):
-        section.write()
+    with ThreadPoolExecutor() as pool_executor:
+        for section in process_resource_health(
+            mgmt_client, monitored_resources, args, pool_executor
+        ):
+            section.write()
 
     write_remaining_reads(mgmt_client.ratelimit)
 

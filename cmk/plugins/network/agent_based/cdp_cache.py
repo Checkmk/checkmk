@@ -209,18 +209,14 @@ def _get_capabilities(
         1024: "Two-port Mac Relay",  #
     }
 
-    try:
-        if isinstance(raw_capabilities, str):
-            s = raw_capabilities.strip()
-            s_clean = s.replace(" ", "").replace(":", "").replace("-", "").replace(".", "")
-            try:
-                bytes_data = bytes.fromhex(s_clean)
-            except ValueError:
-                bytes_data = s.encode("latin-1")
-        else:
-            bytes_data = bytes(raw_capabilities)
-    except Exception:
-        return None
+    if isinstance(raw_capabilities, str):
+        cleaned = raw_capabilities.strip().replace(":", "").replace("-", "").replace(".", "")
+        try:
+            bytes_data = bytes.fromhex(cleaned)
+        except ValueError:
+            bytes_data = cleaned.encode("latin-1")
+    else:
+        bytes_data = bytes(raw_capabilities)
 
     byte_string = hexlify(bytes_data)
     try:

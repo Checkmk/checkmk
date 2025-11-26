@@ -67,7 +67,7 @@ from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
 
 
 def test_display_hint_titles() -> None:
-    assert all("title" in hint for hint in inventory_displayhints.values())
+    assert not inventory_displayhints
 
 
 def test_paths() -> None:

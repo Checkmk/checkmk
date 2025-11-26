@@ -259,25 +259,36 @@ fn check_headers(
     matchers
         .iter()
         .flat_map(|(name_matcher, value_matcher)| {
-            let (match_text, predicate, expectation) = match name_matcher {
-                // We expect name and value matchers to be of the same variant,
-                // so we can match on name_matcher only.
-                TextMatcher::Regex {
-                    regex: _,
-                    expectation,
-                } => (
-                    if *expectation {
-                        "Expected regex in HTTP headers"
-                    } else {
-                        "Not expected regex in HTTP headers"
-                    },
-                    "matched",
-                    *expectation,
-                ),
-                TextMatcher::Contains(_) | TextMatcher::Exact(_) => {
-                    ("Expected HTTP header", "found", true)
-                }
-            };
+            let (match_text, positive_result_text, negative_result_text, expectation) =
+                match name_matcher {
+                    // We expect name and value matchers to be of the same variant,
+                    // so we can match on name_matcher only.
+                    TextMatcher::Regex {
+                        regex: _,
+                        expectation,
+                    } => {
+                        if *expectation {
+                            (
+                                "Expected regex in HTTP headers",
+                                "matched",
+                                "not matched",
+                                *expectation,
+                            )
+                        } else {
+                            (
+                                "Not expected regex in HTTP headers",
+                                "not matched",
+                                "matched",
+                                *expectation,
+                            )
+                        }
+                    }
+                    TextMatcher::Contains(_) | TextMatcher::Exact(_) => {
+                        ("Expected HTTP header", "found", "not found", true)
+                    }
+                };
+
+            let header_regex = format!("{}:{}", name_matcher.inner(), value_matcher.inner());
 
             if match_on_headers(
                 &headers_as_strings,
@@ -288,22 +299,16 @@ fn check_headers(
                 vec![CheckResult::details(
                     State::Ok,
                     &format!(
-                        "{}: {}:{} ({})",
-                        match_text,
-                        name_matcher.inner(),
-                        value_matcher.inner(),
-                        predicate
+                        "{}: {} ({})",
+                        match_text, header_regex, positive_result_text
                     ),
                 )]
             } else {
                 notice(
                     State::Warn,
                     &format!(
-                        "{}: {}:{} (not {})",
-                        match_text,
-                        name_matcher.inner(),
-                        value_matcher.inner(),
-                        predicate
+                        "{}: {} ({})",
+                        match_text, header_regex, negative_result_text
                     ),
                 )
             }
@@ -360,7 +365,7 @@ fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Op
     matcher
         .iter()
         .flat_map(|m| {
-            let (match_text, match_predicate, not_match_predicate) = match m {
+            let (match_text, positive_result_text, negative_result_text) = match m {
                 TextMatcher::Regex {
                     regex: _,
                     expectation,
@@ -379,12 +384,12 @@ fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Op
             if m.match_on(&body.text) {
                 vec![CheckResult::details(
                     State::Ok,
-                    &format!("{}: {} ({})", match_text, m.inner(), match_predicate),
+                    &format!("{}: {} ({})", match_text, m.inner(), positive_result_text),
                 )]
             } else {
                 notice(
                     State::Warn,
-                    &format!("{}: {} ({})", match_text, m.inner(), not_match_predicate),
+                    &format!("{}: {} ({})", match_text, m.inner(), negative_result_text),
                 )
             }
         })

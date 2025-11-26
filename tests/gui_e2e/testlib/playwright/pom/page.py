@@ -110,6 +110,12 @@ class CmkPage(LocatorHelper):
         # It seems to be not trustworthy by now, so we disable it for now.
         # expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible()
 
+    def goto_main_dashboard(self) -> None:
+        """Click the banner and wait for the dashboard"""
+        logger.info("Navigate to 'Main dashboard' page")
+        self.main_menu.monitor_menu("Main dashboard").click()
+        self.main_area.check_page_title("Main dashboard")
+
     def select_host(self, host_name: str) -> None:
         logger.info("Click on host link: %s", host_name)
         self.main_area.locator(f"td a:has-text('{host_name}')").click()

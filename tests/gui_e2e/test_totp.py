@@ -18,7 +18,7 @@ from tests.testlib.site import Site
 
 def test_totp(test_site: Site, dashboard_page: MainDashboard, credentials: CmkCredentials) -> None:
     # first go to dashboard to ensure we're reloading the page in case we're already there
-    dashboard_page.navigate()
+    dashboard_page.goto_main_dashboard()
 
     # On two factor registration page
     dashboard_page.main_menu.user_two_factor_authentication.click()

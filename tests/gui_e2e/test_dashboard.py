@@ -71,8 +71,8 @@ def test_dashboard_sanity_check(dashboard_page: MainDashboard) -> None:
     for dropdown_button_name in dashboard_page.dropdown_buttons:
         expect(dashboard_page.main_area.dropdown_button(dropdown_button_name)).to_be_visible()
 
-    for button_title in dashboard_page.header_buttons:
-        expect(dashboard_page.menu_button(button_title)).to_be_visible()
+    for icon_title in dashboard_page.icons_list:
+        expect(dashboard_page.menu_icon(icon_title)).to_be_visible()
 
     expect(dashboard_page.dashlet_svg("Host statistics")).to_be_visible()
     expect(dashboard_page.dashlet_svg("Service statistics")).to_be_visible()

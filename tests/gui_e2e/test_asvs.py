@@ -42,7 +42,7 @@ def test_v2_1_5(
 
     login_page.login(credentials)
     dashboard_page.navigate()
-    page.check_dashboard_selector_placeholder()
+    page.main_area.check_page_title("Main dashboard")
 
 
 def test_password_truncation_error(dashboard_page: MainDashboard) -> None:

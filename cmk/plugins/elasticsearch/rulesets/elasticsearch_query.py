@@ -146,6 +146,7 @@ def _parameter_form() -> Dictionary:
                         TimeMagnitude.DAY,
                         TimeMagnitude.HOUR,
                         TimeMagnitude.MINUTE,
+                        TimeMagnitude.SECOND,
                     ),
                     prefill=DefaultValue(60.0),
                     migrate=_migrate_to_float,

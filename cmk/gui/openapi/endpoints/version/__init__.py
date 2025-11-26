@@ -7,13 +7,13 @@
 This folder collects individual endpoints not fitting into the other endpoint folders.
 """
 
-# mypy: disable-error-code="no-untyped-def"
-
 import sys
+from collections.abc import Mapping
+from typing import Any
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site
-from cmk.gui.http import request
+from cmk.gui.http import request, Response
 from cmk.gui.openapi.endpoints.version.response_schemas import InstalledVersions
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -28,7 +28,7 @@ from cmk.utils import paths
     method="get",
     response_schema=InstalledVersions,
 )
-def search(param):
+def search(params: Mapping[str, Any]) -> Response:
     """Display some version information"""
     if request.args.get("fail"):
         raise Exception("This is an intentional failure.")

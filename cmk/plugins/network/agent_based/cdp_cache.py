@@ -415,7 +415,7 @@ def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResul
 
     path = path + ["neighbours"]
     for neighbor in section.cdp_neighbors:
-        neighbor_id = str(neighbor.neighbor_id)
+        neighbor_id = neighbor.neighbor_id
         if params["remove_domain"]:
             if domain_name := params["domain_name"]:
                 neighbor_id = neighbor_id.replace(domain_name, "")

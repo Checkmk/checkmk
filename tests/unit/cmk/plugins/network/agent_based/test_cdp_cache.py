@@ -85,36 +85,6 @@ CDP = Cdp(
     cdp_neighbors=CDP_NEIGHBORS,
 )
 
-CDP_GLOBAL_ATTRIBUTE = Attributes(
-    path=["networking", "cdp_cache"],
-    inventory_attributes={
-        "enabled": "yes",
-        "message_interval": 60,
-        "hold_time": 180,
-        "local_name": "ip-enke-ch-bsk-r-005",
-    },
-    status_attributes={},
-)
-
-CDP_NEIGHBOR_ATTRIBUTE = TableRow(
-    path=["networking", "cdp_cache", "neighbours"],
-    key_columns={
-        "neighbour_name": "SCHE-CH-BASEL-SW-1",
-        "neighbour_port": "FastEthernet0/1",
-        "local_port": "Gi0/0",
-    },
-    inventory_columns={
-        "platform_details": "Cisco IOS Software, C3560 Software (C3560-IPBASE-M), Version 12.2(25)SEB4, RELEASE SOFTWARE (fc1)Copyright (c) 1986-2005 by Cisco Systems, Inc.Compiled Tue 30-Aug-05 14:19 by yenanh",
-        "platform": "cisco WS-C3560-24PS",
-        "capabilities": "Host, L2, L3, SB",
-        "vtp_mgmt_domain": "sche-ch-basel",
-        "native_vlan": "2",
-        "duplex": "full duplex",
-        "power_consumption": "None",
-    },
-    status_columns={},
-)
-
 
 @pytest.mark.parametrize(
     "data, expected",
@@ -155,6 +125,37 @@ def test_parse_inv_cdp_cache(data: Sequence[StringByteTable], expected: Cdp | No
 def test_host_label_inv_cdp_cache(section: Cdp, expected: list[HostLabel]) -> None:
     labels = list(host_label_inv_cdp_cache(section=section))
     assert labels == expected
+
+
+CDP_GLOBAL_ATTRIBUTE = Attributes(
+    path=["networking", "cdp_cache"],
+    inventory_attributes={
+        "enabled": "yes",
+        "message_interval": 60,
+        "hold_time": 180,
+        "local_name": "ip-enke-ch-bsk-r-005",
+    },
+    status_attributes={},
+)
+
+CDP_NEIGHBOR_ATTRIBUTE = TableRow(
+    path=["networking", "cdp_cache", "neighbours"],
+    key_columns={
+        "neighbour_name": "SCHE-CH-BASEL-SW-1",
+        "neighbour_port": "FastEthernet0/1",
+        "local_port": "Gi0/0",
+    },
+    inventory_columns={
+        "platform_details": "Cisco IOS Software, C3560 Software (C3560-IPBASE-M), Version 12.2(25)SEB4, RELEASE SOFTWARE (fc1)Copyright (c) 1986-2005 by Cisco Systems, Inc.Compiled Tue 30-Aug-05 14:19 by yenanh",
+        "platform": "cisco WS-C3560-24PS",
+        "capabilities": "Host, L2, L3, SB",
+        "vtp_mgmt_domain": "sche-ch-basel",
+        "native_vlan": "2",
+        "duplex": "full duplex",
+        "power_consumption": "None",
+    },
+    status_columns={},
+)
 
 
 @pytest.mark.parametrize(

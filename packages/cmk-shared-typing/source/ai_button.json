@@ -4,7 +4,9 @@
   "title": "ai_button",
   "properties": {
     "button_text": { "type": "string" },
-    "template": { "$ref": "#/$defs/ai_template" },
+    "template": {
+      "anyOf": [{ "$ref": "#/$templates/explain_this_issue" }]
+    },
     "teleport": { "type": "string" },
     "user_id": { "type": "string" }
   },
@@ -13,26 +15,31 @@
     "ai_template": {
       "type": "object",
       "properties": {
-        "id": { "$ref": "#/$defs/ai_template_id" },
-        "title": { "type": "string" },
-        "data": {
-          "anyOf": [{ "$ref": "#/$templateData/explain_this_issue" }]
-        }
+        "title": { "type": "string" }
       },
-      "required": ["id", "title"]
-    },
-    "ai_template_id": {
-      "enum": ["explain-this-issue"]
+      "required": ["title"]
+    }
+  },
+  "$templates": {
+    "explain_this_issue": {
+      "allOf": [{ "$ref": "#/$defs/ai_template" }],
+      "type": "object",
+      "properties": {
+        "id": { "const": "explain-this-issue" },
+        "data": { "$ref": "#/$templateData/explain_this_issue_data" }
+      },
+      "required": ["id", "data"]
     }
   },
   "$templateData": {
-    "explain_this_issue": {
+    "explain_this_issue_data": {
       "type": "object",
       "properties": {
         "host_name": { "type": "string" },
         "service_name": { "type": "string" },
         "status": { "enum": ["Critical", "Warning", "OK"] }
-      }
+      },
+      "required": ["host_name", "service_name", "status"]
     }
   }
 }

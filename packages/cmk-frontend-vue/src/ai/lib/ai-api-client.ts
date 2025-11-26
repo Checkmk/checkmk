@@ -3,8 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { AiTemplateId } from 'cmk-shared-typing/typescript/ai_button'
-
 import { Api, type ApiResponseBody } from '@/lib/api-client'
 import { randomId } from '@/lib/randomId'
 
@@ -87,7 +85,7 @@ export class AiApiClient extends Api {
     ) as Promise<DataToBeProvidedToLlmResponse>
   }
 
-  public async getUserActions(templateId: AiTemplateId): Promise<AiServiceAction[]> {
+  public async getUserActions(templateId: string): Promise<AiServiceAction[]> {
     return (
       (await this.get(
         `enumerate-actions?request_id=${randomId()}&template_id=${templateId}`

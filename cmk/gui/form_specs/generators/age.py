@@ -7,13 +7,14 @@ from collections.abc import Callable, Sequence
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
-from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, InputHint, TimeMagnitude, TimeSpan
 
 
 def Age(
     title: Title | None = None,
     label: Label | None = None,
+    help_text: Help | None = None,
     displayed_magnitudes: Sequence[TimeMagnitude] | None = None,
     custom_validate: Sequence[Callable[[float], None]] | None = None,
     prefill: DefaultValue[float] | None = None,
@@ -37,6 +38,7 @@ def Age(
     return TransformDataForLegacyFormatOrRecomposeFunction(
         wrapped_form_spec=TimeSpan(
             title=title,
+            help_text=help_text,
             label=label,
             displayed_magnitudes=displayed_magnitudes,
             custom_validate=custom_validate,

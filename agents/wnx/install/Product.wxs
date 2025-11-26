@@ -311,6 +311,9 @@ just to signal that real build script was not called -->
             <Component Id="cmpE9245496997CBB452C7AB2DD036AA4DD" Guid="{B53B231C-FFFF-405C-AAC4-88BE73233A66}">
                 <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\hyperv_vms_guestinfos.ps1" DiskId="1"  />
             </Component>
+            <Component Id="cmpA9A726739B66479FB82C465AA6E52707" Guid="{225A673E-6F02-4862-9794-A5C570F68FDD}">
+                <File Id="fil41C94B135BE64B8AB9C22EFCF2796ADD" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\hyperv_host.ps1" DiskId="1"  />
+            </Component>
             <Component Id="cmp139D49E9FB5840048B28A161D1AC903D" Guid="{1CE43602-C0DC-4A8D-A6BD-93E7B0146E65}">
                 <File Id="fil8E8D55BD121B46CE8FEADE51980298A8" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\kaspersky_av_client.ps1" DiskId="1"  />
             </Component>
@@ -449,6 +452,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="cmp8B610C872802BC16FE56FCA23BF098AD" />
             <ComponentRef Id="cmp11787B278B3DC312240FABB58B837C20" />
             <ComponentRef Id="cmpD065F5D090988C41C559F2AAD37A744F" />
+            <ComponentRef Id="cmpA9A726739B66479FB82C465AA6E52707" />
         </Feature>
 
         <Property Id="INSTALLSERVICE" Value="1" />

@@ -39,6 +39,7 @@ TO_SIGN_SCRIPTS = [
     "windows_os_bonding.ps1",
     "windows_tasks.ps1",
     "windows_updates.ps1",
+    "hyperv_host.ps1",
 ]
 
 [

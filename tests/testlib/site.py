@@ -1924,7 +1924,7 @@ class SiteFactory:
         self,
         test_site: Site,
         target_version: CMKVersion,
-        min_version: CMKVersion,
+        min_version: CMKVersion | None = None,
         conflict_mode: str = "keepold",
         logfile_path: str = "/tmp/sep.out",
         timeout: int = 60,
@@ -1935,6 +1935,7 @@ class SiteFactory:
         Such update process is performed interactively via Pexpect.
         """
         base_version = test_site.version
+        min_version = min_version or get_min_version(base_version.edition)
         self.version = target_version
 
         # refresh site object to install the correct target version
@@ -2058,11 +2059,12 @@ class SiteFactory:
             fallback_edition=Edition.CEE,
             fallback_branch=current_base_branch_name(),
         ),
-        min_version: CMKVersion = get_min_version(Edition.CEE),
+        min_version: CMKVersion | None = None,
         conflict_mode: str = "keepold",
         start_site_after_update: bool = True,
     ) -> Site:
         base_version = test_site.version
+        min_version = min_version or get_min_version(base_version.edition)
         self.version = target_version
 
         version_supported = base_version >= min_version

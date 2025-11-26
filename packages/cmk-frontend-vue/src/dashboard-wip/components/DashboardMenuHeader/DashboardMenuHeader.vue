@@ -191,7 +191,7 @@ const pageNavigation = parsePageNavigation()
               action: () => emit('open-settings'),
               hidden: isBuiltInDashboard
             },
-            { label: _t('Clone dashboard'), action: () => emit('open-settings') },
+            { label: _t('Clone dashboard'), action: () => emit('open-clone-workflow') },
             {
               label: _t('Dashboard user guide'),
               url: linkUserGuide,

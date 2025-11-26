@@ -1110,6 +1110,31 @@ mod test_check_headers {
             ]
         )
     }
+
+    #[test]
+    fn test_regex_invert() {
+        assert_eq!(
+            check_headers(
+                &(&HashMap::from([("some_key1".to_string(), "some_value1".to_string()),]))
+                    .try_into()
+                    .unwrap(),
+                vec![(
+                    TextMatcher::from_regex(Regex::new("s.*y[0-9]").unwrap(), false),
+                    TextMatcher::from_regex(Regex::new("s[a-z]+_*value1").unwrap(), false)
+                ),]
+            ),
+            vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Not expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (matched)"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Not expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (matched)"
+                ),
+            ]
+        )
+    }
 }
 
 #[cfg(test)]

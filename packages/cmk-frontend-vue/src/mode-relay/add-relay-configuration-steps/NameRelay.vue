@@ -21,7 +21,9 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 const { _t } = usei18n()
 
-const props = defineProps<CmkWizardStepProps & { nameValidationRegex: string }>()
+const props = defineProps<
+  CmkWizardStepProps & { nameValidationRegex: string; nameValidationRegexHelp: string }
+>()
 
 const relayName = defineModel<string>({ default: '' })
 const savedRelays = ref<Relay[]>([])
@@ -36,11 +38,7 @@ const getNameErrors = () => {
   } else if (savedRelays.value.some((relay) => relay.alias === name)) {
     errors.push('This relay name is already in use')
   } else if (!new RegExp(props.nameValidationRegex).test(name)) {
-    errors.push(
-      'Allowed characters are word characters (letters, digits, underscores), ',
-      'dollar signs, spaces, at signs, dots, plus signs, and hyphens. ',
-      'Must start and end with a word character or dollar sign.'
-    )
+    errors.push(props.nameValidationRegexHelp)
   }
   return errors
 }

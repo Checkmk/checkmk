@@ -16,6 +16,7 @@ import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistrati
 
 const props = defineProps<{
   name_validation_regex: string
+  name_validation_regex_help: string
   create_host_url: string
   relay_overview_url: string
   site_name: string
@@ -49,6 +50,7 @@ const openRelayOverviewPage = () => {
         :index="2"
         :is-completed="() => currentStep > 2"
         :name-validation-regex="props.name_validation_regex"
+        :name-validation-regex-help="props.name_validation_regex_help"
       />
       <RegisterRelay
         :relay-name="relayName"

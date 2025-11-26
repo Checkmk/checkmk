@@ -288,21 +288,24 @@ def _get_device_port(raw_device_port: str) -> str | None:
 
 def parse_inv_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
     """Parses CDP cache from SNMP string table"""
-    try:
-        cdp_info, cdp_global, if_info = string_table
-    except ValueError:
+
+    if len(string_table) != 3:
         return None
+
+    cdp_info, cdp_global, if_info = string_table
 
     try:
         interface_by_index = {if_index: if_name for if_index, if_name in if_info}
     except ValueError:
         return None
 
-    try:
-        cdp_run, cdp_message_interval, cdp_hold_time, local_device_id = cdp_global[0]
-    except (ValueError, IndexError):
+    global_info_not_found = bool(not cdp_global or not cdp_global[0] or len(cdp_global[0]) < 4)
+
+    if global_info_not_found:
         global_info = None
     else:
+        cdp_run, cdp_message_interval, cdp_hold_time, local_device_id = cdp_global[0]
+
         _cdp_run = {
             "0": "no",
             "1": "yes",

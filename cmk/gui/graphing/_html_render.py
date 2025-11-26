@@ -354,7 +354,7 @@ def _show_graph_html_content(
         )
 
     if graph_render_config.show_controls and graph_render_config.resizable:
-        html.img(src=theme.url("images/resize_graph.png"), class_="resize")
+        html.img(src=theme.detect_icon_path("resize_graph", prefix=""), class_="resize")
 
     if title := text_with_links_to_user_translated_html(
         _render_graph_title_elements(

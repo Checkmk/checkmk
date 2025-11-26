@@ -95,14 +95,14 @@ def _get_short_if_name(if_name: str) -> str:
     return if_name
 
 
-def _get_cdp_duplex(st: str) -> str | None:
+def _get_cdp_duplex_name(duplex_type: str) -> str | None:
     names = {
         "0": "N/A",
         "1": "unknown",
         "2": "half duplex",
         "3": "full duplex",
     }
-    return names.get(st)
+    return names.get(duplex_type)
 
 
 def _render_ip_address(bytestring: str) -> str | None:
@@ -361,7 +361,7 @@ def parse_inv_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
                 capabilities=_get_capabilities(capabilities),
                 vtp_mgmt_domain=str(vtp_mgmt_domain) if vtp_mgmt_domain else None,
                 native_vlan=str(native_vlan) if str(native_vlan) else None,
-                duplex=_get_cdp_duplex(str(duplex)),
+                duplex=_get_cdp_duplex_name(str(duplex)),
                 power_consumption=str(power_consumption) if str(power_consumption) else None,
             )
         )

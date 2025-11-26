@@ -18,7 +18,8 @@
 # .1.3.6.1.2.1.31.1.1.1.1.9 = STRING: bond1.3001
 #
 
-from collections.abc import Mapping
+
+from pydantic import BaseModel
 
 from cmk.agent_based.v2 import (
     exists,
@@ -32,21 +33,26 @@ from cmk.agent_based.v2 import (
 )
 
 
-def parse_if_name(string_table: StringTable) -> Mapping[int, str]:
-    return {
-        int(if_index): if_name
+class IfNameEntry(BaseModel):
+    index: int
+    name: str
+
+
+def parse_if_name(string_table: StringTable) -> list[IfNameEntry]:
+    return [
+        IfNameEntry(index=int(if_index), name=if_name)
         for if_index, if_name in string_table
         if if_name and if_index.isdigit()
-    }
+    ]
 
 
-def inventory_if_name(section: Mapping[int, str]) -> InventoryResult:
+def inventory_if_name(section: list[IfNameEntry]) -> InventoryResult:
     path = ["networking", "interfaces"]
-    for if_index, if_name in section.items():
+    for entry in section:
         yield TableRow(
             path=path,
-            key_columns={"index": if_index},
-            inventory_columns={"name": if_name},
+            key_columns={"index": entry.index},
+            inventory_columns={"name": entry.name},
         )
 
 

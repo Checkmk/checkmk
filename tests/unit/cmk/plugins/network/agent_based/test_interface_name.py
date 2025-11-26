@@ -4,27 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
-
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.network.agent_based.ifname import (
+    IfNameEntry,
     inventory_if_name,
     parse_if_name,
 )
 
-MAP_OF_IF_NAME_ENTRIES: Mapping[int, str] = {
-    1: "lo",
-    2: "eth-idrc0",
-    3: "eth1",
-    4: "eth2",
-    5: "eth3",
-    6: "Mgmt",
-    7: "bond1",
-    8: "bond1.3000",
-    9: "bond1.3001",
-}
+LIST_OF_IF_NAME_ENTRIES = [
+    IfNameEntry(index=1, name="lo"),
+    IfNameEntry(index=2, name="eth-idrc0"),
+    IfNameEntry(index=3, name="eth1"),
+    IfNameEntry(index=4, name="eth2"),
+    IfNameEntry(index=5, name="eth3"),
+    IfNameEntry(index=6, name="Mgmt"),
+    IfNameEntry(index=7, name="bond1"),
+    IfNameEntry(index=8, name="bond1.3000"),
+    IfNameEntry(index=9, name="bond1.3001"),
+]
 
 
 @pytest.mark.parametrize(
@@ -42,12 +41,12 @@ MAP_OF_IF_NAME_ENTRIES: Mapping[int, str] = {
                 ["8", "bond1.3000"],
                 ["9", "bond1.3001"],
             ],
-            MAP_OF_IF_NAME_ENTRIES,
+            LIST_OF_IF_NAME_ENTRIES,
         ),
     ],
 )
 def test_parse_interface_name(
-    string_table: StringTable, expected_section: Mapping[int, str]
+    string_table: StringTable, expected_section: list[IfNameEntry]
 ) -> None:
     assert parse_if_name(string_table) == expected_section
 
@@ -56,7 +55,7 @@ def test_parse_interface_name(
     "section, result",
     [
         (
-            MAP_OF_IF_NAME_ENTRIES,
+            LIST_OF_IF_NAME_ENTRIES,
             [
                 TableRow(
                     path=["networking", "interfaces"],
@@ -108,7 +107,7 @@ def test_parse_interface_name(
     ],
 )
 def test_check_interface_name_result(
-    section: Mapping[int, str],
+    section: list[IfNameEntry],
     result: InventoryResult,
 ) -> None:
     assert list(inventory_if_name(section)) == result

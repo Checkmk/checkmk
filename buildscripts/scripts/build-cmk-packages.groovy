@@ -92,7 +92,7 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |all_distros:.............. │${all_distros}│
+        |all_distros:....................... │${all_distros}│
         |selected_distros:.................. │${selected_distros}│
         |EDITION:........................... │${params.EDITION}│
         |VERSION:........................... │${params.VERSION}│
@@ -100,14 +100,15 @@ def main() {
         |CIPARAM_REMOVE_RC_CANDIDATES:...... │${params.CIPARAM_REMOVE_RC_CANDIDATES}│
         |CIPARAM_OVERRIDE_DOCKER_TAG_BUILD:. │${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}│
         |FAKE_WINDOWS_ARTIFACTS:............ │${params.FAKE_WINDOWS_ARTIFACTS}│
-        |cmk_version:.............. │${cmk_version}│
-        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |cmk_version:....................... │${cmk_version}│
+        |cmk_version_rc_aware:.............. │${cmk_version_rc_aware}│
         |deliverables_dir:.................. │${deliverables_dir}│
         |relative_deliverables_dir:......... │${relative_deliverables_dir}│
         |upload_to_testbuilds:.............. │${upload_to_testbuilds}│
         |deploy_to_website:................. │${deploy_to_website}│
         |branch_base_folder:................ │${branch_base_folder}│
-        |safe_branch_name:......... │${safe_branch_name}│
+        |safe_branch_name:.................. │${safe_branch_name}│
+        |===================================================
         """.stripMargin());
 
     stage(name: "Cleanup leftovers in deliverables_dir") {

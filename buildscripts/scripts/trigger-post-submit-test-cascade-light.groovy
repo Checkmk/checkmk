@@ -39,8 +39,8 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |safe_branch_name:.... │${safe_branch_name}│
-        |job_names:..... │${job_names}│
-        |checkout_dir:.. │${checkout_dir}│
+        |job_names:........... │${job_names}│
+        |checkout_dir:........ │${checkout_dir}│
         |===================================================
         """.stripMargin());
 

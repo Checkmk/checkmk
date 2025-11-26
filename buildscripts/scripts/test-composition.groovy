@@ -62,7 +62,7 @@ def main() {
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |branch_version:........... │${branch_version}│
-        |docker_tag:..............  │${docker_tag}│
+        |docker_tag:............... │${docker_tag}│
         |===================================================
         """.stripMargin());
 

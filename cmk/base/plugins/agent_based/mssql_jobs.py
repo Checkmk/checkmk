@@ -149,7 +149,10 @@ def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
 
         last_run_outcome = _OUTCOME_TRANSLATION[job["last_run_outcome"]]
 
-        section[job["job_name"]] = JobSpec(
+        # in some cases job_name is empty, so we use job_id as fallback
+        job_name = job["job_name"] if job["job_name"] else job["job_id"]
+
+        section[job_name] = JobSpec(
             last_run_duration=_calculate_seconds(job["last_run_duration"]),
             last_run_outcome=last_run_outcome,
             last_run_datetime=_format_to_datetime(

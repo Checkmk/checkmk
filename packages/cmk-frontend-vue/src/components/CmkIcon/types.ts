@@ -4,11 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { VariantProps } from 'class-variance-authority'
+import { type IconNames } from 'cmk-shared-typing/typescript/icon'
 
-import type { emblems, oneColorIcons, simpleIcons, twoColorIcons } from './icons.constants'
+import type { emblems, oneColorIcons, twoColorIcons } from './icons.constants'
 import type { cmkIconVariants, cmkMultitoneIconVariants, iconSizes } from './icons.constants'
 
-export type SimpleIcons = (typeof simpleIcons)[number]
+export type SimpleIcons = IconNames[number]
 export type IconEmblems = (typeof emblems)[number]
 export type OneColorIcons = (typeof oneColorIcons)[number]
 export type TwoColorIcons = (typeof twoColorIcons)[number]

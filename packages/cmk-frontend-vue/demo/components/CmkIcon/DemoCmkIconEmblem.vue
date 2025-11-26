@@ -9,7 +9,7 @@ import { ref } from 'vue'
 
 import CmkIcon, { type IconSizeNames } from '@/components/CmkIcon'
 import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
-import { emblems, simpleIcons } from '@/components/CmkIcon/icons.constants'
+import { emblems } from '@/components/CmkIcon/icons.constants'
 import type { IconEmblems, SimpleIcons } from '@/components/CmkIcon/types'
 
 const icon = ref<SimpleIcons>('filter')
@@ -26,6 +26,40 @@ const sizes: IconSizeNames[] = [
   'xxxlarge'
 ]
 
+const SOME_ICONS: Array<SimpleIcons> = [
+  'info-circle',
+  'validation-error',
+  'disabled',
+  'enabled',
+  'crit-problem',
+  'checkmk-logo-min',
+  'export-link',
+  'delete',
+  'search',
+  'checkmark-bare',
+  'back',
+  'continue',
+  'save-to-services',
+  'insertdate',
+  'alert-crit',
+  'alert-warn',
+  'alert-up',
+  'about-checkmk',
+  'check',
+  'cross',
+  'save',
+  'cancel',
+  'pending-task',
+  'sparkle',
+  'history',
+  'main-changes',
+  'main-setup-active',
+  'main-monitoring-active',
+  'main-customize-active',
+  'menu',
+  'info'
+]
+
 defineProps<{ screenshotMode: boolean }>()
 </script>
 
@@ -35,7 +69,7 @@ defineProps<{ screenshotMode: boolean }>()
 &lt;CmkIconEmblem emblem="warning"&gt;&lt;CmkIcon name="filter" size="medium" /&gt;&lt;/CmkIconEmblem&gt;
   </pre>
   <select v-model="icon">
-    <option v-for="i in simpleIcons" :key="i">{{ i }}</option>
+    <option v-for="i in SOME_ICONS" :key="i">{{ i }}</option>
   </select>
   <select v-model="emblem">
     <option :value="undefined">undefined</option>

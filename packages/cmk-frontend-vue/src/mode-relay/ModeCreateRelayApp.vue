@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { CreateRelay } from 'cmk-shared-typing/typescript/create_relay'
 import { ref } from 'vue'
 
 import CmkWizard from '@/components/CmkWizard'
@@ -14,26 +15,17 @@ import NameRelay from './add-relay-configuration-steps/NameRelay.vue'
 import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
 import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistration.vue'
 
-const props = defineProps<{
-  name_validation_regex: string
-  name_validation_regex_help: string
-  create_host_url: string
-  relay_overview_url: string
-  site_name: string
-  domain: string
-  site_version: string
-  url_to_get_an_automation_secret: string
-}>()
+const props = defineProps<CreateRelay>()
 
 const currentStep = ref<number>(1)
 const relayName = ref<string>('')
 
 const openCreateHostPage = () => {
-  const url = `${props.create_host_url}&relay=${relayName.value}&prefill=relay`
+  const url = `${props.urls.create_host}&relay=${relayName.value}&prefill=relay`
   window.location.href = url
 }
 const openRelayOverviewPage = () => {
-  window.location.href = props.relay_overview_url
+  window.location.href = props.urls.relay_overview
 }
 </script>
 
@@ -49,15 +41,15 @@ const openRelayOverviewPage = () => {
         v-model="relayName"
         :index="2"
         :is-completed="() => currentStep > 2"
-        :name-validation-regex="props.name_validation_regex"
-        :name-validation-regex-help="props.name_validation_regex_help"
+        :name-validation-regex="props.name_validation.regex"
+        :name-validation-regex-help="props.name_validation.regex_help"
       />
       <RegisterRelay
         :relay-name="relayName"
         :site-name="props.site_name"
         :domain="props.domain"
         :site-version="props.site_version"
-        :url-to-get-an-automation-secret="props.url_to_get_an_automation_secret"
+        :url-to-get-an-automation-secret="props.urls.automation_secret"
         :index="3"
         :is-completed="() => currentStep > 3"
       />

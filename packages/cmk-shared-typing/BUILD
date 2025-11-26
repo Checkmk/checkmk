@@ -5,7 +5,10 @@ load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
-load("@npm//packages/cmk-shared-typing:openapi-typescript/package_json.bzl", openapi_typescript = "bin")
+load(
+    "@npm//packages/cmk-shared-typing:openapi-typescript/package_json.bzl",
+    openapi_typescript = "bin",
+)
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
@@ -17,6 +20,7 @@ npm_link_all_packages(name = "node_modules")
 SOURCES_COMMON = [
     "ai_button.json",
     "configuration_entity.json",
+    "create_relay.json",
     "dialog.json",
     "loading_transition.json",
     "main_menu.json",
@@ -208,7 +212,7 @@ prettier_bin.prettier_binary(
     data = ["//bazel/tools:prettierrc"],
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [
-        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:prettierrc)",
+        '--config="$$JS_BINARY__RUNFILES"/$(rlocationpath //bazel/tools:prettierrc)',
         "--log-level=warn",
     ],
 )

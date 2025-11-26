@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "title": "Create relay",
+  "properties": {
+    "name_validation": {
+      "type": "object",
+      "properties": {
+        "regex": {
+          "type": "string"
+        },
+        "regex_help": {
+          "type": "string"
+        }
+      },
+      "required": ["regex", "regex_help"]
+    },
+    "urls": {
+      "type": "object",
+      "properties": {
+        "create_host": {
+          "type": "string"
+        },
+        "relay_overview": {
+          "type": "string"
+        },
+        "automation_secret": {
+          "type": "string"
+        }
+      },
+      "required": ["create_host", "relay_overview", "automation_secret"]
+    },
+    "site_name": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "site_version": {
+      "type": "string"
+    }
+  },
+  "required": ["name_validation", "urls", "site_name", "domain", "site_version"]
+}

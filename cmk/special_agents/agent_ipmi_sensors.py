@@ -66,6 +66,12 @@ def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
         help="K_g BMC key to use when authenticating with the remote host for IPMI 2.0",
     )
     parser_freeipmi.add_argument(
+        "--cipher_suite_id",
+        type=int,
+        metavar="CIPHER-SUITE-ID",
+        help="Cipher suite ID",
+    )
+    parser_freeipmi.add_argument(
         "--quiet_cache",
         action="store_true",
         help="Do not output information about cache creation/deletion",
@@ -161,6 +167,7 @@ def _freeipmi_additional_args(
             ("driver", "-D"),
             ("driver_type", "--driver-type"),
             ("key", "-k"),
+            ("cipher_suite_id", "--cipher-suite-id"),
         ]
         if (
             value := getattr(

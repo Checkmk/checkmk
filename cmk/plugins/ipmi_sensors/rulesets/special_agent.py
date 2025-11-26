@@ -26,6 +26,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
     return Dictionary(
+        migrate=_migrate,
         elements={
             "username": DictElement(
                 required=True,
@@ -71,6 +72,18 @@ def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
                     help_text=Help(
                         "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
                     ),
+                ),
+            ),
+            "cipher_suite_id": DictElement(
+                required=False,
+                parameter_form=SingleChoice(
+                    title=Title("Cipher suite ID"),
+                    help_text=Help("Specify the IPMI 2.0 cipher suite ID to use. Default is 17."),
+                    elements=[
+                        SingleChoiceElement(name="suite_3", title=Title("3")),
+                        SingleChoiceElement(name="suite_17", title=Title("17")),
+                    ],
+                    prefill=DefaultValue("suite_17"),
                 ),
             ),
             "quiet_cache": DictElement(
@@ -222,6 +235,14 @@ def _tuple_to_dict(
         case dict() as already_migrated:
             return already_migrated
     raise ValueError(param)
+
+
+def _migrate(value: object) -> Mapping[str, object]:
+    assert isinstance(value, dict)
+    if "cipher_suite_id" not in value:
+        value["cipher_suite_id"] = "suite_3"
+        return value
+    return value
 
 
 rule_spec_special_agent_ipmi_sensors = SpecialAgent(

@@ -32,10 +32,7 @@ def _migrate_cdp_cache(value: object) -> Mapping[str, object]:
         if "removecolumns" in value.keys():
             value["remove_columns"] = value.pop("removecolumns")
 
-        if "remove_columns" in value.keys():
-            if not isinstance(value["remove_columns"], list):
-                value["remove_columns"] = []
-        else:
+        if "remove_columns" not in value.keys() or not isinstance(value["remove_columns"], list):
             value["remove_columns"] = []
 
         return value

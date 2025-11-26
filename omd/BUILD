@@ -294,6 +294,7 @@ pkg_files(
         "//packages/check-http:check_http_pkg",
     ],
     compressor = "@zstd//:zstd_cli",
+    compressor_args = "-19",
     extension = "tar.zst",
     package_dir_file = ":omd_root_dir",
     tags = ["manual"],

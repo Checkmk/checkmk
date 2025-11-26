@@ -175,7 +175,10 @@ def _file_exists_in_package(package_path: str, cmk_version: str, version_rel_pat
 
     file_list = _get_paths_from_package(package_path)
 
-    if package_path.endswith(".deb") or package_path.endswith(".rpm"):
+    if package_path.endswith(".deb"):
+        return f"opt/omd/versions/{omd_version}/{version_rel_path}" in file_list
+
+    if package_path.endswith(".rpm"):
         return f"/opt/omd/versions/{omd_version}/{version_rel_path}" in file_list
 
     if package_path.endswith(".cma"):
@@ -202,7 +205,7 @@ def _get_file_from_package(package_path: str, cmk_version: str, version_rel_path
 
     if package_path.endswith(".deb"):
         return subprocess.check_output(
-            ["tar", "xOf", "-", f"./opt/omd/versions/{omd_version}/{version_rel_path}"],
+            ["tar", "xOf", "-", f"opt/omd/versions/{omd_version}/{version_rel_path}"],
             input=subprocess.run(
                 ["dpkg", "--fsys-tarfile", package_path], stdout=subprocess.PIPE, check=False
             ).stdout,
@@ -258,16 +261,20 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
 
     paths = _get_paths_from_package(package_path)
 
+    prefix = ""
+    if package_path.endswith(".rpm"):
+        prefix = "/"
+
     version_allowed_patterns = [
-        "/opt/omd/versions/?$",
-        "/opt/omd/versions/###OMD_VERSION###/?$",
+        "%sopt/omd/versions/?$" % prefix,
+        "%sopt/omd/versions/###OMD_VERSION###/?$" % prefix,
     ]
 
     # All files below the standard directories are allowed
     for basedir in ["bin", "etc", "include", "lib", "local", "share", "skel", "tmp", "var"]:
         version_allowed_patterns += [
-            "/opt/omd/versions/###OMD_VERSION###/%s/?$" % basedir,
-            "/opt/omd/versions/###OMD_VERSION###/%s/.*" % basedir,
+            "%sopt/omd/versions/###OMD_VERSION###/%s/?$" % (prefix, basedir),
+            "%sopt/omd/versions/###OMD_VERSION###/%s/.*" % (prefix, basedir),
         ]
 
     if package_path.endswith(".rpm"):
@@ -280,25 +287,25 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
         ] + version_allowed_patterns
     elif package_path.endswith(".deb"):
         allowed_patterns = [
-            "/$",
-            "/opt/$",
-            "/opt/omd/$",
-            "/opt/omd/apache/$",
-            "/opt/omd/sites/$",
-            "/usr/$",
-            "/usr/share/$",
-            "/usr/share/man/$",
-            "/usr/share/man/man8/$",
-            "/usr/share/doc/$",
-            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/$",
-            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/changelog.gz$",
-            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/COPYING.gz$",
-            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/TEAM$",
-            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/copyright$",
-            "/usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/README.md$",
-            "/etc/$",
-            "/etc/init.d/$",
-            "/etc/init.d/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*$",
+            "$",
+            "opt/$",
+            "opt/omd/$",
+            "opt/omd/apache/$",
+            "opt/omd/sites/$",
+            "usr/$",
+            "usr/share/$",
+            "usr/share/man/$",
+            "usr/share/man/man8/$",
+            "usr/share/doc/$",
+            "usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/$",
+            "usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/changelog.gz$",
+            "usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/COPYING.gz$",
+            "usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/TEAM$",
+            "usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/copyright$",
+            "usr/share/doc/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*/README.md$",
+            "etc/$",
+            "etc/init.d/$",
+            "etc/init.d/check-mk-(community|pro|ultimatemt|ultimate|cloud)-.*$",
         ] + version_allowed_patterns
     else:
         raise NotImplementedError()
@@ -898,9 +905,12 @@ def test_windows_artifacts_are_signed(
         omd_version = _get_omd_version(cmk_version, package_path)
         paths_signable = [
             # remove prefixes of paths to make it comparable
-            #   * /opt/omd/versions/{omd_version}/...  (for deb/rpm/docker)
+            #   * opt/omd/versions/{omd_version}/...  (for deb)
+            #   * /opt/omd/versions/{omd_version}/...  (for rpm/docker)
             #   * {omd_version}/...  (for cma)
-            path.removeprefix(f"/opt/omd/versions/{omd_version}/").removeprefix(f"{omd_version}/")
+            path.removeprefix("/")
+            .removeprefix(f"opt/omd/versions/{omd_version}/")
+            .removeprefix(f"{omd_version}/")
             for path in paths
             if _should_be_signed(path)
         ]

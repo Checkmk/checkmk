@@ -91,6 +91,7 @@ const localValidation = ref<Array<string>>([])
 
 <template>
   <FormValidation :validation="[...validation, ...localValidation]" />
+  {{ spec.label }}
   <span role="group" :aria-label="spec.label || spec.title">
     <label v-for="magnitude in selectedMagnitudes" :key="magnitude">
       <input

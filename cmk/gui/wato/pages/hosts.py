@@ -11,7 +11,6 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-import copy
 from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import Final, Literal, overload, override
@@ -900,10 +899,18 @@ class CreateHostMode(ABCHostMode):
         if not folder.has_host(HostName(clone_source_name)):
             raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
 
-        # save the original host
         self._clone_source = folder.load_host(HostName(clone_source_name))
 
-        host = copy.deepcopy(self._clone_source)
+        # Used to render the form with the cloned hosts attributes. On form submissions this will
+        # be overridden by the action method.
+        host = Host(
+            folder=folder,
+            host_name=self._clone_source.name(),
+            attributes=self._clone_source.attributes.copy(),
+            cluster_nodes=(
+                list(nodes) if (nodes := self._clone_source.cluster_nodes()) is not None else None
+            ),
+        )
 
         # remove the quick setup lock from the clone
         if is_locked_by_quick_setup(host.locked_by()):

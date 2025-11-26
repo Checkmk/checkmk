@@ -5,6 +5,7 @@ common --registry=https://bcr.bazel.build
 
 # enable a local disk cache: this is especially relevant for local builds without an enabled bazel-remote
 common:linux --disk_cache=~/.cache/bazel_disk_cache/
+common:linux --experimental_disk_cache_gc_max_size=100G
 
 # reading WORKSPACE is disabled by default for Bazel 8
 common --enable_workspace

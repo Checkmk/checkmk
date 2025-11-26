@@ -21,6 +21,8 @@ import DialogApp from './dialog/DialogApp.vue'
 import LoadingTransition from './loading-transition/LoadingTransition.vue'
 import MainMenuApp from './main-menu/MainMenuApp.vue'
 import ChangesApp from './main-menu/changes/ChangesApp.vue'
+import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
+import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRedirectOAuth2ConnectionApp.vue'
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
@@ -42,6 +44,8 @@ defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
 defineCmkComponent('cmk-mode-create-otel-conf', ModeCreateOTelConfApp)
 defineCmkComponent('cmk-mode-create-relay', ModeCreateRelayApp)
+defineCmkComponent('cmk-mode-create-oauth2-connection', ModeCreateOAuth2ConnectionApp)
+defineCmkComponent('cmk-mode-redirect-oauth2-connection', ModeRedirectOAuth2ConnectionAppCopy)
 defineCmkComponent('cmk-sidebar', SidebarApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)

@@ -45,6 +45,7 @@ def test_registered_pages() -> None:
         "ajax_popup_icon_selector",
         "ajax_popup_move_to_folder",
         "ajax_reschedule",
+        "ajax_request_and_save_ms_graph_access_token",
         "ajax_search",
         "ajax_service_discovery",
         "ajax_set_dashboard_start_url",

@@ -147,6 +147,7 @@ SRCS = [
     ":node_modules/radix-vue",
     ":node_modules/rollup",
     ":node_modules/sanitize-html",
+    ":node_modules/uuid",
     ":node_modules/vite",
     ":node_modules/vite-plugin-vue-devtools",
     ":node_modules/vue-component-type-helpers",

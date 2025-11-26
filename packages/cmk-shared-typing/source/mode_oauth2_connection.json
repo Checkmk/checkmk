@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "oauth2_connection_config",
+  "properties": {
+    "connection": {
+      "anyOf": [{ "$ref": "#/$connection_object/ms_graph_api" }]
+    },
+    "urls": { "$ref": "#/$def/oauth2_urls" }
+  },
+  "required": ["urls"],
+  "$def": {
+    "oauth2_urls": {
+      "type": "object",
+      "properties": {
+        "redirect": { "type": "string" },
+        "ms_graph_api": {
+          "$ref": "#/$urls/ms_graph_api_urls"
+        }
+      },
+      "required": ["ms_graph_api", "redirect"]
+    }
+  },
+  "$urls": {
+    "ms_graph_api_urls": {
+      "type": "object",
+      "properties": {
+        "global_": {
+          "$ref": "#/authority_urls"
+        },
+        "china": {
+          "$ref": "#/authority_urls"
+        }
+      },
+      "required": ["global_", "china"]
+    }
+  },
+  "authority_urls": {
+    "type": "object",
+    "properties": {
+      "base_url": {
+        "type": "string"
+      }
+    },
+    "required": ["base_url"]
+  },
+  "$connection_object": {
+    "base_connection_object": {
+      "type": "object",
+      "properties": {
+        "type": { "enum": ["ms_graph_api"] },
+        "id": { "type": "string" },
+        "redirect_uri": { "type": "string" },
+        "description": { "type": "string" },
+        "access_token": { "type": "string" },
+        "refresh_token": { "type": "string" }
+      },
+      "required": ["type", "id", "redirect_uri"]
+    },
+    "ms_graph_api": {
+      "allOf": [{ "$ref": "#/$connection_object/base_connection_object" }],
+      "properties": {
+        "authority": { "enum": ["global_", "china"] },
+        "tenant_id": { "type": "string" },
+        "client_id": { "type": "string" },
+        "client_secret": { "type": "string" },
+        "code": { "type": "string" }
+      }
+    }
+  }
+}

@@ -21,6 +21,7 @@ SOURCES_COMMON = [
     "loading_transition.json",
     "main_menu.json",
     "mode_host.json",
+    "mode_oauth2_connection.json",
     "notifications.json",
     "setup.json",
     "icon.json",

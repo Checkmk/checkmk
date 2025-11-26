@@ -47,6 +47,7 @@ from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenuTopicEntries
 from cmk.gui.nodevis import nodevis
+from cmk.gui.oauth2.registration import register as register_oauth2_connections
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
@@ -336,3 +337,5 @@ def register(
     rulespec.register(rulespec_registry, notification_parameter_registry)
     welcome.register(page_registry, snapin_registry)
     search_registration.register(page_registry)
+
+    register_oauth2_connections(mode_registry, page_registry)

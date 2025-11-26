@@ -14,12 +14,11 @@ from cmk.gui.graphing import (
     parse_perf_data,
     RegisteredMetric,
     translate_metrics,
-    TranslatedMetric,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Perfdata, Row
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
 
 
@@ -33,32 +32,25 @@ class Perfometer:
             perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked,
         ],
     ) -> None:
-        self.temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
         self._row = row
-
-        self._perf_data: Perfdata = []
-        self._check_command: str = self._row["service_check_command"]
-        self._translated_metrics: Mapping[str, TranslatedMetric] = {}
         self._registered_metrics = registered_metrics
         self._registered_perfometers = registered_perfometers
+        self._temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
 
-        self._parse_perf_data()
-
-    def _parse_perf_data(self) -> None:
-        perf_data_string = self._row["service_perf_data"].strip()
-        if not perf_data_string:
-            return
-
-        self._perf_data, self._check_command = parse_perf_data(
-            perf_data_string, self._row["service_check_command"], debug=active_config.debug
-        )
-
-        self._translated_metrics = translate_metrics(
-            self._perf_data,
-            self._check_command,
-            self._registered_metrics,
-            temperature_unit=self.temperature_unit,
-        )
+        if perf_data_string := row["service_perf_data"].strip():
+            self._perf_data, self._check_command = parse_perf_data(
+                perf_data_string, self._row["service_check_command"], debug=active_config.debug
+            )
+            self._translated_metrics = translate_metrics(
+                self._perf_data,
+                self._check_command,
+                self._registered_metrics,
+                temperature_unit=self._temperature_unit,
+            )
+        else:
+            self._perf_data = []
+            self._check_command = self._row["service_check_command"]
+            self._translated_metrics = {}
 
     def render(self) -> tuple[str | None, HTML | None]:
         """Renders the HTML code of a perfometer
@@ -86,8 +78,8 @@ class Perfometer:
         ):
             return None, None
         return (
-            renderer.get_label(self.temperature_unit),
-            _render_metricometer(renderer.get_stack(self.temperature_unit)),
+            renderer.get_label(self._temperature_unit),
+            _render_metricometer(renderer.get_stack(self._temperature_unit)),
         )
 
     def sort_value(self) -> tuple[int | None, float | None]:

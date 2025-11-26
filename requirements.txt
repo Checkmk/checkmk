@@ -3972,9 +3972,10 @@ pytest==8.3.5 \
     #   pytest-subtests
     #   pytest-xdist
     #   schemathesis
-pytest-asyncio @ git+https://github.com/pytest-dev/pytest-asyncio@db36483bc47c804b74aa6e0baab5d701a9224776
+pytest-asyncio==1.3.0 \
+    --hash=sha256:611e26147c7f77640e6d0a92a38ed17c3e9848063698d5c93d5aa7aa11cebff5 \
+    --hash=sha256:d7f52f36d231b80ee124cd216ffb19369aa168fc10095013c6b014a34d3ee9e5
     # via
-    #   -c constraints.txt
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r tests/dev-requirements.in

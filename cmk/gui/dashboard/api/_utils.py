@@ -39,9 +39,7 @@ from .model.constants import (
     ResponsiveGridBreakpointConfig,
     WidgetConstraints,
 )
-from .model.dashboard import (
-    RelativeGridDashboardResponse,
-)
+from .model.dashboard import RelativeGridDashboardResponse
 from .model.response_model import RelativeGridDashboardDomainObject
 from .model.widget import WidgetRelativeGridPosition, WidgetRelativeGridSize
 

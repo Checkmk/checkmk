@@ -11,11 +11,7 @@ from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, GROW, MAX
-from cmk.gui.dashboard.type_defs import (
-    DashletConfig,
-    DashletPosition,
-    DashletSize,
-)
+from cmk.gui.dashboard.type_defs import DashletConfig, DashletPosition, DashletSize
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualContext
@@ -192,7 +188,9 @@ class BaseWidgetRequest(_BaseWidget, ABC):
     ) -> Iterable[ErrorDetails]:
         """Run additional validations that depends on the config."""
         yield from self.content.iter_validation_errors(
-            location + ("content", self.content.type), context, embedded_views=embedded_views
+            location + ("content", self.content.type),
+            context,
+            embedded_views=embedded_views,
         )
 
     def _to_internal_without_layout(self) -> DashletConfig:
@@ -287,7 +285,9 @@ class RelativeGridWidgetResponse(BaseWidgetResponse):
         )
 
 
-def determine_widget_filter_used_infos(widget_config: DashletConfig) -> list[AnnotatedInfoName]:
+def determine_widget_filter_used_infos(
+    widget_config: DashletConfig,
+) -> list[AnnotatedInfoName]:
     dashlet_type = dashlet_registry[widget_config["type"]]
     if "context" not in widget_config:
         # setting a dummy context, since the widget might access it

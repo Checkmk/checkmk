@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._ajax_handler import FigureRequestInternal, get_validated_internal_figure_request
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
 from ._utils import (
@@ -19,9 +20,11 @@ __all__ = [
     "ApiCustomGraphValidation",
     "DASHBOARD_FAMILY",
     "DashboardConstants",
+    "FigureRequestInternal",
     "PERMISSIONS_DASHBOARD",
     "PERMISSIONS_DASHBOARD_EDIT",
     "get_permitted_user_id",
+    "get_validated_internal_figure_request",
     "register_endpoints",
     "save_dashboard_to_file",
     "convert_internal_relative_dashboard_to_api_model_dict",

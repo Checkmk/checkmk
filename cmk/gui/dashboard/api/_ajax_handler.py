@@ -11,7 +11,7 @@
 ###################################################################################################
 
 from dataclasses import dataclass
-from typing import Annotated, NotRequired, TypedDict
+from typing import Annotated, Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel, Discriminator, Json, ValidationError
 
@@ -35,7 +35,7 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import SingleInfos, VisualContext
 
-from .model.widget import WidgetGeneralSettings
+from .model.widget import WidgetGeneralSettings, WidgetTitle
 from .model.widget_content.inventory import InventoryContent
 from .model.widget_content.metric import (
     AverageScatterplotContent,
@@ -88,7 +88,7 @@ type FigureDashletConfig = (
 class _WidgetTitleInternal(TypedDict, total=True):
     text: str
     url: NotRequired[str]
-    render_mode: str
+    show_title: bool | Literal["transparent"]
 
 
 class _WidgetGeneralSettingsInternal(TypedDict, total=True):
@@ -103,13 +103,13 @@ def _general_settings_to_internal(
         if not isinstance(gs_api.title.url, ApiOmitted):
             title = _WidgetTitleInternal(
                 text=gs_api.title.text,
-                render_mode=gs_api.title.render_mode,
+                show_title=WidgetTitle.render_mode_to_internal(gs_api.title.render_mode),
                 url=gs_api.title.url,
             )
         else:
             title = _WidgetTitleInternal(
                 text=gs_api.title.text,
-                render_mode=gs_api.title.render_mode,
+                show_title=WidgetTitle.render_mode_to_internal(gs_api.title.render_mode),
             )
 
         return _WidgetGeneralSettingsInternal(

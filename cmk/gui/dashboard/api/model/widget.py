@@ -19,6 +19,8 @@ from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualContext
 from .type_defs import AnnotatedInfoName
 from .widget_content import content_from_internal, WidgetContent
 
+type ApiRenderMode = Literal["hidden", "with_background", "without_background"]
+
 
 @api_model
 class WidgetTitle:
@@ -27,15 +29,13 @@ class WidgetTitle:
         description="Optional URL the title should link to.",
         default_factory=ApiOmitted,
     )
-    render_mode: Literal["hidden", "with_background", "without_background"] = api_field(
+    render_mode: ApiRenderMode = api_field(
         description="How the title should be rendered.",
         # default="with_background",
     )
 
     @staticmethod
-    def _render_mode_from_internal(
-        show_title: bool | Literal["transparent"],
-    ) -> Literal["hidden", "with_background", "without_background"]:
+    def _render_mode_from_internal(show_title: bool | Literal["transparent"]) -> ApiRenderMode:
         if isinstance(show_title, bool):
             return "with_background" if show_title else "hidden"
         if show_title == "transparent":
@@ -43,9 +43,7 @@ class WidgetTitle:
         raise ValueError(f"Invalid show_title value: {show_title}")
 
     @staticmethod
-    def render_mode_to_internal(
-        render_mode: Literal["hidden", "with_background", "without_background"],
-    ) -> bool | Literal["transparent"]:
+    def render_mode_to_internal(render_mode: ApiRenderMode) -> bool | Literal["transparent"]:
         match render_mode:
             case "hidden":
                 return False

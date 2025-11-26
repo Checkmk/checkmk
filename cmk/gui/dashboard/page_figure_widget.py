@@ -52,11 +52,11 @@ def get_figure_widget_response(
             "single_infos": request_data.single_infos,
         }
     )
-    if (title := request_data.general_settings.get("title")) is not None and title[
-        "render_mode"
-    ] != "hidden":
+    title = request_data.general_settings.get("title")
+    if title is not None:
         figure_config.update(
             {
+                "show_title": title["show_title"],
                 "title": title["text"],
                 "title_url": title.get("url", ""),
             }

@@ -174,26 +174,22 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
             self.fill_last_locator(self.port_textfield, str(target["port"]))
         for rule in properties["host_name_rules"]:
             self.add_new_rule_button.click()
+            self.click_on_last_locator(self.host_name_rules_dropdown)
             if rule["type"] == "service_instance_id":
-                continue  # to remove
-                # self.click_on_last_locator(self.host_name_rules_dropdown)
-                # self.dropdown_option("Host name / IP address").click()
+                self.dropdown_option("Host name / IP address").click()
             elif rule["type"] == "custom":
-                self.click_on_last_locator(self.host_name_rules_dropdown)
                 self.dropdown_option("Custom host name computation").click()
                 for custom_field in rule["value"]:
                     self.click_on_last_locator(self.add_new_field_button)
-                    if custom_field["type"] != "key":  # to remove
-                        self.click_on_last_locator(self.host_name_field_type_dropdown)
+                    self.click_on_last_locator(self.host_name_field_type_dropdown)
                     if custom_field["type"] == "key":
-                        # self.dropdown_option("Value of attribute").click() to uncomment
-                        if custom_field["value"] != "service.name":  # to remove
-                            self.click_on_last_locator(self.value_of_attribute_dropdown)
-                            self.fill_last_locator(
-                                self.value_of_attribute_filter,
-                                custom_field["value"],
-                            )
-                            self.dropdown_option(custom_field["value"]).click()
+                        self.dropdown_option("Value of attribute").click()
+                        self.click_on_last_locator(self.value_of_attribute_dropdown)
+                        self.fill_last_locator(
+                            self.value_of_attribute_filter,
+                            custom_field["value"],
+                        )
+                        self.dropdown_option(custom_field["value"]).click()
                     elif custom_field["type"] == "free":
                         self.dropdown_option("Literal string").click()
                         self.fill_last_locator(self.literal_string_textfield, custom_field["value"])

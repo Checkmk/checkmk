@@ -1,4 +1,4 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 exports_files([
@@ -142,23 +142,9 @@ pkg_mklink(
     target = "../init.d/piggyback-hub",
 )
 
-pkg_tar(
-    name = "check_mk",
-    srcs = [
-        ":10-agent-receiver",
-        ":10-mkeventd",
-        ":55-automation-helper",
-        ":60-ui-job-scheduler",
-        ":90-piggyback-hub",
-        ":post_cp",
-        ":post_create",
-        ":post_mv",
-        ":post_restore",
-        ":post_update",
-        ":skel",
-        ":skel_755",
-    ],
-    empty_dirs = [
+pkg_mkdirs(
+    name = "empty_dirs",
+    dirs = [
         "lib/nagios/plugins",
         "lib/python3/cmk/gui/plugins/userdb",
         "lib/python3/cmk/gui/plugins/watolib",
@@ -213,6 +199,25 @@ pkg_tar(
         "skel/tmp/check_mk/piggyback_sources",
         "skel/tmp/check_mk/counters",
         "skel/tmp/check_mk/cache",
+    ],
+)
+
+pkg_tar(
+    name = "check_mk",
+    srcs = [
+        ":10-agent-receiver",
+        ":10-mkeventd",
+        ":55-automation-helper",
+        ":60-ui-job-scheduler",
+        ":90-piggyback-hub",
+        ":empty_dirs",
+        ":post_cp",
+        ":post_create",
+        ":post_mv",
+        ":post_restore",
+        ":post_update",
+        ":skel",
+        ":skel_755",
     ],
     visibility = ["//omd:__pkg__"],
 )

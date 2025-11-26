@@ -28,6 +28,7 @@ class _FreeIPMIParams(BaseModel, frozen=True):
     privilege_lvl: Literal["user", "operator", "admin"]
     ipmi_driver: str | None = None
     driver_type: str | None = None
+    cipher_suite_id: Literal["suite_3", "suite_17"] = "suite_17"
     quiet_cache: bool = False
     sdr_cache_recreate: bool = False
     interpret_oem_data: bool = False
@@ -70,16 +71,21 @@ def _ipmitool_args(options: _IPMIToolParams) -> Iterable[str]:
     yield from ("--intf", options.intf)
 
 
+def _cipher_suite_id_to_value(suite_id: Literal["suite_3", "suite_17"]) -> str:
+    return "3" if suite_id == "suite_3" else "17"
+
+
 def _freeipmi_args(options: _FreeIPMIParams) -> Iterable[str]:
     yield from chain.from_iterable(
         (
             opt,
-            value,
+            value if parameter != "cipher_suite_id" else _cipher_suite_id_to_value(value),
         )
         for opt, parameter in [
             ("--driver", "ipmi_driver"),
             ("--driver_type", "driver_type"),
             ("--key", "BMC_key"),
+            ("--cipher-suite-id", "cipher_suite_id"),
         ]
         if (value := getattr(options, parameter)) is not None
     )

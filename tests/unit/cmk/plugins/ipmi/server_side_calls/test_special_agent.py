@@ -28,6 +28,7 @@ HOST_CONFIG = HostConfig(
                         "username": "user",
                         "password": Secret(23),
                         "privilege_lvl": "user",
+                        "cipher_suite_id": "suite_3",
                     },
                 ),
             },
@@ -40,6 +41,8 @@ HOST_CONFIG = HostConfig(
                     Secret(23),
                     "freeipmi",
                     "user",
+                    "--cipher-suite-id",
+                    "3",
                     "--output_sensor_state",
                 ]
             ),
@@ -57,6 +60,7 @@ HOST_CONFIG = HostConfig(
                         "sdr_cache_recreate": True,
                         "interpret_oem_data": True,
                         "output_sensor_state": False,
+                        "cipher_suite_id": "suite_17",
                     },
                 ),
             },
@@ -71,6 +75,8 @@ HOST_CONFIG = HostConfig(
                     "user",
                     "--driver",
                     "driver",
+                    "--cipher-suite-id",
+                    "17",
                     "--sdr_cache_recreate",
                     "--interpret_oem_data",
                 ]

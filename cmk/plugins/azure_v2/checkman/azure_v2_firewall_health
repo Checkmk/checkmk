@@ -1,0 +1,17 @@
+title: Microsoft Azure Firewall: Health
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the health status of Microsoft Azure Firewalls.
+ The health metric represents the overall health state of the firewall
+ as a percentage.
+
+ You can configure the warning and critical levels using the rule
+ "Azure Firewall Health".
+
+ In order to use this check, you need to configure the Azure special agent.
+
+discovery:
+ One service is created for each Azure Firewall.

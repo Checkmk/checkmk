@@ -375,6 +375,9 @@ ALL_METRICS: dict[str, list[AzureMetric]] = {
         AzureMetric(name="HealthyHostCount", interval="PT1M", aggregation="average"),
         AzureMetric(name="FailedRequests", interval="PT1M", aggregation="count"),
     ],
+    "Microsoft.Network/azureFirewalls": [
+        AzureMetric(name="FirewallHealth", interval="PT1M", aggregation="average"),
+    ],
     "Microsoft.Compute/virtualMachines": [
         AzureMetric(name="Percentage CPU", interval="PT1M", aggregation="average"),
         AzureMetric(name="CPU Credits Consumed", interval="PT1M", aggregation="average"),

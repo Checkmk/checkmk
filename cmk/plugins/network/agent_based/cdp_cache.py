@@ -50,7 +50,7 @@ class InventoryParams(TypedDict):
     remove_domain: bool
     domain_name: str | None
     use_short_if_name: bool
-    removecolumns: Sequence[str]
+    remove_columns: Sequence[str]
 
 
 class CdpGlobal(BaseModel, frozen=True):
@@ -442,7 +442,7 @@ def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResul
             ("duplex", neighbor.duplex),
             ("power_consumption", neighbor.power_consumption),
         ]:
-            if key not in params["removecolumns"] and value is not None:
+            if key not in params["remove_columns"] and value is not None:
                 inventory_columns[key] = value
 
         yield TableRow(
@@ -505,7 +505,7 @@ inventory_plugin_inv_cdp_cache = InventoryPlugin(
         remove_domain=False,
         domain_name=None,
         use_short_if_name=False,
-        removecolumns=[],
+        remove_columns=[],
     ),
     inventory_ruleset_name="inv_cdp_cache",
 )

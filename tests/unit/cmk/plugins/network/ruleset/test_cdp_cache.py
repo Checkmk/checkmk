@@ -52,6 +52,7 @@ def test_migrate_remove_columns(data: object, expected: Sequence[str]) -> None:
             {
                 "remove_domain": True,
                 "domain_name": "example.com",
+                "remove_columns": [],
                 "use_short_if_name": True,
             },
         ),
@@ -65,7 +66,7 @@ def test_migrate_remove_columns(data: object, expected: Sequence[str]) -> None:
             {
                 "remove_domain": True,
                 "domain_name": "example.com",
-                "removecolumns": REMOVE_COLUMNS,
+                "remove_columns": REMOVE_COLUMNS,
                 "use_short_if_name": True,
             },
         ),
@@ -73,20 +74,36 @@ def test_migrate_remove_columns(data: object, expected: Sequence[str]) -> None:
             {
                 "remove_domain": True,
                 "domain_name": "example.com",
-                "removecolumns": None,
+                "remove_columns": None,
                 "use_short_if_name": True,
             },
             {
                 "remove_domain": True,
                 "domain_name": "example.com",
+                "remove_columns": [],
+                "use_short_if_name": True,
+            },
+        ),
+        (
+            {
+                "remove_domain": True,
+                "domain_name": "example.com",
+                "removecolumns": REMOVE_COLUMNS,
+                "use_short_if_name": True,
+            },
+            {
+                "remove_domain": True,
+                "domain_name": "example.com",
+                "remove_columns": REMOVE_COLUMNS,
                 "use_short_if_name": True,
             },
         ),
     ],
     ids=[
-        "no removecolumns key",
-        "removecolumns with proper value is not removed",
-        "removecolumns with empty value is removed",
+        "no removecolumns key is migrated to empty array",
+        "remove_columns with proper value is not removed",
+        "remove_columns with empty value is migrated to empty array",
+        "removecolumns is migrated to remove_columns",
     ],
 )
 def test_migrate_inv_cdp_cache(data: object, expected: Mapping[str, object]) -> None:

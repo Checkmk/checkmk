@@ -30,8 +30,14 @@ def _migrate_remove_columns(value: object) -> Sequence[str]:
 def _migrate_inv_cdp_cache(value: object) -> Mapping[str, object]:
     if isinstance(value, dict):
         if "removecolumns" in value.keys():
-            if not value["removecolumns"]:
-                _not_used = value.pop("removecolumns")
+            value["remove_columns"] = value.pop("removecolumns")
+
+        if "remove_columns" in value.keys():
+            if not isinstance(value["remove_columns"], list):
+                value["remove_columns"] = []
+        else:
+            value["remove_columns"] = []
+
         return value
     return {}
 
@@ -68,7 +74,7 @@ def _parameter_form_inv_cdp_cache() -> Dictionary:
                     ],
                 )
             ),
-            "removecolumns": DictElement(
+            "remove_columns": DictElement(
                 parameter_form=MultipleChoice(
                     title=Title("Columns to remove"),
                     elements=_remove_columns,

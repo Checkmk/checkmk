@@ -162,7 +162,7 @@ def test_host_label_inv_cdp_cache(section: Cdp, expected: list[HostLabel]) -> No
             InventoryParams(
                 remove_domain=False,
                 domain_name=None,
-                removecolumns=[],
+                remove_columns=[],
                 use_short_if_name=False,
             ),
             [CDP_GLOBAL_ATTRIBUTE],
@@ -172,7 +172,7 @@ def test_host_label_inv_cdp_cache(section: Cdp, expected: list[HostLabel]) -> No
             InventoryParams(
                 remove_domain=False,
                 domain_name=None,
-                removecolumns=[],
+                remove_columns=[],
                 use_short_if_name=False,
             ),
             [CDP_GLOBAL_ATTRIBUTE, CDP_NEIGHBOR_ATTRIBUTE],

@@ -52,11 +52,12 @@ export function unwrap<T>(result: { data?: T; error?: unknown; response: Respons
     throw new CmkApiError(message, null, context.join('\n\n'))
   }
 
-  if (result.data === undefined) {
+  // Reference: https://github.com/openapi-ts/openapi-typescript/discussions/1869
+  if (result.data === undefined && ![204, 205].includes(result.response.status)) {
     throw new CmkApiError('No data in fetch response', null, '')
   }
 
-  return result.data
+  return result.data!
 }
 
 /** Get base url by stripping endpoint resource name

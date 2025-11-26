@@ -26946,6 +26946,10 @@ msgstr ""
 msgid "Graph template"
 msgstr "グラフテンプレート"
 
+#, fuzzy
+msgid "Graph time and refresh"
+msgstr "グラフの時間範囲"
+
 msgid "Graph time range"
 msgstr "グラフの時間範囲"
 
@@ -88495,7 +88499,7 @@ msgid "explicit password"
 msgstr "新しいパスワード"
 
 #, fuzzy
-msgid "~Enter regex (pattern match)"
+msgid "Enter regex (pattern match)"
 msgstr "パターン一致を試す"
 
 msgid "Enter plain text (single match)"

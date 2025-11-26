@@ -28504,6 +28504,10 @@ msgstr ""
 msgid "Graph template"
 msgstr "Modelo gráfico"
 
+#, fuzzy
+msgid "Graph time and refresh"
+msgstr "Intervalo de tempo do gráfico"
+
 msgid "Graph time range"
 msgstr "Intervalo de tempo do gráfico"
 
@@ -94176,7 +94180,7 @@ msgid "explicit password"
 msgstr "Nova Senha"
 
 #, fuzzy
-msgid "~Enter regex (pattern match)"
+msgid "Enter regex (pattern match)"
 msgstr "Tentar a correspondência de padrões"
 
 msgid "Enter plain text (single match)"

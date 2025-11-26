@@ -28496,6 +28496,10 @@ msgstr ""
 msgid "Graph template"
 msgstr "Grafieksjabloon"
 
+#, fuzzy
+msgid "Graph time and refresh"
+msgstr "Grafiek tijd bereik"
+
 msgid "Graph time range"
 msgstr "Grafiek tijd bereik"
 
@@ -94284,7 +94288,7 @@ msgid "explicit password"
 msgstr "Nieuw wachtwoord"
 
 #, fuzzy
-msgid "~Enter regex (pattern match)"
+msgid "Enter regex (pattern match)"
 msgstr "Probeer Patroon Overeenstemming"
 
 msgid "Enter plain text (single match)"

@@ -28587,6 +28587,10 @@ msgstr ""
 msgid "Graph template"
 msgstr "Șablon grafic"
 
+#, fuzzy
+msgid "Graph time and refresh"
+msgstr "Intervalul de timp al graficului"
+
 msgid "Graph time range"
 msgstr "Intervalul de timp al graficului"
 
@@ -94549,7 +94553,7 @@ msgid "explicit password"
 msgstr "Parolă nouă"
 
 #, fuzzy
-msgid "~Enter regex (pattern match)"
+msgid "Enter regex (pattern match)"
 msgstr "Încercați potrivirea modelului"
 
 msgid "Enter plain text (single match)"

@@ -160,6 +160,24 @@ class DistributedMonitoring(CmkPage):
         """Configure the site-specific global settings"""
         return self.main_area.locator(f"a[href*='mode=edit_site_globals&site={site_id}']")
 
+    def is_remote_site_licensed(self, site_id: str) -> bool | None:
+        """Check if a remote site is licensed.
+
+        Returns None if the replication is disabled (and therefore the license state is unknown).
+        Returns a boolean indicating the license state otherwise.
+        """
+        if "not enabled" in self._get_table_row(site_id).inner_text().lower():
+            logger.warning(
+                'Replication disabled for remote site "%s"; licensing status unknown!', site_id
+            )
+            return None
+        remote_site_license_info = (
+            self._get_table_row(site_id).get_by_role("cell").filter(has_text="license state")
+        )
+        licensed = "license state: licensed" in remote_site_license_info.inner_text().lower()
+
+        return licensed
+
 
 class AddSiteConnection(CmkPage):
     """Represent the page `Setup -> General -> Distributed monitoring -> Add site connection`."""

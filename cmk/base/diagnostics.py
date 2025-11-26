@@ -100,6 +100,7 @@ class _DiagnosticsElement:
     title: str
     description: str
     content: str
+    exception: Exception | None
 
 
 SUFFIX = ".tar.gz"
@@ -221,6 +222,16 @@ class DiagnosticsDump:
             optional_elements.append(OMDConfigDiagnosticsElement())
 
         if OPT_CHECKMK_OVERVIEW in parameters:
+            content = ""
+            exception_for_later = None
+            try:
+                content = _get_checkmk_overview_content(
+                    InventoryStore(cmk.utils.paths.omd_root),
+                    parameters.get(OPT_CHECKMK_OVERVIEW, ""),
+                )
+            except Exception as e:
+                exception_for_later = e
+
             optional_elements.append(
                 _DiagnosticsElementWrapper(
                     _DiagnosticsElement(
@@ -233,10 +244,8 @@ class DiagnosticsDump:
                             "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
                             "(Agent plug-in mk_inventory needs to be installed)"
                         ),
-                        content=_get_checkmk_overview_content(
-                            InventoryStore(cmk.utils.paths.omd_root),
-                            parameters.get(OPT_CHECKMK_OVERVIEW, ""),
-                        ),
+                        content=content,
+                        exception=exception_for_later,
                     )
                 )
             )
@@ -445,6 +454,8 @@ class _DiagnosticsElementWrapper(ABCDiagnosticsElementTextDump):
 
     @override
     def _collect_infos(self) -> str:
+        if self._wrapped.exception:
+            raise self._wrapped.exception
         return self._wrapped.content
 
 

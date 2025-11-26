@@ -125,6 +125,7 @@ def test_diagnostics_element_wrapper() -> None:
             title="Title",
             description="Bla",
             content="hallo",
+            exception=None,
         )
     )
     assert wrapper.ident == "ident"

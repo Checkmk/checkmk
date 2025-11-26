@@ -19,11 +19,9 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-import { hasValidRelayNameCharacters } from '@/mode-relay/lib/validation'
-
 const { _t } = usei18n()
 
-defineProps<CmkWizardStepProps>()
+const props = defineProps<CmkWizardStepProps & { nameValidationRegex: string }>()
 
 const relayName = defineModel<string>({ default: '' })
 const savedRelays = ref<Relay[]>([])
@@ -37,7 +35,7 @@ const getNameErrors = () => {
     errors.push('A relay name is required')
   } else if (savedRelays.value.some((relay) => relay.alias === name)) {
     errors.push('This relay name is already in use')
-  } else if (!hasValidRelayNameCharacters(name)) {
+  } else if (!new RegExp(props.nameValidationRegex).test(name)) {
     errors.push(
       'Allowed characters are word characters (letters, digits, underscores), ',
       'dollar signs, spaces, at signs, dots, plus signs, and hyphens. ',

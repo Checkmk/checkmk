@@ -15,6 +15,7 @@ import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
 import VerifyRegistration from './add-relay-configuration-steps/VerifyRegistration.vue'
 
 const props = defineProps<{
+  name_validation_regex: string
   create_host_url: string
   relay_overview_url: string
   site_name: string
@@ -43,7 +44,12 @@ const openRelayOverviewPage = () => {
         :index="1"
         :is-completed="() => currentStep > 1"
       />
-      <NameRelay v-model="relayName" :index="2" :is-completed="() => currentStep > 2" />
+      <NameRelay
+        v-model="relayName"
+        :index="2"
+        :is-completed="() => currentStep > 2"
+        :name-validation-regex="props.name_validation_regex"
+      />
       <RegisterRelay
         :relay-name="relayName"
         :site-name="props.site_name"

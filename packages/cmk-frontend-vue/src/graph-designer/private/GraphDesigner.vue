@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import {
   type GraphLine,
+  type GraphLineQueryAttributes,
   type GraphLines,
   type GraphOptions,
   type Operation,
@@ -796,16 +797,61 @@ const configEntityTypeData = ref<ObjectId | null>(null)
 
 const slideInObjectId = ref<ObjectId | null>(null)
 const slideInOpen = ref<boolean>(false)
+const graphLineQuery = ref<GraphLine | null>(null)
 
 function openSlideIn(graphLine: GraphLine) {
   if (graphLine.type !== 'query') {
     return
   }
   slideInOpen.value = true
+  graphLineQuery.value = graphLine
 }
 
 function closeSlideIn() {
   slideInOpen.value = false
+  graphLineQuery.value = null
+}
+
+function transformQueryAttributes(attributes: GraphLineQueryAttributes) {
+  return attributes.map((attr) => {
+    return { key: attr.key, value: attr.value }
+  })
+}
+
+function transformQueryAggregationSum(aggregationSum: QueryAggregationSumRate | null) {
+  if (aggregationSum === null) {
+    return {
+      type: 'rate',
+      enabled: false,
+      value: 2,
+      unit: 'min'
+    }
+  } else {
+    return {
+      type: 'rate',
+      enabled: aggregationSum.enabled,
+      value: aggregationSum.value,
+      unit: aggregationSum.unit
+    }
+  }
+}
+
+function transformQueryAggregationHistogram(
+  aggregationHistogram: QueryAggregationHistogramPercentile | null
+) {
+  if (aggregationHistogram === null) {
+    return {
+      type: 'percentile',
+      enabled: false,
+      value: 90
+    }
+  } else {
+    return {
+      type: 'percentile',
+      enabled: aggregationHistogram.enabled,
+      value: aggregationHistogram.value
+    }
+  }
 }
 
 const slideInAPI = {
@@ -819,12 +865,30 @@ const slideInAPI = {
   },
   getData: async (objectId: ObjectId | null) => {
     if (objectId === null) {
-      return (
+      const values = (
         await configEntityAPI.getSchema(
           configEntityType as ConfigEntityType,
           configEntityTypeSpecifier
         )
       ).defaultValues
+      if (values.value && graphLineQuery.value !== null && graphLineQuery.value.type === 'query') {
+        const queryAttributes = {
+          metric_name: graphLineQuery.value.metric_name,
+          resource_attributes: transformQueryAttributes(graphLineQuery.value.resource_attributes),
+          scope_attributes: transformQueryAttributes(graphLineQuery.value.scope_attributes),
+          data_point_attributes: transformQueryAttributes(
+            graphLineQuery.value.data_point_attributes
+          ),
+          aggregation_sum: transformQueryAggregationSum(graphLineQuery.value.aggregation_sum),
+          aggregation_histogram: transformQueryAggregationHistogram(
+            graphLineQuery.value.aggregation_histogram
+          )
+        }
+        values.value = {
+          value: { metric_backend_custom_query: queryAttributes }
+        }
+      }
+      return values
     }
     throw new Error('Editing is not supported')
   },

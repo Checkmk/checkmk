@@ -130,8 +130,8 @@ node_networking_interfaces = Node(
             ),
             "available": BoolField(
                 Title("Port usage"),
-                render_true=Label("Free"),
-                render_false=Label("Used"),
+                render_true=Label("free"),
+                render_false=Label("used"),
                 style=_style_if_available,
             ),
             "speed": NumberField(Title("Speed"), render=UNIT_BITS_PER_SECOND),

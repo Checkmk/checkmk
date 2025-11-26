@@ -1405,7 +1405,7 @@ async def process_cosmosdb(
                 resources.append(db_resource)
 
     if err:
-        LOGGER.error("Errors occurred during cosmosdb metrics collection.")
+        LOGGER.error("Errors occurred during cosmosdb metrics collection.\n %s", err.dumpinfo())
         agent_info_section = AzureSection("agent_info")
         agent_info_section.add(err.dumpinfo())
         agent_info_section.write()

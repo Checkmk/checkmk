@@ -23,8 +23,8 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |safe_branch_name:...............(local)  │${safe_branch_name}│
-        |branch_version:.................(local)  │${branch_version}│
+        |safe_branch_name:........... │${safe_branch_name}│
+        |branch_version:............. │${branch_version}│
         |===================================================
         """.stripMargin());
 

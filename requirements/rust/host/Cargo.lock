@@ -1852,6 +1852,7 @@ dependencies = [
  "assert_cmd",
  "clap",
  "derive_more",
+ "encoding_rs",
  "flexi_logger",
  "futures",
  "lazy_static",

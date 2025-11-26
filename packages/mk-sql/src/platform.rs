@@ -339,17 +339,28 @@ pub mod odbc {
         let mut rows: Vec<Vec<String>> = Vec::new();
         for row in 0..batch.num_rows() {
             let row: Vec<String> = (0..batch.num_cols())
-                .map(|col_index| {
-                    batch
-                        .at_as_str(col_index, row)
-                        .unwrap_or_default()
-                        .unwrap_or_default()
-                        .to_string()
-                })
+                .map(|col_index| get_batch_field(batch, col_index, row))
                 .collect();
             rows.push(row);
         }
         rows
+    }
+
+    pub fn get_batch_field(batch: &BufferType, col_index: usize, row: usize) -> String {
+        if let Ok(some) = batch.at_as_str(col_index, row) {
+            return some.unwrap_or_default().to_string();
+        }
+
+        // can't decode utf8 -> try 1252
+        // TODO(sk): get real encoding of database and use corresponding encoding
+        if let Some(some_bin) = batch.at(col_index, row) {
+            let (val, _, _) = encoding_rs::WINDOWS_1252.decode(some_bin);
+            log::trace!("*** WINDOWS_1252 decode {} @ {}", val, col_index);
+            val.to_string()
+        } else {
+            log::info!("*** can't decode {} binary is absent too", col_index);
+            "<malformed>".to_string()
+        }
     }
 
     #[cfg(test)]

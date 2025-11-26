@@ -1,5 +1,5 @@
 {
-  "checksum": "7106d343b18aebbb51d33f3774a172e703c2fb2d44877bb7ce43a19a2850bb55",
+  "checksum": "4699f756ef85da1617c27a4a866ce30a37455a6858f42612b8c40fd25e4f21cd",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -11183,6 +11183,10 @@
           ],
           "selects": {
             "cfg(windows)": [
+              {
+                "id": "encoding_rs 0.8.35",
+                "target": "encoding_rs"
+              },
               {
                 "id": "odbc-api 10.2.0",
                 "target": "odbc_api"
@@ -28141,6 +28145,7 @@
     "bincode 1.3.3",
     "clap 4.5.45",
     "derive_more 1.0.0",
+    "encoding_rs 0.8.35",
     "faccess 0.2.4",
     "flate2 1.1.2",
     "flexi_logger 0.29.8",

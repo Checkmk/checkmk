@@ -47,10 +47,7 @@ impl TextMatcher {
         match self {
             Self::Contains(string) => text.contains(string),
             Self::Exact(string) => text == string,
-            Self::Regex {
-                regex,
-                expectation: expect_match,
-            } => &regex.is_match(text) == expect_match,
+            Self::Regex { regex, expectation } => &regex.is_match(text) == expectation,
         }
     }
 }
@@ -262,7 +259,7 @@ fn check_headers(
     matchers
         .iter()
         .flat_map(|(name_matcher, value_matcher)| {
-            let (match_text, predicate) = match name_matcher {
+            let (match_text, predicate, expectation) = match name_matcher {
                 // We expect name and value matchers to be of the same variant,
                 // so we can match on name_matcher only.
                 TextMatcher::Regex {
@@ -275,13 +272,19 @@ fn check_headers(
                         "Not expected regex in HTTP headers"
                     },
                     "matched",
+                    *expectation,
                 ),
                 TextMatcher::Contains(_) | TextMatcher::Exact(_) => {
-                    ("Expected HTTP header", "found")
+                    ("Expected HTTP header", "found", true)
                 }
             };
 
-            if match_on_headers(&headers_as_strings, name_matcher, value_matcher) {
+            if match_on_headers(
+                &headers_as_strings,
+                name_matcher,
+                value_matcher,
+                expectation,
+            ) {
                 vec![CheckResult::details(
                     State::Ok,
                     &format!(
@@ -312,12 +315,18 @@ fn match_on_headers(
     string_headers: &[(&str, String)],
     name_matcher: &TextMatcher,
     value_matcher: &TextMatcher,
+    first_match_ok: bool,
 ) -> bool {
-    string_headers.iter().any(|(header_key, header_value)| {
-        name_matcher.match_on(header_key) && value_matcher.match_on(header_value)
-    })
+    if first_match_ok {
+        string_headers.iter().any(|(header_key, header_value)| {
+            name_matcher.match_on(header_key) && value_matcher.match_on(header_value)
+        })
+    } else {
+        string_headers.iter().all(|(header_key, header_value)| {
+            name_matcher.match_on(header_key) && value_matcher.match_on(header_value)
+        })
+    }
 }
-
 fn latin1_to_string(bytes: &[u8]) -> String {
     // latin-1 basically consists of the first two unicode blocks,
     // so it's straighyforward to interpret the u8 values as unicode values.

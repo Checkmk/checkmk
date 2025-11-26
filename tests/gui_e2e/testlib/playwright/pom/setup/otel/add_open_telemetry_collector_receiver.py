@@ -171,19 +171,17 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
             self.add_new_host_name_computation_rule_button(receiver_type).click()
             for host_name_field in host_name_rule:
                 self.click_on_last_locator(self.add_new_field_button(receiver_type))
-                if host_name_field["type"] != "key":  # to remove
-                    self.click_on_last_locator(
-                        self.host_name_computation_field_type_dropdown(receiver_type)
-                    )
+                self.click_on_last_locator(
+                    self.host_name_computation_field_type_dropdown(receiver_type)
+                )
                 if host_name_field["type"] == "key":
-                    # self.dropdown_option(receiver_type, "Value of attribute").click() to uncomment
-                    if host_name_field["value"] != "service.name":  # to remove
-                        self.click_on_last_locator(self.value_of_attribute_dropdown(receiver_type))
-                        self.fill_last_locator(
-                            self.value_of_attribute_filter(receiver_type),
-                            host_name_field["value"],
-                        )
-                        self.dropdown_option(receiver_type, host_name_field["value"]).click()
+                    self.dropdown_option(receiver_type, "Value of attribute").click()
+                    self.click_on_last_locator(self.value_of_attribute_dropdown(receiver_type))
+                    self.fill_last_locator(
+                        self.value_of_attribute_filter(receiver_type),
+                        host_name_field["value"],
+                    )
+                    self.dropdown_option(receiver_type, host_name_field["value"]).click()
                 elif host_name_field["type"] == "free":
                     self.dropdown_option(receiver_type, "Literal string").click()
                     self.fill_last_locator(

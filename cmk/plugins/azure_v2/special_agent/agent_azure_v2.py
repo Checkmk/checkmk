@@ -101,6 +101,7 @@ class FetchedResource(Enum):
     )
     redis = ("Microsoft.Cache/Redis", "redis")
     cosmosdb = ("Microsoft.DocumentDB/databaseAccounts", "databaseaccounts")
+    firewalls = ("Microsoft.Network/azureFirewalls", "azurefirewalls")
 
     def __init__(self, resource_type, section_name):
         self.resource_type = resource_type
@@ -119,6 +120,7 @@ BULK_QUERIED_RESOURCES = {
     FetchedResource.virtual_machines.type,
     FetchedResource.app_gateways.type,
     FetchedResource.load_balancers.type,
+    FetchedResource.firewalls.type,
 }
 
 
@@ -1025,6 +1027,31 @@ async def _collect_load_balancers_resources(
         load_balancers_resources.append(resource)
 
     return load_balancers_resources
+
+
+async def _collect_firewalls_resources(
+    mgmt_client: BaseAsyncApiClient,
+    monitored_resources: Mapping[ResourceId, AzureResource],
+) -> Sequence[AzureResource]:
+    firewalls_response = await mgmt_client.get_async(
+        "providers/Microsoft.Network/azureFirewalls",
+        key="value",
+        params={"api-version": "2025-01-01"},
+    )
+
+    firewalls_resources: list[AzureResource] = []
+    for firewall in firewalls_response:
+        try:
+            resource = monitored_resources[firewall["id"].lower()]
+        except KeyError:
+            # this can happen because the resource has been filtered out
+            # (for example because it is not in the monitored group configured via --explicit-config)
+            LOGGER.info("Azure Firewall not found in monitored resources: %s", firewall["id"])
+            continue
+
+        firewalls_resources.append(resource)
+
+    return firewalls_resources
 
 
 async def _get_standard_network_interface_config(
@@ -2354,6 +2381,8 @@ async def process_bulk_resources(
         tasks.add(_collect_app_gateways_resources(mgmt_client, monitored_resources))
     if FetchedResource.load_balancers.type in monitored_services:
         tasks.add(_collect_load_balancers_resources(mgmt_client, monitored_resources))
+    if FetchedResource.firewalls.type in monitored_services:
+        tasks.add(_collect_firewalls_resources(mgmt_client, monitored_resources))
 
     processed_resources: list[AzureResource] = []
     results = await asyncio.gather(*tasks, return_exceptions=True)

@@ -63,6 +63,7 @@ RAW_AZURE_SERVICES: Final = [
     ),
     ("Microsoft.Network/trafficmanagerprofiles", Title("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", Title("Load Balancer")),
+    ("Microsoft.Network/azureFirewalls", Title("Azure Firewalls")),
 ]
 
 NONFREEED_AZURE_SERVICES: Final = [

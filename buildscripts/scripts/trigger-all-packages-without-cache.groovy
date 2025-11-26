@@ -36,30 +36,30 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def stages = all_editions.collectEntries { edition ->
-        [("${edition}") : {
-            def stepName = "Trigger ${edition}";
-            def run_condition = edition in editions_to_test;
+    def success = false;
+    for (edition in all_editions) {
+        def stepName = "Trigger ${edition}";
+        def run_condition = edition in editions_to_test;
 
-            /// this makes sure the whole parallel thread is marked as skipped
-            if (! run_condition) {
-                Utils.markStageSkippedForConditional(stepName);
-            }
+        /// this makes sure the whole parallel thread is marked as skipped
+        if (! run_condition) {
+            Utils.markStageSkippedForConditional(stepName);
+        }
 
-            smart_stage(
-                name: stepName,
-                condition: run_condition,
-                raiseOnError: true,
-            ) {
-                def this_job_parameters = job_parameters + [stringParam(name: "EDITION", value: edition)];
-                smart_build(
-                    job: "${branch_base_folder}/nightly-${edition}/build-cmk-deliverables-no-cache",
-                    parameters: this_job_parameters,
-                );
-            }
-        }]
+        success &= smart_stage(
+            name: stepName,
+            condition: run_condition,
+            raiseOnError: true,
+        ) {
+            def this_job_parameters = job_parameters + [stringParam(name: "EDITION", value: edition)];
+            smart_build(
+                job: "${branch_base_folder}/nightly-${edition}/build-cmk-deliverables-no-cache",
+                parameters: this_job_parameters,
+            );
+        }[0]
     }
-    currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+
+    currentBuild.result = success ? "SUCCESS" : "FAILURE";
 }
 
 return this;

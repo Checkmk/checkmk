@@ -120,17 +120,10 @@ def _cluster_check(
         selector=selector,
         preferred=clusterization_parameters.get("primary_node"),
         unpreferred_node_state=unpreferred_node_state,
+        levels_additional_nodes_count=levels_additional_nodes_count,
+        metrics_node=clusterization_parameters.get("metrics_node"),
     )
-    if summarizer.is_empty():
-        return summarizer.raise_for_ignores()
-
-    yield from summarizer.primary_results()
-
-    yield from summarizer.secondary_results(
-        levels_additional_nodes_count=levels_additional_nodes_count
-    )
-
-    yield from summarizer.metrics(clusterization_parameters.get("metrics_node"))
+    yield from summarizer()
     return None
 
 
@@ -149,6 +142,8 @@ class Summarizer:
         selector: Selector,
         preferred: HostName | None,
         unpreferred_node_state: State,
+        levels_additional_nodes_count: tuple[float, float],
+        metrics_node: HostName | None = None,
         additional_node_label: str = "Additional results from:",
     ) -> None:
         self._node_results = node_results
@@ -157,6 +152,8 @@ class Summarizer:
         self._selector = selector
         self._preferred = preferred
         self._unpreferred_node_state = unpreferred_node_state
+        self._levels_additional_nodes_count = levels_additional_nodes_count
+        self._metrics_node = metrics_node
 
         selected_nodes = self._get_selected_nodes(node_results.results, selector)
         # fallback: arbitrary, but comprehensible choice.
@@ -169,6 +166,15 @@ class Summarizer:
             )
         else:
             self._active = self._pivoting
+
+    def __call__(self) -> CheckResult:
+        if self.is_empty():
+            self.raise_for_ignores()
+            return
+
+        yield from self.primary_results()
+        yield from self.secondary_results()
+        yield from self.metrics()
 
     @staticmethod
     def _get_selected_nodes(
@@ -204,11 +210,7 @@ class Summarizer:
             )
         yield from self._node_results.results[self._pivoting]
 
-    def secondary_results(
-        self,
-        *,
-        levels_additional_nodes_count: tuple[float, float],
-    ) -> Iterable[Result]:
+    def secondary_results(self) -> Iterable[Result]:
         secondary_nodes = sorted(
             node
             for node, results in self._node_results.results.items()
@@ -218,7 +220,7 @@ class Summarizer:
             return
 
         yield Result(
-            state=self._secondary_nodes_state(secondary_nodes, levels_additional_nodes_count),
+            state=self._secondary_nodes_state(secondary_nodes, self._levels_additional_nodes_count),
             summary=f"{self._additional_node_label} {', '.join(f'[{n}]' for n in secondary_nodes)}",
         )
         yield from (
@@ -239,8 +241,8 @@ class Summarizer:
         count = len(secondary_nodes)
         return State.CRIT if count >= levels[1] else State(count >= levels[0])
 
-    def metrics(self, node_name: HostName | None) -> CheckResult:
-        used_node = node_name or self._pivoting
+    def metrics(self) -> CheckResult:
+        used_node = self._metrics_node or self._pivoting
         if not (metrics := self._node_results.metrics.get(used_node, ())):
             return
 

@@ -413,12 +413,11 @@ def test_summarizer_result_generation(
         selector=State.best,
         preferred=clusterization_parameters.get("primary_node"),
         unpreferred_node_state=State.WARN,
+        levels_additional_nodes_count=(0.0, 0.0),
     )
 
     assert expected_primary_result == list(summarizer.primary_results())
-    assert expected_secondary_result == list(
-        summarizer.secondary_results(levels_additional_nodes_count=(0.0, 0.0))
-    )
+    assert expected_secondary_result == list(summarizer.secondary_results())
 
 
 @pytest.mark.parametrize(
@@ -467,9 +466,8 @@ def test_summarizer_result_generation_for_failover(
         selector=State.worst,
         preferred=clusterization_parameters.get("primary_node"),
         unpreferred_node_state=State.WARN,
+        levels_additional_nodes_count=(0.0, 0.0),
     )
 
     assert expected_primary_result == list(summarizer.primary_results())
-    assert expected_secondary_result == list(
-        summarizer.secondary_results(levels_additional_nodes_count=(0.0, 0.0))
-    )
+    assert expected_secondary_result == list(summarizer.secondary_results())

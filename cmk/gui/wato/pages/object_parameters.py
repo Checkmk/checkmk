@@ -26,6 +26,9 @@ from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import (
+    DefaultValue,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -63,6 +66,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import Item
 
 from ._status_links import make_service_status_link
+from .rulesets import render_rulespec_value_model_readonly
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -581,7 +585,7 @@ class ModeObjectParameters(WatoMode):
             )
 
         varname = rulespec.name
-        valuespec = rulespec.valuespec
+        value_model = rulespec.value_model
 
         url = folder_preserving_link(
             [
@@ -646,7 +650,9 @@ class ModeObjectParameters(WatoMode):
 
         elif known_settings is not self._PARAMETERS_UNKNOWN:
             try:
-                html.write_text_permissive(valuespec.value_to_html(known_settings))
+                html.write_text_permissive(
+                    render_rulespec_value_model_readonly(value_model, known_settings)
+                )
             except Exception as e:
                 if debug:
                     raise
@@ -656,7 +662,9 @@ class ModeObjectParameters(WatoMode):
             if rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
                 # If there is a factory default then show that one
                 setting = rulespec.factory_default
-                html.write_text_permissive(valuespec.value_to_html(setting))
+                html.write_text_permissive(
+                    render_rulespec_value_model_readonly(value_model, setting)
+                )
 
             elif ruleset.match_type() in ("all", "list"):
                 # Rulesets that build lists are empty if no rule matches
@@ -664,7 +672,9 @@ class ModeObjectParameters(WatoMode):
 
             else:
                 # Else we use the default value of the valuespec
-                html.write_text_permissive(valuespec.value_to_html(valuespec.default_value()))
+                html.write_text_permissive(
+                    render_rulespec_value_model_readonly(value_model, DefaultValue())
+                )
 
         # We have a setting
         elif ruleset.match_type() == "all":
@@ -672,11 +682,11 @@ class ModeObjectParameters(WatoMode):
                 raise ValueError(f"Expected list, got {setting}")
             html.write_html(
                 HTML.without_escaping(", ").join(
-                    [valuespec.value_to_html(value) for value in setting]
+                    [render_rulespec_value_model_readonly(value_model, value) for value in setting]
                 )
             )
         else:
-            html.write_text_permissive(valuespec.value_to_html(setting))
+            html.write_text_permissive(render_rulespec_value_model_readonly(value_model, setting))
 
         html.close_td()
         html.close_tr()

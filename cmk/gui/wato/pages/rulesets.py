@@ -182,7 +182,9 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs import (
     FixedValue as FixedValueAPI,
 )
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1.form_specs import (
+    FormSpec,
+)
 from cmk.rulesets.v1.form_specs import (
     String as StringAPI,
 )
@@ -3897,3 +3899,21 @@ class ModeUnknownRulesets(WatoMode):
             )
 
         return None
+
+
+def render_rulespec_value_model_readonly(
+    used_value_model: FormSpec[Any] | ValueSpec, value: object
+) -> HTML | str:
+    if isinstance(used_value_model, FormSpec):
+        with output_funnel.plugged():
+            render_form_spec(
+                form_spec=used_value_model,
+                field_id="readonly_id",
+                value=value if isinstance(value, DefaultValue) else RawDiskData(value),
+                do_validate=False,
+                display_mode=DisplayMode.READONLY,
+            )
+            return HTML(output_funnel.drain(), escape=False)
+    if isinstance(value, DefaultValue):
+        value = used_value_model.default_value()
+    return used_value_model.value_to_html(value)

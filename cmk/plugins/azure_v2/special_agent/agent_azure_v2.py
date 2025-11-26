@@ -2167,7 +2167,7 @@ async def process_resource_health(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,
     monitored_resources: Mapping[ResourceId, AzureResource],
-    monitored_groups: Mapping[str, AzureResourceGroup],
+    groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     debug: bool,
 ) -> Sequence[AzureSection]:
     multi_response = await asyncio.gather(
@@ -2180,7 +2180,7 @@ async def process_resource_health(
                 },
                 key="value",
             )
-            for resource_group in monitored_groups
+            for resource_group in groups_with_monitored_resources
         ),
         return_exceptions=True,
     )
@@ -2194,7 +2194,9 @@ async def process_resource_health(
             continue
         health_values.extend(response)
 
-    return _get_resource_health_sections(health_values, monitored_resources, monitored_groups)
+    return _get_resource_health_sections(
+        health_values, monitored_resources, groups_with_monitored_resources
+    )
 
 
 # TODO: test
@@ -2369,7 +2371,7 @@ def _gather_sections_from_resources(
 async def process_bulk_resources(
     mgmt_client: BaseAsyncApiClient,
     args: argparse.Namespace,
-    monitored_groups: Mapping[str, AzureResourceGroup],
+    groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     monitored_services: set[str],
     monitored_resources: Mapping[ResourceId, AzureResource],
     subscription: AzureSubscription,
@@ -2397,7 +2399,7 @@ async def process_bulk_resources(
 
         processed_resources.extend(resources_async)
 
-    return _gather_sections_from_resources(processed_resources, monitored_groups)
+    return _gather_sections_from_resources(processed_resources, groups_with_monitored_resources)
 
 
 # TODO: test
@@ -2405,7 +2407,7 @@ async def process_single_resources(
     mgmt_client: BaseAsyncApiClient,
     args: argparse.Namespace,
     subscription: AzureSubscription,
-    monitored_groups: Mapping[str, AzureResourceGroup],
+    groups_with_monitored_resources: Mapping[str, AzureResourceGroup],
     monitored_resources: Mapping[ResourceId, AzureResource],
 ) -> Sequence[AzureSection]:
     processed_resources: list[AzureResource] = []
@@ -2447,7 +2449,7 @@ async def process_single_resources(
             assert isinstance(resource_async, list)
             processed_resources.extend(resource_async)
 
-    return _gather_sections_from_resources(processed_resources, monitored_groups)
+    return _gather_sections_from_resources(processed_resources, groups_with_monitored_resources)
 
 
 async def process_resources(
@@ -2467,6 +2469,12 @@ async def process_resources(
         for r in selected_resources
         if r.info["type"].lower() in monitored_services_lower
     }
+    resources_groups = {r.group for r in monitored_resources_by_id.values()}
+    groups_with_monitored_resources = {
+        group_name: group
+        for group_name, group in monitored_groups.items()
+        if group_name in resources_groups
+    }
 
     # metrics must be gathered before the actual section writing
     # (which happens in the concurrent tasks below)
@@ -2474,18 +2482,26 @@ async def process_resources(
 
     tasks = {
         process_resource_health(
-            mgmt_client, subscription, monitored_resources_by_id, monitored_groups, args.debug
+            mgmt_client,
+            subscription,
+            monitored_resources_by_id,
+            groups_with_monitored_resources,
+            args.debug,
         ),
         process_bulk_resources(
             mgmt_client,
             args,
-            monitored_groups,
+            groups_with_monitored_resources,
             monitored_services,
             monitored_resources_by_id,
             subscription,
         ),
         process_single_resources(
-            mgmt_client, args, subscription, monitored_groups, monitored_resources_by_id
+            mgmt_client,
+            args,
+            subscription,
+            groups_with_monitored_resources,
+            monitored_resources_by_id,
         ),
     }
 
@@ -2543,11 +2559,15 @@ async def main_subscription(
             # revealing later would be better, but I'm keeping this simple for now
             secret=resolve_secret_option(args, SECRET_OPTION).reveal(),
         ) as mgmt_client:
+            # monitored_groups_list is a list of resource groups that match the selector
+            # that means also groups without any monitored resources
+            # we need this to show resource groups as hosts (e.g. with their costs)
             selected_resources, monitored_groups_list = await _collect_resources(
                 mgmt_client, subscription, args, selector
             )
 
-            resource_groups = await get_resource_groups(
+            # resource_groups is a Mapping lower_name: AzureResourceGroup
+            resource_groups: Mapping[str, AzureResourceGroup] = await get_resource_groups(
                 mgmt_client, monitored_groups_list, subscription, args
             )
             write_group_info(resource_groups, selected_resources, subscription)

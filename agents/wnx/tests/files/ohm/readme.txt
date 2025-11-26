@@ -1,2 +1,0 @@
-OpenHardwareMonitor
-working Abandon Ware

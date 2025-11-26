@@ -17,8 +17,8 @@ namespace fs = std::filesystem;
 
 namespace {
 void CopyOhmToBin() {
-    const auto src_dir =
-        tst::MakePathToTestsFiles(fs::path{SOLUTION_DIR}) / "ohm" / "cli";
+    const auto src_dir = tst::MakePathToTestsFiles(fs::path{SOLUTION_DIR}) /
+                         ".." / ".." / "doc" / "treasures" / "windows" / "ohm";
     for (const auto &name :
          {"OpenHardwareMonitorCLI.exe", "OpenHardwareMonitorLib.dll"}) {
         fs::copy_file(src_dir / name,

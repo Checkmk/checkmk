@@ -16,7 +16,7 @@ from cmk.gui.views.sorter import Sorter
 from .base import Perfometer
 
 
-def sort_perfometer(
+def _sort_perfometer(
     r1: Row,
     r2: Row,
     *,
@@ -59,5 +59,5 @@ SorterPerfometer = Sorter(
         "service_pnpgraph_present",
         "service_plugin_output",
     ],
-    sort_function=sort_perfometer,
+    sort_function=_sort_perfometer,
 )

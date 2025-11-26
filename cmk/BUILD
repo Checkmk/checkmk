@@ -221,6 +221,7 @@ CMK_PACKAGES = [
     "//packages/cmk-check-engine:helper-interface",
     "//packages/cmk-check-engine:snmplib",
     "//packages/cmk-crypto",
+    "//packages/cmk-ec",
     "//packages/cmk-events",
     "//packages/cmk-livestatus-client",
     "//packages/cmk-livestatus-client:py_livestatus",

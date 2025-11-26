@@ -278,6 +278,7 @@ pkg_files(
                "//packages/cmk-ccc:pkg_tar",
                "//packages/cmk-check-engine:pkg_tar",
                "//packages/cmk-crypto:pkg_tar",
+               "//packages/cmk-ec:pkg_tar",
                "//packages/cmk-events:pkg_tar",
                "//packages/cmk-frontend",
                "//packages/cmk-frontend-vue",

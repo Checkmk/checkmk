@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import re
 
 import pytest
@@ -262,7 +261,7 @@ def test_match_outcome(
     expected: ec.MatchResult,
 ) -> None:
     m = ec.RuleMatcher(None, SiteId("test_site"), lambda _time_period_name: True)
-    assert m._check_match_outcome(rule, match_groups, match_priority) == expected
+    assert m._check_match_outcome(rule, match_groups, match_priority) == expected  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

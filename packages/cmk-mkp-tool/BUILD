@@ -28,7 +28,10 @@ py_library(
     ],
     data = [":py_typed"],
     imports = ["."],
-    visibility = ["//cmk:__pkg__"],
+    visibility = [
+        "//cmk:__pkg__",
+        "//packages/cmk-ec:__pkg__",
+    ],
     deps = [
         requirement("pydantic"),
         requirement("toml"),

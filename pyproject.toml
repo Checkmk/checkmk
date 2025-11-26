@@ -60,6 +60,7 @@ ignore = [
   "ARG005",
   "SLF001",
 ]
+"packages/cmk-ec/*" = ["ARG001", "ARG002"]
 "packages/cmk-trace/cmk/trace/__init__.py" = ["A005"]
 "packages/cmk-plugins/*" = ["ARG001", "ARG002"]
 "non-free/packages/cmk-mknotifyd/*" = ["ARG001", "ARG002", "SLF001"]

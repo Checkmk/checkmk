@@ -409,9 +409,6 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
     ImportName("pip"): {  # is included by default in python
         Path("omd/packages/Python/pip")
     },
-    ImportName("pymongo"): {  # Optional except ImportError...
-        Path("cmk/ec/history_mongo.py")
-    },
     ImportName("ibm_db"): {Path("cmk/plugins/sql/active_check/check_sql.py")},
     ImportName("sqlanydb"): {Path("cmk/plugins/sql/active_check/check_sql.py")},
     ImportName("ibm_db_dbi"): {Path("cmk/plugins/sql/active_check/check_sql.py")},

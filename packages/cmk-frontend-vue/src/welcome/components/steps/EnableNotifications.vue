@@ -61,7 +61,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a notification rule') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 0" #content>
+        <template #content>
           <StepParagraph>
             {{
               _t(
@@ -87,7 +87,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Send a test notification') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 1" #content>
+        <template #content>
           <StepParagraph>
             {{
               _t(

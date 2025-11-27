@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkCollapsible from '@/components/CmkCollapsible'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 
 export interface CmkWizardStepProps {
@@ -28,15 +29,19 @@ function onClickGoTo() {
     }"
     @click="(_mouse_event) => onClickGoTo"
   >
-    <div class="cmk-wizard-step__slots">
+    <div class="cmk-wizard-step__slots-outer">
       <slot name="header"></slot>
-      <slot
-        v-if="context.mode() === 'overview' || context.isSelected(props.index)"
-        name="content"
-      ></slot>
-      <div v-if="context.isSelected(index)" class="cmk-wizard-step__actions">
-        <slot name="actions"></slot>
-      </div>
+      <slot v-if="context.mode() === 'overview'" name="content" />
+      <CmkCollapsible
+        v-else
+        :open="context.isSelected(props.index)"
+        class="cmk-wizard-step__slots-inner"
+      >
+        <slot name="content"></slot>
+        <div class="cmk-wizard-step__actions">
+          <slot name="actions"></slot>
+        </div>
+      </CmkCollapsible>
     </div>
   </li>
 </template>
@@ -112,11 +117,18 @@ function onClickGoTo() {
   }
 }
 
-.cmk-wizard-step__slots {
+.cmk-wizard-step__slots-outer {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
   width: calc(100% - 40px);
+}
+
+.cmk-wizard-step__slots-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+  width: 100%;
 }
 
 .cmk-wizard-step__actions {

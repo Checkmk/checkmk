@@ -64,7 +64,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Run a service discovery') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 0" #content>
+        <template #content>
           <StepParagraph>
             {{ _t('To adjust parameters for a host, start by running a service discovery.') }}
             <br />
@@ -91,7 +91,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Open the ruleset for a check parameter') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 1" #content>
+        <template #content>
           <StepParagraph>
             {{ _t('In the Service Discovery view, find the service you want to configure.') }}
             <br />
@@ -111,7 +111,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a check parameter rule') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 2" #content>
+        <template #content>
           <StepParagraph>
             {{
               _t(
@@ -134,7 +134,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 3" #content>
+        <template #content>
           <StepParagraph>
             {{
               _t(

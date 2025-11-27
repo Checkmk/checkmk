@@ -62,7 +62,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Create a contact group') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 0" #content>
+        <template #content>
           <StepParagraph>
             {{ _t('By default, there is one contact group available, called "Everything".') }}
             <br />
@@ -86,7 +86,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign users to a contact group') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 1" #content>
+        <template #content>
           <StepParagraph>
             {{
               _t(
@@ -113,7 +113,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Assign the contact group to hosts') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 2" #content>
+        <template #content>
           <StepParagraph>
             {{
               _t(
@@ -146,7 +146,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(
         <template #header>
           <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
         </template>
-        <template v-if="currentStep === 3" #content>
+        <template #content>
           <StepParagraph>
             {{
               _t(

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from ipaddress import ip_address
 from pathlib import Path
 from stat import S_IMODE
 
@@ -13,7 +12,6 @@ import pytest
 from cmk.ccc.site import SiteId
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
-from cmk.crypto.x509 import SAN
 from cmk.utils.certs import SiteCA
 
 SITE_ID = SiteId("test_site")
@@ -42,9 +40,7 @@ def _file_permissions_is_660(path: Path) -> bool:
 def test_create_site_certificate(ca: SiteCA) -> None:
     assert not ca.site_certificate_exists(ca.cert_dir, SITE_ID)
 
-    ca.create_site_certificate(
-        SITE_ID, additional_sans=["checkmk.testing.local", "127.0.0.1"], key_size=1024
-    )
+    ca.create_site_certificate(SITE_ID, key_size=1024)
     assert ca.site_certificate_exists(ca.cert_dir, SITE_ID)
     assert _file_permissions_is_660(ca.site_certificate_path(ca.cert_dir, SITE_ID))
 
@@ -55,13 +51,3 @@ def test_create_site_certificate(ca: SiteCA) -> None:
     assert certificate.common_name == str(SITE_ID)
     assert certificate.public_key == private_key.public_key
     certificate.verify_is_signed_by(ca.root_ca.certificate)
-
-    expected_sans = [
-        SAN.dns_name("test_site"),
-        SAN.dns_name("checkmk.testing.local"),
-        SAN.checkmk_site(SiteId("test_site")),
-        SAN.ip_address(ip_address("127.0.0.1")),
-    ]
-    assert sorted(certificate.subject_alternative_names or [], key=str) == sorted(
-        expected_sans, key=str
-    )

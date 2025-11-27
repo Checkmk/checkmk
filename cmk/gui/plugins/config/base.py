@@ -547,8 +547,6 @@ class CREConfig:
         )
     )
 
-    site_subject_alternative_names: list[str] = field(default_factory=list)
-
     # .
     #   .--EC------------------------------------------------------------------.
     #   |                             _____ ____                               |

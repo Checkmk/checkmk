@@ -90,7 +90,6 @@ def test_default_config_from_plugins() -> None:
         "log_logon_failures",
         "lock_on_logon_failures",
         "single_user_session",
-        "site_subject_alternative_names",
         "password_policy",
         "user_localizations",
         "user_icons_and_actions",

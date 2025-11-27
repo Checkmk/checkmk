@@ -37,7 +37,6 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
-    ConfigDomainSiteCertificate,
 )
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
@@ -135,12 +134,8 @@ def replace_site_certificate(
 ) -> None:
     site_ca = SiteCA.load(certificate_directory=certificate_directory)
 
-    sans = (
-        ConfigDomainSiteCertificate().load_full_config().get("site_subject_alternative_names", [])
-    )
     site_ca.create_site_certificate(
         site_id=site_id,
-        additional_sans=sans,
         expiry=expiry,
         key_size=key_size,
     )

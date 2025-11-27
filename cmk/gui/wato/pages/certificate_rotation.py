@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
-from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -23,7 +22,9 @@ CERTIFICATE_TMP_PATH = CERTIFICATE_DIRECTORY / "temp_certificate"
 TEMPORARY_CA_FILE_PATH = Path(CERTIFICATE_TMP_PATH / "ca.pem")
 
 
-def register(automation_command_registry: AutomationCommandRegistry) -> None:
+def register(
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
     automation_command_registry.register(AutomationStageCertificateRotation)
     automation_command_registry.register(AutomationFinalizeCertificateRotation)
 
@@ -31,15 +32,13 @@ def register(automation_command_registry: AutomationCommandRegistry) -> None:
 @dataclass
 class CertificateRotationParameters:
     site_id: str
-    additional_sans: Sequence[str]
     expiry: int
     key_size: int
 
     @classmethod
-    def from_request(cls, config: Config, request: Request) -> "CertificateRotationParameters":
+    def from_request(cls, request: Request) -> "CertificateRotationParameters":
         return cls(
             site_id=request.get_str_input_mandatory("site_id"),
-            additional_sans=config.site_subject_alternative_names,
             expiry=request.get_integer_input_mandatory("expiry"),
             key_size=request.get_integer_input_mandatory("key_size"),
         )
@@ -58,7 +57,7 @@ class AutomationStageCertificateRotation(AutomationCommand[CertificateRotationPa
         return site_ca.root_ca.certificate.dump_pem().bytes.decode("utf-8")
 
     def get_request(self, config: Config, request: Request) -> CertificateRotationParameters:
-        return CertificateRotationParameters.from_request(config, request)
+        return CertificateRotationParameters.from_request(request=request)
 
 
 def _stage_certificate_rotation(site_id: str, expiry: int, key_size: int) -> SiteCA:
@@ -77,35 +76,30 @@ class AutomationFinalizeCertificateRotation(AutomationCommand[CertificateRotatio
 
     def execute(self, api_request: CertificateRotationParameters) -> str:
         return _finalize_certificate_rotation(
-            site_id=SiteId(api_request.site_id),
-            additional_sans=api_request.additional_sans,
-            expiry=relativedelta(days=api_request.expiry),
+            site_id=api_request.site_id,
+            expiry=api_request.expiry,
             key_size=api_request.key_size,
         )
 
     def get_request(self, config: Config, request: Request) -> CertificateRotationParameters:
-        return CertificateRotationParameters.from_request(config, request)
+        return CertificateRotationParameters.from_request(request=request)
 
 
-def _finalize_certificate_rotation(
-    site_id: SiteId,
-    additional_sans: Sequence[str],
-    expiry: relativedelta,
-    key_size: int,
-) -> str:
+def _finalize_certificate_rotation(site_id: str, expiry: int, key_size: int) -> str:
     site_ca = SiteCA.load(certificate_directory=CERTIFICATE_TMP_PATH)
 
     shutil.move(TEMPORARY_CA_FILE_PATH, Path(CERTIFICATE_DIRECTORY / "ca.pem"))
 
     site_ca.cert_dir = CERTIFICATE_DIRECTORY
     site_ca.create_site_certificate(
-        site_id=site_id,
-        additional_sans=additional_sans,
-        expiry=expiry,
+        site_id=SiteId(site_id),
+        expiry=relativedelta(days=expiry),
         key_size=key_size,
     )
 
-    site_cert = SiteCA.load_site_certificate(CERTIFICATE_DIRECTORY, site_id)
+    site_cert = SiteCA.load_site_certificate(
+        cert_dir=CERTIFICATE_DIRECTORY, site_id=SiteId(site_id)
+    )
 
     log_security_event(
         CertManagementEvent(

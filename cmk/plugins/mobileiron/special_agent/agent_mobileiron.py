@@ -2,12 +2,9 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-Special agent for monitoring MobileIron devices with Checkmk. The data
-is fetched from the MobileIron Cloud. Documentation:
-https://help.ivanti.com/mi/help/en_us/cld/76/api/Content/MobileIronCloudCustomerIntegrationAPIGuide/Device%20API%20Calls.htm#_Toc507757059
+"""agent_mobileiron
 
-api call url parameters: "https://" + $tenantURL + "/api/v1/device?q=&rows=" + $interval + "&start=" + $start + "&dmPartitionId=" + $spaceId + "&fq=" + $filterCriteria + ""
+Checkmk special agent for monitoring MobileIron devices.
 """
 
 # mypy: disable-error-code="no-any-return"
@@ -107,8 +104,9 @@ def _get_partition_list(opt_string: str) -> list[str]:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--debug",

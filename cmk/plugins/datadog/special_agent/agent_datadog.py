@@ -2,12 +2,11 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-Special agent for monitoring "Monitors" and "Events" of a datadog instance with Checkmk. The data
-is fetched from the Datadog API, https://docs.datadoghq.com/api/. Endpoints:
-* Monitors: monitor (v1)
-* Events: events (v1)
-* Logs: logs (v2)
+"""agent_datadog
+
+Checkmk special agent for monitoring Datadog monitors, events, and logs.
+The data is fetched from the Datadog API, https://docs.datadoghq.com/api/.
+Endpoints: Monitors (v1), Events (v1), Logs (v2).
 """
 
 # mypy: disable-error-code="no-any-return"
@@ -61,8 +60,9 @@ class LogMessageElement:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--debug",

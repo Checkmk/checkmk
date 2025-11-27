@@ -2,11 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_allnet_ip_sensoric
 
-# This agent uses UPNP API calls to the Fritz!Box to gather information
-# about connection configuration and status.
-"""
-Special Agent for Allnet IP-Sensoric monitoring
+Checkmk special agent for monitoring Allnet IP-Sensoric devices.
 """
 
 import argparse
@@ -47,8 +45,9 @@ def parse_response_data(contents: str) -> Mapping[str, Mapping[str, str]]:
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--debug",

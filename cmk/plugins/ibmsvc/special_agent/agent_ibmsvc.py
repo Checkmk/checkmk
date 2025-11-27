@@ -20,10 +20,9 @@ from pathlib import Path
 
 def usage():
     sys.stderr.write(
-        """Check_MK SVC / V7000 Agent
+        """usage: agent_ibmsvc [OPTIONS] HOST
 
-USAGE: agent_ibmsvc [OPTIONS] HOST
-       agent_ibmsvc -h
+Checkmk special agent for monitoring IBM SVC / V7000
 
 ARGUMENTS:
   HOST                          Host name or IP address of the target device

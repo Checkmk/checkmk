@@ -2,8 +2,9 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-Special agent for monitoring statistics of MQTT brokers with Checkmk
+"""agent_mqtt
+
+Checkmk special agent for monitoring statistics of MQTT brokers.
 
 Useful information:
 
@@ -17,7 +18,7 @@ That's all well and good, but the information available really seems to fit our 
 this interface anyway.
 
 The most important take away is: In multi-tentant, enterprise level cluster this agent may not be
-useful or probably only when directly connecting to single nodes - not sure about the later.
+useful or probably only when directly connecting to single nodes - not sure about the latter.
 """
 
 import argparse
@@ -90,8 +91,9 @@ class ReceivedData:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--debug",

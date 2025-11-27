@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_hivemanager
+
+Checkmk special agent for monitoring Hivemanager devices.
+"""
 
 import argparse
 import base64
@@ -23,11 +27,12 @@ PASSWORD_OPTION = "password"
 
 @report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return _main(_parse_arguments(sys.argv[1:]))
+    return _main(parse_arguments(sys.argv[1:]))
 
 
-def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument(
         "server",
         help="Hivemanager server address",

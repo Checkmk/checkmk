@@ -32,9 +32,9 @@ _SECTION_HEADER_MAP = {
 
 def usage() -> None:
     sys.stderr.write(
-        """Check_MK AppDynamics special agent
+        """usage: agent_appdynamics [OPTIONS] HOST APPLICATION
 
-USAGE: agent_appdynamics [OPTIONS] HOST APPLICATION
+Checkmk special agent for monitoring AppDynamics.
 
 ARGUMENTS:
   HOST                          The AppDynamics host

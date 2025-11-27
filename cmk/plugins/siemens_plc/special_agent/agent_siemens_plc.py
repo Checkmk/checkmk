@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_siemens_plc
+
+Checkmk special agent for monitoring Siemens PLC devices.
+"""
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -138,8 +142,9 @@ def parse_spec(hostspec):
 
 
 def parse_arguments(sys_argv):
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        "Checkmk Siemens PLC agent", formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
 
     parser.add_argument(

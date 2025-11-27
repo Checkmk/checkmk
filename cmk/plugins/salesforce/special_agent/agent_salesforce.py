@@ -11,17 +11,12 @@ import sys
 import requests
 
 
-class AgentJSON:
-    def __init__(self, key: str, title: str) -> None:
-        self._key = key
-        self._title = title
-
+class AgentSalesforce:
     def usage(self) -> None:
         sys.stderr.write(
-            """
-Check_MK %s Agent
+            """usage: agent_salesforce --section_url [{section_name},{url}]
 
-USAGE: agent_%s --section_url [{section_name},{url}]
+Checkmk special agent for monitoring Salesforce.
 
     Parameters:
         --section_url   Pair of section_name and url separated by a comma
@@ -29,7 +24,6 @@ USAGE: agent_%s --section_url [{section_name},{url}]
         --debug         Output json data with pprint
 
 """
-            % (self._title, self._key)
         )
 
     def get_content(self) -> dict[str, list[str]] | None:
@@ -79,7 +73,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
 
 
 def main() -> int:
-    agent = AgentJSON("salesforce", "Salesforce")
+    agent = AgentSalesforce()
     content = agent.get_content()
     if content is None:
         return 0

@@ -2,36 +2,45 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_random
 
+Checkmk special agent to create random monitoring data.
+Testing script, that can be used as a datasource program.
+It creates a number of random services with random states.
+"""
 # mypy: disable-error-code="no-untyped-def"
 
-# Testing script, that can be used as a datasource program
-# and creates a number of random services with random states.
-# Call it with the hostname as the first argument.
-
+import argparse
 import ast
 import os
 import random
 import sys
 import time
+from collections.abc import Sequence
 from pathlib import Path
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        sys_argv = sys.argv[1:]
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
+    parser.add_argument(
+        "hostname",
+        required=False,
+        default="unknown",
+        help="Hostname for which to generate random data",
+    )
+    return parser.parse_args(argv)
 
-    try:
-        hostname = sys_argv[1]
-    except IndexError:
-        hostname = "unknown"
+
+def main(argv=None):
+    args = parse_arguments(argv or sys.argv[1:])
 
     state_dir = Path(os.getenv("OMD_ROOT", "/"), "tmp/check_mk/ds_random/")
     state_dir.mkdir(
         parents=True,
         exist_ok=True,
     )
-    state_file = state_dir / hostname
+    state_file = state_dir / args.hostname
     try:
         history = ast.literal_eval(state_file.read_text())
     except (OSError, SyntaxError):

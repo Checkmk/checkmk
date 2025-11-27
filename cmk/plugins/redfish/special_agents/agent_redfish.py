@@ -2,7 +2,10 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Special Agent to fetch Redfish data from management interfaces"""
+"""agent_redfish
+
+Checkmk special agent for monitoring Redfish management interfaces.
+"""
 
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="no-any-return"

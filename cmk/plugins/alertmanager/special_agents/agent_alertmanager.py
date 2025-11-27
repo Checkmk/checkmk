@@ -2,8 +2,9 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-Special agent for monitoring Promtheus Alertmanager with Checkmk.
+"""agent_alertmanager
+
+Checkmk special agent for monitoring Prometheus Alertmanager.
 """
 
 # mypy: disable-error-code="no-any-return"
@@ -141,7 +142,8 @@ def generate_api_session(
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument(
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
     )

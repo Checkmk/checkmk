@@ -2,6 +2,10 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_rabbitmq
+
+Checkmk special agent for monitoring RabbitMQ.
+"""
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -187,7 +191,8 @@ def parse_arguments(argv):
         "queues",
     ]
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument(
         "--debug",

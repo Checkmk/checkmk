@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_graylog
+
+Checkmk special agent for monitoring Graylog servers.
+"""
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="unreachable"
@@ -413,7 +417,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "events",
     ]
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument("-u", "--user", default=None, help="Username for graylog login")
     parser_add_secret_option(

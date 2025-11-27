@@ -2,8 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Agent Cisco Prime
-Write cisco_prime_ sections containing JSON formatted results from Cisco Prime API
+"""agent_cisco_prime
+
+Checkmk special agent for monitoring Cisco Prime Infrastructure.
 """
 
 # mypy: disable-error-code="no-untyped-call"
@@ -32,7 +33,8 @@ PASSWORD_OPTION = "password"
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     """Parse arguments needed to construct an URL and for connection conditions"""
-    parser = argparse.ArgumentParser()
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument("--hostname", required=True, help="Host to query")
     parser.add_argument("--port", "-p", type=int, help="IPv4 port to connect to")
     parser.add_argument("--user", help="Username for basic auth")

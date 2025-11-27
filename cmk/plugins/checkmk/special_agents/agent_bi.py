@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_bi
+
+Checkmk special agent for monitoring BI aggregations.
+"""
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -344,7 +348,8 @@ def _optionally_read_stdin_list() -> list[str]:
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
     parser.add_argument("--secrets", default=[], nargs="*", help="List of secrets")
     parser.add_argument("--configs", default=[], nargs="*", help="List of configs")

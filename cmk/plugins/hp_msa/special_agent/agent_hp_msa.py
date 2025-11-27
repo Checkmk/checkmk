@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_hp_msa
+
+Checkmk special agent for monitoring HP MSA storage systems.
+"""
 
 # mypy: disable-error-code="type-arg"
 
@@ -27,7 +31,8 @@ PASSWORD_OPTION = "password"
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     # flags
     parser.add_argument("-v", "--verbose", action="count", help="""Increase verbosity""")

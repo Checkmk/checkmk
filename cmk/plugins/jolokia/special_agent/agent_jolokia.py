@@ -2,7 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia"""
+"""agent_jolokia
+
+Checkmk special agent for monitoring JMX using Mbeans exposed by jolokia.
+"""
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -27,7 +30,8 @@ USER_AGENT = "checkmk-special-jolokia-" + __version__
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument("-v", "--verbose", action="count", help="""Verbose mode""")
     parser.add_argument(

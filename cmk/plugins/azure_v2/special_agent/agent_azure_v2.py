@@ -2,9 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-Special agent azure: Monitoring Azure cloud applications with Checkmk
+"""agent_azure_v2
 
+Checkmk special agent for monitoring Azure cloud applications.
 Resources and resourcegroups are all treated lowercase because of:
 https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
@@ -255,8 +255,9 @@ def _chunks(list_: Sequence[T], length: int = 50) -> Sequence[Sequence[T]]:
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--debug",

@@ -5,12 +5,13 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-"""
-Special agent for monitoring Kubernetes clusters. This agent is required for
-monitoring data provided by the Kubernetes API and the Checkmk collectors,
-which can optionally be deployed within a cluster. The agent requires
-Kubernetes version v1.26 or higher. Moreover, read access to the Kubernetes API
-endpoints monitored by Checkmk must be provided.
+"""agent_kube
+
+Checkmk special agent for monitoring Kubernetes clusters.
+This agent is required for monitoring data provided by the Kubernetes API and the Checkmk collectors,
+which can optionally be deployed within a cluster.
+The agent requires Kubernetes version v1.26 or higher.
+Moreover, read access to the Kubernetes API endpoints monitored by Checkmk must be provided.
 """
 
 from __future__ import annotations
@@ -128,7 +129,8 @@ class MonitoredObject(enum.Enum):
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    p = argparse.ArgumentParser(prog=prog, description=description)
     p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
     p.add_argument(
         "-v",

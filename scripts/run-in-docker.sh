@@ -112,6 +112,7 @@ fi
 
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 : "${CPU_LIMITATION:="--cpus=8"}"
+: "${MEMORY_LIMITATION:="--memory=24g"}"
 
 if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
@@ -132,6 +133,7 @@ docker run -a stdout -a stderr \
     --rm \
     --name $CONTAINER_NAME \
     ${CPU_LIMITATION} \
+    ${MEMORY_LIMITATION} \
     --ulimit nofile=8192:8192 \
     ${TERMINAL_FLAG} \
     --init \

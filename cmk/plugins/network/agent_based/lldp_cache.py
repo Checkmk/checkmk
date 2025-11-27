@@ -20,22 +20,7 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     TableRow,
 )
-from cmk.plugins.network.agent_based.lib import DETECT_FORTINET
-
-_interface_displayhints = {
-    "ethernet": "eth",
-    "fastethernet": "Fa",
-    "gigabitethernet": "Gi",
-    "tengigabitethernet": "Te",
-    "fortygigabitethernet": "Fo",
-    "hundredgigabitethernet": "Hu",
-    "port-channel": "Po",
-    "tunnel": "Tu",
-    "loopback": "Lo",
-    "cellular": "Cel",
-    "vlan": "Vlan",
-    "management": "Ma",
-}
+from cmk.plugins.network.agent_based.lib import DETECT_FORTINET, get_short_if_name
 
 
 class InventoryParams(TypedDict):
@@ -91,21 +76,6 @@ class LldpNeighbor(BaseModel, frozen=True):
 class Lldp(BaseModel, frozen=True):
     lldp_global: LldpGlobal | None
     lldp_neighbors: list[LldpNeighbor]
-
-
-def _get_short_if_name(ifname: str) -> str | None:
-    """
-    returns short interface name from long interface name
-    ifname: is the long interface name
-    :type ifname: str
-    """
-    if not ifname:
-        return ifname
-    for ifname_prefix in _interface_displayhints.keys():  # noqa: PLC0206
-        if ifname.lower().startswith(ifname_prefix.lower()):
-            ifname_short = _interface_displayhints[ifname_prefix]
-            return ifname.lower().replace(ifname_prefix.lower(), ifname_short, 1)
-    return ifname
 
 
 def _get_interface_name(if_type: str, raw_interface: Sequence[int] | str) -> str | None:
@@ -394,8 +364,8 @@ def inventory_lldp_cache(params: InventoryParams, section: Lldp) -> InventoryRes
         neighbor_port = neighbor.neighbor_port
         local_port = neighbor.local_port
         if params.get("use_short_if_name"):
-            neighbor_port = _get_short_if_name(neighbor_port) or neighbor_port
-            local_port = _get_short_if_name(str(local_port)) or str(local_port)
+            neighbor_port = get_short_if_name(neighbor_port) or neighbor_port
+            local_port = get_short_if_name(str(local_port)) or str(local_port)
 
         key_columns = {
             # 'neighbor_id': neighbor.neighbor_id,

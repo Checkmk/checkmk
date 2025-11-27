@@ -335,3 +335,7 @@ def _main(args: argparse.Namespace) -> int:
 def main() -> int:
     """Main entry point to be used"""
     return _main(parse_arguments(sys.argv[1:]))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

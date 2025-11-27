@@ -317,3 +317,7 @@ def agent_pure_storage_fa(args: argparse.Namespace) -> int:
 @report_agent_crashes(AGENT, __version__)
 def main() -> int:
     return agent_pure_storage_fa(parse_arguments(sys.argv[1:]))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

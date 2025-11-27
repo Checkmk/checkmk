@@ -2,19 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-import getopt
-import json
-import pprint
-import sys
-
-import requests
-
-
-class AgentSalesforce:
-    def usage(self) -> None:
-        sys.stderr.write(
-            """usage: agent_salesforce --section_url [{section_name},{url}]
+"""usage: agent_salesforce --section_url [{section_name},{url}]
 
 Checkmk special agent for monitoring Salesforce.
 
@@ -24,57 +12,63 @@ Checkmk special agent for monitoring Salesforce.
         --debug         Output json data with pprint
 
 """
-        )
 
-    def get_content(self) -> dict[str, list[str]] | None:
-        short_options = "h"
-        long_options = ["section_url=", "help", "newline_replacement=", "debug"]
+import getopt
+import json
+import pprint
+import sys
 
-        try:
-            opts, _args = getopt.getopt(sys.argv[1:], short_options, long_options)
-        except getopt.GetoptError as err:
-            sys.stderr.write("%s\n" % err)
-            sys.exit(1)
+import requests
 
-        sections = []
-        newline_replacement = "\\n"
-        opt_debug = False
 
-        for o, a in opts:
-            if o in ["--section_url"]:
-                sections.append(a.split(",", 1))
-            elif o in ["--newline_replacement"]:
-                newline_replacement = a
-            elif o in ["--debug"]:
-                opt_debug = True
-            elif o in ["-h", "--help"]:
-                self.usage()
-                sys.exit(0)
+def get_content() -> dict[str, list[str]] | None:
+    short_options = "h"
+    long_options = ["section_url=", "help", "newline_replacement=", "debug"]
 
-        if not sections:
-            self.usage()
+    try:
+        opts, _args = getopt.getopt(sys.argv[1:], short_options, long_options)
+    except getopt.GetoptError as err:
+        sys.stderr.write("%s\n" % err)
+        sys.exit(1)
+
+    sections = []
+    newline_replacement = "\\n"
+    opt_debug = False
+
+    for o, a in opts:
+        if o in ["--section_url"]:
+            sections.append(a.split(",", 1))
+        elif o in ["--newline_replacement"]:
+            newline_replacement = a
+        elif o in ["--debug"]:
+            opt_debug = True
+        elif o in ["-h", "--help"]:
+            sys.stdout.write(__doc__)
             sys.exit(0)
 
-        content: dict[str, list[str]] = {}
-        for section_name, url in sections:
-            content.setdefault(section_name, [])
-            c = requests.get(url, timeout=900)
-            content[section_name].append(c.text.replace("\n", newline_replacement))
+    if not sections:
+        sys.stderr.write(__doc__)
+        sys.exit(1)
 
-        if opt_debug:
-            for line in content:
-                try:
-                    pprint.pprint(json.loads(line))
-                except Exception:
-                    sys.stdout.write(line + "\n")
-            return None
+    content: dict[str, list[str]] = {}
+    for section_name, url in sections:
+        content.setdefault(section_name, [])
+        c = requests.get(url, timeout=900)
+        content[section_name].append(c.text.replace("\n", newline_replacement))
 
-        return content
+    if opt_debug:
+        for line in content:
+            try:
+                pprint.pprint(json.loads(line))
+            except Exception:
+                sys.stdout.write(line + "\n")
+        return None
+
+    return content
 
 
 def main() -> int:
-    agent = AgentSalesforce()
-    content = agent.get_content()
+    content = get_content()
     if content is None:
         return 0
     for section, section_content in content.items():
@@ -83,3 +77,7 @@ def main() -> int:
             sys.stdout.write("%s\n" % entry)
     sys.stdout.write("\n")
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

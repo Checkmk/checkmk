@@ -93,3 +93,7 @@ def main(sys_argv=None):
         mk_jolokia.query_instance(instance)
     except mk_jolokia.SkipInstance:
         pass
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

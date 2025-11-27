@@ -307,3 +307,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("%s\n" % e)
         return 1
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

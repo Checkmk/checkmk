@@ -2,7 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Check_MK HP StoreOnce Special Agent for REST API Version 4.2.3"""
+"""agent_storeonce4x
+
+Checkmk special agent for HP StoreOnce REST API Version 4.2.3"""
 
 # mypy: disable-error-code="no-untyped-call"
 
@@ -219,8 +221,9 @@ SECTIONS: Sequence[tuple[str, ResultFn]] = (
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+    prog, description = __doc__.split("\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--debug",

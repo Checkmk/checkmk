@@ -342,9 +342,10 @@ def _optionally_read_stdin_list() -> list[str]:
     In case stdin is not provided (in manual calls for example) we time out
     after just 1 second.
     """
-    if select.select([sys.stdin], [], [], 1.0)[0]:
-        return json.load(sys.stdin)
-    return []
+    raw_data = sys.stdin.read() if select.select([sys.stdin], [], [], 1.0)[0] else ""
+    if not raw_data:
+        return []
+    return [str(e) for e in json.loads(raw_data)]
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:

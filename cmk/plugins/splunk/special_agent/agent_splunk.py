@@ -2,7 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_splunk
 
+Checkmk special agent for Splunk
+"""
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -115,8 +118,9 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> Non
 
 
 def parse_arguments(argv):
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
 
     parser.add_argument("-u", "--user", default=None, help="Username for splunk login")

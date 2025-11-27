@@ -8,7 +8,6 @@ Checkmk special agent to create random monitoring data.
 Testing script, that can be used as a datasource program.
 It creates a number of random services with random states.
 """
-# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import json
@@ -27,15 +26,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument(
         "hostname",
-        required=False,
-        default="unknown",
         help="Hostname for which to generate random data",
     )
     return parser.parse_args(argv)
 
 
-def main(argv=None):
-    args = parse_arguments(argv or sys.argv[1:])
+def main(argv: Sequence[str]) -> int:
+    args = parse_arguments(argv)
 
     state_storage = Storage(AGENT, args.hostname)
     history = json.loads(state_storage.read("history", "{}"))
@@ -82,3 +79,8 @@ def main(argv=None):
         )
 
     state_storage.write("history", json.dumps(history))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

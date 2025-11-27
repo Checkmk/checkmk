@@ -126,3 +126,7 @@ def _session(
             HostnameValidationAdapter(cert_server_name),
         )
     return session
+
+
+if __name__ == "__main__":
+    sys.exit(main())

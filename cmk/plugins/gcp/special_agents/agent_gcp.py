@@ -2,6 +2,9 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_gcp
+
+Checkmk special agent for Google Cloud Platform (GCP)"""
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="unreachable"
@@ -1253,8 +1256,9 @@ PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
         "--debug",
@@ -1372,3 +1376,7 @@ def main() -> int:
     """Main entry point to be used"""
 
     return agent_gcp_main(parse_arguments(sys.argv[1:]))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

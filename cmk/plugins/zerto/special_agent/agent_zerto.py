@@ -138,3 +138,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         except KeyError:
             continue
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

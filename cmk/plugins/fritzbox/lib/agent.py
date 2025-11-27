@@ -28,7 +28,9 @@
 #
 # http://fritz.box:49000/igddslSCPD.xml
 # get_upnp_info('WANDSLLinkC1', 'urn:schemas-upnp-org:service:WANDSLLinkConfig:1', 'GetDSLLinkInfo')
-"""Checkmk special agent FRITZ!Box"""
+"""agent_fritzbox
+
+Checkmk special agent FRITZ!Box"""
 
 import argparse
 import json
@@ -82,7 +84,8 @@ _SOAP_TEMPLATE = """
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(description=__doc__)
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument(
         "--debug",

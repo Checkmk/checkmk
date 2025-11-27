@@ -31,7 +31,7 @@ _SECTION_HEADER_MAP = {
 
 
 def usage() -> None:
-    sys.stderr.write(
+    sys.stdout.write(
         """usage: agent_appdynamics [OPTIONS] HOST APPLICATION
 
 Checkmk special agent for monitoring AppDynamics.
@@ -212,3 +212,7 @@ def main() -> int:
                         sys.stdout.write("|".join(output_items) + "\n")
     sys.stdout.write("<<<<>>>>\n")
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

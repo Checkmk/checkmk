@@ -2,6 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_ruckus_spot
+
+Checkmk special agent for Ruckus Spot
+"""
+
 import argparse
 import socket
 import sys
@@ -80,7 +85,8 @@ class _Arguments:
 
 
 def _parse_arguments(argv: Sequence[str]) -> _Arguments:
-    parser = argparse.ArgumentParser(description="Check_MK Ruckus Spot Agent")
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument(
         "address",
@@ -120,3 +126,7 @@ def _fetch_data_and_write_to_stdout(
     response = session.get(url, auth=(apikey.reveal(), "X"), timeout=900)
     sys.stdout.write(f"<<<ruckus_spot_{section_type}:sep(0)>>>\n")
     sys.stdout.write(response.text + "\n")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

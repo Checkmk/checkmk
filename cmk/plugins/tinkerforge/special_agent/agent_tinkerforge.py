@@ -367,3 +367,7 @@ def main():
     finally:
         conn.disconnect()
     return None
+
+
+if __name__ == "__main__":
+    main()

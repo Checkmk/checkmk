@@ -217,3 +217,7 @@ def agent_activemq_main(args: argparse.Namespace) -> int:
 def main() -> int:
     """Main entry point to be used"""
     return agent_activemq_main(parse_arguments(sys.argv[1:]))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -2,14 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_hivemanager_ng
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
+Checkmk special agent for Aerohive HiveManagerNG.
+"""
 
 import argparse
 import sys
 import traceback
+from collections.abc import Sequence
+from typing import NoReturn
 
 import requests
 
@@ -18,7 +20,7 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 SECRET_OPTION = "secret"
 
 
-def bail_out(message, debug=False):
+def bail_out(message: str, debug: bool = False) -> NoReturn:
     if debug:
         sys.stderr.write("----------------------------------\n")
         sys.stderr.write(traceback.format_exc())
@@ -27,14 +29,9 @@ def bail_out(message, debug=False):
     sys.exit(1)
 
 
-class ArgParser(argparse.ArgumentParser):
-    # Use custom behaviour on error
-    def error(self, message):
-        bail_out("Parsing the arguments failed - %s." % message)
-
-
-def parse_arguments(argv):
-    parser = ArgParser(description="Special agent to retrieve data from Aerohive HiveManagerNG")
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(description=description, prog=prog)
     parser.add_argument("-d", "--debug", help="enable debugging", action="store_true")
     parser.add_argument("url", help="URL to Aerohive NG, e.g. https://cloud.aerohive.com")
     parser.add_argument("vhm_id", help="Numericl ID of the VHM e.g. 102")
@@ -45,7 +42,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def main():
+def main() -> int:
     args = parse_arguments(sys.argv[1:])
 
     sys.stdout.write("<<<hivemanager_ng_devices:sep(124)>>>\n")
@@ -98,3 +95,9 @@ def main():
     for device in json["data"]:
         device_txt = "|".join([f"{k}::{v}" for (k, v) in device.items() if k in used])
         sys.stdout.write(device_txt + "\n")
+
+    return 0
+
+
+if __name__ == "__main__":
+    main()

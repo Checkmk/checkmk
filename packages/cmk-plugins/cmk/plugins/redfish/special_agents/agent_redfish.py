@@ -7,7 +7,6 @@
 Checkmk special agent for monitoring Redfish management interfaces.
 """
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
@@ -143,8 +142,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     """Parse arguments needed to construct an URL and for connection conditions"""
     sections = [s.name for s in REDFISH_SECTIONS]
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.formatter_class = argparse.RawTextHelpFormatter
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument(
         "--debug",
         "-d",
@@ -484,8 +485,9 @@ def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
         case "Ami" | "Supermicro" | "Seagate" as name:
             return Vendor(name=name)
 
-    # TODO: why not use the vendor string here?
-    return Vendor(name="Generic")
+        case _other_vendor_string:
+            # TODO: why not use the vendor string here?
+            return Vendor(name="Generic")
 
 
 def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:

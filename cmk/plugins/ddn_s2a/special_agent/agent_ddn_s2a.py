@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_ddn_s2a
+
+A datasource program for Data DirectNetworks Silicon Storage Appliances
+"""
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -9,6 +13,7 @@
 import argparse
 import socket
 import sys
+from collections.abc import Sequence
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
@@ -34,13 +39,9 @@ def query(s, command_txt):
     return "".join(response)
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        sys_argv = sys.argv[1:]
-
-    parser = argparse.ArgumentParser(
-        description="A datasource program for Data DirectNetworks Silicon Storage Appliances"
-    )
+def main(sys_argv: Sequence[str]) -> int:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument("ip_address")
     parser.add_argument("port", type=int)
@@ -70,3 +71,9 @@ def main(sys_argv=None):
         sock.connect((ip_address, port))
         sys.stdout.write(query(sock, commandstring(command, username, password)) + "\n")
         sock.close()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

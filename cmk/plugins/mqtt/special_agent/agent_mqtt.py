@@ -256,3 +256,7 @@ def on_message(mqttc: mqtt.Client, received: ReceivedData, msg: mqtt.MQTTMessage
 @report_agent_crashes(AGENT, __version__)
 def main() -> int:
     return agent_mqtt_main(parse_arguments(sys.argv[1:]))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

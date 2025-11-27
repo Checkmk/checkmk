@@ -7,12 +7,10 @@
 Special agent for monitoring 3par devices.
 """
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 
 import requests
 import urllib3
@@ -45,7 +43,7 @@ VALID_VALUES = {
 }
 
 
-def _get_values_list(opt_string):
+def _get_values_list(opt_string: str) -> Sequence[str]:
     values = opt_string.split(",")
     invalid_choices = set(values) - set(VALID_VALUES)
     if invalid_choices:
@@ -53,7 +51,7 @@ def _get_values_list(opt_string):
     return values
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
         prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
@@ -80,7 +78,7 @@ def parse_arguments(argv):
     return args
 
 
-def main():
+def main() -> int:
     args = parse_arguments(sys.argv[1:])
 
     url = f"https://{args.host}:{args.port}/api/v1"
@@ -122,8 +120,8 @@ def main():
         # key in our header for all further requests on the api.
         data = json.loads(req.text)
         headers["X-HP3PAR-WSAPI-SessionKey"] = data["key"]
-    except Exception:
-        raise Exception("No session key received")
+    except Exception:  # booooo
+        raise RuntimeError("No session key received")
 
     # Get the requested data. We put every needed value into an extra section
     # to get better performance in the checkplugin if less data is needed.
@@ -148,4 +146,8 @@ def main():
     if not req.status_code == requests.codes.OK:
         sys.stderr.write(f"Wrong status code: {req.status_code}. Expected: {requests.codes.OK} \n")
         return 1
-    return None
+    return 0
+
+
+if __name__ == "__main__":
+    main()

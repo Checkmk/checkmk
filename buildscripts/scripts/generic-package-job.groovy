@@ -64,10 +64,10 @@ void main() {
                         cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
                         output_file: output_file,
                     ]);
-                }
-                sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
             }
+                sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
         }
+    }
 
         // Can be removed once ci-artifacts doesn't fail anymore on empty files
         def is_empty = sh(script:"[[ -s ${output_file} ]]", returnStatus:true)
@@ -77,7 +77,7 @@ void main() {
             artifacts: artifacts,
             fingerprint: true,
         );
-    }
+}
 }
 
 return this;

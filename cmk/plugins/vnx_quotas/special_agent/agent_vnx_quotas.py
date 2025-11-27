@@ -130,3 +130,7 @@ def main(args=None):
         sys.stdout.write("[[[%s]]]\n" % query_type)
         for line in result["stdout"].readlines():
             sys.stdout.write("%s" % line)
+
+
+if __name__ == "__main__":
+    main()

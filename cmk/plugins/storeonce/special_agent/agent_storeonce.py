@@ -2,7 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""agent_storeonce
 
+Checkmk special agent for monitoring HPE StoreOnce appliances.
+"""
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="union-attr"
@@ -4635,8 +4638,9 @@ def query_stores_info(
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+        prog=prog, description=description, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("--demo", action="store_true", help="Enable demo mode")
     parser.add_argument(
@@ -4682,3 +4686,7 @@ def main() -> int:
         sys.stderr.write("Connection error: %s" % e)
         return 1
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

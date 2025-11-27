@@ -2,25 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
-# needs to issue a command like
-# ssh USER@HOSTNAME 'echo \<\<\<ibm_svc_host:sep\(58\)\>\>\>; lshost -delim :; echo \<\<\<ibm_svc_license:sep\(58\)\>\>\>; lslicense -delim :; echo \<\<\<ibm_svc_mdisk:sep\(58\)\>\>\>; lsmdisk -delim :; echo \<\<\<ibm_svc_mdiskgrp:sep\(58\)\>\>\>; lsmdiskgrp -delim :; echo \<\<\<ibm_svc_node:sep\(58\)\>\>\>; lsnode -delim :; echo \<\<\<ibm_svc_nodestats:sep\(58\)\>\>\>; lsnodestats -delim :; echo \<\<\<ibm_svc_system:sep\(58\)\>\>\>; lssystem -delim :; echo \<\<\<ibm_svc_systemstats:sep\(58\)\>\>\>; lssystemstats -delim :'
-
-import cProfile
-import getopt
-import shlex
-import subprocess
-import sys
-from pathlib import Path
-
-
-def usage():
-    sys.stderr.write(
-        """usage: agent_ibmsvc [OPTIONS] HOST
+"""usage: agent_ibmsvc [OPTIONS] HOST
 
 Checkmk special agent for monitoring IBM SVC / V7000
 
@@ -54,17 +36,24 @@ OPTIONS:
                                 performance. The default is "all".
 
 """
-    )
 
+# needs to issue a command like
+# ssh USER@HOSTNAME 'echo \<\<\<ibm_svc_host:sep\(58\)\>\>\>; lshost -delim :; echo \<\<\<ibm_svc_license:sep\(58\)\>\>\>; lslicense -delim :; echo \<\<\<ibm_svc_mdisk:sep\(58\)\>\>\>; lsmdisk -delim :; echo \<\<\<ibm_svc_mdiskgrp:sep\(58\)\>\>\>; lsmdiskgrp -delim :; echo \<\<\<ibm_svc_node:sep\(58\)\>\>\>; lsnode -delim :; echo \<\<\<ibm_svc_nodestats:sep\(58\)\>\>\>; lsnodestats -delim :; echo \<\<\<ibm_svc_system:sep\(58\)\>\>\>; lssystem -delim :; echo \<\<\<ibm_svc_systemstats:sep\(58\)\>\>\>; lssystemstats -delim :'
+
+import cProfile
+import getopt
+import shlex
+import subprocess
+import sys
+from pathlib import Path
 
 #############################################################################
 # command line options
 #############################################################################
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        sys_argv = sys.argv[1:]
+def main() -> int:
+    sys_argv = sys.argv[1:]
 
     short_options = "hu:p:t:m:i:k"
     long_options = [
@@ -167,7 +156,7 @@ def main(sys_argv=None):
         elif o in ["-k", "--accept-any-hostkey"]:
             opt_any_hostkey = "-o StrictHostKeyChecking=no"
         elif o in ["-h", "--help"]:
-            usage()
+            sys.stdout.write(__doc__)
             sys.exit(0)
 
     if len(args) == 1:
@@ -219,7 +208,7 @@ def main(sys_argv=None):
         show_profile.chmod(0o755)
 
         sys.stderr.write(f"Profile '{g_profile_path}' written. Please run {show_profile}.\n")
-    return None
+    return 0
 
 
 def _execute_ssh_command(
@@ -229,7 +218,7 @@ def _execute_ssh_command(
     user: str,
     host_address: str,
     opt_debug: bool,
-) -> subprocess.CompletedProcess:
+) -> subprocess.CompletedProcess[str]:
     cmd = f"ssh -o ConnectTimeout={opt_timeout} {opt_any_hostkey} {shlex.quote(user)}@{shlex.quote(host_address)} '{remote_command}'"
 
     if opt_debug:
@@ -245,7 +234,7 @@ def _execute_ssh_command(
     )
 
 
-def _check_ssh_result(result: subprocess.CompletedProcess) -> None:
+def _check_ssh_result(result: subprocess.CompletedProcess[str]) -> None:
     if result.returncode not in [0, 1]:
         sys.stderr.write("Error connecting via ssh: %s\n" % result.stderr)
         sys.exit(2)
@@ -259,3 +248,7 @@ def _check_ssh_result(result: subprocess.CompletedProcess) -> None:
     # Quite strange.. Why not simply print stdout?
     for line in lines:
         sys.stdout.write(line + "\n")
+
+
+if __name__ == "__main__":
+    main()

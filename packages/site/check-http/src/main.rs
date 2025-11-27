@@ -253,7 +253,11 @@ fn make_configs(
                 (x, Some(y)) => LowerLevels::warn_crit(x, y),
             }),
             disable_certificate_verification: args.disable_certificate_verification,
-            on_error_state: args.on_error.unwrap_or(State::Crit),
+            on_error_state: args
+                .on_error
+                .as_ref()
+                .map(map_on_error_state)
+                .unwrap_or(State::Crit),
         },
     )
 }
@@ -264,6 +268,15 @@ fn map_tls_version(tls_version: &cli::TlsVersion) -> TlsVersion {
         cli::TlsVersion::Tls11 => TlsVersion::TLS_1_1,
         cli::TlsVersion::Tls12 => TlsVersion::TLS_1_2,
         cli::TlsVersion::Tls13 => TlsVersion::TLS_1_3,
+    }
+}
+
+fn map_on_error_state(on_error_state: &cli::OnErrorState) -> State {
+    match *on_error_state {
+        cli::OnErrorState::Ok => State::Ok,
+        cli::OnErrorState::Warning => State::Warn,
+        cli::OnErrorState::Critical => State::Crit,
+        cli::OnErrorState::Unknown => State::Unknown,
     }
 }
 

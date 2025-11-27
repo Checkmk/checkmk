@@ -58,3 +58,31 @@ check_plugin_azure_firewall_health = CheckPlugin(
         "health": ("fixed", (90.0, 80.0)),
     },
 )
+
+
+def discover_azure_firewall_snat(section: Resource) -> DiscoveryResult:
+    yield Service()
+
+
+check_plugin_azure_firewall_snat = CheckPlugin(
+    name="azure_v2_firewall_snat",
+    sections=["azure_v2_azurefirewalls"],
+    service_name="Azure/Firewall SNAT Utilization",
+    discovery_function=discover_azure_firewall_snat,
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "maximum_SNATPortUtilization",
+                "azure_firewall_snat_port_utilization",
+                "Outbound SNAT port utilization",
+                render.percent,
+                upper_levels_param="snat_utilization",
+            ),
+        ],
+        check_levels=check_levels_v2,
+    ),
+    check_ruleset_name="azure_v2_firewall_snat",
+    check_default_parameters={
+        "snat_utilization": ("fixed", (85.0, 95.0)),
+    },
+)

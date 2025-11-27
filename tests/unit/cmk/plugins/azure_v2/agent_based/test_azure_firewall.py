@@ -13,7 +13,10 @@ import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.azure_v2.agent_based import azure_firewall
-from cmk.plugins.azure_v2.agent_based.azure_firewall import discover_azure_firewall_health
+from cmk.plugins.azure_v2.agent_based.azure_firewall import (
+    discover_azure_firewall_health,
+    discover_azure_firewall_snat,
+)
 from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
 
 AZURE_FIREWALL_RESOURCE = Resource(
@@ -39,6 +42,12 @@ AZURE_FIREWALL_RESOURCE = Resource(
             name="FirewallHealth",
             aggregation="average",
             value=80.0,
+            unit="Percent",
+        ),
+        "maximum_SNATPortUtilization": AzureMetric(
+            name="SNATPortUtilization",
+            aggregation="maximum",
+            value=90.0,
             unit="Percent",
         ),
     },
@@ -136,3 +145,46 @@ def test_check_azure_firewall_health_no_metrics() -> None:
     check_function = azure_firewall.check_plugin_azure_firewall_health.check_function
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
         list(check_function({}, AZURE_FIREWALL_NO_METRICS))
+
+
+def test_discover_azure_firewall_snat() -> None:
+    assert list(discover_azure_firewall_snat(AZURE_FIREWALL_RESOURCE)) == [Service()]
+
+
+@pytest.mark.parametrize(
+    "resource, params, expected_results",
+    [
+        pytest.param(
+            AZURE_FIREWALL_RESOURCE,
+            {"snat_utilization": ("fixed", (85.0, 95.0))},
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Outbound SNAT port utilization: 90.00% (warn/crit at 85.00%/95.00%)",
+                ),
+                Metric("azure_firewall_snat_port_utilization", 90.0, levels=(85.0, 95.0)),
+            ],
+            id="snat utilization at warn level",
+        ),
+        pytest.param(
+            AZURE_FIREWALL_RESOURCE,
+            {"snat_utilization": ("fixed", (92.0, 97.0))},
+            [
+                Result(
+                    state=State.OK,
+                    summary="Outbound SNAT port utilization: 90.00%",
+                ),
+                Metric("azure_firewall_snat_port_utilization", 90.0, levels=(92.0, 97.0)),
+            ],
+            id="snat utilization below warn level",
+        ),
+    ],
+)
+def test_check_azure_firewall_snat(
+    resource: Resource,
+    params: Mapping[str, Any],
+    expected_results: Sequence[Result | Metric],
+) -> None:
+    check_function = azure_firewall.check_plugin_azure_firewall_snat.check_function
+    results = list(check_function(params, resource))
+    assert results == expected_results

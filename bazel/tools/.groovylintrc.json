@@ -3,7 +3,7 @@
     "basic.DeadCode": "error",
     "convention.CompileStatic": "off",
     "convention.FieldTypeRequired": "error",
-    "convention.IfStatementCouldBeTernary": "info",
+    "convention.IfStatementCouldBeTernary": "error",
     "convention.MethodReturnTypeRequired": "off",
     "convention.NoDef": "off",
     "convention.TrailingComma": "warning",

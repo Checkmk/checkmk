@@ -241,7 +241,7 @@ def _anonymize_host_attributes(
                     if tag_key in builtin_tag_group_ids:
                         anon_attributes[attr_name] = anon_interface.get_tag_value(attr_value)
                     else:
-                        anon_attributes[f"tag_{anon_interface.get_tag_group(tag_key)}"] = (
+                        anon_attributes[f"tag_{anon_interface.get_id_of_tag_group(tag_key)}"] = (
                             anon_interface.get_tag_value(attr_value)
                         )
                 case "locked_attributes":

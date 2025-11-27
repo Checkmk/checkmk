@@ -14,6 +14,8 @@ from cmk.utils.paths import omd_root, var_dir
 
 
 class ANONTYPE(enum.Enum):
+    TAG_ID = "tag_id"
+    AUX_TAG_ID = "aux_tag_id"
     SITE = "site"
     SITE_ALIAS = "site_alias"
     HOST = "host"
@@ -39,6 +41,7 @@ class ANONTYPE(enum.Enum):
     PASSWORD_ID = "password_id"
     LDAP_CONNECTION = "ldap_connection"
     UNIX_SOCKET = "unix_socket"
+    TAG_TOPIC = "tag_topic"
 
 
 CustomAnon = str
@@ -102,7 +105,7 @@ class AnonInterface:
         )
 
     def get_tags(self, key: str, value: str) -> tuple[str, str]:
-        return self.get_tag_group(key), self.get_tag_value(value)
+        return self.get_id_of_tag_group(key), self.get_tag_value(value)
 
     def get_labels(self, key: str, value: str) -> tuple[str, str]:
         return self.get_label_key(key), self.get_label_value(value)
@@ -121,7 +124,7 @@ class AnonInterface:
 
         return self._get_entry(original, namespace)
 
-    def get_tag_group(self, original: str) -> str:
+    def get_id_of_tag_group(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.TAG_GROUP)
 
     def get_tag_value(self, original: str) -> str:
@@ -212,3 +215,12 @@ class AnonInterface:
 
     def get_unix_socket(self, original: str) -> str:
         return "/anon_socket_path/run/" + self._get_entry(original, ANONTYPE.UNIX_SOCKET)
+
+    def get_id_of_aux_tag(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.AUX_TAG_ID)
+
+    def get_tag_topic(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.TAG_TOPIC)
+
+    def get_id_of_tag(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.TAG_ID)

@@ -191,6 +191,9 @@ class Summarizer:
     def is_empty(self) -> bool:
         return not any(self._node_results.results.values())
 
+    def is_preferred_node_active(self) -> bool:
+        return self._preferred is None or self._preferred == self._active
+
     def raise_for_ignores(self) -> None:
         if msgs := [
             f"[{node}] {', '.join(str(i) for i in ign)}"
@@ -200,7 +203,7 @@ class Summarizer:
             raise IgnoreResultsError(", ".join(msgs))
 
     def primary_results(self) -> Iterable[Result]:
-        if self._preferred is None or self._preferred == self._active:
+        if self.is_preferred_node_active():
             yield Result(state=State.OK, summary=f"{self._label}: [{self._active}]")
         else:
             yield Result(

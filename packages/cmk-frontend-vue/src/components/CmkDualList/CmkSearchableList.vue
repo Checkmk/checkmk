@@ -63,9 +63,7 @@ watch(
 const selectStyle = computed(() => {
   return {
     height: props.countElements < 10 ? '200px' : `${Math.min(props.countElements * 15, 400)}px`,
-    width: `${Math.max(20, Math.min(100, (props.lengthElements + 1) * 0.7))}em`,
-    marginTop: '3px',
-    maxWidth: '440px'
+    width: `${Math.max(20, Math.min(50, (props.lengthElements + 1) * 0.7))}em`
   }
 })
 
@@ -98,7 +96,7 @@ watch(
         :id="`cmk-searchable-list-search-input-${componentId}`"
         v-model="search"
         :aria-label="`${_t('Filter')} ${props.title}`"
-        style="width: 100%"
+        :field-size="'FILL'"
       />
       <label
         :for="`cmk-searchable-list-search-input-${componentId}`"
@@ -139,6 +137,7 @@ watch(
 .cmk-searchable-list__container {
   display: flex;
   flex-direction: column;
+  max-width: 50em;
 }
 
 .cmk-searchable-list__header {
@@ -153,7 +152,6 @@ watch(
 
 .cmk-searchable-list__search-input-wrapper {
   position: relative;
-  display: flex;
   margin: 0;
   padding: 0;
 }
@@ -170,6 +168,7 @@ watch(
   width: 100%;
   min-height: 150px;
   box-sizing: border-box;
+  margin-top: 3px;
 }
 
 .cmk-searchable-list__no-element-in-select {
@@ -180,5 +179,6 @@ watch(
   background-color: var(--default-form-element-bg-color);
   border-radius: 4px;
   user-select: none;
+  margin-top: 3px;
 }
 </style>

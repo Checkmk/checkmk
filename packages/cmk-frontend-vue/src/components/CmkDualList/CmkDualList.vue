@@ -180,6 +180,7 @@ const elementCounter = computed(() => props.elements.length)
   display: flex;
   gap: 1rem;
   align-items: center;
+  max-width: fit-content;
 }
 
 .cmk-dual-list__single-list {

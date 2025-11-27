@@ -7,5 +7,6 @@
 export const inputSizes = {
   SMALL: { width: '64px' },
   MEDIUM: { width: '155px' },
-  LARGE: { width: '435px' }
+  LARGE: { width: '435px' },
+  FILL: { width: '100%' }
 }

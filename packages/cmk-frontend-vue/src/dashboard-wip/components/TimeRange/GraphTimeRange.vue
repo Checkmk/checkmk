@@ -22,7 +22,6 @@ const { _t } = usei18n()
 
 export interface GraphTimerange {
   type: 'predefined' | 'duration' | 'date' | 'age'
-  title: TranslatedString | null
   duration: number | null
   date_range: null | {
     from: string
@@ -62,8 +61,18 @@ interface GraphTimerangeApiResult {
 
 const selectedTimerange = defineModel<GraphTimerange>('selectedTimerange', { required: true })
 
-const apiDurationTimeranges = ref<GraphTimerange[]>([])
+const apiDurationTimeranges = ref<GraphTimerangeApiResult[]>([])
 const selectedDropdownOption = ref<string | null>(null)
+
+function toPublicTimerange(internal: GraphTimerangeApiResult): GraphTimerange {
+  return {
+    type: 'duration',
+    duration: internal.extensions.total_seconds,
+    date_range: null,
+    predefined: null,
+    age: null
+  }
+}
 
 const customTimeOptionName = 'custom_time'
 const customDateOptionName = 'custom_date'
@@ -71,27 +80,19 @@ const customDateOptionName = 'custom_date'
 const customTimeOptionTitle = _t('The last...')
 const customDateOptionTitle = _t('Date range')
 
-async function loadApiDurationGraphTimeranges(): Promise<GraphTimerange[]> {
+async function loadApiDurationGraphTimeranges(): Promise<GraphTimerangeApiResult[]> {
   const API_ROOT = 'api/unstable'
   const url = `${API_ROOT}/domain-types/graph_timerange/collections/all`
   const response = await fetchRestAPI(url, 'GET')
   await response.raiseForStatus()
   const data = await response.json()
-  const apiTimeranges: GraphTimerange[] = data.value.map((item: GraphTimerangeApiResult) => ({
-    type: 'duration',
-    title: untranslated(item.title),
-    duration: item.extensions.total_seconds,
-    date_range: null,
-    predefined: null,
-    age: null
-  }))
-  return apiTimeranges
+  return data.value
 }
 
 const dropdownOptions = computed<Suggestion[]>(() => {
   const mappedApiDurationRanges = apiDurationTimeranges.value.map((range) => ({
-    name: `duration_${range.duration?.toString() ?? '0'}`,
-    title: range.title ?? untranslated('')
+    name: `duration_${range.extensions.total_seconds?.toString() ?? '0'}`,
+    title: untranslated(range.title)
   }))
 
   const mappedPredefinedRanges = Object.entries(predefinedTimeranges).map(([apiKey, title]) => ({
@@ -172,15 +173,14 @@ watch(
     const selectedOption: string = selectedDropdownOption.value ?? ''
     if (selectedOption.startsWith('duration_')) {
       const range = apiDurationTimeranges.value.find(
-        (r) => `duration_${r.duration}` === selectedOption
+        (r) => `duration_${r.extensions.total_seconds?.toString() ?? '0'}` === selectedOption
       )
       if (range) {
-        selectedTimerange.value = range
+        selectedTimerange.value = toPublicTimerange(range)
       }
     } else if (selectedOption === customTimeOptionName) {
       selectedTimerange.value = {
         type: 'age',
-        title: customTimeOptionTitle,
         age: { ...customDuration.value },
         duration: null,
         date_range: null,
@@ -195,7 +195,6 @@ watch(
 
       selectedTimerange.value = {
         type: 'date',
-        title: customDateOptionTitle,
         date_range: {
           from: getApiDate(customDurationDate.value.from),
           to: getApiDate(customDurationDate.value.to)
@@ -205,16 +204,12 @@ watch(
         age: null
       }
     } else if (selectedOption in predefinedTimeranges) {
-      const predefinedTitle = predefinedTimeranges[selectedOption as PreDefinedTimeRange]
-      if (predefinedTitle) {
-        selectedTimerange.value = {
-          type: 'predefined',
-          title: predefinedTitle,
-          predefined: selectedOption as PreDefinedTimeRange,
-          duration: null,
-          date_range: null,
-          age: null
-        }
+      selectedTimerange.value = {
+        type: 'predefined',
+        predefined: selectedOption as PreDefinedTimeRange,
+        duration: null,
+        date_range: null,
+        age: null
       }
     }
   },

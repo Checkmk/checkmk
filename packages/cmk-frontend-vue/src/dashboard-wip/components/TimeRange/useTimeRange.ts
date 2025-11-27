@@ -19,7 +19,6 @@ const timerangeModel2GraphTimerange = (model: TimerangeModel): GraphTimerange =>
       return {
         type: 'duration',
         duration: model.duration,
-        title: null,
         date_range: null,
         predefined: null,
         age: null
@@ -32,7 +31,6 @@ const timerangeModel2GraphTimerange = (model: TimerangeModel): GraphTimerange =>
           from: model.start,
           to: model.end
         },
-        title: null,
         duration: null,
         predefined: null,
         age: null
@@ -47,7 +45,6 @@ const timerangeModel2GraphTimerange = (model: TimerangeModel): GraphTimerange =>
           minutes: model.minutes ?? 0,
           seconds: model.seconds ?? 0
         },
-        title: null,
         duration: null,
         date_range: null,
         predefined: null
@@ -58,7 +55,6 @@ const timerangeModel2GraphTimerange = (model: TimerangeModel): GraphTimerange =>
       return {
         type: 'predefined',
         predefined: model.value,
-        title: null,
         duration: null,
         date_range: null,
         age: null
@@ -70,7 +66,6 @@ export const useTimeRange = (currentTimerange: TimerangeModel | null): UseTimeRa
   const timeRange = ref<GraphTimerange>({
     type: 'predefined',
     predefined: 'last_4_hours',
-    title: null,
     duration: null,
     date_range: null,
     age: null

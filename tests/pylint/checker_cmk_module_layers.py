@@ -1061,14 +1061,16 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.nonfree.pro.licensing",
         "cmk.utils.paths",
     ),
-    Component("tests.plugins_siteless.plugins_consistency"): _allow(
+    Component("tests.plugins_siteless"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         "cmk.plugins",
         "cmk.base.config",
+        "cmk.base.checkers",
         "cmk.checkengine",
         "cmk.discover_plugins",
         "cmk.gui",
+        "cmk.helper_interface",
         "cmk.server_side_calls_backend",
         "cmk.utils",
     ),

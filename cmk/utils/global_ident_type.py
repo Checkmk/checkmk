@@ -7,6 +7,7 @@ from typing import TypedDict
 # TODO: replace this with an enum once we parse config files to proper types
 PROGRAM_ID_DCD = "dcd"
 PROGRAM_ID_QUICK_SETUP = "quick_setup"
+PROGRAM_ID_OAUTH = "oauth"
 
 
 class GlobalIdent(TypedDict):

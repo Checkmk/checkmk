@@ -16,6 +16,7 @@ import { groupNestedValidations, type ValidationMessages } from '@/form/componen
 import CmkSpace from '@/components/CmkSpace.vue'
 import TopicUngrouped from '@/form/components/forms/form_catalog/TopicUngrouped.vue'
 import TopicGrouped from '@/form/components/forms/form_catalog/TopicGrouped.vue'
+import FormValidation from '@/form/components/FormValidation.vue'
 
 const props = defineProps<{
   spec: Catalog
@@ -34,11 +35,16 @@ immediateWatch(
 )
 
 const elementValidation = ref<Record<string, ValidationMessages>>({})
+const validation = ref<ValidationMessages>([])
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    const [, nestedValidation] = groupNestedValidations(props.spec.elements, newValidation)
+    const [catalogValidation, nestedValidation] = groupNestedValidations(
+      props.spec.elements,
+      newValidation
+    )
     elementValidation.value = nestedValidation
+    validation.value = catalogValidation
   }
 )
 
@@ -62,6 +68,7 @@ function isGroupedTopic(topic: Topic): boolean {
 </script>
 
 <template>
+  <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
   <span>
     <template v-for="topic in props.spec.elements" :key="topic.name">
       <table class="dictionary nform">

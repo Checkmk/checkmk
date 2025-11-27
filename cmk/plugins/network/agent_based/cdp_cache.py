@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from ipaddress import AddressValueError, IPv4Address
 from re import compile as re_compile
 from re import match as re_match
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 from pydantic import BaseModel
 
@@ -47,10 +47,10 @@ _INTERFACE_DISPLAY_HINTS = {
 
 
 class InventoryParams(TypedDict):
-    remove_domain: bool
-    domain_name: str | None
-    use_short_if_name: bool
-    remove_columns: Sequence[str]
+    remove_domain: NotRequired[bool]
+    domain_name: NotRequired[str]
+    use_short_if_name: NotRequired[bool]
+    remove_columns: NotRequired[Sequence[str]]
 
 
 class CdpGlobal(BaseModel, frozen=True):
@@ -540,11 +540,6 @@ snmp_section_inv_cdp_cache = SNMPSection(
 inventory_plugin_inv_cdp_cache = InventoryPlugin(
     name="inv_cdp_cache",
     inventory_function=inventory_cdp_cache,
-    inventory_default_parameters=InventoryParams(
-        remove_domain=False,
-        domain_name=None,
-        use_short_if_name=False,
-        remove_columns=[],
-    ),
+    inventory_default_parameters=InventoryParams(),
     inventory_ruleset_name="inv_cdp_cache",
 )

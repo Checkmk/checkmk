@@ -165,7 +165,6 @@ CDP_NEIGHBOR_ATTRIBUTE = TableRow(
             Cdp(cdp_global=CDP_GLOBAL, cdp_neighbors=[]),
             InventoryParams(
                 remove_domain=False,
-                domain_name=None,
                 remove_columns=[],
                 use_short_if_name=False,
             ),
@@ -175,7 +174,6 @@ CDP_NEIGHBOR_ATTRIBUTE = TableRow(
             CDP,
             InventoryParams(
                 remove_domain=False,
-                domain_name=None,
                 remove_columns=[],
                 use_short_if_name=False,
             ),

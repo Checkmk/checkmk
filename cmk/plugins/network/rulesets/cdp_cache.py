@@ -7,7 +7,7 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.rulesets.v1 import Label, Message, Title
+from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
@@ -16,7 +16,6 @@ from cmk.rulesets.v1.form_specs import (
     MultipleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.rulesets.v1.rule_specs import InventoryParameters, Topic
 
 
@@ -64,11 +63,6 @@ def parameter_form_cdp_cache() -> Dictionary:
             "domain_name": DictElement(
                 parameter_form=String(
                     title=Title("Specific domain name to remove from neighbor device name"),
-                    custom_validate=[
-                        LengthInRange(
-                            min_value=1, error_msg=Message("This field can not be empty.")
-                        )
-                    ],
                 )
             ),
             "remove_columns": DictElement(
@@ -76,9 +70,6 @@ def parameter_form_cdp_cache() -> Dictionary:
                     title=Title("Columns to remove"),
                     elements=_remove_columns,
                     migrate=_migrate_remove_columns,
-                    custom_validate=[
-                        LengthInRange(min_value=1, error_msg=Message("Select at least one column."))
-                    ],
                 )
             ),
             "use_short_if_name": DictElement(

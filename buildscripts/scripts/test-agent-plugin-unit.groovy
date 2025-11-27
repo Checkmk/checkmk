@@ -4,8 +4,8 @@
 
 String get_agent_plugin_python_versions(String git_dir=".") {
     dir(git_dir) {
-        return (cmd_output("make --no-print-directory --file=defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS")
-                ?: raise("Could not read AGENT_PLUGIN_PYTHON_VERSIONS from defines.make")).split(" ");
+        return (cmd_output("make --no-print-directory --file=defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER")
+                ?: raise("Could not read AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER from defines.make")).split(" ");
     }
 }
 
@@ -17,6 +17,7 @@ void main() {
         privileged: true,
     ) {
         dir("${checkout_dir}") {
+            // TODO: Drop the make target as soon as we drop the compatibilty to python < 3.8
             // pre-create virtual environments before parallel execution
             stage("prepare virtual environment") {
                 sh("make .venv");
@@ -33,6 +34,10 @@ void main() {
                 }]
             }
             parallel(test_builds);
+
+            stage("Test for remaining python versions") {
+                sh("bazel test //tests/agent-plugin-unit:supported_python_versions");
+            }
         }
     }
 }

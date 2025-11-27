@@ -20,7 +20,7 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
 # the EDITIONS environment variable handed over by some jenkins test jobs.
 # Looks like we need to cleanup the EDITION handling here.
-AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
+AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER)
 REPO_PATH := $(shell make --no-print-directory --file=../defines.make print-REPO_PATH)
 MAX_CHARS := 1500000
 EDITION ?= pro
@@ -90,7 +90,7 @@ PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-chec
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 
 .PHONY: clean help prepare-playwright  bandit.ini \
-	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
+	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
 	test-integration-agent-plugin test-integration-agent-plugin-docker \
@@ -112,7 +112,7 @@ clean:
 
 help:
 	@echo "container-debug                     - Run container for manual test debugging"
-	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS); do \
+	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER); do \
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
 	done
 	@for i in $(SYSTEM_TESTS); do \
@@ -139,7 +139,7 @@ bandit.ini:
 	  echo ) > bandit.ini
 	( echo exclude: /tests >> bandit.ini )
 
-$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
+$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker):
 	@if [ -z ${DOCKER_REGISTRY_NO_HTTPS} ]; then \
 	   echo "DOCKER_REGISTRY_NO_HTTPS is not set, please export this environment variable during make target call."; \
 	   echo "Hint: export DOCKER_REGISTRY_NO_HTTPS=artifacts.lan.tribe29.com:4000"; \
@@ -458,7 +458,12 @@ test-unit-testlib:
 		tests/testlib/
 
 test-agent-plugin:
-	make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+	# For python versions > 3.8, we are able to use pre built hermetic interpreters via rules_python / rules_uv
+	# Older python versions are not available and an attempt to get the oldest python version 3.4 working, turned
+	# out to be already very hard (rules_python/uv are unable to bootstrap with such old python versions)
+        # TODO: Drop the foreach make target as soon as we drop the compatibilty to python < 3.8
+	make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker)
+	bazel test //tests/agent-plugin-unit:supported_python_versions
 
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make test-agent-plugin

@@ -55,7 +55,10 @@ PYTHON_VERSION_WINDOWS_MINOR   := $(word 2,$(PY_ARRAY_WINDOWS))
 PYTHON_VERSION_WINDOWS_PATCH   := $(word 3,$(PY_ARRAY_WINDOWS))
 PYTHON_VERSION_WINDOWS_MAJOR_DOT_MINOR := $(PYTHON_VERSION_WINDOWS_MAJOR).$(PYTHON_VERSION_WINDOWS_MINOR)
 
-AGENT_PLUGIN_PYTHON_VERSIONS := 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12
+# NOTE: From python 3.8 and upwards, we're able to use an hermetic python interpreter from bazel.
+# For older python versions, we need to fall back to the older docker mechanism
+# TODO: Drop the old docker mechanism as soon as we can drop tests for 3.4 -> 3.7
+AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER := 3.4 3.5 3.6 3.7
 
 # Needed for bootstrapping CI and development environments
 VIRTUALENV_VERSION := 20.25.0

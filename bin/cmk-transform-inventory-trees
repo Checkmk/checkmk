@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import subprocess
 import sys
 from argparse import ArgumentParser, Namespace
@@ -10,6 +11,8 @@ from collections.abc import Sequence
 
 import cmk.utils.paths
 from cmk.inventory.transformation import transform_inventory_trees
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_arguments(argv: Sequence[str]) -> Namespace:
@@ -52,7 +55,7 @@ def _collect_hosts() -> Sequence[str]:
             )
         )
     except subprocess.CalledProcessError as e:
-        sys.stderr.write(f"Failed to collect all host names: {e}\n")
+        logger.error("Failed to collect all host names: %s", e)
         return []
 
 
@@ -60,6 +63,7 @@ def main() -> int:
     args = _parse_arguments(sys.argv)
     try:
         return transform_inventory_trees(
+            logger=logger,
             omd_root=cmk.utils.paths.omd_root,
             show_results=args.show_results,
             bundle_length=args.bundle_length,
@@ -67,7 +71,7 @@ def main() -> int:
             all_host_names=_collect_hosts(),
         )
     except Exception as e:
-        sys.stderr.write(f"Failed to transform inventory trees: {e}")
+        logger.error("Failed to transform inventory trees: %s", e)
         return 1
 
 

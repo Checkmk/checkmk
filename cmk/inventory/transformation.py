@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import math
 import os
 import sys
@@ -214,6 +215,7 @@ def _transform_host_tree_path(host_tree_path: _HostTreePath) -> TransformationRe
 
 def transform_inventory_trees(
     *,
+    logger: logging.Logger,
     omd_root: Path,
     show_results: bool,
     bundle_length: int,
@@ -242,7 +244,8 @@ def transform_inventory_trees(
     for host_tree_path in to_be_transformed:
         new_transformation_results.append(_transform_host_tree_path(host_tree_path))
 
-    sys.stdout.write(f"Transformed {len(new_transformation_results)} inventory trees\n")
+    if len_results := len(new_transformation_results):
+        logger.info("Transformed %s inventory trees", len_results)
     transformation_results_store.save(list(transformation_results) + new_transformation_results)
 
     return 0

@@ -5,6 +5,7 @@
 
 import gzip
 import io
+import logging
 from pathlib import Path
 
 import cmk.ccc.store
@@ -18,8 +19,15 @@ from cmk.inventory.structured_data import (
 from cmk.inventory.transformation import transform_inventory_trees
 
 
+def _logger() -> logging.Logger:
+    logger = logging.getLogger(__name__)
+    logger.addHandler(logging.NullHandler())
+    return logger
+
+
 def test_transformation_nothing_to_do(tmp_path: Path) -> None:
     transform_inventory_trees(
+        logger=_logger(),
         omd_root=tmp_path,
         show_results=False,
         bundle_length=0,
@@ -72,6 +80,7 @@ def test_transform_inventory_tree(tmp_path: Path) -> None:
     cmk.ccc.store.save_bytes_to_file(tmp_path / "var/check_mk/inventory/hostname.gz", gzipped)
 
     transform_inventory_trees(
+        logger=_logger(),
         omd_root=tmp_path,
         show_results=False,
         bundle_length=0,
@@ -90,6 +99,7 @@ def test_transform_status_data_tree(tmp_path: Path) -> None:
     cmk.ccc.store.save_object_to_file(tmp_path / "tmp/check_mk/status_data/hostname", raw_tree)
 
     transform_inventory_trees(
+        logger=_logger(),
         omd_root=tmp_path,
         show_results=False,
         bundle_length=0,
@@ -108,6 +118,7 @@ def test_transform_archive_tree(tmp_path: Path) -> None:
     )
 
     transform_inventory_trees(
+        logger=_logger(),
         omd_root=tmp_path,
         show_results=False,
         bundle_length=0,
@@ -126,6 +137,7 @@ def test_transform_delta_cache_tree(tmp_path: Path) -> None:
     )
 
     transform_inventory_trees(
+        logger=_logger(),
         omd_root=tmp_path,
         show_results=False,
         bundle_length=0,

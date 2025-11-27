@@ -72,6 +72,7 @@ monitoring_host: str | None = None  # deprecated
 max_num_processes = 50
 fallback_agent_output_encoding = "latin-1"
 stored_passwords: dict[str, Password] = {}
+oauth_connections: dict[str, dict[str, str]] = {}
 # Collection of predefined rule conditions. For the moment this setting is only stored
 # in this config domain but not used by the base code. The WATO logic for writing out
 # rule.mk files is resolving the predefined conditions.

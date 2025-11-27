@@ -56,4 +56,4 @@ APACHE_MODULE_DIR = /usr/lib/httpd/modules
 APACHE_MODULE_DIR_64 = /usr/lib64/httpd/modules
 HTPASSWD_BIN      = /usr/bin/htpasswd
 MOUNT_OPTIONS     =
-INIT_CMD          = /usr/bin/systemctl %(action)s %(name)s.service
+INIT_CMD          = systemctl %(action)s %(name)s.service

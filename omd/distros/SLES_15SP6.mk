@@ -55,4 +55,4 @@ APACHE_MODULE_DIR = /usr/lib/apache2-prefork
 APACHE_MODULE_DIR_64 = /usr/lib64/apache2-prefork
 HTPASSWD_BIN      = /usr/bin/htpasswd2
 MOUNT_OPTIONS     =
-INIT_CMD          = /usr/bin/systemctl %(action)s %(name)s.service
+INIT_CMD          = systemctl %(action)s %(name)s.service

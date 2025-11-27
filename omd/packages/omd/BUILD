@@ -46,6 +46,7 @@ WRAPPED_EXECUTABLES = [
     "zypper",
     "rpmbuild",
     "nslookup",
+    "systemctl",
 ]
 
 [pkg_files(

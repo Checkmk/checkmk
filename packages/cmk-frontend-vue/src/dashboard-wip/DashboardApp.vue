@@ -297,6 +297,11 @@ const redirectToListDashboardsPage = () => {
   window.location.href = props.links.list_dashboards
 }
 
+const handleSaveDashboardFilters = async (filters: ConfiguredFilters) => {
+  dashboardFilters.handleSaveDashboardFilters(filters)
+  await dashboardsManager.persistDashboard()
+}
+
 const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilterMode) => {
   dashboardFilters.handleApplyRuntimeFilters(filters)
   dashboardFilters.setRuntimeFiltersMode(mode)
@@ -326,6 +331,11 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilt
     urlSearchParams
   )
   urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
+}
+
+const handleSaveMandatoryRuntimeFilters = async (filters: string[]) => {
+  dashboardFilters.handleSaveMandatoryRuntimeFilters(filters)
+  await dashboardsManager.persistDashboard()
 }
 
 const updateDashboardSettings = async (
@@ -441,9 +451,9 @@ function deepClone<T>(obj: T): T {
         "
         :can-edit="can_edit_dashboards"
         starting-tab="dashboard-filter"
-        @save-dashboard-filters="dashboardFilters.handleSaveDashboardFilters"
+        @save-dashboard-filters="handleSaveDashboardFilters"
         @apply-runtime-filters="handleApplyRuntimeFilters"
-        @save-mandatory-runtime-filters="dashboardFilters.handleSaveMandatoryRuntimeFilters"
+        @save-mandatory-runtime-filters="handleSaveMandatoryRuntimeFilters"
         @close="openDashboardFilterSettings = false"
       />
       <DashboardSettingsWizard

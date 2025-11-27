@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, perfometers, Title
+from cmk.graphing.v1 import metrics, perfometers, Title
 
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
@@ -21,11 +21,4 @@ perfometer_azure_firewall_health = perfometers.Perfometer(
         perfometers.Closed(100.0),
     ),
     segments=["azure_firewall_health"],
-)
-
-# TODO: remove?
-graph_azure_firewall_health = graphs.Graph(
-    name="azure_firewall_health",
-    title=Title("Health"),
-    compound_lines=["azure_firewall_health"],
 )

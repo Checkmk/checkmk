@@ -138,7 +138,7 @@ const pageNavigation = parsePageNavigation()
           @dashboard-change="handleDashboardChange"
         />
 
-        <MenuButton @click="emit('open-filter')">
+        <MenuButton v-if="!isEditMode" @click="emit('open-filter')">
           <CmkIcon name="filter" size="large" />
           <span>{{ _t('Filter') }}</span>
         </MenuButton>

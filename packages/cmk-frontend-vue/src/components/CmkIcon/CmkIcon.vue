@@ -656,7 +656,8 @@ $unthemed-icons: (
   'inventory': 'icon_inventory.svg',
   'static-checks': 'icon_static_checks.svg',
   'inventory-failed': 'icon_inventory_failed.png',
-  'alert-warn': 'icon_alert_warn.png'
+  'alert-warn': 'icon_alert_warn.png',
+  'inline-error': 'icon_inline_error.svg'
 );
 $themed-icons: (
   'info-circle': 'icon_info_circle.svg',

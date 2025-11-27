@@ -330,6 +330,7 @@ CLEAN_UTILS_MODULES = (
 # to import each other. Would be nice to narrow this down,
 # but there's a lot going on.
 CROSS_DEPENDING_UTILS_MODULES = (
+    "automation_config",
     "backup",
     "caching",
     "caching_redis",

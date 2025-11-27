@@ -2,7 +2,7 @@
   "rules": {
     "basic.DeadCode": "error",
     "convention.CompileStatic": "off",
-    "convention.FieldTypeRequired": "info",
+    "convention.FieldTypeRequired": "error",
     "convention.IfStatementCouldBeTernary": "info",
     "convention.MethodReturnTypeRequired": "off",
     "convention.NoDef": "off",

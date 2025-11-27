@@ -102,32 +102,6 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     def password_dropdown(self, receiver_type: str) -> Locator:
         return self._receiver(receiver_type).get_by_role("combobox", name="Password")
 
-    def add_new_host_name_computation_rule_button(self, receiver_type: str) -> Locator:
-        return self._receiver(receiver_type).get_by_role("button", name="Add new rule")
-
-    def add_new_field_button(self, receiver_type: str) -> Locator:
-        return self._receiver(receiver_type).get_by_role("button", name="Add new field")
-
-    def host_name_computation_field_type_dropdown(self, receiver_type: str) -> Locator:
-        return (
-            self._receiver(receiver_type)
-            .get_by_role("combobox")
-            .get_by_text(re.compile(r"(Value of attribute|Literal string)", re.IGNORECASE))
-        )
-
-    def value_of_attribute_dropdown(self, receiver_type: str) -> Locator:
-        return self._receiver(receiver_type).locator("button.cmk-dropdown-button--group-start")
-
-    def value_of_attribute_filter(self, receiver_type: str) -> Locator:
-        return self._receiver(receiver_type).get_by_label("filter")
-
-    def literal_string_textfield(self, receiver_type: str) -> Locator:
-        return (
-            self._receiver(receiver_type)
-            .get_by_text("Host name computation The")
-            .locator("input[type='text']")
-        )
-
     def send_logs_to_event_console_checkbox(self, receiver_type: str) -> Locator:
         return self._receiver(receiver_type).get_by_role(
             "checkbox", name="Send log messages to event"
@@ -171,29 +145,6 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
                 self.dropdown_option(
                     receiver_type, user_data["password"]["value"], exact=True
                 ).click()
-
-        for host_name_rule in properties["endpoint"]["host_name_rules"]:
-            self.add_new_host_name_computation_rule_button(receiver_type).click()
-            for host_name_field in host_name_rule:
-                self.click_on_last_locator(self.add_new_field_button(receiver_type))
-                self.click_on_last_locator(
-                    self.host_name_computation_field_type_dropdown(receiver_type)
-                )
-                if host_name_field["type"] == "key":
-                    self.dropdown_option(receiver_type, "Value of attribute").click()
-                    self.click_on_last_locator(self.value_of_attribute_dropdown(receiver_type))
-                    self.fill_last_locator(
-                        self.value_of_attribute_filter(receiver_type),
-                        host_name_field["value"],
-                    )
-                    self.dropdown_option(receiver_type, host_name_field["value"]).click()
-                elif host_name_field["type"] == "free":
-                    self.dropdown_option(receiver_type, "Literal string").click()
-                    self.fill_last_locator(
-                        self.literal_string_textfield(receiver_type), host_name_field["value"]
-                    )
-                else:
-                    raise ValueError(f"Unknown host name field type: {host_name_field['type']}")
         if properties["endpoint"].get("event_console"):
             self.send_logs_to_event_console_checkbox(receiver_type).check()
             self.resource_attribute_for_hostname_computation_textfield(receiver_type).fill(

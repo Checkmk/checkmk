@@ -106,50 +106,6 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
     def port_textfield(self) -> Locator:
         return self.main_area.locator().get_by_role("spinbutton", name="Port")
 
-    @property
-    def add_new_rule_button(self) -> Locator:
-        return self.main_area.locator().get_by_role("button", name="Add new rule")
-
-    @property
-    def host_name_rules_dropdown(self) -> Locator:
-        return self.main_area.locator().get_by_role("combobox", name="Host name rules")
-
-    def dropdown_option(self, option: str) -> Locator:
-        return self.main_area.locator().get_by_role("option", name=option, exact=True)
-
-    @property
-    def add_new_field_button(self) -> Locator:
-        return self.main_area.locator().get_by_role("button", name="Add new field")
-
-    @property
-    def host_name_field_type_dropdown(self) -> Locator:
-        return (
-            self.main_area.locator()
-            .get_by_role("combobox")
-            .get_by_text(re.compile(r"(Value of attribute|Literal string)", re.IGNORECASE))
-        )
-
-    @property
-    def value_of_attribute_dropdown(self) -> Locator:
-        return self.main_area.locator("button.cmk-dropdown-button--group-start")
-
-    @property
-    def value_of_attribute_filter(self) -> Locator:
-        return self.main_area.locator().get_by_label("filter")
-
-    @property
-    def literal_string_textfield(self) -> Locator:
-        return (
-            self.main_area.locator()
-            .get_by_text("Host name computation The")
-            .locator("input[type='text']")
-        )
-
-    @staticmethod
-    def click_on_last_locator(locator: Locator) -> None:
-        target_index = locator.count() - 1
-        locator.nth(target_index).click()
-
     @staticmethod
     def fill_last_locator(locator: Locator, value: str) -> None:
         target_index = locator.count() - 1
@@ -172,28 +128,3 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
             self.add_new_target_button.click()
             self.fill_last_locator(self.ip_address_or_hostname_textfield, target["address"])
             self.fill_last_locator(self.port_textfield, str(target["port"]))
-        for rule in properties["host_name_rules"]:
-            self.add_new_rule_button.click()
-            self.click_on_last_locator(self.host_name_rules_dropdown)
-            if rule["type"] == "service_instance_id":
-                self.dropdown_option("Host name / IP address").click()
-            elif rule["type"] == "custom":
-                self.dropdown_option("Custom host name computation").click()
-                for custom_field in rule["value"]:
-                    self.click_on_last_locator(self.add_new_field_button)
-                    self.click_on_last_locator(self.host_name_field_type_dropdown)
-                    if custom_field["type"] == "key":
-                        self.dropdown_option("Value of attribute").click()
-                        self.click_on_last_locator(self.value_of_attribute_dropdown)
-                        self.fill_last_locator(
-                            self.value_of_attribute_filter,
-                            custom_field["value"],
-                        )
-                        self.dropdown_option(custom_field["value"]).click()
-                    elif custom_field["type"] == "free":
-                        self.dropdown_option("Literal string").click()
-                        self.fill_last_locator(self.literal_string_textfield, custom_field["value"])
-                    else:
-                        raise ValueError(f"Unknown host name field type: {custom_field['type']}")
-            else:
-                raise ValueError(f"Unknown host name rule type: {rule['type']}")

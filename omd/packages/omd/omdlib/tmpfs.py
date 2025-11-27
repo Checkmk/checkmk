@@ -27,6 +27,7 @@ from omdlib.utils import (
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc import tty
+from cmk.ccc.archive import CheckmkTarArchive
 
 
 def tmpfs_mounted(sitename: str) -> bool:
@@ -271,11 +272,12 @@ def save_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
 def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
     """Populate the tmpfs from the previously created tmpfs dump
     Silently skipping over in case there is no dump available."""
-    if not Path(site_dir, "var/omd/tmpfs-dump.tar").exists():
-        return
     tmpfs_dump = Path(site_dir, "var/omd/tmpfs-dump.tar")
-    with tarfile.TarFile(tmpfs_dump) as tar:
-        tar.extractall(site_tmp_dir, filter="data")  # nosec B202 # BNS:a7d6b8
+    if not tmpfs_dump.exists():
+        return
+
+    with CheckmkTarArchive.from_path(tmpfs_dump, compression="*") as archive:
+        archive.extractall(dest=site_tmp_dir)  # nosec B202 - its secured now
     tmpfs_dump.unlink()
 
 

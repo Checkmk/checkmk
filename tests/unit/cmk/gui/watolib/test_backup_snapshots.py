@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pathlib
-import tarfile
 from collections.abc import Generator
 
 import pytest
 
+from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.user import UserId
 from cmk.gui.watolib import backup_snapshots
 
@@ -59,7 +59,9 @@ def test_extract_snapshot() -> None:
         use_git=False,
         debug=False,
     )
-    with tarfile.open(next(_snapshot_files()), mode="r") as snapshot_tar:
+    with CheckmkTarArchive.from_path(
+        next(_snapshot_files()), streaming=False, compression="*"
+    ) as snapshot_tar:
         backup_snapshots.extract_snapshot(
             snapshot_tar,
             backup_snapshots.backup_domains,

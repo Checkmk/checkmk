@@ -28,7 +28,8 @@ const typeOptions: { name: NonNullable<PropTypes['type']>; title: string }[] = [
   { name: 'text', title: 'Text' },
   { name: 'number', title: 'Number' },
   { name: 'date', title: 'Date' },
-  { name: 'time', title: 'Time' }
+  { name: 'time', title: 'Time' },
+  { name: 'password', title: 'Password' }
 ]
 
 const externalErrors = ref<string[]>([])

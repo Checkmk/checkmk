@@ -12,13 +12,13 @@ import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
 import type { IAiConversationElement } from '@/ai/lib/service/ai-template'
 import { AiRole } from '@/ai/lib/utils'
 
-import AiConversationConsent from './AiConversationConsent.vue'
+import AiConversationConsent from './AiConversationDisclaimer.vue'
 import AiConversationElement from './AiConversationElement.vue'
 import AiConversationFooter from './AiConversationFooter.vue'
 
 const aiTemplate = getInjectedAiTemplate()
 
-const showConsent = ref<boolean>(!aiTemplate.value?.isConsented())
+const showConsent = ref<boolean>(!aiTemplate.value?.isDisclaimerShown())
 
 const emit = defineEmits(['close', 'consent'])
 

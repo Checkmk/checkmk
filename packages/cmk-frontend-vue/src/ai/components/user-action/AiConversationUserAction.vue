@@ -53,21 +53,19 @@ onMounted(async () => {
         @click="aiTemplate?.execUserActionButton(action)"
       />
     </template>
-    <template v-else>
+    <template v-else-if="!actionsError">
       <CmkSkeleton v-for="i in 3" :key="i" class="ai-conversation-user-action__skeleton" />
     </template>
     <template v-if="userActions && userActions.length === 0">
       <AlertContent content_type="alert" variant="warning" :text="_t('No actions found')" />
     </template>
-    <template v-else>
-      <template v-if="actionsError">
-        <AlertContent
-          content_type="alert"
-          variant="error"
-          :text="actionsError.message"
-          :title="actionsError.name"
-        />
-      </template>
+    <template v-else-if="actionsError">
+      <AlertContent
+        content_type="alert"
+        variant="error"
+        :text="_t('Error retrieving available AI actions. Please try again later.')"
+        :title="actionsError.name"
+      />
     </template>
     <br />
   </div>

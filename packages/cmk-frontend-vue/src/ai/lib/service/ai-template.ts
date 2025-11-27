@@ -29,7 +29,7 @@ export interface IAiConversationConfig<T> {
   user_id: string
   data?: T
   conversationId?: string | undefined
-  dataToProvideToLlm?: () => Promise<TAiConversationElementContent[]> | undefined
+  getDisclaimer?: () => Promise<TAiConversationElementContent[]> | undefined
   userActions: IAiUserActionConfig
 }
 
@@ -124,20 +124,20 @@ export class AiTemplateService extends ServiceBase {
       userActions: {}
     }
 
-    if (!this.getPersistentRef().value) {
-      this.config.dataToProvideToLlm = this.getDataToBeProvidedToAi.bind(this)
+    if (!this.getDisclaimerPersistentRef().value) {
+      this.config.getDisclaimer = this.getDisclaimer.bind(this)
     }
 
     void this.loadInfo()
   }
 
-  public isConsented(): boolean {
-    return this.getPersistentRef().value
+  public isDisclaimerShown(): boolean {
+    return this.getDisclaimerPersistentRef().value
   }
 
-  public persistConsent() {
-    const consented = this.getPersistentRef()
-    consented.value = true
+  public persistDisclaimerShown() {
+    const disclaimerShown = this.getDisclaimerPersistentRef()
+    disclaimerShown.value = true
 
     void this.loadAiUserActions()
   }
@@ -159,7 +159,7 @@ export class AiTemplateService extends ServiceBase {
     this.elements.push(element)
   }
 
-  public async getDataToBeProvidedToAi(): Promise<TAiConversationElementContent[]> {
+  public async getDisclaimer(): Promise<TAiConversationElementContent[]> {
     if (!this.info) {
       await this.loadInfo()
     }
@@ -270,9 +270,9 @@ export class AiTemplateService extends ServiceBase {
     return []
   }
 
-  private getPersistentRef(): Ref<boolean> {
+  private getDisclaimerPersistentRef(): Ref<boolean> {
     return usePersistentRef<boolean>(
-      `ai-consent-${this.config.user_id}`,
+      `ai-disclaimer-${this.config.user_id}`,
       false,
       (v) => v as boolean,
       'local'

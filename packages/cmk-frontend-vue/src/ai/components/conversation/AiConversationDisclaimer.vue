@@ -12,7 +12,6 @@ import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkSkeleton from '@/components/CmkSkeleton.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
 import type { TAiConversationElementContent } from '@/ai/lib/service/ai-template'
@@ -22,16 +21,27 @@ import AiConversationElement from './AiConversationElement.vue'
 
 const { _t } = usei18n()
 const aiTemplate = getInjectedAiTemplate()
-const systemPrompt = ref<TAiConversationElementContent[] | null>(null)
-const doNotAskAgain = ref<boolean>(false)
+const disclaimerPrompt = ref<TAiConversationElementContent[] | null>(null)
 const consentTriggered = ref<boolean>(false)
+const startButtonDisabled = ref<boolean>(false)
 
 onMounted(async () => {
-  if (!aiTemplate.value?.isConsented()) {
-    if (typeof aiTemplate.value?.config.dataToProvideToLlm === 'function') {
-      const res = await aiTemplate.value.config.dataToProvideToLlm()
-      if (res) {
-        systemPrompt.value = res
+  if (!aiTemplate.value?.isDisclaimerShown()) {
+    if (typeof aiTemplate.value?.config.getDisclaimer === 'function') {
+      try {
+        const res = await aiTemplate.value.config.getDisclaimer()
+        if (res) {
+          disclaimerPrompt.value = res
+        }
+      } catch {
+        startButtonDisabled.value = true
+        disclaimerPrompt.value = [
+          {
+            content_type: 'alert',
+            variant: 'error',
+            text: _t('Error retrieving AI service information. Please try again later.')
+          }
+        ]
       }
     }
   }
@@ -40,9 +50,7 @@ onMounted(async () => {
 const emit = defineEmits(['consent', 'decline'])
 
 function onConsent() {
-  if (doNotAskAgain.value) {
-    aiTemplate.value?.persistConsent()
-  }
+  aiTemplate.value?.persistDisclaimerShown()
   consentTriggered.value = true
   emit('consent')
 }
@@ -50,48 +58,47 @@ function onConsent() {
 
 <template>
   <div
-    v-if="systemPrompt"
-    class="ai-conversation-consent"
-    :class="{ 'ai-conversation-consent--triggered': consentTriggered }"
+    v-if="disclaimerPrompt"
+    class="ai-conversation-disclaimer"
+    :class="{ 'ai-conversation-disclaimer--triggered': consentTriggered }"
   >
-    <CmkHeading type="h1" class="ai-conversation-consent__header">
+    <CmkHeading type="h1" class="ai-conversation-disclaimer__header">
       {{ _t('Checkmk AI feature documentation & privacy policy') }}
     </CmkHeading>
     <AiConversationElement
       :role="AiRole.system"
-      :content="systemPrompt"
+      :content="disclaimerPrompt"
       :no-animation="true"
       :hide-controls="true"
-      class="ai-conversation-consent__element"
+      class="ai-conversation-disclaimer__element"
     />
 
-    <div v-if="!consentTriggered" class="ai-conversation-consent__ctrls">
-      <CmkCheckbox v-model="doNotAskAgain" :label="_t('Do not show again')" />
+    <div v-if="!consentTriggered" class="ai-conversation-disclaimer__ctrls">
       <div>
-        <CmkButton variant="primary" @click="onConsent">
+        <CmkButton variant="primary" :disabled="startButtonDisabled" @click="onConsent">
           {{ _t('Start AI feature') }}
         </CmkButton>
         <CmkButton @click="emit('decline')">{{ _t('Cancel and go back') }}</CmkButton>
       </div>
     </div>
   </div>
-  <CmkSkeleton v-else class="ai-conversation-consent__skeleton" />
+  <CmkSkeleton v-else class="ai-conversation-disclaimer__skeleton" />
 </template>
 
 <style scoped>
-.ai-conversation-consent {
+.ai-conversation-disclaimer {
   width: 95%;
   position: absolute;
   margin-top: var(--dimension-10);
   margin-bottom: var(--dimension-8);
   overflow: hidden;
 
-  &.ai-conversation-consent--triggered {
+  &.ai-conversation-disclaimer--triggered {
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
   }
 
-  .ai-conversation-consent__header {
+  .ai-conversation-disclaimer {
     width: 100%;
     text-align: left;
     display: flex;
@@ -101,11 +108,11 @@ function onConsent() {
     gap: var(--dimension-5);
   }
 
-  .ai-conversation-consent__element {
+  .ai-conversation-disclaimer__element {
     margin: var(--dimension-10) 0 0 -28px;
   }
 
-  .ai-conversation-consent__ctrls {
+  .ai-conversation-disclaimer__ctrls {
     display: flex;
     flex-direction: column;
     padding-left: var(--dimension-4);
@@ -123,7 +130,7 @@ function onConsent() {
   }
 }
 
-.ai-conversation-consent__skeleton {
+.ai-conversation-disclaimer__skeleton {
   width: 70%;
   height: 100px;
 }

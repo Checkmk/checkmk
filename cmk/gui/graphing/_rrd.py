@@ -84,7 +84,7 @@ def _metric_props_by_service(
             MetricProperties(
                 metric_name=key.metric_name,
                 consolidation_function=(
-                    consolidation_function or key.consolidation_function or "max"
+                    key.consolidation_function or consolidation_function or "max"
                 ),
                 scale=key.scale,
             )

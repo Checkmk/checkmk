@@ -120,6 +120,23 @@ py_test(
 )
 
 py_library(
+    name = "randomds",
+    srcs = glob(
+        [
+            "cmk/plugins/randomds/**/*.py",
+        ],
+    ),
+    data = ["cmk/plugins/randomds/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+    ],
+)
+
+py_library(
     name = "redfish",
     srcs = glob(["cmk/plugins/redfish/**/*.py"]),
     data = glob([
@@ -137,6 +154,18 @@ py_library(
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-plugin-apis:server_side_programs",
         requirement("redfish"),
+    ],
+)
+
+py_test(
+    name = "randomds-test",
+    size = "small",
+    srcs = glob(["tests/cmk/plugins/randomds/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":randomds",
+        requirement("pytest"),
     ],
 )
 

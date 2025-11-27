@@ -11,6 +11,7 @@
 RELAY_SUPPORTED_PLUGIN_FAMILIES = [
     "lib",
     "netapp",
+    "randomds",
 ]
 
 RELAY_SUPPORTED_MODULES = ["cmk.plugins.%s" % family for family in RELAY_SUPPORTED_PLUGIN_FAMILIES]

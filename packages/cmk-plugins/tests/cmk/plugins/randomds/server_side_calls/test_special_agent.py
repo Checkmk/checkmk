@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.random.server_side_calls.special_agent import special_agent_random
+from cmk.plugins.randomds.server_side_calls.special_agent import special_agent_random
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, SpecialAgentCommand
 
 

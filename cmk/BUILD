@@ -181,6 +181,8 @@ filegroup(
     name = "miscellaneous",
     srcs = [
         "gui/wsgi/applications/index.wsgi",
+        "plugins/hyperv_cluster/agents/README.md",
+        "plugins/hyperv_cluster/agents/hyperv_host.ps1",
         "plugins/oracle/agents/oracle_unified_async",
         "plugins/oracle/agents/oracle_unified_async.ps1",
         "plugins/oracle/agents/oracle_unified_sync",

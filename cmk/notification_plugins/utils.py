@@ -119,6 +119,7 @@ def html_escape_context(context: PluginNotificationContext) -> PluginNotificatio
         "CONTACTALIAS",
         "CONTACTNAME",
         "CONTACTEMAIL",
+        "EVENT_TXT",  # already constructed on context creation
         "PARAMETER_BULK_SUBJECT",
         "PARAMETER_HOST_SUBJECT",
         "PARAMETER_SERVICE_SUBJECT",

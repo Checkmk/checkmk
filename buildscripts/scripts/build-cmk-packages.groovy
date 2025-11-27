@@ -313,26 +313,28 @@ def main() {
         }
     }
 
-    smart_stage(
-        name: "Deploy to website",
-        condition: deploy_to_website,
-    ) {
-        smart_build(
-            use_upstream_build: true,
-            relative_job_name: "${branch_base_folder}/deploy-to-website",
-            build_params: [
-                VERSION: params.VERSION,
-                CIPARAM_REMOVE_RC_CANDIDATES: params.CIPARAM_REMOVE_RC_CANDIDATES,
-                CUSTOM_GIT_REF: effective_git_ref,
-                DISABLE_CACHE: params.DISABLE_CACHE,
-            ],
-            build_params_no_check: [
-                CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-            ],
-            download: false,
-        );
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        smart_stage(
+            name: "Deploy to website",
+            condition: deploy_to_website,
+        ) {
+            smart_build(
+                use_upstream_build: true,
+                relative_job_name: "${branch_base_folder}/deploy-to-website",
+                build_params: [
+                    VERSION: params.VERSION,
+                    CIPARAM_REMOVE_RC_CANDIDATES: params.CIPARAM_REMOVE_RC_CANDIDATES,
+                    CUSTOM_GIT_REF: effective_git_ref,
+                    DISABLE_CACHE: params.DISABLE_CACHE,
+                ],
+                build_params_no_check: [
+                    CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                    CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                ],
+                download: false,
+            );
+        }
     }
 
     smart_stage(name: "Plot cache hits") {

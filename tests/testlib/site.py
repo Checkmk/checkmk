@@ -1684,12 +1684,6 @@ class Site:
             if re.search("Licensed phase: too many services.", crash_detail):
                 logger.warning("Ignored crash report due to license violation!")
                 continue
-            if re.search("CollectorComponentsMetadata", crash_detail):
-                logger.warning("Ignored crash report due to CMK-27649.")
-                continue
-            if re.search("CollectorProcessingLogs", crash_detail):
-                logger.warning("Ignored crash report due to CMK-27648.")
-                continue
             if re.search("SectionVMInfo", crash_detail):
                 logger.warning("Ignored crash report due to CMK-27875.")
                 continue

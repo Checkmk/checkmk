@@ -365,7 +365,6 @@ class Site:
     def reschedule_services(
         self,
         hostname: str,
-        service_description: str = "Check_MK",
         max_count: int = 10,
         strict: bool = True,
         wait_timeout: int | None = None,
@@ -390,7 +389,7 @@ class Site:
                 hostname,
                 pformat(pending_services),
             )
-            self.schedule_check(hostname, service_description, 0, wait_timeout)
+            self.schedule_check(hostname, "Check_MK", 0, wait_timeout)
             count += 1
 
         if strict:
@@ -454,10 +453,9 @@ class Site:
         pending: bool | None = None,
         extra_columns: Sequence[str] = (),
     ) -> dict[str, ServiceInfo]:
-        """Return dict for all services of the given host.
+        """Return dict for all services in the given site and host.
 
         If pending=True, return the pending services only.
-        If pending=False, return the non-pending services only.
         """
         services = {}
 

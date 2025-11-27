@@ -139,10 +139,10 @@ CDP_GLOBAL_ATTRIBUTE = Attributes(
 )
 
 CDP_NEIGHBOR_ATTRIBUTE = TableRow(
-    path=["networking", "cdp_cache", "neighbours"],
+    path=["networking", "cdp_cache", "neighbors"],
     key_columns={
-        "neighbour_name": "SCHE-CH-BASEL-SW-1",
-        "neighbour_port": "FastEthernet0/1",
+        "neighbor_name": "SCHE-CH-BASEL-SW-1",
+        "neighbor_port": "FastEthernet0/1",
         "local_port": "Gi0/0",
     },
     inventory_columns={

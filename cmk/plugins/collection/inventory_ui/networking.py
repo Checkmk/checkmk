@@ -528,18 +528,18 @@ node_networking_cdp_cache = Node(
     title=Title("CDP cache"),
 )
 
-node_networking_cdp_cache_neighbours = Node(
-    name="networking_cdp_cache_neighbours",
-    path=["networking", "cdp_cache", "neighbours"],
+node_networking_cdp_cache_neighbors = Node(
+    name="networking_cdp_cache_neighbors",
+    path=["networking", "cdp_cache", "neighbors"],
     title=Title("CDP neighbors"),
     table=Table(
         view=View(name="invcdpcache", title=Title("CDP neighbors")),
         columns={
-            "neighbour_name": TextField(Title("Neighbor name")),
-            "neighbour_port": TextField(Title("Neighbor port")),
+            "neighbor_name": TextField(Title("Neighbor name")),
+            "neighbor_port": TextField(Title("Neighbor port")),
             "local_port": TextField(Title("Local port")),
-            "neighbour_address": TextField(Title("Neighbor address")),
-            "neighbour_id": TextField(Title("Neighbor ID")),
+            "neighbor_address": TextField(Title("Neighbor address")),
+            "neighbor_id": TextField(Title("Neighbor ID")),
             "platform": TextField(Title("Neighbor platform")),
             "platform_details": TextField(Title("Neighbor platform details")),
             "capabilities": TextField(Title("Capabilities")),

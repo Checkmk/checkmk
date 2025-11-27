@@ -380,7 +380,7 @@ def parse_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
         except ValueError:
             continue
 
-        # skip neighbour if one of the key columns is None
+        # skip neighbor if one of the key columns is None
         if not (neighbor_id := _get_device_id(str(device_id))):
             continue
         if not (neighbor_port := _get_device_port(str(device_port))):
@@ -452,7 +452,7 @@ def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResul
             },
         )
 
-    path = path + ["neighbours"]
+    path = path + ["neighbors"]
     for neighbor in section.cdp_neighbors:
         neighbor_id = neighbor.neighbor_id
         if params["remove_domain"]:
@@ -468,14 +468,14 @@ def inventory_cdp_cache(params: InventoryParams, section: Cdp) -> InventoryResul
             local_port = _get_short_if_name(local_port)
 
         key_columns = {
-            "neighbour_name": neighbor_id,
-            "neighbour_port": neighbor_port,
+            "neighbor_name": neighbor_id,
+            "neighbor_port": neighbor_port,
             "local_port": local_port,
         }
 
         inventory_columns = {}
         for key, value in [
-            ("neighbour_address", neighbor.address),
+            ("neighbor_address", neighbor.address),
             ("platform_details", neighbor.platform_details),
             ("platform", neighbor.platform),
             ("capabilities", neighbor.capabilities),
@@ -502,7 +502,7 @@ snmp_section_inv_cdp_cache = SNMPSection(
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.23.1.2.1.1",  # CISCO-CDP-MIB::cdpCacheEntry
             oids=[
-                OIDEnd(),  # ifIndex.neighbour-index-on-interface
+                OIDEnd(),  # ifIndex.neighbor-index-on-interface
                 "3",  # cdpCacheAddressType
                 "4",  # cdpCacheAddress
                 "5",  # cdpCacheVersion   # is not version but platform details

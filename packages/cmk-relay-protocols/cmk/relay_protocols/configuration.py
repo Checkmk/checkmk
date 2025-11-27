@@ -69,7 +69,6 @@ class EngineConfig(UserEngineConfig):
     bin_fetcher: Path = Path("/opt/check-mk-relay/bin/fetcher")
     bin_adhoc_fetcher: Path = Path("/opt/check-mk-relay/bin/fetch-ad-hoc")
     num_adhoc_fetchers: int = 4
-    daemon_sleep: float = 0.5
     poll_sleep: float = 0.5
     host_scheduler_sleep: float = 0.5
     poll_history: HistoryConfig = HistoryConfig()

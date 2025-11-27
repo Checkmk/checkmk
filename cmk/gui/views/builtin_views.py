@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -5013,13 +5010,8 @@ _host_view_context = {
     "siteopt": {"site": ""},
 }
 
-
-def _simple_host_view(custom_attributes, add_context=None):
-    context = _host_view_context.copy()
-    if add_context:
-        context.update(add_context)
-
-    view_spec = {
+_host_view_spec = ViewSpec(
+    {
         "browser_reload": 30,
         "column_headers": "pergroup",
         "datasource": "hosts",
@@ -5033,7 +5025,7 @@ def _simple_host_view(custom_attributes, add_context=None):
         "num_columns": 1,
         "play_sounds": False,
         "user_sortable": True,
-        "context": context,
+        "context": {},
         "group_painters": [
             ColumnSpec(name="sitealias"),
         ],
@@ -5049,14 +5041,20 @@ def _simple_host_view(custom_attributes, add_context=None):
         "is_show_more": False,
         "packaged": False,
         "main_menu_search_terms": [],
+        # Will be overwritten
+        "name": "",
+        "add_context_to_title": True,
+        "title": "",
+        "description": "",
+        "topic": "",
+        "sort_index": 0,
     }
-
-    view_spec.update(custom_attributes)
-    return view_spec
+)
 
 
-builtin_views["docker_nodes"] = _simple_host_view(
+builtin_views["docker_nodes"] = ViewSpec(
     {
+        **_host_view_spec,
         "title": _l("Docker nodes"),
         "topic": "applications",
         "icon": "docker",
@@ -5074,17 +5072,19 @@ builtin_views["docker_nodes"] = _simple_host_view(
             ColumnSpec(name="inv_software_applications_docker_num_containers_stopped"),
         ],
         "name": "docker_nodes",
-    },
-    add_context={
-        "host_labels": filter_http_vars_for_simple_label_group(
-            labels=["cmk/docker_object:node"],
-            object_type="host",
-        )
+        "context": {
+            **_host_view_context,
+            "host_labels": filter_http_vars_for_simple_label_group(
+                labels=["cmk/docker_object:node"],
+                object_type="host",
+            ),
+        },
     },
 )
 
-builtin_views["docker_containers"] = _simple_host_view(
+builtin_views["docker_containers"] = ViewSpec(
     {
+        **_host_view_spec,
         "title": _l("Docker containers"),
         "topic": "applications",
         "icon": "docker",
@@ -5110,17 +5110,19 @@ builtin_views["docker_containers"] = _simple_host_view(
             ),
         ],
         "name": "docker_containers",
-    },
-    add_context={
-        "host_labels": filter_http_vars_for_simple_label_group(
-            labels=["cmk/docker_object:container"],
-            object_type="host",
-        )
+        "context": {
+            **_host_view_context,
+            "host_labels": filter_http_vars_for_simple_label_group(
+                labels=["cmk/docker_object:container"],
+                object_type="host",
+            ),
+        },
     },
 )
 
-builtin_views["vsphere_servers"] = _simple_host_view(
+builtin_views["vsphere_servers"] = ViewSpec(
     {
+        **_host_view_spec,
         "title": _l("vSphere Servers"),
         "topic": "applications",
         "icon": "vsphere",
@@ -5131,17 +5133,19 @@ builtin_views["vsphere_servers"] = _simple_host_view(
         "add_context_to_title": False,
         "painters": host_view_painters,
         "name": "vsphere_servers",
-    },
-    add_context={
-        "host_labels": filter_http_vars_for_simple_label_group(
-            labels=["cmk/vsphere_object:server"],
-            object_type="host",
-        )
+        "context": {
+            **_host_view_context,
+            "host_labels": filter_http_vars_for_simple_label_group(
+                labels=["cmk/vsphere_object:server"],
+                object_type="host",
+            ),
+        },
     },
 )
 
-builtin_views["vpshere_vms"] = _simple_host_view(
+builtin_views["vpshere_vms"] = ViewSpec(
     {
+        **_host_view_spec,
         "title": _l("vSphere VMs"),
         "topic": "applications",
         "icon": "vsphere",
@@ -5170,12 +5174,13 @@ builtin_views["vpshere_vms"] = _simple_host_view(
             ),
         ],
         "name": "vpshere_vms",
-    },
-    add_context={
-        "host_labels": filter_http_vars_for_simple_label_group(
-            labels=["cmk/vsphere_object:vm"],
-            object_type="host",
-        )
+        "context": {
+            **_host_view_context,
+            "host_labels": filter_http_vars_for_simple_label_group(
+                labels=["cmk/vsphere_object:vm"],
+                object_type="host",
+            ),
+        },
     },
 )
 

@@ -10,6 +10,7 @@ import httpx
 from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
+from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationResponse
@@ -70,6 +71,7 @@ class AgentReceiverClient:
             params = {"status": status}
         return self.client.get(
             f"/{self.site_name}/relays/{relay_id}/tasks",
+            headers={INJECTED_UUID_HEADER: relay_id},
             params=params,
         )
 
@@ -78,6 +80,7 @@ class AgentReceiverClient:
     ) -> httpx.Response:
         return self.client.patch(
             f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
+            headers={INJECTED_UUID_HEADER: relay_id},
             json={
                 "result_type": result_type,
                 "result_payload": result_payload,
@@ -92,6 +95,7 @@ class AgentReceiverClient:
     ) -> httpx.Response:
         return self.client.post(
             f"/{self.site_name}/relays/{relay_id}/monitoring",
+            headers={INJECTED_UUID_HEADER: relay_id},
             json=monitoring_data.model_dump(mode="json"),
         )
 

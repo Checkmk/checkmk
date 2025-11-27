@@ -1898,9 +1898,10 @@ class AgentReceiverRelayAPI(ARBaseAPI):
             raise UnexpectedResponse.from_response(response)
         return TaskCreateResponse.model_validate(response.json())
 
-    def get_tasks(self, relay_id: str) -> list[TaskResponse]:
+    def get_tasks(self, relay_id: str, cert: tuple[str, str]) -> list[TaskResponse]:
         response = self.session.get(
             url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/tasks"),
+            cert=cert,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

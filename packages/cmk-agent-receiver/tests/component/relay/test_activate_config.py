@@ -142,9 +142,8 @@ def test_new_relays_when_activation_performed(
     # Assert each relay has exactly one pending config task with correct serial
     _assert_single_pending_config_task(agent_receiver, config_a, relay_id_a)
     _assert_single_pending_config_task(agent_receiver, config_a, relay_id_b)
-
-    with pytest.raises(AssertionError):
-        get_relay_tasks(agent_receiver, relay_id_c)
+    tasks = get_relay_tasks(agent_receiver, relay_id_c)
+    assert len(tasks.tasks) == 0
 
     # Add new relay in the site mock
     site_client.post(
@@ -204,8 +203,10 @@ def test_removed_relays_when_activation_performed(
 
     # Assert each relay has the new pending config task with correct serial
     _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_b)
-    with pytest.raises(AssertionError):
-        get_relay_tasks(agent_receiver, relay_id_a)
+
+    # Currently tasks for removed relays are not deleted. They remain in the system.
+    # This case must be handled eventually if proper logic for removed relays is defined.
+    _assert_pending_config_task_is_present(agent_receiver, config_a, relay_id_a)
 
 
 def test_activation_with_no_relays(

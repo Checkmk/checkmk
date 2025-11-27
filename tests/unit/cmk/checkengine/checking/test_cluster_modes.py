@@ -135,9 +135,12 @@ def test_notice_propagation_if_OK(vsm: value_store.ValueStoreManager) -> None:
             }
         )
     ) == [
-        Result(state=State.OK, summary="Worst: [Nodett]"),
-        Result(state=State.OK, notice="[Nodett]: notice text moved to details"),
-        Result(state=State.OK, notice="[Nodett]: yeah details"),
+        Result(state=State.OK, notice="Cluster mode: Worst, Worst node: Nodett"),
+        Result(
+            state=State.OK,
+            notice="Results from node: Nodett",
+            details="\nResults from node: Nodett\nnotice text moved to details\nyeah details",
+        ),
     ]
 
 
@@ -172,10 +175,14 @@ def test_cluster_check_worst_others_are_notice_only(vsm: value_store.ValueStoreM
             },
         )
     ) == [
-        Result(state=State.OK, summary="Worst: [Nodett]"),
-        Result(state=State.CRIT, summary="Hi", details="[Nodett]: Hi"),
-        Result(state=State.OK, summary="Additional results from: [Nomo]"),
-        Result(state=State.OK, notice="[Nomo]: Hi(!)"),
+        Result(state=State.OK, notice="Cluster mode: Worst, Worst node: Nodett"),
+        Result(state=State.OK, notice="\nAggregating results from host(s): Nodett, Nomo"),
+        Result(state=State.CRIT, summary="Hi", details="\nResults from node: Nodett\nHi(!!)"),
+        Result(
+            state=State.OK,
+            notice="Results from node: Nomo",
+            details="\nResults from node: Nomo\nHi(!)",
+        ),
     ]
 
 
@@ -250,10 +257,16 @@ def test_cluster_check_best_empty_results_are_ignored(vsm: value_store.ValueStor
             section={"Nodett": [2], "Nomo": [1], "NoResults": []},
         )
     ) == [
-        Result(state=State.OK, summary="Best: [Nomo]"),
-        Result(state=State.WARN, summary="Hi", details="[Nomo]: Hi"),
-        Result(state=State.OK, summary="Additional results from: [Nodett]"),
-        Result(state=State.OK, notice="[Nodett]: Hi(!!)"),
+        Result(state=State.OK, notice="Cluster mode: Best, Best node: Nomo"),
+        Result(
+            state=State.OK, notice="\nAggregating results from host(s): NoResults, Nodett, Nomo"
+        ),
+        Result(state=State.WARN, summary="Hi", details="\nResults from node: Nomo\nHi(!)"),
+        Result(
+            state=State.OK,
+            notice="Results from node: Nodett",
+            details="\nResults from node: Nodett\nHi(!!)",
+        ),
     ]
 
 
@@ -268,10 +281,14 @@ def test_cluster_check_best_others_are_notice_only(vsm: value_store.ValueStoreMa
             },
         )
     ) == [
-        Result(state=State.OK, summary="Best: [Nomo]"),
-        Result(state=State.WARN, summary="Hi", details="[Nomo]: Hi"),
-        Result(state=State.OK, summary="Additional results from: [Nodett]"),
-        Result(state=State.OK, notice="[Nodett]: Hi(!!)"),
+        Result(state=State.OK, notice="Cluster mode: Best, Best node: Nomo"),
+        Result(state=State.OK, notice="\nAggregating results from host(s): Nodett, Nomo"),
+        Result(state=State.WARN, summary="Hi", details="\nResults from node: Nomo\nHi(!)"),
+        Result(
+            state=State.OK,
+            notice="Results from node: Nodett",
+            details="\nResults from node: Nodett\nHi(!!)",
+        ),
     ]
 
 
@@ -330,7 +347,11 @@ def test_cluster_check_failover_others_are_notice_only(vsm: value_store.ValueSto
             },
         )
     )[3:] == [
-        Result(state=State.OK, notice="[Nomo]: Hi(!)"),
+        Result(
+            state=State.OK,
+            notice="Results from node: Nomo",
+            details="\nResults from node: Nomo\nHi(!)",
+        ),
     ]
 
 
@@ -373,15 +394,19 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(
 
 
 @pytest.mark.parametrize(
-    "node_results, expected_primary_result, expected_secondary_result",
+    [
+        "node_results",
+        "levels",
+        "expected_general_results",
+        "expected_primary_result",
+        "expected_secondary_result",
+    ],
     [
         pytest.param(
             cluster_mode.NodeResults(
                 results={
-                    HostName("Nodebert"): [
-                        Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")
-                    ],
-                    HostName("Nodett"): [Result(state=State.OK, notice="[Nodett]: CPU load: 0.00")],
+                    HostName("Nodebert"): [Result(state=State.OK, notice="CPU load: 0.00")],
+                    HostName("Nodett"): [Result(state=State.OK, notice="CPU load: 0.00")],
                 },
                 metrics={
                     HostName("Nodebert"): [Metric("CPULoad", 0.00335345)],
@@ -389,20 +414,161 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(
                 },
                 ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
             ),
+            (0.0, 0.0),
             [
-                Result(state=State.OK, summary="Best: [Nodebert]"),
-                Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00"),
+                Result(
+                    state=State.OK,
+                    notice="Cluster details",
+                    details="Cluster mode: Best, Best node: Nodebert, Preferred node: Nodebert",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Additional results from: Nodebert, Nodett",
+                    details="\nAdditional results from: Nodebert, Nodett",
+                ),
             ],
             [
-                Result(state=State.CRIT, summary="Additional results from: [Nodett]"),
-                Result(state=State.OK, notice="[Nodett]: CPU load: 0.00"),
+                Result(
+                    state=State.OK,
+                    notice="Results from node: Nodebert",
+                    details="\nResults from node: Nodebert\nCPU load: 0.00",
+                ),
+            ],
+            [
+                Result(
+                    state=State.OK,
+                    notice="Results from node: Nodett",
+                    details="\nResults from node: Nodett\nCPU load: 0.00",
+                ),
             ],
             id="notice only",
+        ),
+        pytest.param(
+            cluster_mode.NodeResults(
+                results={
+                    HostName("Nodebert"): [
+                        Result(state=State.CRIT, summary="Really bad"),
+                    ],
+                    HostName("Nodett"): [Result(state=State.WARN, summary="Not so bad")],
+                },
+                metrics={
+                    HostName("Nodebert"): [],
+                    HostName("Nodett"): [],
+                },
+                ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
+            ),
+            (float("inf"), float("inf")),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Cluster details",
+                    details="Cluster mode: Best, Best node: Nodett, Preferred node: Nodebert",
+                ),
+                Result(state=State.OK, notice="\nAdditional results from: Nodebert, Nodett"),
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Not so bad",
+                    details="\nResults from node: Nodett\nNot so bad(!)",
+                )
+            ],
+            [
+                Result(
+                    state=State.OK,
+                    notice="Results from node: Nodebert",
+                    details="\nResults from node: Nodebert\nReally bad(!!)",
+                )
+            ],
+            id="no OK results",
+        ),
+        pytest.param(
+            cluster_mode.NodeResults(
+                results={
+                    HostName("Nodebert"): [
+                        Result(state=State.CRIT, summary="Really bad(!)"),
+                    ],
+                    HostName("Nodett"): [Result(state=State.WARN, summary="Not so bad(!)")],
+                },
+                metrics={
+                    HostName("Nodebert"): [],
+                    HostName("Nodett"): [],
+                },
+                ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
+            ),
+            (float("inf"), float("inf")),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Cluster details",
+                    details="Cluster mode: Best, Best node: Nodett, Preferred node: Nodebert",
+                ),
+                Result(state=State.OK, notice="\nAdditional results from: Nodebert, Nodett"),
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Not so bad",
+                    details="\nResults from node: Nodett\nNot so bad(!)",
+                )
+            ],
+            [
+                Result(
+                    state=State.OK,
+                    notice="Results from node: Nodebert",
+                    details="\nResults from node: Nodebert\nReally bad(!!)",
+                )
+            ],
+            id="legacy results with markers",
+        ),
+        pytest.param(
+            cluster_mode.NodeResults(
+                results={
+                    HostName("Nodebert"): [
+                        Result(state=State.CRIT, summary="Really bad(!)"),
+                    ],
+                    HostName("Nodett"): [
+                        Result(state=State.WARN, summary="Not so bad(!)"),
+                        Result(state=State.OK, summary="Some innocent info"),
+                    ],
+                },
+                metrics={
+                    HostName("Nodebert"): [],
+                    HostName("Nodett"): [],
+                },
+                ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
+            ),
+            (float("inf"), float("inf")),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Cluster details",
+                    details="Cluster mode: Best, Best node: Nodett, Preferred node: Nodebert",
+                ),
+                Result(state=State.OK, notice="\nAdditional results from: Nodebert, Nodett"),
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Not so bad, Some innocent info",
+                    details="\nResults from node: Nodett\nNot so bad(!)\nSome innocent info",
+                )
+            ],
+            [
+                Result(
+                    state=State.OK,
+                    notice="Results from node: Nodebert",
+                    details="\nResults from node: Nodebert\nReally bad(!!)",
+                )
+            ],
+            id="multiple results per host",
         ),
     ],
 )
 def test_summarizer_result_generation(
     node_results: cluster_mode.NodeResults,
+    levels: tuple[float, float],
+    expected_general_results: CheckResult,
     expected_primary_result: CheckResult,
     expected_secondary_result: CheckResult,
 ) -> None:
@@ -413,25 +579,27 @@ def test_summarizer_result_generation(
         selector=State.best,
         preferred=clusterization_parameters.get("primary_node"),
         unpreferred_node_state=State.WARN,
-        levels_additional_nodes_count=(0.0, 0.0),
+        levels_additional_nodes_count=levels,
     )
 
+    assert expected_general_results == list(summarizer.general_results())
     assert expected_primary_result == list(summarizer.primary_results())
     assert expected_secondary_result == list(summarizer.secondary_results())
 
 
 @pytest.mark.parametrize(
-    "node_results, expected_primary_result, expected_secondary_result",
+    [
+        "node_results",
+        "expected_general_results",
+        "expected_primary_result",
+        "expected_secondary_result",
+    ],
     [
         pytest.param(
             cluster_mode.NodeResults(
                 results={
-                    HostName("Nodebert"): [
-                        Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")
-                    ],
-                    HostName("Nodett"): [
-                        Result(state=State.CRIT, notice="[Nodett]: CPU load: 0.00")
-                    ],
+                    HostName("Nodebert"): [Result(state=State.OK, notice="CPU load: 0.00")],
+                    HostName("Nodett"): [Result(state=State.CRIT, notice="CPU load: 0.00")],
                 },
                 metrics={
                     HostName("Nodebert"): [Metric("CPULoad", 0.00335345)],
@@ -440,14 +608,30 @@ def test_summarizer_result_generation(
                 ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
             ),
             [
-                Result(state=State.OK, summary="Active: [Nodebert]"),
-                Result(state=State.CRIT, summary="[Nodett]: CPU load: 0.00"),
+                Result(
+                    state=State.OK,
+                    notice="Cluster details",
+                    details="Cluster mode: Failover, Worst node: Nodett, Preferred node: Nodebert",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="More than one node are reporting results: Nodebert, Nodett",
+                    details="\nMore than one node are reporting results: Nodebert, Nodett",
+                ),
             ],
             [
                 Result(
-                    state=State.CRIT, summary="More than one node are reporting results: [Nodebert]"
+                    state=State.CRIT,
+                    summary="CPU load: 0.00",
+                    details="\nResults from node: Nodett\nCPU load: 0.00(!!)",
                 ),
-                Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00"),
+            ],
+            [
+                Result(
+                    state=State.OK,
+                    notice="Results from node: Nodebert",
+                    details="\nResults from node: Nodebert\nCPU load: 0.00",
+                ),
             ],
             id="notice only",
         ),
@@ -455,6 +639,7 @@ def test_summarizer_result_generation(
 )
 def test_summarizer_result_generation_for_failover(
     node_results: cluster_mode.NodeResults,
+    expected_general_results: CheckResult,
     expected_primary_result: CheckResult,
     expected_secondary_result: CheckResult,
 ) -> None:
@@ -469,5 +654,6 @@ def test_summarizer_result_generation_for_failover(
         levels_additional_nodes_count=(0.0, 0.0),
     )
 
+    assert expected_general_results == list(summarizer.general_results())
     assert expected_primary_result == list(summarizer.primary_results())
     assert expected_secondary_result == list(summarizer.secondary_results())

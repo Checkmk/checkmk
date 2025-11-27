@@ -79,7 +79,7 @@ def get_cluster_check_function(
             executor=executor,
             check_function=plugin.check_function,
             cluster_mode=mode,
-            additional_nodes_label="Additional results from:",
+            additional_nodes_label="Aggregating results from host(s):",
             selector=State.worst,
             levels_additional_nodes_count=(_INF, _INF),
             unpreferred_node_state=State.OK,
@@ -92,7 +92,7 @@ def get_cluster_check_function(
             executor=executor,
             check_function=plugin.check_function,
             cluster_mode=mode,
-            additional_nodes_label="Additional results from:",
+            additional_nodes_label="Aggregating results from host(s):",
             selector=State.best,
             levels_additional_nodes_count=(_INF, _INF),
             unpreferred_node_state=State.OK,
@@ -167,22 +167,25 @@ class Summarizer:
         else:
             self._active = self._pivoting
 
+        self._secondary_nodes = sorted(
+            node
+            for node, results in self._node_results.results.items()
+            if node != self._pivoting and results
+        )
+
     def __call__(self) -> CheckResult:
         if self.is_empty():
             self.raise_for_ignores()
             return
 
+        yield from self.general_results()
         yield from self.primary_results()
         yield from self.secondary_results()
         yield from self.metrics()
 
     @property
     def _label(self) -> str:
-        return {
-            "failover": "Active",
-            "worst": "Worst",
-            "best": "Best",
-        }.get(self._cluster_mode, "Active")
+        return "Best" if self._cluster_mode == "best" else "Worst"
 
     @staticmethod
     def _get_selected_nodes(
@@ -210,46 +213,92 @@ class Summarizer:
         ]:
             raise IgnoreResultsError(", ".join(msgs))
 
-    def primary_results(self) -> Iterable[Result]:
-        if self.is_preferred_node_active():
-            yield Result(state=State.OK, summary=f"{self._label}: [{self._active}]")
-        else:
-            yield Result(
-                state=self._unpreferred_node_state,
-                summary=f"{self._label}: [{self._active}]",
-                details=f"{self._label}: [{self._active}], Preferred node is [{self._preferred}]",
-            )
-        yield from self._node_results.results[self._pivoting]
+    def general_results(self) -> Iterable[Result]:
+        """
+        Generate results about the cluster configuration
+        """
+        details_header = [
+            f"Cluster mode: {self._cluster_mode.title()}",
+            f"{self._label} node: {self._pivoting}",
+        ]
+        if self._preferred:
+            details_header.append(f"Preferred node: {self._preferred}")
 
-    def secondary_results(self) -> Iterable[Result]:
-        secondary_nodes = sorted(
-            node
-            for node, results in self._node_results.results.items()
-            if node != self._pivoting and results
-        )
-        if not secondary_nodes:
+        yield Result(state=State.OK, notice="Cluster details", details=", ".join(details_header))
+
+        if not self._secondary_nodes:
             return
 
+        summary = f"{self._additional_node_label} {', '.join(self._node_results.results)}"
         yield Result(
-            state=self._secondary_nodes_state(secondary_nodes, self._levels_additional_nodes_count),
-            summary=f"{self._additional_node_label} {', '.join(f'[{n}]' for n in secondary_nodes)}",
-        )
-        yield from (
-            Result(
-                state=State.OK,
-                notice=r.summary if r.summary else r.details,
-                details=f"{r.details}{state_markers[int(r.state)]}",
-            )
-            for node in secondary_nodes
-            for r in self._node_results.results[node]
+            state=self._secondary_nodes_state(self._levels_additional_nodes_count),
+            notice=summary,
+            details="\n" + summary,
         )
 
+    def primary_results(self) -> Iterable[Result]:
+        """
+        Return the results from the primary/pivoting/active node
+        """
+        results = self._node_results.results[self._pivoting]
+        details = [f"Results from node: {self._pivoting}"] + [
+            self._add_state_marker_to_details(r.details, state_markers[int(r.state)])
+            for r in results
+        ]
+        best_possible_state = (
+            State.OK if self.is_preferred_node_active() else self._unpreferred_node_state
+        )
+
+        state = State.worst(best_possible_state, *(r.state for r in results))
+        summary = ", ".join(self._remove_state_markers(r.summary) for r in results if r.summary)
+
+        if state is State.OK and not summary:
+            yield Result(
+                state=state,
+                notice=f"Results from node: {self._pivoting}",
+                details="\n" + "\n".join(details),
+            )
+        else:
+            yield Result(state=state, summary=summary, details="\n" + "\n".join(details))
+
+    def secondary_results(self) -> Iterable[Result]:
+        """
+        Return the results from the remaining nodes
+        """
+        for node in self._secondary_nodes:
+            yield Result(
+                state=State.OK,
+                notice=f"Results from node: {node}",
+                details=f"\nResults from node: {node}\n"
+                + "\n".join(
+                    self._add_state_marker_to_details(r.details, state_markers[int(r.state)])
+                    for r in self._node_results.results[node]
+                ),
+            )
+
     @staticmethod
+    def _remove_state_markers(summary_or_details: str) -> str:
+        # Legacy checks may already add state markers to details.
+        # TODO: Remove this workaround after all legacy checks are converted.
+        cleaned = summary_or_details
+        for m in state_markers:
+            cleaned = cleaned.replace(m, "")
+        return cleaned
+
+    @staticmethod
+    def _add_state_marker_to_details(details: str, marker: str) -> str:
+        # Legacy checks may already add state markers to details.
+        # TODO: Remove this workaround after all legacy checks are converted.
+        if marker in details:
+            return details
+
+        return f"{Summarizer._remove_state_markers(details)}{marker}"
+
     def _secondary_nodes_state(
-        secondary_nodes: Sequence[str],
+        self,
         levels: tuple[float, float],
     ) -> State:
-        count = len(secondary_nodes)
+        count = len(self._secondary_nodes)
         return State.CRIT if count >= levels[1] else State(count >= levels[0])
 
     def metrics(self) -> CheckResult:
@@ -259,7 +308,7 @@ class Summarizer:
 
         yield Result(
             state=State.OK,
-            notice=f"[{used_node}] Metrics: {', '.join(m.name for m in metrics)}",
+            notice=f"Metrics from node {used_node}: {', '.join(m.name for m in metrics)}",
         )
         yield from metrics
 
@@ -290,9 +339,7 @@ class NodeCheckExecutor:
             )
             metrics[node] = [e for e in elements if isinstance(e, Metric)]
             ignores[node] = [e for e in elements if isinstance(e, IgnoreResults)]
-            results[node] = [
-                self._add_node_name(e, node) for e in elements if isinstance(e, Result)
-            ]
+            results[node] = [e for e in elements if isinstance(e, Result)]
 
         return NodeResults(results, metrics, ignores)
 
@@ -333,11 +380,3 @@ class NodeCheckExecutor:
                 return list(result_generator)
             except IgnoreResultsError as exc:
                 return [IgnoreResults(str(exc))]
-
-    @staticmethod
-    def _add_node_name(result: Result, node_name: str) -> Result:
-        return Result(
-            state=result.state,
-            summary="FAKE",
-            details="\n".join(f"[{node_name}]: {line}" for line in result.details.splitlines()),
-        )._replace(summary=result.summary)

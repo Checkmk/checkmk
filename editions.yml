@@ -53,7 +53,7 @@ editions:
         daily_tests: *daily_reduced
         fips: [*fips_distros]
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*common]
+        daily_update_tests: [*daily_reduced]
         weekly: [*common, *cma_distros]
         testbuild: ["ubuntu-24.04", "sles-15sp7", "cma-4"]
     ultimate:
@@ -71,7 +71,7 @@ editions:
         daily_tests: [*common]
         fips: []
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_reduced]
+        daily_update_tests: [*common]
         weekly: *daily_reduced
         testbuild: []
     community:

@@ -107,17 +107,16 @@ def test_host_config(
 ) -> None:
     hostname = HostName(hostname_str)
     with live(expect_status_query=False):
-        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(["GET status", "Columns: program_start"])
         live.expect_query(
             [
                 "GET hosts",
                 "Columns: name alias address custom_variables contacts contact_groups groups",
-                "ColumnHeaders: on",
             ]
         )
         assert host_config.get_config_for_host(hostname) == result
         # Data is cached and not queried twice.
-        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(["GET status", "Columns: program_start"])
         assert host_config.get_config_for_host(hostname) == result
 
 
@@ -140,17 +139,16 @@ def test_host_config_get_canonical_name(
     result: HostName | None,
 ) -> None:
     with live(expect_status_query=False):
-        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(["GET status", "Columns: program_start"])
         live.expect_query(
             [
                 "GET hosts",
                 "Columns: name alias address custom_variables contacts contact_groups groups",
-                "ColumnHeaders: on",
             ]
         )
         assert host_config.get_canonical_name(search_term) == result
 
-        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(["GET status", "Columns: program_start"])
         assert host_config.get_canonical_name(search_term) == result
 
 
@@ -158,12 +156,11 @@ def test_host_config_get_canonical_name_is_cached_updated(
     host_config: HostConfig, live: MockLiveStatusConnection
 ) -> None:
     with live(expect_status_query=False):
-        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(["GET status", "Columns: program_start"])
         live.expect_query(
             [
                 "GET hosts",
                 "Columns: name alias address custom_variables contacts contact_groups groups",
-                "ColumnHeaders: on",
             ]
         )
         assert host_config.get_canonical_name("heute alias") == HostName("heute")
@@ -175,15 +172,14 @@ def test_host_config_get_canonical_name_is_cached_updated(
         )
 
         # Original alias is not matching anymore, cache is updated
-        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(["GET status", "Columns: program_start"])
         live.expect_query(
             [
                 "GET hosts",
                 "Columns: name alias address custom_variables contacts contact_groups groups",
-                "ColumnHeaders: on",
             ]
         )
         assert host_config.get_canonical_name("heute alias") is None
 
-        live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
+        live.expect_query(["GET status", "Columns: program_start"])
         assert host_config.get_canonical_name("new alias") == HostName("heute")

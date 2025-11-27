@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 from livestatus import LocalConnection
 
@@ -27,10 +25,8 @@ def query_contactgroups_members(group_names: Iterable[_ContactgroupName]) -> set
         query += f"\nFilter: name = {group_name}"
         num_group_names += 1
     query += f"\nOr: {num_group_names}"
-    contact_lists: list[list[str]] = (
-        LocalConnection().query_column(query) if num_group_names else []
-    )
-    return {UserId(contact) for contact_list in contact_lists for contact in contact_list}
+    rows = LocalConnection().query(query) if num_group_names else []
+    return {UserId(contact) for row in rows for contact in row[0]}
 
 
 class HostInfo(NamedTuple):
@@ -43,39 +39,37 @@ class HostInfo(NamedTuple):
     host_groups: set[_HostGroupName]
 
 
-def _create_host_info(row: Mapping[str, Any]) -> HostInfo:
-    return HostInfo(
-        name=row["name"],
-        alias=row["alias"],
-        address=row["address"],
-        custom_variables=row["custom_variables"],
-        contacts={UserId(c) for c in row["contacts"]},
-        contact_groups=set(row["contact_groups"]),
-        host_groups=set(row["groups"]),
-    )
-
-
 def query_hosts_infos() -> Sequence[HostInfo]:
     return [
-        _create_host_info(row)
-        for row in LocalConnection().query_table_assoc(
+        HostInfo(
+            name=name,
+            alias=alias,
+            address=address,
+            custom_variables=custom_variables,
+            contacts={UserId(contact) for contact in contacts},
+            contact_groups=set(contact_groups),
+            host_groups=set(groups),
+        )
+        for name, alias, address, custom_variables, contacts, contact_groups, groups in LocalConnection().query(
             "GET hosts\nColumns: name alias address custom_variables contacts contact_groups groups"
         )
     ]
 
 
 def query_hosts_scheduled_downtime_depth(host_name: HostName) -> int:
-    return LocalConnection().query_value(
-        f"GET hosts\nColumns: scheduled_downtime_depth\nFilter: host_name = {host_name}"
+    return int(
+        LocalConnection().query(
+            f"GET hosts\nColumns: scheduled_downtime_depth\nFilter: host_name = {host_name}"
+        )[0][0]
     )
 
 
 def query_status_program_start() -> int:
-    return LocalConnection().query_value("GET status\nColumns: program_start")
+    return int(LocalConnection().query("GET status\nColumns: program_start")[0][0])
 
 
 def query_status_enable_notifications() -> bool:
-    return bool(LocalConnection().query_value("GET status\nColumns: enable_notifications"))
+    return bool(LocalConnection().query("GET status\nColumns: enable_notifications")[0][0])
 
 
 def query_timeperiods_in() -> Mapping[TimeperiodName, bool]:

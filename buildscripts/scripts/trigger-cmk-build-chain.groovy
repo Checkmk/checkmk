@@ -55,11 +55,6 @@ def main() {
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
     ];
 
-    def job_parameters_fips = [
-        // build node selection in done base on USE_CASE value
-        USE_CASE: 'fips',
-    ];
-
     job_parameters = job_parameters_common + job_parameters_use_case;
 
     // TODO we should take this list from a single source of truth

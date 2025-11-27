@@ -7,12 +7,12 @@ import logging
 import os
 import threading
 from collections.abc import Iterator
+from pathlib import Path
 from unittest import mock
 
 import pytest
 
 import cmk.ec.export as ec
-import cmk.utils.paths
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
 from cmk.ec.history_file import FileHistory
@@ -34,8 +34,8 @@ from cmk.ec.settings import create_settings
 
 
 @pytest.fixture(name="settings")
-def fixture_settings() -> ec.Settings:
-    return create_settings("1.2.3i45", cmk.utils.paths.omd_root, ["mkeventd"])
+def fixture_settings(tmp_path: Path) -> ec.Settings:
+    return create_settings("1.2.3i45", tmp_path, ["mkeventd"])
 
 
 @pytest.fixture(name="lock_configuration")

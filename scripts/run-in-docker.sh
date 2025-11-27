@@ -111,7 +111,7 @@ if [ -d "${GIT_REFERENCE_CLONE_PATH}" ]; then
 fi
 
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
-: "${CPU_LIMITATION:="--cpus="$(($(nproc) - 3))""}"
+: "${CPU_LIMITATION:="--cpus=8"}"
 
 if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"

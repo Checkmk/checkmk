@@ -3,7 +3,7 @@
 /// file: tests_helper.groovy
 
 // execute tests, catch error and output log
-def execute_test(Map config = [:]) {
+void execute_test(Map config = [:]) {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def safe_branch_name = versioning.safe_branch_name();
 
@@ -37,7 +37,7 @@ def execute_test(Map config = [:]) {
     }
 }
 
-def run_sh_command(cmd) {
+void run_sh_command(cmd) {
     sh("""
         set -o pipefail
         ${cmd}
@@ -48,7 +48,7 @@ def run_sh_command(cmd) {
 // in case 'as_stage' is set false, the parser list will be returned
 // otherwise a publish issue stage is created
 /* groovylint-disable MethodSize, LineLength */
-def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) {
+Object analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) {
     def issues = [];
     def parserId = '';  // used for custom groovyScript parser
 
@@ -296,7 +296,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
 /* groovylint-enable MethodSize, LineLength */
 
 // pusblish issues stage based on given issue parser(s)
-def publish_issue_stages(issues) {
+void publish_issue_stages(issues) {
     if (issues) {
         stage("Publish issues") {
             publishIssues(
@@ -316,7 +316,7 @@ def publish_issue_stages(issues) {
 }
 
 // update custom parser with new configs, existing parsers will be overwritten
-def update_custom_parser(Map config = [:]) {
+void update_custom_parser(Map config = [:]) {
     // update the default map content with the user provided config content
     // new key/value of provided map is automatically added to the defaultDict
     def defaultDict = [
@@ -348,7 +348,7 @@ def update_custom_parser(Map config = [:]) {
 }
 
 // Get registry credentials for a specific edition
-def registry_credentials_id(edition) {
+String registry_credentials_id(edition) {
     switch (edition) {
         case "ultimate":
         case "ultimatemt":
@@ -362,7 +362,7 @@ def registry_credentials_id(edition) {
     }
 }
 
-def assert_fips_testing(use_case, node_labels) {
+void assert_fips_testing(use_case, node_labels) {
     if (use_case == "fips" && !node_labels.contains("fips")) {
         throw new Exception("FIPS testing requested but we're not running on a fips node.");
     }

@@ -4,7 +4,7 @@
 
 import java.time.LocalDate
 
-def main() {
+void main() {
     /// make sure the listed parameters are set
     check_job_parameters([
         "EDITION",

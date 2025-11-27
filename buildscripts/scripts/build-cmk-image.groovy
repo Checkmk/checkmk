@@ -5,7 +5,7 @@
 /// Build Checkmk Docker image
 
 /* groovylint-disable MethodSize */
-def main() {
+void main() {
     check_job_parameters([
         "EDITION",
         "VERSION",

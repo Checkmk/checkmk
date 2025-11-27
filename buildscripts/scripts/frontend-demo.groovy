@@ -2,7 +2,7 @@
 
 /// file: frontend-demo.groovy
 
-def main() {
+void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def safe_branch_name = versioning.safe_branch_name();
     def output_artifacts = "bazel-bin/packages/cmk-frontend-vue/demo/dist";

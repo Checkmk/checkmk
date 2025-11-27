@@ -2,7 +2,7 @@
 
 /// file: test-bazel-lint.groovy
 
-def main() {
+void main() {
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     dir("${checkout_dir}") {

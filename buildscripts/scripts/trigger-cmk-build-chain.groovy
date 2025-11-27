@@ -5,7 +5,7 @@
 import java.time.LocalDate
 
 // groovylint-disable MethodSize
-def main() {
+void main() {
     /// make sure the listed parameters are set
     check_job_parameters([
         "VERSION",

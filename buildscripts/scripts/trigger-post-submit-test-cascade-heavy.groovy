@@ -2,7 +2,7 @@
 
 /// file: trigger-post-submit-test-cascade-heavy.groovy
 
-def main() {
+void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 

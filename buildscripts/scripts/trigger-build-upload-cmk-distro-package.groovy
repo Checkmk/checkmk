@@ -2,7 +2,7 @@
 
 /// file: trigger-build-upload-cmk-distro-package.groovy
 
-def main() {
+void main() {
     check_job_parameters([
         "EDITION",
         "DISTRO",

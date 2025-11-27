@@ -11,7 +11,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 /// Builds all artifacts used for a given Checkmk edition
 // groovylint-disable MethodSize
-def main() {
+void main() {
     check_job_parameters([
         ["EDITION", true],
         ["VERSION", true],  // should be deprecated

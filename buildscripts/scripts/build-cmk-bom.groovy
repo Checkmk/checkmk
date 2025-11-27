@@ -2,7 +2,7 @@
 
 /// file: build-cmk-bom.groovy
 
-def main() {
+void main() {
     check_job_parameters([
         ["VERSION", true],
         ["EDITION", true],

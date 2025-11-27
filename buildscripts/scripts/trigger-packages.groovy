@@ -2,7 +2,7 @@
 
 /// file: trigger-packages.groovy
 
-def main() {
+void main() {
     check_job_parameters([
         "FORCE_BUILD",
     ]);

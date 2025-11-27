@@ -2,17 +2,17 @@
 
 /// file: generic-package-job.groovy
 
-def secret_list(secret_vars) {
+static ArrayList secret_list(String secret_vars) {
     return secret_vars ? secret_vars.split(' ') : [];
 }
 
-def validate_parameters() {
+void validate_parameters() {
     if (COMMAND_LINE == "") {
         error("COMMAND_LINE parameter is empty - you need to specify a command to run.");
     }
 }
 
-def main() {
+void main() {
     check_job_parameters([
         "PACKAGE_PATH",
         "SECRET_VARS",

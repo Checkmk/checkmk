@@ -8,7 +8,7 @@
 import java.text.SimpleDateFormat
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-def main(job_definition_file) {
+void main(job_definition_file) {
     /// brings raise, load_json, cmd_output
     load("${checkout_dir}/buildscripts/scripts/utils/common.groovy");
     load("${checkout_dir}/buildscripts/scripts/utils/docker_util.groovy");

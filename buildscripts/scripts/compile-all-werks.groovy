@@ -2,7 +2,7 @@
 
 /// file: compile-all-werks.groovy
 
-def main() {
+void main() {
     if (params.CUSTOM_GIT_REF != "") {
         raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
     }

@@ -2,7 +2,7 @@
 
 // file: build-mk-oracle-on-aix-and-solaris.groovy
 
-def main() {
+void main() {
     check_job_parameters([
         "VERSION",
     ])

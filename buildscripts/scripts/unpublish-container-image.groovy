@@ -2,7 +2,7 @@
 
 /// file: unpublish-container-image.groovy
 
-def main() {
+void main() {
     // Check for required job params
     check_job_parameters([
         "EDITION",

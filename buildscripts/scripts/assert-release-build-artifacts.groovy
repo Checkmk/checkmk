@@ -3,7 +3,7 @@
 // file: assert-release-build-artifacts.groovy
 
 // groovylint-disable MethodSize
-def main() {
+void main() {
     check_job_parameters([
         "VERSION",
         "USE_CASE",

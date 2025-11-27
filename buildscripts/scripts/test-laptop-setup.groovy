@@ -10,7 +10,7 @@
 /// Other artifacts: ???
 /// Depends on: image aliases for upstream OS images on Nexus, ???
 
-def main() {
+void main() {
     check_environment_variables([
         "NEXUS_ARCHIVES_URL",
     ]);

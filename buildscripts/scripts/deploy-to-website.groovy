@@ -2,7 +2,7 @@
 
 /// file: deploy_to_website.groovy
 
-def main() {
+void main() {
     check_job_parameters([
         ["VERSION", true],
         ["UPDATE_LATEST_BOM_SYMLINKS", true],

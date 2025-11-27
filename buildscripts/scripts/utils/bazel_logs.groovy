@@ -2,15 +2,15 @@
 
 /// file: bazel_logs.groovy
 
-def cache_hits_file_name(distro, bazel_log_prefix) {
+String cache_hits_file_name(distro, bazel_log_prefix) {
     return "${bazel_log_prefix}cache_hits_${distro}.csv";
 }
 
-def summary_file_name(distro, bazel_log_prefix) {
+String summary_file_name(distro, bazel_log_prefix) {
     return "${bazel_log_prefix}execution_summary_${distro}.json";
 }
 
-def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
+void try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
     try {
         dir("${distro_dir}") {
             def summary_file = distro_dir + "/" + summary_file_name(distro, bazel_log_prefix);
@@ -32,7 +32,7 @@ def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
     }
 }
 
-def try_plot_cache_hits(bazel_log_prefix, distros) {
+void try_plot_cache_hits(bazel_log_prefix, distros) {
     try {
         plot(
             csvFileName: 'bazel_cache_hits.csv',

@@ -2,7 +2,7 @@
 
 /// file: winagt-build-modules.groovy
 
-def main() {
+void main() {
     check_job_parameters(
         ["VERSION"],
         ["DISABLE_CACHE", false],

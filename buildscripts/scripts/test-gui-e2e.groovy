@@ -4,7 +4,7 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-def main() {
+void main() {
     check_job_parameters([
         "EDITION",
         "VERSION",

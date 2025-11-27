@@ -2,14 +2,14 @@
 
 /// file: test-agent-plugin-unit.groovy
 
-def get_agent_plugin_python_versions(String git_dir=".") {
+String get_agent_plugin_python_versions(String git_dir=".") {
     dir(git_dir) {
         return (cmd_output("make --no-print-directory --file=defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS")
                 ?: raise("Could not read AGENT_PLUGIN_PYTHON_VERSIONS from defines.make")).split(" ");
     }
 }
 
-def main() {
+void main() {
     def python_versions = get_agent_plugin_python_versions(checkout_dir);
 
     inside_container(

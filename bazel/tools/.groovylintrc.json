@@ -4,7 +4,7 @@
     "convention.CompileStatic": "off",
     "convention.FieldTypeRequired": "error",
     "convention.IfStatementCouldBeTernary": "error",
-    "convention.MethodReturnTypeRequired": "off",
+    "convention.MethodReturnTypeRequired": "error",
     "convention.NoDef": "off",
     "convention.TrailingComma": "warning",
     "convention.VariableTypeRequired": "off",

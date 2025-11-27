@@ -2,7 +2,7 @@
 
 /// file: winagt-test-integration.groovy
 
-def main() {
+void main() {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
 
     stage("Run 'test_integration'") {

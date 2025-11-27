@@ -42,13 +42,13 @@ def REPO_PATCH_RULES = [\
 ];
 /* groovylint-enable DuplicateListLiteral */
 
-def branch_name_is_branch_version(String git_dir=".") {
+boolean branch_name_is_branch_version(String git_dir=".") {
     dir(git_dir) {
         return cmd_output("make --no-print-directory -f defines.make print-BRANCH_NAME_IS_BRANCH_VERSION") ? true : false;
     }
 }
 
-def branch_name() {
+String branch_name() {
     if (params.CUSTOM_GIT_REF) {
         if (branch_name_is_branch_version("${checkout_dir}")) {
             // this is only required as "master" is called "stable branch + 0.1.0"
@@ -63,14 +63,14 @@ def branch_name() {
     }
 }
 
-def safe_branch_name() {
+String safe_branch_name() {
     // "+" can't be part of a docker tag, therefore we remove this.
     // We remove the complete "+security" to only have a regular version as part of our image tag
     return branch_name().replaceAll("/", "-").replaceAll("\\+security", "");
 }
 
 /* groovylint-disable DuplicateListLiteral */
-def get_cmk_version(branch_name, branch_version, version) {
+String get_cmk_version(branch_name, branch_version, version) {
     return (
       // Experimental builds
       (branch_name.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch_name}" :
@@ -81,7 +81,7 @@ def get_cmk_version(branch_name, branch_version, version) {
 }
 /* groovylint-enable DuplicateListLiteral */
 
-def get_package_name(base_dir, package_type, edition, cmk_version) {
+String get_package_name(base_dir, package_type, edition, cmk_version) {
     print("FN get_package_name(base_dir=${base_dir}, package_type=${package_type}, cmk_version=${cmk_version})");
     dir(base_dir) {
         def file_pattern = (package_type == "deb" ?
@@ -92,7 +92,7 @@ def get_package_name(base_dir, package_type, edition, cmk_version) {
     }
 }
 
-def get_distros(Map args) {
+List<String> get_distros(Map args) {
     def override_distros = args.override.trim() ?: "";
 
     /// retrieve all available distros if provided distro-list is 'all',
@@ -117,7 +117,7 @@ def get_distros(Map args) {
     }
 }
 
-def get_editions() {
+List<String> get_editions() {
     /// read editions from edition.yml
     dir("${checkout_dir}") {
         return cmd_output("""python3 \
@@ -128,7 +128,7 @@ def get_editions() {
     }
 }
 
-def get_internal_artifacts_pattern() {
+String get_internal_artifacts_pattern() {
     dir("${checkout_dir}") {
         return sh(script: """python3 \
               buildscripts/scripts/get_distros.py \
@@ -140,14 +140,14 @@ def get_internal_artifacts_pattern() {
     }
 }
 
-def get_branch_version(String git_dir=".") {
+String get_branch_version(String git_dir=".") {
     dir(git_dir) {
         return (cmd_output("make --no-print-directory -f defines.make print-BRANCH_VERSION").trim()
                 ?: raise("Could not read BRANCH_VERSION from defines.make - wrong directory?"));
     }
 }
 
-def get_git_hash(String git_dir=".") {
+String get_git_hash(String git_dir=".") {
     dir(git_dir) {
         return (cmd_output("git log -n 1 --pretty=format:'%h'")
                 ?: raise("Could not read git commit hash - wrong directory?"));
@@ -162,24 +162,24 @@ distro_package_type = { distro ->
       raise("Cannot associate distro ${distro}"));
 }
 
-def get_docker_tag(String git_dir=".") {
+String get_docker_tag(String git_dir=".") {
     return "${safe_branch_name()}-${build_date}-${get_git_hash(git_dir)}";
 }
 
-def get_docker_artifact_name(edition, cmk_version) {
+String get_docker_artifact_name(edition, cmk_version) {
     return "check-mk-${edition}-docker-${cmk_version}.tar.gz";
 }
 
-def select_docker_tag(build_tag, branch_name) {
+String select_docker_tag(build_tag, branch_name) {
     // build_tag > branch_name
     return build_tag ?: "${branch_name}-latest";
 }
 
-def print_image_tag() {
+String print_image_tag() {
     sh("cat /version.txt");
 }
 
-def patch_folders(edition) {
+void patch_folders(edition) {
     REPO_PATCH_RULES[edition]["paths_to_be_removed"].each { FOLDER ->
         sh("find -name ${FOLDER} -exec rm -rf {} ';' || true");
     }
@@ -189,17 +189,17 @@ def patch_folders(edition) {
     }
 }
 
-def set_version(cmk_version) {
+void set_version(cmk_version) {
     sh("make NEW_VERSION=${cmk_version} setversion");
 }
 
-def configure_checkout_folder(edition, cmk_version) {
+void configure_checkout_folder(edition, cmk_version) {
     assert edition in REPO_PATCH_RULES: "edition=${edition} not known";
     patch_folders(edition);
     set_version(cmk_version);
 }
 
-def delete_non_cre_files() {
+void delete_non_cre_files() {
     non_cre_paths = [
         "non-free",
         "nonfree",
@@ -218,11 +218,11 @@ def delete_non_cre_files() {
     """);
 }
 
-def strip_rc_number_from_version(VERSION) {
+String strip_rc_number_from_version(VERSION) {
     return VERSION.split("-rc")[0];
 }
 
-def is_official_release(version) {
+boolean is_official_release(version) {
     // groovylint-disable IfStatementCouldBeTernary
     if (strip_rc_number_from_version(version) ==~ /((\d+.\d+.\d+)(([pib])(\d+))?)/) {
         return true;

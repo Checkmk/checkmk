@@ -2,7 +2,7 @@
 
 /// file: test-plugins-piggyback.groovy
 
-def main() {
+void main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')

@@ -5,7 +5,7 @@
 // Builds a tar.gz which contains announcement text for publishing in the forum and on the mailing list.
 // Artifacts will be consumed by bw-release.
 
-def main() {
+void main() {
     stage("Clean workspace") {
         dir("${checkout_dir}") {
             // We don't want to fill up the workspace with old annoucement files

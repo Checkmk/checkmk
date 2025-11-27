@@ -2,7 +2,7 @@
 
 /// file: create-dependency-update-changeset.groovy
 
-def main() {
+void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def safe_branch_name = versioning.safe_branch_name();
     def repo_name = "check_mk"

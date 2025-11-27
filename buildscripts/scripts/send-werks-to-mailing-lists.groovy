@@ -2,14 +2,14 @@
 
 /// file: send-werks-to-mailing-lists.groovy
 
-def validate_parameters(send_werk_mails, add_werk_git_notes) {
+void validate_parameters(send_werk_mails, add_werk_git_notes) {
     if (send_werk_mails && !add_werk_git_notes) {
         error("Sending the werk mails but not adding the git notes is dangerous: " +
             "We may re-send already published werks again.");
     }
 }
 
-def build_cmd_options_from_params(send_werk_mails, add_werk_git_notes, assume_no_mails_sent_except, werks_mail_address) {
+String build_cmd_options_from_params(send_werk_mails, add_werk_git_notes, assume_no_mails_sent_except, werks_mail_address) {
     // We let the python code fetch the git notes (and not via JJB/groovy) as this may also push the notes.
     def cmd_line = "--do-fetch-git-notes";
 
@@ -32,11 +32,11 @@ def build_cmd_options_from_params(send_werk_mails, add_werk_git_notes, assume_no
     return cmd_line;
 }
 
-def was_timer_triggered() {
+Boolean was_timer_triggered() {
     return currentBuild.rawBuild.getCauses()[0].toString().contains('TimerTriggerCause');
 }
 
-def main() {
+void main() {
     if (params.CUSTOM_GIT_REF != "") {
         raise("The werk jobs are not meant to be triggered with a custom git ref to no miss any werks.");
     }

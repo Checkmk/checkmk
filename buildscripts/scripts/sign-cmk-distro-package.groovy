@@ -5,7 +5,7 @@
 /// Signs a distribution package (.rpm, .dep, etc.) for a given edition/distribution
 /// at a given git hash
 
-def main() {
+void main() {
     check_job_parameters([
         ["EDITION", true],
         ["DISTRO", true],

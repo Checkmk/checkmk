@@ -2,7 +2,7 @@
 
 /// file: notify.groovy
 
-def notify_maintainer_of_package(maintainers, package_name, build_url) {
+void notify_maintainer_of_package(maintainers, package_name, build_url) {
     try {
         mail(
             to: maintainers.join(","),  // TODO: Add the commmiter
@@ -21,7 +21,7 @@ def notify_maintainer_of_package(maintainers, package_name, build_url) {
     }
 }
 
-def notify_error(error) {
+void notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.

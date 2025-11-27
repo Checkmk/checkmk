@@ -4,7 +4,7 @@
 
 /// Build Checkmk Relay image
 
-def main() {
+void main() {
     check_job_parameters([
         "PUSH_TO_REGISTRY",
     ])

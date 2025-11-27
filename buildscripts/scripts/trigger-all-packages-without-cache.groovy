@@ -4,7 +4,7 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-def main() {
+void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 

@@ -2,7 +2,7 @@
 
 /// file: single_tests.groovy
 
-def common_prepare(Map args) {
+Map common_prepare(Map args) {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
@@ -46,7 +46,7 @@ def common_prepare(Map args) {
     return [safe_branch_name: safe_branch_name, docker_tag: docker_tag];
 }
 
-def fetch_package(Map args) {
+void fetch_package(Map args) {
     // this is a quick fix for FIPS based tests, see CMK-20851
     def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
     def relative_job_name = args.relative_job_name == null ? "builders/trigger-cmk-distro-package" : args.relative_job_name;
@@ -91,7 +91,7 @@ def fetch_package(Map args) {
     }
 }
 
-def run_make_target(Map args) {
+void run_make_target(Map args) {
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
         // no inline bash comments are allowed in this sh call
         sh("""
@@ -113,7 +113,7 @@ def run_make_target(Map args) {
     }
 }
 
-def archive_and_process_reports(Map args) {
+void archive_and_process_reports(Map args) {
     show_duration("archiveArtifacts") {
         archiveArtifacts(args.test_results);
     }

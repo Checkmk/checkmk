@@ -5,7 +5,7 @@
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 // groovylint-disable MethodSize
-def main() {
+void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -292,7 +292,7 @@ def main() {
     }
     }
 
-def update_result_table(static_description, table_data) {
+void update_result_table(static_description, table_data) {
     currentBuild.description = ("""
     <p>
     <b style='font-style: italic; color: darkblue;'>${GERRIT_CHANGE_SUBJECT}</b>
@@ -304,7 +304,7 @@ def update_result_table(static_description, table_data) {
         "<br>" + static_description);
 }
 
-def render_description(job_results) {
+String render_description(job_results) {
     def job_result_table_html = """<table><tr style='text-align: left; padding: 50px 50px;'>
     <th>${['Stage', 'Duration', 'Status', 'Issues', 'Test report', 'Report files'].join("</th><th>")}</th></tr>""";
     job_results.each { entry ->
@@ -314,7 +314,7 @@ def render_description(job_results) {
     return job_result_table_html;
 }
 
-def job_result_row(Map args) {
+String job_result_row(Map args) {
     // 'Stage'                    'Duration'      'Status'  'Parsed results'                'Result files'
     // Python Typing(<-JOB_URL)   11.078 seconds  success   (Analyser URL (<-ANALYSER_URL))  results/python-typing.txt(<-ARTIFACTS_URL)
     def pattern_url = "n/a";

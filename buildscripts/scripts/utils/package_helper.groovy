@@ -16,7 +16,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 /// the 'Testing/..' prefix
 /// So "Testing/bla.blubb/checkmk/2.4.0/some_job" will result in
 /// "Testing/bla.blubb/checkmk/2.4.0" or "checkmk/2.4.0"
-def branch_base_folder(with_testing_prefix) {
+String branch_base_folder(with_testing_prefix) {
     def project_name_components = currentBuild.fullProjectName.split("/").toList();
     def checkmk_index = project_name_components.indexOf('checkmk');
     if (with_testing_prefix) {
@@ -25,13 +25,13 @@ def branch_base_folder(with_testing_prefix) {
     return project_name_components[checkmk_index..checkmk_index + 1].join('/');
 }
 
-def directory_sha256sum(directories) {
+LinkedHashMap<String, List> directory_sha256sum(directories) {
     return directories.collectEntries({ path ->
         [("${path}".toString()): cmd_output("sha256sum <(find ${path} -type f -exec sha256sum {} \\; | sort) | cut -d' ' -f1")]
     });
 }
 
-def dependency_paths_mapping() {
+static LinkedHashMap<String, List> dependency_paths_mapping() {
     return [
         "build-linux-agent-updater": [
             "agents",
@@ -58,7 +58,7 @@ def dependency_paths_mapping() {
     ];
 }
 
-def dependency_paths_hashes() {
+LinkedHashMap<String, List> dependency_paths_hashes() {
     dir("${checkout_dir}") {
         return dependency_paths_mapping().collectEntries({ job_name, paths ->
             [("${job_name}".toString()) : {
@@ -71,7 +71,7 @@ def dependency_paths_hashes() {
 }
 
 /* groovylint-disable MethodSize */
-def provide_agent_binaries(Map args) {
+void provide_agent_binaries(Map args) {
     // always download and move artifacts unless specified differently
     def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();
     def all_dependency_paths_hashes = dependency_paths_hashes();
@@ -256,7 +256,7 @@ def provide_agent_binaries(Map args) {
     return stages;
 }
 
-def cleanup_provided_agent_binaries(artifacts_base_dir) {
+void cleanup_provided_agent_binaries(artifacts_base_dir) {
     /// Cleanup
     sh("""
         # needed only because upstream_build() only downloads relative
@@ -266,7 +266,7 @@ def cleanup_provided_agent_binaries(artifacts_base_dir) {
     """);
 }
 
-def sign_package(source_dir, package_path) {
+void sign_package(source_dir, package_path) {
     print("FN sign_package(source_dir=${source_dir}, package_path=${package_path})");
     withCredentials([file(
         credentialsId: "Check_MK_Release_Key",
@@ -284,7 +284,7 @@ def sign_package(source_dir, package_path) {
     }
 }
 
-def test_package(package_path, name, workspace, source_dir, cmk_version) {
+void test_package(package_path, name, workspace, source_dir, cmk_version) {
     def junit_file = "junit-${name}.xml";
     try {
         sh("""

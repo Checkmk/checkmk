@@ -2,7 +2,7 @@
 
 /// file: windows.groovy
 
-def build(Map args) {
+void build(Map args) {
     def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;    // groovylint-disable JavaIoPackageAccess
     def artifacts_dir = 'artefacts';
 

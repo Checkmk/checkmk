@@ -9,21 +9,21 @@ smb_base_path = "/smb-share-customer/checkmk/"
 versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 /* groovylint-disable ParameterCount */
-def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
+void download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
     CMK_VERSION_RC_LESS = versioning.strip_rc_number_from_version(CMK_VERSION);
     def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION_RC_LESS}_0.${DISTRO}_amd64.deb";
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, DISTRO);
 }
 /* groovylint-enable ParameterCount */
 
-def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION) {
+void download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION) {
     CMK_VERSION_RC_LESS = versioning.strip_rc_number_from_version(CMK_VERSION);
     def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION_RC_LESS}.tar.gz";
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'source tar');
 }
 
 /* groovylint-disable ParameterCount */
-def download_version_dir(DOWNLOAD_SOURCE,
+void download_version_dir(DOWNLOAD_SOURCE,
                          PORT,
                          CMK_VERSION,
                          DOWNLOAD_DEST,
@@ -63,7 +63,7 @@ def download_version_dir(DOWNLOAD_SOURCE,
 /* groovylint-enable ParameterCount */
 
 /* groovylint-disable ParameterCount */
-def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port, exclude_pattern="") {
+void upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port, exclude_pattern="") {
     println("""
         ||== upload_via_rsync() ================================================
         || archive_base = |${archive_base}|
@@ -91,7 +91,7 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
 }
 /* groovylint-enable ParameterCount */
 
-def upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
+void upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
     println("""
         ||== upload_files_to_nexus() ================================================
         || SOURCE_PATTERN      = |${SOURCE_PATTERN}|
@@ -109,14 +109,14 @@ def upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
     }
 }
 
-def create_hash(FILE_PATH) {
+void create_hash(FILE_PATH) {
     sh("""
         cd \$(dirname ${FILE_PATH});
         sha256sum -- \$(basename ${FILE_PATH}) > "\$(basename ${FILE_PATH})${hashfile_extension}";
     """);
 }
 
-def execute_cmd_on_archive_server(cmd) {
+void execute_cmd_on_archive_server(cmd) {
     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
         sh("""
            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${WEB_DEPLOY_PORT} ${WEB_DEPLOY_URL} "${cmd}"
@@ -124,7 +124,7 @@ def execute_cmd_on_archive_server(cmd) {
     }
 }
 
-def deploy_to_website(CMK_VERS) {
+void deploy_to_website(CMK_VERS) {
     stage("Deploy to Website") {
         // CMK_VERS can contain a rc information like v2.1.0p6-rc1.
         // On the website, we only want to have official releases.
@@ -140,7 +140,7 @@ def deploy_to_website(CMK_VERS) {
     }
 }
 
-def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
+void update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
     def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
 
     inside_container(set_docker_group_id: true,
@@ -188,7 +188,7 @@ def update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
     }
 }
 
-def cleanup_rc_candidates_of_version(CMK_VERS) {
+void cleanup_rc_candidates_of_version(CMK_VERS) {
     def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
     execute_cmd_on_archive_server("rm -rf ${downloads_path}${TARGET_VERSION}-rc*;");
 // cleanup of tst server would come to early as "build-cmk-container" needs the rc candiates available

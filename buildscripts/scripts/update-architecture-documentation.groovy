@@ -2,7 +2,7 @@
 
 /// file: update-architecture-documentation.groovy
 
-def main() {
+void main() {
     dir("${checkout_dir}") {
         // Sphinx supports many different builders.
         // We have to use the same for creating new documentation and for

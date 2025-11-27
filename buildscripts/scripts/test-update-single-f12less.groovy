@@ -2,7 +2,7 @@
 
 /// file: test-update-single-f12less.groovy
 
-def build_make_target(edition, cross_edition_target="") {
+String build_make_target(edition, cross_edition_target="") {
     switch (edition) {
         // The make targets are written without the -docker suffix in tests/Makefile.
         case 'community':
@@ -34,7 +34,7 @@ def build_make_target(edition, cross_edition_target="") {
     }
 }
 
-def main() {
+void main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')

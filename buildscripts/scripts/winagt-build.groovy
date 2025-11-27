@@ -2,7 +2,7 @@
 
 /// file: winagt-build.groovy
 
-def main() {
+void main() {
     check_job_parameters(["VERSION"]);
 
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");

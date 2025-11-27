@@ -10,12 +10,12 @@
 /// Jenkins artifacts: will be directly pushed into the cloud
 /// Depends on: Ubuntu 22.04 package beeing available on download.checkmk.com (will be fetched by ansible collection)
 
-def build_cloud_images_names(version) {
+String build_cloud_images_names(version) {
     def version_suffix = "${version}-build-${env.BUILD_NUMBER}";
     return ["cmk-ami-https-${version_suffix}", "cmk-azure-${version_suffix}"];
 }
 
-def main() {
+void main() {
     check_job_parameters([
         "EDITION",
         "VERSION",
@@ -93,7 +93,7 @@ def main() {
     }
 }
 
-def build_env_secret_map(cmk_version, ami, azure) {
+LinkedHashMap<String, List> build_env_secret_map(cmk_version, ami, azure) {
     return [
         "env"    : [
             // ~~~ COMMON ~~~
@@ -138,7 +138,7 @@ def build_env_secret_map(cmk_version, ami, azure) {
     ];
 }
 
-def create_build_stages(cloud_targets, env_secret_map, build_images, packer_envvars) {
+LinkedHashMap<String, List> create_build_stages(cloud_targets, env_secret_map, build_images, packer_envvars) {
     return cloud_targets.collectEntries { target ->
         [("Building target ${target}"): {
             smart_stage(
@@ -161,7 +161,7 @@ def create_build_stages(cloud_targets, env_secret_map, build_images, packer_envv
     }
 }
 
-def create_publish_stages(targets_names, version, publish) {
+LinkedHashMap<String, List> create_publish_stages(targets_names, version, publish) {
     return targets_names.collectEntries { target, name ->
         [("Publish ${target} in marketplace"): {
             smart_stage(

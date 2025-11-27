@@ -167,7 +167,7 @@ class DistributedMonitoring(CmkPage):
         Returns a boolean indicating the license state otherwise.
         """
         if "not enabled" in self._get_table_row(site_id).inner_text().lower():
-            logger.warning(
+            logger.info(
                 'Replication disabled for remote site "%s"; licensing status unknown!', site_id
             )
             return None

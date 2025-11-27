@@ -50,6 +50,7 @@ build_python_module(
     ],
     requirements = "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce",
     tags = ["manual"],
+    visibility = ["//omd/non-free/relay:__pkg__"],
 )
 
 genrule(

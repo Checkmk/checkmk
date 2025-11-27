@@ -17,7 +17,7 @@ import {
 export function useDashboardFilters(
   dashboardFilterContextRef: Ref<DashboardFilterContextWithSingleInfos | undefined>
 ) {
-  const runtimeFiltersMode = ref<RuntimeFilterMode>(RuntimeFilterMode.OVERRIDE)
+  const runtimeFiltersMode = ref<RuntimeFilterMode>(RuntimeFilterMode.MERGE)
   const appliedRuntimeFilters = ref<ConfiguredFilters>({})
 
   const configuredMandatoryRuntimeFilters = computed<string[]>(() => {

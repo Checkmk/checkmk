@@ -36,9 +36,7 @@ class GlobalConfig(BaseModel):
 
 
 def load_global_config() -> GlobalConfig:
-    path = cse_config_dir / "global-allow-config.json"
-    if not path.exists():
-        path = cse_config_dir / "global-config.json"
+    path = cse_config_dir / "global-config.json"
     try:
         with open(path, encoding="utf-8") as file:
             return GlobalConfig.model_validate_json(file.read())

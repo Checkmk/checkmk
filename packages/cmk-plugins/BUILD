@@ -118,6 +118,14 @@ filegroup(
 )
 
 [filegroup(
+    name = "agent-%s" % family,
+    srcs = glob(
+        ["cmk/plugins/%s/agent/**/*" % family],
+        allow_empty = True,
+    ),
+) for family in FAMILIES]
+
+[filegroup(
     name = "checkman-%s" % family,
     srcs = glob(
         ["cmk/plugins/%s/checkman/**/*" % family],
@@ -138,9 +146,12 @@ COMMON_DEPS = [
     ":%s" % family
     for family in FAMILIES
 ] + [
+    ":agent-%s" % family
+    for family in FAMILIES
+] + [
     ":checkman-%s" % family
     for family in FAMILIES
-]  # TODO: add agent files.
+]
 
 py_wheel(
     name = "wheel",
@@ -163,6 +174,7 @@ py_wheel(
     version = "1.0.0",
     deps = [
         ":%s" % family,
+        ":agent-%s" % family,
         ":checkman-%s" % family,
         ":libexec-%s" % family,
     ],
@@ -210,6 +222,7 @@ package_wheel(
     version = "1.0.0",
     deps = [
         ":%s" % family,
+        ":agent-%s" % family,
         ":checkman-%s" % family,
     ],
 ) for family in FAMILIES]

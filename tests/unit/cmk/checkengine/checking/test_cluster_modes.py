@@ -409,7 +409,7 @@ def test_summarizer_result_generation(
     clusterization_parameters = {"primary_node": HostName("Nodebert")}
     summarizer = cluster_mode.Summarizer(
         node_results=node_results,
-        label="Best",
+        cluster_mode="best",
         selector=State.best,
         preferred=clusterization_parameters.get("primary_node"),
         unpreferred_node_state=State.WARN,
@@ -461,7 +461,7 @@ def test_summarizer_result_generation_for_failover(
     clusterization_parameters = {"primary_node": HostName("Nodebert")}
     summarizer = cluster_mode.Summarizer(
         node_results=node_results,
-        label="active",
+        cluster_mode="failover",
         additional_node_label="More than one node are reporting results:",
         selector=State.worst,
         preferred=clusterization_parameters.get("primary_node"),

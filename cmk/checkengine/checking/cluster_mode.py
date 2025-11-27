@@ -65,7 +65,7 @@ def get_cluster_check_function(
             clusterization_parameters=clusterization_parameters,
             executor=executor,
             check_function=plugin.check_function,
-            label="active",
+            cluster_mode=mode,
             additional_nodes_label="More than one node are reporting results:",
             selector=State.worst,
             levels_additional_nodes_count=(1, _INF),
@@ -78,7 +78,7 @@ def get_cluster_check_function(
             clusterization_parameters=clusterization_parameters,
             executor=executor,
             check_function=plugin.check_function,
-            label="worst",
+            cluster_mode=mode,
             additional_nodes_label="Additional results from:",
             selector=State.worst,
             levels_additional_nodes_count=(_INF, _INF),
@@ -91,7 +91,7 @@ def get_cluster_check_function(
             clusterization_parameters=clusterization_parameters,
             executor=executor,
             check_function=plugin.check_function,
-            label="best",
+            cluster_mode=mode,
             additional_nodes_label="Additional results from:",
             selector=State.best,
             levels_additional_nodes_count=(_INF, _INF),
@@ -106,7 +106,7 @@ def _cluster_check(
     clusterization_parameters: Mapping[str, Any],
     executor: "NodeCheckExecutor",
     check_function: Callable,
-    label: str,
+    cluster_mode: ClusterMode,
     additional_nodes_label: str,
     selector: Selector,
     levels_additional_nodes_count: tuple[float, float],
@@ -115,7 +115,7 @@ def _cluster_check(
 ) -> CheckResult:
     summarizer = Summarizer(
         node_results=executor(check_function, cluster_kwargs),
-        label=label,
+        cluster_mode=cluster_mode,
         additional_node_label=additional_nodes_label,
         selector=selector,
         preferred=clusterization_parameters.get("primary_node"),
@@ -138,7 +138,7 @@ class Summarizer:
         self,
         *,
         node_results: NodeResults,
-        label: str,
+        cluster_mode: ClusterMode,
         selector: Selector,
         preferred: HostName | None,
         unpreferred_node_state: State,
@@ -147,7 +147,7 @@ class Summarizer:
         additional_node_label: str = "Additional results from:",
     ) -> None:
         self._node_results = node_results
-        self._label = label.title()
+        self._cluster_mode = cluster_mode
         self._additional_node_label = additional_node_label
         self._selector = selector
         self._preferred = preferred
@@ -159,7 +159,7 @@ class Summarizer:
         # fallback: arbitrary, but comprehensible choice.
         self._pivoting = preferred if preferred in selected_nodes else sorted(selected_nodes)[0]
 
-        if label == "active":
+        if self._cluster_mode == "failover":
             # If we are in failover mode, always pick preferred node
             self._active = (
                 preferred if preferred in node_results.results else sorted(selected_nodes)[0]
@@ -175,6 +175,14 @@ class Summarizer:
         yield from self.primary_results()
         yield from self.secondary_results()
         yield from self.metrics()
+
+    @property
+    def _label(self) -> str:
+        return {
+            "failover": "Active",
+            "worst": "Worst",
+            "best": "Best",
+        }.get(self._cluster_mode, "Active")
 
     @staticmethod
     def _get_selected_nodes(

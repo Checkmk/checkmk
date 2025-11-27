@@ -18,7 +18,6 @@ from tests.gui_e2e.testlib.playwright.pom.setup.support_diagnostics import Suppo
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="CMK-27683: Bug in Support Diagnostics. Skipping to avoid crash report...")
 def test_download_diagnostics(
     dashboard_page: MainDashboard, request: pytest.FixtureRequest
 ) -> None:

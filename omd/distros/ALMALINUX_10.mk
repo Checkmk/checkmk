@@ -62,4 +62,4 @@ PHP_FCGI_BIN      = /usr/bin/php-cgi
 APACHE_ENMOD      = true %s
 BECOME_ROOT       = su -c
 MOUNT_OPTIONS     =
-INIT_CMD          = /usr/bin/systemctl %(action)s %(name)s.service
+INIT_CMD          = systemctl %(action)s %(name)s.service

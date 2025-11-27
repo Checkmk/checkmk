@@ -181,15 +181,18 @@ filegroup(
     name = "miscellaneous",
     srcs = [
         "gui/wsgi/applications/index.wsgi",
-        "plugins/hyperv_cluster/agents/README.md",
-        "plugins/hyperv_cluster/agents/hyperv_host.ps1",
-        "plugins/oracle/agents/oracle_unified_async",
-        "plugins/oracle/agents/oracle_unified_async.ps1",
-        "plugins/oracle/agents/oracle_unified_sync",
-        "plugins/oracle/agents/oracle_unified_sync.ps1",
         "utils/werks/announce/templates/announce.md.jinja2",
         "utils/werks/announce/templates/announce.txt.jinja2",
     ],
+)
+
+filegroup(
+    name = "agents",
+    srcs = glob(
+        [
+            "plugins/**/agents/*",
+        ],
+    ),
 )
 
 CMK_PACKAGES = [
@@ -260,7 +263,7 @@ py_library(
     srcs = glob(
         # Keep in sync with `REPO_PATCH_RULES` from `versioning.groovy`.
         include = ["**/*.py"],
-        exclude = COMMUNITY_PY + ULTIMATE_PY + PRO_PY + ULTIMATEMT_PY + CLOUD_PY + DO_NOT_DEPLOY + ["base/legacy_checks/*"],
+        exclude = ["plugins/**/agents/*"] + COMMUNITY_PY + ULTIMATE_PY + PRO_PY + ULTIMATEMT_PY + CLOUD_PY + DO_NOT_DEPLOY + ["base/legacy_checks/*"],
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
@@ -332,6 +335,7 @@ py_wheel(
     deps = [
         "lib_cmk",
         "lib_cmk_community",
+        ":agents",
         ":checkman",
         ":miscellaneous",
     ],
@@ -346,6 +350,7 @@ py_wheel(
     visibility = ["//visibility:public"],
     deps = CMC_PROTO_DEPS + [
         "lib_cmk",
+        ":agents",
         ":checkman",
         ":libexec",
         ":miscellaneous",

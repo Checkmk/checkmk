@@ -5,7 +5,6 @@
 use crate::pwstore::password_from_store;
 use crate::version;
 use anyhow::{bail, Result as AnyhowResult};
-use check_http::checking_types::State;
 use clap::{Args, Parser, ValueEnum};
 use regex::{Regex, RegexBuilder};
 use reqwest::{
@@ -218,8 +217,8 @@ pub struct Cli {
     pub status_code: Vec<StatusCode>,
 
     /// State to report if expected string/regex is not found in body or headers
-    #[arg(long, value_parser = parse_on_error_state)]
-    pub on_error: Option<State>,
+    #[arg(long)]
+    pub on_error: Option<OnErrorState>,
 
     /// Use TLS version for HTTPS requests.
     ///
@@ -329,6 +328,14 @@ pub enum OnRedirect {
 pub enum ForceIP {
     Ipv4,
     Ipv6,
+}
+
+#[derive(Clone, Debug, ValueEnum)]
+pub enum OnErrorState {
+    Ok,
+    Warning,
+    Critical,
+    Unknown,
 }
 
 #[derive(Args, Debug)]
@@ -478,19 +485,6 @@ fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(Regex, R
 
 fn parse_regex_pattern(pattern: &str) -> Result<Regex, regex::Error> {
     RegexBuilder::new(pattern).crlf(true).build()
-}
-
-fn parse_on_error_state(state: &str) -> AnyhowResult<State> {
-    match state.to_lowercase().as_str() {
-        "ok" => Ok(State::Ok),
-        "warning" | "warn" => Ok(State::Warn),
-        "critical" | "crit" => Ok(State::Crit),
-        "unknown" => Ok(State::Unknown),
-        _ => bail!(
-            "Invalid state: '{}'. Expected one of: ok, warning, critical, unknown",
-            state
-        ),
-    }
 }
 
 #[cfg(test)]
